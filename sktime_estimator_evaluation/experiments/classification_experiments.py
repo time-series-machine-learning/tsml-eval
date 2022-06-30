@@ -35,7 +35,7 @@ generated in java.
 def demo_loading():
     """Test function to check dataset loading of univariate and multivaria problems."""
     for i in range(0, len(dataset_lists.univariate)):
-        data_dir = "../"
+        data_dir = "../../"
         dataset = dataset_lists.univariate[i]
         trainX, trainY = load_ts(data_dir + dataset + "/" + dataset + "_TRAIN.ts")
         testX, testY = load_ts(data_dir + dataset + "/" + dataset + "_TEST.ts")
