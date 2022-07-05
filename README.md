@@ -3,7 +3,7 @@ Evaluation tools for sktime
 
 Installation
 ------------
-pip install -r requirements.txt'
+pip install -r requirements.txt
 
 
 Export new requirements
