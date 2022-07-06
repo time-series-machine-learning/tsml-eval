@@ -9,7 +9,7 @@ from sktime.datasets import load_acsf1, load_arrow_head, load_osuleaf
 from sktime.datatypes import convert_to
 
 
-def _test_cluster_evaluation():
+def test_cluster_evaluation():
 
     datasets = [
         ("acsf1", load_acsf1),
