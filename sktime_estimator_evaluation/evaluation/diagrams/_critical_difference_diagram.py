@@ -23,8 +23,8 @@ def create_critical_difference_diagram(
     alpha: float = 0.05,
     color: str = "0.0",
     space_between_labels: float = 0.15,
-    fontsize: float = 15,
-    title_fontsize: float = 20,
+    fontsize: float = 8,
+    title_fontsize: float = 10,
     figure_width: float = None,
     figure_height: float = None,
 ) -> Union[plt.Figure, List[plt.Figure]]:
@@ -72,6 +72,7 @@ def create_critical_difference_diagram(
         If more than one metric passed then a list of critical difference diagram
         figures is return else plt.Figure is returned.
     """
+    df = _check_df(df)
     num_metrics = len(df.columns) - 2
     figures = []
     for i in range(2, num_metrics + 2):
@@ -113,6 +114,31 @@ def create_critical_difference_diagram(
         return figures[0]
     return figures
 
+def _check_df(df: pd.DataFrame) -> pd.DataFrame:
+    """Check if data frame is valid.
+
+    Parameters
+    ----------
+    df: pd.DataFrame
+        Data frame to check.
+
+    Returns
+    -------
+    pd.DataFrame
+        Validated dataframe
+    """
+    datasets = (df.iloc[:, 1]).unique()
+    num_datasets = len(datasets)
+    estimators = (df.iloc[:, 0]).unique()
+    for estimator in estimators:
+        curr = df[df.iloc[:, 0] == estimator]
+        if len(curr.iloc[:, 1]) != num_datasets:
+            warnings.warn(
+                f"Number of datasets for estimator {estimator} is not equal to "
+                f"number of datasets in dataframe. Removing {estimator} from dataframe."
+            )
+            df = df[df.iloc[:, 0] != estimator]
+    return df
 
 def _find_edges(graph: List[List[int]]) -> List[Tuple]:
     """Find edges of a graph.
@@ -278,10 +304,10 @@ def _compute_wilcoxon_signed_rank(
     if len(acc_arr) >= 3:
         friedman_p_value = friedmanchisquare(*acc_arr)[1]
 
-        if friedman_p_value >= alpha:
-            raise ValueError(
-                "The estimators results provided cannot reject the null" "hypothesis."
-            )
+        # if friedman_p_value >= alpha:
+        #     raise ValueError(
+        #         "The estimators results provided cannot reject the null" "hypothesis."
+        #     )
     p_values = []
 
     for i in range(len(estimators)):
@@ -324,11 +350,11 @@ def _compute_average_rank(df: pd.DataFrame) -> pd.Series:
         names, index 1 should be the dataset and index 3 and onwards should be the
          estimators metric scored for the datasets. For examples:
         ----------------------------------
-        | estimator | dataset | metric1  | metric2 |
-        | cls1      | data1   | 1.2      | 1.2     |
-        | cls2      | data2   | 3.4      | 1.4     |
-        | cls1      | data2   | 1.4      | 1.3     |
-        | cls2      | data1   | 1.3      | 1.2     |
+        | estimator_name | dataset | metric1  | metric2 |
+        | cls1           | data1   | 1.2      | 1.2     |
+        | cls2           | data2   | 3.4      | 1.4     |
+        | cls1           | data2   | 1.4      | 1.3     |
+        | cls2           | data1   | 1.3      | 1.2     |
         ----------------------------------
 
     Returns
@@ -344,6 +370,7 @@ def _compute_average_rank(df: pd.DataFrame) -> pd.Series:
     sorted_df = df.loc[df[df.columns[0]].isin(estimators)].sort_values(
         [df.columns[0], df.columns[1]]
     )
+
     rank_data = np.array(sorted_df[df.columns[-1]]).reshape(
         len(estimators), num_datasets
     )
@@ -407,7 +434,6 @@ def _plot_critical_difference_diagram(
     """
     if cliques is None:
         cliques = []
-    # Get the scale i.e 1 - x
     min_rank = 1
     max_rank = math.ceil(max(ranks) + (min(ranks) - 1))
 
@@ -498,6 +524,7 @@ def _plot_critical_difference_diagram(
         x_pos = x_pos_modifier
         y_pos = -5
 
+
         ax.annotate(
             estimator,
             xy=(labels_x_positions[i], labels_y_positions[i]),
@@ -545,10 +572,11 @@ def _plot_critical_difference_diagram(
     plt.axis("off")
     fig.tight_layout()
 
-    if figure_width is None:
-        fig.set_figwidth(number_line_y + 5)
-    else:
-        fig.set_figwidth(figure_width)
+    # if figure_width is None:
+    #     # fig.set_figwidth(end-start)
+    # else:
+    #     fig.set_figwidth(figure_width)
+    # fig.set_figwidth(10)
 
     if figure_height is not None:
         fig.set_figheight(figure_height)

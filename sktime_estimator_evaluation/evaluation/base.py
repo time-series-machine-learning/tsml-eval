@@ -21,9 +21,6 @@ class BaseEstimatorEvaluator(ABC):
     experiment_name: str
         The name of the experiment (the directory that stores the results will be called
         this).
-    draw_critical_difference_diagrams: bool, defaults = True
-        Boolean that when true will also output critical difference diagrams. When
-        False no diagrams will be outputted.
     critical_diff_params: dict, defaults = None
         Parameters for critical difference call. See create_critical_difference_diagram
         method for list of valid parameters.
@@ -34,13 +31,11 @@ class BaseEstimatorEvaluator(ABC):
         results_path: str,
         evaluation_out_path: str,
         experiment_name: str,
-        draw_critical_difference_diagrams: bool = True,
         critical_diff_params: dict = None,
     ):
         self.results_path = results_path
         self.evaluation_out_path = evaluation_out_path
         self.experiment_name = experiment_name
-        self.draw_critical_difference_diagrams = draw_critical_difference_diagrams
 
         self.critical_diff_params = critical_diff_params
         if critical_diff_params is None:
@@ -97,14 +92,27 @@ class BaseEstimatorEvaluator(ABC):
             estimator_combinations.append([estimator])
         estimator_combinations.append(estimators)
 
+        df = df.groupby(["dataset", "estimator_name", "estimator"]).mean().reset_index()
+
+        def remove_dash(x):
+            if '-' in x[1]:
+                return (x.split('-')[1])
+            return x
+
+
         for combination in estimator_combinations:
             curr_df = df.loc[df["estimator"].isin(combination)]
             curr_df = curr_df.loc[:, curr_df.columns != "estimator"]
 
+            metrics = curr_df.columns[2:]
+            datasets = list(set(curr_df["dataset"]))
+
+
             if len(combination) <= 1:
-                curr_df["estimator_name"] = curr_df["estimator_name"].apply(
-                    lambda x: (x.split("-")[1])
-                )
+                if '-' in estimators[0]:
+                    curr_df["estimator_name"] = curr_df["estimator_name"].apply(
+                        lambda x: remove_dash(x)
+                    )
 
             estimator_name = combination[0]
             if len(combination) > 1:
@@ -116,8 +124,6 @@ class BaseEstimatorEvaluator(ABC):
 
             curr_df.to_csv(f"{curr_output_path}/all.csv", index=False)
 
-            metrics = curr_df.columns[2:]
-            datasets = list(set(curr_df["dataset"]))
             for metric in metrics:
                 curr_df_cols = [f"{split}{metric}".upper()]
                 curr_df_cols += list(set(curr_df["estimator_name"]))
@@ -133,17 +139,11 @@ class BaseEstimatorEvaluator(ABC):
                         curr_row += list(df_metric[metric])
                     curr_metric_df.append(curr_row)
 
+
                 metric_df = pd.DataFrame(curr_metric_df, columns=curr_df_cols)
                 metric_df.to_csv(
                     f"{curr_output_path}/{curr_df_cols[0]}.csv", index=False
                 )
-
-            metric_order = ["estimator_name", "dataset"] + list(curr_df.columns[2:])
-            crit_diff_df = curr_df[metric_order]
-
-            create_critical_difference_diagram(
-                crit_diff_df, output_path=curr_output_path, **self.critical_diff_params
-            )
 
     @abstractmethod
     def evaluate_csv_data(self, csv_path: str) -> Tuple:
@@ -174,18 +174,22 @@ class BaseEstimatorEvaluator(ABC):
         train_results = []
         test_results = []
         for estimator in estimators:
-            path = os.path.abspath(f"{self.results_path}/{estimator}/Predictions")
+            path = os.path.abspath(f"{self.results_path}/{estimator}")
             for _, dirs, _ in os.walk(path):
                 for dir in dirs:
-                    dataset_dir = os.path.abspath(f"{path}/{dir}")
-                    for _, _, files in os.walk(dataset_dir):
-                        if len(files) > 1:
-                            for file in files:
-                                if file.endswith(".csv"):
-                                    file_path = os.path.abspath(f"{dataset_dir}/{file}")
-                                    res = self.evaluate_csv_data(file_path)
-                                    if "test" in file:
-                                        test_results.append(res)
-                                    else:
-                                        train_results.append(res)
+                    prediction_dir = os.path.abspath(f"{path}/{dir}/Predictions")
+                    for _, dataset_dirs, files in os.walk(prediction_dir):
+                        for dataset in dataset_dirs:
+                            dataset_dir = os.path.abspath(f"{prediction_dir}/{dataset}")
+                            for _, _, resample_file in os.walk(dataset_dir):
+                                if len(resample_file) > 1:
+                                    for resample in resample_file:
+                                        if resample.endswith(".csv"):
+                                            file_path = os.path.abspath(
+                                                f"{dataset_dir}/{resample}")
+                                            res = self.evaluate_csv_data(file_path)
+                                            if "test" in resample:
+                                                test_results.append(res)
+                                            else:
+                                                train_results.append(res)
         return test_results, train_results

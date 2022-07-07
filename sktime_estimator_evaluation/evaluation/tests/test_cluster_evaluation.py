@@ -9,7 +9,7 @@ from sktime.datasets import load_acsf1, load_arrow_head, load_osuleaf
 from sktime.datatypes import convert_to
 
 
-def _test_cluster_evaluation():
+def test_cluster_evaluation():
 
     datasets = [
         ("acsf1", load_acsf1),
@@ -41,8 +41,8 @@ def _test_cluster_evaluation():
         dataset_paths[dataset_name] = [trainX, testX]
 
     evaluator = ClusterEvaluator(
-        "test_results",
-        os.path.abspath("./result_out"),
+        results_path=os.path.abspath("./dummy_results/distance-results"),
+        evaluation_out_path="./test_results",
         experiment_name="example_experiment",
         naming_parameter_key="metric",
         critical_diff_params={"alpha": 100000.0},
@@ -50,6 +50,6 @@ def _test_cluster_evaluation():
         dataset_paths=dataset_paths,
     )
 
-    evaluator.run_evaluation(["kmeans", "kmedoids"])
+    evaluator.run_evaluation(["kmeans"])
 
-    shutil.rmtree(os.path.abspath("./result_out"))
+    # shutil.rmtree(os.path.abspath("./result_out"))

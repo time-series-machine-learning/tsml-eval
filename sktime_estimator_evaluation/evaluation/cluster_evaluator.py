@@ -52,9 +52,6 @@ class ClusterEvaluator(BaseEstimatorEvaluator):
     naming_parameter_key: str, defaults = None
         The key from the dict defining the parameters of the experiments (first line of
         csv file).
-    draw_critical_difference_diagrams: bool, defaults = True
-        Boolean that when true will also output critical difference diagrams. When
-        False no diagrams will be outputted.
     critical_diff_params: dict, defaults = None
         Parameters for critical difference call. See create_critical_difference_diagram
         method for list of valid parameters.
@@ -80,7 +77,6 @@ class ClusterEvaluator(BaseEstimatorEvaluator):
         experiment_name: str,
         metrics: Union[str, List[str]] = None,
         naming_parameter_key: str = None,
-        draw_critical_difference_diagrams: bool = True,
         critical_diff_params: dict = None,
         dataset_paths: dict = None,
     ):
@@ -105,7 +101,6 @@ class ClusterEvaluator(BaseEstimatorEvaluator):
             results_path,
             evaluation_out_path,
             experiment_name,
-            draw_critical_difference_diagrams=draw_critical_difference_diagrams,
             critical_diff_params=critical_diff_params,
         )
 
@@ -159,7 +154,7 @@ class ClusterEvaluator(BaseEstimatorEvaluator):
         estimator_name = estimator_details[1]
         if self.naming_parameter_key is not None:
             estimator_name = (
-                f"{estimator_name}-{estimator_params[self.naming_parameter_key]}"
+                f"{estimator_details[1]}"
             )
         return estimator_name
 
