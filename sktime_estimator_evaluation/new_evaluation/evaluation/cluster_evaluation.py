@@ -94,14 +94,14 @@ def evaluate_cluster_results(
         metrics: List[Union[MetricCallable, str]] = None,
         output_dir: str = None
 ) -> pd.DataFrame:
-    """Evaluate the results of a clustering experiment.
+    """Evaluate the ignore-results of a clustering experiment.
 
     Parameters
     ----------
     experiment_name: str
         Name of the experiment.
     path: str
-        Path to a directory containing the results of a clustering experiment. This
+        Path to a directory containing the ignore-results of a clustering experiment. This
         should be structured as follows:
         -> experiment_directory
             -> experiment_name
@@ -126,7 +126,7 @@ def evaluate_cluster_results(
     Returns
     -------
     pd.DataFrame
-        Dataframe containing the results of the evaluation. It will take the form:
+        Dataframe containing the ignore-results of the evaluation. It will take the form:
         | Dataset  | Estimator 1 | Estimator 2 | Estimator 3 | ... |
         -----------------------------------------------------------
         | dataset1 | 0.0         | 0.0          | 0.0        | ... |
@@ -165,14 +165,14 @@ def evaluate_cluster_results(
 
     estimator_result = {}
     # For each estimator
-    test = result['estimators']
-    first = test[0]
     for estimator in result['estimators']:
+        print("evaluating estimator: ", estimator['estimator_name'])
         estimator_output_path = resolve_join_path(output_dir, estimator['estimator_name'])
         estimator_result[estimator['estimator_name']] = {}
 
         # For each experiment for estimator (i.e. hyperparams)
         for experiment in estimator['experiment_results']:
+            print("----> evaluating experiment: ", experiment['experiment_name'])
             estimator_result[experiment['experiment_name']] = {}
             experiment_output_path = resolve_join_path(estimator_output_path, experiment['experiment_name'])
 
@@ -186,7 +186,12 @@ def evaluate_cluster_results(
 
             # TODO: Define a return format that will also be used for reading in
 
-
+if __name__ == '__main__':
+    result = evaluate_cluster_results(
+        experiment_name='test',
+        path='test/ignore-results/',
+        output_dir='./out/'
+    )
 
 
 

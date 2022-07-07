@@ -6,12 +6,12 @@ def read_results_from_uea_format(
     meta_col_headers: List[str] = None,
     prediction_col_headers: List[str] = None,
 ) -> Dict:
-    """Read results from uea format.
+    """Read ignore-results from uea format.
 
     Parameters
     ----------
     path: str
-        Path to results file csv.
+        Path to ignore-results file csv.
     meta_col_headers: List[str], defaults = None
         Column header for meta data about estimator (third line)
     prediction_col_headers: List[str], defaults = None

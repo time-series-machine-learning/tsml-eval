@@ -3,6 +3,7 @@ import os
 from os.path import abspath, join
 from csv import reader
 from operator import itemgetter
+import platform
 
 import pandas as pd
 
@@ -45,7 +46,7 @@ def resolve_experiment_paths(path: str, experiment_name: str) -> Experiment:
     path: str
         Path to an experiment directory.
     experiment_name: str
-        Name of the experiment results reading in.
+        Name of the experiment ignore-results reading in.
 
     Returns
     -------
@@ -117,14 +118,18 @@ def _add_experiment_result(
     file: str
         Name of the file containing the experiment result.
     experiment_dict: Experiment
-        Dictionary containing the experiment results.
+        Dictionary containing the experiment ignore-results.
 
     Returns
     -------
     Experiment
-        Updated dictionary containing the experiment results.
+        Updated dictionary containing the experiment ignore-results.
     """
-    split_subdir = subdir.split('/')
+    # If on windows use different split
+    if 'Windows' in platform.platform():
+        split_subdir = subdir.split('\\')
+    else:
+        split_subdir = subdir.split('/')
 
     curr_estimator_name = split_subdir[-4]
     estimator: Estimator = _find_dict_item(
@@ -166,8 +171,6 @@ def _add_experiment_result(
         dataset['resamples']['test_resamples'].append(join(subdir, file))
     else:
         raise ValueError('File name must start with train or test')
-
-    experiment_dict['estimators'].append(estimator)
 
     return experiment_dict
 
@@ -214,7 +217,7 @@ def _extract_resamples_for_dataset(
     return resample_row
 
 def _check_equal_resamples(metric_rows: List) -> List:
-    """Check if results all have same number of resamples.
+    """Check if ignore-results all have same number of resamples.
 
     If they don't have same number of resamples take the most common amount of equal
     resamples.
@@ -251,7 +254,7 @@ def extract_estimator_experiment(
         estimator_experiment: EstimatorExperiment,
         metric_callables: List[MetricCallable]
 ) -> Tuple[List[Tuple[str, pd.DataFrame]], List[Tuple[str, pd.DataFrame]]]:
-    """Extract the results of an estimator experiment.
+    """Extract the ignore-results of an estimator experiment.
 
     Each data in the list of dataframes return will take the form:
     | folds    | 0   | 1   | 2   | 3   | ... |
@@ -264,18 +267,18 @@ def extract_estimator_experiment(
     Parameters
     ----------
     estimator_experiment: EstimatorExperiment
-        The estimator experiment to extract the results from.
+        The estimator experiment to extract the ignore-results from.
     metric_callables: List[MetricCallable]
-        List of metric callables to use to evaluate the results.
+        List of metric callables to use to evaluate the ignore-results.
 
     Returns
     -------
     List[Tuple[str, pd.DataFrame]]
         List of tuples containing the metric name as first element and dataframe
-        containing the metric train results.
+        containing the metric train ignore-results.
     List[Tuple[str, pd.DataFrame]]
         List of tuples containing the metric name as first element and dataframe
-        containing the metric test results.
+        containing the metric test ignore-results.
     """
 
     train_results = []
@@ -332,12 +335,12 @@ def read_results_from_uea_format(
         meta_col_headers: List[str] = None,
         prediction_col_headers: List[str] = None,
 ) -> Dict:
-    """Read results from uea format.
+    """Read ignore-results from uea format.
 
     Parameters
     ----------
     path: str
-        Path to results file csv.
+        Path to ignore-results file csv.
     meta_col_headers: List[str], defaults = None
         Column header for meta data about estimator (third line)
     prediction_col_headers: List[str], defaults = None
@@ -409,19 +412,19 @@ def _csv_results_to_metric(
     csv_path: str,
     metric_callables: List[MetricCallable]
 ) -> Dict:
-    """Read results from csv and return a dict of metric results.
+    """Read ignore-results from csv and return a dict of metric ignore-results.
 
     Parameters
     ----------
     csv_path: str
-        Path to csv file containing the results.
+        Path to csv file containing the ignore-results.
     metric_callables: List[MetricCallable]
-        List of metric callables to use to evaluate the results.
+        List of metric callables to use to evaluate the ignore-results.
 
     Returns
     -------
     dict
-        Dict of metric results. The dict will have the following format:
+        Dict of metric ignore-results. The dict will have the following format:
         {
             'metric_name': metric_value,
         }

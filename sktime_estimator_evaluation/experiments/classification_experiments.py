@@ -26,8 +26,8 @@ mechanism used in Java,
 https://github.com/TonyBagnall/uea-tsc/tree/master/src/main/java/experiments
 but isfrom sktime.classification.interval_based import (
     CanonicalIntervalForest,
- not yet as engineered. However, if you generate results using the method
-recommended here, they can be directly and automatically compared to the results
+ not yet as engineered. However, if you generate ignore-results using the method
+recommended here, they can be directly and automatically compared to the ignore-results
 generated in java.
 """
 
