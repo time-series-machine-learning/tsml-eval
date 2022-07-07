@@ -1,5 +1,5 @@
 # sktime-estimator-evaluation
-Evaluation tools for sktime
+Evaluation tools for classification and regression
 
 Installation
 ------------
