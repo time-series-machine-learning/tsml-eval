@@ -2,7 +2,7 @@
 
 max_folds=1                                               
 start_fold=1                                                
-maxNumSubmitted=350
+maxNumSubmitted=100
 queue="compute-16-64"
 username="ajb"
 mail="NONE"
@@ -15,13 +15,13 @@ results_dir="/gpfs/home/ajb/ClassificationResults/"
 out_dir="/gpfs/home/ajb/Code/output/"
 script_file_path="/gpfs/home/ajb/Code/sktime-estimator-evaluation/sktime-estimator-evaluation/experiments/classification_experiments.py"
 env_name="eval"
-datasets="/gpfs/home/ajb/DataSetLists/MTSC2022.txt"
+datasets="/gpfs/home/ajb/Code/sktime-estimator-evaluation/sktime-estimator-evaluation/experiments/TSC_112_2019.txt"
 generate_train_files="true"
 predefined_folds="false"
 
 count=0
 while read dataset; do
-for classifier in TDE DrCIF STC Arsenal
+for classifier in ROCKET
 do
 
 
