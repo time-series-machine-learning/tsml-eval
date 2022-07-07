@@ -1,7 +1,7 @@
 #!/bin/bash
 
-max_folds=1                                               
-start_fold=1                                                
+max_folds=1
+start_fold=1
 maxNumSubmitted=100
 queue="compute-16-64"
 username="ajb"
@@ -13,9 +13,9 @@ start_point=1
 data_dir="/gpfs/home/ajb/Data/"
 results_dir="/gpfs/home/ajb/ClassificationResults/"
 out_dir="/gpfs/home/ajb/Code/output/"
-script_file_path="/gpfs/home/ajb/Code/sktime-estimator-evaluation/sktime-estimator-evaluation/experiments/classification_experiments.py"
+script_file_path="/gpfs/home/ajb/Code/sktime-estimator-evaluation/experiments/classification_experiments.py"
 env_name="eval"
-datasets="/gpfs/home/ajb/Code/sktime-estimator-evaluation/sktime-estimator-evaluation/experiments/Univariate.txt"
+datasets="/gpfs/home/ajb/Code/sktime-estimator-evaluation/experiments/Univariate.txt"
 generate_train_files="true"
 predefined_folds="false"
 
@@ -43,7 +43,7 @@ mkdir -p ${out_dir}${classifier}/${dataset}/
 
 echo "#!/bin/bash
 
-#SBATCH --mail-type=${mail}   
+#SBATCH --mail-type=${mail}
 #SBATCH --mail-user=${mailto}
 #SBATCH -p ${queue}
 #SBATCH -t ${max_time}
