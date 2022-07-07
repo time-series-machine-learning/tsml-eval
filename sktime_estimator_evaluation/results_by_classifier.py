@@ -15,6 +15,7 @@ def get_single_classifier_results(classifier, root =ROOT_DIR, package = "tsml"):
     abspath = os.path.join(root, cls_file)
     file = open(abspath, "r", encoding="utf-8")
     #Read and discard header line
+
     #Look for results file locally
 
     #Look on tsc.com?

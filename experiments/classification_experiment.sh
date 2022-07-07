@@ -15,7 +15,7 @@ results_dir="/gpfs/home/ajb/ClassificationResults/"
 out_dir="/gpfs/home/ajb/Code/output/"
 script_file_path="/gpfs/home/ajb/Code/sktime-estimator-evaluation/sktime-estimator-evaluation/experiments/classification_experiments.py"
 env_name="eval"
-datasets="/gpfs/home/ajb/Code/sktime-estimator-evaluation/sktime-estimator-evaluation/experiments/TSC_112_2019.txt"
+datasets="/gpfs/home/ajb/Code/sktime-estimator-evaluation/sktime-estimator-evaluation/experiments/Univariate.txt"
 generate_train_files="true"
 predefined_folds="false"
 
