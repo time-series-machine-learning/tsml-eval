@@ -46,7 +46,7 @@ def resolve_experiment_paths(path: str, experiment_name: str) -> Experiment:
     path: str
         Path to an experiment directory.
     experiment_name: str
-        Name of the experiment ignore-results reading in.
+        Name of the experiment results reading in.
 
     Returns
     -------
@@ -118,12 +118,12 @@ def _add_experiment_result(
     file: str
         Name of the file containing the experiment result.
     experiment_dict: Experiment
-        Dictionary containing the experiment ignore-results.
+        Dictionary containing the experiment results.
 
     Returns
     -------
     Experiment
-        Updated dictionary containing the experiment ignore-results.
+        Updated dictionary containing the experiment results.
     """
     # If on windows use different split
     if 'Windows' in platform.platform():
@@ -217,7 +217,7 @@ def _extract_resamples_for_dataset(
     return resample_row
 
 def _check_equal_resamples(metric_rows: List) -> List:
-    """Check if ignore-results all have same number of resamples.
+    """Check if results all have same number of resamples.
 
     If they don't have same number of resamples take the most common amount of equal
     resamples.
@@ -254,7 +254,7 @@ def extract_estimator_experiment(
         estimator_experiment: EstimatorExperiment,
         metric_callables: List[MetricCallable]
 ) -> Tuple[List[Tuple[str, pd.DataFrame]], List[Tuple[str, pd.DataFrame]]]:
-    """Extract the ignore-results of an estimator experiment.
+    """Extract the results of an estimator experiment.
 
     Each data in the list of dataframes return will take the form:
     | folds    | 0   | 1   | 2   | 3   | ... |
@@ -267,18 +267,18 @@ def extract_estimator_experiment(
     Parameters
     ----------
     estimator_experiment: EstimatorExperiment
-        The estimator experiment to extract the ignore-results from.
+        The estimator experiment to extract the results from.
     metric_callables: List[MetricCallable]
-        List of metric callables to use to evaluate the ignore-results.
+        List of metric callables to use to evaluate the results.
 
     Returns
     -------
     List[Tuple[str, pd.DataFrame]]
         List of tuples containing the metric name as first element and dataframe
-        containing the metric train ignore-results.
+        containing the metric train results.
     List[Tuple[str, pd.DataFrame]]
         List of tuples containing the metric name as first element and dataframe
-        containing the metric test ignore-results.
+        containing the metric test results.
     """
 
     train_results = []
@@ -335,12 +335,12 @@ def read_results_from_uea_format(
         meta_col_headers: List[str] = None,
         prediction_col_headers: List[str] = None,
 ) -> Dict:
-    """Read ignore-results from uea format.
+    """Read results from uea format.
 
     Parameters
     ----------
     path: str
-        Path to ignore-results file csv.
+        Path to results file csv.
     meta_col_headers: List[str], defaults = None
         Column header for meta data about estimator (third line)
     prediction_col_headers: List[str], defaults = None
@@ -412,19 +412,19 @@ def _csv_results_to_metric(
     csv_path: str,
     metric_callables: List[MetricCallable]
 ) -> Dict:
-    """Read ignore-results from csv and return a dict of metric ignore-results.
+    """Read results from csv and return a dict of metric results.
 
     Parameters
     ----------
     csv_path: str
-        Path to csv file containing the ignore-results.
+        Path to csv file containing the results.
     metric_callables: List[MetricCallable]
-        List of metric callables to use to evaluate the ignore-results.
+        List of metric callables to use to evaluate the results.
 
     Returns
     -------
     dict
-        Dict of metric ignore-results. The dict will have the following format:
+        Dict of metric results. The dict will have the following format:
         {
             'metric_name': metric_value,
         }
@@ -451,3 +451,20 @@ def _csv_results_to_metric(
         metric_results[metric_name] = metric_callable(true_label, predicted_label)
 
     return metric_results
+
+
+class EstimatorMetricResults(TypedDict):
+    estimator_name: str
+    result: pd.DataFrame
+
+
+class MetricResults(TypedDict):
+    metric_name: str
+    test_estimator_results: Union[List[EstimatorMetricResults], None]
+    train_estimator_results: Union[List[EstimatorMetricResults], None]
+
+
+def read_metric_results(path: str):
+    """Read results from csv and return a dict of metric results.
+    """
+    pass

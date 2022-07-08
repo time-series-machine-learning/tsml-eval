@@ -306,7 +306,7 @@ def _compute_wilcoxon_signed_rank(
 
         # if friedman_p_value >= alpha:
         #     raise ValueError(
-        #         "The estimators ignore-results provided cannot reject the null" "hypothesis."
+        #         "The estimators results provided cannot reject the null" "hypothesis."
         #     )
     p_values = []
 

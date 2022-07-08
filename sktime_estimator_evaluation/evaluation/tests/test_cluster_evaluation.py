@@ -41,7 +41,7 @@ def test_cluster_evaluation():
         dataset_paths[dataset_name] = [trainX, testX]
 
     evaluator = ClusterEvaluator(
-        results_path=os.path.abspath("./dummy_results/distance-ignore-results"),
+        results_path=os.path.abspath("./dummy_results/distance-results"),
         evaluation_out_path="./test_results",
         experiment_name="example_experiment",
         naming_parameter_key="metric",
