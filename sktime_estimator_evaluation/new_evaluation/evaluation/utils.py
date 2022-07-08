@@ -464,7 +464,25 @@ class MetricResults(TypedDict):
     train_estimator_results: Union[List[EstimatorMetricResults], None]
 
 
-def read_metric_results(path: str):
+def read_metric_results(path: str) -> List[str]:
     """Read results from csv and return a dict of metric results.
+
+    Parameters
+    ----------
+    path: str
+        Path to directory containing csv results.
+
+    Returns
+    -------
+    List[str]
+        List of path to metric results csv files.
     """
-    pass
+    result_path = abspath(path)
+    test = []
+    for subdir, dirs, files in os.walk(result_path):
+        if len(files) > 0:
+            for file in files:
+                if 'csv' in file:
+                    test.append(join(subdir, file))
+
+    return test

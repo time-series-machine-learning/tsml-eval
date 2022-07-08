@@ -1,5 +1,6 @@
 from typing import List, Union, Callable, Tuple, Dict
 import os
+import platform
 
 import pandas as pd
 from sktime_estimator_evaluation.new_evaluation.evaluation.utils import (
@@ -8,7 +9,8 @@ from sktime_estimator_evaluation.new_evaluation.evaluation.utils import (
     MetricCallable,
     extract_estimator_experiment,
     EstimatorMetricResults,
-    MetricResults
+    MetricResults,
+    read_metric_results,
 )
 from sklearn.metrics import (
     accuracy_score,
@@ -131,8 +133,9 @@ def _format_metric_results(
         Name of the estimator.
     formatted_metric_results: List[MetricResults]
         List of formatted metric results to store output.
-    train_split: bool
+    train_split: bool, defaults = True
         Whether the metric results are for the training split or the test split.
+        Should be true if it is train split and false if test split.
     """
     for metric in metric_results:
         metric_name, metric_result = metric
@@ -333,5 +336,103 @@ def evaluate_results(
 
     return formatted_metric_results
 
-def read_evaluation_metric_results(path: str) -> List[MetricResults]:
-    pass
+def _default_format_reader(path: str) -> Tuple[str, str, str]:
+    """Default format reader.
+
+    Parameters
+    ----------
+    path: str
+        Path to result file.
+
+    Returns
+    -------
+    str
+        Estimator name.
+    str
+        Metric name.
+    str
+        Experiment name.
+    """
+    if 'Windows' in platform.platform():
+        split_subdir = path.split('\\')
+    else:
+        split_subdir = path.split('/')
+    metric_name = split_subdir[-1].split('.')[0]
+    split = split_subdir[-2]
+    estimator_name = split_subdir[-3]
+    return estimator_name, metric_name, split
+
+
+def read_evaluation_metric_results(
+        path: str,
+        name_metric_callable: Callable[[str], Tuple[str, str, str]] = None
+) -> List[MetricResults]:
+    """Read the evaluation metric results from a directory.
+
+    Each csv withing the path directory should be of them format:
+        | folds    | 0   | 1   | 2   | 3   | ... |
+        ------------------------------------------
+        | dataset1 | 0.0 | 0.0 | 0.0 | 0.0 | ... |
+        | dataset2 | 0.0 | 0.0 | 0.0 | 0.0 | ... |
+        | dataset3 | 0.0 | 0.0 | 0.0 | 0.0 | ... |
+        | dataset4 | 0.0 | 0.0 | 0.0 | 0.0 | ... |
+
+    Parameters
+    ----------
+    path: str
+        Path to a directory containing the results of an experiment. This directory
+        should contain csvs that are metrics analysis of a given estimator.
+    name_metric_callable: Callable[[str], str], defaults = None
+        Function that takes the path to a csv and should return the estimator name as
+        the first return value, the metric name as the second return value, and
+        the split (i.e.'test' or 'train') as the third. It is
+        up to you to define how the name and metric used is derived from the path to
+        the csv. If none is specified then the default reader that assumes the
+        standard format (i.e. created using evaluate_results) is used to derive the
+        name and metric.
+
+    Returns
+    -------
+    Returns
+    -------
+    List[Dict]
+        A list of metric results. Each metric will take the form:
+        {
+            'metric_name': str,
+            'test_estimator_results': [
+                {
+                    'estimator_name': str,
+                    'result': pd.DataFrame
+                },
+                {
+                    'estimator_name': str,
+                    'result': pd.DataFrame
+                }
+            ],
+            'train_estimator_results': [
+                {
+                    'estimator_name': str,
+                    'result': pd.DataFrame
+                },
+                {
+                    'estimator_name': str,
+                    'result': pd.DataFrame
+                }
+            ],
+        }
+    """
+    if name_metric_callable is None:
+        name_metric_callable = _default_format_reader
+
+    result_paths = read_metric_results(path)
+
+    metric_results: List[MetricResults] = []
+
+    for result in result_paths:
+        estimator_name, metric_name, split = name_metric_callable(result)
+        result_df = pd.read_csv(result)
+        _format_metric_results(
+            [(metric_name, result_df)], estimator_name, metric_results, split == 'train'
+        )
+    joe = ''
+
