@@ -99,10 +99,11 @@ if __name__ == "__main__":
         )
     else:  # Local run
         print(" Local Run")
-        data_dir = "../datasets/data/"
+        from root import ROOT_DIR
+        data_dir = ROOT_DIR+"/sktime_estimator_evaluation/datasets/data/"
         results_dir = "./temp/"
-        cls_name = "CNNClassifier"
-        classifier = CNNClassifier()
+        cls_name = "tsf"
+        classifier = set_classifier(cls_name)
         dataset = "UnitTest"
         resample = 0
         tf = False

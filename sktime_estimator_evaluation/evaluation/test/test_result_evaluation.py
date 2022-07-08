@@ -1,0 +1,39 @@
+from sktime_estimator_evaluation.evaluation.result_evaluation import (
+    evaluate_raw_results,
+    CLUSTER_METRIC_CALLABLES,
+    evaluate_metric_results
+)
+import platform
+
+def test_cluster_evaluation():
+    """Evaluate clustering results."""
+    result = evaluate_raw_results(
+        experiment_name='test',
+        path='ignore-results/',
+        output_dir='out/',
+        metrics=CLUSTER_METRIC_CALLABLES
+    )
+
+def test_classification_evaluation():
+    """Evaluate classification results."""
+    pass
+
+
+def test_read_evaluation_metric_results():
+    """Read evaluation metric results."""
+    clustering_results = evaluate_metric_results('./out/')
+
+    def custom_classification(path: str):
+        if 'Windows' in platform.platform():
+            split_subdir = path.split('\\')
+        else:
+            split_subdir = path.split('/')
+        metric_name = 'ACC'
+        file_name_split = split_subdir[-1].split('_')
+        estimator_name = file_name_split[0]
+        split = file_name_split[0].split('FOLDS')[0].lower()
+        return estimator_name, metric_name, split
+
+    classification_results = evaluate_metric_results(
+        '../../../results/', custom_classification
+    )
