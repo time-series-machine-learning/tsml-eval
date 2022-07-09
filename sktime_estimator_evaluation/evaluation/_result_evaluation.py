@@ -3,7 +3,7 @@ import os
 import platform
 
 import pandas as pd
-from sktime_estimator_evaluation.evaluation.utils import (
+from sktime_estimator_evaluation.evaluation._utils import (
     resolve_experiment_paths,
     Experiment,
     MetricCallable,

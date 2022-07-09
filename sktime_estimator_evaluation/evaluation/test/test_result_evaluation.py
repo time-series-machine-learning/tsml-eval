@@ -1,4 +1,4 @@
-from sktime_estimator_evaluation.evaluation.result_evaluation import (
+from sktime_estimator_evaluation.evaluation._result_evaluation import (
     evaluate_raw_results,
     CLUSTER_METRIC_CALLABLES,
     evaluate_metric_results
