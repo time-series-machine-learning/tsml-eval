@@ -38,8 +38,8 @@ def test_read_evaluation_metric_results():
         '../../../results/', custom_classification
     )
 
-    from sktime_estimator_evaluation.evaluation.diagrams._critical_difference_diagram import create_critical_difference_diagram
+    from sktime_estimator_evaluation.evaluation.diagrams._critical_difference_diagram import critical_difference_diagram
 
     # create_critical_difference_diagram(classification_results)
-    create_critical_difference_diagram(clustering_results)
+    critical_difference_diagram(clustering_results)
     joe = ''

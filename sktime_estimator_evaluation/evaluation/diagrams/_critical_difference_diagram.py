@@ -19,7 +19,7 @@ warnings.filterwarnings(
 )  # Hide warnings that can generate and clutter notebook
 
 
-def create_critical_difference_diagram(
+def critical_difference_diagram(
     metric_results: Union[pd.DataFrame, List[MetricResults]],
     output_path=None,
     title=None,

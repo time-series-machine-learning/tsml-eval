@@ -1,6 +1,6 @@
+import itertools
 import os.path
 from typing import Union, List
-from itertools import combinations
 
 import numpy as np
 import pandas as pd
@@ -10,10 +10,11 @@ from sktime_estimator_evaluation.evaluation import MetricResults
 from sktime_estimator_evaluation.evaluation.diagrams._utils import metric_result_to_df
 
 
-def create_scatter_diagram(
+def scatter_diagram(
         metric_results: Union[pd.DataFrame, List[MetricResults]],
         output_path=None,
-        compare_estimator_columns: List[str] = None,
+        compare_estimators_from: List[str] = None,
+        compare_estimators_to: List[str] = None,
         compare_dataset_columns: List[str] = None,
         compare_metric_columns: List[str] = None,
         top_half_color: str = "turquoise",
@@ -45,9 +46,18 @@ def create_scatter_diagram(
     output_path: str, defaults = None
         String that is the path to output the figure. If not specified then figure
         isn't written
-    compare_estimator_columns: List[str], defaults = None
+    compare_estimators_from: List[str], defaults = None
+        List of strings that specify which estimators you want to compare from. If
+        left as None, all estimators are compared from.
+    compare_estimators_to: List[str], defaults = None
         List of strings that specify which estimators you want to compare to. If
-        left as None, all estimators are compared.
+        left as None, all estimators are compared to.
+    compare_dataset_columns: List[str], defaults = None
+        List of strings that specify which datasets you want to compare to. If
+        left as None, all datasets are compared.
+    compare_metric_columns: List[str], defaults = None
+        List of strings that specify which metrics you want to compare to. If
+        left as None, all metrics are compared.
     top_half_color: str, defaults = '0.0'
         The matplotlib color of the top half shaded in.
     top_half_alpha: float, defaults = 0.5
@@ -75,8 +85,11 @@ def create_scatter_diagram(
     """
     df = metric_result_to_df(metric_results)
     all_estimator = list(set(df["estimator"]))
-    if compare_estimator_columns is None:
-        compare_estimator_columns = all_estimator
+    if compare_estimators_from is None:
+        compare_estimators_from = all_estimator
+
+    if compare_estimators_to is None:
+        compare_estimators_to = all_estimator
 
     if compare_dataset_columns is None:
         compare_dataset_columns = list(set(df["dataset"]))
@@ -90,7 +103,9 @@ def create_scatter_diagram(
 
     figures = []
 
-    for comb in combinations(compare_estimator_columns, 2):
+    for comb in itertools.product(compare_estimators_from, compare_estimators_to):
+        if comb[0] == comb[1]:
+            continue
         curr_compare_to_scores = df[df["estimator"] == comb[0]]
         curr_compare_against_scores = df[df["estimator"] == comb[1]]
         compare_df = pd.concat([curr_compare_to_scores, curr_compare_against_scores])
@@ -186,6 +201,7 @@ def _plot_scatter_diagram(
 
             index_zero = float(
                 curr_metric_df[curr_metric_df['estimator'] == estimators[0]][metric])
+
             index_one = float(
                 curr_metric_df[curr_metric_df['estimator'] == estimators[1]][metric])
 
