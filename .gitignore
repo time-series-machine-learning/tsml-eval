@@ -128,3 +128,9 @@ dmypy.json
 # Pyre type checker
 .pyre/
 /sktime_estimator_evaluation/experiments/temp/
+
+# Testing result and output
+out/
+ignore-results/
+
+.DS_Store
