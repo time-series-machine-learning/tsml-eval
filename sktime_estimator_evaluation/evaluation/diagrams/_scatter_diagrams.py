@@ -6,9 +6,12 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+from sktime_estimator_evaluation.evaluation import MetricResults
+from sktime_estimator_evaluation.evaluation.diagrams._utils import metric_result_to_df
+
 
 def create_scatter_diagram(
-        df: pd.DataFrame,
+        metric_results: Union[pd.DataFrame, List[MetricResults]],
         output_path=None,
         compare_estimator_columns: List[str] = None,
         compare_dataset_columns: List[str] = None,
@@ -27,10 +30,11 @@ def create_scatter_diagram(
 
     Parameters
     ----------
-    df: pd.DataFrame
-        The data frame should have three columns index 0 should be the estimators
-        names, index 1 should be the dataset and index 3 and onwards should be the
-         estimators metric scored for the datasets. For examples:
+    metric_results: pd.DataFrame or List[MetricResults]
+        If a List[MetricResults] is passed, then it is formatted to correct DF. If a
+        data frame is passed it should have three columns index 0 should be the
+        estimator names, index 1 should be the dataset and index 3 and onwards should
+        be the estimators metric scored for the datasets. For examples:
         ----------------------------------
         | estimator | dataset | metric1  | metric2 |
         | cls1      | data1   | 1.2      | 1.2     |
@@ -69,6 +73,7 @@ def create_scatter_diagram(
         If more than one metric passed then a list of critical difference diagram
         figures is return else plt.Figure is returned.
     """
+    df = metric_result_to_df(metric_results)
     all_estimator = list(set(df["estimator"]))
     if compare_estimator_columns is None:
         compare_estimator_columns = all_estimator

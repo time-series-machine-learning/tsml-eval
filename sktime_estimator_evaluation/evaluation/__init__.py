@@ -16,7 +16,8 @@ __all__ = [
     'EstimatorMetricResults',
     'read_metric_results',
     'extract_estimator_experiment',
-    'resolve_experiment_paths'
+    'resolve_experiment_paths',
+    'metric_result_to_summary'
 ]
 
 from sktime_estimator_evaluation.evaluation.result_evaluation import (
@@ -38,7 +39,8 @@ from sktime_estimator_evaluation.evaluation.utils import (
     EstimatorMetricResults,
     read_metric_results,
     extract_estimator_experiment,
-    resolve_experiment_paths
+    resolve_experiment_paths,
+    metric_result_to_summary
 )
 
 

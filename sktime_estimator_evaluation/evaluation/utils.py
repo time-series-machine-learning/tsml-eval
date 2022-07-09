@@ -490,3 +490,76 @@ def read_metric_results(path: str) -> List[str]:
                     test.append(join(subdir, file))
 
     return test
+
+
+def metric_result_to_summary(result: List[MetricResults]) -> pd.DataFrame:
+    """Convert metric result to data frame of the format:
+        ----------------------------------
+        | estimator | dataset | metric1  | metric2 |
+        | cls1      | data1   | 1.2      | 1.2     |
+        | cls2      | data2   | 3.4      | 1.4     |
+        | cls1      | data2   | 1.4      | 1.3     |
+        | cls2      | data1   | 1.3      | 1.2     |
+        ----------------------------------
+
+    Parameters
+    ----------
+    result: List[MetricResults]
+        Metric results to convert.
+
+    Returns
+    -------
+    pd.DataFrame
+        Data frame with metric results converted. This will be of the format:
+        ----------------------------------
+        | estimator | dataset | metric1  | metric2 |
+        | cls1      | data1   | 1.2      | 1.2     |
+        | cls2      | data2   | 3.4      | 1.4     |
+        | cls1      | data2   | 1.4      | 1.3     |
+        | cls2      | data1   | 1.3      | 1.2     |
+        ----------------------------------
+    """
+    column_headers = ['estimator', 'dataset']
+    temp_dict = {}
+
+    for metric_result in result:
+        curr_metric = metric_result['metric_name']
+        column_headers.append(curr_metric)
+
+        for test_result in metric_result['test_estimator_results']:
+            curr_estimator = test_result['estimator_name']
+            data = test_result['result'].copy()
+
+            dataset_col = list(data[data.columns[0]][0:])
+
+            del data[data.columns[0]]
+            data = data.mean(axis=1)
+
+            estimator_col = [curr_estimator] * (len(dataset_col))
+
+            curr_df = pd.DataFrame(
+                [estimator_col, dataset_col, data],
+            ).T
+
+            for index, row in curr_df.iterrows():
+                name = f'{row[0]}:::{row[1]}'
+                if name not in temp_dict:
+                    temp_dict[name] = []
+                temp_dict[name].append((curr_metric, row[2]))
+
+    df_list = []
+
+    for key, value in temp_dict.items():
+        estimator_name, dataset_name = key.split(':::')
+        row = [estimator_name, dataset_name]
+        for metric_name in column_headers[2:]:
+            for metric in value:
+                curr_metric = metric[0]
+                if metric_name == curr_metric:
+                    metric_value = metric[1]
+                    row.append(metric_value)
+                    break
+        df_list.append(row)
+
+    df = pd.DataFrame(df_list, columns=column_headers)
+    return df

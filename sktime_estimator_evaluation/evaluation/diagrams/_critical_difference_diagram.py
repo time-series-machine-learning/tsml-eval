@@ -11,13 +11,16 @@ import numpy as np
 import pandas as pd
 from scipy.stats import friedmanchisquare, wilcoxon
 
+from sktime_estimator_evaluation.evaluation import MetricResults
+from sktime_estimator_evaluation.evaluation.diagrams._utils import metric_result_to_df
+
 warnings.filterwarnings(
     "ignore"
 )  # Hide warnings that can generate and clutter notebook
 
 
 def create_critical_difference_diagram(
-    df,
+    metric_results: Union[pd.DataFrame, List[MetricResults]],
     output_path=None,
     title=None,
     alpha: float = 0.05,
@@ -32,10 +35,11 @@ def create_critical_difference_diagram(
 
     Parameters
     ----------
-    df: pd.DataFrame
-        The data frame should have three columns index 0 should be the estimators
-        names, index 1 should be the dataset and index 3 and onwards should be the
-         estimators metric scored for the datasets. For examples:
+    metric_results: pd.DataFrame or List[MetricResults]
+        If a List[MetricResults] is passed, then it is formatted to correct DF. If a
+        data frame is passed it should have three columns index 0 should be the
+        estimator names, index 1 should be the dataset and index 3 and onwards should
+        be the estimators metric scored for the datasets. For examples:
         ----------------------------------
         | estimator | dataset | metric1  | metric2 |
         | cls1      | data1   | 1.2      | 1.2     |
@@ -72,7 +76,7 @@ def create_critical_difference_diagram(
         If more than one metric passed then a list of critical difference diagram
         figures is return else plt.Figure is returned.
     """
-    df = _check_df(df)
+    df = metric_result_to_df(metric_results)
     num_metrics = len(df.columns) - 2
     figures = []
     for i in range(2, num_metrics + 2):
@@ -114,31 +118,6 @@ def create_critical_difference_diagram(
         return figures[0]
     return figures
 
-def _check_df(df: pd.DataFrame) -> pd.DataFrame:
-    """Check if data frame is valid.
-
-    Parameters
-    ----------
-    df: pd.DataFrame
-        Data frame to check.
-
-    Returns
-    -------
-    pd.DataFrame
-        Validated dataframe
-    """
-    datasets = (df.iloc[:, 1]).unique()
-    num_datasets = len(datasets)
-    estimators = (df.iloc[:, 0]).unique()
-    for estimator in estimators:
-        curr = df[df.iloc[:, 0] == estimator]
-        if len(curr.iloc[:, 1]) != num_datasets:
-            warnings.warn(
-                f"Number of datasets for estimator {estimator} is not equal to "
-                f"number of datasets in dataframe. Removing {estimator} from dataframe."
-            )
-            df = df[df.iloc[:, 0] != estimator]
-    return df
 
 def _find_edges(graph: List[List[int]]) -> List[Tuple]:
     """Find edges of a graph.
