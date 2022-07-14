@@ -142,18 +142,19 @@ def fetch_classifier_metric(
         return result.to_numpy()
 
     return result
-# if __name__ == '__main__':
-#     metric = 'ACC'
-#     datasets = ["Chinatown", "ItalyPowerDemand"]
-#     classifiers = ["HC2", "InceptionTime", "ROCKET"]
-#     res = fetch_classifier_metric('ACC', classifiers, datasets, 6)
-#     res_np = fetch_classifier_metric('ACC', classifiers, datasets, 6, return_numpy=True)
-#     res_dataset = fetch_classifier_metric('ACC', classifiers, folds=6, summary_format=False)
-#     res_dataset_np = fetch_classifier_metric('ACC', classifiers, datasets, 6, return_numpy=True, summary_format=False)
-#
-#
-#
-#
+if __name__ == '__main__':
+    metric = 'ACC'
+    datasets = ["Chinatown", "ItalyPowerDemand"]
+    classifiers = ["HC2", "InceptionTime", "ROCKET"]
+    res = fetch_classifier_metric('ACC', classifiers, datasets, 6)
+    joe = ''
+    # res_np = fetch_classifier_metric('ACC', classifiers, datasets, 6, return_numpy=True)
+    # res_dataset = fetch_classifier_metric('ACC', classifiers, folds=6, summary_format=False)
+    # res_dataset_np = fetch_classifier_metric('ACC', classifiers, datasets, 6, return_numpy=True, summary_format=False)
+
+
+
+
 
 
 

@@ -1,4 +1,6 @@
 from typing import Union, List
+
+import numpy as np
 import pandas as pd
 import warnings
 

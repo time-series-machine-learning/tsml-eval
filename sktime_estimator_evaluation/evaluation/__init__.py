@@ -17,7 +17,9 @@ __all__ = [
     'read_metric_results',
     'extract_estimator_experiment',
     'resolve_experiment_paths',
-    'metric_result_to_summary'
+    'metric_result_to_summary',
+    'from_metric_dataset_format_to_metric_summary',
+    'from_metric_summary_to_dataset_format',
 ]
 
 from sktime_estimator_evaluation.evaluation._result_evaluation import (
@@ -40,7 +42,9 @@ from sktime_estimator_evaluation.evaluation._utils import (
     read_metric_results,
     extract_estimator_experiment,
     resolve_experiment_paths,
-    metric_result_to_summary
+    metric_result_to_summary,
+    from_metric_dataset_format_to_metric_summary,
+    from_metric_summary_to_dataset_format
 )
 from sktime_estimator_evaluation.evaluation._bulit_in_evaluation import (
     fetch_classifier_metric

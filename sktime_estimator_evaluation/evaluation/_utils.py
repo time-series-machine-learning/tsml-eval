@@ -1,5 +1,6 @@
 from typing import List, TypedDict, Callable, Tuple, Dict, Union
 import os
+import numpy as np
 from os.path import abspath, join
 from csv import reader
 from operator import itemgetter
@@ -563,3 +564,109 @@ def metric_result_to_summary(result: List[MetricResults]) -> pd.DataFrame:
 
     df = pd.DataFrame(df_list, columns=column_headers)
     return df
+
+def from_metric_summary_to_dataset_format(
+        summary_format: pd.DataFrame,
+        return_numpy: np.ndarray = False
+) -> Union[pd.DataFrame, np.ndarray, List[pd.DataFrame], List[np.ndarray]]:
+    """Converts summary format to dataset format.
+
+    Parameters
+    ----------
+    summary_format: pd.DataFrame
+        Summary format dataframe.
+
+    Returns
+    -------
+    Union[pd.DataFrame, np.ndarray, List[pd.DataFrame], List[np.ndarray]]:
+        Dataset formatted data. If multiple metrics will return list if only one then
+        only that is returned.
+    """
+    metrics = list(set(summary_format.columns[2:]))
+    datasets = list(summary_format['dataset'].unique())
+    classifiers = list(summary_format['estimator'].unique())
+
+    return_result = []
+    for curr_metric in metrics:
+        metric_index = summary_format.columns.get_loc(curr_metric)
+        columns = ['Problem'] + classifiers
+        rows = []
+        for dataset in datasets:
+            rows.append([dataset] + ([None] * len(classifiers)))
+
+        for i in range(len(classifiers)):
+            estimator = classifiers[i]
+            curr_df = summary_format[summary_format['estimator'] == estimator]
+            for j in range(len(datasets)):
+                curr_dataset = datasets[j]
+                curr_metric = curr_df[curr_df['dataset'] == datasets[j]]
+                try:
+                    curr_res = curr_metric.iloc[0, metric_index]
+                except:
+                    continue
+
+                rows[j][i + 1] = curr_res
+        curr = pd.DataFrame(rows, columns=columns)
+        if return_numpy is True:
+            temp = curr.to_numpy()
+            col_header = np.array([curr.columns.to_numpy()])
+            return_result.append(np.concatenate((col_header, temp), axis=0))
+        else:
+            return_result.append(curr)
+
+    if len(return_result) == 1:
+        return return_result[0]
+    return return_result
+
+def from_metric_dataset_format_to_metric_summary(
+        summary_format: pd.DataFrame,
+        return_numpy: np.ndarray = False
+) -> Union[pd.DataFrame, np.ndarray, List[pd.DataFrame], List[np.ndarray]]:
+    """Converts summary format to dataset format.
+
+    Parameters
+    ----------
+    summary_format: pd.DataFrame
+        Summary format dataframe.
+
+    Returns
+    -------
+    Union[pd.DataFrame, np.ndarray, List[pd.DataFrame], List[np.ndarray]]:
+        Dataset formatted data. If multiple metrics will return list if only one then
+        only that is returned.
+    """
+    metrics = list(set(summary_format.columns[2:]))
+    datasets = list(summary_format['dataset'].unique())
+    classifiers = list(summary_format['estimator'].unique())
+
+    return_result = []
+    for curr_metric in metrics:
+        metric_index = summary_format.columns.get_loc(curr_metric)
+        columns = ['Problem'] + classifiers
+        rows = []
+        for dataset in datasets:
+            rows.append([dataset] + ([None] * len(classifiers)))
+
+        for i in range(len(classifiers)):
+            estimator = classifiers[i]
+            curr_df = summary_format[summary_format['estimator'] == estimator]
+            for j in range(len(datasets)):
+                curr_dataset = datasets[j]
+                curr_metric = curr_df[curr_df['dataset'] == datasets[j]]
+                try:
+                    curr_res = curr_metric.iloc[0, metric_index]
+                except:
+                    continue
+
+                rows[j][i + 1] = curr_res
+        curr = pd.DataFrame(rows, columns=columns)
+        if return_numpy is True:
+            temp = curr.to_numpy()
+            col_header = np.array([curr.columns.to_numpy()])
+            return_result.append(np.concatenate((col_header, temp), axis=0))
+        else:
+            return_result.append(curr)
+
+    if len(return_result) == 1:
+        return return_result[0]
+    return return_result
