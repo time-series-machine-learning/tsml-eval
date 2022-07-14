@@ -6,6 +6,7 @@ from sktime.transformations.panel.catch22 import Catch22
 from sktime.datasets import load_arrow_head
 from sktime.datasets import load_UCR_UEA_dataset
 from sktime_estimator_evaluation.evaluation import fetch_classifier_metric
+from sktime_estimator_evaluation.evaluation.diagrams import scatter_diagram, critical_difference_diagram
 
 import numpy as np
 
@@ -48,20 +49,30 @@ def ucr_datasets(classifier, examples):
     return scores
 
 
-examples = ["Chinatown", "ItalyPowerDemand","BeetleFly","Adiac"]
-#freshPrince = FreshPRINCE()
-#acc = ucr_datasets(freshPrince, examples)
+examples = ["Chinatown", "ItalyPowerDemand", "BeetleFly", "Adiac"]
+# freshPrince = FreshPRINCE()
+# acc = ucr_datasets(freshPrince, examples)
 results = [0.9, 0.8, 0.7, 0.6]
 names = ["FreshPrince"]
 others = ["HC2", "InceptionTime", "ROCKET"]
-other_accs = fetch_classifier_metric(
+other_accs_df = fetch_classifier_metric(
     metrics=['ACC'],
     datasets=examples,
     classifiers=others,
     folds=1,
-    summary_format=False,
-    return_numpy=True
 )
+for res in zip(examples, results):
+    other_accs_df.loc[len(other_accs_df)] = ['FreshPrince', res[0], res[1]]
+cd = critical_difference_diagram(other_accs_df)
+scatters = scatter_diagram(
+    other_accs_df,
+    compare_estimators_from=['FreshPrince'],
+)
+
+cd.show()
+
+for scatter in scatters:
+    scatter.show()
 
 #Combine results and other_accs into one CD
 
