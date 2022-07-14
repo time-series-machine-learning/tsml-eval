@@ -48,9 +48,11 @@ def ucr_datasets(classifier, examples):
     return scores
 
 
-examples = ["Chinatown", "ItalyPowerDemand"]
-freshPrince = FreshPRINCE()
-acc = ucr_datasets(freshPrince, examples)
+examples = ["Chinatown", "ItalyPowerDemand","BeetleFly","Adiac"]
+#freshPrince = FreshPRINCE()
+#acc = ucr_datasets(freshPrince, examples)
+results = [0.9, 0.8, 0.7, 0.6]
+names = ["FreshPrince"]
 others = ["HC2", "InceptionTime", "ROCKET"]
 other_accs = fetch_classifier_metric(
     metrics=['ACC'],
@@ -60,6 +62,9 @@ other_accs = fetch_classifier_metric(
     summary_format=False,
     return_numpy=True
 )
+
+#Combine results and other_accs into one CD
+
 # print as a table
 
 # Make your own Pipeline
