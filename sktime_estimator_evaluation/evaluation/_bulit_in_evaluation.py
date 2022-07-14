@@ -20,9 +20,9 @@ def _resolve_to_list(x: ListOrString) -> List[str]:
     return x
 
 def fetch_classifier_metric(
-        metrics: ListOrString,
-        classifiers: ListOrString,
-        datasets: ListOrString,
+        metrics: ListOrString = None,
+        classifiers: ListOrString = None,
+        datasets: ListOrString = None,
         folds = 30,
         summary_format: bool = True,
         return_numpy: bool = False,
@@ -31,12 +31,12 @@ def fetch_classifier_metric(
 
     Parameters
     ----------
-    metric: str
-        The metric to fetch.
-    classifiers: str or list of str
-        The classifier to fetch the metric for.
-    datasets: str or list of str
-        The dataset to fetch the metric for.
+    metric: str, defaults = None
+        The metric to fetch. If None then all metrics are used.
+    classifiers: str or list of str, defaults = None
+        The classifier to fetch the metric for. If None then all classifiers used
+    datasets: str or list of str, defaults = None
+        The dataset to fetch the metric for. If None then all datasets used
     folds: int
         The number of folds to use for the evaluation. NOTE: folds are 0 indexing
         so if you ask for '6' youll get folds 0-5 (i.e. 6 folds).
@@ -46,9 +46,7 @@ def fetch_classifier_metric(
     return_numpy: bool, default=False
         If True, return a numpy array. If False, return a pandas df.
     """
-    metrics = _resolve_to_list(metrics)
-    datasets = _resolve_to_list(datasets)
-    classifiers = _resolve_to_list(classifiers)
+
 
     def custom_classification(path: str):
         # Check os to determine split value
@@ -65,6 +63,22 @@ def fetch_classifier_metric(
     classification_results = evaluate_metric_results(
         PATH_TO_CLASSIFICATION_RESULTS, custom_classification
     )
+
+    summary_results = metric_result_to_summary(classification_results)
+
+    if metrics is None:
+        metrics = list(set(summary_results.columns[2:]))
+
+    if datasets is None:
+        datasets = list(summary_results['dataset'].unique())
+
+    if classifiers is None:
+        classifiers = list(summary_results['estimator'].unique())
+
+
+    metrics = _resolve_to_list(metrics)
+    datasets = _resolve_to_list(datasets)
+    classifiers = _resolve_to_list(classifiers)
 
 
     temp = []
@@ -104,8 +118,13 @@ def fetch_classifier_metric(
                 estimator = classifiers[i]
                 curr_df = result[result['estimator'] == estimator]
                 for j in range(len(datasets)):
+                    curr_dataset = datasets[j]
                     curr_metric = curr_df[curr_df['dataset'] == datasets[j]]
-                    curr_res = curr_metric.iloc[0, metric_index]
+                    try:
+                        curr_res = curr_metric.iloc[0, metric_index]
+                    except:
+                        continue
+
                     rows[j][i + 1] = curr_res
             curr = pd.DataFrame(rows, columns=columns)
             if return_numpy is True:
@@ -123,19 +142,18 @@ def fetch_classifier_metric(
         return result.to_numpy()
 
     return result
-
 # if __name__ == '__main__':
 #     metric = 'ACC'
 #     datasets = ["Chinatown", "ItalyPowerDemand"]
 #     classifiers = ["HC2", "InceptionTime", "ROCKET"]
 #     res = fetch_classifier_metric('ACC', classifiers, datasets, 6)
 #     res_np = fetch_classifier_metric('ACC', classifiers, datasets, 6, return_numpy=True)
-#     res_dataset = fetch_classifier_metric('ACC', classifiers, datasets, 6, summary_format=False)
+#     res_dataset = fetch_classifier_metric('ACC', classifiers, folds=6, summary_format=False)
 #     res_dataset_np = fetch_classifier_metric('ACC', classifiers, datasets, 6, return_numpy=True, summary_format=False)
 #
-
-
-
+#
+#
+#
 
 
 
