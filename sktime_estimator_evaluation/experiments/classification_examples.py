@@ -1,8 +1,11 @@
 # Simple usages for building classifiers
 
 from sktime.classification.feature_based import FreshPRINCE
+from sktime.classification.compose import ClassifierPipeline
+from sktime.transformations.panel.catch22 import Catch22
 from sktime.datasets import load_arrow_head
 from sktime.datasets import load_UCR_UEA_dataset
+
 import numpy as np
 
 def basic_usage():
@@ -33,20 +36,24 @@ def basic_usage():
     s = freshPrince.score(arrow_test_X, arrow_test_y)
     print(" Score  = ", s)
 
-def ucr_datasets(examples):
-    freshPrince = FreshPRINCE()
+def ucr_datasets(classifier, examples):
     scores = np.zeros(len(examples))
     for i in range(0, len(examples)):
         train_X, train_y = load_UCR_UEA_dataset(examples[i], split="TRAIN")
         test_X, test_y = load_UCR_UEA_dataset(examples[i], split="TEST")
-        freshPrince.fit(train_X, train_y)
-        scores[i] = freshPrince.score(test_X, test_y)
+        classifier.fit(train_X, train_y)
+        scores[i] = classifier.score(test_X, test_y)
         print(" problem ", examples[i], " accuracy = ",scores[i])
     return scores
 
 
 examples = ["Chinatown", "ItalyPowerDemand"]
-acc = ucr_datasets(examples)
+freshPrince = FreshPRINCE()
+acc = ucr_datasets(freshPrince, examples)
 others = ["HC2", "InceptionTime", "ROCKET"]
-other_accs = fetch_accs(examples,acc, others)
+other_accs = fetch_accs(examples, others)
 # print as a table
+
+# Make your own Pipeline
+#summarytStats = Catch22
+#ClassifierPipeline p =
