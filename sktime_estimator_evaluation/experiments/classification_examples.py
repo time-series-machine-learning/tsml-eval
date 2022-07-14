@@ -5,6 +5,7 @@ from sktime.classification.compose import ClassifierPipeline
 from sktime.transformations.panel.catch22 import Catch22
 from sktime.datasets import load_arrow_head
 from sktime.datasets import load_UCR_UEA_dataset
+from sktime_estimator_evaluation.evaluation import fetch_classifier_metric
 
 import numpy as np
 
@@ -51,7 +52,12 @@ examples = ["Chinatown", "ItalyPowerDemand"]
 freshPrince = FreshPRINCE()
 acc = ucr_datasets(freshPrince, examples)
 others = ["HC2", "InceptionTime", "ROCKET"]
-other_accs = fetch_accs(examples, others)
+other_accs = fetch_classifier_metric(
+    metrics=['ACC'],
+    datasets=examples,
+    classifiers=others,
+    folds=1
+)
 # print as a table
 
 # Make your own Pipeline

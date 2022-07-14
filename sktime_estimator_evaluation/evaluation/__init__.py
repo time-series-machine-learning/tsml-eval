@@ -42,5 +42,6 @@ from sktime_estimator_evaluation.evaluation._utils import (
     resolve_experiment_paths,
     metric_result_to_summary
 )
-
-
+from sktime_estimator_evaluation.evaluation._bulit_in_evaluation import (
+    fetch_classifier_metric
+)
