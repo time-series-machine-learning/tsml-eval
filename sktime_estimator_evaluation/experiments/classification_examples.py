@@ -46,5 +46,7 @@ def ucr_datasets(examples):
 
 
 examples = ["Chinatown", "ItalyPowerDemand"]
-scores = ucr_datasets()
-
+acc = ucr_datasets(examples)
+others = ["HC2", "InceptionTime", "ROCKET"]
+other_accs = fetch_accs(examples,acc, others)
+# print as a table
