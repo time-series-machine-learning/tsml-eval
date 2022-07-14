@@ -2,8 +2,13 @@ from typing import List, Union
 import platform
 
 import pandas as pd
+import numpy as np
 
-from sktime_estimator_evaluation.evaluation import evaluate_metric_results
+from sktime_estimator_evaluation.evaluation import (
+    evaluate_metric_results,
+    MetricResults,
+    metric_result_to_summary
+)
 
 ListOrString = Union[List[str], str]
 
@@ -18,8 +23,10 @@ def fetch_classifier_metric(
         metrics: ListOrString,
         classifiers: ListOrString,
         datasets: ListOrString,
-        folds = 30
-) -> List[pd.DataFrame]:
+        folds = 30,
+        summary_format: bool = True,
+        return_numpy: bool = False,
+) -> Union[pd.DataFrame, List[pd.DataFrame], np.ndarray, List[np.ndarray]]:
     """Fetch the metric for a classifier over a dataset.
 
     Parameters
@@ -33,6 +40,11 @@ def fetch_classifier_metric(
     folds: int
         The number of folds to use for the evaluation. NOTE: folds are 0 indexing
         so if you ask for '6' youll get folds 0-5 (i.e. 6 folds).
+    summary_format: bool, default=True
+        If True, return a summary of the metric. If False, return dataset formatted
+        df
+    return_numpy: bool, default=False
+        If True, return a numpy array. If False, return a pandas df.
     """
     metrics = _resolve_to_list(metrics)
     datasets = _resolve_to_list(datasets)
@@ -54,31 +66,73 @@ def fetch_classifier_metric(
         PATH_TO_CLASSIFICATION_RESULTS, custom_classification
     )
 
+
     temp = []
     for metric in metrics:
+        curr_metric_result: MetricResults = {
+            'metric_name': metric,
+            'test_estimator_results': [],
+            'train_estimator_results': []
+        }
         for result in classification_results:
             if result['metric_name'] == metric:
                 for estimator_result in result['test_estimator_results']:
-                    uno = ''
                     for classifier in classifiers:
-                        dose = ''
                         if classifier == estimator_result['estimator_name']:
-                            tres = ''
                             df = estimator_result['result']
                             curr = df[df[df.columns[0]].isin(datasets)]
                             curr = curr.iloc[:, 0:folds+1]
-                            temp.append(curr)
+                            curr_metric_result['test_estimator_results'].append({'estimator_name': classifier, 'result': curr})
                             break
 
                 break
-    return temp
+        temp.append(curr_metric_result)
 
-if __name__ == '__main__':
-    metric = 'ACC'
-    datasets = ["Chinatown", "ItalyPowerDemand"]
-    classifiers = ["HC2", "InceptionTime", "ROCKET"]
-    fetch_classifier_metric('ACC', classifiers, datasets, 6)
+    result = metric_result_to_summary(temp)
 
+    if summary_format is False:
+        return_result = []
+
+        for curr_metric in metrics:
+            metric_index = result.columns.get_loc(curr_metric)
+            columns = ['Problem'] + classifiers
+            rows = []
+            for dataset in datasets:
+                rows.append([dataset] + ([None] * len(classifiers)))
+
+            for i in range(len(classifiers)):
+                estimator = classifiers[i]
+                curr_df = result[result['estimator'] == estimator]
+                for j in range(len(datasets)):
+                    curr_metric = curr_df[curr_df['dataset'] == datasets[j]]
+                    curr_res = curr_metric.iloc[0, metric_index]
+                    rows[j][i + 1] = curr_res
+            curr = pd.DataFrame(rows, columns=columns)
+            if return_numpy is True:
+                temp = curr.to_numpy()
+                col_header = np.array([curr.columns.to_numpy()])
+                return_result.append(np.concatenate((col_header, temp), axis=0))
+            else:
+                return_result.append(curr)
+
+        if len(return_result) == 1:
+            return return_result[0]
+        return return_result
+
+    if return_numpy is True:
+        return result.to_numpy()
+
+    return result
+
+# if __name__ == '__main__':
+#     metric = 'ACC'
+#     datasets = ["Chinatown", "ItalyPowerDemand"]
+#     classifiers = ["HC2", "InceptionTime", "ROCKET"]
+#     res = fetch_classifier_metric('ACC', classifiers, datasets, 6)
+#     res_np = fetch_classifier_metric('ACC', classifiers, datasets, 6, return_numpy=True)
+#     res_dataset = fetch_classifier_metric('ACC', classifiers, datasets, 6, summary_format=False)
+#     res_dataset_np = fetch_classifier_metric('ACC', classifiers, datasets, 6, return_numpy=True, summary_format=False)
+#
 
 
 

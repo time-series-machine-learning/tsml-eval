@@ -56,7 +56,9 @@ other_accs = fetch_classifier_metric(
     metrics=['ACC'],
     datasets=examples,
     classifiers=others,
-    folds=1
+    folds=1,
+    summary_format=False,
+    return_numpy=True
 )
 # print as a table
 
