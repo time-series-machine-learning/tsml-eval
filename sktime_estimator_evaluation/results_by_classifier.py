@@ -34,8 +34,7 @@ def get_single_classifier_results(classifier, root=ROOT_DIR, package="tsml"):
 
 
 def get_classifier_results(classifiers, datasets, resample=0, root=ROOT_DIR,
-                           package =
-"tsml"):
+                           package ="tsml"):
     """Collate results for classifiers over problems.
 
     given lists of n datasets and m classifiers, form an n by m array of accuracies,
