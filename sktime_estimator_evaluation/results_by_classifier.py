@@ -60,7 +60,9 @@ def get_classifier_results(classifiers, datasets, resample=0, root=ROOT_DIR,
         prob_index = prob_index+1
     return results
 
-#r=get_single_classifier_results("ROCKET")
+
+
+#r=get_single_classifier_results_from_web("ROCKET")
 #print(r["ItalyPowerDemand"][0])
 #print(r["Yoga"][0])
 #cls = ["ROCKET", "Arsenal"]
