@@ -12,6 +12,35 @@ valid_multi_classifiers = [
     "CBOSS", "CIF", "DTW_A", "DTW_D", "DTW_I", "gRSF", "InceptionTime","mrseql",
     "MUSE","ResNet","RISE","ROCKET","STC","TapNet","TSF"
 ]
+"""26 equal length multivariate time series classification problems [4]"""
+multivariate_equal_length = [
+    "ArticularyWordRecognition",
+    "AtrialFibrillation",
+    "BasicMotions",
+    "Cricket",
+    "DuckDuckGeese",
+    "EigenWorms",
+    "Epilepsy",
+    "EthanolConcentration",
+    "ERing",
+    "FaceDetection",
+    "FingerMovements",
+    "HandMovementDirection",
+    "Handwriting",
+    "Heartbeat",
+    "Libras",
+    "LSST",
+    "MotorImagery",
+    "NATOPS",
+    "PenDigits",
+    "PEMS-SF",
+    "PhonemeSpectra",
+    "RacketSports",
+    "SelfRegulationSCP1",
+    "SelfRegulationSCP2",
+    "StandWalkJump",
+    "UWaveGestureLibrary",
+]
 
 
 def get_single_classifier_results(classifier, root=ROOT_DIR, package="tsml", type="Univariate"):
@@ -130,3 +159,8 @@ def get_averaged_results_from_web(datasets, classifiers, start=0, end=1,
             data_index = data_index + 1
         cls_index = cls_index + 1
     return results
+
+fold_zero = get_averaged_results_from_web(multivariate_equal_length,
+                                          valid_multi_classifiers)
+averages = get_averaged_results_from_web(multivariate_equal_length,
+                                          valid_multi_classifiers, end=30)
