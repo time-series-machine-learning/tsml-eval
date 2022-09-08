@@ -9,8 +9,8 @@ valid_uni_classifiers =[
     "TS-CHIEF","TSF","WEASEL"
 ]
 valid_multi_classifiers = [
-    "CBOSS", "CIF", "DTW_A", "DTW_D", "DTW_I", "gRSF", "InceptionTime","mrseql",
-    "MUSE","ResNet","RISE","ROCKET","STC","TapNet","TSF"
+    "Arsenal","CBOSS", "CIF", "DrCIF","DTW_A", "DTW_D", "DTW_I", "gRSF", "HC1", "HC2",
+    "InceptionTime","mrseql","MUSE","ResNet","RISE","ROCKET","STC","TapNet","TDE","TSF"
 ]
 """26 equal length multivariate time series classification problems [4]"""
 multivariate_equal_length = [
