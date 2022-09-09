@@ -99,7 +99,8 @@ def get_classifier_results(classifiers, datasets, resample=0, root=ROOT_DIR,
     return results
 
 
-def get_single_classifier_results_from_web(classifier, type="Univariate"):
+def get_single_classifier_results_from_web(classifier, type="Univariate",
+                                           package="tsml"):
     """Load the results for a single classifier on a single resample.
 
      Load from results into a dictionary of {problem_names: accuracy (numpy array)}.
@@ -116,10 +117,8 @@ def get_single_classifier_results_from_web(classifier, type="Univariate"):
     else:
         raise Exception("Type must be Univariate or Multivariate, you set it to ",type)
 
-    url = "https://timeseriesclassification.com/results/ResultsByClassifier/"+type\
-          +"/"+ classifier
-
-    url = url+"_TESTFOLDS.csv"
+    url = f"https://timeseriesclassification.com/results/{package}/ByClassifier/" \
+          f"{type}/{classifier}_TESTFOLDS.csv"
     import requests
     response = requests.get(url)
     data = response.text
