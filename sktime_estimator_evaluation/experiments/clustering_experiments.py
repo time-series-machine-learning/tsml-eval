@@ -24,7 +24,6 @@ import sktime.datasets.tsc_dataset_names as dataset_lists
 from sktime.benchmarking.experiments import run_clustering_experiment
 from sktime.clustering.k_means import TimeSeriesKMeans
 from sktime.clustering.k_medoids import TimeSeriesKMedoids
-from sktime.clustering.tslearn_kmeans import TslearnKmeans
 from sktime.datasets import load_from_tsfile as load_ts
 from sktime.datasets import load_gunpoint
 
@@ -207,11 +206,6 @@ if __name__ == "__main__":
             distance_params=parameters,
             n_clusters=len(set(train_Y)),
             random_state=resample + 1,
-        )
-    elif clusterer == "tslearn":
-        clst = TslearnKmeans(
-            metric=distance,
-            n_clusters=len(set(train_Y)),
         )
 
     run_clustering_experiment(
