@@ -123,10 +123,10 @@ if __name__ == "__main__":
         print(" Local Run")
         dataset = "UnitTest"
         data_dir = f"../datasets/data/"
-        results_dir = "./temp"
+        results_dir = "C://temp"
         resample = 0
         tf = True
-        distance = "msm"
+        distance = "euclidean"
     train_X, train_Y = load_ts(
         f"{data_dir}/{dataset}/{dataset}_TRAIN.ts", return_data_type="numpy2d"
     )
@@ -155,7 +155,7 @@ if __name__ == "__main__":
     else:
         parameters = {"window": 1.0, "epsilon": 0.05, "g": 0.05, "c": 1}
     clst = TimeSeriesKMeans(
-        averaging_method="dba",
+        averaging_method="mean",
         average_params={"averaging_distance_metric": distance},
         metric=distance,
         distance_params=parameters,
