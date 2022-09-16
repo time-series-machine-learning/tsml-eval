@@ -2,24 +2,31 @@
 
 max_folds=1                                               
 start_fold=1                                                
+# To avoid dumping 1000s of jobs in the queue we have a higher level queue
 maxNumSubmitted=700
+# queue options are https://my.uea.ac.uk/divisions/it-and-computing-services/service-catalogue/research-it-services/hpc/ada-cluster/using-ada
 queue="compute-64-512"
 username="ajb"
 mail="NONE"
 mailto="ajb@uea.ac.uk"
+# MB for jobs, max is maybe 128000 before you need ot use huge memory queue
 max_memory=8000
+# Max allowable is 7 days  - 168 hours
 max_time="168:00:00"
 start_point=1
 data_dir="/gpfs/home/ajb/Data/"
 datasets="/gpfs/home/ajb/DataSetLists/temp.txt"
-# Put your home directory here
+# Tony's work space, all should be able to read these.
+# Change if you want to use different data or lists
 local_path="/gpfs/home/ajb/"
-
+#dont write results to my file space, it causes problems
+my_path="/gpfs/home/ajb/"
 data_dir=$local_path"Data/"
 datasets=$local_path"DataSetLists/temp.txt"
-results_dir=$local_path"ClusteringResults/kmeans/"
-out_dir=$local_path"Code/output/Clustering/"
-script_file_path=$local_path"Code/estimator-evaluation/sktime_estimator_evaluation/experiments/clustering_experiments.py"
+results_dir=my_path"ClusteringResults/kmeans/"
+out_dir=my_path"Code/output/Clustering/"
+script_file_path=my_path"Code/estimator-evaluation/sktime_estimator_evaluation/experiments/clustering_experiments.py"
+# For env set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
 env_name="sktime-dev"
 generate_train_files="false"
 clusterer="kmeans"
