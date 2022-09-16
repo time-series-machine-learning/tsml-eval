@@ -22,10 +22,9 @@ out_dir=$local_path"Code/output/Clustering/"
 script_file_path=$local_path"Code/estimator-evaluation/sktime_estimator_evaluation/experiments/clustering_experiments.py"
 env_name="sktime"
 generate_train_files="false"
-predefined_folds="false"
 clusterer="kmeans"
 averaging="mean"
-count=1
+count=0
 # dtw ddtw erp edr wdtw lcss twe msm dwdtw euclidean
 while read dataset; do
 for distance in euclidean
@@ -66,7 +65,15 @@ source /gpfs/software/ada/python/anaconda/2019.10/3.7/etc/profile.d/conda.sh
 conda activate $env_name
 export PYTHONPATH=$(pwd)
 
-python ${script_file_path} ${data_dir} ${results_dir} ${distance} ${dataset} \$SLURM_ARRAY_TASK_ID ${generate_train_files} ${predefined_folds} ${clusterer} ${averaging}"  > generatedFile.sub
+python ${script_file_path} ${data_dir} ${results_dir} ${distance} ${dataset} \$SLURM_ARRAY_TASK_ID ${generate_train_files} ${clusterer} ${averaging}"  > generatedFile.sub
+#                         data_dir = sys.argv[1]
+#                         results_dir = sys.argv[2]
+#                         distance = sys.argv[3]
+#                         dataset = sys.argv[4]
+#                         resample = int(sys.argv[5]) - 1
+#                         tf = sys.argv[6]
+#                         clusterer = sys.argv[8]
+#                         averaging = sys.argv[9]
 
 echo ${count} ${clusterer}/${dataset}
 
