@@ -15,7 +15,7 @@ datasets="/gpfs/home/ajb/DataSetLists/temp.txt"
 # Put your home directory here
 local_path="/gpfs/home/ajb/"
 
-data_dir=$local_path"sktimeData/"
+data_dir=$local_path"Data/"
 datasets=$local_path"DataSetLists/temp.txt"
 results_dir=$local_path"ClusteringResults/kmeans/"
 out_dir=$local_path"Code/output/Clustering/"
