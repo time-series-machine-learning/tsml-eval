@@ -10,19 +10,23 @@ mailto="ajb@uea.ac.uk"
 max_memory=8000
 max_time="168:00:00"
 start_point=1
-data_dir="/gpfs/home/ajb/sktimeData/"
-results_dir="/gpfs/home/ajb/ClusteringResults/kmeans/"
-results_dir="/gpfs/temp/"
-out_dir="/gpfs/home/ajb/temp/kmeans/output/"
-script_file_path="/gpfs/home/ajb/Code/estimator-evaluation/sktime_estimator_evaluation/experiments/clustering_experiments.py"
-env_name="sktime"
+data_dir="/gpfs/home/ajb/Data/"
 datasets="/gpfs/home/ajb/DataSetLists/temp.txt"
+# Put your home directory here
+local_path="/gpfs/home/ajb/"
+
+data_dir=$local_path"sktimeData/"
+datasets=$local_path"DataSetLists/temp.txt"
+results_dir=$local_path"ClusteringResults/kmeans/"
+out_dir=$local_path"Code/output/Clustering/"
+script_file_path=$local_path"Code/estimator-evaluation/sktime_estimator_evaluation/experiments/clustering_experiments.py"
+env_name="sktime"
 generate_train_files="false"
 predefined_folds="false"
 clusterer="kmeans"
 averaging="mean"
-count=0
-# dtw ddtw erp edr wdtw lcss twe msm dwdtw
+count=1
+# dtw ddtw erp edr wdtw lcss twe msm dwdtw euclidean
 while read dataset; do
 for distance in euclidean
 do
@@ -41,7 +45,7 @@ done
 
 if ((count>=start_point)); then
 
-mkdir -p ${out_dir}${classifier}/${dataset}/
+mkdir -p ${out_dir}${clusterer}/${dataset}/
 
 echo "#!/bin/bash
 
@@ -49,11 +53,11 @@ echo "#!/bin/bash
 #SBATCH --mail-user=${mailto}
 #SBATCH -p ${queue}
 #SBATCH -t ${max_time}
-#SBATCH --job-name=${classifier}${dataset}
+#SBATCH --job-name=${clusterer}${dataset}
 #SBATCH --array=${start_fold}-${max_folds}
 #SBATCH --mem=${max_memory}M
-#SBATCH -o ${out_dir}${classifier}/${dataset}/%A-%a.out
-#SBATCH -e ${out_dir}${classifier}/${dataset}/%A-%a.err
+#SBATCH -o ${out_dir}${clusterer}/${dataset}/%A-%a.out
+#SBATCH -e ${out_dir}${clusterer}/${dataset}/%A-%a.err
 
 . /etc/profile
 
@@ -64,7 +68,7 @@ export PYTHONPATH=$(pwd)
 
 python ${script_file_path} ${data_dir} ${results_dir} ${distance} ${dataset} \$SLURM_ARRAY_TASK_ID ${generate_train_files} ${predefined_folds} ${clusterer} ${averaging}"  > generatedFile.sub
 
-echo ${count} ${classifier}/${dataset}
+echo ${count} ${clusterer}/${dataset}
 
 sbatch < generatedFile.sub --qos=ht
 
