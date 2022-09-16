@@ -71,7 +71,7 @@ python ${script_file_path} ${data_dir} ${results_dir} ${distance} ${dataset} \$S
 #                         distance = sys.argv[3]
 #                         dataset = sys.argv[4]
 #                         resample = int(sys.argv[5]) - 1
-#                         tf = sys.argv[6]
+#                         generate_train_files = sys.argv[6]
 #                         clusterer = sys.argv[8]
 #                         averaging = sys.argv[9]
 
