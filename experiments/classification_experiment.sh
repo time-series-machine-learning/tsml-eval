@@ -27,7 +27,7 @@ out_dir=$local_path"Code/output/multivariate/"
 script_file_path=$local_path"Code/estimator-evaluation/sktime_estimator_evaluation/experiments/classification_experiments.py"
 # Env set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
 env_name="sktime-dev"
-# Generating train folds is usually slower, set to false unless you need them
+# Generating train folds is usually slower, set to false unless you need them.
 generate_train_files="true"
 # If set for true, looks for <problem>_Train<fold>.ts file
 predefined_folds="false"
