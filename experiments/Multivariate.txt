@@ -4,6 +4,7 @@ AsphaltPavementTypeCoordinatesEq
 AsphaltRegularityCoordinatesEq
 AtrialFibrillation
 BasicMotions
+Blink
 CharacterTrajectoriesEq
 Cricket
 DuckDuckGeese
@@ -18,7 +19,7 @@ FingerMovements
 HandMovementDirection
 Handwriting
 Heartbeat
-InsectWingbeat
+InsectWingbeatEq
 JapaneseVowelsEq
 Libras
 LSST
