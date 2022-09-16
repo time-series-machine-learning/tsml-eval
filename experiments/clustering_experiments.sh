@@ -72,8 +72,8 @@ python ${script_file_path} ${data_dir} ${results_dir} ${distance} ${dataset} \$S
 #                         dataset = sys.argv[4]
 #                         resample = int(sys.argv[5]) - 1
 #                         generate_train_files = sys.argv[6]
-#                         clusterer = sys.argv[8]
-#                         averaging = sys.argv[9]
+#                         clusterer = sys.argv[7]
+#                         averaging = sys.argv[8]
 
 echo ${count} ${clusterer}/${dataset}
 
