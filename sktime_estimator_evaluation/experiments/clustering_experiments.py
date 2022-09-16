@@ -121,7 +121,7 @@ if __name__ == "__main__":
     """
     Example simple usage, with arguments input via script or hard coded for testing.
     """
-    clusterer = "tslearn"
+    clusterer = "kmeans"
     chris_config = False  # This is so chris doesn't have to change config each time
     tune = False
     if sys.argv.__len__() > 1:  # cluster run, this is fragile
