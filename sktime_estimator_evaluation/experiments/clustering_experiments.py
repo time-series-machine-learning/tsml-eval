@@ -131,8 +131,8 @@ if __name__ == "__main__":
         dataset = sys.argv[4]
         resample = int(sys.argv[5]) - 1
         tf = sys.argv[6]
-        clusterer = sys.argv[8]
-        averaging = sys.argv[9]
+        clusterer = sys.argv[7]
+        averaging = sys.argv[8]
         if averaging == "dba":
             results_dir = results_dir + clusterer + "_dba"
     elif chris_config is True:
