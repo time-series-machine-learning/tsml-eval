@@ -5,6 +5,7 @@ __author__ = ["TonyBagnall"]
 from sklearn.ensemble import RandomForestClassifier
 
 from sktime.classification.deep_learning import CNNClassifier
+from sktime.classification.dummy import DummyClassifier
 from sktime.classification.dictionary_based import (
     MUSE,
     WEASEL,
@@ -41,6 +42,7 @@ from sktime.classification.interval_based import (
 )
 from sktime.classification.kernel_based import Arsenal, RocketClassifier
 from sktime.classification.shapelet_based import ShapeletTransformClassifier
+from sktime.classification.compose import ComposableTimeSeriesForestClassifier
 from sktime.transformations.series.summarize import SummaryTransformer
 from sktime.registry import all_estimators
 
@@ -73,7 +75,7 @@ def set_classifier(cls, resample_id=None, train_file=False):
     if name == "boss" or name == "bossensemble":
         return BOSSEnsemble(random_state=resample_id)
     elif name == "individualboss":
-        return InidividualBOSS(
+        return IndividualBOSS(
             random_state=resample_id
         )
     elif name == "cboss" or name == "contractableboss":
@@ -93,7 +95,7 @@ def set_classifier(cls, resample_id=None, train_file=False):
         return ProximityForest(random_state=resample_id)
     elif name == "pt" or name == "proximitytree":
         return ProximityTree(random_state=resample_id)
-    elif name == "ps" or name == "proximityStump":
+    elif name == "ps" or name == "proximitystump":
         return ProximityStump(random_state=resample_id)
     elif name == "dtw" or name == "kneighborstimeseriesclassifier":
         return KNeighborsTimeSeriesClassifier(distance="dtw")
@@ -125,7 +127,7 @@ def set_classifier(cls, resample_id=None, train_file=False):
         return Catch22Classifier(
             random_state=resample_id, estimator=RandomForestClassifier(n_estimators=500)
         )
-    elif name == "matrixprofile":
+    elif name == "matrixprofile" or name == "matrixprofileclassifier":
         return MatrixProfileClassifier(random_state=resample_id)
     elif name == "freshprince":
         return FreshPRINCE(random_state=resample_id)
@@ -143,7 +145,7 @@ def set_classifier(cls, resample_id=None, train_file=False):
         return HIVECOTEV2(random_state=resample_id)
 
     # Interval based
-    elif name == "rise" or name == "randomintervalspectralforest":
+    elif name == "rise" or name == "randomintervalspectralforest" or name == "randomintervalspectralensemble":
         return RandomIntervalSpectralEnsemble(
             random_state=resample_id, n_estimators=500
         )
@@ -191,11 +193,21 @@ def set_classifier(cls, resample_id=None, train_file=False):
     elif name == "cnn" or name == "cnnclassifier":
         print("Cannot create CNNClassifier unless tensorflow installed")
 #        return CNNClassifier()
+    # requires constructor arguments
     elif name == "columnensemble" or name == "columnensembleclassifier":
-        print("Cannot create a ColumnEnsembleClassifier without passing a base class ")
+        print("Cannot create a ColumnEnsembleClassifier without passing a base "
+              "classifier ")
     elif name == "probabilitythresholdearlyclassifier":
         print("probabilitythresholdearlyclassifier is for early classification, "
               "not applicable here")
+    elif name == "classifierpipeline" or name == "sklearnclassifierpipeline":
+        print("Cannot create a ClassifierPipeline or SklearnClassifierPipeline "
+              "without passing a base "
+              "classifier and transform(s)")
+    elif name == "composabletimeseriesforestclassifier":
+        return ComposableTimeSeriesForestClassifier()
+    elif name == "dummy" or name == "dummyclassifier":
+        return DummyClassifier()
     else:
         raise Exception("UNKNOWN CLASSIFIER ", name," in set_classifier")
 
@@ -212,19 +224,22 @@ def list_all_multivariate_capable_classifiers():
 
 
 def test_set_classifier():
-    cls_list = list_all_multivariate_capable_classifiers()
+    cls_list = list_classifiers(univariate_only=True)
     for c in cls_list:
         cls = set_classifier(c)
 
 
-def list_classifiers(multivariate=False,dictionary=True):
+def list_classifiers(multivariate_only=False, univariate_only = False, dictionary=True):
     cls = []
     filter_tags = {}
-    if multivariate:
+    if multivariate_only:
         filter_tags["capability:multivariate"] = True
+    if univariate_only:
+        filter_tags["capability:multivariate"] = False
     cls = all_estimators(estimator_types="classifier", filter_tags=filter_tags)
+    print(cls)
     names= [i for i, _ in cls]
-    print(names)
+    print(len(names))
     return names
 
 
