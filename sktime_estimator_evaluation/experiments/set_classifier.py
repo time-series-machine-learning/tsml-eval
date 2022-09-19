@@ -11,6 +11,8 @@ from sktime.classification.dictionary_based import (
     BOSSEnsemble,
     ContractableBOSS,
     TemporalDictionaryEnsemble,
+    IndividualTDE,
+    IndividualBOSS,
 )
 from sktime.classification.distance_based import (
     ElasticEnsemble,
@@ -39,8 +41,8 @@ from sktime.classification.interval_based import (
 )
 from sktime.classification.kernel_based import Arsenal, RocketClassifier
 from sktime.classification.shapelet_based import ShapeletTransformClassifier
-from sktime.transformations.panel.dimension_selection import ecp, ecs, kmeans
 from sktime.transformations.series.summarize import SummaryTransformer
+from sktime.registry import all_estimators
 
 
 def set_classifier(cls, resample_id=None, train_file=False):
@@ -50,6 +52,7 @@ def set_classifier(cls, resample_id=None, train_file=False):
     set up is to help with batch jobs for multiple problems to facilitate easy
     reproducibility for use with load_and_run_classification_experiment. You can pass a
     classifier object instead to run_classification_experiment.
+    TODO: add contract and threaded options
 
     Parameters
     ----------
@@ -69,12 +72,18 @@ def set_classifier(cls, resample_id=None, train_file=False):
     # Dictionary based
     if name == "boss" or name == "bossensemble":
         return BOSSEnsemble(random_state=resample_id)
+    elif name == "individualboss":
+        return InidividualBOSS(
+            random_state=resample_id
+        )
     elif name == "cboss" or name == "contractableboss":
         return ContractableBOSS(random_state=resample_id)
     elif name == "tde" or name == "temporaldictionaryensemble":
         return TemporalDictionaryEnsemble(
             random_state=resample_id, save_train_predictions=train_file
         )
+    elif name == "individualtde":
+        return IndividualTDE(random_state=resample_id)
     elif name == "weasel":
         return WEASEL(random_state=resample_id)
     elif name == "muse":
@@ -86,9 +95,7 @@ def set_classifier(cls, resample_id=None, train_file=False):
         return ProximityTree(random_state=resample_id)
     elif name == "ps" or name == "proximityStump":
         return ProximityStump(random_state=resample_id)
-    elif name == "dtwcv" or name == "kneighborstimeseriesclassifier":
-        return KNeighborsTimeSeriesClassifier(distance="dtwcv")
-    elif name == "dtw" or name == "1nn-dtw":
+    elif name == "dtw" or name == "kneighborstimeseriesclassifier":
         return KNeighborsTimeSeriesClassifier(distance="dtw")
     elif name == "msm" or name == "1nn-msm":
         return KNeighborsTimeSeriesClassifier(distance="msm")
@@ -97,7 +104,7 @@ def set_classifier(cls, resample_id=None, train_file=False):
     elif name == "shapedtw":
         return ShapeDTW()
     # Feature based
-    elif name == "summary":
+    elif name == "summary" or name == "summaryclassifier":
         return SummaryClassifier(
             random_state=resample_id, estimator=RandomForestClassifier(n_estimators=500)
         )
@@ -114,12 +121,22 @@ def set_classifier(cls, resample_id=None, train_file=False):
         return RandomIntervalClassifier(
             random_state=resample_id, estimator=RandomForestClassifier(n_estimators=500)
         )
-    elif name == "catch22":
+    elif name == "catch22" or name == "catch22classifier":
         return Catch22Classifier(
             random_state=resample_id, estimator=RandomForestClassifier(n_estimators=500)
         )
     elif name == "matrixprofile":
         return MatrixProfileClassifier(random_state=resample_id)
+    elif name == "freshprince":
+        return FreshPRINCE(random_state=resample_id)
+    elif name == "randomintervalclassifier":
+        return RandomIntervalClassifier(random_state=resample_id)
+    elif name == "signatureclassifier":
+#        return SignatureClassifier(random_state=resample_id)
+        print("Need the soft dep esig package for signatures")
+    elif name == "tsfreshclassifier":
+        return TSFreshClassifier(random_state=resample_id)
+    # hybrids
     elif name == "hc1" or name == "hivecotev1":
         return HIVECOTEV1(random_state=resample_id)
     elif name == "hc2" or name == "hivecotev2":
@@ -140,8 +157,8 @@ def set_classifier(cls, resample_id=None, train_file=False):
         return DrCIF(
             random_state=resample_id, n_estimators=500, save_transformed_data=train_file
         )
-    # Kernel based
-    elif name == "rocket":
+    # Convolution based
+    elif name == "rocket" or name == "rocketclassifier":
         return RocketClassifier(random_state=resample_id)
     elif name == "mini-rocket":
         return RocketClassifier(random_state=resample_id, rocket_transform="minirocket")
@@ -170,5 +187,45 @@ def set_classifier(cls, resample_id=None, train_file=False):
             random_state=resample_id,
             save_transformed_data=train_file,
         )
+    # deep learning based
+    elif name == "cnn" or name == "cnnclassifier":
+        print("Cannot create CNNClassifier unless tensorflow installed")
+#        return CNNClassifier()
+    elif name == "columnensemble" or name == "columnensembleclassifier":
+        print("Cannot create a ColumnEnsembleClassifier without passing a base class ")
+    elif name == "probabilitythresholdearlyclassifier":
+        print("probabilitythresholdearlyclassifier is for early classification, "
+              "not applicable here")
     else:
-        raise Exception("UNKNOWN CLASSIFIER")
+        raise Exception("UNKNOWN CLASSIFIER ", name," in set_classifier")
+
+
+def list_all_multivariate_capable_classifiers():
+    cls = []
+    from sktime.registry import all_estimators
+    cls = all_estimators(estimator_types="classifier",
+                         filter_tags={"capability:multivariate":True}
+                         )
+    print(cls)
+    name = [i for i, _ in cls]
+    return names
+
+
+def test_set_classifier():
+    cls_list = list_all_multivariate_capable_classifiers()
+    for c in cls_list:
+        cls = set_classifier(c)
+
+
+def list_classifiers(multivariate=False,dictionary=True):
+    cls = []
+    filter_tags = {}
+    if multivariate:
+        filter_tags["capability:multivariate"] = True
+    cls = all_estimators(estimator_types="classifier", filter_tags=filter_tags)
+    names= [i for i, _ in cls]
+    print(names)
+    return names
+
+
+test_set_classifier()

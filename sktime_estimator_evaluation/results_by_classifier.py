@@ -159,10 +159,13 @@ def get_averaged_results_from_web(datasets, classifiers, start=0, end=1,
         cls_index = cls_index + 1
     return results
 
-newones=["Arsenal","DrCIF","HC1","HC2","TDE"]
-fold_zero = get_averaged_results_from_web(multivariate_equal_length,
-                                          newones)
-np.savetxt("fold_zero.csv",fold_zero,delimiter=",")
-means = get_averaged_results_from_web(multivariate_equal_length,
-                                          valid_multi_classifiers, end=30)
-np.savetxt("means.csv",means,delimiter=",")
+
+
+
+#newones=["Arsenal","DrCIF","HC1","HC2","TDE"]
+#fold_zero = get_averaged_results_from_web(multivariate_equal_length,
+#                                          newones)
+#np.savetxt("fold_zero.csv",fold_zero,delimiter=",")
+#means = get_averaged_results_from_web(multivariate_equal_length,
+#                                          valid_multi_classifiers, end=30)
+#np.savetxt("means.csv",means,delimiter=",")
