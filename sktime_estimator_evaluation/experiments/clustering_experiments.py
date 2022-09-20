@@ -22,10 +22,10 @@ from sklearn.preprocessing import normalize
 
 import sktime.datasets.tsc_dataset_names as dataset_lists
 from sktime.benchmarking.experiments import run_clustering_experiment
-from sktime.clustering.k_means import TimeSeriesKMeans
-from sktime.clustering.k_medoids import TimeSeriesKMedoids
 from sktime.datasets import load_from_tsfile as load_ts
 from sktime.datasets import load_gunpoint
+from ..sktime.sktime.clustering.k_means import TimeSeriesKMeans
+from ..sktime.sktime.clustering.k_medoids import TimeSeriesKMedoids
 
 """Prototype mechanism for testing classifiers on the UCR format. This mirrors the
 mechanism used in Java,
@@ -194,7 +194,7 @@ if __name__ == "__main__":
     if clusterer == "kmeans":
         clst = TimeSeriesKMeans(
             averaging_method=averaging,
-            average_params={"averaging_distance_metric": "dtw"},
+            average_params={"averaging_distance_metric": distance},
             metric=distance,
             distance_params=parameters,
             n_clusters=len(set(train_Y)),
