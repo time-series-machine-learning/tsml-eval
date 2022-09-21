@@ -70,7 +70,7 @@ if __name__ == "__main__":
     Example simple usage, with arguments input via script or hard coded for testing.
     """
     if sys.argv.__len__() > 1:  # cluster run, this is fragile
-        print(sys.argv)
+        print(" Input args = ",sys.argv)
         data_dir = sys.argv[1]
         results_dir = sys.argv[2]
         classifier = sys.argv[3]
@@ -81,6 +81,7 @@ if __name__ == "__main__":
             tf = sys.argv[6].lower() == "true"
         else:
             tf = False
+
         print(" GEN TRAIN FILES  = ", tf)
         if len(sys.argv) > 7:
             predefined_resample = sys.argv[7].lower() == "true"
