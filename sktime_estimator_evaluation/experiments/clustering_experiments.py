@@ -183,8 +183,8 @@ if __name__ == "__main__":
     if tune:
         w = tune_window(distance, train_X, len(set(train_Y)))
         name = clusterer + "-" + distance + "-tuned"
-    # else:
-    #     name = clusterer + "-" + distance
+    else:
+        name = clusterer + "-" + distance
     #     w = 1.0
     #     if (
     #         distance == "wdtw"
