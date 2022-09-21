@@ -179,19 +179,20 @@ if __name__ == "__main__":
     train_X = s.fit_transform(train_X.T)
     train_X = train_X.T
     test_X = s.fit_transform(test_X.T)
+    w = 1.0
     if tune:
         w = tune_window(distance, train_X, len(set(train_Y)))
         name = clusterer + "-" + distance + "-tuned"
-    else:
-        name = clusterer + "-" + distance
-        w = 1.0
-        if (
-            distance == "wdtw"
-            or distance == "dwdtw"
-            or distance == "dtw"
-            or distance == "wdtw"
-        ):
-            w = 0.2
+    # else:
+    #     name = clusterer + "-" + distance
+    #     w = 1.0
+    #     if (
+    #         distance == "wdtw"
+    #         or distance == "dwdtw"
+    #         or distance == "dtw"
+    #         or distance == "wdtw"
+    #     ):
+    #         w = 0.2
     parameters = {
         "window": w,
         "epsilon": 0.05,
