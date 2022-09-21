@@ -81,7 +81,7 @@ if __name__ == "__main__":
             tf = sys.argv[6].lower() == "true"
         else:
             tf = False
-
+        print(" GEN TRAIN FILES  = ", tf)
         if len(sys.argv) > 7:
             predefined_resample = sys.argv[7].lower() == "true"
         else:
