@@ -210,8 +210,9 @@ if __name__ == "__main__":
             distance_params=parameters,
             n_clusters=len(set(train_Y)),
             random_state=resample + 1,
+            verbose=True,
         )
-    elif clusterer == "kmedoids":
+    else:
         clst = TimeSeriesKMedoids(
             metric=distance,
             distance_params=parameters,
