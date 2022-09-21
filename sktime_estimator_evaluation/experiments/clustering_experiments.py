@@ -127,7 +127,6 @@ if __name__ == "__main__":
     clusterer = "kmeans"
     chris_config = False  # This is so chris doesn't have to change config each time
     tune = False
-    averaging = 'mean'
     if sys.argv.__len__() > 1:  # cluster run, this is fragile
         data_dir = sys.argv[1]
         results_dir = sys.argv[2]
@@ -151,7 +150,7 @@ if __name__ == "__main__":
 
     else:  # Local run
         print(" Local Run")
-        dataset = load_gunpoint
+        dataset = "Chinatown"
         data_dir = f"c:/temp/"
         results_dir = "./temp"
         resample = 0
