@@ -10,7 +10,7 @@ username="eej17ucu"
 mail="NONE"
 mailto="eej17ucu@uea.ac.uk"
 # MB for jobs, max is maybe 128000 before you need ot use huge memory queue
-max_memory=8000
+max_memory=32000
 # Max allowable is 7 days  - 168 hours
 max_time="168:00:00"
 start_point=1

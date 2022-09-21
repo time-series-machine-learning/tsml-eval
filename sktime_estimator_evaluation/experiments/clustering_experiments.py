@@ -125,7 +125,7 @@ if __name__ == "__main__":
     Example simple usage, with arguments input via script or hard coded for testing.
     """
     clusterer = "kmeans"
-    chris_config = False  # This is so chris doesn't have to change config each time
+    chris_config = True  # This is so chris doesn't have to change config each time
     tune = False
     if sys.argv.__len__() > 1:  # cluster run, this is fragile
         data_dir = sys.argv[1]
@@ -140,13 +140,13 @@ if __name__ == "__main__":
             results_dir = results_dir + clusterer + "_dba"
     elif chris_config is True:
         path = "C:/Users/chris/Documents/Masters"
-        data_dir = os.path.abspath(f"{path}/datasets/Univariate_ts/")
+        data_dir = os.path.abspath(f"{path}/datasets/Multivariate_ts/")
         results_dir = os.path.abspath(f"{path}/results/")
-        dataset = "ElectricDevices"
+        dataset = "Handwriting"
         resample = 2
-        averaging = "dba"
+        averaging = "mean"
         tf = True
-        distance = "msm"
+        distance = "euclidean"
 
     else:  # Local run
         print(" Local Run")
@@ -179,6 +179,7 @@ if __name__ == "__main__":
     train_X = s.fit_transform(train_X.T)
     train_X = train_X.T
     test_X = s.fit_transform(test_X.T)
+    test_X = test_X.T
     w = 1.0
     if tune:
         w = tune_window(distance, train_X, len(set(train_Y)))
