@@ -24,8 +24,10 @@ import sktime.datasets.tsc_dataset_names as dataset_lists
 from sktime.benchmarking.experiments import run_clustering_experiment
 from sktime.datasets import load_from_tsfile as load_ts
 from sktime.datasets import load_gunpoint
-from ..sktime.sktime.clustering.k_means import TimeSeriesKMeans
-from ..sktime.sktime.clustering.k_medoids import TimeSeriesKMedoids
+from sktime.clustering.k_means import TimeSeriesKMeans
+from sktime.clustering.k_medoids import TimeSeriesKMedoids
+
+
 
 """Prototype mechanism for testing classifiers on the UCR format. This mirrors the
 mechanism used in Java,
@@ -110,6 +112,7 @@ def _recreate_results(trainX, trainY):
         distance_params={"window": 0.2},
         n_clusters=len(set(train_Y)),
         random_state=1,
+        verbose=True
     )
     clst.fit(trainX)
     preds = clst.predict(trainY)
@@ -124,6 +127,7 @@ if __name__ == "__main__":
     clusterer = "kmeans"
     chris_config = False  # This is so chris doesn't have to change config each time
     tune = False
+    averaging = 'mean'
     if sys.argv.__len__() > 1:  # cluster run, this is fragile
         data_dir = sys.argv[1]
         results_dir = sys.argv[2]
@@ -141,23 +145,30 @@ if __name__ == "__main__":
         results_dir = os.path.abspath(f"{path}/results/")
         dataset = "ElectricDevices"
         resample = 2
+        averaging = "dba"
         tf = True
         distance = "msm"
+
     else:  # Local run
         print(" Local Run")
-        dataset = "Chinatown"
+        dataset = load_gunpoint
         data_dir = f"c:/temp/"
         results_dir = "./temp"
         resample = 0
-        averaging = "mean"
+        averaging = "dba"
         tf = True
-        distance = "euclidean"
-    train_X, train_Y = load_ts(
-        f"{data_dir}/{dataset}/{dataset}_TRAIN.ts", return_data_type="numpy2d"
-    )
-    test_X, test_Y = load_ts(
-        f"{data_dir}/{dataset}/{dataset}_TEST.ts", return_data_type="numpy2d"
-    )
+        distance = "dtw"
+
+    if isinstance(dataset, str):
+        train_X, train_Y = load_ts(
+            f"{data_dir}/{dataset}/{dataset}_TRAIN.ts", return_data_type="numpy2d"
+        )
+        test_X, test_Y = load_ts(
+            f"{data_dir}/{dataset}/{dataset}_TEST.ts", return_data_type="numpy2d"
+        )
+    else:
+        train_X, train_Y = dataset('train', return_X_y=True)
+        test_X, test_Y = dataset('test', return_X_y=True)
     #    train_X = np.concatenate((train_X, test_X), axis=0)
     #    train_Y = np.concatenate((train_Y, test_Y), axis=0)
     #    _recreate_results(train_X, train_Y)
@@ -169,7 +180,6 @@ if __name__ == "__main__":
     train_X = s.fit_transform(train_X.T)
     train_X = train_X.T
     test_X = s.fit_transform(test_X.T)
-    test_X = test_X.T
     if tune:
         w = tune_window(distance, train_X, len(set(train_Y)))
         name = clusterer + "-" + distance + "-tuned"
@@ -192,6 +202,7 @@ if __name__ == "__main__":
         "lmbda": 1.0,
     }
     if clusterer == "kmeans":
+        print("running kmeans")
         clst = TimeSeriesKMeans(
             averaging_method=averaging,
             average_params={"averaging_distance_metric": distance},
