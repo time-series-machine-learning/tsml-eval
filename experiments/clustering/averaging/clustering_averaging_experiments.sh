@@ -15,14 +15,14 @@ max_memory=32000
 max_time="168:00:00"
 start_point=1
 data_dir="/gpfs/home/ajb/Data/"
-datasets="/gpfs/home/ajb/DataSetLists/temp.txt"
+datasets="/gpfs/home/eej17ucu/code/estimator-evaluation/experiments/"
 # Tony's work space, all should be able to read these.
 # Change if you want to use different data or lists
 local_path="/gpfs/home/ajb/"
 #dont write results to my file space, it causes problems
 my_path="/gpfs/home/eej17ucu/"
 data_dir=$local_path"Data/"
-datasets=$local_path"DataSetLists/temp.txt"
+datasets=$local_path"Univariate.txt"
 results_dir=$my_path"ClusteringResults/averaging-results/kmeans/"
 out_dir=$my_path"code/output/Clustering/"
 script_file_path=$my_path"code/estimator-evaluation/sktime_estimator_evaluation/experiments/clustering_experiments.py"
