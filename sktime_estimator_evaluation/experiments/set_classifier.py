@@ -131,12 +131,12 @@ def set_classifier(cls, resample_id=None, train_file=False):
         return MatrixProfileClassifier(random_state=resample_id)
     elif name == "freshprince":
         return FreshPRINCE(random_state=resample_id)
-    elif name == "randomintervalclassifier":
+    elif name == "randominterval" or name == "randomintervalclassifier":
         return RandomIntervalClassifier(random_state=resample_id)
-    elif name == "signatureclassifier":
+    elif name == "signature" or name == "signatureclassifier":
 #        return SignatureClassifier(random_state=resample_id)
         print("Need the soft dep esig package for signatures")
-    elif name == "tsfreshclassifier":
+    elif name == "tsfreshfresh" or name == "tsfreshclassifier":
         return TSFreshClassifier(random_state=resample_id)
     # hybrids
     elif name == "hc1" or name == "hivecotev1":
