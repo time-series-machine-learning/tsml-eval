@@ -133,7 +133,7 @@ if __name__ == "__main__":
         distance = sys.argv[3]
         dataset = sys.argv[4]
         resample = int(sys.argv[5]) - 1
-        tf = sys.argv[6]
+        tf = bool(sys.argv[6])
         clusterer = sys.argv[7]
         averaging = sys.argv[8]
         if averaging == "dba":
