@@ -23,7 +23,7 @@ local_path="/gpfs/home/ajb/"
 my_path="/gpfs/home/eej17ucu/"
 data_dir=$local_path"Data/"
 datasets=$local_path"DataSetLists/temp.txt"
-results_dir=%my_path"ClusteringResults/kmeans/"
+results_dir=$my_path"ClusteringResults/averaging-results/kmeans/"
 out_dir=$my_path"code/output/Clustering/"
 script_file_path=$my_path"Code/estimator-evaluation/sktime_estimator_evaluation/experiments/clustering_experiments.py"
 # For env set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
