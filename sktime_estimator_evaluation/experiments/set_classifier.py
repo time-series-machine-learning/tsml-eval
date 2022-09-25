@@ -131,12 +131,12 @@ def set_classifier(cls, resample_id=None, train_file=False):
         return MatrixProfileClassifier(random_state=resample_id)
     elif name == "freshprince":
         return FreshPRINCE(random_state=resample_id)
-    elif name == "randominterval" or name == "randomintervalclassifier":
+    elif name == "randomintervalclassifier":
         return RandomIntervalClassifier(random_state=resample_id)
-    elif name == "signature" or name == "signatureclassifier":
+    elif name == "signatureclassifier":
 #        return SignatureClassifier(random_state=resample_id)
         print("Need the soft dep esig package for signatures")
-    elif name == "tsfreshfresh" or name == "tsfreshclassifier":
+    elif name == "tsfreshclassifier":
         return TSFreshClassifier(random_state=resample_id)
     # hybrids
     elif name == "hc1" or name == "hivecotev1":
@@ -204,6 +204,9 @@ def set_classifier(cls, resample_id=None, train_file=False):
         print("Cannot create a ClassifierPipeline or SklearnClassifierPipeline "
               "without passing a base "
               "classifier and transform(s)")
+    elif name == "weightedensembleclassifier" or name == "weightedensemble":
+        print("Cannot create a WeightedEnsembleClassifier"
+              "without passing base classifiers")
     elif name == "composabletimeseriesforestclassifier":
         return ComposableTimeSeriesForestClassifier()
     elif name == "dummy" or name == "dummyclassifier":
@@ -224,12 +227,12 @@ def list_all_multivariate_capable_classifiers():
 
 
 def test_set_classifier():
-    cls_list = list_classifiers(univariate_only=True)
+    cls_list = list_classifiers(multivariate_only=True)
     for c in cls_list:
         cls = set_classifier(c)
 
 
-def list_classifiers(multivariate_only=False, univariate_only = False, dictionary=True):
+def list_classifiers(multivariate_only=False, univariate_only=False, dictionary=True):
     cls = []
     filter_tags = {}
     if multivariate_only:
@@ -242,5 +245,4 @@ def list_classifiers(multivariate_only=False, univariate_only = False, dictionar
     print(len(names))
     return names
 
-
-test_set_classifier()
+print(test_set_classifier())
