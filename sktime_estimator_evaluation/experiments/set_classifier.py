@@ -46,7 +46,7 @@ from sktime.classification.compose import ComposableTimeSeriesForestClassifier
 from sktime.transformations.series.summarize import SummaryTransformer
 from sktime.registry import all_estimators
 
-multivariate_classifiers= [
+multivariate_classifiers = [
 "Arsenal",
 "CNNClassifier",
 "CanonicalIntervalForest",
@@ -155,9 +155,6 @@ def set_classifier(cls, resample_id=None, train_file=False):
         return FreshPRINCE(random_state=resample_id)
     elif name == "randomintervalclassifier":
         return RandomIntervalClassifier(random_state=resample_id)
-    elif name == "signatureclassifier":
-#        return SignatureClassifier(random_state=resample_id)
-        print("Need the soft dep esig package for signatures")
     elif name == "tsfreshclassifier":
         return TSFreshClassifier(random_state=resample_id)
     # hybrids
@@ -216,6 +213,9 @@ def set_classifier(cls, resample_id=None, train_file=False):
     elif name == "dummy" or name == "dummyclassifier":
         return DummyClassifier()
     # deep learning based
+    elif name == "signatureclassifier":
+        return SignatureClassifier(random_state=resample_id)
+#        raise Exception("Need the soft dep esig package for signatures")
     elif name == "cnn" or name == "cnnclassifier":
         raise Exception("Cannot create CNNClassifier unless tensorflow installed")
 #        return CNNClassifier()
