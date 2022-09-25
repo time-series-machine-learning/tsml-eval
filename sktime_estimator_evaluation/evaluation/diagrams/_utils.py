@@ -52,9 +52,20 @@ def _check_df(df: pd.DataFrame) -> pd.DataFrame:
     pd.DataFrame
         Validated dataframe
     """
-    datasets = (df.iloc[:, 1]).unique()
-    num_datasets = len(datasets)
+    datasets = set((df.iloc[:, 1]).unique())
     estimators = (df.iloc[:, 0]).unique()
+
+    remove_datasets = set()
+
+    for estimator in estimators:
+        curr = df[df.iloc[:, 0] == estimator]
+        curr_datasets = set((curr.iloc[:, 1]).unique())
+        remove_datasets = remove_datasets.union(datasets.difference(curr_datasets))
+
+    df = df[~df.iloc[:, 1].isin(remove_datasets)]
+    datasets = set((df.iloc[:, 1]).unique())
+
+    num_datasets = len(datasets)
     for estimator in estimators:
         curr = df[df.iloc[:, 0] == estimator]
         if len(curr.iloc[:, 1]) != num_datasets:
@@ -62,5 +73,6 @@ def _check_df(df: pd.DataFrame) -> pd.DataFrame:
                 f"Number of datasets for estimator {estimator} is not equal to "
                 f"number of datasets in dataframe. Removing {estimator} from dataframe."
             )
+            test1 = curr.iloc[:, 1]
             df = df[df.iloc[:, 0] != estimator]
     return df

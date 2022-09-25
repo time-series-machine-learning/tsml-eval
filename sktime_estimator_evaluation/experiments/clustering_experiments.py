@@ -125,7 +125,7 @@ if __name__ == "__main__":
     Example simple usage, with arguments input via script or hard coded for testing.
     """
     clusterer = "kmeans"
-    chris_config = True  # This is so chris doesn't have to change config each time
+    chris_config = False  # This is so chris doesn't have to change config each time
     tune = False
     if sys.argv.__len__() > 1:  # cluster run, this is fragile
         data_dir = sys.argv[1]
@@ -144,9 +144,9 @@ if __name__ == "__main__":
         results_dir = os.path.abspath(f"{path}/results/")
         dataset = "Handwriting"
         resample = 2
-        averaging = "mean"
+        averaging = "dba"
         tf = True
-        distance = "euclidean"
+        distance = "msm"
 
     else:  # Local run
         print(" Local Run")
@@ -201,12 +201,18 @@ if __name__ == "__main__":
         "c": 1,
         "nu": 0.05,
         "lmbda": 1.0,
+        "strategy": "independent",
+    }
+    average_params = {
+        "averaging_distance_metric": distance,
+        "medoids_distance_metric": distance,
     }
     if clusterer == "kmeans":
         print("running kmeans")
+        format_kwargs = {**average_params, **parameters}
         clst = TimeSeriesKMeans(
             averaging_method=averaging,
-            average_params={"averaging_distance_metric": distance},
+            average_params=format_kwargs,
             metric=distance,
             distance_params=parameters,
             n_clusters=len(set(train_Y)),

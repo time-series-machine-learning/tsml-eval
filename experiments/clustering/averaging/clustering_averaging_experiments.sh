@@ -1,6 +1,6 @@
 #!/bin/bash
 
-max_folds=1
+max_folds=30
 start_fold=1
 # To avoid dumping 1000s of jobs in the queue we have a higher level queue
 maxNumSubmitted=700
@@ -22,8 +22,8 @@ data_dir=$local_path"Data/"
 #dont write results to my file space, it causes problems
 my_path="/gpfs/home/eej17ucu/"
 datasets=$my_path"code/estimator-evaluation/experiments/Univariate.txt"
-results_dir=$my_path"ClusteringResults/averaging-results/kmeans/"
-out_dir=$my_path"code/output/Clustering/"
+results_dir=$my_path"experiment-results/averaging/elastic-dba/"
+out_dir=$my_path"experiment-logs/averaging/elastic-dba"
 script_file_path=$my_path"code/estimator-evaluation/sktime_estimator_evaluation/experiments/clustering_experiments.py"
 # For env set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
 env_name="sktime-estimator-evaluation"
@@ -33,7 +33,7 @@ averaging="dba"
 count=0
 # dtw ddtw erp edr wdtw lcss twe msm dwdtw euclidean
 while read dataset; do
-for distance in dtw msm
+for distance in dtw msm ddtw wdtw wddtw erp twe
 do
 
 numPending=$(squeue -u ${username} --format="%10i %15P %20j %10u %10t %10M %10D %20R" -r | awk '{print $5, $2}' | grep "PD ${queue}" | wc -l)

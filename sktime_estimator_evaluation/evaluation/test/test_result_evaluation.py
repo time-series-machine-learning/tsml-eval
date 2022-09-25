@@ -9,10 +9,11 @@ def test_cluster_evaluation():
     """Evaluate clustering results."""
     result = evaluate_raw_results(
         experiment_name='test',
-        path='ignore-results/',
+        path='C:\\Users\\chris\\Documents\\Phd\\Results\\kmeans\\kmeans_dba',
         output_dir='out/',
         metrics=CLUSTER_METRIC_CALLABLES
     )
+    joe = ''
 
 def test_classification_evaluation():
     """Evaluate classification results."""

@@ -398,8 +398,9 @@ def read_clusterer_result_from_uea_format(csv_path):
     ]
     with open(csv_path, "r") as read_obj:
         csv_reader = reader(read_obj)
-        next(csv_reader)  # Skip first line
-        next(csv_reader)  # Skip second line
+        curr_line = next(csv_reader)
+        while '}' not in curr_line[-1]:
+            curr_line = next(csv_reader)
         meta = next(csv_reader)  # Skip second line
         num_classes = meta[-1]
 
@@ -436,7 +437,19 @@ def _csv_results_to_metric(
     """
     data = read_clusterer_result_from_uea_format(csv_path)["predictions"]
 
+    # TODO: update the experiment method so it can't ever read in arrays but for now
+    # we filter out the dict
+    remove_start = 0
+    for i in range(len(data)):
+        val = data[i]
+        for string in val:
+            if '}' in string:
+                remove_start = i
+
+    data = data[remove_start:-1]
+
     columns = data[0][0:2]
+
 
     # Read in only first two columns which is true class followed by predicted.
     true_label = []
@@ -492,42 +505,14 @@ def read_metric_results(path: str) -> List[str]:
 
     return test
 
-
-def metric_result_to_summary(result: List[MetricResults]) -> pd.DataFrame:
-    """Convert metric result to data frame of the format:
-        ----------------------------------
-        | estimator | dataset | metric1  | metric2 |
-        | cls1      | data1   | 1.2      | 1.2     |
-        | cls2      | data2   | 3.4      | 1.4     |
-        | cls1      | data2   | 1.4      | 1.3     |
-        | cls2      | data1   | 1.3      | 1.2     |
-        ----------------------------------
-
-    Parameters
-    ----------
-    result: List[MetricResults]
-        Metric results to convert.
-
-    Returns
-    -------
-    pd.DataFrame
-        Data frame with metric results converted. This will be of the format:
-        ----------------------------------
-        | estimator | dataset | metric1  | metric2 |
-        | cls1      | data1   | 1.2      | 1.2     |
-        | cls2      | data2   | 3.4      | 1.4     |
-        | cls1      | data2   | 1.4      | 1.3     |
-        | cls2      | data1   | 1.3      | 1.2     |
-        ----------------------------------
-    """
+def _split_metric_result_to_summary(result: List[MetricResults], split: str = 'test_estimator_results'):
     column_headers = ['estimator', 'dataset']
     temp_dict = {}
-
     for metric_result in result:
         curr_metric = metric_result['metric_name']
         column_headers.append(curr_metric)
 
-        for test_result in metric_result['test_estimator_results']:
+        for test_result in metric_result[split]:
             curr_estimator = test_result['estimator_name']
             data = test_result['result'].copy()
 
@@ -564,6 +549,60 @@ def metric_result_to_summary(result: List[MetricResults]) -> pd.DataFrame:
 
     df = pd.DataFrame(df_list, columns=column_headers)
     return df
+
+
+def metric_result_to_summary(
+        result: List[MetricResults], split: str = 'both'
+) -> Union[Tuple[pd.DataFrame, pd.DataFrame], pd.DataFrame]:
+    """Convert metric result to data frame of the format:
+        ----------------------------------
+        | estimator | dataset | metric1  | metric2 |
+        | cls1      | data1   | 1.2      | 1.2     |
+        | cls2      | data2   | 3.4      | 1.4     |
+        | cls1      | data2   | 1.4      | 1.3     |
+        | cls2      | data1   | 1.3      | 1.2     |
+        ----------------------------------
+
+    Parameters
+    ----------
+    result: List[MetricResults]
+        Metric results to convert.
+    split: str, default='both'
+        Whether to split the results into train and test results. If 'both' then
+        both train and test results will be returned. If 'test' then only test
+        results will be returned. If 'train' then only train results will be
+        returned.
+
+    Returns
+    -------
+    pd.DataFrame
+        Data frame with metric results converted for test data. This will be of the format:
+        ----------------------------------
+        | estimator | dataset | metric1  | metric2 |
+        | cls1      | data1   | 1.2      | 1.2     |
+        | cls2      | data2   | 3.4      | 1.4     |
+        | cls1      | data2   | 1.4      | 1.3     |
+        | cls2      | data1   | 1.3      | 1.2     |
+        ----------------------------------
+    pd.DataFrame
+        Data frame with metric results converted for training data. This will be of the format:
+        ----------------------------------
+        | estimator | dataset | metric1  | metric2 |
+        | cls1      | data1   | 1.2      | 1.2     |
+        | cls2      | data2   | 3.4      | 1.4     |
+        | cls1      | data2   | 1.4      | 1.3     |
+        | cls2      | data1   | 1.3      | 1.2     |
+        ----------------------------------
+    """
+    test_data = _split_metric_result_to_summary(result, split='test_estimator_results')
+    train_data = _split_metric_result_to_summary(result, split='train_estimator_results')
+    if split == 'test':
+        return test_data
+    elif split == 'train':
+        return train_data
+    else:
+        return test_data, train_data
+
 
 def from_metric_summary_to_dataset_format(
         summary_format: pd.DataFrame,
@@ -670,3 +709,15 @@ def from_metric_dataset_format_to_metric_summary(
     if len(return_result) == 1:
         return return_result[0]
     return return_result
+
+def combine_two_summary_df(first_df: pd.DataFrame, second_df: pd.DataFrame):
+    first_cols = set(first_df.columns)
+    second_cols = set(second_df.columns)
+    drop_cols = first_cols.difference(second_cols)
+
+    if drop_cols in first_cols:
+        first_df = first_df.drop(columns=drop_cols)
+    if drop_cols in second_cols:
+        second_df = second_df.drop(columns=drop_cols)
+
+    return pd.concat([first_df, second_df])
