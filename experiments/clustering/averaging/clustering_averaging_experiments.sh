@@ -23,7 +23,7 @@ data_dir=$local_path"Data/"
 my_path="/gpfs/home/eej17ucu/"
 datasets=$my_path"code/estimator-evaluation/experiments/Univariate.txt"
 results_dir=$my_path"experiment-results/averaging/elastic-dba/"
-out_dir=$my_path"experiment-logs/averaging/elastic-dba"
+out_dir=$my_path"experiment-logs/averaging/elastic-dba/"
 script_file_path=$my_path"code/estimator-evaluation/sktime_estimator_evaluation/experiments/clustering_experiments.py"
 # For env set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
 env_name="averaging-elastic-dba"
