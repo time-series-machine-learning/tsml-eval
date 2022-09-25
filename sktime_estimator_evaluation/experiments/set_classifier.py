@@ -189,28 +189,28 @@ def set_classifier(cls, resample_id=None, train_file=False):
             random_state=resample_id,
             save_transformed_data=train_file,
         )
-    # deep learning based
-    elif name == "cnn" or name == "cnnclassifier":
-        print("Cannot create CNNClassifier unless tensorflow installed")
-#        return CNNClassifier()
-    # requires constructor arguments
-    elif name == "columnensemble" or name == "columnensembleclassifier":
-        print("Cannot create a ColumnEnsembleClassifier without passing a base "
-              "classifier ")
-    elif name == "probabilitythresholdearlyclassifier":
-        print("probabilitythresholdearlyclassifier is for early classification, "
-              "not applicable here")
-    elif name == "classifierpipeline" or name == "sklearnclassifierpipeline":
-        print("Cannot create a ClassifierPipeline or SklearnClassifierPipeline "
-              "without passing a base "
-              "classifier and transform(s)")
-    elif name == "weightedensembleclassifier" or name == "weightedensemble":
-        print("Cannot create a WeightedEnsembleClassifier"
-              "without passing base classifiers")
     elif name == "composabletimeseriesforestclassifier":
         return ComposableTimeSeriesForestClassifier()
     elif name == "dummy" or name == "dummyclassifier":
         return DummyClassifier()
+    # deep learning based
+    elif name == "cnn" or name == "cnnclassifier":
+        raise Exception("Cannot create CNNClassifier unless tensorflow installed")
+#        return CNNClassifier()
+    # requires constructor arguments
+    elif name == "columnensemble" or name == "columnensembleclassifier":
+        raise Exception("Cannot create a ColumnEnsembleClassifier without passing a base "
+              "classifier ")
+    elif name == "probabilitythresholdearlyclassifier":
+        raise Exception("probabilitythresholdearlyclassifier is for early classification, "
+              "not applicable here")
+    elif name == "classifierpipeline" or name == "sklearnclassifierpipeline":
+        raise Exception("Cannot create a ClassifierPipeline or SklearnClassifierPipeline "
+              "without passing a base "
+              "classifier and transform(s)")
+    elif name == "weightedensembleclassifier" or name == "weightedensemble":
+        raise Exception("Cannot create a WeightedEnsembleClassifier"
+              "without passing base classifiers")
     else:
         raise Exception("UNKNOWN CLASSIFIER ", name," in set_classifier")
 
