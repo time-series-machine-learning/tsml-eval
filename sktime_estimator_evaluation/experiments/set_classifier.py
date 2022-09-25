@@ -46,6 +46,28 @@ from sktime.classification.compose import ComposableTimeSeriesForestClassifier
 from sktime.transformations.series.summarize import SummaryTransformer
 from sktime.registry import all_estimators
 
+multivariate_classifiers= [
+"Arsenal",
+"CNNClassifier",
+"CanonicalIntervalForest",
+"Catch22Classifier",
+"ColumnEnsembleClassifier",
+"DrCIF",
+"FreshPRINCE",
+"HIVECOTEV2",
+"IndividualTDE",
+"KNeighborsTimeSeriesClassifier",
+"MUSE",
+"ProbabilityThresholdEarlyClassifier",
+"RandomIntervalClassifier",
+"RocketClassifier",
+"ShapeletTransformClassifier",
+"SignatureClassifier",
+"SummaryClassifier",
+"TSFreshClassifier",
+"TemporalDictionaryEnsemble",
+"WeightedEnsembleClassifier",
+]
 
 def set_classifier(cls, resample_id=None, train_file=False):
     """Construct a classifier, possibly seeded.
@@ -243,4 +265,6 @@ def list_classifiers(multivariate_only=False, univariate_only=False, dictionary=
     print(len(names))
     return names
 
-print(test_set_classifier())
+str=list_classifiers(multivariate_only=True)
+for s in str:
+    print(f"\"{s}\",")
