@@ -81,9 +81,7 @@ def set_classifier(cls, resample_id=None, train_file=False):
     elif name == "cboss" or name == "contractableboss":
         return ContractableBOSS(random_state=resample_id)
     elif name == "tde" or name == "temporaldictionaryensemble":
-        return TemporalDictionaryEnsemble(
-            random_state=resample_id, save_train_predictions=train_file
-        )
+        return TemporalDictionaryEnsemble(random_state=resample_id, save_train_predictions=train_file)
     elif name == "individualtde":
         return IndividualTDE(random_state=resample_id)
     elif name == "weasel":
