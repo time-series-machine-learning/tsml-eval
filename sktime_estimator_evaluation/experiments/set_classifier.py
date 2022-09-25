@@ -54,7 +54,7 @@ def set_classifier(cls, resample_id=None, train_file=False):
     set up is to help with batch jobs for multiple problems to facilitate easy
     reproducibility for use with load_and_run_classification_experiment. You can pass a
     classifier object instead to run_classification_experiment.
-    TODO: add contract and threaded options
+    TODO: add contract, checkpoint and threaded options
 
     Parameters
     ----------
@@ -81,9 +81,7 @@ def set_classifier(cls, resample_id=None, train_file=False):
     elif name == "cboss" or name == "contractableboss":
         return ContractableBOSS(random_state=resample_id)
     elif name == "tde" or name == "temporaldictionaryensemble":
-        return TemporalDictionaryEnsemble(
-            random_state=resample_id, save_train_predictions=train_file
-        )
+        return TemporalDictionaryEnsemble(random_state=resample_id, save_train_predictions=train_file)
     elif name == "individualtde":
         return IndividualTDE(random_state=resample_id)
     elif name == "weasel":
@@ -222,7 +220,7 @@ def list_all_multivariate_capable_classifiers():
                          filter_tags={"capability:multivariate":True}
                          )
     print(cls)
-    name = [i for i, _ in cls]
+    names = [i for i, _ in cls]
     return names
 
 
