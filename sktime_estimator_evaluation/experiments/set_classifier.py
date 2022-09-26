@@ -153,9 +153,9 @@ def set_classifier(cls, resample_id=None, train_file=False):
         return MatrixProfileClassifier(random_state=resample_id)
     elif name == "freshprince":
         return FreshPRINCE(random_state=resample_id)
-    elif name == "randomintervalclassifier":
+    elif name == "randomintervalclassifier" or name == "randominterval":
         return RandomIntervalClassifier(random_state=resample_id)
-    elif name == "tsfreshclassifier":
+    elif name == "tsfreshclassifier" or  name == "tsfresh":
         return TSFreshClassifier(random_state=resample_id)
     # hybrids
     elif name == "hc1" or name == "hivecotev1":
