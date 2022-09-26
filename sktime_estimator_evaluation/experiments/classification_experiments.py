@@ -66,6 +66,32 @@ def demo_loading():
         print(testY.shape)
 
 
+def results_present(results_path, cls_name, dataset, resample_id):
+    full_path = (
+            results_path
+            + "/"
+            + cls_name
+            + "/Predictions/"
+            + dataset
+            + "/testResample"
+            + str(resample_id)
+            + ".csv"
+        )
+    full_path2 = (
+                results_path
+                + "/"
+                + cls_name
+                + "/Predictions/"
+                + dataset
+                + "/trainResample"
+                + str(resample_id)
+                + ".csv"
+            )
+    if os.path.exists(full_path) and os.path.exists(full_path2):
+        return True
+    return False
+
+
 if __name__ == "__main__":
     """
     Example simple usage, with arguments input via script or hard coded for testing.
@@ -83,22 +109,25 @@ if __name__ == "__main__":
         else:
             tf = False
 
-        print(" GEN TRAIN FILES  = ", tf)
         if len(sys.argv) > 7:
             predefined_resample = sys.argv[7].lower() == "true"
         else:
             predefined_resample = False
-
-        load_and_run_classification_experiment(
-            problem_path=data_dir,
-            results_path=results_dir,
-            classifier=set_classifier(classifier, resample, tf),
-            cls_name=classifier,
-            dataset=dataset,
-            resample_id=resample,
-            build_train=tf,
-            predefined_resample=predefined_resample,
-        )
+        # this is also checked in load_and_run, but doing a quick check here so can
+        # print a message and make sure data is not loaded
+        if results_present(results_dir,classifier,dataset,resample):
+            print("Ignoring, results already present")
+        else:
+            load_and_run_classification_experiment(
+                problem_path=data_dir,
+                results_path=results_dir,
+                classifier=set_classifier(classifier, resample, tf),
+                cls_name=classifier,
+                dataset=dataset,
+                resample_id=resample,
+                build_train=tf,
+                predefined_resample=predefined_resample,
+            )
     else:  # Local run
         print(" Local Run")
         from root import ROOT_DIR
