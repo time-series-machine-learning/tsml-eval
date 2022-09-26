@@ -1,0 +1,4 @@
+[submodule "sktime_estimator_evaluation/sktime"]
+	path = sktime_estimator_evaluation/sktime
+	url = git@github.com:alan-turing-institute/sktime.git
+	branch = estimator-evaluation
