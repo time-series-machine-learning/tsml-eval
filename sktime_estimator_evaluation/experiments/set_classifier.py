@@ -217,8 +217,7 @@ def set_classifier(cls, resample_id=None, train_file=False):
         return SignatureClassifier(random_state=resample_id)
 #        raise Exception("Need the soft dep esig package for signatures")
     elif name == "cnn" or name == "cnnclassifier":
-        raise Exception("Cannot create CNNClassifier unless tensorflow installed")
-#        return CNNClassifier()
+        return CNNClassifier()
     # requires constructor arguments
     elif name == "columnensemble" or name == "columnensembleclassifier":
         raise Exception("Cannot create a ColumnEnsembleClassifier without passing a base "
