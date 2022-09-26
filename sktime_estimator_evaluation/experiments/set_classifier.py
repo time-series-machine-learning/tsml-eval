@@ -267,6 +267,6 @@ def list_classifiers(multivariate_only=False, univariate_only=False, dictionary=
     print(len(names))
     return names
 
-str=list_classifiers(multivariate_only=True)
-for s in str:
-    print(f"\"{s}\",")
+#str=list_classifiers(multivariate_only=True)
+#for s in str:
+#    print(f"\"{s}\",")
