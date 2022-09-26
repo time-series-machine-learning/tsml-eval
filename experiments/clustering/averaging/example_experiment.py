@@ -61,7 +61,7 @@ if __name__ == '__main__':
     test_Y = test_Y[:20]
     # lcss bugs out, edr bugs out,
 
-    for distance in ['erp', 'twe', 'msm']:
+    for distance in ['msm', 'dtw', 'ddtw', 'wdtw', 'wddtw', 'erp', 'twe', 'msm']:
         print("running for distance: ", distance)
         average_params = {
             "averaging_distance_metric": distance,
