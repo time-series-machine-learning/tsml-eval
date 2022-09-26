@@ -135,6 +135,11 @@ if __name__ == "__main__":
         averaging = sys.argv[8]
         if averaging == "dba":
             results_dir = results_dir + clusterer + "_dba"
+        import classification_experiments
+        if results_present(results_dir,classifier,dataset,resample):
+            print("Ignoring, results already present")
+
+
     elif chris_config is True:
         path = "C:/Users/chris/Documents/Masters"
         data_dir = os.path.abspath(f"{path}/datasets/Univariate_ts/")

@@ -44,7 +44,8 @@ from sktime.classification.kernel_based import Arsenal, RocketClassifier
 from sktime.classification.shapelet_based import ShapeletTransformClassifier
 from sktime.classification.compose import ComposableTimeSeriesForestClassifier
 from sktime.transformations.series.summarize import SummaryTransformer
-from sktime.registry import all_estimators
+from sktime_estimator_evaluation.comparison.compare_estimators import list_estimators
+
 
 multivariate_classifiers = [
 "Arsenal",
@@ -236,36 +237,9 @@ def set_classifier(cls, resample_id=None, train_file=False):
         raise Exception("UNKNOWN CLASSIFIER ", name," in set_classifier")
 
 
-def list_all_multivariate_capable_classifiers():
-    cls = []
-    from sktime.registry import all_estimators
-    cls = all_estimators(estimator_types="classifier",
-                         filter_tags={"capability:multivariate":True}
-                         )
-    print(cls)
-    names = [i for i, _ in cls]
-    return names
 
-
-def test_set_classifier():
-    cls_list = list_classifiers(multivariate_only=True)
+def check_set_classifier():
+    cls_list = list_estimators(estimator_type="classifier",  multivariate_only=True)
     for c in cls_list:
         cls = set_classifier(c)
 
-
-def list_classifiers(multivariate_only=False, univariate_only=False, dictionary=True):
-    cls = []
-    filter_tags = {}
-    if multivariate_only:
-        filter_tags["capability:multivariate"] = True
-    if univariate_only:
-        filter_tags["capability:multivariate"] = False
-    cls = all_estimators(estimator_types="classifier", filter_tags=filter_tags)
-    print(cls)
-    names= [i for i, _ in cls]
-    print(len(names))
-    return names
-
-#str=list_classifiers(multivariate_only=True)
-#for s in str:
-#    print(f"\"{s}\",")
