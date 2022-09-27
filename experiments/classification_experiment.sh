@@ -79,7 +79,7 @@ python ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} \
 
 echo ${count} ${classifier}/${dataset}
 
-sbatch < generatedFile.sub --qos=ht
+sbatch < generatedFile.sub
 fi
 
 done
