@@ -31,7 +31,6 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
-
 CLUSTER_METRIC_CALLABLES = [
     MetricCallable(name="RI", callable=rand_score),
     MetricCallable(name="AMI", callable=adjusted_mutual_info_score),
@@ -173,7 +172,7 @@ def evaluate_raw_results(
         experiment_name: str,
         path: str,
         metrics: List[Union[MetricCallable, str]] = None,
-        output_dir: str = None
+        output_dir: str = None,
 ) -> List[MetricResults]:
     """Evaluate the results of a experiment.
 
@@ -243,6 +242,9 @@ def evaluate_raw_results(
         {'name': 'example_metric', 'callable': example_metric}
     output_dir: str
         Path to directory to output result. If it doesn't exist then it is created
+    split: str, defaults = 'both'
+        Whether to evaluate the results for the test split, train split or both.
+        Must be 'train', 'test' or 'both'.
 
     Returns
     -------

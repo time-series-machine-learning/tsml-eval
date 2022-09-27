@@ -5,6 +5,7 @@ import warnings
 from itertools import combinations
 from operator import itemgetter
 from typing import Generator, List, Tuple, Union
+import networkx
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -207,39 +208,56 @@ def _k_cliques(graph: List[List[int]]) -> List[List[int]]:
     return valid_cliques
 
 
-def form_cliques(p_values, estimators) -> List[List[int]]:
-    """For clique for critical difference.
-
-    This method is used to find grouping that are not critically different so that they
-    can be connected in the final graph.
-
-    Parameters
-    ----------
-    p_values: List[Tuple]
-        List of tuples of length 4. Where index 0 is the name of the first estimator,
-        index 1 is the name of the estimator it was compared to, index 2 is the p value
-        and index 3 is a boolean that when true means two classifiers are not critically
-        different and false means they are critically different.
-    estimators: Pd.Index
-        Index of keys that are the estimators.
-
-    Returns
-    -------
-    List[List[int]]
-        List where each list contains the index of the estimators that are not
-        critically different.
+def form_cliques(p_values, nnames):
     """
-    m = len(estimators)
-    graph = np.zeros((m, m), dtype=np.int64)
+    This method forms the cliques
+    """
+    # first form the numpy matrix data
+    m = len(nnames)
+    g_data = np.zeros((m, m), dtype=np.int64)
     for p in p_values:
-        if not p[3]:
-            i = np.where(estimators == p[0])[0]
-            j = np.where(estimators == p[1])[0]
+        if p[3] == False:
+            i = np.where(nnames == p[0])[0][0]
+            j = np.where(nnames == p[1])[0][0]
             min_i = min(i, j)
             max_j = max(i, j)
-            graph[min_i, max_j] = 1
+            g_data[min_i, max_j] = 1
 
-    return _k_cliques(graph)
+    g = networkx.Graph(g_data)
+    return networkx.find_cliques(g)
+# def form_cliques(p_values, estimators) -> List[List[int]]:
+#     """For clique for critical difference.
+#
+#     This method is used to find grouping that are not critically different so that they
+#     can be connected in the final graph.
+#
+#     Parameters
+#     ----------
+#     p_values: List[Tuple]
+#         List of tuples of length 4. Where index 0 is the name of the first estimator,
+#         index 1 is the name of the estimator it was compared to, index 2 is the p value
+#         and index 3 is a boolean that when true means two classifiers are not critically
+#         different and false means they are critically different.
+#     estimators: Pd.Index
+#         Index of keys that are the estimators.
+#
+#     Returns
+#     -------
+#     List[List[int]]
+#         List where each list contains the index of the estimators that are not
+#         critically different.
+#     """
+#     m = len(estimators)
+#     graph = np.zeros((m, m), dtype=np.int64)
+#     for p in p_values:
+#         if not p[3]:
+#             i = np.where(estimators == p[0])[0]
+#             j = np.where(estimators == p[1])[0]
+#             min_i = min(i, j)
+#             max_j = max(i, j)
+#             graph[min_i, max_j] = 1
+#
+#     return _k_cliques(graph)
 
 
 def _compute_wilcoxon_signed_rank(

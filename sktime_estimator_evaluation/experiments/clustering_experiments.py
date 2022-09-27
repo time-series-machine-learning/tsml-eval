@@ -22,10 +22,13 @@ from sklearn.preprocessing import normalize
 
 import sktime.datasets.tsc_dataset_names as dataset_lists
 from sktime.benchmarking.experiments import run_clustering_experiment
-from sktime.clustering.k_means import TimeSeriesKMeans
-from sktime.clustering.k_medoids import TimeSeriesKMedoids
 from sktime.datasets import load_from_tsfile as load_ts
 from sktime.datasets import load_gunpoint
+from sktime.clustering.k_means import TimeSeriesKMeans
+from sktime.clustering.k_medoids import TimeSeriesKMedoids
+from sktime_estimator_evaluation.experiments.classification_experiments import results_present
+
+
 
 """Prototype mechanism for testing classifiers on the UCR format. This mirrors the
 mechanism used in Java,
@@ -110,6 +113,7 @@ def _recreate_results(trainX, trainY):
         distance_params={"window": 0.2},
         n_clusters=len(set(train_Y)),
         random_state=1,
+        verbose=True
     )
     clst.fit(trainX)
     preds = clst.predict(trainY)
@@ -122,7 +126,7 @@ if __name__ == "__main__":
     Example simple usage, with arguments input via script or hard coded for testing.
     """
     clusterer = "kmeans"
-    chris_config = False  # This is so chris doesn't have to change config each time
+    chris_config = True  # This is so chris doesn't have to change config each time
     tune = False
     if sys.argv.__len__() > 1:  # cluster run, this is fragile
         data_dir = sys.argv[1]
@@ -130,39 +134,46 @@ if __name__ == "__main__":
         distance = sys.argv[3]
         dataset = sys.argv[4]
         resample = int(sys.argv[5]) - 1
-        tf = sys.argv[6]
+        tf = bool(sys.argv[6])
         clusterer = sys.argv[7]
         averaging = sys.argv[8]
         if averaging == "dba":
             results_dir = results_dir + clusterer + "_dba"
         import classification_experiments
-        if results_present(results_dir,classifier,dataset,resample):
+        if results_present(results_dir,clusterer,dataset,resample):
             print("Ignoring, results already present")
 
 
     elif chris_config is True:
         path = "C:/Users/chris/Documents/Masters"
-        data_dir = os.path.abspath(f"{path}/datasets/Univariate_ts/")
+        data_dir = os.path.abspath(f"{path}/datasets/Multivariate_ts/")
         results_dir = os.path.abspath(f"{path}/results/")
-        dataset = "ElectricDevices"
+        dataset = "Handwriting"
         resample = 2
+        averaging = "mean"
         tf = True
-        distance = "msm"
+        distance = "dtw"
+
     else:  # Local run
         print(" Local Run")
         dataset = "Chinatown"
         data_dir = f"c:/temp/"
         results_dir = "./temp"
         resample = 0
-        averaging = "mean"
+        averaging = "dba"
         tf = True
-        distance = "euclidean"
-    train_X, train_Y = load_ts(
-        f"{data_dir}/{dataset}/{dataset}_TRAIN.ts", return_data_type="numpy2d"
-    )
-    test_X, test_Y = load_ts(
-        f"{data_dir}/{dataset}/{dataset}_TEST.ts", return_data_type="numpy2d"
-    )
+        distance = "dtw"
+
+    if isinstance(dataset, str):
+        train_X, train_Y = load_ts(
+            f"{data_dir}/{dataset}/{dataset}_TRAIN.ts", return_data_type="numpy2d"
+        )
+        test_X, test_Y = load_ts(
+            f"{data_dir}/{dataset}/{dataset}_TEST.ts", return_data_type="numpy2d"
+        )
+    else:
+        train_X, train_Y = dataset('train', return_X_y=True)
+        test_X, test_Y = dataset('test', return_X_y=True)
     #    train_X = np.concatenate((train_X, test_X), axis=0)
     #    train_Y = np.concatenate((train_Y, test_Y), axis=0)
     #    _recreate_results(train_X, train_Y)
@@ -175,19 +186,20 @@ if __name__ == "__main__":
     train_X = train_X.T
     test_X = s.fit_transform(test_X.T)
     test_X = test_X.T
+    w = 1.0
     if tune:
         w = tune_window(distance, train_X, len(set(train_Y)))
         name = clusterer + "-" + distance + "-tuned"
     else:
         name = clusterer + "-" + distance
-        w = 1.0
-        if (
-            distance == "wdtw"
-            or distance == "dwdtw"
-            or distance == "dtw"
-            or distance == "wdtw"
-        ):
-            w = 0.2
+    #     w = 1.0
+    #     if (
+    #         distance == "wdtw"
+    #         or distance == "dwdtw"
+    #         or distance == "dtw"
+    #         or distance == "wdtw"
+    #     ):
+    #         w = 0.2
     parameters = {
         "window": w,
         "epsilon": 0.05,
@@ -195,17 +207,25 @@ if __name__ == "__main__":
         "c": 1,
         "nu": 0.05,
         "lmbda": 1.0,
+        "strategy": "independent",
+    }
+    average_params = {
+        "averaging_distance_metric": distance,
+        "medoids_distance_metric": distance,
     }
     if clusterer == "kmeans":
+        print("running kmeans")
+        format_kwargs = {**average_params, **parameters}
         clst = TimeSeriesKMeans(
             averaging_method=averaging,
-            average_params={"averaging_distance_metric": "dtw"},
+            average_params=format_kwargs,
             metric=distance,
             distance_params=parameters,
             n_clusters=len(set(train_Y)),
             random_state=resample + 1,
+            verbose=True,
         )
-    elif clusterer == "kmedoids":
+    else:
         clst = TimeSeriesKMedoids(
             metric=distance,
             distance_params=parameters,
