@@ -26,6 +26,7 @@ from sktime.datasets import load_from_tsfile as load_ts
 from sktime.datasets import load_gunpoint
 from sktime.clustering.k_means import TimeSeriesKMeans
 from sktime.clustering.k_medoids import TimeSeriesKMedoids
+from sktime_estimator_evaluation.experiments.classification_experiments import results_present
 
 
 
@@ -125,7 +126,7 @@ if __name__ == "__main__":
     Example simple usage, with arguments input via script or hard coded for testing.
     """
     clusterer = "kmeans"
-    chris_config = False  # This is so chris doesn't have to change config each time
+    chris_config = True  # This is so chris doesn't have to change config each time
     tune = False
     if sys.argv.__len__() > 1:  # cluster run, this is fragile
         data_dir = sys.argv[1]
@@ -139,7 +140,7 @@ if __name__ == "__main__":
         if averaging == "dba":
             results_dir = results_dir + clusterer + "_dba"
         import classification_experiments
-        if results_present(results_dir,classifier,dataset,resample):
+        if results_present(results_dir,clusterer,dataset,resample):
             print("Ignoring, results already present")
 
 
@@ -149,9 +150,9 @@ if __name__ == "__main__":
         results_dir = os.path.abspath(f"{path}/results/")
         dataset = "Handwriting"
         resample = 2
-        averaging = "dba"
+        averaging = "mean"
         tf = True
-        distance = "msm"
+        distance = "dtw"
 
     else:  # Local run
         print(" Local Run")

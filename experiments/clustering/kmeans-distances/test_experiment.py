@@ -18,15 +18,14 @@ from sktime.datasets import load_gunpoint
 from sktime.clustering.k_means import TimeSeriesKMeans
 from sktime.clustering.k_medoids import TimeSeriesKMedoids
 
-if __name__ == '__main__':
+def test_experiment():
     print("starting test experiment")
     path = "C:/Users/chris/Documents/Masters"
     data_dir = os.path.abspath(f"{path}/datasets/Multivariate_ts/")
     results_dir = os.path.abspath(f"{path}/results/")
     dataset = "Handwriting"
     resample = 2
-    averaging = "dba"
-    tf = True
+    averaging = "mean"
     parameters = {
         "window": 1.0,
         "epsilon": 0.05,
@@ -61,7 +60,7 @@ if __name__ == '__main__':
     test_Y = test_Y[:20]
     # lcss bugs out, edr bugs out,
 
-    for distance in ['msm', 'dtw', 'ddtw', 'wdtw', 'wddtw', 'erp', 'twe', 'msm']:
+    for distance in ['msm', 'dtw', 'ddtw', 'wdtw', 'wddtw', 'erp', 'twe', 'msm', 'euclidean']:
         print("running for distance: ", distance)
         average_params = {
             "averaging_distance_metric": distance,
