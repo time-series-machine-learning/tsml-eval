@@ -44,7 +44,6 @@ from sktime.classification.kernel_based import Arsenal, RocketClassifier
 from sktime.classification.shapelet_based import ShapeletTransformClassifier
 from sktime.classification.compose import ComposableTimeSeriesForestClassifier
 from sktime.transformations.series.summarize import SummaryTransformer
-from sktime_estimator_evaluation.comparison.compare_estimators import list_estimators
 
 
 multivariate_classifiers = [
@@ -154,9 +153,9 @@ def set_classifier(cls, resample_id=None, train_file=False):
         return MatrixProfileClassifier(random_state=resample_id)
     elif name == "freshprince":
         return FreshPRINCE(random_state=resample_id)
-    elif name == "randomintervalclassifier":
+    elif name == "randomintervalclassifier" or name == "randominterval":
         return RandomIntervalClassifier(random_state=resample_id)
-    elif name == "tsfreshclassifier":
+    elif name == "tsfreshclassifier" or  name == "tsfresh":
         return TSFreshClassifier(random_state=resample_id)
     # hybrids
     elif name == "hc1" or name == "hivecotev1":
@@ -235,11 +234,4 @@ def set_classifier(cls, resample_id=None, train_file=False):
               "without passing base classifiers")
     else:
         raise Exception("UNKNOWN CLASSIFIER ", name," in set_classifier")
-
-
-
-def check_set_classifier():
-    cls_list = list_estimators(estimator_type="classifier",  multivariate_only=True)
-    for c in cls_list:
-        cls = set_classifier(c)
 
