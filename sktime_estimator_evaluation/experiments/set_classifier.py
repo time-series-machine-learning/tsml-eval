@@ -117,7 +117,7 @@ def set_classifier(cls, resample_id=None, train_file=False):
         return ProximityTree(random_state=resample_id)
     elif name == "ps" or name == "proximitystump":
         return ProximityStump(random_state=resample_id)
-    elif name == "dtw" or name == "1nn-dtw" or name == "KNeighborsTimeSeriesClassifier":
+    elif name == "dtw" or name == "1nn-dtw" or name == "kneighborstimeseriesclassifier":
         return KNeighborsTimeSeriesClassifier()
     elif name == "ed" or name == "1nn-ed":
         return KNeighborsTimeSeriesClassifier(distance="ed")
