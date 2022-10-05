@@ -9,14 +9,13 @@ queue="compute-64-512"
 username="ajb"
 mail="NONE"
 mailto="ajb@uea.ac.uk"
-# MB for jobs, max is maybe 64000 before you need ot use huge memory queue
+# MB for jobs, max is maybe 64000 before you need to use huge memory queue
 max_memory=8000
-# Max allowable is 7 days  - 168 hours
+# Max allowable is 7 days - 168 hours
 max_time="168:00:00"
-# Not sure what this does, it relates
+# Start point for the script i.e. 3 datasets, 3 classifiers, 30 folds = 270 jobs to submit, start_point=100 will skip to job 100
 start_point=1
-# Tony's work space, all should be able to read these.
-# Change if you want to use different data or lists
+# Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
 data_dir="/gpfs/home/ajb/Data/"
 datasets="/gpfs/home/ajb/DataSetLists/temp.txt"
 # Put your home directory here
@@ -29,10 +28,10 @@ script_file_path=$local_path"Code/estimator-evaluation/sktime_estimator_evaluati
 env_name="sktime-dev"
 # Generating train folds is usually slower, set to false unless you need them.
 generate_train_files="true"
-# If set for true, looks for <problem>_Train<fold>.ts file
+# If set for true, looks for <problem><fold>_TRAIN.ts file
 predefined_folds="false"
 
-# List valid classifiers e.g DrCIF TDE Arsenal STC MUSE ROCKET Mini-ROCKET Multi-ROCKET  ROCKET Mini-ROCKET Multi-ROCKET
+# List valid classifiers e.g DrCIF TDE Arsenal STC MUSE ROCKET Mini-ROCKET Multi-ROCKET
 count=0
 while read dataset; do
 for classifier in STC
@@ -43,8 +42,8 @@ numPending=$(squeue -u ${username} --format="%10i %15P %20j %10u %10t %10M %10D 
 numRunning=$(squeue -u ${username} --format="%10i %15P %20j %10u %10t %10M %10D %20R" -r | awk '{print $5, $2}' | grep "R ${queue}" | wc -l)
 while [ "$((numPending+numRunning))" -ge "${maxNumSubmitted}" ]
 do
-    echo Waiting 30s, $((numPending+numRunning)) currently submitted on ${queue}, user-defined max is ${maxNumSubmitted}
-	sleep 30
+    echo Waiting 60s, $((numPending+numRunning)) currently submitted on ${queue}, user-defined max is ${maxNumSubmitted}
+	sleep 60
 	numPending=$(squeue -u ${username} --format="%10i %15P %20j %10u %10t %10M %10D %20R" -r | awk '{print $5, $2}' | grep "PD ${queue}" | wc -l)
 	numRunning=$(squeue -u ${username} --format="%10i %15P %20j %10u %10t %10M %10D %20R" -r | awk '{print $5, $2}' | grep "R ${queue}" | wc -l)
 done
@@ -54,7 +53,7 @@ done
 if ((count>=start_point)); then
 
 mkdir -p ${out_dir}${classifier}/${dataset}/
-# his creates the scrip to run the job based on the info above
+# This creates the scrip to run the job based on the info above
 echo "#!/bin/bash
 #SBATCH --qos=ht
 #SBATCH --mail-type=${mail}
