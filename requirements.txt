@@ -3,12 +3,12 @@ cycler==0.11.0
 Deprecated==1.2.13
 fonttools==4.33.3
 iniconfig==1.1.1
-joblib==1.1.0
+joblib==1.2.0
 kiwisolver==1.4.3
 llvmlite==0.38.1
 matplotlib==3.5.2
 numba==0.55.2
-numpy==1.21.6
+numpy==1.22
 packaging==21.3
 pandas==1.4.3
 patsy==0.5.2
