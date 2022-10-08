@@ -68,7 +68,6 @@ do
     fi
 done
 
-
 if [ "${array_jobs}" != "" ]; then
 
 # This creates the scrip to run the job based on the info above
