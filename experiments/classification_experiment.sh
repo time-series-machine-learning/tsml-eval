@@ -59,18 +59,15 @@ mkdir -p ${out_dir}${classifier}/${dataset}/
 array_jobs=""
 for (( i=start_fold-1; i<max_folds; i++ ))
 do
-    test_file=${results_dir}${classifier}/Predictions/${dataset}/testResample${i}.csv
-    if [ -f "${test_file}" ]; then
-        if [ "${generate_train_files}" == "true" ]; then
-            train_file=${results_dir}${classifier}/Predictions/${dataset}/trainResample${i}.csv
-            if ! [ -f "${train_file}" ]; then
-                array_jobs="${array_jobs}${array_jobs:+,}${i}"
-            fi
+    if [ -f "${results_dir}${classifier}/Predictions/${dataset}/testResample${i}.csv" ]; then
+        if [ "${generate_train_files}" == "true" ] && ! [ -f "${results_dir}${classifier}/Predictions/${dataset}/trainResample${i}.csv" ]; then
+            array_jobs="${array_jobs}${array_jobs:+,}${i}"
         fi
     else
         array_jobs="${array_jobs}${array_jobs:+,}${i}"
     fi
 done
+
 
 if [ "${array_jobs}" != "" ]; then
 
