@@ -3,9 +3,10 @@
 max_folds=30
 start_fold=1
 # To avoid dumping 1000s of jobs in the queue we have a higher level queue
-maxNumSubmitted=700
-# queue options are https://my.uea.ac.uk/divisions/it-and-computing-services/service-catalogue/research-it-services/hpc/ada-cluster/using-ada
+max_num_submitted=300
+# Queue options are https://my.uea.ac.uk/divisions/it-and-computing-services/service-catalogue/research-it-services/hpc/ada-cluster/using-ada
 queue="compute-64-512"
+# Enter your username and email here
 username="ajb"
 mail="NONE"
 mailto="ajb@uea.ac.uk"
@@ -13,7 +14,7 @@ mailto="ajb@uea.ac.uk"
 max_memory=8000
 # Max allowable is 7 days - 168 hours
 max_time="168:00:00"
-# Start point for the script i.e. 3 datasets, 3 classifiers, 30 folds = 270 jobs to submit, start_point=100 will skip to job 100
+# Start point for the script i.e. 3 datasets, 3 classifiers = 9 jobs to submit, start_point=5 will skip to job 5
 start_point=1
 # Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
 data_dir="/gpfs/home/ajb/Data/"
@@ -26,9 +27,9 @@ out_dir=$local_path"Code/output/multivariate/"
 script_file_path=$local_path"Code/estimator-evaluation/sktime_estimator_evaluation/experiments/classification_experiments.py"
 # Env set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
 env_name="sktime-dev"
-# Generating train folds is usually slower, set to false unless you need them.
+# Generating train folds is usually slower, set to false unless you need them
 generate_train_files="true"
-# If set for true, looks for <problem><fold>_TRAIN.ts file
+# If set for true, looks for <problem><fold>_TRAIN.ts file. This is useful for running tsml resamples
 predefined_folds="false"
 
 # List valid classifiers e.g DrCIF TDE Arsenal STC MUSE ROCKET Mini-ROCKET Multi-ROCKET
@@ -37,22 +38,42 @@ while read dataset; do
 for classifier in STC
 do
 
-# This is the loop to keep from dumping everything in the queue which is maintained around maxNumSubmitted jobs
-numPending=$(squeue -u ${username} --format="%10i %15P %20j %10u %10t %10M %10D %20R" -r | awk '{print $5, $2}' | grep "PD ${queue}" | wc -l)
-numRunning=$(squeue -u ${username} --format="%10i %15P %20j %10u %10t %10M %10D %20R" -r | awk '{print $5, $2}' | grep "R ${queue}" | wc -l)
-while [ "$((numPending+numRunning))" -ge "${maxNumSubmitted}" ]
+# This is the loop to keep from dumping everything in the queue which is maintained around max_num_submitted jobs
+num_pending=$(squeue -u ${username} --format="%10i %15P %20j %10u %10t %10M %10D %20R" -r | awk '{print $5, $2}' | grep "PD ${queue}" | wc -l)
+num_running=$(squeue -u ${username} --format="%10i %15P %20j %10u %10t %10M %10D %20R" -r | awk '{print $5, $2}' | grep "R ${queue}" | wc -l)
+while [ "$((num_pending+num_running))" -ge "${max_num_submitted}" ]
 do
-    echo Waiting 60s, $((numPending+numRunning)) currently submitted on ${queue}, user-defined max is ${maxNumSubmitted}
+    echo Waiting 60s, $((num_pending+num_running)) currently submitted on ${queue}, user-defined max is ${max_num_submitted}
 	sleep 60
-	numPending=$(squeue -u ${username} --format="%10i %15P %20j %10u %10t %10M %10D %20R" -r | awk '{print $5, $2}' | grep "PD ${queue}" | wc -l)
-	numRunning=$(squeue -u ${username} --format="%10i %15P %20j %10u %10t %10M %10D %20R" -r | awk '{print $5, $2}' | grep "R ${queue}" | wc -l)
+	num_pending=$(squeue -u ${username} --format="%10i %15P %20j %10u %10t %10M %10D %20R" -r | awk '{print $5, $2}' | grep "PD ${queue}" | wc -l)
+	num_running=$(squeue -u ${username} --format="%10i %15P %20j %10u %10t %10M %10D %20R" -r | awk '{print $5, $2}' | grep "R ${queue}" | wc -l)
 done
 
+# Skip to the script start point
 ((count++))
-
 if ((count>=start_point)); then
 
 mkdir -p ${out_dir}${classifier}/${dataset}/
+
+# This skips jobs which have test/train files already written to the results directory. Only looks for Resamples, not Folds (old file name) 
+array_jobs=""
+for (( i=start_fold-1; i<max_folds; i++ ))
+do
+    test_file=${results_dir}${classifier}/Predictions/${dataset}/testResample${i}.csv
+    if [ -f "${test_file}" ]; then
+        if [ "${generate_train_files}" == "true" ]; then
+            train_file=${results_dir}${classifier}/Predictions/${dataset}/trainResample${i}.csv
+            if ! [ -f "${train_file}" ]; then
+                array_jobs="${array_jobs}${array_jobs:+,}${i}"
+            fi
+        fi
+    else
+        array_jobs="${array_jobs}${array_jobs:+,}${i}"
+    fi
+done
+
+if [ "${array_jobs}" != "" ]; then
+
 # This creates the scrip to run the job based on the info above
 echo "#!/bin/bash
 #SBATCH --qos=ht
@@ -61,7 +82,7 @@ echo "#!/bin/bash
 #SBATCH -p ${queue}
 #SBATCH -t ${max_time}
 #SBATCH --job-name=${classifier}${dataset}
-#SBATCH --array=${start_fold}-${max_folds}
+#SBATCH --array=${array_jobs}
 #SBATCH --mem=${max_memory}M
 #SBATCH -o ${out_dir}${classifier}/${dataset}/%A-%a.out
 #SBATCH -e ${out_dir}${classifier}/${dataset}/%A-%a.err
@@ -79,8 +100,12 @@ python ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} \
 echo ${count} ${classifier}/${dataset}
 
 sbatch < generatedFile.sub
+
+else
+    echo ${count} ${classifier}/${dataset} has finshed all required folds, skipping
 fi
 
+fi
 done
 done < ${datasets}
 
