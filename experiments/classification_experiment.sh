@@ -99,7 +99,7 @@ echo ${count} ${classifier}/${dataset}
 sbatch < generatedFile.sub
 
 else
-    echo ${count} ${classifier}/${dataset} has finshed all required folds, skipping
+    echo ${count} ${classifier}/${dataset} has finished all required resamples, skipping
 fi
 
 fi
