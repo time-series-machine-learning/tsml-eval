@@ -5,6 +5,9 @@ __author__ = ["TonyBagnall"]
 from sklearn.ensemble import RandomForestClassifier
 
 from sktime.classification.deep_learning import CNNClassifier
+from sktime.classification.deep_learning import MLPClassifier
+from sktime.classification.deep_learning import FCNClassifier
+from sktime.classification.deep_learning import TapNetClassifier
 #from sktime.classification.dummy import DummyClassifier
 from sktime.classification.dictionary_based import (
     MUSE,
@@ -218,6 +221,12 @@ def set_classifier(cls, resample_id=None, train_file=False):
 #        raise Exception("Need the soft dep esig package for signatures")
     elif name == "cnn" or name == "cnnclassifier":
         return CNNClassifier()
+    elif name == "fcnn" or name == "fcnclassifier":
+        return FCNClassifier()
+    elif name == "mlp" or name == "mlpclassifier":
+        return MLPClassifier()
+    elif name == "tapnet" or name == "tapnetclassifier":
+        return TapNetClassifier()
     # requires constructor arguments
     elif name == "columnensemble" or name == "columnensembleclassifier":
         raise Exception("Cannot create a ColumnEnsembleClassifier without passing a base "
