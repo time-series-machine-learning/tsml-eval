@@ -5,9 +5,6 @@ __author__ = ["TonyBagnall"]
 from sklearn.ensemble import RandomForestClassifier
 
 from sktime.classification.deep_learning import CNNClassifier
-from sktime.classification.deep_learning import MLPClassifier
-from sktime.classification.deep_learning import FCNClassifier
-from sktime.classification.deep_learning import TapNetClassifier
 #from sktime.classification.dummy import DummyClassifier
 from sktime.classification.dictionary_based import (
     MUSE,
@@ -222,10 +219,13 @@ def set_classifier(cls, resample_id=None, train_file=False):
     elif name == "cnn" or name == "cnnclassifier":
         return CNNClassifier()
     elif name == "fcnn" or name == "fcnclassifier":
+        from sktime.classification.deep_learning.fcn import FCNClassifier
         return FCNClassifier()
     elif name == "mlp" or name == "mlpclassifier":
+        from sktime.classification.deep_learning.mlp import MLPClassifier
         return MLPClassifier()
     elif name == "tapnet" or name == "tapnetclassifier":
+        from sktime.classification.deep_learning.tapnet import TapNetClassifier
         return TapNetClassifier()
     # requires constructor arguments
     elif name == "columnensemble" or name == "columnensembleclassifier":
