@@ -1,4 +1,7 @@
 #!/bin/bash
+# GPU jobs require two changes:
+#queue="gpu-rtx6000-2"
+#SBATCH --qos=gpu-rtx
 # Start and end for resamples
 max_folds=30
 start_fold=1
@@ -61,7 +64,7 @@ if ((count>=start_point)); then
 
 mkdir -p ${out_dir}${classifier}/${dataset}/
 
-# This skips jobs which have test/train files already written to the results directory. Only looks for Resamples, not Folds (old file name) 
+# This skips jobs which have test/train files already written to the results directory. Only looks for Resamples, not Folds (old file name)
 array_jobs=""
 for (( i=start_fold-1; i<max_folds; i++ ))
 do

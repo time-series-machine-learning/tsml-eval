@@ -16,10 +16,7 @@ os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
 
 import sktime.datasets.tsc_dataset_names as dataset_lists
 from set_classifier import set_classifier
-#from sktime._contrib.set_classifier import set_classifier
 from sktime.benchmarking.experiments import load_and_run_classification_experiment
-from sktime.classification.deep_learning import CNNClassifier
-from sktime.classification.interval_based import CanonicalIntervalForest
 from sktime.datasets import load_from_tsfile_to_dataframe as load_ts
 
 """Prototype mechanism for testing classifiers on the UCR format. This mirrors the
@@ -60,13 +57,9 @@ def list_estimators(estimator_type="classifier", multivariate_only=False,
     return names
 
 
-str=list_estimators(estimator_type="classifier")
-for s in str:
-    print(f"\"{s}\",")
-
-str=list_estimators(estimator_type="clusterer")
-for s in str:
-    print(f"\"{s}\",")
+#str=list_estimators(estimator_type="classifier")
+#for s in str:
+#    print(f"\"{s}\",")
 
 
 def demo_loading():
@@ -128,11 +121,8 @@ def results_present(results_path, cls_name, dataset, resample_id):
     return False
 
 
-if __name__ == "__main__":
-    """
-    Example simple usage, with arguments input via script or hard coded for testing.
-    """
-    if sys.argv.__len__() > 1:  # cluster run, this is fragile
+def run_experiment(args):
+    if args.__len__() > 1:  # cluster run, this is fragile
         print(" Input args = ",sys.argv)
         data_dir = sys.argv[1]
         results_dir = sys.argv[2]
@@ -187,3 +177,10 @@ if __name__ == "__main__":
             build_train=tf,
             predefined_resample=predefined_resample,
         )
+
+
+if __name__ == "__main__":
+    """
+    Example simple usage, with arguments input via script or hard coded for testing.
+    """
+    run_experiment(sys.argv)
