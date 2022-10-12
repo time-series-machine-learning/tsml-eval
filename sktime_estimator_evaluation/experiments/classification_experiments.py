@@ -156,7 +156,6 @@ def run_experiment(args):
             )
     else:  # Local run
         print(" Local Run")
-        from root import ROOT_DIR
         data_dir = "/home/ajb/Data/"
         results_dir = "/home/ajb/temp/"
         cls_name = "TDE"
