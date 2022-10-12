@@ -160,7 +160,8 @@ def run_experiment(args):
         data_dir = ROOT_DIR+"/sktime_estimator_evaluation/datasets/data/"
         results_dir = "./temp/"
         cls_name = "tsf"
-        classifier = set_classifier(cls_name)
+        n_jobs =60
+        classifier = set_classifier(cls_name,n_jobs=n_jobs)
         dataset = "UnitTest"
         resample = 0
         tf = False
