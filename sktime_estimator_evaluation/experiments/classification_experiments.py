@@ -159,8 +159,8 @@ def run_experiment(args):
         print(" Local Run")
         data_dir = "/home/ajb/Data/"
         results_dir = "/home/ajb/temp/"
-        cls_name = "TDE"
-        n_jobs = 60
+        cls_name = "DrCIF"
+        n_jobs = 10
         classifier = set_classifier(cls_name, n_jobs=n_jobs)
         dataset = "FaceDetection"
         resample = 0
