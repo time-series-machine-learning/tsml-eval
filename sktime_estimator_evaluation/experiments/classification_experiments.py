@@ -10,9 +10,9 @@ __author__ = ["TonyBagnall"]
 import os
 import sys
 
-os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
-os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
-os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
+#os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
+#os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
+#os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
 
 import sktime.datasets.tsc_dataset_names as dataset_lists
 from set_classifier import set_classifier
@@ -159,7 +159,7 @@ def run_experiment(args):
         data_dir = "/home/ajb/Data/"
         results_dir = "/home/ajb/temp/"
         cls_name = "TDE"
-        n_jobs =60
+        n_jobs = 60
         classifier = set_classifier(cls_name, n_jobs=n_jobs)
         dataset = "FaceDetection"
         resample = 0

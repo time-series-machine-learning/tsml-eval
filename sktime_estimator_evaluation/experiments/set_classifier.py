@@ -177,7 +177,8 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1):
         return SupervisedTimeSeriesForest(random_state=resample_id, n_estimators=500)
     elif name == "drcif":
         return DrCIF(
-            random_state=resample_id, n_estimators=500, save_transformed_data=train_file
+            random_state=resample_id, n_estimators=500,
+            save_transformed_data=train_file, n_jobs=n_jobs
         )
     # Convolution based
     elif name == "rocket" or name == "rocketclassifier":
