@@ -2,6 +2,9 @@
 # GPU jobs require two changes:
 #queue="gpu-rtx6000-2"
 #SBATCH --qos=gpu-rtx
+#ALSO CHECK: datasets (list of problems), results_dir (where to check/write results),
+# for classifier in MLPClassifier
+
 # Start and end for resamples
 max_folds=30
 start_fold=1
