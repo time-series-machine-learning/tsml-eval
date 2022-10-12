@@ -156,7 +156,7 @@ def run_experiment(args):
                 predefined_resample=predefined_resample,
             )
     else:  # Local run
-        print(" Local Run")
+        print(" Local Run of DrCIF with threading")
         data_dir = "/home/ajb/Data/"
         results_dir = "/home/ajb/temp/"
         cls_name = "DrCIF"
