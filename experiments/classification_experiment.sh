@@ -5,6 +5,7 @@ start_fold=1
 # To avoid dumping 1000s of jobs in the queue we have a higher level queue
 max_num_submitted=300
 # Queue options are https://my.uea.ac.uk/divisions/it-and-computing-services/service-catalogue/research-it-services/hpc/ada-cluster/using-ada
+# For tensorflow/GPU jobs, use "gpu-rtx6000-2"
 queue="compute-64-512"
 # Enter your username and email here
 username="ajb"
@@ -12,21 +13,26 @@ mail="NONE"
 mailto="ajb@uea.ac.uk"
 # MB for jobs, max is maybe 64000 before you need to use huge memory queue
 max_memory=8000
+
 # Max allowable is 7 days - 168 hours
 max_time="168:00:00"
+
 # Start point for the script i.e. 3 datasets, 3 classifiers = 9 jobs to submit, start_point=5 will skip to job 5
 start_point=1
+
 # Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
 data_dir="/gpfs/home/ajb/Data/"
 datasets="/gpfs/home/ajb/DataSetLists/temp.txt"
+
 # Put your home directory here
 local_path="/gpfs/home/ajb/"
+
 # Change these to reflect your own file structure
 results_dir=$local_path"ClassificationResults/MultivariateReferenceResults/sktime/"
 out_dir=$local_path"Code/output/multivariate/"
 script_file_path=$local_path"Code/estimator-evaluation/sktime_estimator_evaluation/experiments/classification_experiments.py"
-# Env set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
-env_name="sktime-dev"
+# environment name, change accordingly, for set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
+env_name="env"
 # Generating train folds is usually slower, set to false unless you need them
 generate_train_files="true"
 # If set for true, looks for <problem><fold>_TRAIN.ts file. This is useful for running tsml resamples
@@ -37,7 +43,7 @@ count=0
 while read dataset; do
 for classifier in STC
 do
-
+# Dont change anything after here
 # This is the loop to keep from dumping everything in the queue which is maintained around max_num_submitted jobs
 num_pending=$(squeue -u ${username} --format="%10i %15P %20j %10u %10t %10M %10D %20R" -r | awk '{print $5, $2}' | grep "PD ${queue}" | wc -l)
 num_running=$(squeue -u ${username} --format="%10i %15P %20j %10u %10t %10M %10D %20R" -r | awk '{print $5, $2}' | grep "R ${queue}" | wc -l)
