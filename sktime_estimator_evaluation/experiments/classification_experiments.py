@@ -157,18 +157,18 @@ def run_experiment(args):
     else:  # Local run
         print(" Local Run")
         from root import ROOT_DIR
-        data_dir = ROOT_DIR+"/sktime_estimator_evaluation/datasets/data/"
-        results_dir = "./temp/"
-        cls_name = "tsf"
+        data_dir = "/home/ajb/Data/"
+        results_dir = "/home/ajb/temp/"
+        cls_name = "TDE"
         n_jobs =60
-        classifier = set_classifier(cls_name,n_jobs=n_jobs)
-        dataset = "UnitTest"
+        classifier = set_classifier(cls_name, n_jobs=n_jobs)
+        dataset = "FaceDetection"
         resample = 0
         tf = False
         predefined_resample = False
 
         load_and_run_classification_experiment(
-            overwrite=True,
+            overwrite=False,
             problem_path=data_dir,
             results_path=results_dir,
             cls_name=cls_name,
