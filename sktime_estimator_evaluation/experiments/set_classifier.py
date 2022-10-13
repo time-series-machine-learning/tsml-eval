@@ -95,22 +95,23 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1):
     name = cls.lower()
     # Dictionary based
     if name == "boss" or name == "bossensemble":
-        return BOSSEnsemble(random_state=resample_id)
+        return BOSSEnsemble(random_state=resample_id, n_jobs=n_jobs, save_train_predictions=train_file)
     elif name == "individualboss":
         return IndividualBOSS(
-            random_state=resample_id
+            random_state=resample_id,
+            n_jobs=n_jobs,
         )
     elif name == "cboss" or name == "contractableboss":
-        return ContractableBOSS(random_state=resample_id)
+        return ContractableBOSS(random_state=resample_id, n_jobs=n_jobs,)
     elif name == "tde" or name == "temporaldictionaryensemble":
         return TemporalDictionaryEnsemble(random_state=resample_id,
                                           save_train_predictions=train_file, n_jobs=n_jobs)
     elif name == "individualtde":
-        return IndividualTDE(random_state=resample_id)
+        return IndividualTDE(random_state=resample_id, n_jobs=n_jobs)
     elif name == "weasel":
-        return WEASEL(random_state=resample_id)
+        return WEASEL(random_state=resample_id, n_jobs=n_jobs, support_probabilities=True)
     elif name == "muse":
-        return MUSE(random_state=resample_id)
+        return MUSE(random_state=resample_id, n_jobs=n_jobs)
     # Distance based
     elif name == "pf" or name == "proximityforest":
         return ProximityForest(random_state=resample_id)
