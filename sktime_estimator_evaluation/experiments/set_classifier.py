@@ -69,7 +69,7 @@ multivariate_classifiers = [
 "WeightedEnsembleClassifier",
 ]
 
-def set_classifier(cls, resample_id=None, train_file=False):
+def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1):
     """Construct a classifier, possibly seeded.
 
     Basic way of creating the classifier to build using the default settings. This
@@ -103,7 +103,8 @@ def set_classifier(cls, resample_id=None, train_file=False):
     elif name == "cboss" or name == "contractableboss":
         return ContractableBOSS(random_state=resample_id)
     elif name == "tde" or name == "temporaldictionaryensemble":
-        return TemporalDictionaryEnsemble(random_state=resample_id, save_train_predictions=train_file)
+        return TemporalDictionaryEnsemble(random_state=resample_id,
+                                          save_train_predictions=train_file, n_jobs=n_jobs)
     elif name == "individualtde":
         return IndividualTDE(random_state=resample_id)
     elif name == "weasel":
@@ -176,7 +177,8 @@ def set_classifier(cls, resample_id=None, train_file=False):
         return SupervisedTimeSeriesForest(random_state=resample_id, n_estimators=500)
     elif name == "drcif":
         return DrCIF(
-            random_state=resample_id, n_estimators=500, save_transformed_data=train_file
+            random_state=resample_id, n_estimators=500,
+            save_transformed_data=train_file, n_jobs=n_jobs
         )
     # Convolution based
     elif name == "rocket" or name == "rocketclassifier":
@@ -218,6 +220,15 @@ def set_classifier(cls, resample_id=None, train_file=False):
 #        raise Exception("Need the soft dep esig package for signatures")
     elif name == "cnn" or name == "cnnclassifier":
         return CNNClassifier()
+    elif name == "fcnn" or name == "fcnclassifier":
+        from sktime.classification.deep_learning.fcn import FCNClassifier
+        return FCNClassifier()
+    elif name == "mlp" or name == "mlpclassifier":
+        from sktime.classification.deep_learning.mlp import MLPClassifier
+        return MLPClassifier()
+    elif name == "tapnet" or name == "tapnetclassifier":
+        from sktime.classification.deep_learning.tapnet import TapNetClassifier
+        return TapNetClassifier()
     # requires constructor arguments
     elif name == "columnensemble" or name == "columnensembleclassifier":
         raise Exception("Cannot create a ColumnEnsembleClassifier without passing a base "

@@ -121,6 +121,13 @@ def _recreate_results(trainX, trainY):
     print("Score = ", score)
 
 
+#from classification_experiments import list_estimators
+#str=list_estimators(estimator_type="clusterer")
+#for s in str:
+#    print(f"\"{s}\",")
+
+
+
 if __name__ == "__main__":
     """
     Example simple usage, with arguments input via script or hard coded for testing.

@@ -10,27 +10,57 @@ __author__ = ["TonyBagnall"]
 import os
 import sys
 
-os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
-os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
-os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
+#os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
+#os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
+#os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
+
 
 import sktime.datasets.tsc_dataset_names as dataset_lists
 from set_classifier import set_classifier
-#from sktime._contrib.set_classifier import set_classifier
 from sktime.benchmarking.experiments import load_and_run_classification_experiment
-from sktime.classification.deep_learning import CNNClassifier
-from sktime.classification.interval_based import CanonicalIntervalForest
 from sktime.datasets import load_from_tsfile_to_dataframe as load_ts
 
 """Prototype mechanism for testing classifiers on the UCR format. This mirrors the
 mechanism used in Java,
 https://github.com/TonyBagnall/uea-tsc/tree/master/src/main/java/experiments
-but isfrom sktime.classification.interval_based import (
-    CanonicalIntervalForest,
- not yet as engineered. However, if you generate results using the method
+but is not yet as engineered. However, if you generate results using the method
 recommended here, they can be directly and automatically compared to the results
 generated in java.
 """
+
+
+from sktime.registry import all_estimators
+
+
+def list_all_multivariate_capable_classifiers():
+    """ Return a list of all multivariate capable classifiers in sktime."""
+    cls = []
+    from sktime.registry import all_estimators
+    cls = all_estimators(estimator_types="classifier",
+                         filter_tags={"capability:multivariate":True}
+                         )
+    names = [i for i, _ in cls]
+    return names
+
+
+def list_estimators(estimator_type="classifier", multivariate_only=False,
+                    univariate_only=False,
+                    dictionary=True):
+    """ Return a list of all estimators of given type in sktime."""
+    cls = []
+    filter_tags = {}
+    if multivariate_only:
+        filter_tags["capability:multivariate"] = True
+    if univariate_only:
+        filter_tags["capability:multivariate"] = False
+    cls = all_estimators(estimator_types=estimator_type, filter_tags=filter_tags)
+    names= [i for i, _ in cls]
+    return names
+
+
+#str=list_estimators(estimator_type="classifier")
+#for s in str:
+#    print(f"\"{s}\",")
 
 
 def demo_loading():
@@ -92,11 +122,8 @@ def results_present(results_path, cls_name, dataset, resample_id):
     return False
 
 
-if __name__ == "__main__":
-    """
-    Example simple usage, with arguments input via script or hard coded for testing.
-    """
-    if sys.argv.__len__() > 1:  # cluster run, this is fragile
+def run_experiment(args):
+    if args.__len__() > 1:  # cluster run, this is fragile
         print(" Input args = ",sys.argv)
         data_dir = sys.argv[1]
         results_dir = sys.argv[2]
@@ -129,19 +156,19 @@ if __name__ == "__main__":
                 predefined_resample=predefined_resample,
             )
     else:  # Local run
-        print(" Local Run")
-        from root import ROOT_DIR
-        data_dir = ROOT_DIR+"/sktime_estimator_evaluation/datasets/data/"
-        results_dir = "./temp/"
-        cls_name = "tsf"
-        classifier = set_classifier(cls_name)
-        dataset = "UnitTest"
+        print(" Local Run of DrCIF with threading")
+        data_dir = "/home/ajb/Data/"
+        results_dir = "/home/ajb/temp/"
+        cls_name = "DrCIF"
+        n_jobs = 10
+        classifier = set_classifier(cls_name, n_jobs=n_jobs)
+        dataset = "FaceDetection"
         resample = 0
         tf = False
         predefined_resample = False
 
         load_and_run_classification_experiment(
-            overwrite=True,
+            overwrite=False,
             problem_path=data_dir,
             results_path=results_dir,
             cls_name=cls_name,
@@ -151,3 +178,10 @@ if __name__ == "__main__":
             build_train=tf,
             predefined_resample=predefined_resample,
         )
+
+
+if __name__ == "__main__":
+    """
+    Example simple usage, with arguments input via script or hard coded for testing.
+    """
+    run_experiment(sys.argv)
