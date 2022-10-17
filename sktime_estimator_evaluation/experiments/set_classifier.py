@@ -102,7 +102,7 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1):
             n_jobs=n_jobs,
         )
     elif name == "cboss" or name == "contractableboss":
-        return ContractableBOSS(random_state=resample_id, n_jobs=n_jobs,)
+        return ContractableBOSS(random_state=resample_id, n_jobs=n_jobs)
     elif name == "tde" or name == "temporaldictionaryensemble":
         return TemporalDictionaryEnsemble(random_state=resample_id,
                                           save_train_predictions=train_file, n_jobs=n_jobs)
@@ -168,14 +168,14 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1):
     # Interval based
     elif name == "rise" or name == "randomintervalspectralforest" or name == "randomintervalspectralensemble":
         return RandomIntervalSpectralEnsemble(
-            random_state=resample_id, n_estimators=500
+            random_state=resample_id, n_estimators=500, n_jobs=n_jobs
         )
     elif name == "tsf" or name == "timeseriesforestclassifier":
-        return TimeSeriesForestClassifier(random_state=resample_id, n_estimators=500)
+        return TimeSeriesForestClassifier(random_state=resample_id, n_estimators=500, n_jobs=n_jobs)
     elif name == "cif" or name == "canonicalintervalforest":
-        return CanonicalIntervalForest(random_state=resample_id, n_estimators=500)
+        return CanonicalIntervalForest(random_state=resample_id, n_estimators=500, n_jobs=n_jobs)
     elif name == "stsf" or name == "supervisedtimeseriesforest":
-        return SupervisedTimeSeriesForest(random_state=resample_id, n_estimators=500)
+        return SupervisedTimeSeriesForest(random_state=resample_id, n_estimators=500, n_jobs=n_jobs)
     elif name == "drcif":
         return DrCIF(
             random_state=resample_id, n_estimators=500,
