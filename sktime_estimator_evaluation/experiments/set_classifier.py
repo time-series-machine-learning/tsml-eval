@@ -110,6 +110,8 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1):
         return IndividualTDE(random_state=resample_id, n_jobs=n_jobs)
     elif name == "weasel":
         return WEASEL(random_state=resample_id, n_jobs=n_jobs, support_probabilities=True)
+    elif name == "weasel-ridge":
+        return WEASEL(random_state=resample_id, n_jobs=n_jobs)
     elif name == "muse":
         return MUSE(random_state=resample_id, n_jobs=n_jobs)
     # Distance based
@@ -130,10 +132,12 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1):
     elif name == "shapedtw":
         return ShapeDTW()
     # Feature based
-    elif name == "summary" or name == "summaryclassifier":
+    elif name == "summary-500":
         return SummaryClassifier(
             random_state=resample_id, estimator=RandomForestClassifier(n_estimators=500)
         )
+    elif name == "summaryclassifier" or name == "summary":
+        return SummaryClassifier(random_state=resample_id)
     elif name == "summary-intervals":
         return RandomIntervalClassifier(
             random_state=resample_id,
@@ -143,42 +147,62 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1):
             ),
             estimator=RandomForestClassifier(n_estimators=500),
         )
-    elif name == "summary-catch22":
+    elif name == "catch22-intervals":
         return RandomIntervalClassifier(
             random_state=resample_id, estimator=RandomForestClassifier(n_estimators=500)
         )
-    elif name == "catch22" or name == "catch22classifier":
+    elif name == "randomintervalclassifier" or name == "randominterval":
+        return RandomIntervalClassifier(random_state=resample_id)
+    elif name == "catch22-500":
         return Catch22Classifier(
             random_state=resample_id, estimator=RandomForestClassifier(n_estimators=500)
         )
+    elif name == "catch22" or name == "catch22classifier":
+        return Catch22Classifier(random_state=resample_id)
     elif name == "matrixprofile" or name == "matrixprofileclassifier":
         return MatrixProfileClassifier(random_state=resample_id)
     elif name == "freshprince":
         return FreshPRINCE(random_state=resample_id)
-    elif name == "randomintervalclassifier" or name == "randominterval":
-        return RandomIntervalClassifier(random_state=resample_id)
+    elif name == name == "tsfresh-r":
+        return TSFreshClassifier(
+            random_state=resample_id, relevant_feature_extractor=True
+        )
     elif name == "tsfreshclassifier" or  name == "tsfresh":
         return TSFreshClassifier(random_state=resample_id)
+    elif name == "signatureclassifier":
+        return SignatureClassifier(random_state=resample_id)
     # hybrids
     elif name == "hc1" or name == "hivecotev1":
         return HIVECOTEV1(random_state=resample_id)
     elif name == "hc2" or name == "hivecotev2":
         return HIVECOTEV2(random_state=resample_id)
-
     # Interval based
-    elif name == "rise" or name == "randomintervalspectralforest" or name == "randomintervalspectralensemble":
+    elif name == "rise-500":
         return RandomIntervalSpectralEnsemble(
             random_state=resample_id, n_estimators=500, n_jobs=n_jobs
         )
-    elif name == "tsf" or name == "timeseriesforestclassifier":
+    elif name == "rise" or name == "randomintervalspectralforest" or name == "randomintervalspectralensemble":
+        return RandomIntervalSpectralEnsemble(random_state=resample_id, n_jobs=n_jobs)
+    elif name == "tsf-500":
         return TimeSeriesForestClassifier(random_state=resample_id, n_estimators=500, n_jobs=n_jobs)
-    elif name == "cif" or name == "canonicalintervalforest":
+    elif name == "tsf" or name == "timeseriesforestclassifier":
+        return TimeSeriesForestClassifier(random_state=resample_id, n_jobs=n_jobs)
+    elif name == "cif-500":
         return CanonicalIntervalForest(random_state=resample_id, n_estimators=500, n_jobs=n_jobs)
-    elif name == "stsf" or name == "supervisedtimeseriesforest":
+    elif name == "cif" or name == "canonicalintervalforest":
+        return CanonicalIntervalForest(random_state=resample_id, n_jobs=n_jobs)
+    elif name == "stsf-500":
         return SupervisedTimeSeriesForest(random_state=resample_id, n_estimators=500, n_jobs=n_jobs)
-    elif name == "drcif":
+    elif name == "stsf" or name == "supervisedtimeseriesforest":
+        return SupervisedTimeSeriesForest(random_state=resample_id, n_jobs=n_jobs)
+    elif name == "drcif-500":
         return DrCIF(
             random_state=resample_id, n_estimators=500,
+            save_transformed_data=train_file, n_jobs=n_jobs
+        )
+    elif name == "drcif":
+        return DrCIF(
+            random_state=resample_id,
             save_transformed_data=train_file, n_jobs=n_jobs
         )
     # Convolution based
@@ -205,22 +229,18 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1):
             rocket_transform="multirocket",
         )
     # Shapelet based
-    elif name == "stc" or name == "shapelettransformclassifier":
+    elif name == "stc-2hour":
         return ShapeletTransformClassifier(
             transform_limit_in_minutes=120,
             random_state=resample_id,
             save_transformed_data=train_file,
         )
-    elif name == "dummy" or name == "dummyclassifier":
-        return DummyClassifier()
-    elif name == "composabletimeseriesforestclassifier":
-        return ComposableTimeSeriesForestClassifier()
-#    elif name == "dummy" or name == "dummyclassifier":
- #       return DummyClassifier()
-    # deep learning based
-    elif name == "signatureclassifier":
-        return SignatureClassifier(random_state=resample_id)
-#        raise Exception("Need the soft dep esig package for signatures")
+    elif name == "stc" or name == "shapelettransformclassifier":
+        return ShapeletTransformClassifier(
+            random_state=resample_id,
+            save_transformed_data=train_file,
+        )
+    # Deep learning based
     elif name == "cnn" or name == "cnnclassifier":
         return CNNClassifier()
     elif name == "fcnn" or name == "fcnclassifier":
@@ -232,6 +252,11 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1):
     elif name == "tapnet" or name == "tapnetclassifier":
         from sktime.classification.deep_learning.tapnet import TapNetClassifier
         return TapNetClassifier()
+    # Other
+    elif name == "dummy" or name == "dummyclassifier":
+        return DummyClassifier()
+    elif name == "composabletimeseriesforestclassifier":
+        return ComposableTimeSeriesForestClassifier()
     # requires constructor arguments
     elif name == "columnensemble" or name == "columnensembleclassifier":
         raise Exception("Cannot create a ColumnEnsembleClassifier without passing a base "
