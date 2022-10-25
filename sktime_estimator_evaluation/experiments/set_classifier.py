@@ -109,8 +109,6 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1):
     elif name == "individualtde":
         return IndividualTDE(random_state=resample_id, n_jobs=n_jobs)
     elif name == "weasel":
-        return WEASEL(random_state=resample_id, n_jobs=n_jobs, support_probabilities=True)
-    elif name == "weasel-ridge":
         return WEASEL(random_state=resample_id, n_jobs=n_jobs)
     elif name == "muse":
         return MUSE(random_state=resample_id, n_jobs=n_jobs)
