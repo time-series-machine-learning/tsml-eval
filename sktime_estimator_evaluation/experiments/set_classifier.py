@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 """Set classifier function."""
-__author__ = ["TonyBagnall"]
+__author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 from sklearn.ensemble import RandomForestClassifier
 
-from sktime.classification.deep_learning import CNNClassifier
 from sktime.classification.dummy import DummyClassifier
 from sktime.classification.dictionary_based import (
     MUSE,
@@ -161,7 +160,7 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1):
         return MatrixProfileClassifier(random_state=resample_id)
     elif name == "freshprince":
         return FreshPRINCE(random_state=resample_id)
-    elif name == name == "tsfresh-r":
+    elif name == "tsfresh-r":
         return TSFreshClassifier(
             random_state=resample_id, relevant_feature_extractor=True
         )
@@ -240,6 +239,7 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1):
         )
     # Deep learning based
     elif name == "cnn" or name == "cnnclassifier":
+        from sktime.classification.deep_learning.cnn import CNNClassifier
         return CNNClassifier()
     elif name == "fcnn" or name == "fcnclassifier":
         from sktime.classification.deep_learning.fcn import FCNClassifier
