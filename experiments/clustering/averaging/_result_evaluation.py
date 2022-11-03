@@ -1,14 +1,14 @@
 import pandas as pd
 import os
 
-from sktime_estimator_evaluation.evaluation._result_evaluation import (
+from estimator_evaluation.evaluation._result_evaluation import (
     evaluate_raw_results,
     CLUSTER_METRIC_CALLABLES,
     evaluate_metric_results
 )
-from sktime_estimator_evaluation.evaluation._utils import metric_result_to_summary
-from sktime_estimator_evaluation.evaluation.diagrams import critical_difference_diagram
-from sktime_estimator_evaluation.evaluation._utils import read_metric_results, combine_two_summary_df
+from estimator_evaluation.evaluation._utils import metric_result_to_summary
+from estimator_evaluation.evaluation.diagrams import critical_difference_diagram
+from estimator_evaluation.evaluation._utils import read_metric_results, combine_two_summary_df
 
 
 def load_custom_data():

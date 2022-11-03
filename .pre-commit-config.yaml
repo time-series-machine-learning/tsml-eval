@@ -1,0 +1,54 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.3.0
+    hooks:
+    - id: check-added-large-files
+      args: ["--maxkb=10000"]
+    - id: check-case-conflict
+    - id: check-merge-conflict
+    - id: check-symlinks
+    - id: check-yaml
+    - id: debug-statements
+    - id: end-of-file-fixer
+    - id: fix-encoding-pragma
+    - id: requirements-txt-fixer
+    - id: trailing-whitespace
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.10.1
+    hooks:
+      - id: isort
+        name: isort (python)
+        args: ["--profile=black"]
+
+  - repo: https://github.com/psf/black
+    rev: 22.10.0
+    hooks:
+      - id: black
+        language_version: python3.7
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 5.0.4
+    hooks:
+      - id: flake8
+        additional_dependencies: [ flake8-bugbear, flake8-print ]
+        args: ["--max-line-length=88", "--extend-ignore=E203"]
+
+  - repo: https://github.com/nbQA-dev/nbQA
+    rev: 1.5.3
+    hooks:
+      - id: nbqa-isort
+        additional_dependencies: [ isort==5.10.1 ]
+        args: [ --nbqa-mutate, --nbqa-dont-skip-bad-cells ]
+      - id: nbqa-black
+        additional_dependencies: [ black==22.10.0 ]
+        args: [ --nbqa-mutate, --nbqa-dont-skip-bad-cells ]
+      - id: nbqa-flake8
+        additional_dependencies: [ flake8==5.0.4 ]
+        args: [ --nbqa-dont-skip-bad-cells, "--extend-ignore=E402,E203" ]
+
+  - repo: https://github.com/pycqa/pydocstyle
+    rev: 6.1.1
+    hooks:
+      - id: pydocstyle
+        args: ["--convention=numpy"]
