@@ -1,14 +1,17 @@
+# -*- coding: utf-8 -*-
 # Simple usages for building classifiers
 
-from sktime.classification.feature_based import FreshPRINCE
-from sktime.classification.compose import ClassifierPipeline
-from sktime.transformations.panel.catch22 import Catch22
-from sktime.datasets import load_arrow_head
-from sktime.datasets import load_UCR_UEA_dataset
-from estimator_evaluation.evaluation import fetch_classifier_metric
-from estimator_evaluation.evaluation.diagrams import scatter_diagram, critical_difference_diagram
-
 import numpy as np
+from estimator_evaluation.evaluation import fetch_classifier_metric
+from estimator_evaluation.evaluation.diagrams import (
+    critical_difference_diagram,
+    scatter_diagram,
+)
+from sktime.classification.compose import ClassifierPipeline
+from sktime.classification.feature_based import FreshPRINCE
+from sktime.datasets import load_arrow_head, load_UCR_UEA_dataset
+from sktime.transformations.panel.catch22 import Catch22
+
 
 def basic_usage():
     arrow_X, arrow_y = load_arrow_head(return_type="numpy2d")
@@ -18,8 +21,8 @@ def basic_usage():
     # 20 series equal length of 50
     test_X = np.random.rand(20, 50)
     # Random class labels
-    train_Y =np.random.randint(0, high=2, size=10)
-    test_Y =np.random.randint(0, high=2, size=20)
+    train_Y = np.random.randint(0, high=2, size=10)
+    test_Y = np.random.randint(0, high=2, size=20)
     freshPrince = FreshPRINCE()
     freshPrince.fit(train_X, train_Y)
     preds = freshPrince.predict(test_X)
@@ -38,6 +41,7 @@ def basic_usage():
     s = freshPrince.score(arrow_test_X, arrow_test_y)
     print(" Score  = ", s)
 
+
 def ucr_datasets(classifier, examples):
     scores = np.zeros(len(examples))
     for i in range(0, len(examples)):
@@ -45,7 +49,7 @@ def ucr_datasets(classifier, examples):
         test_X, test_y = load_UCR_UEA_dataset(examples[i], split="TEST")
         classifier.fit(train_X, train_y)
         scores[i] = classifier.score(test_X, test_y)
-        print(" problem ", examples[i], " accuracy = ",scores[i])
+        print(" problem ", examples[i], " accuracy = ", scores[i])
     return scores
 
 
@@ -56,17 +60,17 @@ results = [0.9, 0.8, 0.7, 0.6]
 names = ["FreshPrince"]
 others = ["HC2", "InceptionTime", "ROCKET"]
 other_accs_df = fetch_classifier_metric(
-    metrics=['ACC'],
+    metrics=["ACC"],
     datasets=examples,
     classifiers=others,
     folds=1,
 )
 for res in zip(examples, results):
-    other_accs_df.loc[len(other_accs_df)] = ['FreshPrince', res[0], res[1]]
+    other_accs_df.loc[len(other_accs_df)] = ["FreshPrince", res[0], res[1]]
 cd = critical_difference_diagram(other_accs_df)
 scatters = scatter_diagram(
     other_accs_df,
-    compare_estimators_from=['FreshPrince'],
+    compare_estimators_from=["FreshPrince"],
 )
 
 cd.show()
@@ -74,10 +78,10 @@ cd.show()
 for scatter in scatters:
     scatter.show()
 
-#Combine results and other_accs into one CD
+# Combine results and other_accs into one CD
 
 # print as a table
 
 # Make your own Pipeline
-#summarytStats = Catch22
-#ClassifierPipeline p =
+# summarytStats = Catch22
+# ClassifierPipeline p =

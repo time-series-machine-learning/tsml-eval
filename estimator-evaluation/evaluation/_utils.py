@@ -1,12 +1,14 @@
-from typing import List, TypedDict, Callable, Tuple, Dict, Union
+# -*- coding: utf-8 -*-
 import os
-import numpy as np
-from os.path import abspath, join
+import platform
 from csv import reader
 from operator import itemgetter
-import platform
+from os.path import abspath, join
+from typing import Callable, Dict, List, Tuple, TypedDict, Union
 
+import numpy as np
 import pandas as pd
+
 
 # Typing for experiment reading
 class ExperimentResamples(TypedDict):
@@ -56,27 +58,21 @@ def resolve_experiment_paths(path: str, experiment_name: str) -> Experiment:
     """
     experiment_path = abspath(path)
 
-    experiment: Experiment = {
-        'experiment_name': experiment_name,
-        'estimators': []
-    }
+    experiment: Experiment = {"experiment_name": experiment_name, "estimators": []}
 
     # Loop through all subdirectories looking for the 'Predictions' directory
     for subdir, dirs, files in os.walk(experiment_path):
-        if 'Predictions' in subdir:
-                if len(files) > 0:
-                    for file in files:
-                        if 'csv' in file:
-                            experiment = _add_experiment_result(subdir, file, experiment)
+        if "Predictions" in subdir:
+            if len(files) > 0:
+                for file in files:
+                    if "csv" in file:
+                        experiment = _add_experiment_result(subdir, file, experiment)
 
     return experiment
 
 
 def _find_dict_item(
-        dict_list: List[dict],
-        key: str,
-        value: str,
-        create_new_item: dict
+    dict_list: List[dict], key: str, value: str, create_new_item: dict
 ) -> dict:
     """Find an item in a list of dictionaries.
 
@@ -106,9 +102,7 @@ def _find_dict_item(
 
 
 def _add_experiment_result(
-        subdir: str,
-        file: str,
-        experiment_dict: Experiment
+    subdir: str, file: str, experiment_dict: Experiment
 ) -> Experiment:
     """Add an experiment result to the experiment dictionary.
 
@@ -127,62 +121,54 @@ def _add_experiment_result(
         Updated dictionary containing the experiment results.
     """
     # If on windows use different split
-    if 'Windows' in platform.platform():
-        split_subdir = subdir.split('\\')
+    if "Windows" in platform.platform():
+        split_subdir = subdir.split("\\")
     else:
-        split_subdir = subdir.split('/')
+        split_subdir = subdir.split("/")
 
-    with open(join(subdir, file), 'r') as f:
-        first_line = (f.readline()).split(',')
+    with open(join(subdir, file), "r") as f:
+        first_line = (f.readline()).split(",")
 
     curr_estimator_name = split_subdir[-4]
     curr_experiment_name = first_line[1]
     curr_dataset_name = first_line[0]
 
     estimator: Estimator = _find_dict_item(
-        experiment_dict['estimators'],
-        'estimator_name',
+        experiment_dict["estimators"],
+        "estimator_name",
         curr_estimator_name,
-        {
-            'estimator_name': curr_estimator_name,
-            'experiment_results': []
-        }
+        {"estimator_name": curr_estimator_name, "experiment_results": []},
     )
 
     estimator_experiment: EstimatorExperiment = _find_dict_item(
-        estimator['experiment_results'],
-        'experiment_name',
+        estimator["experiment_results"],
+        "experiment_name",
         curr_experiment_name,
-        {
-            'experiment_name': curr_experiment_name,
-            'datasets': []
-        }
+        {"experiment_name": curr_experiment_name, "datasets": []},
     )
 
     dataset: Dataset = _find_dict_item(
-        estimator_experiment['datasets'],
-        'dataset_name',
+        estimator_experiment["datasets"],
+        "dataset_name",
         curr_dataset_name,
         {
-            'dataset_name': curr_dataset_name,
-            'resamples':
-                {'train_resamples': [], 'test_resamples': []}
-        }
+            "dataset_name": curr_dataset_name,
+            "resamples": {"train_resamples": [], "test_resamples": []},
+        },
     )
 
-    if file.startswith('train'):
-        dataset['resamples']['train_resamples'].append(join(subdir, file))
-    elif file.startswith('test'):
-        dataset['resamples']['test_resamples'].append(join(subdir, file))
+    if file.startswith("train"):
+        dataset["resamples"]["train_resamples"].append(join(subdir, file))
+    elif file.startswith("test"):
+        dataset["resamples"]["test_resamples"].append(join(subdir, file))
     else:
-        raise ValueError('File name must start with train or test')
+        raise ValueError("File name must start with train or test")
 
     return experiment_dict
 
+
 def _extract_resamples_for_dataset(
-        dataset: Dataset,
-        key: str,
-        metric_callables: List[MetricCallable]
+    dataset: Dataset, key: str, metric_callables: List[MetricCallable]
 ) -> Dict:
     """Creates a row for each of the metrics for each resample.
 
@@ -205,11 +191,11 @@ def _extract_resamples_for_dataset(
             'metric_name': [resample1, resample2, ...]
         }
     """
-    if key != 'train_resamples' and key != 'test_resamples':
-        raise ValueError('key must be train_resamples or test_resamples')
+    if key != "train_resamples" and key != "test_resamples":
+        raise ValueError("key must be train_resamples or test_resamples")
 
     resamples = []
-    for resample in dataset['resamples'][key]:
+    for resample in dataset["resamples"][key]:
         resamples.append(_csv_results_to_metric(resample, metric_callables))
 
     resample_row = {}
@@ -220,6 +206,7 @@ def _extract_resamples_for_dataset(
             resample_row[metric_name].append(metric_value)
 
     return resample_row
+
 
 def _check_equal_resamples(metric_rows: List) -> List:
     """Check if results all have same number of resamples.
@@ -245,7 +232,7 @@ def _check_equal_resamples(metric_rows: List) -> List:
         extra_row_temp[str(len(row))].append(i)
 
     max = 0
-    found = ''
+    found = ""
     for key in extra_row_temp:
         if len(extra_row_temp[key]) > max:
             found = key
@@ -256,8 +243,7 @@ def _check_equal_resamples(metric_rows: List) -> List:
 
 
 def extract_estimator_experiment(
-        estimator_experiment: EstimatorExperiment,
-        metric_callables: List[MetricCallable]
+    estimator_experiment: EstimatorExperiment, metric_callables: List[MetricCallable]
 ) -> Tuple[List[Tuple[str, pd.DataFrame]], List[Tuple[str, pd.DataFrame]]]:
     """Extract the results of an estimator experiment.
 
@@ -288,10 +274,7 @@ def extract_estimator_experiment(
 
     train_results = []
     test_results = []
-    result_dict = {
-        'train': {},
-        'test': {}
-    }
+    result_dict = {"train": {}, "test": {}}
 
     # Function that takes metrics and organises it into rows
     def create_metric_rows(resamples: Dict, dataset_name: str, split: str):
@@ -302,16 +285,16 @@ def extract_estimator_experiment(
             curr[metric_name].append([dataset_name] + metric_values)
 
     # Loops through each dataset and each resample metric is organised into a row
-    for dataset in estimator_experiment['datasets']:
+    for dataset in estimator_experiment["datasets"]:
         train_resamples = _extract_resamples_for_dataset(
-            dataset, 'train_resamples', metric_callables
+            dataset, "train_resamples", metric_callables
         )
         test_resamples = _extract_resamples_for_dataset(
-            dataset, 'test_resamples', metric_callables
+            dataset, "test_resamples", metric_callables
         )
 
-        create_metric_rows(train_resamples, dataset['dataset_name'], 'train')
-        create_metric_rows(test_resamples, dataset['dataset_name'], 'test')
+        create_metric_rows(train_resamples, dataset["dataset_name"], "train")
+        create_metric_rows(test_resamples, dataset["dataset_name"], "test")
 
     # Function creates dataframe from a row and adds column headings
     def create_df(split: str):
@@ -320,25 +303,20 @@ def extract_estimator_experiment(
         for metric_name, metric_rows in curr.items():
 
             metric_rows = _check_equal_resamples(metric_rows)
-            columns = ['folds'] + list(range(0, len(metric_rows[0]) - 1))
+            columns = ["folds"] + list(range(0, len(metric_rows[0]) - 1))
 
-            temp.append(
-                (
-                    metric_name,
-                    pd.DataFrame(metric_rows, columns=[columns])
-                )
-            )
+            temp.append((metric_name, pd.DataFrame(metric_rows, columns=[columns])))
         return temp
 
-    train_dfs = create_df('train')
-    test_dfs = create_df('test')
+    train_dfs = create_df("train")
+    test_dfs = create_df("test")
     return train_dfs, test_dfs
 
 
 def read_results_from_uea_format(
-        path: str,
-        meta_col_headers: List[str] = None,
-        prediction_col_headers: List[str] = None,
+    path: str,
+    meta_col_headers: List[str] = None,
+    prediction_col_headers: List[str] = None,
 ) -> Dict:
     """Read results from uea format.
 
@@ -399,7 +377,7 @@ def read_clusterer_result_from_uea_format(csv_path):
     with open(csv_path, "r") as read_obj:
         csv_reader = reader(read_obj)
         curr_line = next(csv_reader)
-        while '}' not in curr_line[-1]:
+        while "}" not in curr_line[-1]:
             curr_line = next(csv_reader)
         meta = next(csv_reader)  # Skip second line
         num_classes = meta[-1]
@@ -415,8 +393,7 @@ def read_clusterer_result_from_uea_format(csv_path):
 
 
 def _csv_results_to_metric(
-    csv_path: str,
-    metric_callables: List[MetricCallable]
+    csv_path: str, metric_callables: List[MetricCallable]
 ) -> Dict:
     """Read results from csv and return a dict of metric results.
 
@@ -443,13 +420,12 @@ def _csv_results_to_metric(
     for i in range(len(data)):
         val = data[i]
         for string in val:
-            if '}' in string:
+            if "}" in string:
                 remove_start = i
 
     data = data[remove_start:-1]
 
     columns = data[0][0:2]
-
 
     # Read in only first two columns which is true class followed by predicted.
     true_label = []
@@ -460,8 +436,8 @@ def _csv_results_to_metric(
 
     metric_results = {}
     for metric in metric_callables:
-        metric_name = metric['name']
-        metric_callable = metric['callable']
+        metric_name = metric["name"]
+        metric_callable = metric["callable"]
 
         if metric_name not in metric_results:
             metric_results[metric_name] = 0.0
@@ -500,21 +476,24 @@ def read_metric_results(path: str) -> List[str]:
     for subdir, dirs, files in os.walk(result_path):
         if len(files) > 0:
             for file in files:
-                if 'csv' in file:
+                if "csv" in file:
                     test.append(join(subdir, file))
 
     return test
 
-def _split_metric_result_to_summary(result: List[MetricResults], split: str = 'test_estimator_results'):
-    column_headers = ['estimator', 'dataset']
+
+def _split_metric_result_to_summary(
+    result: List[MetricResults], split: str = "test_estimator_results"
+):
+    column_headers = ["estimator", "dataset"]
     temp_dict = {}
     for metric_result in result:
-        curr_metric = metric_result['metric_name']
+        curr_metric = metric_result["metric_name"]
         column_headers.append(curr_metric)
 
         for test_result in metric_result[split]:
-            curr_estimator = test_result['estimator_name']
-            data = test_result['result'].copy()
+            curr_estimator = test_result["estimator_name"]
+            data = test_result["result"].copy()
 
             dataset_col = list(data[data.columns[0]][0:])
 
@@ -528,7 +507,7 @@ def _split_metric_result_to_summary(result: List[MetricResults], split: str = 't
             ).T
 
             for index, row in curr_df.iterrows():
-                name = f'{row[0]}:::{row[1]}'
+                name = f"{row[0]}:::{row[1]}"
                 if name not in temp_dict:
                     temp_dict[name] = []
                 temp_dict[name].append((curr_metric, row[2]))
@@ -536,7 +515,7 @@ def _split_metric_result_to_summary(result: List[MetricResults], split: str = 't
     df_list = []
 
     for key, value in temp_dict.items():
-        estimator_name, dataset_name = key.split(':::')
+        estimator_name, dataset_name = key.split(":::")
         row = [estimator_name, dataset_name]
         for metric_name in column_headers[2:]:
             for metric in value:
@@ -552,7 +531,7 @@ def _split_metric_result_to_summary(result: List[MetricResults], split: str = 't
 
 
 def metric_result_to_summary(
-        result: List[MetricResults], split: str = 'both'
+    result: List[MetricResults], split: str = "both"
 ) -> Union[Tuple[pd.DataFrame, pd.DataFrame], pd.DataFrame]:
     """Convert metric result to data frame of the format:
         ----------------------------------
@@ -594,19 +573,20 @@ def metric_result_to_summary(
         | cls2      | data1   | 1.3      | 1.2     |
         ----------------------------------
     """
-    test_data = _split_metric_result_to_summary(result, split='test_estimator_results')
-    train_data = _split_metric_result_to_summary(result, split='train_estimator_results')
-    if split == 'test':
+    test_data = _split_metric_result_to_summary(result, split="test_estimator_results")
+    train_data = _split_metric_result_to_summary(
+        result, split="train_estimator_results"
+    )
+    if split == "test":
         return test_data
-    elif split == 'train':
+    elif split == "train":
         return train_data
     else:
         return test_data, train_data
 
 
 def from_metric_summary_to_dataset_format(
-        summary_format: pd.DataFrame,
-        return_numpy: np.ndarray = False
+    summary_format: pd.DataFrame, return_numpy: np.ndarray = False
 ) -> Union[pd.DataFrame, np.ndarray, List[pd.DataFrame], List[np.ndarray]]:
     """Converts summary format to dataset format.
 
@@ -622,23 +602,23 @@ def from_metric_summary_to_dataset_format(
         only that is returned.
     """
     metrics = list(set(summary_format.columns[2:]))
-    datasets = list(summary_format['dataset'].unique())
-    classifiers = list(summary_format['estimator'].unique())
+    datasets = list(summary_format["dataset"].unique())
+    classifiers = list(summary_format["estimator"].unique())
 
     return_result = []
     for curr_metric in metrics:
         metric_index = summary_format.columns.get_loc(curr_metric)
-        columns = ['Problem'] + classifiers
+        columns = ["Problem"] + classifiers
         rows = []
         for dataset in datasets:
             rows.append([dataset] + ([None] * len(classifiers)))
 
         for i in range(len(classifiers)):
             estimator = classifiers[i]
-            curr_df = summary_format[summary_format['estimator'] == estimator]
+            curr_df = summary_format[summary_format["estimator"] == estimator]
             for j in range(len(datasets)):
                 curr_dataset = datasets[j]
-                curr_metric = curr_df[curr_df['dataset'] == datasets[j]]
+                curr_metric = curr_df[curr_df["dataset"] == datasets[j]]
                 try:
                     curr_res = curr_metric.iloc[0, metric_index]
                 except:
@@ -656,10 +636,10 @@ def from_metric_summary_to_dataset_format(
     if len(return_result) == 1:
         return return_result[0]
     return return_result
+
 
 def from_metric_dataset_format_to_metric_summary(
-        summary_format: pd.DataFrame,
-        return_numpy: np.ndarray = False
+    summary_format: pd.DataFrame, return_numpy: np.ndarray = False
 ) -> Union[pd.DataFrame, np.ndarray, List[pd.DataFrame], List[np.ndarray]]:
     """Converts summary format to dataset format.
 
@@ -675,23 +655,23 @@ def from_metric_dataset_format_to_metric_summary(
         only that is returned.
     """
     metrics = list(set(summary_format.columns[2:]))
-    datasets = list(summary_format['dataset'].unique())
-    classifiers = list(summary_format['estimator'].unique())
+    datasets = list(summary_format["dataset"].unique())
+    classifiers = list(summary_format["estimator"].unique())
 
     return_result = []
     for curr_metric in metrics:
         metric_index = summary_format.columns.get_loc(curr_metric)
-        columns = ['Problem'] + classifiers
+        columns = ["Problem"] + classifiers
         rows = []
         for dataset in datasets:
             rows.append([dataset] + ([None] * len(classifiers)))
 
         for i in range(len(classifiers)):
             estimator = classifiers[i]
-            curr_df = summary_format[summary_format['estimator'] == estimator]
+            curr_df = summary_format[summary_format["estimator"] == estimator]
             for j in range(len(datasets)):
                 curr_dataset = datasets[j]
-                curr_metric = curr_df[curr_df['dataset'] == datasets[j]]
+                curr_metric = curr_df[curr_df["dataset"] == datasets[j]]
                 try:
                     curr_res = curr_metric.iloc[0, metric_index]
                 except:
@@ -709,6 +689,7 @@ def from_metric_dataset_format_to_metric_summary(
     if len(return_result) == 1:
         return return_result[0]
     return return_result
+
 
 def combine_two_summary_df(first_df: pd.DataFrame, second_df: pd.DataFrame):
     first_cols = set(first_df.columns)

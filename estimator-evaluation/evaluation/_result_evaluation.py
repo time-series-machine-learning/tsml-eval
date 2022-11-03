@@ -1,34 +1,35 @@
-from typing import List, Union, Callable, Tuple, Dict
+# -*- coding: utf-8 -*-
 import os
 import platform
+from typing import Callable, Dict, List, Tuple, Union
 
 import pandas as pd
 from estimator_evaluation.evaluation._utils import (
-    resolve_experiment_paths,
+    EstimatorMetricResults,
     Experiment,
     MetricCallable,
-    extract_estimator_experiment,
-    EstimatorMetricResults,
     MetricResults,
+    extract_estimator_experiment,
     read_metric_results,
+    resolve_experiment_paths,
 )
 from sklearn.metrics import (
     accuracy_score,
     adjusted_mutual_info_score,
     adjusted_rand_score,
-    mutual_info_score,
-    normalized_mutual_info_score,
-    rand_score,
-    balanced_accuracy_score,
-    top_k_accuracy_score,
     average_precision_score,
+    balanced_accuracy_score,
     brier_score_loss,
     f1_score,
-    log_loss,
-    precision_score,
-    recall_score,
     jaccard_score,
+    log_loss,
+    mutual_info_score,
+    normalized_mutual_info_score,
+    precision_score,
+    rand_score,
+    recall_score,
     roc_auc_score,
+    top_k_accuracy_score,
 )
 
 CLUSTER_METRIC_CALLABLES = [
@@ -56,7 +57,7 @@ CLASSIFICATION_METRIC_CALLABLES = [
 
 
 def _get_metric_callable(
-        metric: Union[str, MetricCallable],
+    metric: Union[str, MetricCallable],
 ) -> MetricCallable:
     """Get the metric callable for the given metric.
 
@@ -74,23 +75,25 @@ def _get_metric_callable(
 
     if isinstance(metric, str):
         for curr_metric in CLUSTER_METRIC_CALLABLES:
-            if curr_metric['name'] == metric:
+            if curr_metric["name"] == metric:
                 return curr_metric
         for curr_metric in CLASSIFICATION_METRIC_CALLABLES:
             if curr_metric.name == metric:
                 return curr_metric
         raise ValueError(f"Metric {metric} not found.")
-    elif 'name' in metric and 'callable' in metric:
+    elif "name" in metric and "callable" in metric:
         return MetricCallable(**metric)
     else:
-        raise ValueError(f"Metric {metric} not found. It must either be a metric"
-                         f"callable (for example: "
-                         f"MetricCallable(name='ARI', callable=adjusted_rand_score)"
-                         f"or a string that is valid metric name. You can import "
-                         f"MetricCallable like so: "
-                         f"from "
-                         f"sktime_estimator_evaluation.new_evaluation.evaluation.utils "
-                         f"import MetricCallable")
+        raise ValueError(
+            f"Metric {metric} not found. It must either be a metric"
+            f"callable (for example: "
+            f"MetricCallable(name='ARI', callable=adjusted_rand_score)"
+            f"or a string that is valid metric name. You can import "
+            f"MetricCallable like so: "
+            f"from "
+            f"sktime_estimator_evaluation.new_evaluation.evaluation.utils "
+            f"import MetricCallable"
+        )
 
 
 def _resolve_output_dir(output_dir: str) -> Union[str, None]:
@@ -117,10 +120,10 @@ def _resolve_output_dir(output_dir: str) -> Union[str, None]:
 
 
 def _format_metric_results(
-        metric_results: List[Tuple[str, pd.DataFrame]],
-        estimator_name: str,
-        formatted_metric_results: List[MetricResults],
-        train_split: bool = True,
+    metric_results: List[Tuple[str, pd.DataFrame]],
+    estimator_name: str,
+    formatted_metric_results: List[MetricResults],
+    train_split: bool = True,
 ):
     """Format the metric results.
 
@@ -140,39 +143,37 @@ def _format_metric_results(
         metric_name, metric_result = metric
         found_metric_result = None
         for curr_metric_result in formatted_metric_results:
-            if curr_metric_result['metric_name'] == metric_name:
+            if curr_metric_result["metric_name"] == metric_name:
                 found_metric_result = curr_metric_result
                 break
 
         if found_metric_result is None:
             found_metric_result = {
-                'metric_name': metric_name,
-                'test_estimator_results': [],
-                'train_estimator_results': []
+                "metric_name": metric_name,
+                "test_estimator_results": [],
+                "train_estimator_results": [],
             }
             formatted_metric_results.append(found_metric_result)
 
         if train_split is True:
-            found_metric_result['train_estimator_results'].append(
+            found_metric_result["train_estimator_results"].append(
                 EstimatorMetricResults(
-                    estimator_name=estimator_name,
-                    result=metric_result
+                    estimator_name=estimator_name, result=metric_result
                 )
             )
         else:
-            found_metric_result['test_estimator_results'].append(
+            found_metric_result["test_estimator_results"].append(
                 EstimatorMetricResults(
-                    estimator_name=estimator_name,
-                    result=metric_result
+                    estimator_name=estimator_name, result=metric_result
                 )
             )
 
 
 def evaluate_raw_results(
-        experiment_name: str,
-        path: str,
-        metrics: List[Union[MetricCallable, str]] = None,
-        output_dir: str = None,
+    experiment_name: str,
+    path: str,
+    metrics: List[Union[MetricCallable, str]] = None,
+    output_dir: str = None,
 ) -> List[MetricResults]:
     """Evaluate the results of a experiment.
 
@@ -286,9 +287,7 @@ def evaluate_raw_results(
 
     output_dir = _resolve_output_dir(output_dir)
 
-    metrics = [
-        _get_metric_callable(metric) for metric in metrics
-    ]
+    metrics = [_get_metric_callable(metric) for metric in metrics]
     result: Experiment = resolve_experiment_paths(path, experiment_name)
 
     def resolve_join_path(curr_path: str, join_to: str) -> Union[str]:
@@ -299,35 +298,32 @@ def evaluate_raw_results(
         return temp_path
 
     def write_csv_metric(
-            curr_path: str,
-            split: str,
-            metric_results: List[Tuple[str, pd.DataFrame]]
+        curr_path: str, split: str, metric_results: List[Tuple[str, pd.DataFrame]]
     ):
         """Write the metric results to a csv."""
         inner_path = resolve_join_path(curr_path, split)
         for i in range(0, len(metric_results)):
             metric_name, metric_result = metric_results[i]
             metric_result.to_csv(
-                os.path.join(inner_path, f'{metric_name}.csv'),
-                index=False
+                os.path.join(inner_path, f"{metric_name}.csv"), index=False
             )
 
     formatted_metric_results: List[MetricResults] = []
     estimator_result = {}
     # For each estimator
-    for estimator in result['estimators']:
-        print("evaluating estimator: ", estimator['estimator_name'])
+    for estimator in result["estimators"]:
+        print("evaluating estimator: ", estimator["estimator_name"])
         estimator_output_path = resolve_join_path(
-            output_dir, estimator['estimator_name']
+            output_dir, estimator["estimator_name"]
         )
-        estimator_result[estimator['estimator_name']] = {}
+        estimator_result[estimator["estimator_name"]] = {}
 
         # For each experiment for estimator (i.e. hyperparams)
-        for experiment in estimator['experiment_results']:
-            print("----> evaluating experiment: ", experiment['experiment_name'])
-            estimator_result[experiment['experiment_name']] = {}
+        for experiment in estimator["experiment_results"]:
+            print("----> evaluating experiment: ", experiment["experiment_name"])
+            estimator_result[experiment["experiment_name"]] = {}
             experiment_output_path = resolve_join_path(
-                estimator_output_path, experiment['experiment_name']
+                estimator_output_path, experiment["experiment_name"]
             )
 
             train_metrics, test_metrics = extract_estimator_experiment(
@@ -335,23 +331,24 @@ def evaluate_raw_results(
             )
 
             if estimator_output_path is not None:
-                write_csv_metric(experiment_output_path, 'train', train_metrics)
-                write_csv_metric(experiment_output_path, 'test', test_metrics)
+                write_csv_metric(experiment_output_path, "train", train_metrics)
+                write_csv_metric(experiment_output_path, "test", test_metrics)
 
             _format_metric_results(
                 train_metrics,
-                experiment['experiment_name'],
+                experiment["experiment_name"],
                 formatted_metric_results,
-                train_split=True
+                train_split=True,
             )
             _format_metric_results(
                 test_metrics,
-                experiment['experiment_name'],
+                experiment["experiment_name"],
                 formatted_metric_results,
-                train_split=False
+                train_split=False,
             )
 
     return formatted_metric_results
+
 
 def _default_format_reader(path: str) -> Tuple[str, str, str]:
     """Default format reader.
@@ -370,19 +367,18 @@ def _default_format_reader(path: str) -> Tuple[str, str, str]:
     str
         Experiment name.
     """
-    if 'Windows' in platform.platform():
-        split_subdir = path.split('\\')
+    if "Windows" in platform.platform():
+        split_subdir = path.split("\\")
     else:
-        split_subdir = path.split('/')
-    metric_name = split_subdir[-1].split('.')[0]
+        split_subdir = path.split("/")
+    metric_name = split_subdir[-1].split(".")[0]
     split = split_subdir[-2]
     estimator_name = split_subdir[-3]
     return estimator_name, metric_name, split
 
 
 def evaluate_metric_results(
-        path: str,
-        name_metric_callable: Callable[[str], Tuple[str, str, str]] = None
+    path: str, name_metric_callable: Callable[[str], Tuple[str, str, str]] = None
 ) -> List[MetricResults]:
     """Read the evaluation metric results from a directory.
 
@@ -449,8 +445,7 @@ def evaluate_metric_results(
         estimator_name, metric_name, split = name_metric_callable(result)
         result_df = pd.read_csv(result)
         _format_metric_results(
-            [(metric_name, result_df)], estimator_name, metric_results, split == 'train'
+            [(metric_name, result_df)], estimator_name, metric_results, split == "train"
         )
 
     return metric_results
-

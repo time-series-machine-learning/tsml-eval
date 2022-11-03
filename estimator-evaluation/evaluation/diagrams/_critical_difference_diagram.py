@@ -5,15 +5,14 @@ import warnings
 from itertools import combinations
 from operator import itemgetter
 from typing import Generator, List, Tuple, Union
-import networkx
 
 import matplotlib.pyplot as plt
+import networkx
 import numpy as np
 import pandas as pd
-from scipy.stats import friedmanchisquare, wilcoxon
-
 from estimator_evaluation.evaluation import MetricResults
 from estimator_evaluation.evaluation.diagrams._utils import metric_result_to_df
+from scipy.stats import friedmanchisquare, wilcoxon
 
 warnings.filterwarnings(
     "ignore"
@@ -225,6 +224,8 @@ def form_cliques(p_values, nnames):
 
     g = networkx.Graph(g_data)
     return networkx.find_cliques(g)
+
+
 # def form_cliques(p_values, estimators) -> List[List[int]]:
 #     """For clique for critical difference.
 #
@@ -520,7 +521,6 @@ def _plot_critical_difference_diagram(
 
         x_pos = x_pos_modifier
         y_pos = -5
-
 
         ax.annotate(
             estimator,

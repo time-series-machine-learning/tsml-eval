@@ -16,19 +16,16 @@ os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
 import sklearn.metrics
+import sktime.datasets.tsc_dataset_names as dataset_lists
+from estimator_evaluation.experiments.classification_experiments import results_present
 from sklearn.metrics import davies_bouldin_score
 from sklearn.model_selection import GridSearchCV
 from sklearn.preprocessing import normalize
-
-import sktime.datasets.tsc_dataset_names as dataset_lists
 from sktime.benchmarking.experiments import run_clustering_experiment
-from sktime.datasets import load_from_tsfile as load_ts
-from sktime.datasets import load_gunpoint
 from sktime.clustering.k_means import TimeSeriesKMeans
 from sktime.clustering.k_medoids import TimeSeriesKMedoids
-from estimator_evaluation.experiments.classification_experiments import results_present
-
-
+from sktime.datasets import load_from_tsfile as load_ts
+from sktime.datasets import load_gunpoint
 
 """Prototype mechanism for testing classifiers on the UCR format. This mirrors the
 mechanism used in Java,
@@ -113,7 +110,7 @@ def _recreate_results(trainX, trainY):
         distance_params={"window": 0.2},
         n_clusters=len(set(train_Y)),
         random_state=1,
-        verbose=True
+        verbose=True,
     )
     clst.fit(trainX)
     preds = clst.predict(trainY)
@@ -121,11 +118,10 @@ def _recreate_results(trainX, trainY):
     print("Score = ", score)
 
 
-#from classification_experiments import list_estimators
-#str=list_estimators(estimator_type="clusterer")
-#for s in str:
+# from classification_experiments import list_estimators
+# str=list_estimators(estimator_type="clusterer")
+# for s in str:
 #    print(f"\"{s}\",")
-
 
 
 if __name__ == "__main__":
@@ -147,9 +143,9 @@ if __name__ == "__main__":
         if averaging == "dba":
             results_dir = results_dir + clusterer + "_dba"
         import classification_experiments
-        if results_present(results_dir,clusterer,dataset,resample):
-            print("Ignoring, results already present")
 
+        if results_present(results_dir, clusterer, dataset, resample):
+            print("Ignoring, results already present")
 
     elif chris_config is True:
         path = "C:/Users/chris/Documents/Masters"
@@ -179,8 +175,8 @@ if __name__ == "__main__":
             f"{data_dir}/{dataset}/{dataset}_TEST.ts", return_data_type="numpy2d"
         )
     else:
-        train_X, train_Y = dataset('train', return_X_y=True)
-        test_X, test_Y = dataset('test', return_X_y=True)
+        train_X, train_Y = dataset("train", return_X_y=True)
+        test_X, test_Y = dataset("test", return_X_y=True)
     #    train_X = np.concatenate((train_X, test_X), axis=0)
     #    train_Y = np.concatenate((train_Y, test_Y), axis=0)
     #    _recreate_results(train_X, train_Y)

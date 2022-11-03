@@ -3,16 +3,15 @@
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 from sklearn.ensemble import RandomForestClassifier
-
-from sktime.classification.dummy import DummyClassifier
+from sktime.classification.compose import ComposableTimeSeriesForestClassifier
 from sktime.classification.dictionary_based import (
     MUSE,
     WEASEL,
     BOSSEnsemble,
     ContractableBOSS,
-    TemporalDictionaryEnsemble,
-    IndividualTDE,
     IndividualBOSS,
+    IndividualTDE,
+    TemporalDictionaryEnsemble,
 )
 from sktime.classification.distance_based import (
     ElasticEnsemble,
@@ -22,6 +21,7 @@ from sktime.classification.distance_based import (
     ProximityTree,
     ShapeDTW,
 )
+from sktime.classification.dummy import DummyClassifier
 from sktime.classification.feature_based import (
     Catch22Classifier,
     FreshPRINCE,
@@ -41,32 +41,31 @@ from sktime.classification.interval_based import (
 )
 from sktime.classification.kernel_based import Arsenal, RocketClassifier
 from sktime.classification.shapelet_based import ShapeletTransformClassifier
-from sktime.classification.compose import ComposableTimeSeriesForestClassifier
 from sktime.transformations.series.summarize import SummaryTransformer
 
-
 multivariate_classifiers = [
-"Arsenal",
-"CNNClassifier",
-"CanonicalIntervalForest",
-"Catch22Classifier",
-"ColumnEnsembleClassifier",
-"DrCIF",
-"FreshPRINCE",
-"HIVECOTEV2",
-"IndividualTDE",
-"KNeighborsTimeSeriesClassifier",
-"MUSE",
-"ProbabilityThresholdEarlyClassifier",
-"RandomIntervalClassifier",
-"RocketClassifier",
-"ShapeletTransformClassifier",
-"SignatureClassifier",
-"SummaryClassifier",
-"TSFreshClassifier",
-"TemporalDictionaryEnsemble",
-"WeightedEnsembleClassifier",
+    "Arsenal",
+    "CNNClassifier",
+    "CanonicalIntervalForest",
+    "Catch22Classifier",
+    "ColumnEnsembleClassifier",
+    "DrCIF",
+    "FreshPRINCE",
+    "HIVECOTEV2",
+    "IndividualTDE",
+    "KNeighborsTimeSeriesClassifier",
+    "MUSE",
+    "ProbabilityThresholdEarlyClassifier",
+    "RandomIntervalClassifier",
+    "RocketClassifier",
+    "ShapeletTransformClassifier",
+    "SignatureClassifier",
+    "SummaryClassifier",
+    "TSFreshClassifier",
+    "TemporalDictionaryEnsemble",
+    "WeightedEnsembleClassifier",
 ]
+
 
 def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1):
     """Construct a classifier, possibly seeded.
@@ -94,7 +93,9 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1):
     name = cls.lower()
     # Dictionary based
     if name == "boss" or name == "bossensemble":
-        return BOSSEnsemble(random_state=resample_id, n_jobs=n_jobs, save_train_predictions=train_file)
+        return BOSSEnsemble(
+            random_state=resample_id, n_jobs=n_jobs, save_train_predictions=train_file
+        )
     elif name == "individualboss":
         return IndividualBOSS(
             random_state=resample_id,
@@ -103,8 +104,9 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1):
     elif name == "cboss" or name == "contractableboss":
         return ContractableBOSS(random_state=resample_id, n_jobs=n_jobs)
     elif name == "tde" or name == "temporaldictionaryensemble":
-        return TemporalDictionaryEnsemble(random_state=resample_id,
-                                          save_train_predictions=train_file, n_jobs=n_jobs)
+        return TemporalDictionaryEnsemble(
+            random_state=resample_id, save_train_predictions=train_file, n_jobs=n_jobs
+        )
     elif name == "individualtde":
         return IndividualTDE(random_state=resample_id, n_jobs=n_jobs)
     elif name == "weasel":
@@ -164,7 +166,7 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1):
         return TSFreshClassifier(
             random_state=resample_id, relevant_feature_extractor=True
         )
-    elif name == "tsfreshclassifier" or  name == "tsfresh":
+    elif name == "tsfreshclassifier" or name == "tsfresh":
         return TSFreshClassifier(random_state=resample_id)
     elif name == "signatureclassifier":
         return SignatureClassifier(random_state=resample_id)
@@ -178,29 +180,40 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1):
         return RandomIntervalSpectralEnsemble(
             random_state=resample_id, n_estimators=500, n_jobs=n_jobs
         )
-    elif name == "rise" or name == "randomintervalspectralforest" or name == "randomintervalspectralensemble":
+    elif (
+        name == "rise"
+        or name == "randomintervalspectralforest"
+        or name == "randomintervalspectralensemble"
+    ):
         return RandomIntervalSpectralEnsemble(random_state=resample_id, n_jobs=n_jobs)
     elif name == "tsf-500":
-        return TimeSeriesForestClassifier(random_state=resample_id, n_estimators=500, n_jobs=n_jobs)
+        return TimeSeriesForestClassifier(
+            random_state=resample_id, n_estimators=500, n_jobs=n_jobs
+        )
     elif name == "tsf" or name == "timeseriesforestclassifier":
         return TimeSeriesForestClassifier(random_state=resample_id, n_jobs=n_jobs)
     elif name == "cif-500":
-        return CanonicalIntervalForest(random_state=resample_id, n_estimators=500, n_jobs=n_jobs)
+        return CanonicalIntervalForest(
+            random_state=resample_id, n_estimators=500, n_jobs=n_jobs
+        )
     elif name == "cif" or name == "canonicalintervalforest":
         return CanonicalIntervalForest(random_state=resample_id, n_jobs=n_jobs)
     elif name == "stsf-500":
-        return SupervisedTimeSeriesForest(random_state=resample_id, n_estimators=500, n_jobs=n_jobs)
+        return SupervisedTimeSeriesForest(
+            random_state=resample_id, n_estimators=500, n_jobs=n_jobs
+        )
     elif name == "stsf" or name == "supervisedtimeseriesforest":
         return SupervisedTimeSeriesForest(random_state=resample_id, n_jobs=n_jobs)
     elif name == "drcif-500":
         return DrCIF(
-            random_state=resample_id, n_estimators=500,
-            save_transformed_data=train_file, n_jobs=n_jobs
+            random_state=resample_id,
+            n_estimators=500,
+            save_transformed_data=train_file,
+            n_jobs=n_jobs,
         )
     elif name == "drcif":
         return DrCIF(
-            random_state=resample_id,
-            save_transformed_data=train_file, n_jobs=n_jobs
+            random_state=resample_id, save_transformed_data=train_file, n_jobs=n_jobs
         )
     # Convolution based
     elif name == "rocket" or name == "rocketclassifier":
@@ -240,15 +253,19 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1):
     # Deep learning based
     elif name == "cnn" or name == "cnnclassifier":
         from sktime.classification.deep_learning.cnn import CNNClassifier
+
         return CNNClassifier()
     elif name == "fcnn" or name == "fcnclassifier":
         from sktime.classification.deep_learning.fcn import FCNClassifier
+
         return FCNClassifier()
     elif name == "mlp" or name == "mlpclassifier":
         from sktime.classification.deep_learning.mlp import MLPClassifier
+
         return MLPClassifier()
     elif name == "tapnet" or name == "tapnetclassifier":
         from sktime.classification.deep_learning.tapnet import TapNetClassifier
+
         return TapNetClassifier()
     # Other
     elif name == "dummy" or name == "dummyclassifier":
@@ -257,18 +274,25 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1):
         return ComposableTimeSeriesForestClassifier()
     # requires constructor arguments
     elif name == "columnensemble" or name == "columnensembleclassifier":
-        raise Exception("Cannot create a ColumnEnsembleClassifier without passing a base "
-              "classifier ")
+        raise Exception(
+            "Cannot create a ColumnEnsembleClassifier without passing a base "
+            "classifier "
+        )
     elif name == "probabilitythresholdearlyclassifier":
-        raise Exception("probabilitythresholdearlyclassifier is for early classification, "
-              "not applicable here")
+        raise Exception(
+            "probabilitythresholdearlyclassifier is for early classification, "
+            "not applicable here"
+        )
     elif name == "classifierpipeline" or name == "sklearnclassifierpipeline":
-        raise Exception("Cannot create a ClassifierPipeline or SklearnClassifierPipeline "
-              "without passing a base "
-              "classifier and transform(s)")
+        raise Exception(
+            "Cannot create a ClassifierPipeline or SklearnClassifierPipeline "
+            "without passing a base "
+            "classifier and transform(s)"
+        )
     elif name == "weightedensembleclassifier" or name == "weightedensemble":
-        raise Exception("Cannot create a WeightedEnsembleClassifier"
-              "without passing base classifiers")
+        raise Exception(
+            "Cannot create a WeightedEnsembleClassifier"
+            "without passing base classifiers"
+        )
     else:
-        raise Exception("UNKNOWN CLASSIFIER ", name," in set_classifier")
-
+        raise Exception("UNKNOWN CLASSIFIER ", name, " in set_classifier")

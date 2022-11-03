@@ -1,31 +1,31 @@
+# -*- coding: utf-8 -*-
 import itertools
 import os.path
-from typing import Union, List
+from typing import List, Union
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-
 from estimator_evaluation.evaluation import MetricResults
 from estimator_evaluation.evaluation.diagrams._utils import metric_result_to_df
 
 
 def scatter_diagram(
-        metric_results: Union[pd.DataFrame, List[MetricResults]],
-        output_path=None,
-        compare_estimators_from: List[str] = None,
-        compare_estimators_to: List[str] = None,
-        compare_dataset_columns: List[str] = None,
-        compare_metric_columns: List[str] = None,
-        top_half_color: str = "turquoise",
-        top_half_alpha: float = 0.5,
-        bottom_half_color: str = "white",
-        bottom_half_alpha: float = 0.0,
-        figure_width: float = 5,
-        figure_height: float = 5,
-        label_font_size: float = 10,
-        label_x: float = 0.2,
-        label_y: float = 0.8
+    metric_results: Union[pd.DataFrame, List[MetricResults]],
+    output_path=None,
+    compare_estimators_from: List[str] = None,
+    compare_estimators_to: List[str] = None,
+    compare_dataset_columns: List[str] = None,
+    compare_metric_columns: List[str] = None,
+    top_half_color: str = "turquoise",
+    top_half_alpha: float = 0.5,
+    bottom_half_color: str = "white",
+    bottom_half_alpha: float = 0.0,
+    figure_width: float = 5,
+    figure_height: float = 5,
+    label_font_size: float = 10,
+    label_x: float = 0.2,
+    label_y: float = 0.8,
 ) -> Union[plt.Figure, List[plt.Figure]]:
     """Create a critical difference diagram.
 
@@ -131,19 +131,19 @@ def scatter_diagram(
 
 
 def _plot_scatter_diagram(
-        df: pd.DataFrame,
-        output_path: Union[str, None],
-        metrics: List[str],
-        datasets: List[str],
-        top_half_color: str,
-        top_half_alpha: float,
-        bottom_half_color: str,
-        bottom_half_alpha: float,
-        label_x: float,
-        label_y: float,
-        label_font_size: float,
-        figure_width: float,
-        figure_height: float
+    df: pd.DataFrame,
+    output_path: Union[str, None],
+    metrics: List[str],
+    datasets: List[str],
+    top_half_color: str,
+    top_half_alpha: float,
+    bottom_half_color: str,
+    bottom_half_alpha: float,
+    label_x: float,
+    label_y: float,
+    label_font_size: float,
+    figure_width: float,
+    figure_height: float,
 ):
     """Create scatter plot for two classifiers.
 
@@ -193,17 +193,19 @@ def _plot_scatter_diagram(
     estimators = list(set(df["estimator"]))
     metric_score_dict = {}
     for dataset in datasets:
-        curr_dataset_df = df[df['dataset'] == dataset]
+        curr_dataset_df = df[df["dataset"] == dataset]
         for metric in metrics:
             if metric not in metric_score_dict:
                 metric_score_dict[metric] = [[], []]
-            curr_metric_df = curr_dataset_df[['estimator', metric]]
+            curr_metric_df = curr_dataset_df[["estimator", metric]]
 
             index_zero = float(
-                curr_metric_df[curr_metric_df['estimator'] == estimators[0]][metric])
+                curr_metric_df[curr_metric_df["estimator"] == estimators[0]][metric]
+            )
 
             index_one = float(
-                curr_metric_df[curr_metric_df['estimator'] == estimators[1]][metric])
+                curr_metric_df[curr_metric_df["estimator"] == estimators[1]][metric]
+            )
 
             metric_score_dict[metric][0].append(index_zero)
             metric_score_dict[metric][1].append(index_one)
@@ -221,23 +223,37 @@ def _plot_scatter_diagram(
         ax.plot(x, y, "k.")
 
         # bottom triangle fill
-        ax.fill_between(middle_line, middle_line, color=bottom_half_color,
-                        alpha=bottom_half_alpha)
+        ax.fill_between(
+            middle_line, middle_line, color=bottom_half_color, alpha=bottom_half_alpha
+        )
         # top triangle fill
-        ax.fill_betweenx(middle_line, middle_line, color=top_half_color,
-                         alpha=top_half_alpha)
+        ax.fill_betweenx(
+            middle_line, middle_line, color=top_half_color, alpha=top_half_alpha
+        )
 
         plt.xlim(0, 1)
         plt.ylim(0, 1)
         plt.xlabel(f"{estimators[0]} {metric}")
         plt.ylabel(f"{estimators[1]} {metric}")
-        ax.text(label_y, label_x, f"{estimators[0]} \nis better here", ha='center', fontsize=label_font_size)
-        ax.text(label_x, label_y, f"{estimators[1]} \nis better here", ha='center', fontsize=label_font_size)
+        ax.text(
+            label_y,
+            label_x,
+            f"{estimators[0]} \nis better here",
+            ha="center",
+            fontsize=label_font_size,
+        )
+        ax.text(
+            label_x,
+            label_y,
+            f"{estimators[1]} \nis better here",
+            ha="center",
+            fontsize=label_font_size,
+        )
 
         fig.tight_layout()
         figures.append(fig)
         if output_path is not None:
-            if not os.path.isdir(f'{output_path}/{metric}'):
-                os.makedirs(f'{output_path}/{metric}')
+            if not os.path.isdir(f"{output_path}/{metric}"):
+                os.makedirs(f"{output_path}/{metric}")
             fig.savefig(f"{output_path}/{metric}/{estimators[0]}-{estimators[1]}.png")
     return figures

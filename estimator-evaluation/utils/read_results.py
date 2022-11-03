@@ -1,5 +1,7 @@
-from typing import List, Dict
+# -*- coding: utf-8 -*-
 from csv import reader
+from typing import Dict, List
+
 
 def read_results_from_uea_format(
     path: str,

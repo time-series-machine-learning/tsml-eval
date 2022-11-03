@@ -1,25 +1,37 @@
-from sktime.datasets import load_basic_motions
-from sktime.datasets import load_from_tsfile_to_dataframe, load_from_tsfile
-from sktime.utils.sampling import stratified_resample
+# -*- coding: utf-8 -*-
 from sktime.classification.kernel_based import RocketClassifier
 from sktime.clustering.k_means import TimeSeriesKMeans
 from sktime.clustering.k_medoids import TimeSeriesKMedoids
+from sktime.datasets import (
+    load_basic_motions,
+    load_from_tsfile,
+    load_from_tsfile_to_dataframe,
+)
 from sktime.distances import distance_factory
+from sktime.utils.sampling import stratified_resample
 
 
 def debug_clustering():
     trX, trY = load_from_tsfile(
         full_file_path_and_name="C:\Code\sktime\sktime\datasets\data\BasicMotions"
-                                "\BasicMotions_TRAIN.ts", return_data_type="numpy3D")
+        "\BasicMotions_TRAIN.ts",
+        return_data_type="numpy3D",
+    )
     testX, testY = load_from_tsfile(
         full_file_path_and_name="C:\Code\sktime\sktime\datasets\data\BasicMotions"
-                                "\BasicMotions_TEST.ts", return_data_type="numpy3D")
+        "\BasicMotions_TEST.ts",
+        return_data_type="numpy3D",
+    )
     unitTestX, trY = load_from_tsfile(
         full_file_path_and_name="C:\Code\sktime\sktime\datasets\data\\UnitTest"
-                                "\\UnitTest_TRAIN.ts", return_data_type="numpy2D")
+        "\\UnitTest_TRAIN.ts",
+        return_data_type="numpy2D",
+    )
     unitTrainX, unitTrainY = load_from_tsfile(
         full_file_path_and_name="C:\Code\sktime\sktime\datasets\data\\UnitTest"
-                                "\\UnitTest_TRAIN.ts", return_data_type="numpy2D")
+        "\\UnitTest_TRAIN.ts",
+        return_data_type="numpy2D",
+    )
 
     dtw = distance_factory(trX[0], trX[1], metric="dtw")
     print(" Type TrX = ", type(trX))
@@ -47,18 +59,23 @@ def debug_types():
     X, y = load_basic_motions()
     trX, trY = load_from_tsfile_to_dataframe(
         full_file_path_and_name="C:\Code\sktime\sktime\datasets\data\BasicMotions"
-                                "\BasicMotions_TRAIN.ts")
+        "\BasicMotions_TRAIN.ts"
+    )
     testX, testY = load_from_tsfile_to_dataframe(
         full_file_path_and_name="C:\Code\sktime\sktime\datasets\data\BasicMotions"
-                                "\BasicMotions_TEST.ts")
+        "\BasicMotions_TEST.ts"
+    )
 
     newTrainX, newTrainY, newTestX, newTestY = stratified_resample(
-        trX, trY, testX, testY, 2)
-    from sktime.datatypes import check_is_mtype, MTYPE_LIST_PANEL
+        trX, trY, testX, testY, 2
+    )
+    from sktime.datatypes import MTYPE_LIST_PANEL, check_is_mtype
     from sktime.datatypes._panel._registry import MTYPE_REGISTER_PANEL
+
     print(MTYPE_LIST_PANEL)
     print(MTYPE_REGISTER_PANEL)
-    from sktime import show_versions;
+    from sktime import show_versions
+
     show_versions()
     # cls = RocketClassifier()
     # cls.fit(X,y)
@@ -73,13 +90,14 @@ def debug_types():
     # test_set_classifier()
 
 
-from sktime.classification.dummy import DummyClassifier
 import numpy as np
 import pandas as pd
+from sktime.classification.dummy import DummyClassifier
 
 
 def resample_bug():
     from sktime.utils._testing.panel import _make_panel_X
+
     dummy = DummyClassifier()
     # this works
     trainX = _make_panel_X(n_instances=40)
@@ -99,9 +117,12 @@ def loading_issue_recreate():
     tsf2 = TimeSeriesForestClassifier()
     print(trainX.shape)
     print(trainX.shape)
+    from sktime.classification.interval_based import (
+        SupervisedTimeSeriesForest,
+        TimeSeriesForestClassifier,
+    )
     from sktime.utils._testing.panel import _make_panel_X
-    from sktime.classification.interval_based import SupervisedTimeSeriesForest
-    from sktime.classification.interval_based import TimeSeriesForestClassifier
+
     tsf1 = SupervisedTimeSeriesForest()
     X = pd.DataFrame()
     for i in range(40):
@@ -117,13 +138,19 @@ def loading_issue_recreate():
 
 def japanese_vowels_debug():
     from sktime.datasets import load_from_tsfile
+
     trainX, trainY = load_from_tsfile(
         full_file_path_and_name="X:\\ArchiveData\\Multivariate_ts\\JapaneseVowels\\JapaneseVowels_TRAIN.ts",
-        return_data_type="nested_univ")
+        return_data_type="nested_univ",
+    )
     print(" Train shape = ", trainX.shape)
 
     for i in range(0, 270):
         print(" shape = ", trainX.iloc[i, 0].shape)
-    print(" first case first dimension= ", trainX.iloc[0, 0].shape, " type = ",
-          type(trainX.iloc[0, 0]))
+    print(
+        " first case first dimension= ",
+        trainX.iloc[0, 0].shape,
+        " type = ",
+        type(trainX.iloc[0, 0]),
+    )
     print(" first case first dimension= ", trainX.iloc[0, 0])

@@ -10,15 +10,15 @@ __author__ = ["TonyBagnall"]
 import os
 import sys
 
-#os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
-#os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
-#os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
-
-
 import sktime.datasets.tsc_dataset_names as dataset_lists
 from set_classifier import set_classifier
 from sktime.benchmarking.experiments import load_and_run_classification_experiment
 from sktime.datasets import load_from_tsfile_to_dataframe as load_ts
+
+# os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
+# os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
+# os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
+
 
 """Prototype mechanism for testing classifiers on the UCR format. This mirrors the
 mechanism used in Java,
@@ -33,20 +33,24 @@ from sktime.registry import all_estimators
 
 
 def list_all_multivariate_capable_classifiers():
-    """ Return a list of all multivariate capable classifiers in sktime."""
+    """Return a list of all multivariate capable classifiers in sktime."""
     cls = []
     from sktime.registry import all_estimators
-    cls = all_estimators(estimator_types="classifier",
-                         filter_tags={"capability:multivariate":True}
-                         )
+
+    cls = all_estimators(
+        estimator_types="classifier", filter_tags={"capability:multivariate": True}
+    )
     names = [i for i, _ in cls]
     return names
 
 
-def list_estimators(estimator_type="classifier", multivariate_only=False,
-                    univariate_only=False,
-                    dictionary=True):
-    """ Return a list of all estimators of given type in sktime."""
+def list_estimators(
+    estimator_type="classifier",
+    multivariate_only=False,
+    univariate_only=False,
+    dictionary=True,
+):
+    """Return a list of all estimators of given type in sktime."""
     cls = []
     filter_tags = {}
     if multivariate_only:
@@ -54,12 +58,12 @@ def list_estimators(estimator_type="classifier", multivariate_only=False,
     if univariate_only:
         filter_tags["capability:multivariate"] = False
     cls = all_estimators(estimator_types=estimator_type, filter_tags=filter_tags)
-    names= [i for i, _ in cls]
+    names = [i for i, _ in cls]
     return names
 
 
-#str=list_estimators(estimator_type="classifier")
-#for s in str:
+# str=list_estimators(estimator_type="classifier")
+# for s in str:
 #    print(f"\"{s}\",")
 
 
@@ -98,25 +102,25 @@ def demo_loading():
 
 def results_present(results_path, cls_name, dataset, resample_id):
     full_path = (
-            results_path
-            + "/"
-            + cls_name
-            + "/Predictions/"
-            + dataset
-            + "/testResample"
-            + str(resample_id)
-            + ".csv"
-        )
+        results_path
+        + "/"
+        + cls_name
+        + "/Predictions/"
+        + dataset
+        + "/testResample"
+        + str(resample_id)
+        + ".csv"
+    )
     full_path2 = (
-                results_path
-                + "/"
-                + cls_name
-                + "/Predictions/"
-                + dataset
-                + "/trainResample"
-                + str(resample_id)
-                + ".csv"
-            )
+        results_path
+        + "/"
+        + cls_name
+        + "/Predictions/"
+        + dataset
+        + "/trainResample"
+        + str(resample_id)
+        + ".csv"
+    )
     if os.path.exists(full_path) and os.path.exists(full_path2):
         return True
     return False
@@ -124,7 +128,7 @@ def results_present(results_path, cls_name, dataset, resample_id):
 
 def run_experiment(args):
     if args.__len__() > 1:  # cluster run, this is fragile
-        print(" Input args = ",sys.argv)
+        print(" Input args = ", sys.argv)
         data_dir = sys.argv[1]
         results_dir = sys.argv[2]
         classifier = sys.argv[3]
@@ -142,7 +146,7 @@ def run_experiment(args):
             predefined_resample = False
         # this is also checked in load_and_run, but doing a quick check here so can
         # print a message and make sure data is not loaded
-        if results_present(results_dir,classifier,dataset,resample):
+        if results_present(results_dir, classifier, dataset, resample):
             print("Ignoring, results already present")
         else:
             load_and_run_classification_experiment(

@@ -1,16 +1,14 @@
-from typing import Union, List
+# -*- coding: utf-8 -*-
+import warnings
+from typing import List, Union
 
 import numpy as np
 import pandas as pd
-import warnings
+from estimator_evaluation.evaluation import MetricResults, metric_result_to_summary
 
-from estimator_evaluation.evaluation import (
-    MetricResults,
-    metric_result_to_summary
-)
 
 def metric_result_to_df(
-        result: Union[pd.DataFrame, List[MetricResults]]
+    result: Union[pd.DataFrame, List[MetricResults]]
 ) -> pd.DataFrame:
     """Converts and validates dataframe in correct format.
 
