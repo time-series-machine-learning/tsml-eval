@@ -28,7 +28,6 @@ jobs:
           extra_args: --files ${{ steps.file_changes.outputs.files }}
 
   pytest:
-    needs: pre-commit
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
