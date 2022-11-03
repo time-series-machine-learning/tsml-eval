@@ -4,9 +4,10 @@ from typing import List, Union
 
 import numpy as np
 import pandas as pd
-from estimator_evaluation.evaluation import (
+
+from estimator_evaluation.evaluation._result_evaluation import evaluate_metric_results
+from estimator_evaluation.evaluation._utils import (
     MetricResults,
-    evaluate_metric_results,
     metric_result_to_summary,
 )
 

@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 import platform
 
-from estimator_evaluation.evaluation import (
-    evaluate_metric_results,
-    metric_result_to_summary,
-)
+from estimator_evaluation.evaluation import evaluate_metric_results
 from estimator_evaluation.evaluation.diagrams import scatter_diagram
 
 
