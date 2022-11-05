@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-from estimator_evaluation.evaluation import (
+from tsmlpy_estimator_evaluation.evaluation import (
     fetch_classifier_metric,
     from_metric_summary_to_dataset_format,
 )
-from estimator_evaluation.evaluation._utils import resolve_experiment_paths
+from tsmlpy_estimator_evaluation.evaluation._utils import resolve_experiment_paths
 
 
 def test_resolve_experiment_paths():

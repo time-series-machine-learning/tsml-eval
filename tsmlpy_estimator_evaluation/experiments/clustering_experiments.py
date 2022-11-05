@@ -17,7 +17,7 @@ os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
 import sklearn.metrics
 import sktime.datasets.tsc_dataset_names as dataset_lists
-from estimator_evaluation.experiments.classification_experiments import results_present
+from tsmlpy_estimator_evaluation.experiments.classification_experiments import results_present
 from sklearn.metrics import davies_bouldin_score
 from sklearn.model_selection import GridSearchCV
 from sklearn.preprocessing import normalize

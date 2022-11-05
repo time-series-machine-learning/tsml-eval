@@ -2,8 +2,8 @@
 # Simple usages for building classifiers
 
 import numpy as np
-from estimator_evaluation.evaluation import fetch_classifier_metric
-from estimator_evaluation.evaluation.diagrams import (
+from tsmlpy_estimator_evaluation.evaluation import fetch_classifier_metric
+from tsmlpy_estimator_evaluation.evaluation.diagrams import (
     critical_difference_diagram,
     scatter_diagram,
 )

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import platform
 
-from estimator_evaluation.evaluation import evaluate_metric_results
-from estimator_evaluation.evaluation.diagrams import scatter_diagram
+from tsmlpy_estimator_evaluation.evaluation import evaluate_metric_results
+from tsmlpy_estimator_evaluation.evaluation.diagrams import scatter_diagram
 
 
 def test_scatter_plot():

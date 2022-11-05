@@ -6,8 +6,8 @@ from typing import List, Union
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from estimator_evaluation.evaluation import MetricResults
-from estimator_evaluation.evaluation.diagrams._utils import metric_result_to_df
+from tsmlpy_estimator_evaluation.evaluation import MetricResults
+from tsmlpy_estimator_evaluation.evaluation.diagrams._utils import metric_result_to_df
 
 
 def scatter_diagram(
