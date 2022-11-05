@@ -1,6 +1,6 @@
-# estimator-evaluation
+# tsmlPy-estimator-evaluation
 
-Evaluation tools for classification, regression and clustering using the sktime package.
+Evaluation tools for classification, regression and clustering algorithms built on the sktime package.
 
 Installation
 ------------
@@ -8,7 +8,7 @@ pip install -r requirements.txt
 
 Export new requirements
 -----------------------
-pip freeze > requirements.txt 
+pip freeze > requirements.txt
 
 sktime install from main or branch
 --------------------------
