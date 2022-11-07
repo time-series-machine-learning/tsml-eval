@@ -4,7 +4,7 @@ from typing import List, Union
 
 import numpy as np
 import pandas as pd
-from tsmlpy_estimator_evaluation.evaluation import MetricResults, metric_result_to_summary
+from tsml_estimator_evaluation.evaluation import MetricResults, metric_result_to_summary
 
 
 def metric_result_to_df(

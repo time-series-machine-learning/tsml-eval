@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import platform
 
-from tsmlpy_estimator_evaluation.evaluation._result_evaluation import (
+from tsml_estimator_evaluation.evaluation._result_evaluation import (
     CLUSTER_METRIC_CALLABLES,
     evaluate_metric_results,
     evaluate_raw_results,
@@ -43,7 +43,7 @@ def test_read_evaluation_metric_results():
         "../../../results/", custom_classification
     )
 
-    from tsmlpy_estimator_evaluation.evaluation.diagrams._critical_difference_diagram import (
+    from tsml_estimator_evaluation.evaluation.diagrams._critical_difference_diagram import (
         critical_difference_diagram,
     )
 

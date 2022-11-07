@@ -4,7 +4,7 @@ import platform
 from typing import Callable, Dict, List, Tuple, Union
 
 import pandas as pd
-from tsmlpy_estimator_evaluation.evaluation._utils import (
+from tsml_estimator_evaluation.evaluation._utils import (
     EstimatorMetricResults,
     Experiment,
     MetricCallable,

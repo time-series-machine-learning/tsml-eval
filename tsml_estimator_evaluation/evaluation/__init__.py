@@ -23,14 +23,14 @@ __all__ = [
     "from_metric_summary_to_dataset_format",
 ]
 
-from tsmlpy_estimator_evaluation.evaluation._bulit_in_evaluation import fetch_classifier_metric
-from tsmlpy_estimator_evaluation.evaluation._result_evaluation import (
+from tsml_estimator_evaluation.evaluation._bulit_in_evaluation import fetch_classifier_metric
+from tsml_estimator_evaluation.evaluation._result_evaluation import (
     CLASSIFICATION_METRIC_CALLABLES,
     CLUSTER_METRIC_CALLABLES,
     evaluate_metric_results,
     evaluate_raw_results,
 )
-from tsmlpy_estimator_evaluation.evaluation._utils import (
+from tsml_estimator_evaluation.evaluation._utils import (
     Dataset,
     Estimator,
     EstimatorExperiment,

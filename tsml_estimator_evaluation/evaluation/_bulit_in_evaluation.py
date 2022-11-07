@@ -5,8 +5,8 @@ from typing import List, Union
 import numpy as np
 import pandas as pd
 
-from tsmlpy_estimator_evaluation.evaluation._result_evaluation import evaluate_metric_results
-from tsmlpy_estimator_evaluation.evaluation._utils import (
+from tsml_estimator_evaluation.evaluation._result_evaluation import evaluate_metric_results
+from tsml_estimator_evaluation.evaluation._utils import (
     MetricResults,
     metric_result_to_summary,
 )
