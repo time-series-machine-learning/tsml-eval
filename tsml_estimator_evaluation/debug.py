@@ -10,6 +10,13 @@ from sktime.datasets import (
 from sktime.distances import distance_factory
 from sktime.utils.sampling import stratified_resample
 
+import numpy as np
+
+y_test = np.array([1.0,2.0,3.0])
+preds = np.array([-1.0,2.0,1.0])
+
+mse = np.square(y_test - preds).sum()
+print(mse)
 
 def debug_clustering():
     trX, trY = load_from_tsfile(
