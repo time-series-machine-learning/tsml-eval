@@ -1,4 +1,4 @@
-# tsmlPy-estimator-evaluation
+# tsml-estimator-evaluation
 
 Evaluation tools for classification, regression and clustering algorithms built on the sktime package.
 
