@@ -74,7 +74,7 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1):
     set up is to help with batch jobs for multiple problems to facilitate easy
     reproducibility for use with load_and_run_classification_experiment. You can pass a
     classifier object instead to run_classification_experiment.
-    TODO: add contract, checkpoint and threaded options
+    TODO: add contract and checkpoint options
 
     Parameters
     ----------
@@ -254,7 +254,7 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1):
     elif name == "cnn" or name == "cnnclassifier":
         from sktime.classification.deep_learning.cnn import CNNClassifier
 
-        return CNNClassifier()
+        return CNNClassifier(random_state=resample_id)
     elif name == "fcnn" or name == "fcnclassifier":
         from sktime.classification.deep_learning.fcn import FCNClassifier
 
@@ -262,11 +262,10 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1):
     elif name == "mlp" or name == "mlpclassifier":
         from sktime.classification.deep_learning.mlp import MLPClassifier
 
-        return MLPClassifier()
+        return MLPClassifier(random_state=resample_id)
     elif name == "tapnet" or name == "tapnetclassifier":
         from sktime.classification.deep_learning.tapnet import TapNetClassifier
-
-        return TapNetClassifier()
+        return TapNetClassifier(random_state=resample_id)
     # Other
     elif name == "dummy" or name == "dummyclassifier":
         return DummyClassifier()
