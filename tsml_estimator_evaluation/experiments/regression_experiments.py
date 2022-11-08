@@ -199,7 +199,7 @@ def run_experiment(args):
             load_and_run_regression_experiment(
                 problem_path=data_dir,
                 results_path=results_dir,
-                regressor=set_regressor(regressor, resample, tf),
+                regressor=set_regressor(regressor_name, resample, tf),
                 regressor_name=regressor_name,
                 dataset=dataset,
                 resample_id=resample,
