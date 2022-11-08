@@ -38,7 +38,7 @@ results_dir=$local_path"RegressionResults/sktime/"
 out_dir=$local_path"Code/output/regression/"
 script_file_path=$local_path"Code/tsml-estimator-evaluation/tsml_estimator_evaluation/experiments/regression_experiments.py"
 # environment name, change accordingly, for set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
-env_name="env"
+env_name="eval"
 # Generating train folds is usually slower, set to false unless you need them, wont
 # currently work with regression_experiments
 generate_train_files="false"

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-max_folds=1                                               
-start_fold=1                                                
+max_folds=1
+start_fold=1
 # To avoid dumping 1000s of jobs in the queue we have a higher level queue
 maxNumSubmitted=700
 # queue options are https://my.uea.ac.uk/divisions/it-and-computing-services/service-catalogue/research-it-services/hpc/ada-cluster/using-ada
@@ -27,7 +27,7 @@ results_dir=$my_path"ClusteringResults/kmeans/"
 out_dir=$my_path"Code/output/Clustering/"
 script_file_path=$my_path"Code/estimator-evaluation/sktime_estimator_evaluation/experiments/clustering_experiments.py"
 # For env set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
-env_name="sktime-dev"
+env_name="eval"
 generate_train_files="false"
 clusterer="kmeans"
 averaging="mean"
@@ -55,7 +55,7 @@ mkdir -p ${out_dir}${clusterer}/${dataset}/
 
 echo "#!/bin/bash
 
-#SBATCH --mail-type=${mail}   
+#SBATCH --mail-type=${mail}
 #SBATCH --mail-user=${mailto}
 #SBATCH -p ${queue}
 #SBATCH -t ${max_time}
