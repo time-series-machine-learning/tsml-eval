@@ -17,6 +17,7 @@ import sys
 from tsml_estimator_evaluation.experiments.set_regressor import set_regressor
 from sktime.datasets import load_from_tsfile_to_dataframe as load_ts
 from classification_experiments import results_present
+from sktime.utils.sampling import stratified_resample
 
 
 def run_regression_experiment(
