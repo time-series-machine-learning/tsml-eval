@@ -36,8 +36,7 @@ local_path="/gpfs/home/ajb/"
 # Change these to reflect your own file structure
 results_dir=$local_path"RegressionResults/sktime/"
 out_dir=$local_path"Code/output/regression/"
-script_file_path=$local_path"Code/tsml-estimator-evaluation/tsml_estimator_evaluation
-/experiments/regression_experiments.py"
+script_file_path=$local_path"Code/tsml-estimator-evaluation/tsml_estimator_evaluation/experiments/regression_experiments.py"
 # environment name, change accordingly, for set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
 env_name="env"
 # Generating train folds is usually slower, set to false unless you need them, wont
