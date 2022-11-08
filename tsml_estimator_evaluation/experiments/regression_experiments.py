@@ -16,6 +16,7 @@ from datetime import datetime
 import sys
 from tsml_estimator_evaluation.experiments.set_regressor import set_regressor
 from sktime.datasets import load_from_tsfile_to_dataframe as load_ts
+from classification_experiments import results_present
 
 
 def run_regression_experiment(
