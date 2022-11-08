@@ -6,6 +6,13 @@ __author__ = ["TonyBagnall"]
 from sktime.clustering.k_means import TimeSeriesKMeans
 from sktime.clustering.k_medoids import TimeSeriesKMedoids
 
+from sktime.registry import all_estimators
+
+
+cls = all_estimators(estimator_types="clusterer")
+names = [i for i, _ in cls]
+print(names)
+
 
 def set_clusterer(cls, resample_id=None):
     """Construct a clusterer.

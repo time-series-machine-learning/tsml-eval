@@ -42,6 +42,7 @@ from sktime.classification.interval_based import (
 from sktime.classification.kernel_based import Arsenal, RocketClassifier
 from sktime.classification.shapelet_based import ShapeletTransformClassifier
 from sktime.transformations.series.summarize import SummaryTransformer
+from sktime.registry import all_estimators
 
 multivariate_classifiers = [
     "Arsenal",
@@ -66,6 +67,9 @@ multivariate_classifiers = [
     "WeightedEnsembleClassifier",
 ]
 
+cls = all_estimators(estimator_types="classifier")
+names = [i for i, _ in cls]
+print(names)
 
 def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1):
     """Construct a classifier, possibly seeded.

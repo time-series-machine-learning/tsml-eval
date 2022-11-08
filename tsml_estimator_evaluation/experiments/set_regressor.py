@@ -8,6 +8,7 @@ from sktime.regression.kernel_based import RocketRegressor
 from sktime.regression.interval_based import TimeSeriesForestRegressor
 from tsml_estimator_evaluation.experiments.classification_experiments import list_estimators
 from sktime.registry import all_estimators
+
 cls = all_estimators(estimator_types="regressor")
 names = [i for i, _ in cls]
 print(names)

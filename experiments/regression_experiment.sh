@@ -34,14 +34,14 @@ datasets="/gpfs/home/ajb/DataSetLists/temp.txt"
 local_path="/gpfs/home/ajb/"
 
 # Change these to reflect your own file structure
-results_dir=$local_path"ClassificationResults/MultivariateReferenceResults/sktime/"
-out_dir=$local_path"Code/output/multivariate/"
+results_dir=$local_path"RegressionResults/sktime/"
+out_dir=$local_path"Code/output/regression/"
 script_file_path=$local_path"Code/tsml-estimator-evaluation/tsml_estimator_evaluation
-/experiments/classification_experiments.py"
+/experiments/regression_experiments.py"
 # environment name, change accordingly, for set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
 env_name="env"
 # Generating train folds is usually slower, set to false unless you need them
-generate_train_files="false"
+generate_train_files="true"
 # If set for true, looks for <problem><fold>_TRAIN.ts file. This is useful for running tsml resamples
 predefined_folds="false"
 
