@@ -3,7 +3,7 @@
 #queue="gpu-rtx6000-2"
 #SBATCH --qos=gpu-rtx
 #ALSO CHECK: datasets (list of problems), results_dir (where to check/write results),
-# for classifier in MLPClassifier
+# for regressor in ...
 
 # Start and end for resamples
 max_folds=30
@@ -23,7 +23,7 @@ max_memory=8000
 # Max allowable is 7 days - 168 hours
 max_time="168:00:00"
 
-# Start point for the script i.e. 3 datasets, 3 classifiers = 9 jobs to submit, start_point=5 will skip to job 5
+# Start point for the script i.e. 3 datasets, 3 regressors = 9 jobs to submit, start_point=5 will skip to job 5
 start_point=1
 
 # Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
@@ -40,15 +40,17 @@ script_file_path=$local_path"Code/tsml-estimator-evaluation/tsml_estimator_evalu
 /experiments/regression_experiments.py"
 # environment name, change accordingly, for set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
 env_name="env"
-# Generating train folds is usually slower, set to false unless you need them
-generate_train_files="true"
+# Generating train folds is usually slower, set to false unless you need them, wont
+# currently work with regression_experiments
+generate_train_files="false"
 # If set for true, looks for <problem><fold>_TRAIN.ts file. This is useful for running tsml resamples
 predefined_folds="false"
 
-# List valid classifiers e.g DrCIF TDE Arsenal STC MUSE ROCKET Mini-ROCKET Multi-ROCKET
+# List valid regressors e.g CNNRegressor, KNeighborsTimeSeriesRegressor,
+# RocketRegressor, TapNetRegressor, TimeSeriesForestRegressor
 count=0
 while read dataset; do
-for classifier in STC
+for regressor in TimeSeriesForestRegressor
 do
 # Dont change anything after here
 # This is the loop to keep from dumping everything in the queue which is maintained around max_num_submitted jobs
@@ -66,14 +68,14 @@ done
 ((count++))
 if ((count>=start_point)); then
 
-mkdir -p ${out_dir}${classifier}/${dataset}/
+mkdir -p ${out_dir}${regressor}/${dataset}/
 
 # This skips jobs which have test/train files already written to the results directory. Only looks for Resamples, not Folds (old file name)
 array_jobs=""
 for (( i=start_fold-1; i<max_folds; i++ ))
 do
-    if [ -f "${results_dir}${classifier}/Predictions/${dataset}/testResample${i}.csv" ]; then
-        if [ "${generate_train_files}" == "true" ] && ! [ -f "${results_dir}${classifier}/Predictions/${dataset}/trainResample${i}.csv" ]; then
+    if [ -f "${results_dir}${regressor}/Predictions/${dataset}/testResample${i}.csv" ]; then
+        if [ "${generate_train_files}" == "true" ] && ! [ -f "${results_dir}${regressor}/Predictions/${dataset}/trainResample${i}.csv" ]; then
             array_jobs="${array_jobs}${array_jobs:+,}$((i + 1))"
         fi
     else
@@ -90,11 +92,11 @@ echo "#!/bin/bash
 #SBATCH --mail-user=${mailto}
 #SBATCH -p ${queue}
 #SBATCH -t ${max_time}
-#SBATCH --job-name=${classifier}${dataset}
+#SBATCH --job-name=${regressor}${dataset}
 #SBATCH --array=${array_jobs}
 #SBATCH --mem=${max_memory}M
-#SBATCH -o ${out_dir}${classifier}/${dataset}/%A-%a.out
-#SBATCH -e ${out_dir}${classifier}/${dataset}/%A-%a.err
+#SBATCH -o ${out_dir}${regressor}/${dataset}/%A-%a.out
+#SBATCH -e ${out_dir}${regressor}/${dataset}/%A-%a.err
 
 . /etc/profile
 
@@ -104,14 +106,14 @@ conda activate $env_name
 export PYTHONPATH=$(pwd)
 # Input args to classification_experiments are in main method of
 # https://github.com/uea-machine-learning/estimator-evaluation/blob/main/sktime_estimator_evaluation/experiments/classification_experiments.py
-python ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} \$SLURM_ARRAY_TASK_ID ${generate_train_files} ${predefined_folds}"  > generatedFile.sub
+python ${script_file_path} ${data_dir} ${results_dir} ${regressor} ${dataset} \$SLURM_ARRAY_TASK_ID ${generate_train_files} ${predefined_folds}"  > generatedFile.sub
 
-echo ${count} ${classifier}/${dataset}
+echo ${count} ${regressor}/${dataset}
 
 sbatch < generatedFile.sub
 
 else
-    echo ${count} ${classifier}/${dataset} has finished all required resamples, skipping
+    echo ${count} ${regressor}/${dataset} has finished all required resamples, skipping
 fi
 
 fi
