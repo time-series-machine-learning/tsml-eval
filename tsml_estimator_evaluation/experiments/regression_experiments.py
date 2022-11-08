@@ -9,6 +9,7 @@ classification_experiments, we should condense it all to one
 __author__ = ["TonyBagnall"]
 
 import numpy as np
+import pandas as pd
 from sktime.datasets import write_results_to_uea_format
 import os
 import time
@@ -17,7 +18,54 @@ import sys
 from tsml_estimator_evaluation.experiments.set_regressor import set_regressor
 from sktime.datasets import load_from_tsfile_to_dataframe as load_ts
 from classification_experiments import results_present
-from sktime.utils.sampling import stratified_resample
+import sklearn.utils
+
+
+
+def resample(trainx, trainy, testx, testy, random_state):
+    """Stratified resample data without replacement using a random state.
+
+    Reproducable resampling. Combines train and test, resamples to get the same class
+    distribution, then returns new train and test.
+
+    Parameters
+    ----------
+    trainx : pd.DataFrame
+        train data attributes in sktime pandas format.
+    trainy : np.array
+        train data class labels.
+    testx : pd.DataFrame
+        test data attributes in sktime pandas format.
+    testy : np.array
+        test data class labels as np array.
+    random_state : int
+        seed to enable reproducable resamples
+    Returns
+    -------
+    new train and test attributes and class labels.
+    """
+    all_targets = np.concatenate((trainy, testy), axis=None)
+    all_data = pd.concat([trainx, testx])
+    random_state = sklearn.utils.check_random_state(random_state)
+    train_cases = trainy.size
+    test_cases = testy.size
+
+    all_data['target'] = all_targets
+    shuffled = all_data.sample(frac=1, random_state=1)
+    # extract and remove the target column
+    all_targets = shuffled['target'].to_numpy()
+    shuffled = shuffled.drop('target', axis=1)
+    # split the shuffled data into train and test
+    trainx = shuffled.iloc[:train_cases]
+    testx = shuffled.iloc[train_cases:]
+    trainy = all_targets[:train_cases]
+    testy = all_targets[train_cases:]
+    # reset indexes to conform to sktime format.
+    trainx = trainx.reset_index(drop=True)
+    testx = testx.reset_index(drop=True)
+    return trainx, trainy, testx, testy
+
+
 
 
 def run_regression_experiment(
@@ -155,7 +203,7 @@ def load_and_run_regression_experiment(
         X_train, y_train = load_ts(problem_path + dataset + "/" + dataset + "_TRAIN.ts")
         X_test, y_test = load_ts(problem_path + dataset + "/" + dataset + "_TEST.ts")
         if resample_id != 0:
-            X_train, y_train, X_test, y_test = stratified_resample(
+            X_train, y_train, X_test, y_test = resample(
                 X_train, y_train, X_test, y_test, resample_id
             )
     y_train = y_train.astype(float)
@@ -234,4 +282,4 @@ if __name__ == "__main__":
     """
     Example simple usage, with arguments input via script or hard coded for testing.
     """
-    run_experiment(sys.argv)
+#    run_experiment(sys.argv)
