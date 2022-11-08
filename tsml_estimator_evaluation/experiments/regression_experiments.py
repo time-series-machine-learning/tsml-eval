@@ -178,7 +178,7 @@ def run_experiment(args):
         print(" Input args = ", sys.argv)
         data_dir = sys.argv[1]
         results_dir = sys.argv[2]
-        regressor = sys.argv[3]
+        regressor_name = sys.argv[3]
         dataset = sys.argv[4]
         resample = int(sys.argv[5]) - 1
 
