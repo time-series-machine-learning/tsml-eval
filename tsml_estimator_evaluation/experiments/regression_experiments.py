@@ -3,7 +3,7 @@
 
 This file is configured for runs of the main method with command line arguments, or for
 single debugging runs. Results are written in a standard format. It is cloned from
-classification_experiments, we should condense it all to one
+classification_experiments, we should condense it all to one.
 """
 
 __author__ = ["TonyBagnall"]
@@ -282,4 +282,4 @@ if __name__ == "__main__":
     """
     Example simple usage, with arguments input via script or hard coded for testing.
     """
-#    run_experiment(sys.argv)
+    run_experiment(sys.argv)
