@@ -193,7 +193,7 @@ def run_experiment(args):
             predefined_resample = False
         # this is also checked in load_and_run, but doing a quick check here so can
         # print a message and make sure data is not loaded
-        if results_present(results_dir, regressor, dataset, resample):
+        if results_present(results_dir, regressor_name, dataset, resample):
             print("Ignoring, results already present")
         else:
             load_and_run_regression_experiment(
