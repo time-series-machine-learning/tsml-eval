@@ -46,7 +46,7 @@ def set_regressor(regressor, resample_id=None, train_file=False, n_jobs=1):
             return TapNetRegressor(random_state=resample_id)
     elif name == "knn" or name == "kneighborstimeseriesregressor":
         return KNeighborsTimeSeriesRegressor(
-            random_state=resample_id,
+#            random_state=resample_id,
             n_jobs=n_jobs,
         )
     elif name == "rocket" or name == "rocketregressor":
