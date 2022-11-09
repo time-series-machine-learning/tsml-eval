@@ -7,7 +7,7 @@
 max_folds=30
 start_fold=1
 # To avoid dumping 1000s of jobs in the queue we have a higher level queue
-max_num_submitted=300
+max_num_submitted=500
 # Queue options are https://my.uea.ac.uk/divisions/it-and-computing-services/service-catalogue/research-it-services/hpc/ada-cluster/using-ada
 # By default use "compute-64-512". For deep learning classifiers, use "gpu-rtx6000-2"
 queue="gpu-rtx6000-2"
