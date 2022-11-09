@@ -44,7 +44,7 @@ def set_regressor(regressor, resample_id=None, train_file=False, n_jobs=1):
     elif name == "tapnet" or name == "tapnetregressor":
             from sktime.regression.deep_learning.tapnet import TapNetRegressor
             return TapNetRegressor(random_state=resample_id)
-    elif name == "knn" or name == "kneighborstimeSeriesregressor":
+    elif name == "knn" or name == "kneighborstimeseriesregressor":
         return KNeighborsTimeSeriesRegressor(
             random_state=resample_id,
             n_jobs=n_jobs,
