@@ -43,9 +43,7 @@ def list_all_multivariate_capable_classifiers():
     names = [i for i, _ in cls]
     return names
 
-n=list_all_multivariate_capable_classifiers()
-for name in n:
-    print(name)
+
 def list_estimators(
     estimator_type="classifier",
     multivariate_only=False,
@@ -64,9 +62,10 @@ def list_estimators(
     return names
 
 
-# str=list_estimators(estimator_type="classifier")
-# for s in str:
-#    print(f"\"{s}\",")
+str=list_estimators(estimator_type="classifier")
+print(str)
+for s in str:
+    print(f"\"{s}\",")
 
 
 def demo_loading():
