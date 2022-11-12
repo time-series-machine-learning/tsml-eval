@@ -10,6 +10,11 @@ from sktime.datasets import (
 from sktime.distances import distance_factory
 from sktime.utils.sampling import stratified_resample
 
+from sktime.registry import all_estimators
+cls = all_estimators(estimator_types="classifier")
+names = [i for i, _ in cls]
+print(names)
+
 import numpy as np
 
 y_test = np.array([1.0,2.0,3.0])

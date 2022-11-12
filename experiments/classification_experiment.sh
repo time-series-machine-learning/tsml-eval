@@ -46,9 +46,23 @@ generate_train_files="false"
 predefined_folds="false"
 
 # List valid classifiers e.g DrCIF TDE Arsenal STC MUSE ROCKET Mini-ROCKET Multi-ROCKET
+# See set_classifier for aliases
+#Arsenal BOSSEnsemble(BOSS) CanonicalIntervalForest (CIF) Catch22Classifier
+# ContractableBOSS  DrCIF ElasticEnsemble FreshPRINCE HIVECOTEV1 HIVECOTEV2
+# KNeighborsTimeSeriesClassifier RandomIntervalClassifier
+# 'RandomIntervalSpectralEnsemble RocketClassifier
+# ShapeDTWW ShapeletTransformClassifier TemporalDictionaryEnsemble
+# All multivariate classifiers can be listed like this (remove filter_tags for
+# univariate
+#    from sktime.registry import all_estimators
+#    cls = all_estimators(
+#        estimator_types="classifier", filter_tags={"capability:multivariate": True}
+#        )
+#    names = [i for i, _ in cls]
+
 count=0
 while read dataset; do
-for classifier in STC
+for classifier in ShapeletTransformClassifier
 do
 # Dont change anything after here
 # This is the loop to keep from dumping everything in the queue which is maintained around max_num_submitted jobs
