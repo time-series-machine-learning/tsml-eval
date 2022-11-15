@@ -161,13 +161,13 @@ def run_experiment(args):
                 predefined_resample=predefined_resample,
             )
     else:  # Local run
-        print(" Local Run of DrCIF with threading")
+        print(" Local Run of HIVECOTE2 with threading")
         data_dir = "/home/ajb/Data/"
         results_dir = "/home/ajb/temp/"
-        cls_name = "DrCIF"
-        n_jobs = 10
+        cls_name = "HIVECOTE2"
+        n_jobs = 14
         classifier = set_classifier(cls_name, n_jobs=n_jobs)
-        dataset = "FaceDetection"
+        dataset = "Blink"
         resample = 0
         tf = False
         predefined_resample = False
