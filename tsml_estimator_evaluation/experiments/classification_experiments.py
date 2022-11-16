@@ -164,7 +164,7 @@ def run_experiment(args):
         data_dir = "/home/ajb/Data/"
         results_dir = "/home/ajb/temp/"
         cls_name = "TDE"
-        n_jobs = 14
+        n_jobs = 2
         contract_mins = 1
         print(f" Local Run of {cls_name} with threading jobs ={ n_jobs} contract time ={contract_mins}")
         classifier = set_classifier(cls_name, n_jobs=n_jobs, contract=contract_mins)
