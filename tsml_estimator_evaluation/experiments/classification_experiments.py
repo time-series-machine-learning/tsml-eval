@@ -161,12 +161,12 @@ def run_experiment(args):
                 predefined_resample=predefined_resample,
             )
     else:  # Local run
-        print(" Local Run of HIVECOTE2 with threading")
         data_dir = "/home/ajb/Data/"
         results_dir = "/home/ajb/temp/"
         cls_name = "TDE"
         n_jobs = 14
         contract_mins = 1
+        print(f" Local Run of {cls_name} with threading jobs ={ n_jobs} contract time ={contract_mins}")
         classifier = set_classifier(cls_name, n_jobs=n_jobs, contract=contract_mins)
         dataset = "Blink"
         resample = 0
