@@ -164,9 +164,10 @@ def run_experiment(args):
         print(" Local Run of HIVECOTE2 with threading")
         data_dir = "/home/ajb/Data/"
         results_dir = "/home/ajb/temp/"
-        cls_name = "HIVECOTEV2"
+        cls_name = "TDE"
         n_jobs = 14
-        classifier = set_classifier(cls_name, n_jobs=n_jobs)
+        contract_mins = 1
+        classifier = set_classifier(cls_name, n_jobs=n_jobs, contract=contract_mins)
         dataset = "Blink"
         resample = 0
         tf = False

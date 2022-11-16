@@ -71,7 +71,7 @@ cls = all_estimators(estimator_types="classifier")
 names = [i for i, _ in cls]
 print(names)
 
-def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1):
+def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0):
     """Construct a classifier, possibly seeded.
 
     Basic way of creating the classifier to build using the default settings. This
@@ -110,7 +110,7 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1):
     elif name == "tde" or name == "temporaldictionaryensemble":
         return TemporalDictionaryEnsemble(
             random_state=resample_id, save_train_predictions=train_file,
-            n_jobs=n_jobs, min_window=8
+            n_jobs=n_jobs, min_window=8, time_limit_in_minutes=contract,
         )
     elif name == "individualtde":
         return IndividualTDE(random_state=resample_id, n_jobs=n_jobs)
