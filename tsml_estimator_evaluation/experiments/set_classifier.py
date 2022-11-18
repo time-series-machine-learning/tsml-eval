@@ -116,8 +116,12 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
         return IndividualTDE(random_state=resample_id, n_jobs=n_jobs)
     elif name == "weasel":
         return WEASEL(random_state=resample_id, n_jobs=n_jobs)
+    elif name == "weasel-logistic":
+        return WEASEL(random_state=resample_id, n_jobs=n_jobs, support_probabilities=True)
     elif name == "muse":
         return MUSE(random_state=resample_id, n_jobs=n_jobs)
+    elif name == "muse-logistic":
+        return WEASEL(random_state=resample_id, n_jobs=n_jobs, support_probabilities=True)
     # Distance based
     elif name == "pf" or name == "proximityforest":
         return ProximityForest(random_state=resample_id)
@@ -151,11 +155,11 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
             ),
             estimator=RandomForestClassifier(n_estimators=500),
         )
-    elif name == "catch22-intervals":
+    elif name == "randominterval-rf" or name == "catch22intervals-rf":
         return RandomIntervalClassifier(
             random_state=resample_id, estimator=RandomForestClassifier(n_estimators=500)
         )
-    elif name == "randomintervalclassifier" or name == "randominterval":
+    elif name == "randomintervalclassifier" or name == "randominterval" or name == "catch22intervals":
         return RandomIntervalClassifier(random_state=resample_id)
     elif name == "catch22-500":
         return Catch22Classifier(
@@ -173,7 +177,7 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
         )
     elif name == "tsfreshclassifier" or name == "tsfresh":
         return TSFreshClassifier(random_state=resample_id)
-    elif name == "signatureclassifier":
+    elif name == "signatureclassifier" or name == "signatures":
         return SignatureClassifier(random_state=resample_id)
     # hybrids
     elif name == "hc1" or name == "hivecotev1":
