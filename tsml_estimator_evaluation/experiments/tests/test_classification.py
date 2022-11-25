@@ -9,12 +9,18 @@ from tsml_estimator_evaluation.experiments.classification_experiments import (
 
 
 def test_run_experiment():
-    result_path = "../../../test_output/classification/"
+    result_path = (
+        "./test_output/classification/"
+        if os.getcwd().split("\\")[-1] != "tests"
+        else "../../../test_output/classification/"
+    )
     classifier = "DummyClassifier"
     dataset = "UnitTest"
     args = [
         None,
-        "../../data/",
+        "./tsml_estimator_evaluation/data/"
+        if os.getcwd().split("\\")[-1] != "tests"
+        else "../../data/",
         result_path,
         classifier,
         dataset,
@@ -22,6 +28,8 @@ def test_run_experiment():
         "True",
         "False",
     ]
+    print()
+    print()
     run_experiment(args, overwrite=True)
 
     test_file = (

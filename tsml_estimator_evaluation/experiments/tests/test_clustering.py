@@ -7,12 +7,16 @@ from tsml_estimator_evaluation.experiments.clustering_experiments import run_exp
 
 
 def test_run_experiment():
-    result_path = "../../../test_output/clustering/"
+    result_path = (
+        "../../../test_output/clustering/"
+        if os.getcwd().split("\\")[-1] != "tests"
+        else "../../../test_output/clustering/"
+    )
     clusterer = "KMeans"
     dataset = "UnitTest"
     args = [
         None,
-        "../../data/",
+        "../../data/" if os.getcwd().split("\\")[-1] != "tests" else "../../data/",
         result_path,
         clusterer,
         dataset,

@@ -14,12 +14,16 @@ from tsml_estimator_evaluation.experiments.regression_experiments import (
 
 
 def test_run_experiment():
-    result_path = "../../../test_output/regression/"
+    result_path = (
+        "../../../test_output/regression/"
+        if os.getcwd().split("\\")[-1] != "tests"
+        else "../../../test_output/regression/"
+    )
     regressor = "RocketRegressor"
     dataset = "Covid3Month"
     args = [
         None,
-        "../../data/",
+        "../../data/" if os.getcwd().split("\\")[-1] != "tests" else "../../data/",
         result_path,
         regressor,
         dataset,
