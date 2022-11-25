@@ -4,14 +4,8 @@ __author__ = ["TonyBagnall"]
 
 
 from sktime.regression.distance_based import KNeighborsTimeSeriesRegressor
-from sktime.regression.kernel_based import RocketRegressor
 from sktime.regression.interval_based import TimeSeriesForestRegressor
-from tsml_estimator_evaluation.experiments.classification_experiments import list_estimators
-from sktime.registry import all_estimators
-
-cls = all_estimators(estimator_types="regressor")
-names = [i for i, _ in cls]
-print(names)
+from sktime.regression.kernel_based import RocketRegressor
 
 
 def set_regressor(regressor, resample_id=None, train_file=False, n_jobs=1):
@@ -40,13 +34,15 @@ def set_regressor(regressor, resample_id=None, train_file=False, n_jobs=1):
     name = regressor.lower()
     if name == "cnn" or name == "cnnregressor":
         from sktime.regression.deep_learning.cnn import CNNRegressor
+
         return CNNRegressor(random_state=resample_id)
     elif name == "tapnet" or name == "tapnetregressor":
-            from sktime.regression.deep_learning.tapnet import TapNetRegressor
-            return TapNetRegressor(random_state=resample_id)
+        from sktime.regression.deep_learning.tapnet import TapNetRegressor
+
+        return TapNetRegressor(random_state=resample_id)
     elif name == "knn" or name == "kneighborstimeseriesregressor":
         return KNeighborsTimeSeriesRegressor(
-#            random_state=resample_id,
+            #            random_state=resample_id,
             n_jobs=n_jobs,
         )
     elif name == "rocket" or name == "rocketregressor":
