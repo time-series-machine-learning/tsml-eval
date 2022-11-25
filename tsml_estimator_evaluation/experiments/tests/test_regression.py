@@ -19,7 +19,7 @@ def test_run_experiment():
         if os.getcwd().split("\\")[-1] != "tests"
         else "../../../test_output/regression/"
     )
-    regressor = "RocketRegressor"
+    regressor = "DummyRegressor"
     dataset = "Covid3Month"
     args = [
         None,
