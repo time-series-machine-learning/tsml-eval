@@ -23,7 +23,9 @@ def test_run_experiment():
     dataset = "Covid3Month"
     args = [
         None,
-        "../../data/" if os.getcwd().split("\\")[-1] != "tests" else "../../data/",
+        "./tsml_estimator_evaluation/data/"
+        if os.getcwd().split("\\")[-1] != "tests"
+        else "../../data/",
         result_path,
         regressor,
         dataset,
