@@ -14,6 +14,9 @@ os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
 
 import sys
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).parent.parent.parent))
 
 from sktime.benchmarking.experiments import load_and_run_classification_experiment
 

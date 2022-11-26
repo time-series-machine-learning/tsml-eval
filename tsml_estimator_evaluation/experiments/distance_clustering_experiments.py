@@ -8,14 +8,17 @@ single debugging runs. Results are written in a standard format.
 __author__ = ["TonyBagnall"]
 
 import os
-import sys
-
-import numpy as np
 
 os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
 
+import sys
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).parent.parent.parent))
+
+import numpy as np
 from sklearn.metrics import davies_bouldin_score
 from sktime.benchmarking.experiments import run_clustering_experiment
 from sktime.clustering.k_means import TimeSeriesKMeans
