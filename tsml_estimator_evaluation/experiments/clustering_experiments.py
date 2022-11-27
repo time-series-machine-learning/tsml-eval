@@ -8,6 +8,9 @@ single debugging runs. Results are written in a standard format.
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 import sys
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).parent.parent.parent))
 
 from sktime.benchmarking.experiments import load_and_run_clustering_experiment
 

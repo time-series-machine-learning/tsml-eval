@@ -23,7 +23,7 @@ queue="gpu-rtx6000-2"
 # Enter your username and email here
 username="ajb"
 mail="NONE"
-mailto="ajb@uea.ac.uk"
+mailto=$username"@uea.ac.uk"
 
 # MB for jobs, max is maybe 64000 before you need to use huge memory queue. Do not use more than you need
 max_memory=8000
@@ -39,7 +39,7 @@ data_dir="/gpfs/home/ajb/Data/"
 datasets="/gpfs/home/ajb/DataSetLists/Regression.txt"
 
 # Put your home directory here
-local_path="/gpfs/home/ajb/"
+local_path="/gpfs/home/"$username"/"
 
 # CHECK Change these to reflect your own file structure
 results_dir=$local_path"RegressionResults/sktime/"
