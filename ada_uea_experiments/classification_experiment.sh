@@ -19,7 +19,7 @@ queue="compute-64-512"
 # Enter your username and email here
 username="ajb"
 mail="NONE"
-mailto="ajb@uea.ac.uk"
+mailto=$username"@uea.ac.uk"
 
 # MB for jobs, max is maybe 64000 before you need to use huge memory queue. Do not use more than you need
 max_memory=8000
@@ -35,14 +35,14 @@ data_dir="/gpfs/home/ajb/Data/"
 datasets="/gpfs/home/ajb/DataSetLists/TSC_112_2019.txt"
 
 # Put your home directory here
-local_path="/gpfs/home/ajb/"
+local_path="/gpfs/home/"$username"/"
 
 # Results and output file write location. Change these to reflect your own file structure
 results_dir=$local_path"ClassificationResults/sktime/"
 out_dir=$local_path"ClassificationResults/output/"
 
 # The python script we are running
-script_file_path=$local_path"Code/tsml-estimator-evaluation/tsml_estimator_evaluation/experiments/clustering_experiments.py"
+script_file_path=$local_path"Code/tsml-estimator-evaluation/tsml_estimator_evaluation/experiments/classification_experiments.py"
 
 # Environment name, change accordingly, for set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
 # Separate environments for GPU (default python/anaconda/2020.11/3.8) and CPU (default python/anaconda/2019.10/3.7) are recommended
@@ -111,7 +111,6 @@ echo "#!/bin/bash
 . /etc/profile
 
 module add python/anaconda/2019.10/3.7
-source /gpfs/software/ada/python/anaconda/2019.10/3.7/etc/profile.d/conda.sh
 conda activate $env_name
 
 # Input args to the default classification_experiments are in main method of
