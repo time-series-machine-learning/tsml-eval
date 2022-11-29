@@ -30,6 +30,7 @@ class FromFileHIVECOTE(BaseClassifier):
         random_state=None,
     ):
         self.file_paths = file_paths
+        self.alpha = alpha
         self.random_state = random_state
 
         self._weights = []
@@ -102,4 +103,4 @@ class FromFileHIVECOTE(BaseClassifier):
             "test_files/STC/",
             "test_files/TDE/",
         ]
-        return {"stc_params": file_paths, "random_state": 0}
+        return {"file_paths": file_paths, "random_state": 0}
