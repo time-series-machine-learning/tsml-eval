@@ -26,6 +26,7 @@ class FromFileHIVECOTE(BaseClassifier):
     def __init__(
         self,
         file_paths,
+        alpha=4,
         random_state=None,
     ):
         self.file_paths = file_paths
