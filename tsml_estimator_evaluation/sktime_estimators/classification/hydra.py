@@ -13,6 +13,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from sklearn.linear_model import RidgeClassifierCV
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
 from sktime.classification.base import BaseClassifier
 
 
@@ -35,7 +37,10 @@ class HYDRA(BaseClassifier):
         self.transform = HydraInternal(X.shape[-1])
         X_training_transform = self.transform(torch.tensor(X).float())
 
-        self.clf = RidgeClassifierCV(alphas=np.logspace(-3, 3, 10), normalize=True)
+        self.clf = make_pipeline(
+            StandardScaler(with_mean=False),
+            RidgeClassifierCV(alphas=np.logspace(-3, 3, 10)),
+        )
         self.clf.fit(X_training_transform, y)
 
     def _predict(self, X) -> np.ndarray:

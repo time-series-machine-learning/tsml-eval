@@ -258,26 +258,27 @@ class WEASEL_DILATION(BaseClassifier):
         bag = self._transform_words(X)
         return self.clf.predict(bag)
 
-    def _predict_proba(self, X) -> np.ndarray:
-        """Predict class probabilities for n instances in X.
-        Parameters
-        ----------
-        X : 3D np.array of shape = [n_instances, n_dimensions, series_length]
-            The data to make predict probabilities for.
-        Returns
-        -------
-        y : array-like, shape = [n_instances, n_classes_]
-            Predicted probabilities using the ordering in classes_.
-        """
-        bag = self._transform_words(X)
-        scores = self.clf.decision_function(bag)
-        if len(scores.shape) == 1:
-            indices = (scores > 0).astype(np.int)
-        else:
-            indices = scores.argmax(axis=1)
-        return self.classes_[indices]
-
-        # return self.clf.predict_proba(bag)
+    # def _predict_proba(self, X) -> np.ndarray:
+    #     """Predict class probabilities for n instances in X.
+    #     Parameters
+    #     ----------
+    #     X : 3D np.array of shape = [n_instances, n_dimensions, series_length]
+    #         The data to make predict probabilities for.
+    #     Returns
+    #     -------
+    #     y : array-like, shape = [n_instances, n_classes_]
+    #         Predicted probabilities using the ordering in classes_.
+    #     """
+    #     bag = self._transform_words(X)
+    #     scores = self.clf.decision_function(bag)
+    #     print(scores)
+    #     if len(scores.shape) == 1:
+    #         indices = (scores > 0).astype(np.int)
+    #     else:
+    #         indices = scores.argmax(axis=1)
+    #     return self.classes_[indices]
+    #
+    #     # return self.clf.predict_proba(bag)
 
     def _transform_words(self, X):
         XX = X.squeeze(1)
