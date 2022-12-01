@@ -300,10 +300,12 @@ class MUSE_DILATION(BaseClassifier):
         if self.support_probabilities:
             return self.clf.predict_proba(bag)
         else:
-            raise ValueError(
-                "Error in MUSE, please set support_probabilities=True, to"
-                + "allow for probabilities to be computed."
-            )
+            scores = self.clf.decision_function(bag)
+            if len(scores.shape) == 1:
+                indices = (scores > 0).astype(np.int)
+            else:
+                indices = scores.argmax(axis=1)
+            return self.classes_[indices]
 
     def _transform_words(self, X):
         if self.use_first_differences:

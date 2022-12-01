@@ -329,6 +329,7 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
         from sktime.classification.compose import ComposableTimeSeriesForestClassifier
 
         return ComposableTimeSeriesForestClassifier(random_state=resample_id)
+
     # requires constructor arguments
     elif name == "columnensemble" or name == "columnensembleclassifier":
         raise Exception(
@@ -351,5 +352,36 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
             "Cannot create a WeightedEnsembleClassifier"
             "without passing base classifiers"
         )
+
+    # Non-sktime package estimators
+    elif name == "weasel-dilation":
+        from tsml_estimator_evaluation.sktime_estimators.classification.weasel_dilation import (  # noqa: E501
+            WEASEL_DILATION,
+        )
+
+        return WEASEL_DILATION()
+    elif name == "muse-dilation":
+        from tsml_estimator_evaluation.sktime_estimators.classification.muse_dilation import (  # noqa: E501
+            MUSE_DILATION,
+        )
+
+        return MUSE_DILATION()
+    elif name == "rdst":
+        from tsml_estimator_evaluation.sktime_estimators.classification.rdst import RDST
+
+        return RDST()
+    elif name == "rdst-ensemble":
+        from tsml_estimator_evaluation.sktime_estimators.classification.rdst import (
+            RDSTEnsemble,
+        )
+
+        return RDSTEnsemble()
+    elif name == "hydra":
+        from tsml_estimator_evaluation.sktime_estimators.classification.hydra import (
+            HYDRA,
+        )
+
+        return HYDRA()
+
     else:
         raise Exception("UNKNOWN CLASSIFIER ", name, " in set_classifier")
