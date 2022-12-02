@@ -72,7 +72,7 @@ def run_experiment(args, overwrite=False):
     else:  # Local run
         data_dir = "/home/ajb/Data/"
         results_dir = "/home/ajb/Results Working Area/ReduxBakeoff/sktime/"
-        cls_name = "Arsenal"
+        cls_name = "ROCKET"
         n_jobs = 90
         contract_mins = 0
         print(f" Local Run of {cls_name} with threading jobs ={ n_jobs} contract time ={contract_mins}")
