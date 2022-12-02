@@ -1,19 +1,25 @@
 # tsml-estimator-evaluation
 
-Evaluation tools for classification, regression and clustering algorithms built on the sktime package.
+Evaluation tools for classification, regression and clustering algorithms built on the sktime interface.
 
-Installation
-------------
+Dependency installation
+-----------------------
+
 pip install -r requirements.txt
 
-Export new requirements
------------------------
+Export package versions to new requirements
+-------------------------------------------
+
 pip freeze > requirements.txt
 
-sktime install from main or branch
---------------------------
+
+sktime install from main, branch or fork
+----------------------------------------
+
 You can use this package with a sktime install that isn't deployed to pypip.
 
 - First uninstall current sktime: 'pip uninstall sktime'
-- Then install from git using 'pip install git+https://github.com/sktime/sktime.git@main'
-- The values after the @ at the end is the branch i.e. another branch would be 'pip install git+https://github.com/sktime/sktime.git@another-branch'
+- Then install from git using i.e.
+  - pip install git+https://github.com/sktime/sktime.git@main
+  - pip install git+https://github.com/sktime/sktime.git@uea_debugging
+  - pip install git+https://github.com/MatthewMiddlehurst/sktime-mm.git@main

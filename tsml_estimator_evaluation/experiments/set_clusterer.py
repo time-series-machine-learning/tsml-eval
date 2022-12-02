@@ -3,17 +3,6 @@
 __author__ = ["TonyBagnall"]
 
 
-from sktime.clustering.k_means import TimeSeriesKMeans
-from sktime.clustering.k_medoids import TimeSeriesKMedoids
-
-from sktime.registry import all_estimators
-
-
-cls = all_estimators(estimator_types="clusterer")
-names = [i for i, _ in cls]
-print(names)
-
-
 def set_clusterer(cls, resample_id=None):
     """Construct a clusterer.
 
@@ -37,17 +26,21 @@ def set_clusterer(cls, resample_id=None):
     name = cls.lower()
     # Distance based
     if name == "kmeans" or name == "k-means":
+        from sktime.clustering.k_means import TimeSeriesKMeans
+
         return TimeSeriesKMeans(
             n_clusters=5,
             max_iter=50,
-            averaging_algorithm="mean",
+            # averaging_algorithm="mean",
             random_state=resample_id,
         )
     if name == "kmedoids" or name == "k-medoids":
+        from sktime.clustering.k_medoids import TimeSeriesKMedoids
+
         return TimeSeriesKMedoids(
             n_clusters=5,
             max_iter=50,
-            averaging_algorithm="mean",
+            # averaging_algorithm="mean",
             random_state=resample_id,
         )
     else:
