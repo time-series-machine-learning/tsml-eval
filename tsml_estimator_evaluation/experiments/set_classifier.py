@@ -256,21 +256,24 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
     elif name == "rocket" or name == "rocketclassifier":
         from sktime.classification.kernel_based import RocketClassifier
 
-        return RocketClassifier(random_state=resample_id)
+        return RocketClassifier(random_state=resample_id, n_jobs=n_jobs)
     elif name == "mini-rocket":
         from sktime.classification.kernel_based import RocketClassifier
 
-        return RocketClassifier(random_state=resample_id, rocket_transform="minirocket")
+        return RocketClassifier(random_state=resample_id,
+                                rocket_transform="minirocket", n_jobs=n_jobs)
     elif name == "multi-rocket":
         from sktime.classification.kernel_based import RocketClassifier
 
         return RocketClassifier(
-            random_state=resample_id, rocket_transform="multirocket"
+            random_state=resample_id, rocket_transform="multirocket", n_jobs=n_jobs,
+
         )
     elif name == "arsenal":
         from sktime.classification.kernel_based import Arsenal
 
-        return Arsenal(random_state=resample_id, save_transformed_data=train_file)
+        return Arsenal(random_state=resample_id, save_transformed_data=train_file,
+                       n_jobs=n_jobs)
     elif name == "mini-arsenal":
         from sktime.classification.kernel_based import Arsenal
 
@@ -278,6 +281,7 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
             random_state=resample_id,
             save_transformed_data=train_file,
             rocket_transform="minirocket",
+            n_jobs=n_jobs,
         )
     elif name == "multi-arsenal":
         from sktime.classification.kernel_based import Arsenal
@@ -286,6 +290,7 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
             random_state=resample_id,
             save_transformed_data=train_file,
             rocket_transform="multirocket",
+            n_jobs=n_jobs,
         )
     # Shapelet based
     elif name == "stc-2hour":
