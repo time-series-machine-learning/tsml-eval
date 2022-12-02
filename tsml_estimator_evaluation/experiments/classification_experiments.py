@@ -74,7 +74,7 @@ def run_experiment(args, overwrite=False):
         results_dir = "/home/ajb/Results Working Area/ReduxBakeoff/sktime/"
         cls_name = "Arsenal"
         n_jobs = 90
-        contract_mins = 1
+        contract_mins = 0
         print(f" Local Run of {cls_name} with threading jobs ={ n_jobs} contract time ={contract_mins}")
         classifier = set_classifier(cls_name, n_jobs=n_jobs, contract=contract_mins)
         dataset = "Tiselac"
