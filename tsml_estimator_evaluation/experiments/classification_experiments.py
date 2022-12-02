@@ -162,15 +162,15 @@ def run_experiment(args):
             )
     else:  # Local run
         data_dir = "/home/ajb/Data/"
-        results_dir = "/home/ajb/temp/"
-        cls_name = "TDE"
-        n_jobs = 2
+        results_dir = "/home/ajb/Results Working Area/ReduxBakeoff/sktime/"
+        cls_name = "Arsenal"
+        n_jobs = 90
         contract_mins = 1
         print(f" Local Run of {cls_name} with threading jobs ={ n_jobs} contract time ={contract_mins}")
         classifier = set_classifier(cls_name, n_jobs=n_jobs, contract=contract_mins)
-        dataset = "Blink"
+        dataset = "Tiselac"
         resample = 0
-        tf = False
+        tf = True
         predefined_resample = False
 
         load_and_run_classification_experiment(
