@@ -79,7 +79,7 @@ def run_experiment(args, overwrite=False):
         classifier = set_classifier(cls_name, n_jobs=n_jobs, contract=contract_mins)
         dataset = "Tiselac"
         resample = 0
-        tf = True
+        train_fold = True
         predefined_resample = False
         classifier = set_classifier(cls_name, resample, train_fold)
         print(f"Local Run of {classifier.__class__.__name__}.")
