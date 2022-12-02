@@ -18,8 +18,7 @@ from tsml_estimator_evaluation.sktime_estimators.transformations.sfa_dilation im
 )
 
 
-@pytest.mark.parametrize(
-    "est", [SFADilation, WEASEL_DILATION, MUSE_DILATION, HYDRA, RDST, RDSTEnsemble]
-)
+# WEASEL_DILATION, MUSE_DILATION
+@pytest.mark.parametrize("est", [SFADilation, HYDRA, RDST, RDSTEnsemble])
 def test_check_estimator(est):
     check_estimator(est, return_exceptions=False)
