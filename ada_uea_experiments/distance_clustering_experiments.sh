@@ -108,7 +108,7 @@ echo "#!/bin/bash
 . /etc/profile
 
 module add python/anaconda/2019.10/3.7
-conda activate $env_name
+source activate $env_name
 
 python -u ${script_file_path} ${data_dir} ${results_dir} ${distance} ${dataset} \$SLURM_ARRAY_TASK_ID ${generate_train_files} ${clusterer} ${averaging}"  > generatedFile.sub
 #                         data_dir = sys.argv[1]
