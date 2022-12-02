@@ -108,7 +108,7 @@ echo "#!/bin/bash
 . /etc/profile
 
 module add python/anaconda/2019.10/3.7
-conda activate $env_name
+source activate $env_name
 
 # Input args to the default clustering_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-estimator-evaluation/blob/main/tsml_estimator_evaluation/experiments/clustering_experiments.py
