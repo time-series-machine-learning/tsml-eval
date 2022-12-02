@@ -69,14 +69,17 @@ def run_experiment(args, overwrite=False):
                 predefined_resample=predefined_resample,
                 overwrite=overwrite,
             )
-    # local run (no args)
-    else:
-        data_dir = "../"
-        results_dir = "../"
-        cls_name = "DrCIF"
-        dataset = "ItalyPowerDemand"
+    else:  # Local run
+        data_dir = "/home/ajb/Data/"
+        results_dir = "/home/ajb/Results Working Area/ReduxBakeoff/sktime/"
+        cls_name = "Arsenal"
+        n_jobs = 90
+        contract_mins = 0
+        print(f" Local Run of {cls_name} with threading jobs ={ n_jobs} contract time ={contract_mins}")
+        classifier = set_classifier(cls_name, n_jobs=n_jobs, contract=contract_mins)
+        dataset = "Tiselac"
         resample = 0
-        train_fold = False
+        tf = True
         predefined_resample = False
         classifier = set_classifier(cls_name, resample, train_fold)
         print(f"Local Run of {classifier.__class__.__name__}.")

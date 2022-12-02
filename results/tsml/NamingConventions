@@ -1,0 +1,19 @@
+all names are determined from set_classifier. Default results on beast under
+Results Working Area/Default
+
+Those that are the same as the default
+settings are (names not case sensitive)
+
+Dictionary Based
+    boss
+    cboss
+    weasel
+    muse
+
+Distance based: We should use tsml versions for these
+    proximityforest
+    elasticensemble
+
+
+Distance based are all variants of kneighborstimeseriesclassifier
+MUSE
