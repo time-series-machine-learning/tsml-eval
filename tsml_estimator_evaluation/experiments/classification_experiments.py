@@ -75,14 +75,16 @@ def run_experiment(args, overwrite=False):
         cls_name = "DrCIF"
         n_jobs = 90
         contract_mins = 0
-        print(f" Local Run of {cls_name} with threading jobs ={ n_jobs} contract time ={contract_mins}")
-        classifier = set_classifier(cls_name, n_jobs=n_jobs, contract=contract_mins)
         dataset = "Tiselac"
+        print(f" Local Run of {cls_name} on dataset {dataset} with threading jobs "
+              f"={ n_jobs} and "
+              f"contract time ={contract_mins}")
+        classifier = set_classifier(cls_name, n_jobs=n_jobs, contract=contract_mins)
         resample = 0
         train_fold = True
         predefined_resample = False
         classifier = set_classifier(cls_name, resample, train_fold)
-        print(f"Local Run of {classifier.__class__.__name__}.")
+        print(f"Local Run of {classifier.__class__.__name__} with {classifier.n_jobs} jobs")
 
         load_and_run_classification_experiment(
             overwrite=False,
