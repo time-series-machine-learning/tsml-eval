@@ -239,7 +239,6 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
         return SupervisedTimeSeriesForest(random_state=resample_id, n_jobs=n_jobs)
     elif name == "drcif-500":
         from sktime.classification.interval_based import DrCIF
-
         return DrCIF(
             random_state=resample_id,
             n_estimators=500,
@@ -247,7 +246,8 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
             n_jobs=n_jobs,
         )
     elif name == "drcif":
-        from sktime.classification.interval_based import DrCIF
+#        from sktime.classification.interval_based import DrCIF
+        from tsml_estimator_evaluation.temp import DrCIF
 
         return DrCIF(
             random_state=resample_id, save_transformed_data=train_file, n_jobs=n_jobs
