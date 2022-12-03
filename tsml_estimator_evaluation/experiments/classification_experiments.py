@@ -83,7 +83,6 @@ def run_experiment(args, overwrite=False):
         resample = 0
         train_fold = True
         predefined_resample = False
-        classifier = set_classifier(cls_name, resample, train_fold)
         print(f"Local Run of {classifier.__class__.__name__} with {classifier.n_jobs} jobs")
 
         load_and_run_classification_experiment(
