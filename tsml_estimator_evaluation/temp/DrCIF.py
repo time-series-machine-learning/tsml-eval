@@ -196,7 +196,7 @@ class DrCIF(BaseClassifier):
 
     def _fit(self, X, y):
         self.n_instances_, self.n_dims_, self.series_length_ = X.shape
-
+        print(" In temp DrCIF, number of threads = ", self.n_jobs)
         time_limit = self.time_limit_in_minutes * 60
         start_time = time.time()
         train_time = 0
