@@ -18,7 +18,9 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
+import numba
 import numpy as np
+import torch
 from sklearn.metrics import davies_bouldin_score
 from sktime.benchmarking.experiments import run_clustering_experiment
 from sktime.clustering.k_means import TimeSeriesKMeans
@@ -80,6 +82,9 @@ if __name__ == "__main__":
     """
     Example simple usage, with arguments input via script or hard coded for testing.
     """
+    numba.set_num_threads(1)
+    torch.set_num_threads(1)
+
     clusterer = "kmeans"
     chris_config = True  # This is so chris doesn't have to change config each time
     tune = False

@@ -18,6 +18,8 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
+import numba
+import torch
 from sktime.benchmarking.experiments import load_and_run_classification_experiment
 
 from tsml_estimator_evaluation.experiments.set_classifier import set_classifier
@@ -31,6 +33,9 @@ def run_experiment(args, overwrite=False):
     engineered. Results generated using the method are in the same format as tsml and
     can be directly compared to the results generated in Java.
     """
+    numba.set_num_threads(1)
+    torch.set_num_threads(1)
+
     # cluster run (with args), this is fragile
     if args is not None and args.__len__() > 1:
         print("Input args = ", args)
@@ -70,16 +75,12 @@ def run_experiment(args, overwrite=False):
                 overwrite=overwrite,
             )
     else:  # Local run
-        data_dir = "/home/ajb/Data/"
-        results_dir = "/home/ajb/Results Working Area/ReduxBakeoff/sktime/"
-        cls_name = "Arsenal"
-        n_jobs = 90
-        contract_mins = 0
-        print(f" Local Run of {cls_name} with threading jobs ={ n_jobs} contract time ={contract_mins}")
-        classifier = set_classifier(cls_name, n_jobs=n_jobs, contract=contract_mins)
-        dataset = "Tiselac"
+        data_dir = "../"
+        results_dir = "../"
+        cls_name = "DrCIF"
+        dataset = "ItalyPowerDemand"
         resample = 0
-        train_fold = True
+        train_fold = False
         predefined_resample = False
         classifier = set_classifier(cls_name, resample, train_fold)
         print(f"Local Run of {classifier.__class__.__name__}.")
