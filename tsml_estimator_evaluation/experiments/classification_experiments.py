@@ -73,30 +73,30 @@ def run_experiment(args, overwrite=False):
         data_dir = "/home/ajb/Data/"
         results_dir = "/home/ajb/Results Working Area/ReduxBakeoff/sktime/"
         cls_name = "DrCIF"
-        n_jobs = 90
+        n_jobs = 92
         contract_mins = 0
         dataset = "Tiselac"
         print(f" Local Run of {cls_name} on dataset {dataset} with threading jobs "
               f"={ n_jobs} and "
               f"contract time ={contract_mins}")
-        resample = 0
         train_fold = True
         predefined_resample = False
-        classifier = set_classifier(cls_name, resample_id=resample, n_jobs=n_jobs,
-                                    contract=contract_mins, train_file=train_fold)
-        print(f"Local Run of {classifier.__class__.__name__} with {classifier.n_jobs} jobs")
+        for resample in range(1, 30):
+            classifier = set_classifier(cls_name, resample_id=resample, n_jobs=n_jobs,
+                                        contract=contract_mins, train_file=train_fold)
+            print(f"Local Run of {classifier.__class__.__name__} with {classifier.n_jobs} jobs")
 
-        load_and_run_classification_experiment(
-            overwrite=False,
-            problem_path=data_dir,
-            results_path=results_dir,
-            cls_name=cls_name,
-            classifier=classifier,
-            dataset=dataset,
-            resample_id=resample,
-            build_train=train_fold,
-            predefined_resample=predefined_resample,
-        )
+            load_and_run_classification_experiment(
+                overwrite=False,
+                problem_path=data_dir,
+                results_path=results_dir,
+                cls_name=cls_name,
+                classifier=classifier,
+                dataset=dataset,
+                resample_id=resample,
+                build_train=train_fold,
+                predefined_resample=predefined_resample,
+            )
 
 
 if __name__ == "__main__":
