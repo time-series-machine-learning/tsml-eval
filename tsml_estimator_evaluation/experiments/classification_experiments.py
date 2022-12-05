@@ -81,7 +81,7 @@ def run_experiment(args, overwrite=False):
               f"contract time ={contract_mins}")
         train_fold = True
         predefined_resample = False
-        for resample in range(0, 1):
+        for resample in range(0, 30):
             classifier = set_classifier(cls_name, resample_id=resample, n_jobs=n_jobs,
                                         contract=contract_mins, train_file=train_fold)
             print(f"Local Run of {classifier.__class__.__name__} with {classifier.n_jobs} jobs")
