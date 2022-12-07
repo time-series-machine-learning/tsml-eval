@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Classifier Experiments: code to run experiments as an alternative to orchestration.
+"""Regressor Experiments: code to run experiments and generate results file in
+standard format.
 
 This file is configured for runs of the main method with command line arguments, or for
 single debugging runs. Results are written in a standard format. It is cloned from
@@ -10,6 +11,7 @@ __author__ = ["TonyBagnall"]
 
 import os
 
+# Remove if not running on cluster?
 os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
