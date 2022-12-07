@@ -94,7 +94,7 @@ class FromFileHIVECOTE(BaseClassifier):
 
             #   verify file matches data, i.e. n_instances and n_classes
             if len(lines)-3 != len(X): # verify n_instances
-                print("ERROR n_instances does not match in: ", path + file_name)
+                print("ERROR n_instances does not match in: ", path + file_name, len(lines)-3, len(X))
             if len(np.unique(y)) != int(line2[5]): # verify n_classes
                 print("ERROR n_classes does not match in: ", path + file_name, len(np.unique(y)), line2[5])
 
@@ -150,7 +150,7 @@ class FromFileHIVECOTE(BaseClassifier):
 
             #   verify file matches data, i.e. n_instances and n_classes
             if len(lines) - 3 != len(X):  # verify n_instances
-                print("ERROR n_instances does not match in: ", path + file_name)
+                print("ERROR n_instances does not match in: ", path + file_name, len(lines)-3, len(X))
             if self.n_classes_ != int(line2[5]):  # verify n_classes
                 print("ERROR n_classes does not match in: ", path + file_name, self.n_classes_, line2[5])
 
