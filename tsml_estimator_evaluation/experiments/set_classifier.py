@@ -383,5 +383,17 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
 
         return HYDRA()
 
+    # Reading results from file
+    elif name == "fromfile":
+        from tsml_estimator_evaluation._wip.estimator_from_file.hivecote import FromFileHIVECOTE
+        file_paths = [
+            "test_files/Arsenal/",
+            "test_files/DrCIF/",
+            "test_files/STC/",
+            "test_files/TDE/",
+        ]
+
+        return FromFileHIVECOTE(file_paths=file_paths, random_state=0)
+
     else:
         raise Exception("UNKNOWN CLASSIFIER ", name, " in set_classifier")
