@@ -4,13 +4,13 @@ __author__ = ["TonyBagnall"]
 
 
 def set_regressor(regressor, resample_id=None, train_file=False, n_jobs=1):
-    """Construct a classifier, possibly seeded.
+    """Construct a regressor, possibly seeded for reproducability.
 
-    Basic way of creating the classifier to build using the default settings. This
+    Basic way of creating the regressor to build using the default settings. This
     set up is to help with batch jobs for multiple problems to facilitate easy
     reproducibility for use with load_and_run_classification_experiment. You can pass a
     classifier object instead to run_classification_experiment.
-    TODO: add contract and checkpoint options
+    TODO: add threads, contract and checkpoint options
 
     Parameters
     ----------
@@ -20,11 +20,12 @@ def set_regressor(regressor, resample_id=None, train_file=False, n_jobs=1):
         Classifier random seed.
     train_file : bool, default=False
         Whether a train file is being produced.
+    n_jobs: for threading
 
     Return
     ------
-    classifier : A BaseClassifier.
-        The classifier matching the input classifier name.
+    regressor: A BaseRegressor.
+        The regressor matching the input regressor name.
     """
     name = regressor.lower()
     if name == "cnn" or name == "cnnregressor":
@@ -59,10 +60,4 @@ def set_regressor(regressor, resample_id=None, train_file=False, n_jobs=1):
     # Other
     elif name == "dummy" or name == "dummyregressor":
         # todo we need an actual dummy for this
-        from sktime.regression.kernel_based import RocketRegressor
-
-        return RocketRegressor(
-            num_kernels=50,
-            random_state=resample_id,
-            n_jobs=n_jobs,
-        )
+        raise ValueError(f" Regressor {name} is not avaiable")
