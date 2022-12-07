@@ -51,7 +51,8 @@ def test_hivecote_from_file():
     # Normalised weighted probabilities:
     # 0.07846402768, 0.92153597231
 
-    assert _assert_array_almost_equal(probas[0], np.array([0.0785, 0.9215]), decimal=4)
+    assert probas.shape == (test_X.shape[0], 2)
+    _assert_array_almost_equal(probas[0], np.array([0.0785, 0.9215]), decimal=4)
 
 
 def test_hivecote_from_file_check_estimator():

@@ -118,7 +118,7 @@ echo "#!/bin/bash
 
 module add python/anaconda/2020.11/3.8
 module add cudnn/8.2.0
-conda activate $env_name
+source activate $env_name
 export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/gpfs/home/${username}/.conda/envs/${env_name}/lib
 
 # Input args to the default regression_experiments are in main method of

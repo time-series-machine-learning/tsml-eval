@@ -18,6 +18,8 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
+import numba
+import torch
 from sktime.benchmarking.experiments import load_and_run_classification_experiment
 
 from tsml_estimator_evaluation.experiments.set_classifier import set_classifier
@@ -31,6 +33,9 @@ def run_experiment(args, overwrite=False):
     engineered. Results generated using the method are in the same format as tsml and
     can be directly compared to the results generated in Java.
     """
+    numba.set_num_threads(1)
+    torch.set_num_threads(1)
+
     # cluster run (with args), this is fragile
     if args is not None and args.__len__() > 1:
         print("Input args = ", args)
@@ -69,8 +74,7 @@ def run_experiment(args, overwrite=False):
                 predefined_resample=predefined_resample,
                 overwrite=overwrite,
             )
-    # local run (no args)
-    else:
+    else:  # Local run
         data_dir = "../"
         results_dir = "../"
         cls_name = "DrCIF"

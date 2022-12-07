@@ -12,6 +12,8 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
+import numba
+import torch
 from sktime.benchmarking.experiments import load_and_run_clustering_experiment
 
 from tsml_estimator_evaluation.experiments.classification_experiments import (
@@ -21,6 +23,9 @@ from tsml_estimator_evaluation.experiments.set_clusterer import set_clusterer
 
 
 def run_experiment(args, overwrite=False):
+    numba.set_num_threads(1)
+    torch.set_num_threads(1)
+
     # cluster run (with args), this is fragile
     if args.__len__() > 1:
         print("Input args = ", args)
