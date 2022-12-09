@@ -20,7 +20,10 @@ def tuning_hivecote_alpha_value():
         "tests/test_files/STC/",
         "tests/test_files/TDE/",
     ]
-    print("oi")
+
+    hc2 = FromFileHIVECOTE(file_paths=file_paths, random_state=0, tune_alpha=True)
+    hc2.fit(train_X, train_y)
+
     # hyperparameters
     parameters = {
         'alpha': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
@@ -28,17 +31,12 @@ def tuning_hivecote_alpha_value():
         "random_state": 0
     }
 
-    acc_cv = []
-
-    for i in parameters['alpha']:
-        hc2 = FromFileHIVECOTE(file_paths=file_paths, random_state=0, alpha=i)
-        hc2.fit(train_X, train_y)
-        acc_cv.append(hc2.predict_proba(test_X))
-
+    """"
+    print(acc_cv[0].shape == (test_X.shape[0], 2))
+    print(acc_cv[0].shape)
     print(acc_cv)
 
-
-    """"
+    
 #file_paths=file_paths, random_state=0
     model = FromFileHIVECOTE()
 

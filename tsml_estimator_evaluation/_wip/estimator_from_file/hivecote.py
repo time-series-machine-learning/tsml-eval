@@ -12,7 +12,7 @@ __all__ = ["FromFileHIVECOTE"]
 import numpy as np
 from sklearn.utils import check_random_state
 from sktime.classification import BaseClassifier
-
+from sklearn.model_selection import KFold
 
 class FromFileHIVECOTE(BaseClassifier):
     """Hierarchical Vote Collective of Transformation-based Ensembles (HIVE-COTE) from file.
@@ -23,8 +23,10 @@ class FromFileHIVECOTE(BaseClassifier):
     ----------
     file_paths : list
         The paths for Arsenal, DrCIF, STC and TDE files.
-    alpha : int
+    alpha : int, default=4
         The exponent to extenuate diferences in classifers and weighting with the accuracy estimate.
+    tune_alpha : bool, default=False
+        Tests alpha [1..10] and sets the best one
     random_state : int or None, default=None
         Seed for random number generation.
 
@@ -49,10 +51,12 @@ class FromFileHIVECOTE(BaseClassifier):
         self,
         file_paths,
         alpha=4,
+        tune_alpha=False,
         random_state=None,
     ):
         self.file_paths = file_paths
         self.alpha = alpha
+        self.tune_alpha = tune_alpha
         self.random_state = random_state
 
         self._weights = []
@@ -87,6 +91,7 @@ class FromFileHIVECOTE(BaseClassifier):
             file_name = 'trainResample' + str(self.random_state) + '.csv'
 
         acc_list = []
+        all_lines = []
         for path in self.file_paths:
             f = open(path + file_name, "r")
             lines = f.readlines()
@@ -99,10 +104,73 @@ class FromFileHIVECOTE(BaseClassifier):
                 print("ERROR n_classes does not match in: ", path + file_name, len(np.unique(y)), line2[5])
 
             acc_list.append(float(line2[0]))
+            all_lines.append(lines)
+
+        if self.tune_alpha:
+            self.alpha = self._tune_alpha(all_lines)
 
         #   add a weight to the weight list based on the files accuracy
         for acc in acc_list:
             self._weights.append(acc ** self.alpha)
+
+    def _tune_alpha(self, all_files_lines):
+        alpha = 1
+        n_splits = 5
+        n_samples = len(all_files_lines[0])-3
+        X = np.zeros((n_samples, 4, self.n_classes_))
+        y = np.zeros(n_samples, dtype=int)
+        Acc = np.zeros((n_samples, 4))
+        for i, lines in enumerate(all_files_lines):
+            for j in range(n_samples):
+                line = lines[j+3].split(",")
+                acc_0 = float(line[3])
+                acc_1 = float(line[4])
+                X[j][i] = [acc_0, acc_1]
+                if line[0] == line[1]:
+                    if acc_0 > acc_1:
+                        Acc[j][i] = acc_0
+                    else:
+                        Acc[j][i] = acc_1
+                else:
+                    if acc_0 < acc_1:
+                        Acc[j][i] = acc_0
+                    else:
+                        Acc[j][i] = acc_1
+
+                y[j] = int(line[0]) # its getting y 4 times, not efficient
+
+        alpha_values = range(3000,4000) # 3032
+        avg_acc_alpha = np.zeros(len(alpha_values))
+        for i, alpha in enumerate(alpha_values):
+            kf = KFold(n_splits=n_splits)
+            # print(kf.get_n_splits(X))
+            # print(kf)
+            avg_acc = np.zeros(n_splits)
+            for j, (train_index, test_index) in enumerate(kf.split(X)):
+                print(f"Fold {j}:")
+                print(f"  Train: index={train_index}")
+                print(f"  Test:  index={test_index}")
+                x_test_set = X[test_index]
+                y_test_set = y[test_index]
+                acc_list = Acc[train_index].sum(axis=0)/len(train_index)
+                weight_list = acc_list ** alpha
+                predictions_0 = (x_test_set[:, :, 0] * weight_list).sum(axis=1)
+                predictions_1 = (x_test_set[:, :, 1] * weight_list).sum(axis=1)
+                predictions = np.column_stack((predictions_0, predictions_1))
+                # Make each instances probability array sum to 1
+                predictions = predictions / predictions.sum(axis=1, keepdims=True)
+                predicted_acc = np.zeros(len(y_test_set))
+                for k, l in enumerate(y_test_set):
+                    predicted_acc[k] = predictions[k, l]
+                avg_acc[j] = predicted_acc.mean()
+            avg_acc_alpha[i] = avg_acc.mean()
+        print("AVG_ACC/ALPHA")
+        print(avg_acc_alpha)
+        print(avg_acc_alpha[avg_acc_alpha.argmax()])
+        best_alpha = alpha_values[avg_acc_alpha.argmax()]
+        print(best_alpha)
+
+        return best_alpha
 
     def _predict(self, X):
         rng = check_random_state(self.random_state)
