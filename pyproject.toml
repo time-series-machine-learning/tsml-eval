@@ -54,6 +54,7 @@ ignore = [
     "ada_uea_experiments/**",
     "notebooks/**",
     "results/**",
+    "docs/**",
     "requirements.txt",
     "*.yaml",
 ]
