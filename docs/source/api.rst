@@ -4,4 +4,4 @@ API
 .. autosummary::
    :toctree: generated
 
-   lumache
+   tsml_estimator_evaluation/experiments/classification_experiments.py
