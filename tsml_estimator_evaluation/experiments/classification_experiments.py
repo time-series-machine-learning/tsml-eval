@@ -72,10 +72,10 @@ def run_experiment(args, overwrite=False):
     else:  # Local run
         data_dir = "/home/ajb/Data/"
         results_dir = "/home/ajb/Results Working Area/ReduxBakeoff/sktime/"
-        cls_name = "DrCIF"
+        cls_name = "HC2"
         n_jobs = 92
         contract_mins = 0
-        dataset = "InsectWingbeatEq"
+        dataset = "EigenWorms"
         print(f" Local Run of {cls_name} on dataset {dataset} with threading jobs "
               f"={ n_jobs} and "
               f"contract time ={contract_mins}")
