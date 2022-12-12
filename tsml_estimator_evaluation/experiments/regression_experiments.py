@@ -24,8 +24,10 @@ sys.path.append(str(Path(__file__).parent.parent.parent))
 import time
 from datetime import datetime
 
+import numba
 import numpy as np
 import pandas as pd
+import torch
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import cross_val_predict
 from sktime.datasets import load_from_tsfile_to_dataframe as load_ts
@@ -332,6 +334,9 @@ def load_and_run_regression_experiment(
 
 
 def run_experiment(args, overwrite=False):
+    numba.set_num_threads(1)
+    torch.set_num_threads(1)
+
     # cluster run (with args), this is fragile
     if args.__len__() > 1:  # cluster run, this is fragile
         print("Input args = ", args)

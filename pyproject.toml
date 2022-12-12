@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tsml-estimator-evalutation"
+version = "0.0.1"
+description = "A package for benchmarking time series machine learning tools."
+authors = [
+    {name = "Matthew Middlehurst", email = "m.middlehurst@uea.ac.uk"},
+    {name = "Tony Bagnall", email = "ajb@uea.ac.uk"},
+]
+readme = "README.md"
+requires-python = ">=3.7,<3.11"
+keywords = [
+    "data-science",
+    "machine-learning",
+    "data-mining",
+    "time-series",
+    "classification",
+    "regression",
+    "clustering",
+]
+classifiers = [
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python",
+]
+dependencies = [
+    "sktime>=0.14.0",
+    "convst",
+    "networkx",
+    "requests",
+    "torch",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pre-commit",
+    "pytest",
+]
+
+[project.urls]
+homepage = "https://www.timeseriesclassification.com/"
+repository = "https://github.com/time-series-machine-learning/tsml-estimator-evaluation/"
+
+[project.license]
+file = "LICENSE"
+
+[tool.setuptools.packages.find]
+include = ["tsml_estimator_evalutation"]
+
+[tool.check-manifest]
+ignore = [
+    "ada_uea_experiments/**",
+    "notebooks/**",
+    "results/**",
+    "docs/**",
+    "requirements.txt",
+    "*.yaml",
+]

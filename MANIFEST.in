@@ -1,0 +1,3 @@
+recursive-include tsml_estimator_evaluation *.py
+recursive-include tsml_estimator_evaluation/data *.ts
+include LICENSE
