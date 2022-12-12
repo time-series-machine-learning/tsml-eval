@@ -79,7 +79,7 @@ def run_experiment(args, overwrite=False):
         print(f" Local Run of {cls_name} on dataset {dataset} with threading jobs "
               f"={ n_jobs} and "
               f"contract time ={contract_mins}")
-        train_fold = True
+        train_fold = False
         predefined_resample = False
         for resample in range(0, 30):
             classifier = set_classifier(cls_name, resample_id=resample, n_jobs=n_jobs,
