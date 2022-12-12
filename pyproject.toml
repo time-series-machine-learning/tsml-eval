@@ -55,5 +55,5 @@ ignore = [
     "notebooks/**",
     "results/**",
     "requirements.txt",
-    ".pre-commit-config.yaml",
+    "*.yaml",
 ]
