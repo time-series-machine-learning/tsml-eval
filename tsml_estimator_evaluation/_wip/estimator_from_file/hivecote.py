@@ -10,6 +10,7 @@ __author__ = ["MatthewMiddlehurst", "ander-hg"]
 __all__ = ["FromFileHIVECOTE"]
 
 import numpy as np
+from sklearn.metrics import accuracy_score
 from sklearn.utils import check_random_state
 from sktime.classification import BaseClassifier
 from sklearn.model_selection import KFold
@@ -98,13 +99,14 @@ class FromFileHIVECOTE(BaseClassifier):
             line2 = lines[2].split(",")
 
             #   verify file matches data, i.e. n_instances and n_classes
-            if len(lines)-3 != len(X): # verify n_instances
+            if len(lines)-3 != len(X):  # verify n_instances
                 print("ERROR n_instances does not match in: ", path + file_name, len(lines) - 3, len(X))
             if len(np.unique(y)) != int(line2[5]): # verify n_classes
                 print("ERROR n_classes does not match in: ", path + file_name, len(np.unique(y)), line2[5])
 
             acc_list.append(float(line2[0]))
-            all_lines.append(lines)
+            if self.tune_alpha:
+                all_lines.append(lines)
 
         if self.tune_alpha:
             self.alpha = self._tune_alpha(all_lines)
@@ -117,43 +119,36 @@ class FromFileHIVECOTE(BaseClassifier):
         alpha = 1
         n_splits = 5
         n_samples = len(all_files_lines[0])-3
-        X = np.zeros((n_samples, 4, self.n_classes_))
-        y = np.zeros(n_samples, dtype=int)
-        Acc = np.zeros((n_samples, 4))
+        n_files = len(all_files_lines)
+        x_probas = np.zeros((n_samples, n_files, self.n_classes_))
+        y_probas = np.zeros(n_samples, dtype=int)
         for i, lines in enumerate(all_files_lines):
             for j in range(n_samples):
                 line = lines[j+3].split(",")
                 acc_0 = float(line[3])
                 acc_1 = float(line[4])
-                X[j][i] = [acc_0, acc_1]
-                if line[0] == line[1]:
-                    if acc_0 > acc_1:
-                        Acc[j][i] = acc_0
-                    else:
-                        Acc[j][i] = acc_1
-                else:
-                    if acc_0 < acc_1:
-                        Acc[j][i] = acc_0
-                    else:
-                        Acc[j][i] = acc_1
+                x_probas[j][i] = [acc_0, acc_1]
+                y_probas[j] = int(line[0]) # its getting y 4 times, not efficient
 
-                y[j] = int(line[0]) # its getting y 4 times, not efficient
-
-        alpha_values = range(3000,4000) # 3032
+        alpha_values = range(1, 10)
         avg_acc_alpha = np.zeros(len(alpha_values))
         for i, alpha in enumerate(alpha_values):
             kf = KFold(n_splits=n_splits)
             # print(kf.get_n_splits(X))
             # print(kf)
             avg_acc = np.zeros(n_splits)
-            for j, (train_index, test_index) in enumerate(kf.split(X)):
+            for j, (train_index, test_index) in enumerate(kf.split(x_probas)):
                 print(f"Fold {j}:")
                 print(f"  Train: index={train_index}")
                 print(f"  Test:  index={test_index}")
-                x_test_set = X[test_index]
-                y_test_set = y[test_index]
-                acc_list = Acc[train_index].sum(axis=0)/len(train_index)
-                weight_list = acc_list ** alpha
+                x_test_set = x_probas[test_index]
+                y_test_set = y_probas[test_index]
+                #acc_list = Acc[train_index].sum(axis=0)/len(train_index)
+                weight_list = []
+                for n in range(n_files):
+                    train_preds = [int(x) for x in self.classes_[np.argmax(x_probas[train_index, n], axis=1)]]
+                    train_acc = accuracy_score(y_probas[train_index], train_preds)
+                    weight_list.append(train_acc ** alpha)
                 predictions_0 = (x_test_set[:, :, 0] * weight_list).sum(axis=1)
                 predictions_1 = (x_test_set[:, :, 1] * weight_list).sum(axis=1)
                 predictions = np.column_stack((predictions_0, predictions_1))
