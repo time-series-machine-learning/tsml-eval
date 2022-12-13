@@ -26,10 +26,13 @@ class HYDRA(BaseClassifier):
         "classifier_type": "dictionary",
     }
 
-    def __init__(self, k=8, g=64):
+    def __init__(self, k=8, g=64, random_state=None):
 
         self.k = k
         self.g = g
+        self.random_state = random_state
+        if isinstance(random_state, int):
+            torch.manual_seed(random_state)
 
         super(HYDRA, self).__init__()
 
