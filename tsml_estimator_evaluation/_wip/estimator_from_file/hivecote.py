@@ -125,9 +125,7 @@ class FromFileHIVECOTE(BaseClassifier):
         for i, lines in enumerate(all_files_lines):
             for j in range(n_samples):
                 line = lines[j+3].split(",")
-                acc_0 = float(line[3])
-                acc_1 = float(line[4])
-                x_probas[j][i] = [acc_0, acc_1]
+                x_probas[j][i] = [float(k) for k in (line[3:])]
                 y_probas[j] = int(line[0]) # its getting y 4 times, not efficient
 
         alpha_values = range(1, 10)
@@ -136,29 +134,31 @@ class FromFileHIVECOTE(BaseClassifier):
             kf = KFold(n_splits=n_splits)
             # print(kf.get_n_splits(X))
             # print(kf)
-            avg_acc = np.zeros(n_splits)
+            test_acc = np.zeros(n_splits)
             for j, (train_index, test_index) in enumerate(kf.split(x_probas)):
                 print(f"Fold {j}:")
                 print(f"  Train: index={train_index}")
                 print(f"  Test:  index={test_index}")
                 x_test_set = x_probas[test_index]
                 y_test_set = y_probas[test_index]
-                #acc_list = Acc[train_index].sum(axis=0)/len(train_index)
                 weight_list = []
                 for n in range(n_files):
-                    train_preds = [int(x) for x in self.classes_[np.argmax(x_probas[train_index, n], axis=1)]]
+                    train_preds = np.argmax(x_probas[train_index, n], axis=1)
                     train_acc = accuracy_score(y_probas[train_index], train_preds)
                     weight_list.append(train_acc ** alpha)
-                predictions_0 = (x_test_set[:, :, 0] * weight_list).sum(axis=1)
-                predictions_1 = (x_test_set[:, :, 1] * weight_list).sum(axis=1)
-                predictions = np.column_stack((predictions_0, predictions_1))
+                dists = np.zeros((len(test_index), self.n_classes_))
+                for n in range(n_files):
+                    for v in range(len(test_index)):
+                        dists[v] = np.add(
+                            dists[v],
+                            [float(k) for k in x_probas[test_index[v], n]] * (
+                                        np.ones(self.n_classes_) * weight_list[n]),
+                        )
                 # Make each instances probability array sum to 1
-                predictions = predictions / predictions.sum(axis=1, keepdims=True)
-                predicted_acc = np.zeros(len(y_test_set))
-                for k, l in enumerate(y_test_set):
-                    predicted_acc[k] = predictions[k, l]
-                avg_acc[j] = predicted_acc.mean()
-            avg_acc_alpha[i] = avg_acc.mean()
+                predictions = dists / dists.sum(axis=1, keepdims=True)
+                test_preds = np.argmax(predictions, axis=1)
+                test_acc[j] = accuracy_score(y_probas[test_index], test_preds)
+            avg_acc_alpha[i] = test_acc.mean()
         print("AVG_ACC/ALPHA")
         print(avg_acc_alpha)
         print(avg_acc_alpha[avg_acc_alpha.argmax()])
@@ -205,8 +205,7 @@ class FromFileHIVECOTE(BaseClassifier):
 
         dists = np.zeros((X.shape[0], self.n_classes_))
 
-        i = 0
-        for path in self.file_paths:
+        for i, path in enumerate(self.file_paths):
             f = open(path + file_name, "r")
             lines = f.readlines()
             line2 = lines[2].split(",")
@@ -223,7 +222,6 @@ class FromFileHIVECOTE(BaseClassifier):
                     dists[j],
                     [float(k) for k in (lines[j+3].split(",")[3:])] * (np.ones(self.n_classes_) * self._weights[i]),
             )
-            i += 1
 
         # Make each instances probability array sum to 1 and return
         return dists / dists.sum(axis=1, keepdims=True)
