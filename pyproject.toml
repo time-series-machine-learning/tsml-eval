@@ -28,6 +28,7 @@ classifiers = [
 dependencies = [
     "sktime>=0.14.0",
     "convst",
+    "wildboar",
     "networkx",
     "requests",
     "torch",

@@ -10,6 +10,8 @@ from tsml_estimator_evaluation.sktime_estimators.classification.rdst import (
     RDST,
     RDSTEnsemble,
 )
+from tsml_estimator_evaluation.sktime_estimators.classification.rsf import \
+    RandomShapeletForest
 from tsml_estimator_evaluation.sktime_estimators.classification.weasel_dilation import (
     WEASEL_DILATION,
 )
@@ -19,6 +21,6 @@ from tsml_estimator_evaluation.sktime_estimators.transformations.sfa_dilation im
 
 
 # WEASEL_DILATION, MUSE_DILATION
-@pytest.mark.parametrize("est", [SFADilation, HYDRA, RDST, RDSTEnsemble])
+@pytest.mark.parametrize("est", [SFADilation, HYDRA, RDST, RDSTEnsemble, RandomShapeletForest])
 def test_check_estimator(est):
     check_estimator(est, return_exceptions=False)
