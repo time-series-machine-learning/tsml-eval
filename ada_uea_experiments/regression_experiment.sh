@@ -42,7 +42,7 @@ results_dir=$local_path"RegressionResults/sktime/"
 out_dir=$local_path"RegressionResults/output/"
 
 # The python script we are running
-script_file_path=$local_path"Code/tsml-estimator-evaluation/tsml_estimator_evaluation/experiments/regression_experiments.py"
+script_file_path=$local_path"Code/tsml-estimator-evaluation/tsml_eval/experiments/regression_experiments.py"
 
 # Environment name, change accordingly, for set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
 # Separate environments for GPU (default python/anaconda/2020.11/3.8) and CPU (default python/anaconda/2019.10/3.7) are recommended
@@ -114,7 +114,7 @@ module add python/anaconda/2019.10/3.7
 source activate $env_name
 
 # Input args to the default regression_experiments are in main method of
-# https://github.com/time-series-machine-learning/tsml-estimator-evaluation/blob/main/tsml_estimator_evaluation/experiments/regression_experiments.py
+# https://github.com/time-series-machine-learning/tsml-estimator-evaluation/blob/main/tsml_eval/experiments/regression_experiments.py
 python -u ${script_file_path} ${data_dir} ${results_dir} ${regressor} ${dataset} \$SLURM_ARRAY_TASK_ID ${generate_train_files} ${predefined_folds}"  > generatedFile.sub
 
 echo ${count} ${regressor}/${dataset}

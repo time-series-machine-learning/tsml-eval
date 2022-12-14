@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Configuration file for the Sphinx documentation builder."""
 
-# tsml-estimator-evaluation documentation master file, created by
+# tsml-eval documentation master file, created by
 # sphinx-quickstart on Wed Dec 14 00:20:27 2022.
 
 import inspect
@@ -23,14 +23,14 @@ RTD_VERSION = os.environ.get("READTHEDOCS_VERSION", "local")
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = "tsml-estimator-evaluation"
+project = "tsml-eval"
 copyright = "2022, Matthew Middlehurst"
 author = "Matthew Middlehurst"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
-# import tsml_estimator_evaluation  # noqa: E402
+# import tsml_eval  # noqa: E402
 #
 # version = tsml_estimator_evaluation.__version__
 # release = tsml_estimator_evaluation.__version__
@@ -82,12 +82,10 @@ def linkcode_resolve(domain, info):
 
         fn = inspect.getsourcefile(obj)
         fn = os.path.relpath(
-            # fn, start=os.path.dirname(tsml_estimator_evaluation.__file__)
+            # fn, start=os.path.dirname(tsml_eval.__file__)
             # todo
             fn,
-            start=os.path.dirname(
-                os.path.abspath(".") + "\\tsml_estimator_evaluation\\__init__.py"
-            ),
+            start=os.path.dirname(os.path.abspath(".") + "\\tsml_eval\\__init__.py"),
         )
         source, lineno = inspect.getsourcelines(obj)
         return fn, lineno, lineno + len(source) - 1
@@ -95,15 +93,11 @@ def linkcode_resolve(domain, info):
     if domain != "py" or not info["module"]:
         return None
     try:
-        filename = "tsml_estimator_evaluation/%s#L%d-L%d" % find_source()
+        filename = "tsml_eval/%s#L%d-L%d" % find_source()
     except Exception:
         filename = info["module"].replace(".", "/") + ".py"
 
-    return (
-        "https://github.com/time-series-machine-learning/tsml-estimator-evaluation"
-        "/blob/%s/%s"
-        % (
-            version,
-            filename,
-        )
+    return "https://github.com/time-series-machine-learning/tsml-eval/blob/%s/%s" % (
+        version,
+        filename,
     )
