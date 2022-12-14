@@ -42,7 +42,7 @@ results_dir=$local_path"ClusteringResults/sktime/"
 out_dir=$local_path"ClusteringResults/output/"
 
 # The python script we are running
-script_file_path=$local_path"Code/tsml-estimator-evaluation/tsml_estimator_evaluation/experiments/distance_clustering_experiments.py"
+script_file_path=$local_path"Code/tsml-estimator-evaluation/tsml_eval/experiments/distance_clustering_experiments.py"
 
 # Environment name, change accordingly, for set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
 # Separate environments for GPU (default python/anaconda/2020.11/3.8) and CPU (default python/anaconda/2019.10/3.7) are recommended

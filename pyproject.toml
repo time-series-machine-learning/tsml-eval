@@ -3,7 +3,7 @@ requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "tsml-estimator-evalutation"
+name = "tsml-eval"
 version = "0.0.1"
 description = "A package for benchmarking time series machine learning tools."
 authors = [
@@ -58,7 +58,7 @@ repository = "https://github.com/time-series-machine-learning/tsml-estimator-eva
 file = "LICENSE"
 
 [tool.setuptools.packages.find]
-include = ["tsml_estimator_evalutation"]
+include = ["tsml_eval"]
 
 [tool.check-manifest]
 ignore = [
