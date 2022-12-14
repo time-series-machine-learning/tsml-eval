@@ -77,6 +77,18 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
         from sktime.classification.dictionary_based import MUSE
 
         return MUSE(random_state=resample_id, n_jobs=n_jobs, support_probabilities=True)
+    elif name == "weasel-dilation":
+        from tsml_estimator_evaluation.sktime_estimators.classification.weasel_dilation import (  # noqa: E501
+            WEASEL_DILATION,
+        )
+
+        return WEASEL_DILATION(random_state=resample_id)
+    elif name == "muse-dilation":
+        from tsml_estimator_evaluation.sktime_estimators.classification.muse_dilation import (  # noqa: E501
+            MUSE_DILATION,
+        )
+
+        return MUSE_DILATION(random_state=resample_id)
     # Distance based
     elif name == "pf" or name == "proximityforest":
         from sktime.classification.distance_based import ProximityForest
@@ -94,10 +106,10 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
         from sktime.classification.distance_based import KNeighborsTimeSeriesClassifier
 
         return KNeighborsTimeSeriesClassifier()
-    elif name == "ed" or name == "1nn-ed":
+    elif name == "ed" or name == "1nn-euclidean" or name == "1nn-ed":
         from sktime.classification.distance_based import KNeighborsTimeSeriesClassifier
 
-        return KNeighborsTimeSeriesClassifier(distance="ed")
+        return KNeighborsTimeSeriesClassifier(distance="euclidean")
     elif name == "msm" or name == "1nn-msm":
         from sktime.classification.distance_based import KNeighborsTimeSeriesClassifier
 
@@ -290,6 +302,12 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
             rocket_transform="multirocket",
             n_jobs=n_jobs,
         )
+    elif name == "hydra":
+        from tsml_estimator_evaluation.sktime_estimators.classification.hydra import (
+            HYDRA,
+        )
+
+        return HYDRA(random_state=resample_id)
     # Shapelet based
     elif name == "stc-2hour":
         from sktime.classification.shapelet_based import ShapeletTransformClassifier
@@ -306,6 +324,22 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
             random_state=resample_id,
             save_transformed_data=train_file,
         )
+    elif name == "rdst":
+        from tsml_estimator_evaluation.sktime_estimators.classification.rdst import RDST
+
+        return RDST(random_state=resample_id)
+    elif name == "rdst-ensemble":
+        from tsml_estimator_evaluation.sktime_estimators.classification.rdst import (
+            RDSTEnsemble,
+        )
+
+        return RDSTEnsemble(random_state=resample_id)
+    elif name == "rsf":
+        from tsml_estimator_evaluation.sktime_estimators.classification.rsf import (
+            RandomShapeletForest,
+        )
+
+        return RandomShapeletForest(random_state=resample_id)
     # Deep learning based
     elif name == "cnn" or name == "cnnclassifier":
         from sktime.classification.deep_learning.cnn import CNNClassifier
@@ -355,36 +389,6 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
             "Cannot create a WeightedEnsembleClassifier"
             "without passing base classifiers"
         )
-
-    # Non-sktime package estimators
-    elif name == "weasel-dilation":
-        from tsml_estimator_evaluation.sktime_estimators.classification.weasel_dilation import (  # noqa: E501
-            WEASEL_DILATION,
-        )
-
-        return WEASEL_DILATION()
-    elif name == "muse-dilation":
-        from tsml_estimator_evaluation.sktime_estimators.classification.muse_dilation import (  # noqa: E501
-            MUSE_DILATION,
-        )
-
-        return MUSE_DILATION()
-    elif name == "rdst":
-        from tsml_estimator_evaluation.sktime_estimators.classification.rdst import RDST
-
-        return RDST()
-    elif name == "rdst-ensemble":
-        from tsml_estimator_evaluation.sktime_estimators.classification.rdst import (
-            RDSTEnsemble,
-        )
-
-        return RDSTEnsemble()
-    elif name == "hydra":
-        from tsml_estimator_evaluation.sktime_estimators.classification.hydra import (
-            HYDRA,
-        )
-
-        return HYDRA()
 
     else:
         raise Exception("UNKNOWN CLASSIFIER ", name, " in set_classifier")
