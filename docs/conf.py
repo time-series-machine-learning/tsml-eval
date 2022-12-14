@@ -26,24 +26,28 @@ author = "Matthew Middlehurst"
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
-import tsml_estimator_evaluation  # noqa: E402
+# import tsml_estimator_evaluation  # noqa: E402
+#
+# version = tsml_estimator_evaluation.__version__
+# release = tsml_estimator_evaluation.__version__
 
-version = tsml_estimator_evaluation.__version__
-release = tsml_estimator_evaluation.__version__
+# todo
+version = "0.0.1"
+release = "0.0.1"
 
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
-    # "sphinx.ext.autodoc",
-    # "sphinx.ext.autosummary",
-    # "sphinx.ext.intersphinx",
-    # "sphinx.ext.linkcode",
-    # "sphinx_gallery.load_style",
-    # "numpydoc",
-    # "nbsphinx",
-    # "sphinx_design",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.linkcode",
+    "sphinx_gallery.load_style",
+    "numpydoc",
+    "nbsphinx",
+    "sphinx_design",
 ]
 
 templates_path = ["_templates"]
@@ -74,7 +78,12 @@ def linkcode_resolve(domain, info):
 
         fn = inspect.getsourcefile(obj)
         fn = os.path.relpath(
-            fn, start=os.path.dirname(tsml_estimator_evaluation.__file__)
+            # fn, start=os.path.dirname(tsml_estimator_evaluation.__file__)
+            # todo
+            fn,
+            start=os.path.dirname(
+                os.path.abspath(".") + "\\tsml_estimator_evaluation\\__init__.py"
+            ),
         )
         source, lineno = inspect.getsourcelines(obj)
         return fn, lineno, lineno + len(source) - 1
