@@ -9,10 +9,8 @@ import sys
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 ON_READTHEDOCS = os.environ.get("READTHEDOCS") == "True"
 if not ON_READTHEDOCS:
-    sys.path.insert(0, os.path.abspath("../"))
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 RTD_VERSION = os.environ.get("READTHEDOCS_VERSION", "local")
-
-import tsml_estimator_evaluation
 
 
 # For the full list of built-in configuration values, see the documentation:
@@ -24,7 +22,11 @@ import tsml_estimator_evaluation
 project = "tsml-estimator-evaluation"
 copyright = "2022, Matthew Middlehurst"
 author = "Matthew Middlehurst"
+
+import tsml_estimator_evaluation  # noqa: E402
+
 version = tsml_estimator_evaluation.__version__
+release = tsml_estimator_evaluation.__version__
 
 
 # -- General configuration ---------------------------------------------------
