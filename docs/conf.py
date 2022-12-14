@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """Configuration file for the Sphinx documentation builder."""
-
+import inspect
 import os
 import sys
 
-# import tsml_estimator_evaluation
+import tsml_estimator_evaluation
 
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
@@ -50,3 +50,38 @@ exclude_patterns = ["_build", ".ipynb_checkpoints", "Thumbs.db", ".DS_Store"]
 
 html_theme = "furo"
 html_static_path = ["_static"]
+
+
+def linkcode_resolve(domain, info):
+    """Return URL to source code for sphinx.ext.linkcode."""
+
+    def find_source():
+        # try to find the file and line number, used in sktime and tslearn conf.py.
+        # originally based on code from numpy:
+        # https://github.com/numpy/numpy/blob/master/doc/source/conf.py#L393
+        obj = sys.modules[info["module"]]
+        for part in info["fullname"].split("."):
+            obj = getattr(obj, part)
+
+        fn = inspect.getsourcefile(obj)
+        fn = os.path.relpath(
+            fn, start=os.path.dirname(tsml_estimator_evaluation.__file__)
+        )
+        source, lineno = inspect.getsourcelines(obj)
+        return fn, lineno, lineno + len(source) - 1
+
+    if domain != "py" or not info["module"]:
+        return None
+    try:
+        filename = "tsml_estimator_evaluation/%s#L%d-L%d" % find_source()
+    except Exception:
+        filename = info["module"].replace(".", "/") + ".py"
+
+    return (
+        "https://github.com/time-series-machine-learning/tsml-estimator-evaluation"
+        "/blob/%s/%s"
+        % (
+            version,
+            filename,
+        )
+    )
