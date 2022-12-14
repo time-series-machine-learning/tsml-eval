@@ -29,6 +29,7 @@ dependencies = [
     "sktime>=0.14.0",
     "convst",
     "wildboar",
+    "stumpy",
     "networkx",
     "requests",
     "torch",
