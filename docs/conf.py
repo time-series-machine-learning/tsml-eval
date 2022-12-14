@@ -4,18 +4,19 @@ import inspect
 import os
 import sys
 
-# For the full list of built-in configuration values, see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
-
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 ON_READTHEDOCS = os.environ.get("READTHEDOCS") == "True"
 if not ON_READTHEDOCS:
-    sys.path.insert(0, os.path.abspath(".."))
+    sys.path.insert(0, os.path.abspath("../"))
 RTD_VERSION = os.environ.get("READTHEDOCS_VERSION", "local")
 
 import tsml_estimator_evaluation
+
+
+# For the full list of built-in configuration values, see the documentation:
+# https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
