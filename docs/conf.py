@@ -4,7 +4,7 @@
 import os
 import sys
 
-import tsml_estimator_evaluation
+# import tsml_estimator_evaluation
 
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
@@ -23,7 +23,8 @@ RTD_VERSION = os.environ.get("READTHEDOCS_VERSION", "local")
 project = "tsml-estimator-evaluation"
 copyright = "2022, Matthew Middlehurst"
 author = "Matthew Middlehurst"
-version = tsml_estimator_evaluation.__version__
+# version = tsml_estimator_evaluation.__version__
+version = "0.0.1"
 
 
 # -- General configuration ---------------------------------------------------
