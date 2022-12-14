@@ -116,8 +116,23 @@ class FromFileHIVECOTE(BaseClassifier):
             self._weights.append(acc ** self.alpha)
 
     def _tune_alpha(self, all_files_lines):
-        alpha = 1
-        n_splits = 5
+        """Finds the best alpha value if self.tune_alpha == True.
+
+        Parameters
+        ----------
+        all_files_lines : list
+            The content of each file as each element of the list.
+
+        Returns
+        -------
+        self :
+            Reference to self.
+
+        Notes
+        -----
+        Estimates through cross validation the best alpha of a range of values.
+        """
+        n_splits = 5  # number of splits of the cv
         n_samples = len(all_files_lines[0])-3
         n_files = len(all_files_lines)
         x_probas = np.zeros((n_samples, n_files, self.n_classes_))
@@ -128,12 +143,10 @@ class FromFileHIVECOTE(BaseClassifier):
                 x_probas[j][i] = [float(k) for k in (line[3:])]
                 y_probas[j] = int(line[0]) # its getting y 4 times, not efficient
 
-        alpha_values = range(1, 10)
-        avg_acc_alpha = np.zeros(len(alpha_values))
+        alpha_values = range(1, 10)  # tested alpha values
+        avg_acc_alpha = np.zeros(len(alpha_values))  # performance of each alpha value
         for i, alpha in enumerate(alpha_values):
             kf = KFold(n_splits=n_splits)
-            # print(kf.get_n_splits(X))
-            # print(kf)
             test_acc = np.zeros(n_splits)
             for j, (train_index, test_index) in enumerate(kf.split(x_probas)):
                 print(f"Fold {j}:")
@@ -164,6 +177,7 @@ class FromFileHIVECOTE(BaseClassifier):
         print(avg_acc_alpha[avg_acc_alpha.argmax()])
         best_alpha = alpha_values[avg_acc_alpha.argmax()]
         print(best_alpha)
+        print(np.unique(avg_acc_alpha))
 
         return best_alpha
 
