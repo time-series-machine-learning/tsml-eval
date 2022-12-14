@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 """Configuration file for the Sphinx documentation builder."""
+
+# tsml-estimator-evaluation documentation master file, created by
+# sphinx-quickstart on Wed Dec 14 00:20:27 2022.
+
 import inspect
 import os
 import sys
