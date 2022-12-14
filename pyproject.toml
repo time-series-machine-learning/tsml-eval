@@ -40,6 +40,15 @@ dev = [
     "pytest",
 ]
 
+docs = [
+    "sphinx",
+    "sphinx-design",
+    "sphinx-gallery",
+    "numpydoc",
+    "nbsphinx",
+    "furo",
+]
+
 [project.urls]
 homepage = "https://www.timeseriesclassification.com/"
 repository = "https://github.com/time-series-machine-learning/tsml-estimator-evaluation/"
