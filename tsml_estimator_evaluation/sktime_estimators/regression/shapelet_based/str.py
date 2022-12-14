@@ -14,8 +14,11 @@ from sklearn.utils.multiclass import type_of_target
 from sktime.base._base import _clone_estimator
 from sktime.regression.base import BaseRegressor
 from sktime.utils.validation.panel import check_X_y
-from time_series_regression.sktime_models.sklearn.rotation_forest import RotationForest
-from time_series_regression.sktime_models.transformations.shapelet_transform import (
+
+from tsml_estimator_evaluation.sktime_estimators.regression.sklearn import (
+    RotationForest,
+)
+from tsml_estimator_evaluation.sktime_estimators.regression.transformations.shapelet_transform import (
     RandomShapeletTransform,
 )
 

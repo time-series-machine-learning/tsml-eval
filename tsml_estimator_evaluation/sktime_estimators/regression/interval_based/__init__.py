@@ -2,4 +2,6 @@
 """"""
 __all__ = ["DrCIF"]
 
-from time_series_regression.sktime_models.interval_based.drcif import DrCIF
+from tsml_estimator_evaluation.sktime_estimators.regression.interval_based.drcif import (
+    DrCIF,
+)

@@ -2,6 +2,6 @@
 """"""
 __all__ = ["TemporalDictionaryEnsemble"]
 
-from time_series_regression.sktime_models.dictionary_based.tde import (
+from tsml_estimator_evaluation.sktime_estimators.regression.dictionary_based.tde import (
     TemporalDictionaryEnsemble,
 )

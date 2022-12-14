@@ -36,6 +36,12 @@ from tsml_estimator_evaluation.sktime_estimators.regression.shapelet_based.str i
 from tsml_estimator_evaluation.sktime_estimators.regression.sklearn.rotation_forest import (
     RotationForest,
 )
+from tsml_estimator_evaluation.sktime_estimators.regression.transformations.sfa import (
+    SFA,
+)
+from tsml_estimator_evaluation.sktime_estimators.regression.transformations.shapelet_transform import (
+    RandomShapeletTransform,
+)
 from tsml_estimator_evaluation.sktime_estimators.transformations.sfa_dilation import (
     SFADilation,
 )
@@ -53,11 +59,12 @@ classification_estimators = [
 regression_estimators = [
     DrCIF,
     ShapeletTransformRegressor,
+    RandomShapeletTransform,
     Arsenal,
     TemporalDictionaryEnsemble,
+    SFA,
     HIVECOTEV2,
 ]
-
 
 
 @pytest.mark.parametrize("est", classification_estimators + regression_estimators)

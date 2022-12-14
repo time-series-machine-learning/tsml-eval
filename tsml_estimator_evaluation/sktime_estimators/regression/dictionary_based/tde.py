@@ -22,7 +22,10 @@ from sklearn.kernel_ridge import KernelRidge
 from sklearn.utils import check_random_state
 from sktime.regression.base import BaseRegressor
 from sktime.utils.validation.panel import check_X_y
-from time_series_regression.sktime_models.transformations.sfa import SFA
+
+from tsml_estimator_evaluation.sktime_estimators.regression.transformations.sfa import (
+    SFA,
+)
 
 
 class TemporalDictionaryEnsemble(BaseRegressor):

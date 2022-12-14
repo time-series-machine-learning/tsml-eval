@@ -12,14 +12,16 @@ from datetime import datetime
 
 import numpy as np
 from sklearn.metrics import mean_squared_error
-from sklearn.utils import check_random_state
 from sktime.regression.base import BaseRegressor
-from time_series_regression.sktime_models.convolution_based import Arsenal
-from time_series_regression.sktime_models.dictionary_based import (
+
+from tsml_estimator_evaluation.sktime_estimators.regression.convolution_based import (
+    Arsenal,
+)
+from tsml_estimator_evaluation.sktime_estimators.regression.dictionary_based import (
     TemporalDictionaryEnsemble,
 )
-from time_series_regression.sktime_models.interval_based import DrCIF
-from time_series_regression.sktime_models.shapelet_based import (
+from tsml_estimator_evaluation.sktime_estimators.regression.interval_based import DrCIF
+from tsml_estimator_evaluation.sktime_estimators.regression.shapelet_based import (
     ShapeletTransformRegressor,
 )
 
