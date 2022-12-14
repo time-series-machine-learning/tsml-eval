@@ -1,22 +1,20 @@
-Welcome to Lumache's documentation!
-===================================
+.. tsml-estimator-evaluation documentation master file, created by
+   sphinx-quickstart on Wed Dec 14 00:20:27 2022.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
 
-**Lumache** (/lu'make/) is a Python library for cooks and food lovers
-that creates recipes mixing random ingredients.
-It pulls data from the `Open Food Facts database <https://world.openfoodfacts.org/>`_
-and offers a *simple* and *intuitive* API.
-
-Check out the :doc:`usage` section for further information, including
-how to :ref:`installation` the project.
-
-.. note::
-
-   This project is under active development. :) 2
-
-Contents
---------
+Welcome to tsml-estimator-evaluation's documentation!
+=====================================================
 
 .. toctree::
+   :maxdepth: 2
+   :caption: Contents:
 
-   usage
-   api
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
