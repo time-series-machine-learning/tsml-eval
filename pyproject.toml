@@ -29,6 +29,7 @@ dependencies = [
     "sktime>=0.14.0",
     "convst",
     "wildboar",
+    "stumpy",
     "networkx",
     "requests",
     "torch",
@@ -38,6 +39,15 @@ dependencies = [
 dev = [
     "pre-commit",
     "pytest",
+]
+
+docs = [
+    "sphinx",
+    "sphinx-design",
+    "sphinx-gallery",
+    "numpydoc",
+    "nbsphinx",
+    "furo",
 ]
 
 [project.urls]
