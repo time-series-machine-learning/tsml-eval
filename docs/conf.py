@@ -9,7 +9,7 @@ import sys
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 ON_READTHEDOCS = os.environ.get("READTHEDOCS") == "True"
 if not ON_READTHEDOCS:
-    sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+    sys.path.insert(0, os.path.abspath(".."))
 RTD_VERSION = os.environ.get("READTHEDOCS_VERSION", "local")
 
 
@@ -23,6 +23,9 @@ project = "tsml-estimator-evaluation"
 copyright = "2022, Matthew Middlehurst"
 author = "Matthew Middlehurst"
 
+# The version info for the project you're documenting, acts as replacement for
+# |version| and |release|, also used in various other places throughout the
+# built documents.
 import tsml_estimator_evaluation  # noqa: E402
 
 version = tsml_estimator_evaluation.__version__
@@ -33,18 +36,22 @@ release = tsml_estimator_evaluation.__version__
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
-    "sphinx.ext.autodoc",
-    "sphinx.ext.autosummary",
-    "sphinx.ext.intersphinx",
-    "sphinx.ext.linkcode",
-    "sphinx_gallery.load_style",
-    "numpydoc",
-    "nbsphinx",
-    "sphinx_design",
+    # "sphinx.ext.autodoc",
+    # "sphinx.ext.autosummary",
+    # "sphinx.ext.intersphinx",
+    # "sphinx.ext.linkcode",
+    # "sphinx_gallery.load_style",
+    # "numpydoc",
+    # "nbsphinx",
+    # "sphinx_design",
 ]
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", ".ipynb_checkpoints", "Thumbs.db", ".DS_Store"]
+
+# this is needed for some reason...
+# see https://github.com/numpy/numpydoc/issues/69
+numpydoc_show_class_members = False
 
 
 # -- Options for HTML output -------------------------------------------------
