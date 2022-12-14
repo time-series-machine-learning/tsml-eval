@@ -11,7 +11,7 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
     set up is to help with batch jobs for multiple problems to facilitate easy
     reproducibility for use with load_and_run_classification_experiment. You can pass a
     classifier object instead to run_classification_experiment.
-    TODO: add checkpoint options
+    TODO: add checkpoint option
 
     Parameters
     ----------
