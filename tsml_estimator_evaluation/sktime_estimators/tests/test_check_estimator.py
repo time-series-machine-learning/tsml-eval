@@ -47,8 +47,8 @@ from tsml_estimator_evaluation.sktime_estimators.transformations.sfa_dilation im
 )
 
 classification_estimators = [
-    WEASEL_DILATION,
-    MUSE_DILATION,
+    # WEASEL_DILATION,
+    # MUSE_DILATION,
     SFADilation,
     HYDRA,
     RDST,
@@ -59,10 +59,10 @@ classification_estimators = [
 regression_estimators = [
     DrCIF,
     ShapeletTransformRegressor,
-    RandomShapeletTransform,
+    # RandomShapeletTransform,
     Arsenal,
     TemporalDictionaryEnsemble,
-    SFA,
+    # SFA,
     HIVECOTEV2,
 ]
 
@@ -72,7 +72,10 @@ def test_check_estimator(est):
     check_estimator(est, return_exceptions=False)
 
 
-@parametrize_with_checks([RotationForest(n_estimators=3)])
+regression_sklearn_estimators = [RotationForest(n_estimators=3)]
+
+
+@parametrize_with_checks(regression_sklearn_estimators)
 def test_sklearn_compatible_estimator(estimator, check):
     """Test that sklearn estimators adhere to sklearn conventions."""
     check(estimator)
