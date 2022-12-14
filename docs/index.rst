@@ -3,18 +3,15 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to tsml-estimator-evaluation's documentation!
-=====================================================
+tsml-estimator-evaluation's documentation
+=========================================
+
+tsml-estimator-evaluation is a package containing tools for the evaluation for classification, regression and clustering algorithms built on the sktime interface.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :hidden:
 
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   installation
+   api
+   papers
