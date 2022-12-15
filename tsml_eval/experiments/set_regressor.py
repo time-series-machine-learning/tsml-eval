@@ -7,12 +7,12 @@ from sklearn.pipeline import make_pipeline
 
 
 def set_regressor(regressor, resample_id=None, train_file=False, n_jobs=1):
-    """Construct a regressor, possibly seeded for reproducability.
+    """Construct a regressor, possibly seeded for reproducibility.
 
     Basic way of creating the regressor to build using the default settings. This
     set up is to help with batch jobs for multiple problems to facilitate easy
-    reproducibility for use with load_and_run_classification_experiment. You can pass a
-    classifier object instead to run_classification_experiment.
+    reproducibility for use with load_and_run_regression_experiment. You can pass a
+    regression object instead to run_regression_experiment.
     TODO: add threads, contract and checkpoint options
 
     Parameters
@@ -20,7 +20,7 @@ def set_regressor(regressor, resample_id=None, train_file=False, n_jobs=1):
     regressor : str
         String indicating which Regressor you want.
     resample_id : int or None, default=None
-        Classifier random seed.
+        Regressor random seed.
     train_file : bool, default=False
         Whether a train file is being produced.
     n_jobs: for threading
@@ -167,7 +167,7 @@ def set_regressor(regressor, resample_id=None, train_file=False, n_jobs=1):
 
         model_params = {"kernel": 'rbf',
                         "C": 1}
-                        
+
         return SklearnBaseRegressor(SVR(**model_params))
     
     elif name == "rf" or name == "randomforest":
