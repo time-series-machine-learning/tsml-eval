@@ -15,6 +15,7 @@ from sklearn.model_selection import KFold
 from sklearn.utils import check_random_state
 from sktime.classification import BaseClassifier
 
+
 class FromFileHIVECOTE(BaseClassifier):
     """Hierarchical Vote Collective of Transformation-based Ensembles (HIVE-COTE) from file.
     An ensemble of the STC, DrCIF, Arsenal and TDE classifiers from different feature
@@ -151,7 +152,9 @@ class FromFileHIVECOTE(BaseClassifier):
             for j in range(n_samples):
                 line = lines[j + 3].split(",")
                 x_probas[j][i] = [float(k) for k in (line[3:])]
-                y_probas[j] = int(line[0]) # its getting y multiple times, not efficient
+                y_probas[j] = int(
+                    line[0]
+                )  # its getting y multiple times, not efficient
 
         alpha_values = range(1, 10)  # tested alpha values
         avg_acc_alpha = np.zeros(len(alpha_values))  # performance of each alpha value
@@ -284,10 +287,4 @@ class FromFileHIVECOTE(BaseClassifier):
             `MyClass(**params)` or `MyClass(**params[i])` creates a valid test instance.
             `create_test_instance` uses the first (or only) dictionary in `params`.
         """
-        file_paths = [
-            "test_files/Arsenal/",
-            "test_files/DrCIF/",
-            "test_files/STC/",
-            "test_files/TDE/",
-        ]
-        return {"file_paths": file_paths, "random_state": 0}
+        return {"file_paths": "test"}
