@@ -11,7 +11,7 @@ max_folds=30
 start_fold=1
 
 # To avoid dumping 1000s of jobs in the queue we have a higher level queue
-max_num_submitted=100
+max_num_submitted=500
 
 # Queue options are https://my.uea.ac.uk/divisions/it-and-computing-services/service-catalogue/research-it-services/hpc/ada-cluster/using-ada
 queue="compute-64-512"
@@ -42,11 +42,12 @@ results_dir=$local_path"RegressionResults/sktime/"
 out_dir=$local_path"RegressionResults/output/"
 
 # The python script we are running
-script_file_path=$local_path"Code/tsml-estimator-evaluation/tsml_estimator_evaluation/experiments/regression_experiments.py"
+script_file_path=$local_path"Code/tsml-eval/tsml_eval/experiments/regression_experiments
+.py"
 
 # Environment name, change accordingly, for set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
 # Separate environments for GPU (default python/anaconda/2020.11/3.8) and CPU (default python/anaconda/2019.10/3.7) are recommended
-env_name="est-eval"
+env_name="eval"
 
 # Generating train folds is usually slower, set to false unless you need them
 generate_train_files="false"
@@ -114,7 +115,7 @@ module add python/anaconda/2019.10/3.7
 source activate $env_name
 
 # Input args to the default regression_experiments are in main method of
-# https://github.com/time-series-machine-learning/tsml-estimator-evaluation/blob/main/tsml_estimator_evaluation/experiments/regression_experiments.py
+# https://github.com/time-series-machine-learning/tsml-estimator-evaluation/blob/main/tsml_eval/experiments/regression_experiments.py
 python -u ${script_file_path} ${data_dir} ${results_dir} ${regressor} ${dataset} \$SLURM_ARRAY_TASK_ID ${generate_train_files} ${predefined_folds}"  > generatedFile.sub
 
 echo ${count} ${regressor}/${dataset}

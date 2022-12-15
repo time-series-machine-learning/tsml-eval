@@ -1,4 +1,4 @@
-# tsml-estimator-evaluation
+# tsml-eval
 
 Evaluation tools for classification, regression and clustering algorithms built on the sktime interface.
 
