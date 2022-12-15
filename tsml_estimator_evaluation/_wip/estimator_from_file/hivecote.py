@@ -141,7 +141,7 @@ class FromFileHIVECOTE(BaseClassifier):
             for j in range(n_samples):
                 line = lines[j+3].split(",")
                 x_probas[j][i] = [float(k) for k in (line[3:])]
-                y_probas[j] = int(line[0]) # its getting y 4 times, not efficient
+                y_probas[j] = int(line[0]) # its getting y multiple times, not efficient
 
         alpha_values = range(1, 10)  # tested alpha values
         avg_acc_alpha = np.zeros(len(alpha_values))  # performance of each alpha value
@@ -160,6 +160,7 @@ class FromFileHIVECOTE(BaseClassifier):
                     train_acc = accuracy_score(y_probas[train_index], train_preds)
                     weight_list.append(train_acc ** alpha)
                 dists = np.zeros((len(test_index), self.n_classes_))
+                #   apply the weights to the probabilities in the test set
                 for n in range(n_files):
                     for v in range(len(test_index)):
                         dists[v] = np.add(
