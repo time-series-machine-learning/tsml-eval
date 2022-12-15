@@ -141,10 +141,31 @@ def set_regressor(regressor, resample_id=None, train_file=False, n_jobs=1):
         return RotationForest(
             random_state=resample_id, save_transformed_data=train_file, n_jobs=n_jobs
         )
-    elif name == "ridgecv":
-        from sklearn.linear_model import RidgeCV
 
-        return RidgeCV()
+    elif name == "lr" or name == "linearregression":
+        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+        from sklearn.linear_model import LinearRegression
+        return SklearnBaseRegressor(LinearRegression())
+    
+    elif name == "ridgecv" or name == "ridge":
+        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+        from sklearn.linear_model import RidgeCV
+        return SklearnBaseRegressor(RidgeCV())
+
+    elif name == "svr" or name == "supportvectorregressor":
+        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+        from sklearn.svm import SVR
+        return SklearnBaseRegressor(SVR())
+    
+    elif name == "rf" or name == "randomforest":
+        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+        from sklearn.ensemble import RandomForestRegressor
+        return SklearnBaseRegressor(RandomForestRegressor())
+        
+    elif name == "xgb" or name == "xgboost":
+        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+        from xgboost import XGBRegressor
+        return SklearnBaseRegressor(XGBRegressor())
 
     else:
         raise ValueError(f" Regressor {name} is not avaiable")

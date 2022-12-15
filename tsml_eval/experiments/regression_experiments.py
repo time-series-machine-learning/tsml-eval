@@ -378,10 +378,10 @@ def run_experiment(args, overwrite=False):
     # local run (no args)
     else:
         print(" Local Run of TimeSeriesForestRegressor")
-        data_dir = "../../../time_series_regression/datasets/"
+        data_dir = "../../../time_series_regression/new_datasets/"
         results_dir = "../"
-        regressor_name = "TimeSeriesForestRegressor"
-        dataset = "Covid3Month"
+        regressor_name = "svr"
+        dataset = "Covid3Months"
         resample = 0
         train_fold = False
         predefined_resample = False
