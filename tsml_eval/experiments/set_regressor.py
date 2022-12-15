@@ -145,27 +145,51 @@ def set_regressor(regressor, resample_id=None, train_file=False, n_jobs=1):
     elif name == "lr" or name == "linearregression":
         from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
         from sklearn.linear_model import LinearRegression
-        return SklearnBaseRegressor(LinearRegression())
+
+        model_params = {"fit_intercept": True,
+                        "n_jobs": n_jobs}
+
+        return SklearnBaseRegressor(LinearRegression(**model_params))
     
     elif name == "ridgecv" or name == "ridge":
         from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
         from sklearn.linear_model import RidgeCV
-        return SklearnBaseRegressor(RidgeCV())
+
+        model_params = {"fit_intercept": True,
+                        "alphas": np.logspace(-3, 3, 10)}
+
+        return SklearnBaseRegressor(RidgeCV(**model_params))
 
     elif name == "svr" or name == "supportvectorregressor":
         from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
         from sklearn.svm import SVR
-        return SklearnBaseRegressor(SVR())
+        from sklearn.model_selection import GridSearchCV
+
+        model_params = {"kernel": 'rbf',
+                        "C": 1}
+                        
+        return SklearnBaseRegressor(SVR(**model_params))
     
     elif name == "rf" or name == "randomforest":
         from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
         from sklearn.ensemble import RandomForestRegressor
-        return SklearnBaseRegressor(RandomForestRegressor())
+
+        model_params = {"n_estimators": 100,
+                        "n_jobs": n_jobs,
+                        "random_state": resample_id}
+
+        return SklearnBaseRegressor(RandomForestRegressor(**model_params))
         
     elif name == "xgb" or name == "xgboost":
         from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
-        from xgboost import XGBRegressor
-        return SklearnBaseRegressor(XGBRegressor())
+        from xgboost import XGBRegressor # pip install xgboost
+
+        model_params = {"n_estimators": 100,
+                        "n_jobs": n_jobs,
+                        "learning_rate": 0.1,
+                        "random_state": resample_id}
+
+        return SklearnBaseRegressor(XGBRegressor(**model_params))
 
     else:
         raise ValueError(f" Regressor {name} is not avaiable")
