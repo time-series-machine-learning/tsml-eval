@@ -378,7 +378,7 @@ def run_experiment(args, overwrite=False):
     # local run (no args)
     else:
         print(" Local Run of TimeSeriesForestRegressor")
-        data_dir = "../"
+        data_dir = "../../../time_series_regression/datasets/"
         results_dir = "../"
         regressor_name = "TimeSeriesForestRegressor"
         dataset = "Covid3Month"
