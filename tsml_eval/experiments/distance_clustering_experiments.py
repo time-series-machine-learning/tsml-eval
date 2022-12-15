@@ -86,20 +86,32 @@ if __name__ == "__main__":
     clusterer = "kmeans"
     chris_config = True  # This is so chris doesn't have to change config each time
     tune = False
-    if sys.argv.__len__() > 1:  # cluster run, this is fragile
+    normalise = True
+    if sys.argv.__len__() > 1:  # cluster run, this is fragile, requires all args atm
         data_dir = sys.argv[1]
         results_dir = sys.argv[2]
         distance = sys.argv[3]
         dataset = sys.argv[4]
-        resample = int(sys.argv[5]) - 1
-        tf = bool(sys.argv[6])
-        clusterer = sys.argv[7]
-        averaging = sys.argv[8]
+        # ADA starts indexing its jobs at 1, so we need to subtract 1
+        resample = int(args[5]) - 1
+        clusterer = sys.argv[6]
+        if len(args) > 7:
+            train_fold = args[7].lower() == "true"
+        else:
+            train_fold = False
+        if len(args) > 8:
+            averaging = args[8]
+        else:
+            averaging = "mean"
+        if len(args) > 9:
+            normalise = args[9].lower() == "true"
+        else:
+            normalise = False
         if averaging == "dba":
             results_dir = results_dir + clusterer + "_dba"
-
         if results_present(results_dir, clusterer, dataset, resample):
             print("Ignoring, results already present")
+
 
     elif chris_config is True:
         path = "C:/Users/chris/Documents/Masters"
@@ -108,7 +120,7 @@ if __name__ == "__main__":
         dataset = "Handwriting"
         resample = 2
         averaging = "mean"
-        tf = True
+        train_fold = True
         distance = "dtw"
 
     else:  # Local run
@@ -118,7 +130,7 @@ if __name__ == "__main__":
         results_dir = "./temp"
         resample = 0
         averaging = "dba"
-        tf = True
+        train_fold = True
         distance = "dtw"
 
     if isinstance(dataset, str):
@@ -137,26 +149,22 @@ if __name__ == "__main__":
     #    import sys
 
     from sklearn.preprocessing import StandardScaler
-
-    s = StandardScaler()
-    train_X = s.fit_transform(train_X.T)
-    train_X = train_X.T
-    test_X = s.fit_transform(test_X.T)
-    test_X = test_X.T
+    if normalise:
+        s = StandardScaler()
+        train_X = s.fit_transform(train_X.T)
+        train_X = train_X.T
+        test_X = s.fit_transform(test_X.T)
+        test_X = test_X.T
     w = 1.0
     if tune:
         w = tune_window(distance, train_X, len(set(train_Y)))
         name = clusterer + "-" + distance + "-tuned"
     else:
         name = clusterer + "-" + distance
-    #     w = 1.0
-    #     if (
-    #         distance == "wdtw"
-    #         or distance == "dwdtw"
-    #         or distance == "dtw"
-    #         or distance == "wdtw"
-    #     ):
-    #         w = 0.2
+    w = 1.0
+    if (distance == "wdtw" or distance == "dwdtw" or distance == "dtw" or distance ==
+    "wdtw"):
+        w = 0.2
     parameters = {
         "window": w,
         "epsilon": 0.05,

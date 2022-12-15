@@ -46,11 +46,12 @@ script_file_path=$local_path"Code/tsml-estimator-evaluation/tsml_eval/experiment
 
 # Environment name, change accordingly, for set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
 # Separate environments for GPU (default python/anaconda/2020.11/3.8) and CPU (default python/anaconda/2019.10/3.7) are recommended
-env_name="est-eval"
+env_name="eval"
 
 generate_train_files="false"
 clusterer="kmeans"
 averaging="mean"
+normalise=""
 
 count=0
 # dtw ddtw erp edr wdtw lcss twe msm dwdtw euclidean
