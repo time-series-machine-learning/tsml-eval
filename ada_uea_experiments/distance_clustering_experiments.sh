@@ -31,6 +31,9 @@ max_time="168:00:00"
 start_point=1
 
 # Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
+# Input args: ${data_dir} ${results_dir} ${clusterer} ${dataset}
+# \$SLURM_ARRAY_TASK_ID ${distance_function} ${train_fold} ${averaging} ${normalise}"
+
 data_dir="/gpfs/home/ajb/Data/"
 datasets="/gpfs/home/ajb/DataSetLists/TSC_112_2019.txt"
 
@@ -42,7 +45,7 @@ results_dir=$local_path"ClusteringResults/sktime/"
 out_dir=$local_path"ClusteringResults/output/"
 
 # The python script we are running
-script_file_path=$local_path"Code/tsml-estimator-evaluation/tsml_eval/experiments/distance_clustering_experiments.py"
+script_file_path=$local_path"Code/tsml-eval/tsml_eval/experiments/distance_clustering_experiments.py"
 
 # Environment name, change accordingly, for set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
 # Separate environments for GPU (default python/anaconda/2020.11/3.8) and CPU (default python/anaconda/2019.10/3.7) are recommended
@@ -51,12 +54,12 @@ env_name="eval"
 generate_train_files="false"
 clusterer="kmeans"
 averaging="mean"
-normalise=""
+normalise="true"
 
 count=0
 # dtw ddtw erp edr wdtw lcss twe msm dwdtw euclidean
 while read dataset; do
-for distance in euclidean
+for distance in euclidean dtw lcss msm ddtw erp edr twe wdtw wddtw
 do
 
 # Dont change anything after here for regular runs
@@ -111,7 +114,8 @@ echo "#!/bin/bash
 module add python/anaconda/2019.10/3.7
 source activate $env_name
 
-python -u ${script_file_path} ${data_dir} ${results_dir} ${distance} ${dataset} \$SLURM_ARRAY_TASK_ID ${generate_train_files} ${clusterer} ${averaging}"  > generatedFile.sub
+python -u ${script_file_path} ${data_dir} ${results_dir} ${clusterer}  ${dataset} \$SLURM_ARRAY_TASK_ID ${distance} ${generate_train_files} ${averaging} ${normalise}"  >
+ generatedFile.sub
 #                         data_dir = sys.argv[1]
 #                         results_dir = sys.argv[2]
 #                         distance = sys.argv[3]
