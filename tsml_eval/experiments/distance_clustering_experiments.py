@@ -122,7 +122,7 @@ if __name__ == "__main__":
         results_dir = results_dir + "normalised/"
     else:
         results_dir = results_dir + "raw/"
-    results_dir = results_dir + "/" + clusterer + "/" + averaging + "/"
+    results_dir = results_dir + "/" + clusterer + "/" + distance + "/"
     if results_present_full_path(results_dir, dataset, resample):
         print("Ignoring, results already present")
     print(f" Running {dataset} resample {resample} normalised = {normalise} "
@@ -191,7 +191,7 @@ if __name__ == "__main__":
         trainY=train_Y,
         testX=test_X,
         testY=test_Y,
-        cls_name=distance,
+        cls_name=averaging,
         dataset_name=dataset,
         resample_id=resample,
         overwrite=False,
