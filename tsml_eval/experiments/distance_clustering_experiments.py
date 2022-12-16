@@ -27,7 +27,7 @@ from sktime.clustering.k_means import TimeSeriesKMeans
 from sktime.clustering.k_medoids import TimeSeriesKMedoids
 from sktime.datasets import load_from_tsfile as load_ts
 
-from tsml_eval.experiments.classification_experiments import results_present
+from tsml_eval.utils.experiments import results_present_full_path
 
 
 def config_clusterer(clusterer: str, **kwargs):
@@ -90,66 +90,52 @@ if __name__ == "__main__":
     if sys.argv.__len__() > 1:  # cluster run, this is fragile, requires all args atm
         data_dir = sys.argv[1]
         results_dir = sys.argv[2]
-        distance = sys.argv[3]
+        clusterer = sys.argv[3]
         dataset = sys.argv[4]
         # ADA starts indexing its jobs at 1, so we need to subtract 1
-        resample = int(argv[5]) - 1
-        clusterer = sys.argv[6]
+        resample = int(args[5]) - 1
+        distance = sys.argv[6]
         if len(args) > 7:
-            train_fold = argv[7].lower() == "true"
+            train_fold = args[7].lower() == "true"
         else:
             train_fold = False
         if len(args) > 8:
-            averaging = argv[8]
+            averaging = args[8]
         else:
             averaging = "mean"
         if len(args) > 9:
-            normalise = argv[9].lower() == "true"
+            normalise = args[9].lower() == "true"
         else:
             normalise = False
-        if averaging == "dba":
-            results_dir = results_dir + clusterer + "_dba"
-        if results_present(results_dir, clusterer, dataset, resample):
-            print("Ignoring, results already present")
-
-
-    elif chris_config is True:
-        path = "C:/Users/chris/Documents/Masters"
-        data_dir = os.path.abspath(f"{path}/datasets/Multivariate_ts/")
-        results_dir = os.path.abspath(f"{path}/results/")
-        dataset = "Handwriting"
-        resample = 2
-        averaging = "mean"
-        train_fold = True
-        distance = "dtw"
-
     else:  # Local run
         print(" Local Run")
         dataset = "Chinatown"
-        data_dir = f"c:/temp/"
-        results_dir = "./temp"
+        data_dir = f"c:/Data/"
+        results_dir = "c:/temp/"
         resample = 0
-        averaging = "dba"
+        averaging = "mean"
         train_fold = True
         distance = "dtw"
+        normalise = True
 
-    if isinstance(dataset, str):
-        train_X, train_Y = load_ts(
-            f"{data_dir}/{dataset}/{dataset}_TRAIN.ts", return_data_type="numpy2d"
-        )
-        test_X, test_Y = load_ts(
-            f"{data_dir}/{dataset}/{dataset}_TEST.ts", return_data_type="numpy2d"
-        )
-    else:
-        train_X, train_Y = dataset("train", return_X_y=True)
-        test_X, test_Y = dataset("test", return_X_y=True)
-    #    train_X = np.concatenate((train_X, test_X), axis=0)
-    #    train_Y = np.concatenate((train_Y, test_Y), axis=0)
-    #    _recreate_results(train_X, train_Y)
-    #    import sys
-
-    from sklearn.preprocessing import StandardScaler
     if normalise:
+        results_dir = results_dir + "normalised/"
+    else:
+        results_dir = results_dir + "raw/"
+    results_dir = results_dir + averaging + "/" + clusterer + "/"
+    if results_present_full_path(results_dir, dataset, resample):
+        print("Ignoring, results already present")
+    print(f" Running {dataset} resample {resample} normalised = {normalise} "
+          f"clustering ={clusterer} distance = {distance} averaging = {averaging}")
+    train_X, train_Y = load_ts(
+        f"{data_dir}/{dataset}/{dataset}_TRAIN.ts", return_data_type="numpy2d"
+    )
+    test_X, test_Y = load_ts(
+        f"{data_dir}/{dataset}/{dataset}_TEST.ts", return_data_type="numpy2d"
+    )
+    if normalise:
+        from sklearn.preprocessing import StandardScaler
+
         s = StandardScaler()
         train_X = s.fit_transform(train_X.T)
         train_X = train_X.T
@@ -205,7 +191,7 @@ if __name__ == "__main__":
         trainY=train_Y,
         testX=test_X,
         testY=test_Y,
-        cls_name=name,
+        cls_name=distance,
         dataset_name=dataset,
         resample_id=resample,
         overwrite=False,
