@@ -93,18 +93,18 @@ if __name__ == "__main__":
         clusterer = sys.argv[3]
         dataset = sys.argv[4]
         # ADA starts indexing its jobs at 1, so we need to subtract 1
-        resample = int(args[5]) - 1
+        resample = int(argv[5]) - 1
         distance = sys.argv[6]
         if len(args) > 7:
-            train_fold = args[7].lower() == "true"
+            train_fold = argv[7].lower() == "true"
         else:
             train_fold = False
         if len(args) > 8:
-            averaging = args[8]
+            averaging = argv[8]
         else:
             averaging = "mean"
         if len(args) > 9:
-            normalise = args[9].lower() == "true"
+            normalise = argv[9].lower() == "true"
         else:
             normalise = False
     else:  # Local run
