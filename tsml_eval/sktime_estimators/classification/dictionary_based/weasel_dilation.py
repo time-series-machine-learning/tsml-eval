@@ -27,7 +27,7 @@ from sklearn.linear_model import RidgeClassifierCV
 from sklearn.utils import check_random_state
 from sktime.classification.base import BaseClassifier
 
-from tsml_eval.sktime_estimators.transformations.sfa_dilation import SFADilation
+from tsml_eval.sktime_estimators.classification.transformations import SFADilation
 
 # from sktime.transformations.panel.rocket import MiniRocket
 

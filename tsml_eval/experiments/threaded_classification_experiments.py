@@ -9,9 +9,6 @@ threading is introduced.
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 import sys
-from pathlib import Path
-
-sys.path.append(str(Path(__file__).parent.parent.parent))
 
 from set_classifier import set_classifier
 from sktime.benchmarking.experiments import load_and_run_classification_experiment

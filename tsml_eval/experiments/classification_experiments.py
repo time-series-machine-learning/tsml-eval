@@ -14,9 +14,6 @@ os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
 
 import sys
-from pathlib import Path
-
-sys.path.append(str(Path(__file__).parent.parent.parent))
 
 import numba
 import torch
@@ -81,15 +78,24 @@ def run_experiment(args, overwrite=False):
         n_jobs = 92
         contract_mins = 0
         dataset = "EigenWorms"
-        print(f" Local Run of {cls_name} on dataset {dataset} with threading jobs "
-              f"={ n_jobs} and "
-              f"contract time ={contract_mins}")
+        print(
+            f" Local Run of {cls_name} on dataset {dataset} with threading jobs "
+            f"={ n_jobs} and "
+            f"contract time ={contract_mins}"
+        )
         train_fold = False
         predefined_resample = False
         for resample in range(0, 30):
-            classifier = set_classifier(cls_name, resample_id=resample, n_jobs=n_jobs,
-                                        contract=contract_mins, train_file=train_fold)
-            print(f"Local Run of {classifier.__class__.__name__} with {classifier.n_jobs} jobs")
+            classifier = set_classifier(
+                cls_name,
+                resample_id=resample,
+                n_jobs=n_jobs,
+                contract=contract_mins,
+                train_file=train_fold,
+            )
+            print(
+                f"Local Run of {classifier.__class__.__name__} with {classifier.n_jobs} jobs"
+            )
 
             load_and_run_classification_experiment(
                 overwrite=False,

@@ -78,13 +78,13 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
 
         return MUSE(random_state=resample_id, n_jobs=n_jobs, support_probabilities=True)
     elif name == "weasel-dilation":
-        from tsml_eval.sktime_estimators.classification.weasel_dilation import (  # noqa: E501
+        from tsml_eval.sktime_estimators.classification.dictionary_based.weasel_dilation import (  # noqa: E501
             WEASEL_DILATION,
         )
 
         return WEASEL_DILATION(random_state=resample_id)
     elif name == "muse-dilation":
-        from tsml_eval.sktime_estimators.classification.muse_dilation import (  # noqa: E501
+        from tsml_eval.sktime_estimators.classification.dictionary_based.muse_dilation import (  # noqa: E501
             MUSE_DILATION,
         )
 
@@ -202,6 +202,7 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
         return HIVECOTEV1(random_state=resample_id)
     elif name == "hc2" or name == "hivecotev2":
         from sktime.classification.hybrid import HIVECOTEV2
+
         return HIVECOTEV2(random_state=resample_id, n_jobs=n_jobs)
     # Interval based
     elif name == "rise-500":
@@ -250,6 +251,7 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
         return SupervisedTimeSeriesForest(random_state=resample_id, n_jobs=n_jobs)
     elif name == "drcif-500":
         from sktime.classification.interval_based import DrCIF
+
         return DrCIF(
             random_state=resample_id,
             n_estimators=500,
@@ -270,20 +272,23 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
     elif name == "mini-rocket":
         from sktime.classification.kernel_based import RocketClassifier
 
-        return RocketClassifier(random_state=resample_id,
-                                rocket_transform="minirocket", n_jobs=n_jobs)
+        return RocketClassifier(
+            random_state=resample_id, rocket_transform="minirocket", n_jobs=n_jobs
+        )
     elif name == "multi-rocket":
         from sktime.classification.kernel_based import RocketClassifier
 
         return RocketClassifier(
-            random_state=resample_id, rocket_transform="multirocket", n_jobs=n_jobs,
-
+            random_state=resample_id,
+            rocket_transform="multirocket",
+            n_jobs=n_jobs,
         )
     elif name == "arsenal":
         from sktime.classification.kernel_based import Arsenal
 
-        return Arsenal(random_state=resample_id, save_transformed_data=train_file,
-                       n_jobs=n_jobs)
+        return Arsenal(
+            random_state=resample_id, save_transformed_data=train_file, n_jobs=n_jobs
+        )
     elif name == "mini-arsenal":
         from sktime.classification.kernel_based import Arsenal
 
@@ -303,7 +308,9 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
             n_jobs=n_jobs,
         )
     elif name == "hydra":
-        from tsml_eval.sktime_estimators.classification.hydra import HYDRA
+        from tsml_eval.sktime_estimators.classification.convolution_based.hydra import (
+            HYDRA,
+        )
 
         return HYDRA(random_state=resample_id)
     # Shapelet based
@@ -323,15 +330,19 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
             save_transformed_data=train_file,
         )
     elif name == "rdst":
-        from tsml_eval.sktime_estimators.classification.rdst import RDST
+        from tsml_eval.sktime_estimators.classification.shapelet_based.rdst import RDST
 
         return RDST(random_state=resample_id)
     elif name == "rdst-ensemble":
-        from tsml_eval.sktime_estimators.classification.rdst import RDSTEnsemble
+        from tsml_eval.sktime_estimators.classification.shapelet_based.rdst import (
+            RDSTEnsemble,
+        )
 
         return RDSTEnsemble(random_state=resample_id)
     elif name == "rsf":
-        from tsml_eval.sktime_estimators.classification.rsf import RandomShapeletForest
+        from tsml_eval.sktime_estimators.classification.shapelet_based.rsf import (
+            RandomShapeletForest,
+        )
 
         return RandomShapeletForest(random_state=resample_id)
     # Deep learning based

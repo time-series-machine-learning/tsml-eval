@@ -14,9 +14,6 @@ os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
 
 import sys
-from pathlib import Path
-
-sys.path.append(str(Path(__file__).parent.parent.parent))
 
 import numba
 import numpy as np
@@ -112,7 +109,6 @@ if __name__ == "__main__":
         if results_present(results_dir, clusterer, dataset, resample):
             print("Ignoring, results already present")
 
-
     elif chris_config is True:
         path = "C:/Users/chris/Documents/Masters"
         data_dir = os.path.abspath(f"{path}/datasets/Multivariate_ts/")
@@ -149,6 +145,7 @@ if __name__ == "__main__":
     #    import sys
 
     from sklearn.preprocessing import StandardScaler
+
     if normalise:
         s = StandardScaler()
         train_X = s.fit_transform(train_X.T)
@@ -162,8 +159,12 @@ if __name__ == "__main__":
     else:
         name = clusterer + "-" + distance
     w = 1.0
-    if (distance == "wdtw" or distance == "dwdtw" or distance == "dtw" or distance ==
-    "wdtw"):
+    if (
+        distance == "wdtw"
+        or distance == "dwdtw"
+        or distance == "dtw"
+        or distance == "wdtw"
+    ):
         w = 0.2
     parameters = {
         "window": w,
