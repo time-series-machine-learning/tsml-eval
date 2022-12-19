@@ -117,11 +117,15 @@ if __name__ == "__main__":
         train_fold = True
         distance = "dtw"
         normalise = True
+        tune = False
 
     if normalise:
         results_dir = results_dir + "normalised/"
     else:
         results_dir = results_dir + "raw/"
+    if tune:
+        results_dir = results_dir + "tuned/"
+
     results_dir = results_dir + "/" + clusterer + "/" + distance + "/"
     if results_present_full_path(results_dir, dataset, resample):
         print("Ignoring, results already present")
@@ -144,13 +148,10 @@ if __name__ == "__main__":
     w = 1.0
     if tune:
         w = tune_window(distance, train_X, len(set(train_Y)))
-        name = clusterer + "-" + distance + "-tuned"
     else:
-        name = clusterer + "-" + distance
-    w = 1.0
-    if (distance == "wdtw" or distance == "dwdtw" or distance == "dtw" or distance ==
-    "wdtw"):
-        w = 0.2
+        if (
+            distance == "wdtw" or distance == "dwdtw" or distance == "dtw" or distance == "wdtw"):
+            w = 0.2
     parameters = {
         "window": w,
         "epsilon": 0.05,
