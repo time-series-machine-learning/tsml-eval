@@ -85,7 +85,7 @@ if __name__ == "__main__":
 
     clusterer = "kmeans"
     chris_config = True  # This is so chris doesn't have to change config each time
-    tune = False
+    tune_w = False
     normalise = True
     if sys.argv.__len__() > 1:  # cluster run, this is fragile, requires all args atm
         data_dir = sys.argv[1]
@@ -106,7 +106,7 @@ if __name__ == "__main__":
         if len(sys.argv) > 9:
             normalise = sys.argv[9].lower() == "true"
         if len(sys.argv) > 10:
-            tune = sys.argv[10].lower() == "true"
+            tune_w = sys.argv[10].lower() == "true"
     else:  # Local run
         print(" Local Run")
         dataset = "Chinatown"
@@ -117,14 +117,14 @@ if __name__ == "__main__":
         train_fold = True
         distance = "dtw"
         normalise = True
-        tune = False
+        tune_w = False
 
     if normalise:
         results_dir = results_dir + "normalised/"
     else:
         results_dir = results_dir + "raw/"
-    if tune:
-        results_dir = results_dir + "tuned/"
+    if tune_w:
+        results_dir = results_dir + "tune_w/"
 
     results_dir = results_dir + "/" + clusterer + "/" + distance + "/"
     if results_present_full_path(results_dir, dataset, resample):
@@ -146,8 +146,8 @@ if __name__ == "__main__":
         test_X = s.fit_transform(test_X.T)
         test_X = test_X.T
     w = 1.0
-    if tune:
-        w = tune_window(distance, train_X, len(set(train_Y)))
+    if tune_w:
+        w = tune_w(distance, train_X, len(set(train_Y)))
     else:
         if (
             distance == "wdtw" or distance == "dwdtw" or distance == "dtw" or distance == "wdtw"):
