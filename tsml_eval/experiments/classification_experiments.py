@@ -80,16 +80,19 @@ def run_experiment(args, overwrite=False):
         cls_name = "HC2"
         n_jobs = 92
         contract_mins = 0
+        # HC2 Missing multivariate: EmoPain, FaceDetection, InsectWingbeatEq,
+        # PhonemeSpectra, PenDigits, Tiselac
         dataset = "EMOPain"
         print(f" Local Run of {cls_name} on dataset {dataset} with threading jobs "
-              f"={ n_jobs} and "
+              f"={n_jobs} and "
               f"contract time ={contract_mins}")
         train_fold = False
         predefined_resample = False
         for resample in range(0, 30):
             classifier = set_classifier(cls_name, resample_id=resample, n_jobs=n_jobs,
                                         contract=contract_mins, train_file=train_fold)
-            print(f"Local Run of {classifier.__class__.__name__} with {classifier.n_jobs} jobs")
+            print(
+                f"Local Run of {classifier.__class__.__name__} with {classifier.n_jobs} jobs")
 
             load_and_run_classification_experiment(
                 overwrite=False,

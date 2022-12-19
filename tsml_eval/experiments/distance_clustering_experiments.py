@@ -43,7 +43,7 @@ def tune_window(metric: str, train_X, n_clusters):
     """Tune window."""
     best_w = 0
     best_score = 0
-    for w in np.arange(0, 1, 0.1):
+    for w in np.arange(0, 1, 0.05):
         cls = TimeSeriesKMeans(
             metric=metric, distance_params={"window": w}, n_clusters=n_clusters
         )
@@ -105,8 +105,8 @@ if __name__ == "__main__":
             averaging = "mean"
         if len(sys.argv) > 9:
             normalise = sys.argv[9].lower() == "true"
-        else:
-            normalise = False
+        if len(sys.argv) > 10:
+            tune = sys.argv[10].lower() == "true"
     else:  # Local run
         print(" Local Run")
         dataset = "Chinatown"

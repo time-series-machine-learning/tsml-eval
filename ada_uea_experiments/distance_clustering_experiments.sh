@@ -55,7 +55,7 @@ generate_train_files="false"
 clusterer="kmeans"
 averaging="mean"
 normalise="true"
-
+tune="false"
 count=0
 # dtw ddtw erp edr wdtw lcss twe msm dwdtw euclidean
 while read dataset; do
@@ -114,16 +114,17 @@ echo "#!/bin/bash
 module add python/anaconda/2019.10/3.7
 source activate $env_name
 
-python -u ${script_file_path} ${data_dir} ${results_dir} ${clusterer}  ${dataset} \$SLURM_ARRAY_TASK_ID ${distance} ${generate_train_files} ${averaging} ${normalise}"  >
- generatedFile.sub
+python -u ${script_file_path} ${data_dir} ${results_dir} ${clusterer}  ${dataset} \$SLURM_ARRAY_TASK_ID ${distance} ${generate_train_files} ${averaging} ${normalise} ${tune}"  > generatedFile.sub
 #                         data_dir = sys.argv[1]
 #                         results_dir = sys.argv[2]
-#                         distance = sys.argv[3]
+#                         clusterer = sys.argv[3]
 #                         dataset = sys.argv[4]
 #                         resample = int(sys.argv[5]) - 1
-#                         generate_train_files = sys.argv[6]
-#                         clusterer = sys.argv[7]
+#                         distance = sys.argv[6]
+#                         generate_train_files = sys.argv[7]
 #                         averaging = sys.argv[8]
+#                         normalise = sys.argv[9]
+#                         tune = sys.argv[10]
 
 echo ${count} ${clusterer}/${dataset}
 
