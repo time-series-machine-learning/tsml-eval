@@ -147,7 +147,7 @@ if __name__ == "__main__":
         test_X = test_X.T
     w = 1.0
     if tune_w:
-        w = tune_w(distance, train_X, len(set(train_Y)))
+        w = tune_window(distance, train_X, len(set(train_Y)))
     else:
         if (
             distance == "wdtw" or distance == "dwdtw" or distance == "dtw" or distance == "wdtw"):
