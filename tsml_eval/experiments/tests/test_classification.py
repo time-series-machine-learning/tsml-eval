@@ -12,13 +12,16 @@ def test_run_experiment():
         if os.getcwd().split("\\")[-1] != "tests"
         else "../../../test_output/classification/"
     )
+    data_path = (
+        "./tsml_eval/data/"
+        if os.getcwd().split("\\")[-1] != "tests"
+        else "../../data/",
+    )
     classifier = "DummyClassifier"
     dataset = "UnitTest"
     args = [
         None,
-        "./tsml_estimator_evaluation/data/"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else "../../data/",
+        data_path,
         result_path,
         classifier,
         dataset,
@@ -26,8 +29,6 @@ def test_run_experiment():
         "True",
         "False",
     ]
-    print()
-    print()
     run_experiment(args, overwrite=True)
 
     test_file = (

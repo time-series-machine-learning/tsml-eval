@@ -5,24 +5,25 @@ __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 import os
 
-from sktime.datasets import load_arrow_head, load_unit_test
-
-from tsml_eval.experiments.regression_experiments import resample, run_experiment
+from tsml_eval.experiments.regression_experiments import run_experiment
 
 
 def test_run_experiment():
     result_path = (
-        "../../../test_output/regression/"
+        "./test_output/regression/"
         if os.getcwd().split("\\")[-1] != "tests"
         else "../../../test_output/regression/"
+    )
+    data_path = (
+        "./tsml_eval/data/"
+        if os.getcwd().split("\\")[-1] != "tests"
+        else "../../data/",
     )
     regressor = "DummyRegressor"
     dataset = "Covid3Month"
     args = [
         None,
-        "./tsml_estimator_evaluation/data/"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else "../../data/",
+        dataset,
         result_path,
         regressor,
         dataset,
@@ -43,15 +44,3 @@ def test_run_experiment():
 
     os.remove(test_file)
     os.remove(train_file)
-
-
-def test_resample():
-    train_X, train_y = load_arrow_head(split="train")
-    test_X, test_y = load_unit_test(split="train")
-
-    train_size = train_y.size
-    test_size = test_y.size
-
-    train_X, train_y, test_X, test_y = resample(train_X, train_y, test_X, test_y, 1)
-
-    assert train_y.size == train_size and test_y.size == test_size

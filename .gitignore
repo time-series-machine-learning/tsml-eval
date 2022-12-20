@@ -133,3 +133,7 @@ dmypy.json
 
 # Test output
 test_output/
+
+# Test files
+debug.py
+local_code.py
