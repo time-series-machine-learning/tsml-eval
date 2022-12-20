@@ -6,7 +6,7 @@ __author__ = ["MatthewMiddlehurst", "ander-hg"]
 import numpy as np
 from sklearn.model_selection import GridSearchCV
 from sktime.datasets import load_italy_power_demand
-from tsml_estimator_evaluation._wip.estimator_from_file.hivecote import FromFileHIVECOTE
+from tsml_eval._wip.estimator_from_file.hivecote import FromFileHIVECOTE
 
 
 def tuning_hivecote_alpha_value():
@@ -16,10 +16,10 @@ def tuning_hivecote_alpha_value():
 
     # C:/Users/Ander/git/tsml-estimator-evaluation/tsml_estimator_evaluation/_wip/estimator_from_file/tests/test_files/Arsenal/
     file_paths = [
-        "tests/test_files/Arsenal/",
-        "tests/test_files/DrCIF/",
-        "tests/test_files/STC/",
-        "tests/test_files/TDE/",
+        "tests/test_files/ItalyPowerDemand/Arsenal/",
+        "tests/test_files/ItalyPowerDemand/DrCIF/",
+        "tests/test_files/ItalyPowerDemand/STC/",
+        "tests/test_files/ItalyPowerDemand/TDE/",
     ]
 
     hc2 = FromFileHIVECOTE(file_paths=file_paths, random_state=0, tune_alpha=True)

@@ -143,7 +143,7 @@ class FromFileHIVECOTE(BaseClassifier):
         -----
         Estimates through cross validation the best alpha of a range of values.
         """
-        n_splits = 5  # number of splits of the cv
+        n_splits = 10  # number of splits of the cv
         n_samples = len(all_files_lines[0]) - 3
         n_files = len(all_files_lines)
         x_probas = np.zeros((n_samples, n_files, self.n_classes_))
