@@ -1,36 +1,54 @@
 # -*- coding: utf-8 -*-
-from sktime.datasets import load_arrow_head, load_unit_test
+import numpy as np
+import pandas as pd
+from sktime.datasets import load_arrow_head
 
-from tsml_eval.utils.experiments import resample
+from tsml_eval.utils.experiments import resample, stratified_resample
 
 
 def test_resample():
-    train_X, train_y = load_arrow_head(split="train")
-    test_X, test_y = load_unit_test(split="train")
+    """Test resampling returns valid data."""
+    X_train, y_train = load_arrow_head(split="TRAIN")
+    X_test, y_test = load_arrow_head(split="TEST")
 
-    train_size = train_y.size
-    test_size = test_y.size
+    train_size = X_train.shape
+    test_size = X_test.shape
 
-    train_X, train_y, test_X, test_y = resample(train_X, train_y, test_X, test_y, 1)
+    X_train, y_train, X_test, y_test = resample(X_train, y_train, X_test, y_test)
 
-    assert train_y.size == train_size and test_y.size == test_size
+    assert isinstance(X_train, pd.DataFrame)
+    assert isinstance(X_test, pd.DataFrame)
+    assert isinstance(y_test, np.ndarray)
+    assert isinstance(y_test, pd.np.ndarray)
 
-    
+    assert X_train.shape == train_size
+    assert X_test.shape == test_size
+
+
 def test_stratified_resample():
-    """Test resampling returns valid data structure and maintains class distribution."""
-    trainX, trainy = load_unit_test(split="TRAIN")
-    testX, testy = load_unit_test(split="TEST")
-    new_trainX, new_trainy, new_testX, new_testy = stratified_resample(
-        trainX, trainy, testX, testy, 0
+    """Test stratified resampling returns valid data and class distribution."""
+    X_train, y_train = load_arrow_head(split="TRAIN")
+    X_test, y_test = load_arrow_head(split="TEST")
+
+    train_size = X_train.shape
+    test_size = X_test.shape
+    _, counts_train = np.unique(y_train, return_counts=True)
+    _, counts_test = np.unique(y_test, return_counts=True)
+
+    X_train, y_train, X_test, y_test = stratified_resample(
+        X_train, y_train, X_test, y_test
     )
 
-    valid_train = check_is_scitype(new_trainX, scitype="Panel")
-    valid_test = check_is_scitype(new_testX, scitype="Panel")
-    assert valid_test and valid_train
-    # count class occurrences
-    unique_train, counts_train = np.unique(trainy, return_counts=True)
-    unique_test, counts_test = np.unique(testy, return_counts=True)
-    unique_train_new, counts_train_new = np.unique(new_trainy, return_counts=True)
-    unique_test_new, counts_test_new = np.unique(new_testy, return_counts=True)
+    assert isinstance(X_train, pd.DataFrame)
+    assert isinstance(X_test, pd.DataFrame)
+    assert isinstance(y_test, np.ndarray)
+    assert isinstance(y_test, pd.np.ndarray)
+
+    assert X_train.shape == train_size
+    assert X_test.shape == test_size
+
+    _, counts_train_new = np.unique(y_train, return_counts=True)
+    _, counts_test_new = np.unique(y_test, return_counts=True)
+
     assert list(counts_train_new) == list(counts_train)
     assert list(counts_test_new) == list(counts_test)
