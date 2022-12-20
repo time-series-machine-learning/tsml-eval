@@ -96,7 +96,7 @@ def run_experiment(args, overwrite=False):
             print(f" Local Run of {cls_name} on dataset {dataset}")
             for resample in range(0, 30):
                 print(resample)
-                classifier = FromFileHIVECOTE(file_paths=[s + dataset + "/" for s in file_paths], random_state=resample)  # set_classifier("fromfile")
+                classifier = FromFileHIVECOTE(file_paths=[s + dataset + "/" for s in file_paths], random_state=resample, tune_alpha=True)  # set_classifier("fromfile")
                 load_and_run_classification_experiment(
                     overwrite=False,
                     problem_path=data_dir,
