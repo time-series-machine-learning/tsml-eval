@@ -41,27 +41,17 @@ def demo_loading():
         print(testY.shape)
 
 
-def results_present(results_path, cls_name, dataset, resample_id):
-    full_path = (
-        results_path
-        + "/"
-        + cls_name
-        + "/Predictions/"
-        + dataset
-        + "/testResample"
-        + str(resample_id)
-        + ".csv"
-    )
-    full_path2 = (
-        results_path
-        + "/"
-        + cls_name
-        + "/Predictions/"
-        + dataset
-        + "/trainResample"
-        + str(resample_id)
-        + ".csv"
-    )
+def results_present(path, estimator, dataset, res):
+    full_path = f"{path}/{estimator}Predictions/{dataset}/testResample{res}.csv"
+    full_path2 = f"{path}/{estimator}Predictions/{dataset}/trainResample{res}.csv"
+    if os.path.exists(full_path) and os.path.exists(full_path2):
+        return True
+    return False
+
+
+def results_present_full_path(path, dataset, res):
+    full_path = f"{path}/Predictions/{dataset}/testResample{res}.csv"
+    full_path2 = f"{path}/Predictions/{dataset}/trainResample{res}.csv"
     if os.path.exists(full_path) and os.path.exists(full_path2):
         return True
     return False
