@@ -9,8 +9,6 @@ __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 import os
 
-from tsml_eval.experiments import load_and_run_classification_experiment
-
 os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
@@ -20,6 +18,7 @@ import sys
 import numba
 import torch
 
+from tsml_eval.experiments import load_and_run_classification_experiment
 from tsml_eval.experiments.set_classifier import set_classifier
 from tsml_eval.utils.experiments import results_present
 
@@ -78,10 +77,12 @@ def run_experiment(args, overwrite=False):
         cls_name = "HC2"
         n_jobs = 92
         contract_mins = 0
-        dataset = "EigenWorms"
+        # HC2 Missing multivariate: EmoPain, FaceDetection, InsectWingbeatEq,
+        # PhonemeSpectra, PenDigits, Tiselac
+        dataset = "EMOPain"
         print(
             f" Local Run of {cls_name} on dataset {dataset} with threading jobs "
-            f"={ n_jobs} and "
+            f"={n_jobs} and "
             f"contract time ={contract_mins}"
         )
         train_fold = False

@@ -40,7 +40,7 @@ def tune_window(metric: str, train_X, n_clusters):
     """Tune window."""
     best_w = 0
     best_score = 0
-    for w in np.arange(0, 1, 0.1):
+    for w in np.arange(0, 1, 0.05):
         cls = TimeSeriesKMeans(
             metric=metric, distance_params={"window": w}, n_clusters=n_clusters
         )
@@ -82,7 +82,7 @@ if __name__ == "__main__":
 
     clusterer = "kmeans"
     chris_config = True  # This is so chris doesn't have to change config each time
-    tune = False
+    tune_w = False
     normalise = True
     if sys.argv.__len__() > 1:  # cluster run, this is fragile, requires all args atm
         data_dir = sys.argv[1]
@@ -102,8 +102,8 @@ if __name__ == "__main__":
             averaging = "mean"
         if len(sys.argv) > 9:
             normalise = sys.argv[9].lower() == "true"
-        else:
-            normalise = False
+        if len(sys.argv) > 10:
+            tune_w = sys.argv[10].lower() == "true"
     else:  # Local run
         print(" Local Run")
         dataset = "Chinatown"
@@ -114,11 +114,15 @@ if __name__ == "__main__":
         train_fold = True
         distance = "dtw"
         normalise = True
+        tune_w = False
 
     if normalise:
         results_dir = results_dir + "normalised/"
     else:
         results_dir = results_dir + "raw/"
+    if tune_w:
+        results_dir = results_dir + "tune_w/"
+
     results_dir = results_dir + "/" + clusterer + "/" + distance + "/"
     if results_present_full_path(results_dir, dataset, resample):
         print("Ignoring, results already present")
@@ -141,19 +145,16 @@ if __name__ == "__main__":
         test_X = s.fit_transform(test_X.T)
         test_X = test_X.T
     w = 1.0
-    if tune:
+    if tune_w:
         w = tune_window(distance, train_X, len(set(train_Y)))
-        name = clusterer + "-" + distance + "-tuned"
     else:
-        name = clusterer + "-" + distance
-    w = 1.0
-    if (
-        distance == "wdtw"
-        or distance == "dwdtw"
-        or distance == "dtw"
-        or distance == "wdtw"
-    ):
-        w = 0.2
+        if (
+            distance == "wdtw"
+            or distance == "dwdtw"
+            or distance == "dtw"
+            or distance == "wdtw"
+        ):
+            w = 0.2
     parameters = {
         "window": w,
         "epsilon": 0.05,
