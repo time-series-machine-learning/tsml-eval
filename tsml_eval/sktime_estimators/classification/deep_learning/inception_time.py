@@ -4,11 +4,13 @@ __all__ = ["InceptionTimeClassifier"]
 
 from sklearn.utils import check_random_state
 
-from tsml_eval.classification.deep_learning.base import BaseDeepClassifier
-from tsml_eval.networks.cnn import CNNNetwork
+from sktime.classification.deep_learning.base import BaseDeepClassifier
+from tsml_eval.sktime_estimators.networks.inception_time import InceptionTimeNetwork
 from sktime.utils.validation._dependencies import _check_dl_dependencies
 
 _check_dl_dependencies(severity="warning")
+import tensorflow as tf
+from tensorflow import keras
 
 
 class InceptionTimeClassifier(BaseDeepClassifier, InceptionTimeNetwork):
@@ -55,12 +57,9 @@ class InceptionTimeClassifier(BaseDeepClassifier, InceptionTimeNetwork):
         callbacks=None,
         random_state=0,
         verbose=False,
-        model_name="inception",
-        model_save_directory=None,
     ):
         _check_dl_dependencies(severity="error")
-        super(CNNClassifier, self).__init__()
-        self.verbose = verbose
+        super(InceptionTimeClassifier, self).__init__()
         # predefined
         self.nb_filters = nb_filters
         self.use_residual = use_residual
@@ -76,7 +75,7 @@ class InceptionTimeClassifier(BaseDeepClassifier, InceptionTimeNetwork):
         self.verbose = verbose
         self._is_fitted = False
 
-    def build_model(self, input_shape, nb_classes, **kwargs):
+    def build_model(self, input_shape, n_classes, **kwargs):
         """
         Construct a compiled, un-trained, keras model that is ready for training
 
@@ -92,12 +91,10 @@ class InceptionTimeClassifier(BaseDeepClassifier, InceptionTimeNetwork):
         -------
         output : a compiled Keras Model
         """
-        import tensorflow as tf
-        from tensorflow import keras
 
         input_layer, output_layer = self.build_network(input_shape, **kwargs)
 
-        output_layer = keras.layers.Dense(nb_classes, activation="softmax")(
+        output_layer = keras.layers.Dense(n_classes, activation="softmax")(
             output_layer
         )
 
@@ -166,20 +163,18 @@ class InceptionTimeClassifier(BaseDeepClassifier, InceptionTimeNetwork):
             self.batch_size = int(min(X.shape[0] / 10, 16))
         else:
             self.batch_size = self.batch_size
-
-        self.model = self.build_model(self.input_shape, self.nb_classes)
+        self.model_ = self.build_model(self.input_shape, self.n_classes_)
 
         if self.verbose:
-            self.model.summary()
+            self.model_.summary()
 
-        self.history = self.model.fit(
+        self.history = self.model_.fit(
             X,
             y_onehot,
             batch_size=self.batch_size,
             epochs=self.nb_epochs,
             verbose=self.verbose,
             callbacks=self.callbacks,
-            validation_data=validation_data,
         )
 
         #        self.save_trained_model()

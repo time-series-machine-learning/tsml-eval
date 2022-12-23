@@ -6,8 +6,8 @@ __all__ = ["CNNClassifier"]
 
 from sklearn.utils import check_random_state
 
-from tsml_eval.classification.deep_learning.base import BaseDeepClassifier
-from tsml_eval.networks.cnn import CNNNetwork
+from sktime.classification.deep_learning.base import BaseDeepClassifier
+from tsml_eval.sktime_estimators.networks.cnn import CNNNetwork
 from sktime.utils.validation._dependencies import _check_dl_dependencies
 
 _check_dl_dependencies(severity="warning")

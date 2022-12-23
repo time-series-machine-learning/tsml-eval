@@ -336,7 +336,8 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
         return RandomShapeletForest(random_state=resample_id)
     # Deep learning based
     elif name == "cnn" or name == "cnnclassifier":
-        from sktime.classification.deep_learning.cnn import CNNClassifier
+        from tsml_eval.sktime_estimators.classification.deep_learning.cnn import \
+            CNNClassifier
 
         return CNNClassifier(random_state=resample_id)
     elif name == "fcnn" or name == "fcnclassifier":
@@ -351,6 +352,14 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
         from sktime.classification.deep_learning.tapnet import TapNetClassifier
 
         return TapNetClassifier(random_state=resample_id)
+
+    elif name == "inceptiontime" or name == "inceptiontimeclassifier":
+        from tsml_eval.sktime_estimators.classification.deep_learning.inception_time \
+            import \
+            InceptionTimeClassifier
+
+        return InceptionTimeClassifier(random_state=resample_id)
+
     # Other
     elif name == "dummy" or name == "dummyclassifier":
         from sktime.classification.dummy import DummyClassifier

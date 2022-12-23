@@ -75,32 +75,32 @@ def run_experiment(args, overwrite=False):
                 overwrite=overwrite,
             )
     else:  # Local run
-        data_dir = "/home/ajb/Data/"
-        results_dir = "/home/ajb/Results Working Area/ReduxBakeoff/sktime/"
-        cls_name = "HC2"
-        n_jobs = 92
-        contract_mins = 0
-        # HC2 Missing multivariate: EmoPain, FaceDetection, InsectWingbeatEq,
-        # PhonemeSpectra, PenDigits, Tiselac
-        dataset = "EMOPain"
-        print(f" Local Run of {cls_name} on dataset {dataset} with threading jobs "
-              f"={n_jobs} and "
-              f"contract time ={contract_mins}")
-        train_fold = False
-        predefined_resample = False
-        for resample in range(0, 30):
-            classifier = set_classifier(cls_name, resample_id=resample, n_jobs=n_jobs,
-                                        contract=contract_mins, train_file=train_fold)
-            print(
-                f"Local Run of {classifier.__class__.__name__} with {classifier.n_jobs} jobs")
+#        data_dir = "/home/ajb/Data/"
+#        results_dir = "/home/ajb/Results Working Area/ReduxBakeoff/sktime/"
+data_dir = "C:/Data/"
+results_dir = "C:/Temp/"
+cls_name = "InceptionTime"
+n_jobs = 1
+contract_mins = 0
+# HC2 Missing multivariate: EmoPain, FaceDetection, InsectWingbeatEq,
+# PhonemeSpectra, PenDigits, Tiselac
+dataset = "Chinatown"
+print(f" Local Run of {cls_name} on dataset {dataset} with threading jobs "
+      f"={n_jobs} and "
+      f"contract time ={contract_mins}")
+train_fold = False
+predefined_resample = False
+for resample in range(0, 1):
+    classifier = set_classifier(cls_name, resample_id=resample, n_jobs=n_jobs,
+                                contract=contract_mins, train_file=train_fold)
 
-            load_and_run_classification_experiment(
-                overwrite=False,
-                problem_path=data_dir,
-                results_path=results_dir,
-                cls_name=cls_name,
-                classifier=classifier,
-                dataset=dataset,
+    load_and_run_classification_experiment(
+        overwrite=False,
+        problem_path=data_dir,
+        results_path=results_dir,
+        cls_name=cls_name,
+        classifier=classifier,
+        dataset=dataset,
                 resample_id=resample,
                 build_train=train_fold,
                 predefined_resample=predefined_resample,

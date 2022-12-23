@@ -3,7 +3,7 @@
 
 __author__ = ["James-Large, Withington, TonyBagnall"]
 
-from tsml_eval.networks.base import BaseDeepNetwork
+from sktime.networks.base import BaseDeepNetwork
 from sktime.utils.validation._dependencies import _check_dl_dependencies
 
 _check_dl_dependencies(severity="warning")

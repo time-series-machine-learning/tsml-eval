@@ -5,6 +5,8 @@ from sktime.utils.validation._dependencies import _check_dl_dependencies
 
 _check_dl_dependencies(severity="warning")
 
+from tensorflow import keras
+
 
 class InceptionTimeNetwork(BaseDeepNetwork):
     """InceptionTime
@@ -130,7 +132,6 @@ class InceptionTimeNetwork(BaseDeepNetwork):
         output_layer : a keras layer
         """
         # not sure of the whole padding thing
-        from tensorflow import keras
 
         input_layer = keras.layers.Input(input_shape)
 
