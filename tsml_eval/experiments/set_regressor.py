@@ -163,12 +163,31 @@ def set_regressor(regressor, resample_id=None, train_file=False, n_jobs=1):
     elif name == "svr" or name == "supportvectorregressor":
         from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
         from sklearn.svm import SVR
-        from sklearn.model_selection import GridSearchCV
 
         model_params = {"kernel": 'rbf',
                         "C": 1}
 
         return SklearnBaseRegressor(SVR(**model_params))
+
+    elif name == "grid-svr" or name == "grid-supportvectorregressor":
+        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+        from sklearn.svm import SVR
+        from sklearn.model_selection import GridSearchCV
+
+        param_grid = [{
+            "kernel": ['rbf', 'sigmoid'], 
+            "C": [0.1, 1, 10, 100], 
+            "gamma": [0.001, 0.01, 0.1, 1]
+            }]
+        
+        scoring = 'neg_mean_squared_error'
+
+        return SklearnBaseRegressor(GridSearchCV(
+                SVR(), 
+                param_grid, 
+                scoring=scoring, 
+                n_jobs=n_jobs, 
+                cv=3))
     
     elif name == "rf" or name == "randomforest":
         from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
