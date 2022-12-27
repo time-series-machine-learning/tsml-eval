@@ -6,7 +6,7 @@ import numpy as np
 from sklearn.pipeline import make_pipeline
 
 
-def set_regressor(regressor, resample_id=None, train_file=False, n_jobs=1):
+def set_regressor(regressor, resample_id=None, train_file=False, n_jobs=1, kwargs=None):
     """Construct a regressor, possibly seeded for reproducibility.
 
     Basic way of creating the regressor to build using the default settings. This
@@ -43,6 +43,44 @@ def set_regressor(regressor, resample_id=None, train_file=False, n_jobs=1):
         from sktime.regression.distance_based import KNeighborsTimeSeriesRegressor
 
         return KNeighborsTimeSeriesRegressor(
+            # random_state=resample_id,
+            n_jobs=n_jobs,
+        )
+    elif name == "1nn-ed":
+        from sktime.regression.distance_based import KNeighborsTimeSeriesRegressor
+        
+        return KNeighborsTimeSeriesRegressor(
+            n_neighbors=1,
+            distance='euclidean',
+            # random_state=resample_id,
+            n_jobs=n_jobs,
+        )
+    elif name == "1nn-dtw":
+        from sktime.regression.distance_based import KNeighborsTimeSeriesRegressor
+
+        return KNeighborsTimeSeriesRegressor(
+            n_neighbors=1,
+            distance='dtw',
+            metric_params={'window': kwargs['size_X']*0.1},
+            # random_state=resample_id,
+            n_jobs=n_jobs,
+        )
+    elif name == "5nn-ed":
+        from sktime.regression.distance_based import KNeighborsTimeSeriesRegressor
+
+        return KNeighborsTimeSeriesRegressor(
+            n_neighbors=5,
+            distance='euclidean',
+            # random_state=resample_id,
+            n_jobs=n_jobs,
+        )
+    elif name == "5nn-dtw":
+        from sktime.regression.distance_based import KNeighborsTimeSeriesRegressor
+
+        return KNeighborsTimeSeriesRegressor(
+            n_neighbors=5,
+            distance='dtw',
+            metric_params={'window': kwargs['size_X']*0.1},
             # random_state=resample_id,
             n_jobs=n_jobs,
         )

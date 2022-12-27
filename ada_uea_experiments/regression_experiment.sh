@@ -59,7 +59,7 @@ predefined_folds="false"
 # See set_regressor for aliases
 count=0
 while read dataset; do
-for regressor in TimeSeriesForestRegressor
+for regressor in 1nn-ed 5nn-ed
 do
 
 # Dont change anything after here for regular runs
