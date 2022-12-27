@@ -115,6 +115,15 @@ def set_regressor(regressor, resample_id=None, train_file=False, n_jobs=1, kwarg
             random_state=resample_id,
             n_jobs=n_jobs,
         )
+    
+    elif name == "hydra" or name == "hydraregressor":
+        from tsml_eval.sktime_estimators.regression.convolution_based import HydraRegressor
+
+        return HydraRegressor(
+            random_state=resample_id,
+            n_jobs=n_jobs,
+        )
+        
     # Other
     elif name == "dummy" or name == "dummyregressor":
         # todo we need an actual dummy for this

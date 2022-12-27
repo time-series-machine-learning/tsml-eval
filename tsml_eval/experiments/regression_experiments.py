@@ -379,8 +379,8 @@ def run_experiment(args, overwrite=False):
     else:
         data_dir = "../../../../ajb/Data/"
         results_dir = "../"
-        regressor_name = "multirocket"
-        dataset = "Covid3Month"
+        regressor_name = "hydra"
+        dataset = "AppliancesEnergy"
         resample = 0
         train_fold = False
         predefined_resample = False
