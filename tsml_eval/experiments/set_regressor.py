@@ -61,7 +61,7 @@ def set_regressor(regressor, resample_id=None, train_file=False, n_jobs=1, kwarg
         return KNeighborsTimeSeriesRegressor(
             n_neighbors=1,
             distance='dtw',
-            metric_params={'window': kwargs['size_X']*0.1},
+            metric_params={'window': kwargs['n_ts']*0.1},
             # random_state=resample_id,
             n_jobs=n_jobs,
         )
@@ -80,7 +80,7 @@ def set_regressor(regressor, resample_id=None, train_file=False, n_jobs=1, kwarg
         return KNeighborsTimeSeriesRegressor(
             n_neighbors=5,
             distance='dtw',
-            metric_params={'window': kwargs['size_X']*0.1},
+            metric_params={'window': kwargs['n_ts']*0.1},
             # random_state=resample_id,
             n_jobs=n_jobs,
         )
@@ -88,6 +88,23 @@ def set_regressor(regressor, resample_id=None, train_file=False, n_jobs=1, kwarg
         from sktime.regression.kernel_based import RocketRegressor
 
         return RocketRegressor(
+            random_state=resample_id,
+            n_jobs=n_jobs,
+        )
+    
+    elif name == "minirocket" or name == "minirocketregressor":
+        from sktime.regression.kernel_based import RocketRegressor
+        return RocketRegressor(
+            rocket_transform="minirocket",
+            random_state=resample_id,
+            n_jobs=n_jobs,
+        )
+
+    elif name == "multirocket" or name == "multirocketregressor":
+        from sktime.regression.kernel_based import RocketRegressor
+
+        return RocketRegressor(
+            rocket_transform="multirocket",
             random_state=resample_id,
             n_jobs=n_jobs,
         )

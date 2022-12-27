@@ -377,10 +377,9 @@ def run_experiment(args, overwrite=False):
             )
     # local run (no args)
     else:
-        print(" Local Run of TimeSeriesForestRegressor")
         data_dir = "../../../../ajb/Data/"
         results_dir = "../"
-        regressor_name = "5nn-ed"
+        regressor_name = "multirocket"
         dataset = "Covid3Month"
         resample = 0
         train_fold = False
