@@ -20,7 +20,7 @@ import torch
 
 from tsml_eval.experiments import load_and_run_classification_experiment
 from tsml_eval.experiments.set_classifier import set_classifier
-from tsml_eval.utils.experiments import results_present
+from tsml_eval.utils.experiments import _results_present
 
 
 def run_experiment(args, overwrite=False):
@@ -55,7 +55,7 @@ def run_experiment(args, overwrite=False):
 
         # this is also checked in load_and_run, but doing a quick check here so can
         # print a message and make sure data is not loaded
-        if not overwrite and results_present(
+        if not overwrite and _results_present(
             results_dir, classifier, dataset, resample
         ):
             print("Ignoring, results already present")

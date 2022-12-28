@@ -13,7 +13,7 @@ import numba
 import torch
 from sktime.benchmarking.experiments import load_and_run_clustering_experiment
 
-from tsml_eval.experiments.classification_experiments import results_present
+from tsml_eval.experiments.classification_experiments import _results_present
 from tsml_eval.experiments.set_clusterer import set_clusterer
 
 
@@ -33,7 +33,9 @@ def run_experiment(args, overwrite=False):
 
         # this is also checked in load_and_run, but doing a quick check here so can
         # print a message and make sure data is not loaded
-        if not overwrite and results_present(results_dir, clusterer, dataset, resample):
+        if not overwrite and _results_present(
+            results_dir, clusterer, dataset, resample
+        ):
             print("Ignoring, results already present")
         else:
             load_and_run_clustering_experiment(

@@ -24,7 +24,7 @@ from sktime.clustering.k_means import TimeSeriesKMeans
 from sktime.clustering.k_medoids import TimeSeriesKMedoids
 from sktime.datasets import load_from_tsfile as load_ts
 
-from tsml_eval.utils.experiments import results_present_full_path
+from tsml_eval.utils.experiments import _results_present_full_path
 
 
 def config_clusterer(clusterer: str, **kwargs):
@@ -124,7 +124,7 @@ if __name__ == "__main__":
         results_dir = results_dir + "tune_w/"
 
     results_dir = results_dir + "/" + clusterer + "/" + distance + "/"
-    if results_present_full_path(results_dir, dataset, resample):
+    if _results_present_full_path(results_dir, dataset, resample):
         print("Ignoring, results already present")
     print(
         f" Running {dataset} resample {resample} normalised = {normalise} "

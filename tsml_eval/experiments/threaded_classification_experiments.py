@@ -13,7 +13,7 @@ import sys
 from set_classifier import set_classifier
 from sktime.benchmarking.experiments import load_and_run_classification_experiment
 
-from tsml_eval.utils.experiments import results_present
+from tsml_eval.utils.experiments import _results_present
 
 
 def run_experiment(args):
@@ -48,7 +48,7 @@ def run_experiment(args):
 
         # this is also checked in load_and_run, but doing a quick check here so can
         # print a message and make sure data is not loaded
-        if results_present(results_dir, classifier, dataset, resample):
+        if _results_present(results_dir, classifier, dataset, resample):
             print("Ignoring, results already present")
         else:
             load_and_run_classification_experiment(

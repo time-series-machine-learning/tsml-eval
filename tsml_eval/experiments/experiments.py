@@ -18,10 +18,15 @@ from sklearn import preprocessing
 from sklearn.metrics import accuracy_score, mean_squared_error
 from sklearn.model_selection import cross_val_predict
 from sktime.datasets import load_from_tsfile_to_dataframe as load_ts
-from sktime.datasets import write_results_to_uea_format
-from sktime.utils.sampling import stratified_resample
 
-from tsml_eval.utils.experiments import resample
+from tsml_eval.evaluation.metrics import clustering_accuracy
+from tsml_eval.utils.experiments import (
+    resample_data,
+    stratified_resample_data,
+    write_classification_results,
+    write_clustering_results,
+    write_regression_results,
+)
 
 
 def run_classification_experiment(
@@ -119,14 +124,14 @@ def run_classification_experiment(
             # 9. build plus estimate time (all not relevant to test files)
         )
 
-        write_results_to_uea_format(
+        write_classification_results(
             first_line_comment=first_comment,
             second_line=second,
             third_line=third,
             timing_type="MILLISECONDS",
             output_path=results_path,
             estimator_name=classifier_name,
-            resample_seed=resample_id,
+            resample_id=resample_id,
             y_pred=test_preds,
             predicted_probs=test_probs,
             dataset_name=dataset_name,
@@ -163,14 +168,14 @@ def run_classification_experiment(
             f"{fit_time + train_time}"  # 8. build plus estimate time
         )
 
-        write_results_to_uea_format(
+        write_classification_results(
             first_line_comment=first_comment,
             second_line=second,
             third_line=third,
             timing_type="MILLISECONDS",
             output_path=results_path,
             estimator_name=classifier_name,
-            resample_seed=resample_id,
+            resample_id=resample_id,
             y_pred=train_preds,
             predicted_probs=train_probs,
             dataset_name=dataset_name,
@@ -243,13 +248,13 @@ def load_and_run_classification_experiment(
         warnings.warn("All files exist and not overwriting, skipping.")
         return
 
-    X_train, y_train, X_test, y_test, resample_data = _load_data(
+    X_train, y_train, X_test, y_test, resample = _load_data(
         problem_path, dataset, resample_id, predefined_resample
     )
 
-    if resample_data:
-        X_train, y_train, X_test, y_test = stratified_resample(
-            X_train, y_train, X_test, y_test, resample_id
+    if resample:
+        X_train, y_train, X_test, y_test = stratified_resample_data(
+            X_train, y_train, X_test, y_test, random_state=resample_id
         )
 
     run_classification_experiment(
@@ -354,14 +359,14 @@ def run_regression_experiment(
             # 8. build plus estimate time (all not relevant to test files)
         )
 
-        write_results_to_uea_format(
+        write_regression_results(
             first_line_comment=first_comment,
             second_line=second,
             third_line=third,
             timing_type="MILLISECONDS",
             output_path=results_path,
             estimator_name=regressor_name,
-            resample_seed=resample_id,
+            resample_id=resample_id,
             y_pred=test_preds,
             dataset_name=dataset_name,
             y_true=y_test,
@@ -389,14 +394,14 @@ def run_regression_experiment(
             f"{fit_time + train_time}"  # 8. build plus estimate time
         )
 
-        write_results_to_uea_format(
+        write_regression_results(
             first_line_comment=first_comment,
             second_line=second,
             third_line=third,
             timing_type="MILLISECONDS",
             output_path=results_path,
             estimator_name=regressor_name,
-            resample_seed=resample_id,
+            resample_id=resample_id,
             y_pred=train_preds,
             dataset_name=dataset_name,
             y_true=y_train,
@@ -468,13 +473,13 @@ def load_and_run_regression_experiment(
         warnings.warn("All files exist and not overwriting, skipping.")
         return
 
-    X_train, y_train, X_test, y_test, resample_data = _load_data(
+    X_train, y_train, X_test, y_test, resample = _load_data(
         problem_path, dataset, resample_id, predefined_resample
     )
 
-    if resample_data:
-        X_train, y_train, X_test, y_test = resample(
-            X_train, y_train, X_test, y_test, resample_id
+    if resample:
+        X_train, y_train, X_test, y_test = resample_data(
+            X_train, y_train, X_test, y_test, random_state=resample_id
         )
 
     # Ensure labels are floats
@@ -580,8 +585,9 @@ def run_clustering_experiment(
         train_time = int(round(time.time() * 1000)) - start
 
         train_preds = clusterer.classes_[np.argmax(train_probs, axis=1)]
+        train_acc = clustering_accuracy(y_train, train_preds)
         third = (
-            f"0,"  # 1. clustering accuracy       todo
+            f"{train_acc},"  # 1. clustering accuracy
             f"{fit_time},"  # 2. fit time
             f"{train_time},"  # 3. predict time
             "-1,-1,"  # 4. benchmark time, 5. memory usage
@@ -589,14 +595,14 @@ def run_clustering_experiment(
             f"{len(train_probs[0])}"  # 7. number of clusters
         )
 
-        write_results_to_uea_format(
+        write_clustering_results(
             first_line_comment=first_comment,
             second_line=second,
             third_line=third,
             timing_type="MILLISECONDS",
             output_path=results_path,
             estimator_name=clusterer_name,
-            resample_seed=resample_id,
+            resample_id=resample_id,
             y_pred=train_preds,
             predicted_probs=train_probs,
             dataset_name=dataset_name,
@@ -614,8 +620,9 @@ def run_clustering_experiment(
         test_time = int(round(time.time() * 1000)) - start
 
         test_preds = clusterer.classes_[np.argmax(test_probs, axis=1)]
+        test_acc = clustering_accuracy(y_train, test_preds)
         third = (
-            f"0,"  # 1. clustering accuracy       todo
+            f"{test_acc},"  # 1. clustering accuracy
             f"{fit_time},"  # 2. fit time
             f"{test_time},"  # 3. predict time
             "-1,-1,"  # 4. benchmark time, 5. memory usage
@@ -623,14 +630,14 @@ def run_clustering_experiment(
             f"{len(test_probs[0])}"  # 7. number of clusters
         )
 
-        write_results_to_uea_format(
+        write_clustering_results(
             first_line_comment=first_comment,
             second_line=second,
             third_line=third,
             timing_type="MILLISECONDS",
             output_path=results_path,
             estimator_name=clusterer_name,
-            resample_seed=resample_id,
+            resample_id=resample_id,
             y_pred=test_preds,
             predicted_probs=test_probs,
             dataset_name=dataset_name,
@@ -701,13 +708,13 @@ def load_and_run_clustering_experiment(
         warnings.warn("All files exist and not overwriting, skipping.")
         return
 
-    X_train, y_train, X_test, y_test, resample_data = _load_data(
+    X_train, y_train, X_test, y_test, resample = _load_data(
         problem_path, dataset, resample_id, predefined_resample
     )
 
-    if resample_data:
-        X_train, y_train, X_test, y_test = stratified_resample(
-            X_train, y_train, X_test, y_test, resample_id
+    if resample:
+        X_train, y_train, X_test, y_test = stratified_resample_data(
+            X_train, y_train, X_test, y_test, random_state=resample_id
         )
 
     run_clustering_experiment(
