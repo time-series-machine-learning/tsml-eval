@@ -11,7 +11,7 @@ max_folds=30
 start_fold=1
 
 # To avoid dumping 1000s of jobs in the queue we have a higher level queue
-max_num_submitted=100
+max_num_submitted=600
 
 # Queue options are https://my.uea.ac.uk/divisions/it-and-computing-services/service-catalogue/research-it-services/hpc/ada-cluster/using-ada
 queue="compute-64-512"
@@ -31,6 +31,9 @@ max_time="168:00:00"
 start_point=1
 
 # Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
+# Input args: ${data_dir} ${results_dir} ${clusterer} ${dataset}
+# \$SLURM_ARRAY_TASK_ID ${distance_function} ${train_fold} ${averaging} ${normalise}"
+
 data_dir="/gpfs/home/ajb/Data/"
 datasets="/gpfs/home/ajb/DataSetLists/TSC_112_2019.txt"
 
@@ -42,7 +45,7 @@ results_dir=$local_path"ClusteringResults/sktime/"
 out_dir=$local_path"ClusteringResults/output/"
 
 # The python script we are running
-script_file_path=$local_path"Code/tsml-estimator-evaluation/tsml_eval/experiments/distance_clustering_experiments.py"
+script_file_path=$local_path"Code/tsml-eval/tsml_eval/experiments/distance_clustering_experiments.py"
 
 # Environment name, change accordingly, for set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
 # Separate environments for GPU (default python/anaconda/2020.11/3.8) and CPU (default python/anaconda/2019.10/3.7) are recommended
@@ -51,12 +54,12 @@ env_name="eval"
 generate_train_files="false"
 clusterer="kmeans"
 averaging="mean"
-normalise=""
-
+normalise="true"
+tune="false"
 count=0
 # dtw ddtw erp edr wdtw lcss twe msm dwdtw euclidean
 while read dataset; do
-for distance in euclidean
+for distance in euclidean dtw lcss msm ddtw erp edr twe wdtw wddtw
 do
 
 # Dont change anything after here for regular runs
@@ -111,15 +114,17 @@ echo "#!/bin/bash
 module add python/anaconda/2019.10/3.7
 source activate $env_name
 
-python -u ${script_file_path} ${data_dir} ${results_dir} ${distance} ${dataset} \$SLURM_ARRAY_TASK_ID ${generate_train_files} ${clusterer} ${averaging}"  > generatedFile.sub
+python -u ${script_file_path} ${data_dir} ${results_dir} ${clusterer}  ${dataset} \$SLURM_ARRAY_TASK_ID ${distance} ${generate_train_files} ${averaging} ${normalise} ${tune}"  > generatedFile.sub
 #                         data_dir = sys.argv[1]
 #                         results_dir = sys.argv[2]
-#                         distance = sys.argv[3]
+#                         clusterer = sys.argv[3]
 #                         dataset = sys.argv[4]
 #                         resample = int(sys.argv[5]) - 1
-#                         generate_train_files = sys.argv[6]
-#                         clusterer = sys.argv[7]
+#                         distance = sys.argv[6]
+#                         generate_train_files = sys.argv[7]
 #                         averaging = sys.argv[8]
+#                         normalise = sys.argv[9]
+#                         tune = sys.argv[10]
 
 echo ${count} ${clusterer}/${dataset}
 

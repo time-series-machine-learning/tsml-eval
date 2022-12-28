@@ -7,12 +7,12 @@ from sklearn.pipeline import make_pipeline
 
 
 def set_regressor(regressor, resample_id=None, train_file=False, n_jobs=1):
-    """Construct a regressor, possibly seeded for reproducability.
+    """Construct a regressor, possibly seeded for reproducibility.
 
     Basic way of creating the regressor to build using the default settings. This
     set up is to help with batch jobs for multiple problems to facilitate easy
-    reproducibility for use with load_and_run_classification_experiment. You can pass a
-    classifier object instead to run_classification_experiment.
+    reproducibility for use with load_and_run_regression_experiment. You can pass a
+    regression object instead to run_regression_experiment.
     TODO: add threads, contract and checkpoint options
 
     Parameters
@@ -20,7 +20,7 @@ def set_regressor(regressor, resample_id=None, train_file=False, n_jobs=1):
     regressor : str
         String indicating which Regressor you want.
     resample_id : int or None, default=None
-        Classifier random seed.
+        Regressor random seed.
     train_file : bool, default=False
         Whether a train file is being produced.
     n_jobs: for threading
@@ -141,10 +141,55 @@ def set_regressor(regressor, resample_id=None, train_file=False, n_jobs=1):
         return RotationForest(
             random_state=resample_id, save_transformed_data=train_file, n_jobs=n_jobs
         )
-    elif name == "ridgecv":
+
+    elif name == "lr" or name == "linearregression":
+        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+        from sklearn.linear_model import LinearRegression
+
+        model_params = {"fit_intercept": True,
+                        "n_jobs": n_jobs}
+
+        return SklearnBaseRegressor(LinearRegression(**model_params))
+    
+    elif name == "ridgecv" or name == "ridge":
+        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
         from sklearn.linear_model import RidgeCV
 
-        return RidgeCV()
+        model_params = {"fit_intercept": True,
+                        "alphas": np.logspace(-3, 3, 10)}
+
+        return SklearnBaseRegressor(RidgeCV(**model_params))
+
+    elif name == "svr" or name == "supportvectorregressor":
+        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+        from sklearn.svm import SVR
+        from sklearn.model_selection import GridSearchCV
+
+        model_params = {"kernel": 'rbf',
+                        "C": 1}
+
+        return SklearnBaseRegressor(SVR(**model_params))
+    
+    elif name == "rf" or name == "randomforest":
+        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+        from sklearn.ensemble import RandomForestRegressor
+
+        model_params = {"n_estimators": 100,
+                        "n_jobs": n_jobs,
+                        "random_state": resample_id}
+
+        return SklearnBaseRegressor(RandomForestRegressor(**model_params))
+        
+    elif name == "xgb" or name == "xgboost":
+        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+        from xgboost import XGBRegressor # pip install xgboost
+
+        model_params = {"n_estimators": 100,
+                        "n_jobs": n_jobs,
+                        "learning_rate": 0.1,
+                        "random_state": resample_id}
+
+        return SklearnBaseRegressor(XGBRegressor(**model_params))
 
     else:
         raise ValueError(f" Regressor {name} is not avaiable")

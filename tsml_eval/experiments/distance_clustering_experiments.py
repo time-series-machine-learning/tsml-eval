@@ -27,7 +27,7 @@ from sktime.clustering.k_means import TimeSeriesKMeans
 from sktime.clustering.k_medoids import TimeSeriesKMedoids
 from sktime.datasets import load_from_tsfile as load_ts
 
-from tsml_eval.experiments.classification_experiments import results_present
+from tsml_eval.utils.experiments import results_present_full_path
 
 
 def config_clusterer(clusterer: str, **kwargs):
@@ -43,7 +43,7 @@ def tune_window(metric: str, train_X, n_clusters):
     """Tune window."""
     best_w = 0
     best_score = 0
-    for w in np.arange(0, 1, 0.1):
+    for w in np.arange(0, 1, 0.05):
         cls = TimeSeriesKMeans(
             metric=metric, distance_params={"window": w}, n_clusters=n_clusters
         )
@@ -85,86 +85,73 @@ if __name__ == "__main__":
 
     clusterer = "kmeans"
     chris_config = True  # This is so chris doesn't have to change config each time
-    tune = False
+    tune_w = False
     normalise = True
     if sys.argv.__len__() > 1:  # cluster run, this is fragile, requires all args atm
         data_dir = sys.argv[1]
         results_dir = sys.argv[2]
-        distance = sys.argv[3]
+        clusterer = sys.argv[3]
         dataset = sys.argv[4]
         # ADA starts indexing its jobs at 1, so we need to subtract 1
-        resample = int(args[5]) - 1
-        clusterer = sys.argv[6]
-        if len(args) > 7:
-            train_fold = args[7].lower() == "true"
+        resample = int(sys.argv[5]) - 1
+        distance = sys.argv[6]
+        if len(sys.argv) > 7:
+            train_fold = sys.argv[7].lower() == "true"
         else:
             train_fold = False
-        if len(args) > 8:
-            averaging = args[8]
+        if len(sys.argv) > 8:
+            averaging = sys.argv[8]
         else:
             averaging = "mean"
-        if len(args) > 9:
-            normalise = args[9].lower() == "true"
-        else:
-            normalise = False
-        if averaging == "dba":
-            results_dir = results_dir + clusterer + "_dba"
-        if results_present(results_dir, clusterer, dataset, resample):
-            print("Ignoring, results already present")
-
-
-    elif chris_config is True:
-        path = "C:/Users/chris/Documents/Masters"
-        data_dir = os.path.abspath(f"{path}/datasets/Multivariate_ts/")
-        results_dir = os.path.abspath(f"{path}/results/")
-        dataset = "Handwriting"
-        resample = 2
-        averaging = "mean"
-        train_fold = True
-        distance = "dtw"
-
+        if len(sys.argv) > 9:
+            normalise = sys.argv[9].lower() == "true"
+        if len(sys.argv) > 10:
+            tune_w = sys.argv[10].lower() == "true"
     else:  # Local run
         print(" Local Run")
         dataset = "Chinatown"
-        data_dir = f"c:/temp/"
-        results_dir = "./temp"
+        data_dir = f"c:/Data/"
+        results_dir = "c:/temp/"
         resample = 0
-        averaging = "dba"
+        averaging = "mean"
         train_fold = True
         distance = "dtw"
+        normalise = True
+        tune_w = False
 
-    if isinstance(dataset, str):
-        train_X, train_Y = load_ts(
-            f"{data_dir}/{dataset}/{dataset}_TRAIN.ts", return_data_type="numpy2d"
-        )
-        test_X, test_Y = load_ts(
-            f"{data_dir}/{dataset}/{dataset}_TEST.ts", return_data_type="numpy2d"
-        )
-    else:
-        train_X, train_Y = dataset("train", return_X_y=True)
-        test_X, test_Y = dataset("test", return_X_y=True)
-    #    train_X = np.concatenate((train_X, test_X), axis=0)
-    #    train_Y = np.concatenate((train_Y, test_Y), axis=0)
-    #    _recreate_results(train_X, train_Y)
-    #    import sys
-
-    from sklearn.preprocessing import StandardScaler
     if normalise:
+        results_dir = results_dir + "normalised/"
+    else:
+        results_dir = results_dir + "raw/"
+    if tune_w:
+        results_dir = results_dir + "tune_w/"
+
+    results_dir = results_dir + "/" + clusterer + "/" + averaging + "/"
+    if results_present_full_path(results_dir, dataset, resample):
+        print("Ignoring, results already present")
+    print(f" Running {dataset} resample {resample} normalised = {normalise} "
+          f"clustering ={clusterer} distance = {distance} averaging = {averaging}")
+    train_X, train_Y = load_ts(
+        f"{data_dir}/{dataset}/{dataset}_TRAIN.ts", return_data_type="numpy2d"
+    )
+    test_X, test_Y = load_ts(
+        f"{data_dir}/{dataset}/{dataset}_TEST.ts", return_data_type="numpy2d"
+    )
+    if normalise:
+        from sklearn.preprocessing import StandardScaler
+
         s = StandardScaler()
         train_X = s.fit_transform(train_X.T)
         train_X = train_X.T
         test_X = s.fit_transform(test_X.T)
         test_X = test_X.T
     w = 1.0
-    if tune:
+    if tune_w:
         w = tune_window(distance, train_X, len(set(train_Y)))
-        name = clusterer + "-" + distance + "-tuned"
     else:
-        name = clusterer + "-" + distance
-    w = 1.0
-    if (distance == "wdtw" or distance == "dwdtw" or distance == "dtw" or distance ==
-    "wdtw"):
-        w = 0.2
+        if (
+            distance == "wdtw" or distance == "dwdtw" or distance == "dtw" or distance == "wdtw"):
+            w = 0.2
     parameters = {
         "window": w,
         "epsilon": 0.05,
@@ -205,7 +192,7 @@ if __name__ == "__main__":
         trainY=train_Y,
         testX=test_X,
         testY=test_Y,
-        cls_name=name,
+        cls_name=distance,
         dataset_name=dataset,
         resample_id=resample,
         overwrite=False,
