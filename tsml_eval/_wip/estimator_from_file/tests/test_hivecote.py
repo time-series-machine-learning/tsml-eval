@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""TODO"""
+"""Tests for building HIVE-COTE from file."""
 
-__author__ = ["MatthewMiddlehurst", ""]
+__author__ = ["MatthewMiddlehurst"]
 
 import numpy as np
 from sktime.datasets import load_italy_power_demand
@@ -12,7 +12,7 @@ from tsml_eval._wip.estimator_from_file.hivecote import FromFileHIVECOTE
 
 
 def test_hivecote_from_file():
-    """TODO"""
+    """Test HIVE-COTE from file with ItalyPowerDemand results."""
     train_X, train_y = load_italy_power_demand(split="train")
     test_X, test_y = load_italy_power_demand(split="test")
 
@@ -55,26 +55,26 @@ def test_hivecote_from_file():
     _assert_array_almost_equal(probas[0], np.array([0.0785, 0.9215]), decimal=4)
 
 
-# def test_tuned_hivecote_from_file():
-#     """TODO"""
-#     train_X, train_y = load_italy_power_demand(split="train")
-#     test_X, test_y = load_italy_power_demand(split="test")
-#
-#     file_paths = [
-#         "test_files/Arsenal/",
-#         "test_files/DrCIF/",
-#         "test_files/STC/",
-#         "test_files/TDE/",
-#     ]
-#
-#     hc2 = FromFileHIVECOTE(file_paths=file_paths, tune_alpha=True, random_state=0)
-#     hc2.fit(train_X, train_y)
-#     probas = hc2.predict_proba(test_X)
-#
-#     assert probas.shape == (test_X.shape[0], 2)
-#     _assert_array_almost_equal(probas[0], np.array([0.0785, 0.9215]), decimal=4)
-#
-#
-# def test_hivecote_from_file_check_estimator():
-#     """TODO"""
-#     check_estimator(FromFileHIVECOTE, return_exceptions=False)
+def test_tuned_hivecote_from_file():
+    """Test HIVE-COTE from file tuned alpha with ItalyPowerDemand results."""
+    train_X, train_y = load_italy_power_demand(split="train")
+    test_X, test_y = load_italy_power_demand(split="test")
+
+    file_paths = [
+        "test_files/ItalyPowerDemand/Arsenal/",
+        "test_files/ItalyPowerDemand/DrCIF/",
+        "test_files/ItalyPowerDemand/STC/",
+        "test_files/ItalyPowerDemand/TDE/",
+    ]
+
+    hc2 = FromFileHIVECOTE(file_paths=file_paths, tune_alpha=True, random_state=0)
+    hc2.fit(train_X, train_y)
+    probas = hc2.predict_proba(test_X)
+
+    assert probas.shape == (test_X.shape[0], 2)
+    _assert_array_almost_equal(probas[0], np.array([0.0785, 0.9215]), decimal=4)
+
+
+def test_hivecote_from_file_check_estimator():
+    """Test HIVE-COTE meets the sktime estimator interface."""
+    check_estimator(FromFileHIVECOTE, return_exceptions=True)
