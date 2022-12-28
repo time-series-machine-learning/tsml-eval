@@ -391,15 +391,15 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
 
     # Reading results from file
     elif name == "fromfile":
-        from tsml_estimator_evaluation._wip.estimator_from_file.hivecote import (
+        from tsml_eval._wip.estimator_from_file.hivecote import (
             FromFileHIVECOTE,
         )
 
         file_paths = [
-            "test_files/Arsenal/",
-            "test_files/DrCIF/",
-            "test_files/STC/",
-            "test_files/TDE/",
+            "tsml_eval/_wip.estimator_from_file/tests/test_files/Arsenal/",
+            "tsml_eval/_wip.estimator_from_file/tests/test_files/DrCIF/",
+            "tsml_eval/_wip.estimator_from_file/tests/test_files/STC/",
+            "tsml_eval/_wip.estimator_from_file/tests/test_files/TDE/",
         ]
 
         return FromFileHIVECOTE(file_paths=file_paths, random_state=0)
