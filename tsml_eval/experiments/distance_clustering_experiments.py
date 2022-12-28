@@ -123,7 +123,7 @@ if __name__ == "__main__":
     if tune_w:
         results_dir = results_dir + "tune_w/"
 
-    results_dir = results_dir + "/" + clusterer + "/" + distance + "/"
+    results_dir = results_dir + "/" + clusterer + "/" + averaging + "/"
     if _results_present_full_path(results_dir, dataset, resample):
         print("Ignoring, results already present")
     print(
@@ -195,7 +195,7 @@ if __name__ == "__main__":
         trainY=train_Y,
         testX=test_X,
         testY=test_Y,
-        cls_name=averaging,
+        cls_name=distance,
         dataset_name=dataset,
         resample_id=resample,
         overwrite=False,
