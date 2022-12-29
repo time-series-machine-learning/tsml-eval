@@ -43,7 +43,7 @@ def tune_window(metric: str, train_X, n_clusters):
     """Tune window."""
     best_w = 0
     best_score = 0
-    for w in np.arange(0, 1, 0.05):
+    for w in np.arange(0, 1, 0.01):
         cls = TimeSeriesKMeans(
             metric=metric, distance_params={"window": w}, n_clusters=n_clusters
         )
@@ -124,7 +124,7 @@ if __name__ == "__main__":
     else:
         results_dir = results_dir + "raw/"
     if tune_w:
-        results_dir = results_dir + "tune_w/"
+        results_dir = results_dir + "tune_w100/"
 
     results_dir = results_dir + "/" + clusterer + "/" + averaging + "/"
     if results_present_full_path(results_dir, dataset, resample):
