@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 __author__ = ["James-Large", "TonyBagnall"]
-__all__ = ["InceptionTimeClassifier"]
+__all__ = ["IndividualInceptionTimeClassifier"]
 
 from sklearn.utils import check_random_state
 
+from sktime.classification.base import BaseClassifier
 from sktime.classification.deep_learning.base import BaseDeepClassifier
 from tsml_eval.sktime_estimators.networks.inception_time import InceptionTimeNetwork
 from sktime.utils.validation._dependencies import _check_dl_dependencies
@@ -13,8 +14,65 @@ import tensorflow as tf
 from tensorflow import keras
 
 
-class InceptionTimeClassifier(BaseDeepClassifier, InceptionTimeNetwork):
-    """InceptionTime
+class InceptionTimeClassifier(BaseClassifier):
+    """Ensemble InceptionTime classifier. """
+    _tags = {"capability:multivariate": True}
+
+    def __init__(
+        self,
+        n_classifiers=5,
+        nb_filters=32,
+        use_residual=True,
+        use_bottleneck=True,
+        bottleneck_size=32,
+        depth=6,
+        kernel_size=41 - 1,
+        batch_size=64,
+        nb_epochs=1500,
+        callbacks=None,
+        random_state=0,
+        verbose=False,
+    ):
+        super(InceptionTimeClassifier, self).__init__()
+        self.n_classifiers = n_classifiers
+        self.nb_filters = nb_filters
+        self.use_residual = use_residual
+        self.use_bottleneck = use_bottleneck
+        self.bottleneck_size = bottleneck_size
+        self.depth = depth
+        self.kernel_size = kernel_size
+        self.batch_size = batch_size
+        self.nb_epochs = nb_epochs
+        self.callbacks = callbacks
+        self.random_state = random_state
+        self.verbose = verbose
+        self.classifers_ = []
+        for i in range(0, self.n_classifiers):
+            cls = IndividualInceptionTimeClassifier(nb_filters=nb_filters,
+                                                    use_bottleneck=use_bottleneck,
+                                                    bottleneck_size=bottleneck_size,
+                                                    depth=depth, kernel_size=
+                                                    kernel_size, batch_size=
+                                                    batch_size, nb_epochs=nb_epochs,
+                                                    callbacks=callback, random_state
+                                                    =random_state, verbose=verbose)
+            self.classifers_.append(cls)
+
+    def _fit(self, X, y):
+        for i in range(0, self.n_classifiers):
+            classifiers_[i].fit(X, y)
+        return self
+
+    def _predict(self, X) -> np.ndarray:
+        preds = predict_proba(X)
+
+    def _predict_proba(self, X) -> np.ndarray:
+        for i in range(0, self.n_classifiers):
+            classifiers_[i].predict_proba(X, y)
+
+
+class IndividualInceptionTimeClassifier(BaseDeepClassifier, InceptionTimeNetwork):
+    """Single InceptionTime classifier
 
     Parameters
     ----------
@@ -59,7 +117,7 @@ class InceptionTimeClassifier(BaseDeepClassifier, InceptionTimeNetwork):
         verbose=False,
     ):
         _check_dl_dependencies(severity="error")
-        super(InceptionTimeClassifier, self).__init__()
+        super(IndividualInceptionTimeClassifier, self).__init__()
         # predefined
         self.nb_filters = nb_filters
         self.use_residual = use_residual
@@ -73,7 +131,6 @@ class InceptionTimeClassifier(BaseDeepClassifier, InceptionTimeNetwork):
         self.callbacks = callbacks
         self.random_state = random_state
         self.verbose = verbose
-        self._is_fitted = False
 
     def build_model(self, input_shape, n_classes, **kwargs):
         """

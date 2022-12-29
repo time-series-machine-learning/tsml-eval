@@ -356,9 +356,9 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
     elif name == "inceptiontime" or name == "inceptiontimeclassifier":
         from tsml_eval.sktime_estimators.classification.deep_learning.inception_time \
             import \
-            InceptionTimeClassifier
+            IndividualInceptionTimeClassifier
 
-        return InceptionTimeClassifier(random_state=resample_id)
+        return IndividualInceptionTimeClassifier(random_state=resample_id)
 
     # Other
     elif name == "dummy" or name == "dummyclassifier":
