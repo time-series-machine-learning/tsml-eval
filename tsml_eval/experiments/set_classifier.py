@@ -288,12 +288,11 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
     elif name == "mini-arsenal":
         from sktime.classification.kernel_based import Arsenal
 
-        return Arsenal(
-            random_state=resample_id,
-            save_transformed_data=train_file,
-            rocket_transform="minirocket",
-            n_jobs=n_jobs,
-        )
+        return Arsenal(random_state=resample_id,
+                       save_transformed_data=train_file,
+                       rocket_transform="minirocket",
+                       n_jobs=n_jobs,
+                       )
     elif name == "multi-arsenal":
         from sktime.classification.kernel_based import Arsenal
 
