@@ -103,7 +103,8 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
 
         return ProximityStump(random_state=resample_id)
     elif name == "dtw" or name == "1nn-dtw" or name == "kneighborstimeseriesclassifier":
-        from sktime.classification.distance_based import KNeighborsTimeSeriesClassifier
+        from tsml_eval.sktime_estimators.classification.distance_based import \
+            KNeighborsTimeSeriesClassifier
 
         return KNeighborsTimeSeriesClassifier()
     elif name == "ed" or name == "1nn-euclidean" or name == "1nn-ed":
@@ -318,7 +319,7 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
     elif name == "stc" or name == "shapelettransformclassifier":
         from sktime.classification.shapelet_based import ShapeletTransformClassifier
 
-        return ShapeletTransformClassifier(
+        return ShapeletTransformClssifier(
             random_state=resample_id,
             save_transformed_data=train_file,
         )

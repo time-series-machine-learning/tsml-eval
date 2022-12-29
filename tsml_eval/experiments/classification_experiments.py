@@ -75,14 +75,14 @@ def run_experiment(args, overwrite=False):
                 overwrite=overwrite,
             )
     else:  # Local run
-        data_dir = "/home/ajb/Data/"
-        results_dir = "/home/ajb/Results Working Area/ReduxBakeoff/sktime/"
-        cls_name = "HC2"
-        n_jobs = 92
+        data_dir = "C:/Data/"
+        results_dir = "C:/Temp/"
+        cls_name = "1nn-dtw"
+        n_jobs = 1
         contract_mins = 0
         # HC2 Missing multivariate: EmoPain, FaceDetection, InsectWingbeatEq,
         # PhonemeSpectra, PenDigits, Tiselac
-        dataset = "EMOPain"
+        dataset = "Chinatown"
         print(f" Local Run of {cls_name} on dataset {dataset} with threading jobs "
               f"={n_jobs} and "
               f"contract time ={contract_mins}")
