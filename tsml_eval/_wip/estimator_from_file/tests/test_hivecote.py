@@ -71,8 +71,8 @@ def test_tuned_hivecote_from_file():
     hc2.fit(X_train, y_train)
     probas = hc2.predict_proba(X_test)
 
-    assert probas.shape == (X_test.shape[0], 2)
-    _assert_array_almost_equal(probas[0], np.array([0.0785, 0.9215]), decimal=4)
+    assert probas.shape == (X_test.shape[0], 3)
+    _assert_array_almost_equal(probas[0], np.array([0.6092, 0.2308, 0.16]), decimal=4)
 
 
 def test_hivecote_from_file_check_estimator():

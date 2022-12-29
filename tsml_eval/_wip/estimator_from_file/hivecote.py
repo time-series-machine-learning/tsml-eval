@@ -204,6 +204,9 @@ class FromFileHIVECOTE(BaseClassifier):
 
         best_alpha = alpha_values[avg_alpha_acc.argmax()]
 
+        print(avg_alpha_acc)
+        print(best_alpha)
+
         return best_alpha
 
     def _predict(self, X):
@@ -240,7 +243,7 @@ class FromFileHIVECOTE(BaseClassifier):
         #   load test file at path (testResample.csv if random_state is None,
         #   testResample0.csv otherwise)
         file_name = "testResample.csv"
-        if self.random_state is None:
+        if self.random_state is not None:
             file_name = "testResample" + str(self.random_state) + ".csv"
 
         dists = np.zeros((n_instances, self.n_classes_))
