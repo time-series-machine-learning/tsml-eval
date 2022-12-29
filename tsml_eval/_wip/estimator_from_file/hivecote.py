@@ -10,8 +10,9 @@ __author__ = ["MatthewMiddlehurst", "ander-hg"]
 __all__ = ["FromFileHIVECOTE"]
 
 import numpy as np
+from sklearn import preprocessing
 from sklearn.metrics import accuracy_score
-from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedKFold
 from sklearn.utils import check_random_state
 from sktime.classification import BaseClassifier
 
@@ -61,6 +62,7 @@ class FromFileHIVECOTE(BaseClassifier):
         self.tune_alpha = tune_alpha
         self.random_state = random_state
 
+        self._alpha = alpha
         self._weights = []
 
         super(FromFileHIVECOTE, self).__init__()
@@ -84,13 +86,15 @@ class FromFileHIVECOTE(BaseClassifier):
         -----
         Updates the attribute _weights with the loaded from file accuracies to the power of alfa.
         """
-
+        n_instances, _, _ = X.shape
         self._weights = []
 
-        #   load train file at path (trainResample.csv if random_state is None, trainResample0.csv otherwise)
-        file_name = "trainResample.csv"
-        if self.random_state != None:
-            file_name = "trainResample" + str(self.random_state) + ".csv"
+        # load train file at path (trainResample.csv if random_state is None,
+        # trainResample{self.random_state}.csv otherwise)
+        if self.random_state is not None:
+            file_name = f"trainResample{self.random_state}.csv"
+        else:
+            file_name = "trainResample.csv"
 
         acc_list = []
         all_lines = []
@@ -99,19 +103,19 @@ class FromFileHIVECOTE(BaseClassifier):
             lines = f.readlines()
             line2 = lines[2].split(",")
 
-            #   verify file matches data, i.e. n_instances and n_classes
-            if len(lines) - 3 != len(X):  # verify n_instances
+            # verify file matches data
+            if len(lines) - 3 != n_instances:  # verify n_instances
                 print(
                     "ERROR n_instances does not match in: ",
                     path + file_name,
                     len(lines) - 3,
-                    len(X),
+                    n_instances,
                 )
             if len(np.unique(y)) != int(line2[5]):  # verify n_classes
                 print(
                     "ERROR n_classes does not match in: ",
                     path + file_name,
-                    len(np.unique(y)),
+                    self.n_classes_,
                     line2[5],
                 )
 
@@ -120,13 +124,13 @@ class FromFileHIVECOTE(BaseClassifier):
                 all_lines.append(lines)
 
         if self.tune_alpha:
-            self.alpha = self._tune_alpha(all_lines)
+            self._alpha = self._tune_alpha(all_lines, y)
 
-        #   add a weight to the weight list based on the files accuracy
+        # add a weight to the weight list based on the files accuracy
         for acc in acc_list:
-            self._weights.append(acc**self.alpha)
+            self._weights.append(acc**self._alpha)
 
-    def _tune_alpha(self, all_files_lines):
+    def _tune_alpha(self, all_files_lines, y):
         """Finds the best alpha value if self.tune_alpha == True.
 
         Parameters
@@ -143,55 +147,62 @@ class FromFileHIVECOTE(BaseClassifier):
         -----
         Estimates through cross validation the best alpha of a range of values.
         """
-        n_splits = 10  # number of splits of the cv
-        n_samples = len(all_files_lines[0]) - 3
+        n_instances = len(y)
         n_files = len(all_files_lines)
-        x_probas = np.zeros((n_samples, n_files, self.n_classes_))
-        y_probas = np.zeros(n_samples, dtype=int)
+
+        n_splits = 10
+        _, counts = np.unique(y, return_counts=True)
+        min_class = np.min(counts)
+        if min_class < n_splits:
+            n_splits = min_class
+
+        X_probas = np.zeros((n_instances, n_files, self.n_classes_))
+
+        le = preprocessing.LabelEncoder()
+        y = le.fit_transform(y)
+
         for i, lines in enumerate(all_files_lines):
-            for j in range(n_samples):
+            for j in range(n_instances):
                 line = lines[j + 3].split(",")
-                x_probas[j][i] = [float(k) for k in (line[3:])]
-                y_probas[j] = int(
-                    line[0]
-                )  # its getting y multiple times, not efficient
+                X_probas[j][i] = [float(k) for k in (line[3:])]
+                assert float(line[0]) == y[j]
 
         alpha_values = range(1, 10)  # tested alpha values
-        avg_acc_alpha = np.zeros(len(alpha_values))  # performance of each alpha value
+        avg_alpha_acc = np.zeros(len(alpha_values))  # performance of each alpha value
         for i, alpha in enumerate(alpha_values):
-            kf = KFold(n_splits=n_splits)
-            test_acc = np.zeros(n_splits)
-            for j, (train_index, test_index) in enumerate(kf.split(x_probas)):
-                print(f"Fold {j}:")
-                print(f"  Train: index={train_index}")
-                print(f"  Test:  index={test_index}")
-                x_test_set = x_probas[test_index]
-                y_test_set = y_probas[test_index]
+            kf = StratifiedKFold(
+                n_splits=n_splits,
+                shuffle=True,
+                random_state=np.random.randint(0, np.iinfo(np.int32).max)
+                if self.random_state is None
+                else self.random_state,
+            )
+            preds = np.zeros(n_instances)
+
+            for (train_index, test_index) in kf.split(X_probas, y):
                 weight_list = []
                 for n in range(n_files):
-                    train_preds = np.argmax(x_probas[train_index, n], axis=1)
-                    train_acc = accuracy_score(y_probas[train_index], train_preds)
+                    train_preds = np.argmax(X_probas[train_index, n], axis=1)
+                    train_acc = accuracy_score(y[train_index], train_preds)
                     weight_list.append(train_acc**alpha)
+
                 dists = np.zeros((len(test_index), self.n_classes_))
-                #   apply the weights to the probabilities in the test set
+                # apply the weights to the probabilities in the test set
                 for n in range(n_files):
                     for v in range(len(test_index)):
                         dists[v] = np.add(
                             dists[v],
-                            [float(k) for k in x_probas[test_index[v], n]]
+                            [k for k in X_probas[test_index[v], n]]
                             * (np.ones(self.n_classes_) * weight_list[n]),
                         )
+
                 # Make each instances probability array sum to 1
-                predictions = dists / dists.sum(axis=1, keepdims=True)
-                test_preds = np.argmax(predictions, axis=1)
-                test_acc[j] = accuracy_score(y_probas[test_index], test_preds)
-            avg_acc_alpha[i] = test_acc.mean()
-        print("AVG_ACC/ALPHA")
-        print(avg_acc_alpha)
-        print(avg_acc_alpha[avg_acc_alpha.argmax()])
-        best_alpha = alpha_values[avg_acc_alpha.argmax()]
-        print(best_alpha)
-        print(np.unique(avg_acc_alpha))
+                dists = dists / dists.sum(axis=1, keepdims=True)
+                preds[test_index] = np.argmax(dists, axis=1)
+
+            avg_alpha_acc[i] = accuracy_score(y, preds)
+
+        best_alpha = alpha_values[avg_alpha_acc.argmax()]
 
         return best_alpha
 
@@ -223,28 +234,29 @@ class FromFileHIVECOTE(BaseClassifier):
         Loads the probabilities from the test files,
         applies the weights and returns the estimated probabilities.
         """
+        n_instances, _, _ = X.shape
 
         # for each file path input:
         #   load test file at path (testResample.csv if random_state is None,
         #   testResample0.csv otherwise)
         file_name = "testResample.csv"
-        if self.random_state != None:
+        if self.random_state is None:
             file_name = "testResample" + str(self.random_state) + ".csv"
 
-        dists = np.zeros((X.shape[0], self.n_classes_))
+        dists = np.zeros((n_instances, self.n_classes_))
 
         for i, path in enumerate(self.file_paths):
             f = open(path + file_name, "r")
             lines = f.readlines()
             line2 = lines[2].split(",")
 
-            #   verify file matches data, i.e. n_instances and n_classes
-            if len(lines) - 3 != len(X):  # verify n_instances
+            # verify file matches data
+            if len(lines) - 3 != n_instances:  # verify n_instances
                 print(
                     "ERROR n_instances does not match in: ",
                     path + file_name,
                     len(lines) - 3,
-                    len(X),
+                    n_instances,
                 )
             if self.n_classes_ != int(line2[5]):  # verify n_classes
                 print(
@@ -255,7 +267,7 @@ class FromFileHIVECOTE(BaseClassifier):
                 )
 
             #   apply this files weights to the probabilities in the test file
-            for j in range(X.shape[0]):
+            for j in range(n_instances):
                 dists[j] = np.add(
                     dists[j],
                     [float(k) for k in (lines[j + 3].split(",")[3:])]
@@ -287,4 +299,8 @@ class FromFileHIVECOTE(BaseClassifier):
             `MyClass(**params)` or `MyClass(**params[i])` creates a valid test instance.
             `create_test_instance` uses the first (or only) dictionary in `params`.
         """
-        return {"file_paths": "test"}
+        file_paths = [
+            "test_files/Test/Test1/",
+            "test_files/Test/Test2/",
+        ]
+        return {"file_paths": file_paths, "random_state": 0}
