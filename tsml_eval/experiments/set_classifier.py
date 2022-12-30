@@ -11,7 +11,6 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
     set up is to help with batch jobs for multiple problems to facilitate easy
     reproducibility for use with load_and_run_classification_experiment. You can pass a
     classifier object instead to run_classification_experiment.
-    TODO: add checkpoint option
 
     Parameters
     ----------
@@ -103,8 +102,9 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
 
         return ProximityStump(random_state=resample_id)
     elif name == "dtw" or name == "1nn-dtw" or name == "kneighborstimeseriesclassifier":
-        from tsml_eval.sktime_estimators.classification.distance_based import \
-            KNeighborsTimeSeriesClassifier
+        from tsml_eval.sktime_estimators.classification.distance_based import (
+            KNeighborsTimeSeriesClassifier,
+        )
 
         return KNeighborsTimeSeriesClassifier()
     elif name == "ed" or name == "1nn-euclidean" or name == "1nn-ed":
@@ -203,6 +203,7 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
         return HIVECOTEV1(random_state=resample_id)
     elif name == "hc2" or name == "hivecotev2":
         from sktime.classification.hybrid import HIVECOTEV2
+
         return HIVECOTEV2(random_state=resample_id, n_jobs=n_jobs)
     # Interval based
     elif name == "rise-500":
@@ -251,6 +252,7 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
         return SupervisedTimeSeriesForest(random_state=resample_id, n_jobs=n_jobs)
     elif name == "drcif-500":
         from sktime.classification.interval_based import DrCIF
+
         return DrCIF(
             random_state=resample_id,
             n_estimators=500,
@@ -271,28 +273,32 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
     elif name == "mini-rocket":
         from sktime.classification.kernel_based import RocketClassifier
 
-        return RocketClassifier(random_state=resample_id,
-                                rocket_transform="minirocket", n_jobs=n_jobs)
+        return RocketClassifier(
+            random_state=resample_id, rocket_transform="minirocket", n_jobs=n_jobs
+        )
     elif name == "multi-rocket":
         from sktime.classification.kernel_based import RocketClassifier
 
         return RocketClassifier(
-            random_state=resample_id, rocket_transform="multirocket", n_jobs=n_jobs,
-
+            random_state=resample_id,
+            rocket_transform="multirocket",
+            n_jobs=n_jobs,
         )
     elif name == "arsenal":
         from sktime.classification.kernel_based import Arsenal
 
-        return Arsenal(random_state=resample_id, save_transformed_data=train_file,
-                       n_jobs=n_jobs)
+        return Arsenal(
+            random_state=resample_id, save_transformed_data=train_file, n_jobs=n_jobs
+        )
     elif name == "mini-arsenal":
         from sktime.classification.kernel_based import Arsenal
 
-        return Arsenal(random_state=resample_id,
-                       save_transformed_data=train_file,
-                       rocket_transform="minirocket",
-                       n_jobs=n_jobs,
-                       )
+        return Arsenal(
+            random_state=resample_id,
+            save_transformed_data=train_file,
+            rocket_transform="minirocket",
+            n_jobs=n_jobs,
+        )
     elif name == "multi-arsenal":
         from sktime.classification.kernel_based import Arsenal
 
@@ -318,7 +324,7 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
     elif name == "stc" or name == "shapelettransformclassifier":
         from sktime.classification.shapelet_based import ShapeletTransformClassifier
 
-        return ShapeletTransformClssifier(
+        return ShapeletTransformClassifier(
             random_state=resample_id,
             save_transformed_data=train_file,
         )
