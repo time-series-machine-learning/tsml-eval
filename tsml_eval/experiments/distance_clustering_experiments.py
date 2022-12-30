@@ -46,13 +46,16 @@ def tune_window(metric: str, train_X, n_clusters):
         )
         cls.fit(train_X)
         preds = cls.predict(train_X)
-        print(" Preds type = ", type(preds))
-        score = davies_bouldin_score(train_X, preds)
-        print(score)
+        clusters = len(np.unique(preds))
+        if clusters <= 1:
+            score = 0
+        else:
+            score = davies_bouldin_score(train_X, preds)
+        print(" Number of clusters = ", clusters, " score  = ", score)  # noqa
         if score > best_score:
             best_score = score
             best_w = w
-    print("best window =", best_w, " with score ", best_score)
+    print("best window =", best_w, " with score ", best_score)  # noqa
     return best_w
 
 
@@ -70,13 +73,11 @@ def _recreate_results(trainX, trainY):
     clst.fit(trainX)
     preds = clst.predict(trainY)
     score = adjusted_rand_score(trainY, preds)
-    print("Score = ", score)
+    print("Score = ", score)  # noqa
 
 
 if __name__ == "__main__":
-    """
-    Example simple usage, with arguments input via script or hard coded for testing.
-    """
+    """Example simple usage, with args input via script or hard coded for testing."""
     numba.set_num_threads(1)
     torch.set_num_threads(1)
 
@@ -105,9 +106,9 @@ if __name__ == "__main__":
         if len(sys.argv) > 10:
             tune_w = sys.argv[10].lower() == "true"
     else:  # Local run
-        print(" Local Run")
+        print(" Local Run")  # noqa
         dataset = "Chinatown"
-        data_dir = f"c:/Data/"
+        data_dir = "c:/Data/"
         results_dir = "c:/temp/"
         resample = 0
         averaging = "mean"
@@ -125,11 +126,12 @@ if __name__ == "__main__":
 
     results_dir = results_dir + "/" + clusterer + "/" + averaging + "/"
     if _results_present_full_path(results_dir, dataset, resample):
-        print("Ignoring, results already present")
-    print(
-        f" Running {dataset} resample {resample} normalised = {normalise} "
-        f"clustering ={clusterer} distance = {distance} averaging = {averaging}"
-    )
+        print("Ignoring, results already present")  # noqa
+    print(  # noqa
+        f" Running {dataset} resample {resample} normalised = {normalise} "  # noqa
+        f"clustering ={clusterer} distance = {distance} averaging = {averaging} "  # noqa
+        f"tune window = {tune_w}"  # noqa
+    )  # noqa
     train_X, train_Y = load_ts(
         f"{data_dir}/{dataset}/{dataset}_TRAIN.ts", return_data_type="numpy2d"
     )
@@ -169,7 +171,6 @@ if __name__ == "__main__":
         "medoids_distance_metric": distance,
     }
     if clusterer == "kmeans":
-        print("running kmeans")
         format_kwargs = {**average_params, **parameters}
         clst = TimeSeriesKMeans(
             averaging_method=averaging,
@@ -200,4 +201,4 @@ if __name__ == "__main__":
         resample_id=resample,
         overwrite=False,
     )
-    print("done")
+    print("done")  # noqa
