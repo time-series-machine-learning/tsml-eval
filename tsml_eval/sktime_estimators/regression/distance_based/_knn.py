@@ -72,6 +72,6 @@ class KNeighborsTimeSeriesRegressor(BaseRegressor):
             # average top k values
             preds[i] = distances[0]
             for k in range(1, self.n_neighbours):
-                preds[i] = preds[i] + distances[k]
+                preds[i] = preds[i] + distances[index[k]]
             preds[i] = preds[i] / self.n_neighbours
         return preds
