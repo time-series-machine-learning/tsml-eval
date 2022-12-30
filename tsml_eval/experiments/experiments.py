@@ -13,7 +13,6 @@ import warnings
 from datetime import datetime
 
 import numpy as np
-import pandas as pd
 from sklearn import preprocessing
 from sklearn.metrics import accuracy_score, mean_squared_error
 from sklearn.model_selection import cross_val_predict
@@ -87,6 +86,8 @@ def run_classification_experiment(
     y_test = le.transform(y_test)
 
     encoder_dict = {label: i for i, label in enumerate(le.classes_)}
+    n_classes = len(np.unique(y_train))
+
     classifier_train_probs = build_train_file and callable(
         getattr(classifier, "_get_train_probs", None)
     )
@@ -114,30 +115,24 @@ def run_classification_experiment(
 
         test_preds = classifier.classes_[np.argmax(test_probs, axis=1)]
         test_acc = accuracy_score(y_test, test_preds)
-        third = (
-            f"{test_acc},"  # 1. accuracy
-            f"{fit_time},"  # 2. fit time
-            f"{test_time},"  # 3. predict time
-            "-1,-1,"  # 4. benchmark time, 5. memory usage
-            f"{len(classifier.classes_)},"  # 6. number of classes
-            ",-1,-1"  # 7. type of train estimate used, 8. estimate time
-            # 9. build plus estimate time (all not relevant to test files)
-        )
 
         write_classification_results(
-            first_line_comment=first_comment,
-            second_line=second,
-            third_line=third,
-            timing_type="MILLISECONDS",
-            output_path=results_path,
-            estimator_name=classifier_name,
-            resample_id=resample_id,
-            y_pred=test_preds,
-            predicted_probs=test_probs,
-            dataset_name=dataset_name,
-            y_true=y_test,
-            split="TEST",
+            test_preds,
+            test_probs,
+            y_test,
+            classifier_name,
+            dataset_name,
+            results_path,
             full_path=False,
+            split="TEST",
+            resample_id=resample_id,
+            timing_type="MILLISECONDS",
+            first_line_comment=first_comment,
+            parameter_info=second,
+            accuracy=test_acc,
+            fit_time=fit_time,
+            predict_time=test_time,
+            n_classes=n_classes,
         )
 
     if build_train_file:
@@ -158,30 +153,25 @@ def run_classification_experiment(
 
         train_preds = classifier.classes_[np.argmax(train_probs, axis=1)]
         train_acc = accuracy_score(y_train, train_preds)
-        third = (
-            f"{train_acc},"  # 1. accuracy
-            f"{fit_time},-1,-1,-1,"  # 2. fit time
-            # 3. predict time (not relevant for train files)
-            # 4. benchmark time, 5. memory usage
-            f"{len(classifier.classes_)},"  # 6. number of classes
-            f",{train_time},"  # 7. type of train estimate used, 8. estimate time
-            f"{fit_time + train_time}"  # 8. build plus estimate time
-        )
 
         write_classification_results(
-            first_line_comment=first_comment,
-            second_line=second,
-            third_line=third,
-            timing_type="MILLISECONDS",
-            output_path=results_path,
-            estimator_name=classifier_name,
-            resample_id=resample_id,
-            y_pred=train_preds,
-            predicted_probs=train_probs,
-            dataset_name=dataset_name,
-            y_true=y_train,
-            split="TRAIN",
+            train_preds,
+            train_probs,
+            y_train,
+            classifier_name,
+            dataset_name,
+            results_path,
             full_path=False,
+            split="TRAIN",
+            resample_id=resample_id,
+            timing_type="MILLISECONDS",
+            first_line_comment=first_comment,
+            parameter_info=second,
+            accuracy=train_acc,
+            fit_time=fit_time,
+            n_classes=n_classes,
+            train_estimate_time=train_time,
+            fit_and_estimate_time=fit_time + train_time,
         )
 
 
@@ -350,28 +340,22 @@ def run_regression_experiment(
         test_time = int(round(time.time() * 1000)) - start
 
         test_mse = mean_squared_error(y_test, test_preds)
-        third = (
-            f"{test_mse},"  # 1. mean squared error
-            f"{fit_time},"  # 2. fit time
-            f"{test_time},"  # 3. predict time
-            f"-1,-1,"  # 4. benchmark time, 5. memory usage
-            f",-1,-1"  # 6. type of train estimate used, 7. estimate time
-            # 8. build plus estimate time (all not relevant to test files)
-        )
 
         write_regression_results(
-            first_line_comment=first_comment,
-            second_line=second,
-            third_line=third,
-            timing_type="MILLISECONDS",
-            output_path=results_path,
-            estimator_name=regressor_name,
-            resample_id=resample_id,
-            y_pred=test_preds,
-            dataset_name=dataset_name,
-            y_true=y_test,
-            split="TEST",
+            test_preds,
+            y_test,
+            regressor_name,
+            dataset_name,
+            results_path,
             full_path=False,
+            split="TEST",
+            resample_id=resample_id,
+            timing_type="MILLISECONDS",
+            first_line_comment=first_comment,
+            parameter_info=second,
+            mse=test_mse,
+            fit_time=fit_time,
+            predict_time=-test_time,
         )
 
     if build_train_file:
@@ -384,29 +368,23 @@ def run_regression_experiment(
         train_time = int(round(time.time() * 1000)) - start
 
         train_mse = mean_squared_error(y_train, train_preds)
-        third = (
-            f"{train_mse},"  # 1. mean squared error
-            f"{fit_time},-1,-1,-1,,"  # 2. fit time
-            # 3. predict time (not relevant for train files)
-            # 4. benchmark time, 5. memory usage
-            # 6. type of train estimate used
-            f"{train_time},"  # 7. estimate time
-            f"{fit_time + train_time}"  # 8. build plus estimate time
-        )
 
         write_regression_results(
-            first_line_comment=first_comment,
-            second_line=second,
-            third_line=third,
-            timing_type="MILLISECONDS",
-            output_path=results_path,
-            estimator_name=regressor_name,
-            resample_id=resample_id,
-            y_pred=train_preds,
-            dataset_name=dataset_name,
-            y_true=y_train,
-            split="TRAIN",
+            train_preds,
+            y_train,
+            regressor_name,
+            dataset_name,
+            results_path,
             full_path=False,
+            split="TRAIN",
+            resample_id=resample_id,
+            timing_type="MILLISECONDS",
+            first_line_comment=first_comment,
+            parameter_info=second,
+            mse=train_mse,
+            fit_time=fit_time,
+            train_estimate_time=train_time,
+            fit_and_estimate_time=fit_time + train_time,
         )
 
 
@@ -586,29 +564,25 @@ def run_clustering_experiment(
 
         train_preds = clusterer.classes_[np.argmax(train_probs, axis=1)]
         train_acc = clustering_accuracy(y_train, train_preds)
-        third = (
-            f"{train_acc},"  # 1. clustering accuracy
-            f"{fit_time},"  # 2. fit time
-            f"{train_time},"  # 3. predict time
-            "-1,-1,"  # 4. benchmark time, 5. memory usage
-            f"{n_classes},"  # 6. number of classes
-            f"{len(train_probs[0])}"  # 7. number of clusters
-        )
 
         write_clustering_results(
-            first_line_comment=first_comment,
-            second_line=second,
-            third_line=third,
-            timing_type="MILLISECONDS",
-            output_path=results_path,
-            estimator_name=clusterer_name,
-            resample_id=resample_id,
-            y_pred=train_preds,
-            predicted_probs=train_probs,
-            dataset_name=dataset_name,
-            y_true=y_train,
-            split="TRAIN",
+            train_preds,
+            train_probs,
+            y_train,
+            clusterer_name,
+            dataset_name,
+            results_path,
             full_path=False,
+            split="TRAIN",
+            resample_id=resample_id,
+            timing_type="MILLISECONDS",
+            first_line_comment=first_comment,
+            parameter_info=second,
+            clustering_accuracy=train_acc,
+            fit_time=fit_time,
+            predict_time=train_time,
+            n_classes=n_classes,
+            n_clusters=len(train_probs[0]),
         )
 
     if build_test_file:
@@ -620,30 +594,26 @@ def run_clustering_experiment(
         test_time = int(round(time.time() * 1000)) - start
 
         test_preds = clusterer.classes_[np.argmax(test_probs, axis=1)]
-        test_acc = clustering_accuracy(y_train, test_preds)
-        third = (
-            f"{test_acc},"  # 1. clustering accuracy
-            f"{fit_time},"  # 2. fit time
-            f"{test_time},"  # 3. predict time
-            "-1,-1,"  # 4. benchmark time, 5. memory usage
-            f"{n_classes},"  # 6. number of classes
-            f"{len(test_probs[0])}"  # 7. number of clusters
-        )
+        test_acc = clustering_accuracy(y_test, test_preds)
 
         write_clustering_results(
-            first_line_comment=first_comment,
-            second_line=second,
-            third_line=third,
-            timing_type="MILLISECONDS",
-            output_path=results_path,
-            estimator_name=clusterer_name,
-            resample_id=resample_id,
-            y_pred=test_preds,
-            predicted_probs=test_probs,
-            dataset_name=dataset_name,
-            y_true=y_test,
-            split="TEST",
+            test_preds,
+            test_probs,
+            y_test,
+            clusterer_name,
+            dataset_name,
+            results_path,
             full_path=False,
+            split="TEST",
+            resample_id=resample_id,
+            timing_type="MILLISECONDS",
+            first_line_comment=first_comment,
+            parameter_info=second,
+            clustering_accuracy=test_acc,
+            fit_time=fit_time,
+            predict_time=test_time,
+            n_classes=n_classes,
+            n_clusters=len(test_probs[0]),
         )
 
 

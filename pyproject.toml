@@ -69,3 +69,15 @@ ignore = [
     "requirements.txt",
     "*.yaml",
 ]
+
+[tool.flake8]
+max-line-length = 88
+extend-ignore = ["E203"]
+exclude = ["tsml_eval/_wip/*"]
+per-file-ignores = [
+    "tsml_eval/experiments/classification_experiments.py:E402,T201",
+    "tsml_eval/experiments/threaded_classification_experiments.py:T201",
+    "tsml_eval/experiments/regression_experiments.py:E402,T201",
+    "tsml_eval/experiments/clustering_experiments.py:E402,T201",
+    "tsml_eval/experiments/distance_clustering_experiments.py:E402,T201",
+]

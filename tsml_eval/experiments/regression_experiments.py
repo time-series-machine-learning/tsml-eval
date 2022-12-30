@@ -11,6 +11,8 @@ __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 import os
 
+from tsml_eval.experiments import load_and_run_regression_experiment
+
 os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
@@ -62,7 +64,7 @@ def run_experiment(args, overwrite=False):
                 regressor_name=regressor_name,
                 dataset=dataset,
                 resample_id=resample,
-                build_train=train_fold,
+                build_train_file=train_fold,
                 predefined_resample=predefined_resample,
                 overwrite=overwrite,
             )
@@ -86,7 +88,7 @@ def run_experiment(args, overwrite=False):
             regressor_name=regressor_name,
             dataset=dataset,
             resample_id=resample,
-            build_train=train_fold,
+            build_train_file=train_fold,
             predefined_resample=predefined_resample,
             overwrite=True,
         )

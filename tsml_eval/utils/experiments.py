@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Util functions for experiments."""
 
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
@@ -239,7 +240,7 @@ def write_classification_results(
             "class values."
         )
 
-    if n_classes > -1 and n_classes != len(probabilities.shape[1]):
+    if n_classes > -1 and n_classes != probabilities.shape[1]:
         raise IndexError(
             "The number of classes is not the same as the number of probability "
             "values for each case."
@@ -566,16 +567,20 @@ def write_results_to_tsml_format(
     except os.error:
         pass  # raises os.error if path already exists, so just ignore this
 
-    if split == None:
+    if split is None:
         split = ""
     elif split.lower() == "train":
-        split = "Train"
+        split = "TRAIN"
     elif split.lower() == "test":
-        split = "Test"
+        split = "TEST"
     else:
         raise ValueError("Unknown 'split' value - should be 'TRAIN', 'TEST' or None")
 
-    fname = "Results" if resample_id is None else f"Resample{resample_id}"
+    fname = (
+        f"{split.lower()}Results"
+        if resample_id is None
+        else f"{split.lower()}Resample{resample_id}"
+    )
     fname = fname.lower() if split == "" else fname
 
     file = open(f"{output_path}/{fname}.csv", "w")
@@ -614,8 +619,8 @@ def write_results_to_tsml_format(
     # If labels[i] is NaN (if clustering), labels[i] is replaced with ? to indicate
     # missing
     for i in range(0, len(predictions)):
-        l = "?" if np.isnan(labels[i]) else labels[i]
-        file.write(f"{l},{predictions[i]}")
+        label = "?" if np.isnan(labels[i]) else labels[i]
+        file.write(f"{label},{predictions[i]}")
 
         if predicted_probabilities is not None:
             file.write(",")
@@ -627,6 +632,7 @@ def write_results_to_tsml_format(
 
 
 def _results_present(path, estimator, dataset, res):
+    """Check if results are present already."""
     full_path = f"{path}/{estimator}/Predictions/{dataset}/testResample{res}.csv"
     full_path2 = f"{path}/{estimator}/Predictions/{dataset}/trainResample{res}.csv"
     if os.path.exists(full_path) and os.path.exists(full_path2):
@@ -635,6 +641,7 @@ def _results_present(path, estimator, dataset, res):
 
 
 def _results_present_full_path(path, dataset, res):
+    """Duplicate: check if results are present already without an estimator input."""
     full_path = f"{path}/Predictions/{dataset}/testResample{res}.csv"
     full_path2 = f"{path}/Predictions/{dataset}/trainResample{res}.csv"
     if os.path.exists(full_path) and os.path.exists(full_path2):

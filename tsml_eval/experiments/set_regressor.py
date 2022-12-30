@@ -62,8 +62,16 @@ def set_regressor(regressor, resample_id=None, train_file=False, n_jobs=1):
         )
     # Other
     elif name == "dummy" or name == "dummyregressor":
-        # todo we need an actual dummy for this
-        raise ValueError(f" Regressor {name} is not avaiable")
+        # todo we need an actual dummy for this. use tiny rocket for testing purposes
+        #  currently
+        from sktime.regression.kernel_based import RocketRegressor
+
+        return RocketRegressor(
+            num_kernels=50,
+            random_state=resample_id,
+            n_jobs=n_jobs,
+        )
+        # raise ValueError(f" Regressor {name} is not avaiable")
 
     # regression package regressors
     elif name == "drcif":
@@ -143,51 +151,56 @@ def set_regressor(regressor, resample_id=None, train_file=False, n_jobs=1):
         )
 
     elif name == "lr" or name == "linearregression":
-        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
         from sklearn.linear_model import LinearRegression
 
-        model_params = {"fit_intercept": True,
-                        "n_jobs": n_jobs}
+        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+
+        model_params = {"fit_intercept": True, "n_jobs": n_jobs}
 
         return SklearnBaseRegressor(LinearRegression(**model_params))
-    
+
     elif name == "ridgecv" or name == "ridge":
-        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
         from sklearn.linear_model import RidgeCV
 
-        model_params = {"fit_intercept": True,
-                        "alphas": np.logspace(-3, 3, 10)}
+        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+
+        model_params = {"fit_intercept": True, "alphas": np.logspace(-3, 3, 10)}
 
         return SklearnBaseRegressor(RidgeCV(**model_params))
 
     elif name == "svr" or name == "supportvectorregressor":
-        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
         from sklearn.svm import SVR
-        from sklearn.model_selection import GridSearchCV
 
-        model_params = {"kernel": 'rbf',
-                        "C": 1}
+        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+
+        model_params = {"kernel": "rbf", "C": 1}
 
         return SklearnBaseRegressor(SVR(**model_params))
-    
+
     elif name == "rf" or name == "randomforest":
-        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
         from sklearn.ensemble import RandomForestRegressor
 
-        model_params = {"n_estimators": 100,
-                        "n_jobs": n_jobs,
-                        "random_state": resample_id}
+        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+
+        model_params = {
+            "n_estimators": 100,
+            "n_jobs": n_jobs,
+            "random_state": resample_id,
+        }
 
         return SklearnBaseRegressor(RandomForestRegressor(**model_params))
-        
-    elif name == "xgb" or name == "xgboost":
-        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
-        from xgboost import XGBRegressor # pip install xgboost
 
-        model_params = {"n_estimators": 100,
-                        "n_jobs": n_jobs,
-                        "learning_rate": 0.1,
-                        "random_state": resample_id}
+    elif name == "xgb" or name == "xgboost":
+        from xgboost import XGBRegressor  # pip install xgboost
+
+        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+
+        model_params = {
+            "n_estimators": 100,
+            "n_jobs": n_jobs,
+            "learning_rate": 0.1,
+            "random_state": resample_id,
+        }
 
         return SklearnBaseRegressor(XGBRegressor(**model_params))
 

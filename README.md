@@ -1,6 +1,7 @@
 # tsml-eval
 
-Evaluation tools for classification, regression and clustering algorithms built on the sktime interface.
+Evaluation tools and research algorithm implementations for classification, regression
+and clustering algorithms built on the scikit learn and sktime interfaces.
 
 Dependency installation
 -----------------------

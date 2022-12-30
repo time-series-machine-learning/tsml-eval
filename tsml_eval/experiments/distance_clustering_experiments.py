@@ -39,7 +39,7 @@ def config_clusterer(clusterer: str, **kwargs):
 def tune_window(metric: str, train_X, n_clusters):
     """Tune window."""
     best_w = 0
-    best_score = 0
+    best_score = sys.float_info.max
     for w in np.arange(0, 1, 0.05):
         cls = TimeSeriesKMeans(
             metric=metric, distance_params={"window": w}, n_clusters=n_clusters
@@ -48,11 +48,11 @@ def tune_window(metric: str, train_X, n_clusters):
         preds = cls.predict(train_X)
         clusters = len(np.unique(preds))
         if clusters <= 1:
-            score = 0
+            score = sys.float_info.max
         else:
             score = davies_bouldin_score(train_X, preds)
         print(" Number of clusters = ", clusters, " score  = ", score)  # noqa
-        if score > best_score:
+        if score < best_score:
             best_score = score
             best_w = w
     print("best window =", best_w, " with score ", best_score)  # noqa
@@ -115,7 +115,7 @@ if __name__ == "__main__":
         train_fold = True
         distance = "dtw"
         normalise = True
-        tune_w = False
+        tune_w = True
 
     if normalise:
         results_dir = results_dir + "normalised/"
