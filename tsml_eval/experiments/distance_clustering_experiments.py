@@ -117,7 +117,7 @@ if __name__ == "__main__":
         train_fold = True
         distance = "dtw"
         normalise = True
-        tune_w = False
+        tune_w = True
 
     if normalise:
         results_dir = results_dir + "normalised/"
