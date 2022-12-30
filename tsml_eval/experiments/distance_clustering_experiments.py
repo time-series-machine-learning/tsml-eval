@@ -19,8 +19,6 @@ from sktime.clustering.k_means import TimeSeriesKMeans
 from sktime.clustering.k_medoids import TimeSeriesKMedoids
 from sktime.datasets import load_from_tsfile as load_ts
 
-from tsml_eval.utils.experiments import results_present_full_path
-
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
 os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
@@ -76,6 +74,15 @@ def _recreate_results(trainX, trainY):
     preds = clst.predict(trainY)
     score = adjusted_rand_score(trainY, preds)
     print("Score = ", score)  # noqa
+
+
+def results_present_full_path(path, dataset, res):
+    """Duplicate: check if results are present already."""
+    full_path = f"{path}/Predictions/{dataset}/testResample{res}.csv"
+    full_path2 = f"{path}/Predictions/{dataset}/trainResample{res}.csv"
+    if os.path.exists(full_path) and os.path.exists(full_path2):
+        return True
+    return False
 
 
 if __name__ == "__main__":
