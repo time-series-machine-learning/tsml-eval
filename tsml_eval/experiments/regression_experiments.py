@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Regressor Experiments: code to run experiments and generate results file in
-standard format.
+"""Regressor Experiments: run experiments and generate results file in standard format.
 
 This file is configured for runs of the main method with command line arguments, or for
 single debugging runs. Results are written in a standard format. It is cloned from
@@ -10,22 +9,12 @@ classification_experiments, we should condense it all to one.
 __author__ = ["TonyBagnall"]
 
 import os
-
-# Remove if not running on cluster?
-os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
-os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
-os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
-
 import sys
-from pathlib import Path
-
-sys.path.append(str(Path(__file__).parent.parent.parent))
-
 import time
 from datetime import datetime
+from pathlib import Path
 
 import numba
-import numpy as np
 import pandas as pd
 import torch
 from sklearn.metrics import mean_squared_error
@@ -35,6 +24,15 @@ from sktime.datasets import write_results_to_uea_format
 
 from tsml_eval.experiments.set_regressor import set_regressor
 from tsml_eval.utils.experiments import results_present
+
+# Remove if not running on cluster?
+os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!! # noqa
+os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!! # noqa
+os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!! # noqa
+
+import numpy as np  # noqa
+
+sys.path.append(str(Path(__file__).parent.parent.parent))
 
 
 def resample(train_X, train_y, test_X, test_y, random_state):
@@ -334,12 +332,13 @@ def load_and_run_regression_experiment(
 
 
 def run_experiment(args, overwrite=False):
+    """Run a regression experiment."""
     numba.set_num_threads(1)
     torch.set_num_threads(1)
 
     # cluster run (with args), this is fragile
     if args.__len__() > 1:  # cluster run, this is fragile
-        print("Input args = ", args)
+        print("Input args = ", args)  # noqa
         data_dir = args[1]
         results_dir = args[2]
         regressor_name = args[3]
@@ -362,7 +361,7 @@ def run_experiment(args, overwrite=False):
         if not overwrite and results_present(
             results_dir, regressor_name, dataset, resample
         ):
-            print("Ignoring, results already present")
+            print("Ignoring, results already present")  # noqa
         else:
             load_and_run_regression_experiment(
                 problem_path=data_dir,
@@ -377,7 +376,6 @@ def run_experiment(args, overwrite=False):
             )
     # local run (no args)
     else:
-        print(" Local Run of TimeSeriesForestRegressor")
         data_dir = "../../../time_series_regression/new_datasets/"
         results_dir = "../"
         regressor_name = "svr"
@@ -386,7 +384,7 @@ def run_experiment(args, overwrite=False):
         train_fold = False
         predefined_resample = False
         regressor = set_regressor(regressor_name)
-        print(f"Local Run of {regressor.__class__.__name__}.")
+        print(f"Local Run of {regressor.__class__.__name__}.")  # noqa
 
         load_and_run_regression_experiment(
             problem_path=data_dir,
