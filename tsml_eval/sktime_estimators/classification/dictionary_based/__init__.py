@@ -2,9 +2,9 @@
 """"""
 __all__ = ["WEASEL_DILATION", "MUSE_DILATION"]
 
-from tsml_eval.sktime_estimators.classification.dictionary_based.muse_dilation import (
+from tsml_eval.sktime_estimators.classification.dictionary_based.muse import (
     MUSE_DILATION,
 )
-from tsml_eval.sktime_estimators.classification.dictionary_based.weasel_dilation import (
+from tsml_eval.sktime_estimators.classification.dictionary_based.weasel import (
     WEASEL_DILATION,
 )

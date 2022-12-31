@@ -14,8 +14,6 @@ __all__ = ["WEASEL_DILATION"]
 import sys
 from pathlib import Path
 
-sys.path.append(str(Path(__file__).parent.parent.parent))
-
 import numpy as np
 from joblib import Parallel, delayed
 from scipy.sparse import hstack

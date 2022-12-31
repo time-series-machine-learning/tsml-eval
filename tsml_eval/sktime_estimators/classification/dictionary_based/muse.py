@@ -7,13 +7,10 @@ and logistic regression.
 __author__ = ["patrickzib"]
 __all__ = ["MUSE_DILATION"]
 
-import sys
-from pathlib import Path
-
-sys.path.append(str(Path(__file__).parent.parent.parent))
-
 import math
+import sys
 import warnings
+from pathlib import Path
 
 import numpy as np
 from joblib import Parallel, delayed

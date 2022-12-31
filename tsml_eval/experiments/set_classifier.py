@@ -78,13 +78,13 @@ def set_classifier(cls, resample_id=None, train_file=False, n_jobs=1, contract=0
 
         return MUSE(random_state=resample_id, n_jobs=n_jobs, support_probabilities=True)
     elif name == "weasel-dilation":
-        from tsml_eval.sktime_estimators.classification.dictionary_based.weasel_dilation import (  # noqa: E501
+        from tsml_eval.sktime_estimators.classification.dictionary_based.weasel import (  # noqa: E501
             WEASEL_DILATION,
         )
 
         return WEASEL_DILATION(random_state=resample_id)
     elif name == "muse-dilation":
-        from tsml_eval.sktime_estimators.classification.dictionary_based.muse_dilation import (  # noqa: E501
+        from tsml_eval.sktime_estimators.classification.dictionary_based.muse import (  # noqa: E501
             MUSE_DILATION,
         )
 
