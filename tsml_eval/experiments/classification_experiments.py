@@ -8,15 +8,8 @@ single debugging runs. Results are written in a standard format.
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 import os
-
-os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
-os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
-os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
-
 import sys
 from pathlib import Path
-
-sys.path.append(str(Path(__file__).parent.parent.parent))
 
 import numba
 import torch
@@ -24,6 +17,11 @@ from sktime.benchmarking.experiments import load_and_run_classification_experime
 
 from tsml_eval.experiments.set_classifier import set_classifier
 from tsml_eval.utils.experiments import results_present
+
+os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
+os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
+os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
+sys.path.append(str(Path(__file__).parent.parent.parent))
 
 
 def run_experiment(args, overwrite=False):
@@ -38,7 +36,7 @@ def run_experiment(args, overwrite=False):
 
     # cluster run (with args), this is fragile
     if args is not None and args.__len__() > 1:
-        print("Input args = ", args)
+        print("Input args = ", args)  # noqa
         data_dir = args[1]
         results_dir = args[2]
         classifier = args[3]
@@ -61,7 +59,7 @@ def run_experiment(args, overwrite=False):
         if not overwrite and results_present(
             results_dir, classifier, dataset, resample
         ):
-            print("Ignoring, results already present")
+            print("Ignoring, results already present")  # noqa
         else:
             load_and_run_classification_experiment(
                 problem_path=data_dir,
@@ -75,24 +73,32 @@ def run_experiment(args, overwrite=False):
                 overwrite=overwrite,
             )
     else:  # Local run
-        data_dir = "/home/ajb/Data/"
-        results_dir = "/home/ajb/Results Working Area/ReduxBakeoff/sktime/"
-        cls_name = "HC2"
-        n_jobs = 92
+        data_dir = "C:/Data/"
+        results_dir = "C:/Temp/"
+        cls_name = "1nn-dtw"
+        n_jobs = 1
         contract_mins = 0
         # HC2 Missing multivariate: EmoPain, FaceDetection, InsectWingbeatEq,
         # PhonemeSpectra, PenDigits, Tiselac
-        dataset = "EMOPain"
-        print(f" Local Run of {cls_name} on dataset {dataset} with threading jobs "
-              f"={n_jobs} and "
-              f"contract time ={contract_mins}")
+        dataset = "Chinatown"
+        print(  # noqa
+            f" Local Run of {cls_name} on dataset {dataset} with threading jobs "  # noqa
+            f"={n_jobs} and contract time ={contract_mins}"  # noqa
+        )  # noqa
         train_fold = False
         predefined_resample = False
         for resample in range(0, 30):
-            classifier = set_classifier(cls_name, resample_id=resample, n_jobs=n_jobs,
-                                        contract=contract_mins, train_file=train_fold)
-            print(
-                f"Local Run of {classifier.__class__.__name__} with {classifier.n_jobs} jobs")
+            classifier = set_classifier(
+                cls_name,
+                resample_id=resample,
+                n_jobs=n_jobs,
+                contract=contract_mins,
+                train_file=train_fold,
+            )
+            print(  # noqa
+                f"Local Run of {classifier.__class__.__name__} "  # noqa
+                f"with {classifier.n_jobs} jobs"  # noqa
+            )  # noqa
 
             load_and_run_classification_experiment(
                 overwrite=False,
