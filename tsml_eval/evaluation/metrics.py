@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Performance metric functions."""
 
 __author__ = ["MatthewMiddlehurst"]
 
@@ -9,6 +10,7 @@ from sklearn.metrics import confusion_matrix
 
 
 def clustering_accuracy(y_true, y_pred):
+    """Calculate clustering accuracy."""
     matrix = confusion_matrix(y_true, y_pred)
     row, col = linear_sum_assignment(matrix.max() - matrix)
     s = sum([matrix[row[i], col[i]] for i in range(len(row))])

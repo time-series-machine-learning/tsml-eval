@@ -72,44 +72,27 @@ def run_experiment(args, overwrite=False):
                 overwrite=overwrite,
             )
     else:  # Local run
-        data_dir = "/home/ajb/Data/"
-        results_dir = "/home/ajb/Results Working Area/ReduxBakeoff/sktime/"
-        cls_name = "HC2"
-        n_jobs = 92
-        contract_mins = 0
-        # HC2 Missing multivariate: EmoPain, FaceDetection, InsectWingbeatEq,
-        # PhonemeSpectra, PenDigits, Tiselac
-        dataset = "EMOPain"
-        print(
-            f" Local Run of {cls_name} on dataset {dataset} with threading jobs "
-            f"={n_jobs} and "
-            f"contract time ={contract_mins}"
-        )
+        data_dir = "../"
+        results_dir = "../"
+        cls_name = "DrCIF"
+        dataset = "ItalyPowerDemand"
+        resample = 0
         train_fold = False
         predefined_resample = False
-        for resample in range(0, 30):
-            classifier = set_classifier(
-                cls_name,
-                resample_id=resample,
-                n_jobs=n_jobs,
-                contract=contract_mins,
-                train_file=train_fold,
-            )
-            print(
-                f"Local Run of {classifier.__class__.__name__} with {classifier.n_jobs} jobs"
-            )
+        classifier = set_classifier(cls_name, resample, train_fold)
+        print(f"Local Run of {classifier.__class__.__name__}.")
 
-            load_and_run_classification_experiment(
-                overwrite=False,
-                problem_path=data_dir,
-                results_path=results_dir,
-                classifier_name=cls_name,
-                classifier=classifier,
-                dataset=dataset,
-                resample_id=resample,
-                build_train_file=train_fold,
-                predefined_resample=predefined_resample,
-            )
+        load_and_run_classification_experiment(
+            overwrite=False,
+            problem_path=data_dir,
+            results_path=results_dir,
+            classifier_name=cls_name,
+            classifier=classifier,
+            dataset=dataset,
+            resample_id=resample,
+            build_train_file=train_fold,
+            predefined_resample=predefined_resample,
+        )
 
 
 if __name__ == "__main__":
