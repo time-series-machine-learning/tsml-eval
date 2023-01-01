@@ -8,19 +8,39 @@ import numpy as np
 from sktime.distances import distance_factory
 from sktime.regression.base import BaseRegressor
 
-
 class KNeighborsTimeSeriesRegressor(BaseRegressor):
-    """Add docstring."""
+    """Add docstring.
+    
+    Parameters
+    ----------
+    distance : str or Callable, default="euclidean"
+        Metric to be used for distance computations.
+    distance_params : dict or None, default=None
+        Parameters used by the distance metric.
+    n_neighbours : int, default=1
+        Number of neighbours considered when predicting the target value.
+    weights : {"uniform". "distance"}, default="uniform"
+        Weight function used in prediction. "distance" means target value
+        average is weighted by 1 / distance**2.
+    """
 
     _tags = {
-        "X_inner_mtype": "numpy3d",
+        "X_inner_mtype": "numpy3D",
         "capability:multivariate": True,
     }
 
-    def __init__(self, distance="euclidean", distance_params=None, n_neighbours=1):
+    def __init__(
+        self,
+        distance="euclidean",
+        distance_params=None,
+        n_neighbours=1,
+        weights='uniform'
+    ):
         self.distance = distance
         self.distance_params = distance_params
         self.n_neighbours = n_neighbours
+        self.weights = weights
+
         super(KNeighborsTimeSeriesRegressor, self).__init__()
 
     def _fit(self, X, y) -> np.ndarray:
@@ -60,18 +80,32 @@ class KNeighborsTimeSeriesRegressor(BaseRegressor):
         """
         # Measure distance between train set (self_X) and test set (X)
         preds = np.zeros(X.shape[0])
-        distances = np.zeros(self._X.shape[0])
-        # All one with aligned lists for prototype, very inefficient no doubt but
-        # memory light
-        for i in range(0, X.shape[0]):
-            index = list(range(0, self._X.shape[0]))
-            for j in range(0, self._X.shape[0]):
-                distances[j] = self.metric(X[i], self._X[j])
-            # Sort distances ascending. Could be done more efficiently
-            distances, index = map(list, zip(*sorted(zip(distances, index))))
-            # average top k values
-            preds[i] = distances[0]
-            for k in range(1, self.n_neighbours):
-                preds[i] = preds[i] + distances[index[k]]
-            preds[i] = preds[i] / self.n_neighbours
+        for i in range(X.shape[0]):
+            distances = np.array([
+                self.metric(X[i], self._X[j]) for j in range(self._X.shape[0])
+            ])
+
+            # Find indices of k nearest neighbors using partitioning:
+            # [0..k-1], [k], [k+1..n-1]
+            # They might not be ordered within themselves, 
+            # but it is not necessary and partitioning is 
+            # O(n) while sorting is O(nlogn)
+            closest_idx = np.argpartition(distances, self.n_neighbours)
+            closest_idx = closest_idx[:self.n_neighbours]
+
+            closest_targets = self._y[closest_idx]
+
+            if self.weights == "distance":
+                weight_vector = distances[closest_idx]
+                weight_vector = weight_vector**2
+
+                # Using epsilon ~= 0 to avoid division by zero
+                weight_vector = 1 / (weight_vector + np.finfo(float).eps)
+                preds[i] = np.average(closest_targets, weights=weight_vector)
+            elif self.weights == "uniform":
+                preds[i] = np.mean(closest_targets)
+            else:
+                raise Exception(
+                    f"Invalid kNN weights: {self.weights}"
+                )
         return preds
