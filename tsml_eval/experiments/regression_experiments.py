@@ -1,17 +1,13 @@
 # -*- coding: utf-8 -*-
-"""Regressor Experiments: code to run experiments and generate results file in
-standard format.
+"""Regression Experiments: code for experiments as an alternative to orchestration.
 
 This file is configured for runs of the main method with command line arguments, or for
-single debugging runs. Results are written in a standard format. It is cloned from
-classification_experiments, we should condense it all to one.
+single debugging runs. Results are written in a standard tsml format.
 """
 
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 import os
-
-from tsml_eval.experiments import load_and_run_regression_experiment
 
 os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
@@ -22,11 +18,18 @@ import sys
 import numba
 import torch
 
+from tsml_eval.experiments import load_and_run_regression_experiment
 from tsml_eval.experiments.set_regressor import set_regressor
 from tsml_eval.utils.experiments import _results_present
 
 
 def run_experiment(args, overwrite=False):
+    """Mechanism for testing regressors on the UCR data format.
+
+    This mirrors the mechanism used in the Java based tsml. Results generated using the
+    method are in the same format as tsml and can be directly compared to the results
+    generated in Java.
+    """
     numba.set_num_threads(1)
     torch.set_num_threads(1)
 
@@ -58,39 +61,41 @@ def run_experiment(args, overwrite=False):
             print("Ignoring, results already present")
         else:
             load_and_run_regression_experiment(
-                problem_path=data_dir,
-                results_path=results_dir,
-                regressor=set_regressor(regressor_name, resample, train_fold),
-                regressor_name=regressor_name,
-                dataset=dataset,
+                data_dir,
+                results_dir,
+                dataset,
+                set_regressor(regressor_name, resample, train_fold),
                 resample_id=resample,
+                regressor_name=regressor_name,
+                overwrite=overwrite,
                 build_train_file=train_fold,
                 predefined_resample=predefined_resample,
-                overwrite=overwrite,
             )
     # local run (no args)
     else:
-        print(" Local Run of TimeSeriesForestRegressor")
-        data_dir = "../../../time_series_regression/new_datasets/"
+        # These are example parameters, change as required for local runs
+        # Do not include paths to your local directories here in PRs
+        # If threading is required, see the threaded version of this file
+        data_dir = "../"
         results_dir = "../"
-        regressor_name = "svr"
+        regressor_name = "DrCIF"
         dataset = "Covid3Months"
         resample = 0
         train_fold = False
         predefined_resample = False
-        regressor = set_regressor(regressor_name)
+        regressor = set_regressor(regressor_name, resample, train_fold)
         print(f"Local Run of {regressor.__class__.__name__}.")
 
         load_and_run_regression_experiment(
-            problem_path=data_dir,
-            results_path=results_dir,
-            regressor=regressor,
-            regressor_name=regressor_name,
-            dataset=dataset,
+            data_dir,
+            results_dir,
+            dataset,
+            regressor,
             resample_id=resample,
+            regressor_name=regressor_name,
+            overwrite=overwrite,
             build_train_file=train_fold,
             predefined_resample=predefined_resample,
-            overwrite=True,
         )
 
 

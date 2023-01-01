@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Classifier Experiments: code to run experiments as an alternative to orchestration.
+"""Classification Experiments: code for experiments as an alternative to orchestration.
 
 This file is configured for runs of the main method with command line arguments, or for
-single debugging runs. Results are written in a standard format.
+single debugging runs. Results are written in a standard tsml format.
 """
 
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
@@ -24,11 +24,11 @@ from tsml_eval.utils.experiments import _results_present
 
 
 def run_experiment(args, overwrite=False):
-    """Mechanism for testing classifiers on the UCR format.
+    """Mechanism for testing classifiers on the UCR data format.
 
-    This mirrors the mechanism used in the Java based tsml, but is not yet as
-    engineered. Results generated using the method are in the same format as tsml and
-    can be directly compared to the results generated in Java.
+    This mirrors the mechanism used in the Java based tsml. Results generated using the
+    method are in the same format as tsml and can be directly compared to the results
+    generated in Java.
     """
     numba.set_num_threads(1)
     torch.set_num_threads(1)
@@ -38,7 +38,7 @@ def run_experiment(args, overwrite=False):
         print("Input args = ", args)
         data_dir = args[1]
         results_dir = args[2]
-        classifier = args[3]
+        classifier_name = args[3]
         dataset = args[4]
         # ADA starts indexing its jobs at 1, so we need to subtract 1
         resample = int(args[5]) - 1
@@ -56,40 +56,44 @@ def run_experiment(args, overwrite=False):
         # this is also checked in load_and_run, but doing a quick check here so can
         # print a message and make sure data is not loaded
         if not overwrite and _results_present(
-            results_dir, classifier, dataset, resample
+            results_dir, classifier_name, dataset, resample
         ):
             print("Ignoring, results already present")
         else:
             load_and_run_classification_experiment(
-                problem_path=data_dir,
-                results_path=results_dir,
-                classifier=set_classifier(classifier, resample, train_fold),
-                classifier_name=classifier,
-                dataset=dataset,
+                data_dir,
+                results_dir,
+                dataset,
+                set_classifier(classifier_name, resample, train_fold),
                 resample_id=resample,
+                classifier_name=classifier_name,
+                overwrite=overwrite,
                 build_train_file=train_fold,
                 predefined_resample=predefined_resample,
-                overwrite=overwrite,
             )
-    else:  # Local run
+    # local run (no args)
+    else:
+        # These are example parameters, change as required for local runs
+        # Do not include paths to your local directories here in PRs
+        # If threading is required, see the threaded version of this file
         data_dir = "../"
         results_dir = "../"
-        cls_name = "DrCIF"
+        classifier_name = "DrCIF"
         dataset = "ItalyPowerDemand"
         resample = 0
         train_fold = False
         predefined_resample = False
-        classifier = set_classifier(cls_name, resample, train_fold)
-        print(f"Local Run of {classifier.__class__.__name__}.")
+        classifier_name = set_classifier(classifier_name, resample, train_fold)
+        print(f"Local Run of {classifier_name.__class__.__name__}.")
 
         load_and_run_classification_experiment(
-            overwrite=False,
-            problem_path=data_dir,
-            results_path=results_dir,
-            classifier_name=cls_name,
-            classifier=classifier,
-            dataset=dataset,
+            data_dir,
+            results_dir,
+            dataset,
+            classifier_name,
             resample_id=resample,
+            classifier_name=classifier_name,
+            overwrite=overwrite,
             build_train_file=train_fold,
             predefined_resample=predefined_resample,
         )

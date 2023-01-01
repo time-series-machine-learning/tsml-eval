@@ -1,23 +1,35 @@
 # -*- coding: utf-8 -*-
-"""Classifier Experiments: code to run experiments as an alternative to orchestration.
+"""Clustering Experiments: code for experiments as an alternative to orchestration.
 
 This file is configured for runs of the main method with command line arguments, or for
-single debugging runs. Results are written in a standard format.
+single debugging runs. Results are written in a standard tsml format.
 """
 
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
+
+import os
+
+os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
+os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
+os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
 
 import sys
 
 import numba
 import torch
-from sktime.benchmarking.experiments import load_and_run_clustering_experiment
 
+from tsml_eval.experiments import load_and_run_clustering_experiment
 from tsml_eval.experiments.classification_experiments import _results_present
 from tsml_eval.experiments.set_clusterer import set_clusterer
 
 
 def run_experiment(args, overwrite=False):
+    """Mechanism for testing clusterers on the UCR data format.
+
+    This mirrors the mechanism used in the Java based tsml. Results generated using the
+    method are in the same format as tsml and can be directly compared to the results
+    generated in Java.
+    """
     numba.set_num_threads(1)
     torch.set_num_threads(1)
 
@@ -26,30 +38,65 @@ def run_experiment(args, overwrite=False):
         print("Input args = ", args)
         data_dir = args[1]
         results_dir = args[2]
-        clusterer = args[3]
+        clusterer_name = args[3]
         dataset = args[4]
         # ADA starts indexing its jobs at 1, so we need to subtract 1
         resample = int(args[5]) - 1
 
+        if len(args) > 6:
+            test_fold = args[6].lower() == "false"
+        else:
+            test_fold = True
+
+        if len(args) > 7:
+            predefined_resample = args[7].lower() == "true"
+        else:
+            predefined_resample = False
+
         # this is also checked in load_and_run, but doing a quick check here so can
         # print a message and make sure data is not loaded
         if not overwrite and _results_present(
-            results_dir, clusterer, dataset, resample
+            results_dir, clusterer_name, dataset, resample
         ):
             print("Ignoring, results already present")
         else:
             load_and_run_clustering_experiment(
-                problem_path=data_dir,
-                results_path=results_dir,
-                clusterer=set_clusterer(clusterer, resample),
-                cls_name=clusterer,
-                dataset=dataset,
+                data_dir,
+                results_dir,
+                dataset,
+                set_clusterer(clusterer_name, resample),
                 resample_id=resample,
-                train_file=True,
+                clusterer_name=clusterer_name,
                 overwrite=overwrite,
+                build_test_file=test_fold,
+                predefined_resample=predefined_resample,
             )
+    # local run (no args)
     else:
-        print("No local cluster experiment set up currently.")
+        # These are example parameters, change as required for local runs
+        # Do not include paths to your local directories here in PRs
+        # If threading is required, see the threaded version of this file
+        data_dir = "../"
+        results_dir = "../"
+        clusterer_name = "DrCIF"
+        dataset = "Covid3Months"
+        resample = 0
+        test_fold = False
+        predefined_resample = False
+        clusterer = set_clusterer(clusterer_name, resample)
+        print(f"Local Run of {clusterer.__class__.__name__}.")
+
+        load_and_run_clustering_experiment(
+            data_dir,
+            results_dir,
+            dataset,
+            clusterer,
+            resample_id=resample,
+            clusterer_name=clusterer_name,
+            overwrite=overwrite,
+            build_test_file=test_fold,
+            predefined_resample=predefined_resample,
+        )
 
 
 if __name__ == "__main__":

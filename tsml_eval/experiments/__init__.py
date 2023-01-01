@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Experiment functions"""
+"""Experiment functions."""
 
 __all__ = [
     "run_classification_experiment",
