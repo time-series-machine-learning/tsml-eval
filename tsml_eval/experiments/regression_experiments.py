@@ -64,7 +64,9 @@ def run_experiment(args, overwrite=False):
                 data_dir,
                 results_dir,
                 dataset,
-                set_regressor(regressor_name, resample, train_fold),
+                set_regressor(
+                    regressor_name, random_state=resample, build_train_file=train_fold
+                ),
                 resample_id=resample,
                 regressor_name=regressor_name,
                 overwrite=overwrite,
@@ -83,7 +85,9 @@ def run_experiment(args, overwrite=False):
         resample = 0
         train_fold = False
         predefined_resample = False
-        regressor = set_regressor(regressor_name, resample, train_fold)
+        regressor = set_regressor(
+            regressor_name, random_state=resample, build_train_file=train_fold
+        )
         print(f"Local Run of {regressor.__class__.__name__}.")
 
         load_and_run_regression_experiment(

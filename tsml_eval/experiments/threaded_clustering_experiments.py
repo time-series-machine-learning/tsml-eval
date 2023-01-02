@@ -7,16 +7,8 @@ single debugging runs. Results are written in a standard tsml format.
 
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
-import os
-
-os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
-os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
-os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
 
 import sys
-
-import numba
-import torch
 
 from tsml_eval.experiments import load_and_run_clustering_experiment
 from tsml_eval.experiments.classification_experiments import _results_present
@@ -30,10 +22,9 @@ def run_experiment(args, overwrite=False):
     method are in the same format as tsml and can be directly compared to the results
     generated in Java.
     """
-    numba.set_num_threads(1)
-    torch.set_num_threads(1)
-
     # cluster run (with args), this is fragile
+    # don't run threaded jobs on ADA unless you have reserved the whole node and know
+    # what you are doing
     if args.__len__() > 1:
         print("Input args = ", args)
         data_dir = args[1]
@@ -42,14 +33,15 @@ def run_experiment(args, overwrite=False):
         dataset = args[4]
         # ADA starts indexing its jobs at 1, so we need to subtract 1
         resample = int(args[5]) - 1
+        n_jobs = int(sys.argv[6])
 
-        if len(args) > 6:
-            test_fold = args[6].lower() == "false"
+        if len(args) > 7:
+            test_fold = args[7].lower() == "false"
         else:
             test_fold = True
 
-        if len(args) > 7:
-            predefined_resample = args[7].lower() == "true"
+        if len(args) > 8:
+            predefined_resample = args[8].lower() == "true"
         else:
             predefined_resample = False
 
@@ -64,7 +56,7 @@ def run_experiment(args, overwrite=False):
                 data_dir,
                 results_dir,
                 dataset,
-                set_clusterer(clusterer_name, random_state=resample),
+                set_clusterer(clusterer_name, random_state=resample, n_jobs=n_jobs),
                 resample_id=resample,
                 clusterer_name=clusterer_name,
                 overwrite=overwrite,
@@ -83,8 +75,7 @@ def run_experiment(args, overwrite=False):
         resample = 0
         test_fold = False
         predefined_resample = False
-        n_jobs = 4
-        clusterer = set_clusterer(clusterer_name, random_state=resample, n_jobs=n_jobs)
+        clusterer = set_clusterer(clusterer_name, resample)
         print(f"Local Run of {clusterer.__class__.__name__}.")
 
         load_and_run_clustering_experiment(

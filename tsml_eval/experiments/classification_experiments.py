@@ -64,7 +64,9 @@ def run_experiment(args, overwrite=False):
                 data_dir,
                 results_dir,
                 dataset,
-                set_classifier(classifier_name, resample, train_fold),
+                set_classifier(
+                    classifier_name, random_state=resample, build_train_file=train_fold
+                ),
                 resample_id=resample,
                 classifier_name=classifier_name,
                 overwrite=overwrite,
@@ -83,7 +85,9 @@ def run_experiment(args, overwrite=False):
         resample = 0
         train_fold = False
         predefined_resample = False
-        classifier_name = set_classifier(classifier_name, resample, train_fold)
+        classifier_name = set_classifier(
+            classifier_name, random_state=resample, build_train_file=train_fold
+        )
         print(f"Local Run of {classifier_name.__class__.__name__}.")
 
         load_and_run_classification_experiment(
