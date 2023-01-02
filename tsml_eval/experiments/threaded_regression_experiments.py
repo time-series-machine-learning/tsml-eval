@@ -7,16 +7,8 @@ single debugging runs. Results are written in a standard tsml format.
 
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
-import os
-
-os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
-os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
-os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
 
 import sys
-
-import numba
-import torch
 
 from tsml_eval.experiments import load_and_run_regression_experiment
 from tsml_eval.experiments.set_regressor import set_regressor
@@ -30,10 +22,9 @@ def run_experiment(args, overwrite=False):
     method are in the same format as tsml and can be directly compared to the results
     generated in Java.
     """
-    numba.set_num_threads(1)
-    torch.set_num_threads(1)
-
     # cluster run (with args), this is fragile
+    # don't run threaded jobs on ADA unless you have reserved the whole node and know
+    # what you are doing
     if args.__len__() > 1:  # cluster run, this is fragile
         print("Input args = ", args)
         data_dir = args[1]
@@ -42,14 +33,15 @@ def run_experiment(args, overwrite=False):
         dataset = args[4]
         # ADA starts indexing its jobs at 1, so we need to subtract 1
         resample = int(args[5]) - 1
+        n_jobs = int(sys.argv[6])
 
-        if len(args) > 6:
-            train_fold = args[6].lower() == "true"
+        if len(args) > 7:
+            train_fold = args[7].lower() == "true"
         else:
             train_fold = False
 
-        if len(args) > 7:
-            predefined_resample = args[7].lower() == "true"
+        if len(args) > 8:
+            predefined_resample = args[8].lower() == "true"
         else:
             predefined_resample = False
 
@@ -65,7 +57,10 @@ def run_experiment(args, overwrite=False):
                 results_dir,
                 dataset,
                 set_regressor(
-                    regressor_name, random_state=resample, build_train_file=train_fold
+                    regressor_name,
+                    random_state=resample,
+                    build_train_file=train_fold,
+                    n_jobs=n_jobs,
                 ),
                 resample_id=resample,
                 regressor_name=regressor_name,
@@ -78,15 +73,19 @@ def run_experiment(args, overwrite=False):
         # These are example parameters, change as required for local runs
         # Do not include paths to your local directories here in PRs
         # If threading is required, see the threaded version of this file
-        data_dir = "../../../time_series_regression/new_datasets/"
+        data_dir = "../"
         results_dir = "../"
-        regressor_name = "svr"
+        regressor_name = "DrCIF"
         dataset = "Covid3Months"
         resample = 0
         train_fold = False
         predefined_resample = False
+        n_jobs = 4
         regressor = set_regressor(
-            regressor_name, random_state=resample, build_train_file=train_fold
+            regressor_name,
+            random_state=resample,
+            build_train_file=train_fold,
+            n_jobs=n_jobs,
         )
         print(f"Local Run of {regressor.__class__.__name__}.")
 

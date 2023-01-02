@@ -1,3 +1,6 @@
 recursive-include tsml_eval *.py
 recursive-include tsml_eval/data *.ts
 include LICENSE
+
+# these are in _wip currently, may want to remove in the future
+recursive-include tsml_eval *.csv *.ipynb *.sh
