@@ -1,42 +1,38 @@
 # -*- coding: utf-8 -*-
-"""Classifier Experiments: code to run experiments as an alternative to orchestration.
+"""Classification Experiments: code for experiments as an alternative to orchestration.
 
 This file is configured for runs of the main method with command line arguments, or for
-single debugging runs. Results are written in a standard format. The capability for
-threading is introduced.
+single debugging runs. Results are written in a standard tsml format.
 """
 
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 import sys
-from pathlib import Path
-
-sys.path.append(str(Path(__file__).parent.parent.parent))
 
 from set_classifier import set_classifier
-from sktime.benchmarking.experiments import load_and_run_classification_experiment
 
-from tsml_eval.utils.experiments import results_present
+from tsml_eval.experiments import load_and_run_classification_experiment
+from tsml_eval.utils.experiments import _results_present
 
 
-def run_experiment(args):
-    """Mechanism for testing classifiers on the UCR format.
+def run_experiment(args, overwrite=False):
+    """Mechanism for testing classifiers on the UCR data format.
 
-    This mirrors the mechanism used in the Java based tsml, but is not yet as
-    engineered. Results generated using the method are in the same format as tsml and
-    can be directly compared to the results generated in Java.
+    This mirrors the mechanism used in the Java based tsml. Results generated using the
+    method are in the same format as tsml and can be directly compared to the results
+    generated in Java.
     """
     # cluster run (with args), this is fragile
-    # don't run threaded jobs on the cluster unless you have reserved and node and know
+    # don't run threaded jobs on ADA unless you have reserved the whole node and know
     # what you are doing
-    if args.__len__() > 1:
-        print("Input args = ", sys.argv)
-        data_dir = sys.argv[1]
-        results_dir = sys.argv[2]
-        classifier = sys.argv[3]
-        dataset = sys.argv[4]
+    if args is not None and args.__len__() > 1:
+        print("Input args = ", args)
+        data_dir = args[1]
+        results_dir = args[2]
+        classifier_name = args[3]
+        dataset = args[4]
         # ADA starts indexing its jobs at 1, so we need to subtract 1
-        resample = int(sys.argv[5]) - 1
+        resample = int(args[5]) - 1
         n_jobs = int(sys.argv[6])
 
         if len(sys.argv) > 7:
@@ -51,41 +47,57 @@ def run_experiment(args):
 
         # this is also checked in load_and_run, but doing a quick check here so can
         # print a message and make sure data is not loaded
-        if results_present(results_dir, classifier, dataset, resample):
+        if not overwrite and _results_present(
+            results_dir, classifier_name, dataset, resample
+        ):
             print("Ignoring, results already present")
         else:
             load_and_run_classification_experiment(
-                problem_path=data_dir,
-                results_path=results_dir,
-                classifier=set_classifier(classifier, resample, train_fold, n_jobs),
-                cls_name=classifier,
-                dataset=dataset,
+                data_dir,
+                results_dir,
+                dataset,
+                set_classifier(
+                    classifier_name,
+                    random_state=resample,
+                    build_train_file=train_fold,
+                    n_jobs=n_jobs,
+                ),
                 resample_id=resample,
-                build_train=train_fold,
+                classifier_name=classifier_name,
+                overwrite=overwrite,
+                build_train_file=train_fold,
                 predefined_resample=predefined_resample,
             )
     # local run (no args)
     else:
+        # These are example parameters, change as required for local runs
+        # Do not include paths to your local directories here in PRs
+        # If threading is required, see the threaded version of this file
         data_dir = "../"
         results_dir = "../"
-        cls_name = "DrCIF"
+        classifier_name = "DrCIF"
         dataset = "ItalyPowerDemand"
         resample = 0
         train_fold = False
         predefined_resample = False
         n_jobs = 4
-        classifier = set_classifier(cls_name, resample, train_fold, n_jobs)
-        print(f"Local Run of {classifier.__class__.__name__}.")
+        classifier_name = set_classifier(
+            classifier_name,
+            random_state=resample,
+            build_train_file=train_fold,
+            n_jobs=n_jobs,
+        )
+        print(f"Local Run of {classifier_name.__class__.__name__}.")
 
         load_and_run_classification_experiment(
-            overwrite=False,
-            problem_path=data_dir,
-            results_path=results_dir,
-            cls_name=cls_name,
-            classifier=classifier,
-            dataset=dataset,
+            data_dir,
+            results_dir,
+            dataset,
+            classifier_name,
             resample_id=resample,
-            build_train=train_fold,
+            classifier_name=classifier_name,
+            overwrite=overwrite,
+            build_train_file=train_fold,
             predefined_resample=predefined_resample,
         )
 

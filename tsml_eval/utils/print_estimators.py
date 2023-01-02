@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Utilities for searching and printing estimators."""
 
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
@@ -23,6 +24,6 @@ def list_estimators(
 
 if __name__ == "__main__":
     str = list_estimators(estimator_type="classifier")
-    print(str)
+    print(str)  # noqa: T201
     for s in str:
-        print(f'"{s}",')
+        print(f'"{s}",')  # noqa: T201
