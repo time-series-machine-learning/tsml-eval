@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Classifier Experiments: code to run experiments as an alternative to orchestration.
+"""Classification Experiments: code for experiments as an alternative to orchestration.
 
 This file is configured for runs of the main method with command line arguments, or for
-single debugging runs. Results are written in a standard format.
+single debugging runs. Results are written in a standard tsml format.
 """
 
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
@@ -14,24 +14,21 @@ os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
 
 import sys
-from pathlib import Path
-
-sys.path.append(str(Path(__file__).parent.parent.parent))
 
 import numba
 import torch
-from sktime.benchmarking.experiments import load_and_run_classification_experiment
 
+from tsml_eval.experiments import load_and_run_classification_experiment
 from tsml_eval.experiments.set_classifier import set_classifier
-from tsml_eval.utils.experiments import results_present
+from tsml_eval.utils.experiments import _results_present
 
 
 def run_experiment(args, overwrite=False):
-    """Mechanism for testing classifiers on the UCR format.
+    """Mechanism for testing classifiers on the UCR data format.
 
-    This mirrors the mechanism used in the Java based tsml, but is not yet as
-    engineered. Results generated using the method are in the same format as tsml and
-    can be directly compared to the results generated in Java.
+    This mirrors the mechanism used in the Java based tsml. Results generated using the
+    method are in the same format as tsml and can be directly compared to the results
+    generated in Java.
     """
     numba.set_num_threads(1)
     torch.set_num_threads(1)
@@ -41,7 +38,7 @@ def run_experiment(args, overwrite=False):
         print("Input args = ", args)
         data_dir = args[1]
         results_dir = args[2]
-        classifier = args[3]
+        classifier_name = args[3]
         dataset = args[4]
         # ADA starts indexing its jobs at 1, so we need to subtract 1
         resample = int(args[5]) - 1
@@ -58,86 +55,91 @@ def run_experiment(args, overwrite=False):
 
         # this is also checked in load_and_run, but doing a quick check here so can
         # print a message and make sure data is not loaded
-        if not overwrite and results_present(
-            results_dir, classifier, dataset, resample
+        if not overwrite and _results_present(
+            results_dir, classifier_name, dataset, resample
         ):
             print("Ignoring, results already present")
         else:
             load_and_run_classification_experiment(
-                problem_path=data_dir,
-                results_path=results_dir,
-                classifier=set_classifier(classifier, resample, train_fold),
-                cls_name=classifier,
-                dataset=dataset,
+                data_dir,
+                results_dir,
+                dataset,
+                set_classifier(
+                    classifier_name, random_state=resample, build_train_file=train_fold
+                ),
                 resample_id=resample,
-                build_train=train_fold,
-                predefined_resample=predefined_resample,
+                classifier_name=classifier_name,
                 overwrite=overwrite,
+                build_train_file=train_fold,
+                predefined_resample=predefined_resample,
             )
 
     if args is not None:  # from file version  #  and args[0] == "from_file":
-        from tsml_eval._wip.estimator_from_file.hivecote import (
-            FromFileHIVECOTE,
-        )
+        from tsml_eval._wip.estimator_from_file.hivecote import FromFileHIVECOTE
+
         file_paths = [
             "C:/Users/Ander/git/tsml-estimator-evaluation/tsml_eval/_wip/estimator_from_file/tests/test_files/Arsenal/Predictions/",
             "C:/Users/Ander/git/tsml-estimator-evaluation/tsml_eval/_wip/estimator_from_file/tests/test_files/DrCIF-500/Predictions/",
             "C:/Users/Ander/git/tsml-estimator-evaluation/tsml_eval/_wip/estimator_from_file/tests/test_files/STC-2Hour/Predictions/",
             "C:/Users/Ander/git/tsml-estimator-evaluation/tsml_eval/_wip/estimator_from_file/tests/test_files/TDE/Predictions/",
         ]
-        data_dir = "C:/Users/Ander/Downloads/Univariate2018_ts/Univariate_ts/"# "/home/ajb/Data/"
+        data_dir = "C:/Users/Ander/Downloads/Univariate2018_ts/Univariate_ts/"  # "/home/ajb/Data/"
         results_dir = "C:/Users/Ander/git/tsml-estimator-evaluation/tsml_eval/_wip/estimator_from_file/tests/results/"
         cls_name = "HC2"
 
-        f = open("C:/Users/Ander/git/tsml-estimator-evaluation/tsml_eval/_wip/estimator_from_file/tests/test_files/UnivariateDatasets.txt", "r")
+        f = open(
+            "C:/Users/Ander/git/tsml-estimator-evaluation/tsml_eval/_wip/estimator_from_file/tests/test_files/UnivariateDatasets.txt",
+            "r",
+        )
         lines = f.readlines()
         for line in lines:
             dataset = line.replace("\n", "")
             print(f" Local Run of {cls_name} on dataset {dataset}")
             for resample in range(0, 30):
                 print(resample)
-                classifier = FromFileHIVECOTE(file_paths=[s + dataset + "/" for s in file_paths], random_state=resample, tune_alpha=True)  # set_classifier("fromfile")
+                classifier = FromFileHIVECOTE(
+                    file_paths=[s + dataset + "/" for s in file_paths],
+                    random_state=resample,
+                    tune_alpha=True,
+                )  # set_classifier("fromfile")
                 load_and_run_classification_experiment(
                     overwrite=False,
                     problem_path=data_dir,
                     results_path=results_dir,
-                    cls_name=cls_name,
+                    classifier_name=cls_name,
                     classifier=classifier,
                     dataset=dataset,
-                    resample_id=resample
+                    resample_id=resample,
                 )
 
-    else:  # Local run
-        data_dir = "/home/ajb/Data/"
-        results_dir = "/home/ajb/Results Working Area/ReduxBakeoff/sktime/"
-        cls_name = "HC2"
-        n_jobs = 92
-        contract_mins = 0
-        # HC2 Missing multivariate: EmoPain, FaceDetection, InsectWingbeatEq,
-        # PhonemeSpectra, PenDigits, Tiselac
-        dataset = "EMOPain"
-        print(f" Local Run of {cls_name} on dataset {dataset} with threading jobs "
-              f"={n_jobs} and "
-              f"contract time ={contract_mins}")
+    # local run (no args)
+    else:
+        # These are example parameters, change as required for local runs
+        # Do not include paths to your local directories here in PRs
+        # If threading is required, see the threaded version of this file
+        data_dir = "../"
+        results_dir = "../"
+        classifier_name = "DrCIF"
+        dataset = "ItalyPowerDemand"
+        resample = 0
         train_fold = False
         predefined_resample = False
-        for resample in range(0, 30):
-            classifier = set_classifier(cls_name, resample_id=resample, n_jobs=n_jobs,
-                                        contract=contract_mins, train_file=train_fold)
-            print(
-                f"Local Run of {classifier.__class__.__name__} with {classifier.n_jobs} jobs")
+        classifier_name = set_classifier(
+            classifier_name, random_state=resample, build_train_file=train_fold
+        )
+        print(f"Local Run of {classifier_name.__class__.__name__}.")
 
-            load_and_run_classification_experiment(
-                overwrite=False,
-                problem_path=data_dir,
-                results_path=results_dir,
-                cls_name=cls_name,
-                classifier=classifier,
-                dataset=dataset,
-                resample_id=resample,
-                build_train=train_fold,
-                predefined_resample=predefined_resample,
-            )
+        load_and_run_classification_experiment(
+            data_dir,
+            results_dir,
+            dataset,
+            classifier_name,
+            resample_id=resample,
+            classifier_name=classifier_name,
+            overwrite=overwrite,
+            build_train_file=train_fold,
+            predefined_resample=predefined_resample,
+        )
 
 
 if __name__ == "__main__":

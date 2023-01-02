@@ -127,5 +127,7 @@ dmypy.json
 # Test output
 test_output/
 
-# local code
+# local code and Test files
 local/
+local_code.py
+debug.py

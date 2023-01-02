@@ -42,8 +42,7 @@ results_dir=$local_path"RegressionResults/sktime/"
 out_dir=$local_path"RegressionResults/output/"
 
 # The python script we are running
-script_file_path=$local_path"Code/tsml-eval/tsml_eval/experiments/regression_experiments
-.py"
+script_file_path=$local_path"Code/tsml-eval/tsml_eval/experiments/regression_experiments.py"
 
 # Environment name, change accordingly, for set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
 # Separate environments for GPU (default python/anaconda/2020.11/3.8) and CPU (default python/anaconda/2019.10/3.7) are recommended
