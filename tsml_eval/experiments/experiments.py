@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Functions to perform classification and clustering experiments.
+"""Functions to perform machine learning/data mining experiments.
 
-Results are saved a standardised format used by both tsml and sktime.
+Results are saved a standardised format used by tsml.
 """
 
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
@@ -35,51 +35,56 @@ def run_classification_experiment(
     y_test,
     classifier,
     results_path,
-    classifier_name="",
-    dataset_name="",
+    classifier_name=None,
+    dataset_name="N/A",
     resample_id=None,
     build_test_file=True,
     build_train_file=False,
 ):
     """Run a classification experiment and save the results to file.
 
-    Method to run a basic experiment and write the results to files called
-    testFold<resampleID>.csv and, if required, trainFold<resampleID>.csv.
+    Function to run a basic classification experiment for a
+    <dataset>/<classifier/<resample> combination and write the results to csv file(s)
+    at a given location.
 
     Parameters
     ----------
     X_train : pd.DataFrame or np.array
         The data to train the classifier.
-    y_train : np.array, default = None
+    y_train : np.array
         Training data class labels.
-    X_test : pd.DataFrame or np.array, default = None
+    X_test : pd.DataFrame or np.array
         The data used to test the trained classifier.
-    y_test : np.array, default = None
+    y_test : np.array
         Testing data class labels.
     classifier : BaseClassifier
         Classifier to be used in the experiment.
     results_path : str
         Location of where to write results. Any required directories will be created.
-    classifier_name : str, default=""
-        Name of the classifier.
-    dataset_name : str, default=""
-        Name of problem.
-    resample_id : int, default=0
+    classifier_name : str or None, default=None
+        Name of classifier used in writing results. If None, the name is taken from
+        the classifier.
+    dataset_name : str, default="N/A"
+        Name of dataset.
+    resample_id : int or None, default=None
         Seed for resampling. If set to 0, the default train/test split from file is
         used. Also used in output file name.
+    build_test_file : bool, default=True:
+        Whether to generate test files or not. If the classifier can generate its own
+        train probabilities, the classifier will be built but no file will be output.
     build_train_file : bool, default=False
         Whether to generate train files or not. If true, it performs a 10-fold
         cross-validation on the train data and saves. If the classifier can produce its
         own estimates, those are used instead.
-    build_test_file : bool, default=True:
-         Whether to generate test files or not. If the classifier can generate its own
-         train probabilities, the classifier will be built but no file will be output.
     """
     if not build_test_file and not build_train_file:
         raise Exception(
             "Both test_file and train_file are set to False. "
             "At least one must be written."
         )
+
+    if classifier_name is None:
+        classifier_name = type(classifier).__name__
 
     le = preprocessing.LabelEncoder()
     y_train = le.fit_transform(y_train)
@@ -188,8 +193,9 @@ def load_and_run_classification_experiment(
 ):
     """Load a dataset and run a classification experiment.
 
-    Method to run a basic experiment and write the results to files called
-    testFold<resampleID>.csv and, if required, trainFold<resampleID>.csv.
+    Function to load a dataset, run a basic classification experiment for a
+    <dataset>/<classifier/<resample> combination, and write the results to csv file(s)
+    at a given location.
 
     Parameters
     ----------
@@ -198,14 +204,13 @@ def load_and_run_classification_experiment(
     results_path : str
         Location of where to write results. Any required directories will be created.
     dataset : str
-        Name of problem. Files must be  <problem_path>/<dataset>/<dataset>+"_TRAIN.ts",
-        same for "_TEST".
+        Name of problem. Files must be <problem_path>/<dataset>/<dataset>+"_TRAIN.ts",
+        same for "_TEST.ts".
     classifier : BaseClassifier
-        Classifier to be used in the experiment, if none is provided one is selected
-        using cls_name using resample_id as a seed.
-    classifier_name : str, default = None
-        Name of classifier used in writing results. If none the name is taken from
-        the classifier
+        Classifier to be used in the experiment.
+    classifier_name : str or None, default=None
+        Name of classifier used in writing results. If None, the name is taken from
+        the classifier.
     resample_id : int, default=0
         Seed for resampling. If set to 0, the default train/test split from file is
         used. Also used in output file name.
@@ -221,9 +226,6 @@ def load_and_run_classification_experiment(
         the file format must include the resample_id at the end of the dataset name i.e.
         <problem_path>/<dataset>/<dataset>+<resample_id>+"_TRAIN.ts".
     """
-    if classifier_name is None:
-        classifier_name = type(classifier).__name__
-
     build_test_file, build_train_file = _check_existing_results(
         results_path,
         classifier_name,
@@ -269,7 +271,7 @@ def run_regression_experiment(
     y_test,
     regressor,
     results_path,
-    regressor_name="",
+    regressor_name=None,
     dataset_name="",
     resample_id=None,
     build_test_file=True,
@@ -277,43 +279,48 @@ def run_regression_experiment(
 ):
     """Run a regression experiment and save the results to file.
 
-    Method to run a basic experiment and write the results to files called
-    testFold<resampleID>.csv and, if required, trainFold<resampleID>.csv.
+    Function to run a basic regression experiment for a
+    <dataset>/<regressor/<resample> combination and write the results to csv file(s)
+    at a given location.
 
     Parameters
     ----------
     X_train : pd.DataFrame or np.array
-        The data to train the classifier.
-    y_train : np.array, default = None
-        Training data class labels.
-    X_test : pd.DataFrame or np.array, default = None
-        The data used to test the trained classifier.
-    y_test : np.array, default = None
-        Testing data class labels.
+        The data to train the regressor.
+    y_train : np.array
+        Training data labels.
+    X_test : pd.DataFrame or np.array
+        The data used to test the trained regressor.
+    y_test : np.array
+        Testing data labels.
     regressor : BaseRegressor
         Regressor to be used in the experiment.
     results_path : str
         Location of where to write results. Any required directories will be created.
-    regressor_name : str, default=""
-        Name of the Regressor to use in file writing.
-    dataset_name : str, default=""
-        Name of problem to use in file writing.
-    resample_id : int, default=0
+    regressor_name : str or None, default=None
+        Name of regressor used in writing results. If None, the name is taken from
+        the regressor.
+    dataset_name : str, default="N/A"
+        Name of dataset.
+    resample_id : int or None, default=None
         Seed for resampling. If set to 0, the default train/test split from file is
         used. Also used in output file name.
+    build_test_file : bool, default=True:
+        Whether to generate test files or not. If the regressor can generate its own
+        train predictions, the classifier will be built but no file will be output.
     build_train_file : bool, default=False
         Whether to generate train files or not. If true, it performs a 10-fold
         cross-validation on the train data and saves. If the regressor can produce its
         own estimates, those are used instead.
-    build_test_file : bool, default=True:
-         Whether to generate test files or not. If the regressor can generate its own
-         train probabilities, the classifier will be built but no file will be output.
     """
     if not build_test_file and not build_train_file:
         raise Exception(
             "Both test_file and train_file are set to False. "
             "At least one must be written."
         )
+
+    if regressor_name is None:
+        regressor_name = type(regressor).__name__
 
     regressor_train_preds = build_train_file and callable(
         getattr(regressor, "_get_train_preds", None)
@@ -399,10 +406,11 @@ def load_and_run_regression_experiment(
     build_train_file=False,
     predefined_resample=False,
 ):
-    """Load a dataset and run a classification experiment.
+    """Load a dataset and run a regression experiment.
 
-    Method to run a basic experiment and write the results to files called
-    testFold<resampleID>.csv and, if required, trainFold<resampleID>.csv.
+    Function to load a dataset, run a basic regression experiment for a
+    <dataset>/<regressor/<resample> combination, and write the results to csv file(s)
+    at a given location.
 
     Parameters
     ----------
@@ -411,14 +419,13 @@ def load_and_run_regression_experiment(
     results_path : str
         Location of where to write results. Any required directories will be created.
     dataset : str
-        Name of problem. Files must be  <problem_path>/<dataset>/<dataset>+"_TRAIN.ts",
-        same for "_TEST".
-    regressor : BaseClassifier
-        Classifier to be used in the experiment, if none is provided one is selected
-        using cls_name using resample_id as a seed.
-    regressor_name : str, default = None
-        Name of classifier used in writing results. If none the name is taken from
-        the classifier
+        Name of problem. Files must be <problem_path>/<dataset>/<dataset>+"_TRAIN.ts",
+        same for "_TEST.ts".
+    regressor : BaseRegressor
+        Regressor to be used in the experiment.
+    regressor_name : str or None, default=None
+        Name of regressor used in writing results. If None, the name is taken from
+        the regressor.
     resample_id : int, default=0
         Seed for resampling. If set to 0, the default train/test split from file is
         used. Also used in output file name.
@@ -427,16 +434,13 @@ def load_and_run_regression_experiment(
         already present. If True, it will overwrite anything already there.
     build_train_file : bool, default=False
         Whether to generate train files or not. If true, it performs a 10-fold
-        cross-validation on the train data and saves. If the classifier can produce its
+        cross-validation on the train data and saves. If the regressor can produce its
         own estimates, those are used instead.
     predefined_resample : bool, default=False
         Read a predefined resample from file instead of performing a resample. If True
         the file format must include the resample_id at the end of the dataset name i.e.
         <problem_path>/<dataset>/<dataset>+<resample_id>+"_TRAIN.ts".
     """
-    if regressor_name is None:
-        regressor_name = type(regressor).__name__
-
     build_test_file, build_train_file = _check_existing_results(
         results_path,
         regressor_name,
@@ -486,54 +490,55 @@ def run_clustering_experiment(
     results_path,
     X_test=None,
     y_test=None,
-    clusterer_name="",
-    dataset_name="",
+    clusterer_name=None,
+    dataset_name="N/A",
     resample_id=None,
     build_test_file=False,
     build_train_file=True,
 ):
-    """
-    Run a clustering experiment and save the results to file.
+    """Run a clustering experiment and save the results to file.
 
-    Method to run a basic experiment and write the results to files called
-    testFold<resampleID>.csv and, if required, trainFold<resampleID>.csv. This
-    version loads the data from file based on a path. The clusterer is always trained on
-    the required input data trainX. Output to trainResample<resampleID>.csv will be
-    the predicted clusters of trainX. If trainY is also passed, these are written to
-    file. If the clusterer makes probabilistic predictions, these are also written to
-    file. See write_results_to_uea_format for more on the output. Be warned,
-    this method will always overwrite existing results, check bvefore calling or use
-    load_and_run_clustering_experiment instead.
+    Function to run a basic clustering experiment for a
+    <dataset>/<clusterer/<resample> combination and write the results to csv file(s)
+    at a given location.
 
     Parameters
     ----------
     X_train : pd.DataFrame or np.array
-        The data to cluster.
+        The data to train the clusterer.
+    y_train : np.array
+        Training data class labels (used for evaluation).
     clusterer : BaseClusterer
-        The clustering object
+        Clusterer to be used in the experiment.
     results_path : str
-        Where to write the results to
-    y_train : np.array, default = None
-        Train data tue class labels, only used for file writing, ignored by the
-        clusterer
-    X_test : pd.DataFrame or np.array, default = None
-        Test attribute data, if present it is used for predicting testY
-    y_test : np.array, default = None
-        Test data true class labels, only used for file writing, ignored by the
-        clusterer
-    clusterer_name : str, default = None
-        Name of the clusterer, written to the results file, ignored if None
-    dataset_name : str, default = None
-        Name of problem, written to the results file, ignored if None
-    resample_id : int, default = 0
-        Resample identifier, defaults to 0
-
+        Location of where to write results. Any required directories will be created.
+    X_test : pd.DataFrame or np.array, default=None
+        The data used to test the fitted clusterer.
+    y_test : np.array, default=None
+        Testing data class labels.
+    clusterer_name : str or None, default=None
+        Name of clusterer used in writing results. If None, the name is taken from
+        the clusterer.
+    dataset_name : str, default="N/A"
+        Name of dataset.
+    resample_id : int or None, default=None
+        Seed for resampling. If set to 0, the default train/test split from file is
+        used. Also used in output file name.
+    build_test_file : bool, default=False:
+        Whether to generate test files or not. If True, X_test and y_test must be
+        provided.
+    build_train_file : bool, default=True
+        Whether to generate train files or not. The clusterer is fit using train data
+        regardless of input.
     """
     if not build_test_file and not build_train_file:
         raise Exception(
             "Both test_file and train_file are set to False. "
             "At least one must be written."
         )
+
+    if clusterer_name is None:
+        clusterer_name = type(clusterer).__name__
 
     le = preprocessing.LabelEncoder()
     y_train = le.fit_transform(y_train)
@@ -628,42 +633,40 @@ def load_and_run_clustering_experiment(
     build_test_file=False,
     predefined_resample=False,
 ):
-    """Run a clustering experiment.
+    """Load a dataset and run a clustering experiment.
 
-    Method to run a basic experiment and write the results to files called
-    testFold<resampleID>.csv and, if required, trainFold<resampleID>.csv. This
-    version loads the data from file based on a path. The
-    clusterer is always trained on the
+    Function to load a dataset, run a basic clustering experiment for a
+    <dataset>/<clusterer/<resample> combination, and write the results to csv file(s)
+    at a given location.
 
     Parameters
     ----------
     problem_path : str
         Location of problem files, full path.
     results_path : str
-        Location of where to write results. Any required directories will be created
+        Location of where to write results. Any required directories will be created.
     dataset : str
-        Name of problem. Files must be  <problem_path>/<dataset>/<dataset>+
-        "_TRAIN"+format, same for "_TEST"
-    clusterer : the clusterer
-    clusterer_name : str, default =None
-        determines what to call the write directory. If None, it is set to
-        type(clusterer).__name__
-    resample_id : int, default = 0
+        Name of problem. Files must be <problem_path>/<dataset>/<dataset>+"_TRAIN.ts",
+        same for "_TEST.ts".
+    clusterer : BaseClusterer
+        Clusterer to be used in the experiment.
+    resample_id : int, default=0
         Seed for resampling. If set to 0, the default train/test split from file is
         used. Also used in output file name.
-    overwrite : boolean, default = False
-        if False, this will only build results if there is not a result file already
-        present. If True, it will overwrite anything already there.
-    format: string, default = ".ts"
-        Valid formats are ".ts", ".arff", ".tsv" and ".long". For more info on
-        format, see   examples/loading_data.ipynb
-    build_train_file: boolean, default = False
-        whether to generate train files or not. If true, it performs a 10xCV on the
-        train and saves
+    clusterer_name : str or None, default=None
+        Name of clusterer used in writing results. If None, the name is taken from
+        the clusterer.
+    overwrite : bool, default=False
+        If set to False, this will only build results if there is not a result file
+        already present. If True, it will overwrite anything already there.
+    build_test_file : bool, default=False
+        Whether to generate test files or not. If true, the clusterer will assign
+        clusters to the loaded test data.
+    predefined_resample : bool, default=False
+        Read a predefined resample from file instead of performing a resample. If True
+        the file format must include the resample_id at the end of the dataset name i.e.
+        <problem_path>/<dataset>/<dataset>+<resample_id>+"_TRAIN.ts".
     """
-    if clusterer_name is None:
-        clusterer_name = type(clusterer).__name__
-
     build_test_file, build_train_file = _check_existing_results(
         results_path,
         clusterer_name,
