@@ -3,12 +3,16 @@ import pytest
 from sklearn.utils.estimator_checks import parametrize_with_checks
 from sktime.utils.estimator_checks import check_estimator
 
-from tsml_eval.sktime_estimators.classification.hydra import HYDRA
-from tsml_eval.sktime_estimators.classification.mpdist import MPDist
-from tsml_eval.sktime_estimators.classification.muse_dilation import MUSE_DILATION
-from tsml_eval.sktime_estimators.classification.rdst import RDST, RDSTEnsemble
-from tsml_eval.sktime_estimators.classification.rsf import RandomShapeletForest
-from tsml_eval.sktime_estimators.classification.weasel_dilation import WEASEL_DILATION
+from tsml_eval.sktime_estimators.classification.convolution_based.hydra import HYDRA
+from tsml_eval.sktime_estimators.classification.distance_based.mpdist import MPDist
+from tsml_eval.sktime_estimators.classification.shapelet_based.rdst import (
+    RDST,
+    RDSTEnsemble,
+)
+from tsml_eval.sktime_estimators.classification.shapelet_based.rsf import (
+    RandomShapeletForest,
+)
+from tsml_eval.sktime_estimators.classification.transformations import SFADilation
 from tsml_eval.sktime_estimators.regression.convolution_based.arsenal import Arsenal
 from tsml_eval.sktime_estimators.regression.dictionary_based.tde import (
     TemporalDictionaryEnsemble,
@@ -21,11 +25,6 @@ from tsml_eval.sktime_estimators.regression.shapelet_based.str import (
 from tsml_eval.sktime_estimators.regression.sklearn.rotation_forest import (
     RotationForest,
 )
-from tsml_eval.sktime_estimators.regression.transformations.sfa import SFA
-from tsml_eval.sktime_estimators.regression.transformations.shapelet_transform import (
-    RandomShapeletTransform,
-)
-from tsml_eval.sktime_estimators.transformations.sfa_dilation import SFADilation
 
 classification_estimators = [
     # WEASEL_DILATION,

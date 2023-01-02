@@ -14,8 +14,6 @@ __all__ = ["WEASEL_DILATION"]
 import sys
 from pathlib import Path
 
-sys.path.append(str(Path(__file__).parent.parent.parent))
-
 import numpy as np
 from joblib import Parallel, delayed
 from scipy.sparse import hstack
@@ -27,7 +25,7 @@ from sklearn.linear_model import RidgeClassifierCV
 from sklearn.utils import check_random_state
 from sktime.classification.base import BaseClassifier
 
-from tsml_eval.sktime_estimators.transformations.sfa_dilation import SFADilation
+from tsml_eval.sktime_estimators.classification.transformations import SFADilation
 
 # from sktime.transformations.panel.rocket import MiniRocket
 
