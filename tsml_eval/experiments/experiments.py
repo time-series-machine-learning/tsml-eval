@@ -562,7 +562,7 @@ def run_clustering_experiment(
         train_probs = clusterer.predict_proba(X_train)
         train_time = int(round(time.time() * 1000)) - start
 
-        train_preds = clusterer.classes_[np.argmax(train_probs, axis=1)]
+        train_preds = np.argmax(train_probs, axis=1)
         train_acc = clustering_accuracy(y_train, train_preds)
 
         write_clustering_results(
@@ -593,7 +593,7 @@ def run_clustering_experiment(
         test_probs = clusterer.predict_proba(X_test)
         test_time = int(round(time.time() * 1000)) - start
 
-        test_preds = clusterer.classes_[np.argmax(test_probs, axis=1)]
+        test_preds = np.argmax(test_probs, axis=1)
         test_acc = clustering_accuracy(y_test, test_preds)
 
         write_clustering_results(

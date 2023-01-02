@@ -456,13 +456,13 @@ def write_clustering_results(
     n_clusters : int, default=-1
         The number of clusters founds by the clusterer.
     """
-    if len(cluster_predictions) != len(cluster_probabilities) != len(class_labels):
+    if len(cluster_predictions) != cluster_probabilities.shape[0] != len(class_labels):
         raise IndexError(
             "The number of predicted values is not the same as the number of actual "
             "class values."
         )
 
-    if n_clusters > -1 and n_clusters != len(cluster_probabilities.shape[1]):
+    if n_clusters > -1 and n_clusters != cluster_probabilities.shape[1]:
         raise IndexError(
             "The number of clusters is not the same as the number of probability "
             "values for each case."
