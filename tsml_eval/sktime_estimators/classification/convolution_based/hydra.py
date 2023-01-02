@@ -96,7 +96,7 @@ class HydraInternal(nn.Module):
         else:
             Z = []
             batches = torch.arange(num_examples).split(batch_size)
-            for i, batch in enumerate(batches):
+            for _, batch in enumerate(batches):
                 Z.append(self(X[batch]))
             return torch.cat(Z)
 

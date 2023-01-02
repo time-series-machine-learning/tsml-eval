@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 List of datasets available from the http://tseregression.org/ archive, described in [1].
 

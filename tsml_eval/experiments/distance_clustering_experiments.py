@@ -8,9 +8,14 @@ single debugging runs. Results are written in a standard format.
 __author__ = ["TonyBagnall"]
 
 import os
-import sys
-from pathlib import Path
 
+os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
+os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
+os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
+
+import sys
+
+import numba
 import numpy as np
 import torch
 from sklearn.metrics import davies_bouldin_score
@@ -19,12 +24,7 @@ from sktime.clustering.k_means import TimeSeriesKMeans
 from sktime.clustering.k_medoids import TimeSeriesKMedoids
 from sktime.datasets import load_from_tsfile as load_ts
 
-sys.path.append(str(Path(__file__).parent.parent.parent))
-
-os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
-os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
-os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
-import numba  # noqa
+from tsml_eval.utils.experiments import _results_present_full_path
 
 
 def config_clusterer(clusterer: str, **kwargs):
@@ -76,15 +76,6 @@ def _recreate_results(trainX, trainY):
     print("Score = ", score)  # noqa
 
 
-def results_present_full_path(path, dataset, res):
-    """Duplicate: check if results are present already."""
-    full_path = f"{path}/Predictions/{dataset}/testResample{res}.csv"
-    full_path2 = f"{path}/Predictions/{dataset}/trainResample{res}.csv"
-    if os.path.exists(full_path) and os.path.exists(full_path2):
-        return True
-    return False
-
-
 if __name__ == "__main__":
     """Example simple usage, with args input via script or hard coded for testing."""
     numba.set_num_threads(1)
@@ -134,7 +125,7 @@ if __name__ == "__main__":
         results_dir = results_dir + "tune_w/"
 
     results_dir = results_dir + "/" + clusterer + "/" + averaging + "/"
-    if results_present_full_path(results_dir, dataset, resample):
+    if _results_present_full_path(results_dir, dataset, resample):
         print("Ignoring, results already present")  # noqa
     print(  # noqa
         f" Running {dataset} resample {resample} normalised = {normalise} "  # noqa
