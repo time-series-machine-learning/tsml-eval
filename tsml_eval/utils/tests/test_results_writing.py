@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Tests for results writing functions."""
 
 __author__ = ["MatthewMiddlehurst"]
 
@@ -14,6 +15,7 @@ from tsml_eval.utils.experiments import (
 
 
 def test_write_classification_results():
+    """Test writing of classification results files."""
     class_labels, predictions, probabilities = _generate_labels_and_predictions()
 
     output_path = (
@@ -61,6 +63,7 @@ def _check_classification_file_format(file_path):
 
 
 def test_write_regression_results():
+    """Test writing of regression results files."""
     labels, predictions, _ = _generate_labels_and_predictions()
 
     output_path = (
@@ -104,6 +107,7 @@ def _check_regression_file_format(file_path):
 
 
 def test_write_clustering_results():
+    """Test writing of clustering results files."""
     (
         class_labels,
         cluster_predictions,

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Util functions for experiments."""
+"""Utility functions for experiments."""
 
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Tests for dataset resampling functions."""
 
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
