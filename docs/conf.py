@@ -8,6 +8,8 @@ import inspect
 import os
 import sys
 
+import tsml_eval
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -24,21 +26,15 @@ RTD_VERSION = os.environ.get("READTHEDOCS_VERSION", "local")
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "tsml-eval"
-copyright = "2022, Matthew Middlehurst"
+copyright = "2022 - 2023, The tsml developers (BSD-3 License)"
 author = "Matthew Middlehurst"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
-# import tsml_eval  # noqa: E402
-#
-# version = tsml_estimator_evaluation.__version__
-# release = tsml_estimator_evaluation.__version__
 
-# todo
-version = "0.0.1"
-release = "0.0.1"
-
+version = tsml_eval.__version__
+release = tsml_eval.__version__
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -81,12 +77,7 @@ def linkcode_resolve(domain, info):
             obj = getattr(obj, part)
 
         fn = inspect.getsourcefile(obj)
-        fn = os.path.relpath(
-            # fn, start=os.path.dirname(tsml_eval.__file__)
-            # todo
-            fn,
-            start=os.path.dirname(os.path.abspath(".") + "\\tsml_eval\\__init__.py"),
-        )
+        fn = os.path.relpath(fn, start=os.path.dirname(tsml_eval.__file__))
         source, lineno = inspect.getsourcelines(obj)
         return fn, lineno, lineno + len(source) - 1
 
