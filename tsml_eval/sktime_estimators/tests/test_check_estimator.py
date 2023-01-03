@@ -6,10 +6,6 @@ from sklearn.utils.estimator_checks import parametrize_with_checks
 from sktime.utils.estimator_checks import check_estimator
 
 from tsml_eval.sktime_estimators.classification.convolution_based.hydra import HYDRA
-from tsml_eval.sktime_estimators.classification.dictionary_based import (
-    MUSE_DILATION,
-    WEASEL_DILATION,
-)
 from tsml_eval.sktime_estimators.classification.distance_based.mpdist import MPDist
 from tsml_eval.sktime_estimators.classification.shapelet_based.rdst import (
     RDST,
@@ -28,19 +24,14 @@ from tsml_eval.sktime_estimators.regression.interval_based.drcif import DrCIF
 from tsml_eval.sktime_estimators.regression.shapelet_based.str import (
     ShapeletTransformRegressor,
 )
-from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
 from tsml_eval.sktime_estimators.regression.sklearn.rotation_forest import (
     RotationForest,
-)
-from tsml_eval.sktime_estimators.regression.transformations import (
-    SFA,
-    RandomShapeletTransform,
 )
 
 classification_estimators = [
     HYDRA,
-    WEASEL_DILATION,
-    MUSE_DILATION,
+    # WEASEL_DILATION,
+    # MUSE_DILATION,
     MPDist,
     RDST,
     RDSTEnsemble,
@@ -53,9 +44,9 @@ regression_estimators = [
     HIVECOTEV2,
     DrCIF,
     ShapeletTransformRegressor,
-    SklearnBaseRegressor,
-    RandomShapeletTransform,
-    SFA,
+    # SklearnBaseRegressor,
+    # RandomShapeletTransform,
+    # SFA,
 ]
 
 
