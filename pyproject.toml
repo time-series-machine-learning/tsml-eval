@@ -88,4 +88,4 @@ per-file-ignores = [
 ]
 
 [tool.pytest.ini_options]
-addopts = "--ignore tsml_eval/_wip --durations 10 --timeout 600 --showlocals --numprocesses auto"
+addopts = "--ignore tsml_eval/_wip --durations 10 --timeout 600 --showlocals --doctest-modules --numprocesses auto"
