@@ -8,4 +8,4 @@ todo: API!
 .. autosummary::
    :toctree: generated
 
-   lumache
+   experiments API start
