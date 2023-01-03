@@ -92,5 +92,6 @@ addopts = [
     "--ignore tsml_eval/_wip",
     "--durations 10",
     "--timeout 600",
-    "-n auto",
+    "--showlocals",
+    "--numprocesses auto",
 ]
