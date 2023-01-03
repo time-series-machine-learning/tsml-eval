@@ -3,8 +3,10 @@
 API
 ===
 
-Evaluation
-----------
+Evaluation: tsml_eval.evaluation
+--------------------------------
+
+Functions for evaluating the performance of a model.
 
 .. currentmodule:: tsml_eval.evaluation
 
@@ -14,8 +16,10 @@ Evaluation
 
     metrics.clustering_accuracy
 
-Experiments
------------
+Experiments: tsml_eval.experiments
+----------------------------------
+
+Functions for running experiments.
 
 .. currentmodule:: tsml_eval.experiments
 
@@ -30,8 +34,10 @@ Experiments
     run_clustering_experiment
     load_and_run_clustering_experiment
 
-Utilities
----------
+Utilities: tsml_eval.utils
+--------------------------
+
+Public utility functions used elsewhere in the package.
 
 .. currentmodule:: tsml_eval.utils
 

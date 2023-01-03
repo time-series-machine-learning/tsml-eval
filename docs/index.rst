@@ -10,5 +10,6 @@ tsml-estimator-evaluation is a package containing tools for the evaluation for c
    :hidden:
 
    installation
-   api
+   user_guide
    papers
+   api
