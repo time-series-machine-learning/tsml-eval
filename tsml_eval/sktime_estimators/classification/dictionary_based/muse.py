@@ -7,13 +7,10 @@ and logistic regression.
 __author__ = ["patrickzib"]
 __all__ = ["MUSE_DILATION"]
 
-import sys
-from pathlib import Path
-
-sys.path.append(str(Path(__file__).parent.parent.parent))
-
 import math
+import sys
 import warnings
+from pathlib import Path
 
 import numpy as np
 from joblib import Parallel, delayed
@@ -25,7 +22,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.utils import check_random_state
 from sktime.classification.base import BaseClassifier
 
-from tsml_eval.sktime_estimators.transformations.sfa_dilation import SFADilation
+from tsml_eval.sktime_estimators.classification.transformations import SFADilation
 
 
 class MUSE_DILATION(BaseClassifier):
