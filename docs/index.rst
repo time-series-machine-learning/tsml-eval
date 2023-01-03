@@ -1,9 +1,10 @@
 .. _index:
 
 tsml-eval's documentation
-=========================================
+=========================
 
-tsml-estimator-evaluation is a package containing tools for the evaluation for classification, regression and clustering algorithms built on the sktime interface.
+tsml-eval is a package containing tools for the evaluation for classification,
+regression and clustering algorithms.
 
 .. grid:: 1 2 2 2
     :gutter: 3

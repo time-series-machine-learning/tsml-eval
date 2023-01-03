@@ -9,4 +9,5 @@ todo: papers!
 ----
 
 :ref:`Regression paper <regression>`
+
 :ref:`Bakeoff paper <bakeoff>`
