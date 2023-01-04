@@ -16,15 +16,37 @@ _check_dl_dependencies(severity="warning")
 
 
 class InceptionTimeClassifier(BaseClassifier):
-    """Ensemble InceptionTime classifier.
+    """InceptionTime ensemble classifier.
+
+    Ensemble of IndividualInceptionTimeClassifiers, as desribed in [1].
 
     Parameters
     ----------
-    n_classifiers: int, default = 5.
+    n_classifiers=5,
+    n_filters: int,
+    use_residual: boolean,
+    use_bottleneck: boolean,
+    depth: int
+    kernel_size: int, specifying the length of the 1D convolution
+     window
+    batch_size: int, the number of samples per gradient update.
+    bottleneck_size: int,
+    nb_epochs: int, the number of epochs to train the model
+    callbacks: list of tf.keras.callbacks.Callback objects
+    random_state: int, seed to any needed random actions
+    verbose: boolean, whether to output extra information
+    model_name: string, the name of this model for printing and
+     file writing purposes
+    model_save_directory: string, if not None; location to save
+     the trained keras model in hdf5 format
 
     Notes
     -----
-    Reference here.
+    ..[1] Fawaz et. al, InceptionTime: Finding AlexNet for Time Series
+    Classification, Data Mining and Knowledge Discovery, 34, 2020
+
+    Adapted from the implementation from Fawaz et. al
+    https://github.com/hfawaz/InceptionTime/blob/master/classifiers/inception.py
     """
 
     _tags = {"capability:multivariate": True}
@@ -32,7 +54,7 @@ class InceptionTimeClassifier(BaseClassifier):
     def __init__(
         self,
         n_classifiers=5,
-        nb_filters=32,
+        n_filters=32,
         use_residual=True,
         use_bottleneck=True,
         bottleneck_size=32,
@@ -46,7 +68,7 @@ class InceptionTimeClassifier(BaseClassifier):
     ):
         super(InceptionTimeClassifier, self).__init__()
         self.n_classifiers = n_classifiers
-        self.nb_filters = nb_filters
+        self.n_filters = n_filters
         self.use_residual = use_residual
         self.use_bottleneck = use_bottleneck
         self.bottleneck_size = bottleneck_size
@@ -60,7 +82,7 @@ class InceptionTimeClassifier(BaseClassifier):
         self.classifers_ = []
         for _ in range(0, self.n_classifiers):
             cls = IndividualInceptionTimeClassifier(
-                nb_filters=nb_filters,
+                n_filters=n_filters,
                 use_bottleneck=use_bottleneck,
                 bottleneck_size=bottleneck_size,
                 depth=depth,
@@ -90,22 +112,23 @@ class IndividualInceptionTimeClassifier(BaseDeepClassifier, InceptionTimeNetwork
 
     Parameters
     ----------
-    nb_filters: int,
-    use_residual: boolean,
-    use_bottleneck: boolean,
-    depth: int
-    kernel_size: int, specifying the length of the 1D convolution
-     window
-    batch_size: int, the number of samples per gradient update.
-    bottleneck_size: int,
-    nb_epochs: int, the number of epochs to train the model
-    callbacks: list of tf.keras.callbacks.Callback objects
-    random_state: int, seed to any needed random actions
-    verbose: boolean, whether to output extra information
-    model_name: string, the name of this model for printing and
-     file writing purposes
-    model_save_directory: string, if not None; location to save
-     the trained keras model in hdf5 format
+    n_filters: int, default = 32
+    use_residual: boolean, default = True
+    use_bottleneck: boolean, default = True
+    bottleneck_size: int, default = 32
+    depth: int, default = 6
+    kernel_size: int, default = 40
+        specifies the length of the 1D convolution window.
+    batch_size: int, default = 64
+        the number of samples per gradient update.
+    nb_epochs: int, default = 1500
+        the number of epochs to train the model.
+    callbacks: callable or None, default None
+        list of tf.keras.callbacks.Callback objects.
+    random_state: int, default = 0
+        seed to any needed random actions.
+    verbose: boolean, default = False
+        whether to output extra information
 
     Notes
     -----
@@ -118,12 +141,12 @@ class IndividualInceptionTimeClassifier(BaseDeepClassifier, InceptionTimeNetwork
 
     def __init__(
         self,
-        nb_filters=32,
+        n_filters=32,
         use_residual=True,
         use_bottleneck=True,
         bottleneck_size=32,
         depth=6,
-        kernel_size=41 - 1,
+        kernel_size=40,
         batch_size=64,
         nb_epochs=1500,
         callbacks=None,
@@ -133,7 +156,7 @@ class IndividualInceptionTimeClassifier(BaseDeepClassifier, InceptionTimeNetwork
         _check_dl_dependencies(severity="error")
         super(IndividualInceptionTimeClassifier, self).__init__()
         # predefined
-        self.nb_filters = nb_filters
+        self.n_filters = n_filters
         self.use_residual = use_residual
         self.use_bottleneck = use_bottleneck
         self.bottleneck_size = bottleneck_size
@@ -162,8 +185,9 @@ class IndividualInceptionTimeClassifier(BaseDeepClassifier, InceptionTimeNetwork
         -------
         output : a compiled Keras Model
         """
-        input_layer, output_layer = self.build_network(input_shape, **kwargs)
         from tensorflow import keras
+
+        input_layer, output_layer = self.build_network(input_shape, **kwargs)
 
         output_layer = keras.layers.Dense(n_classes, activation="softmax")(output_layer)
 
