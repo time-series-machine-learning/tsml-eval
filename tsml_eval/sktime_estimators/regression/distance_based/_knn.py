@@ -99,7 +99,6 @@ class KNeighborsTimeSeriesRegressor(BaseRegressor):
             if self.weights == "distance":
                 weight_vector = distances[closest_idx]
                 weight_vector = weight_vector**2
-
                 # Using epsilon ~= 0 to avoid division by zero
                 weight_vector = 1 / (weight_vector + np.finfo(float).eps)
                 preds[i] = np.average(closest_targets, weights=weight_vector)
