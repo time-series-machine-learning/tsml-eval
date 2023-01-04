@@ -6,25 +6,60 @@ Installation
 Install from PyPI
 -----------------
 
-pip install tsml-eval
+The easiest way to install ``tsml-eval`` is using ``pip``:
 
-pip install tsml-eval==0.1.0
+.. code-block:: bash
+
+    pip install tsml-eval
+
+To install a specific `release <https://github.com/time-series-machine-learning/
+tsml-eval/releases>`_ version, specifiy the version number when installing:
+
+.. code-block:: bash
+
+    pip install tsml-eval==0.1.0
 
 Install fixed dependency versions for a release
 -----------------------------------------------
 
-https://github.com/time-series-machine-learning/tsml-eval/releases
+``tsml-eval`` `releases <https://github.com/time-series-machine-learning/tsml-eval
+/releases>`_ contain a ``requirements.txt`` file that lists the versions of all
+dependencies used to generate results at the time of the release.
 
-pip install -r requirements.txt
+To install the dependencies using this file, run:
+
+.. code-block:: bash
+
+    pip install -r requirements.txt
 
 Install latest in-development version from GitHub
 -------------------------------------------------
 
-pip install git+https://github.com/time-series-machine-learning/tsml-eval.git@main
+The latest development version of ``tsml-eval`` can be installed directly from GitHub
+using ``pip``:
+
+.. code-block:: bash
+
+    pip install git+https://github.com/time-series-machine-learning/tsml-eval.git@main
 
 Install for developers
 ----------------------
 
-git clone https://github.com/time-series-machine-learning/tsml-eval.git
+To install ``tsml-eval`` for development, first clone the GitHub repository:
 
-pip install --editable .[dev]
+.. code-block:: bash
+
+    git clone https://github.com/time-series-machine-learning/tsml-eval.git
+
+Then install the package in editable mode with developer dependencies:
+
+.. code-block:: bash
+
+    pip install --editable .[dev]
+
+We recommend setting up pre-commit hooks to automatically format code and check for
+common issues before committing:
+
+.. code-block:: bash
+
+    pre-commit install
