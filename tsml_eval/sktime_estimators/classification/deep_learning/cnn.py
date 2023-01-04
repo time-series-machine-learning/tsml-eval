@@ -5,10 +5,10 @@ __author__ = ["James-Large", "TonyBagnall"]
 __all__ = ["CNNClassifier"]
 
 from sklearn.utils import check_random_state
-
 from sktime.classification.deep_learning.base import BaseDeepClassifier
-from tsml_eval.sktime_estimators.networks.cnn import CNNNetwork
 from sktime.utils.validation._dependencies import _check_dl_dependencies
+
+from tsml_eval.sktime_estimators.networks.cnn import CNNNetwork
 
 _check_dl_dependencies(severity="warning")
 
