@@ -3,7 +3,7 @@
 Installation
 ============
 
-Install from PyPI
+Install from PyPi
 -----------------
 
 The easiest way to install ``tsml-eval`` is using ``pip``:
@@ -13,7 +13,7 @@ The easiest way to install ``tsml-eval`` is using ``pip``:
     pip install tsml-eval
 
 To install a specific `release <https://github.com/time-series-machine-learning/
-tsml-eval/releases>`_ version, specifiy the version number when installing:
+tsml-eval/releases>`_ version, specify the version number when installing:
 
 .. code-block:: bash
 

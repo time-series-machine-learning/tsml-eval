@@ -3,4 +3,7 @@
 User Guide
 ==========
 
-todo: user guide!
+.. nbgallery::
+    :glob:
+
+    examples/*.ipynb
