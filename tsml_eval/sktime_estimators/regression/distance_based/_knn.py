@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 """Basic knn regressor."""
 
-__author__ = ["TonyBagnall"]
+__author__ = ["TonyBagnall", "GuiArcencio"]
 __all__ = ["KNeighborsTimeSeriesRegressor"]
 
 import numpy as np
 from sktime.distances import distance_factory
 from sktime.regression.base import BaseRegressor
 
+
 class KNeighborsTimeSeriesRegressor(BaseRegressor):
     """Add docstring.
-    
+
     Parameters
     ----------
     distance : str or Callable, default="euclidean"
@@ -34,7 +35,7 @@ class KNeighborsTimeSeriesRegressor(BaseRegressor):
         distance="euclidean",
         distance_params=None,
         n_neighbours=1,
-        weights='uniform'
+        weights="uniform",
     ):
         self.distance = distance
         self.distance_params = distance_params
@@ -81,23 +82,23 @@ class KNeighborsTimeSeriesRegressor(BaseRegressor):
         # Measure distance between train set (self_X) and test set (X)
         preds = np.zeros(X.shape[0])
         for i in range(X.shape[0]):
-            distances = np.array([
-                self.metric(X[i], self._X[j]) for j in range(self._X.shape[0])
-            ])
+            distances = np.array(
+                [self.metric(X[i], self._X[j]) for j in range(self._X.shape[0])]
+            )
 
             # Find indices of k nearest neighbors using partitioning:
             # [0..k-1], [k], [k+1..n-1]
-            # They might not be ordered within themselves, 
-            # but it is not necessary and partitioning is 
+            # They might not be ordered within themselves,
+            # but it is not necessary and partitioning is
             # O(n) while sorting is O(nlogn)
             closest_idx = np.argpartition(distances, self.n_neighbours)
-            closest_idx = closest_idx[:self.n_neighbours]
+            closest_idx = closest_idx[: self.n_neighbours]
 
             closest_targets = self._y[closest_idx]
 
             if self.weights == "distance":
                 weight_vector = distances[closest_idx]
-                weight_vector = weight_vector**2
+                weight_vector = weight_vector ** 2
 
                 # Using epsilon ~= 0 to avoid division by zero
                 weight_vector = 1 / (weight_vector + np.finfo(float).eps)
@@ -105,7 +106,5 @@ class KNeighborsTimeSeriesRegressor(BaseRegressor):
             elif self.weights == "uniform":
                 preds[i] = np.mean(closest_targets)
             else:
-                raise Exception(
-                    f"Invalid kNN weights: {self.weights}"
-                )
+                raise Exception(f"Invalid kNN weights: {self.weights}")
         return preds
