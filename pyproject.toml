@@ -45,8 +45,9 @@ docs = [
     "sphinx",
     "sphinx-design",
     "sphinx-gallery",
-    "numpydoc",
     "nbsphinx",
+    "numpydoc",
+    "jupyter",
     "furo",
 ]
 
