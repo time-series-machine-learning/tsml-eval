@@ -112,8 +112,9 @@ class KNeighborsTimeSeriesClassifier(_KNeighborsClassifier, BaseClassifier):
         self.weights = _check_weights(weights)
         self.distance = distance
         self.distance_params = distance_params
-        if isinstance(self.distance, str):
-            distance = distance_factory(metric=self.distance)
+        # This ignores the params?
+        #        if isinstance(self.distance, str):
+        #            distance = distance_factory(metric=self.distance)
 
         self.algorithm = algorithm
         self.leaf_size = leaf_size
