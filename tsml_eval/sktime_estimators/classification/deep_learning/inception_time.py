@@ -120,6 +120,11 @@ class InceptionTimeClassifier(BaseClassifier):
 
         probs = probs / self.n_classifiers
 
+        # check if binary classification
+        if probs.shape[1] == 1:
+            # first column is probability of class 0 and second is of class 1
+            probs = np.hstack([1 - probs, probs])
+
         return probs
 
 
