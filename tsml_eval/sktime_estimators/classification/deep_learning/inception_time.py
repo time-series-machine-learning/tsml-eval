@@ -2,7 +2,6 @@
 """InceptionTime classifier."""
 
 __author__ = ["James-Large", "TonyBagnall"]
-__all__ = ["IndividualInceptionTimeClassifier"]
 
 import numpy as np
 from sklearn.utils import check_random_state
@@ -66,7 +65,6 @@ class InceptionTimeClassifier(BaseClassifier):
         random_state=0,
         verbose=False,
     ):
-        super(InceptionTimeClassifier, self).__init__()
         self.n_classifiers = n_classifiers
         self.n_filters = n_filters
         self.use_residual = use_residual
@@ -80,31 +78,40 @@ class InceptionTimeClassifier(BaseClassifier):
         self.random_state = random_state
         self.verbose = verbose
         self.classifers_ = []
-        for _ in range(0, self.n_classifiers):
-            cls = IndividualInceptionTimeClassifier(
-                n_filters=n_filters,
-                use_bottleneck=use_bottleneck,
-                bottleneck_size=bottleneck_size,
-                depth=depth,
-                kernel_size=kernel_size,
-                batch_size=batch_size,
-                nb_epochs=nb_epochs,
-                callbacks=callbacks,
-                random_state=random_state,
-                verbose=verbose,
-            )
-            self.classifers_.append(cls)
+
+        super(InceptionTimeClassifier, self).__init__()
 
     def _fit(self, X, y):
-        for i in range(0, self.n_classifiers):
-            self.classifiers_[i].fit(X, y)
+        self.classifers_ = []
+        rng = check_random_state(self.random_state)
+
+        for _ in range(0, self.n_classifiers):
+            cls = IndividualInceptionTimeClassifier(
+                n_filters=self.n_filters,
+                use_bottleneck=self.use_bottleneck,
+                bottleneck_size=self.bottleneck_size,
+                depth=self.depth,
+                kernel_size=self.kernel_size,
+                batch_size=self.batch_size,
+                nb_epochs=self.nb_epochs,
+                callbacks=self.callbacks,
+                random_state=rng.randint(0, np.iinfo(np.int32).max),
+                verbose=self.verbose,
+            )
+            cls.fit(X, y)
+            self.classifers_.append(cls)
+
         return self
 
-    def _predict(self, X) -> np.ndarray:
-        return None
-
     def _predict_proba(self, X) -> np.ndarray:
-        return None
+        probs = np.zeros((X.shape[0], self.n_classes_))
+
+        for cls in self.classifers_:
+            probs += cls.predict_proba(X)
+
+        probs = probs / self.n_classifiers
+
+        return probs
 
 
 class IndividualInceptionTimeClassifier(BaseDeepClassifier, InceptionTimeNetwork):

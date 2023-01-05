@@ -46,6 +46,8 @@ class InceptionTimeNetwork(BaseDeepNetwork):
         kernel_size=41 - 1,
         random_state=0,
     ):
+        _check_dl_dependencies(severity="error")
+
         self.n_filters = nb_filters
         self.use_residual = use_residual
         self.use_bottleneck = use_bottleneck
@@ -54,6 +56,8 @@ class InceptionTimeNetwork(BaseDeepNetwork):
         self.bottleneck_size = bottleneck_size
 
         self.random_state = random_state
+
+        super(InceptionTimeNetwork, self).__init__()
 
     def _inception_module(self, input_tensor, stride=1, activation="linear"):
         from tensorflow import keras
