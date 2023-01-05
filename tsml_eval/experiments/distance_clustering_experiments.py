@@ -78,7 +78,6 @@ def _recreate_results(trainX, trainY):
 if __name__ == "__main__":
     """Example simple usage, with args input via script or hard coded for testing."""
     numba.set_num_threads(1)
-    torch.set_num_threads(1)
 
     clusterer = "kmeans"
     chris_config = True  # This is so chris doesn't have to change config each time
