@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """HYDRA classifier.
+
 HYDRA: Competing convolutional kernels for fast and accurate time series classification
 By Angus Dempster, Daniel F. Schmidt, Geoffrey I. Webb
 https://arxiv.org/abs/2203.13652
@@ -15,11 +16,11 @@ from sklearn.preprocessing import StandardScaler
 from sktime.classification.base import BaseClassifier
 from sktime.utils.validation._dependencies import _check_soft_dependencies
 
-_check_soft_dependencies("tsfresh")
+_check_soft_dependencies("torch")
 
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
+import torch  # noqa: E402
+import torch.nn as nn  # noqa: E402
+import torch.nn.functional as F  # noqa: E402
 
 
 class HYDRA(BaseClassifier):

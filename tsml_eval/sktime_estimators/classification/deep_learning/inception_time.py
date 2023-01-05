@@ -58,7 +58,7 @@ class InceptionTimeClassifier(BaseClassifier):
         use_bottleneck=True,
         bottleneck_size=32,
         depth=6,
-        kernel_size=41 - 1,
+        kernel_size=40,
         batch_size=64,
         nb_epochs=1500,
         callbacks=None,
@@ -102,6 +102,15 @@ class InceptionTimeClassifier(BaseClassifier):
             self.classifers_.append(cls)
 
         return self
+
+    def _predict(self, X) -> np.ndarray:
+        rng = check_random_state(self.random_state)
+        return np.array(
+            [
+                self.classes_[int(rng.choice(np.flatnonzero(prob == prob.max())))]
+                for prob in self._predict_proba(X)
+            ]
+        )
 
     def _predict_proba(self, X) -> np.ndarray:
         probs = np.zeros((X.shape[0], self.n_classes_))
