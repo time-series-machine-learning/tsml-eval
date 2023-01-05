@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """InceptionTime classifier."""
 
-__author__ = ["James-Large", "TonyBagnall"]
+__author__ = ["James-Large", "TonyBagnall", "MatthewMiddlehurst"]
 
 import numpy as np
 from sklearn.utils import check_random_state
