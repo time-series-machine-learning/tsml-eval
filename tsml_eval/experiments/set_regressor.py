@@ -45,10 +45,17 @@ def set_regressor(
         from sktime.regression.deep_learning.cnn import CNNRegressor
 
         return CNNRegressor(random_state=random_state)
+
     elif r == "tapnet" or r == "tapnetregressor":
         from sktime.regression.deep_learning.tapnet import TapNetRegressor
 
         return TapNetRegressor(random_state=random_state)
+
+    if r == "resnet" or r == "resnetregressor":
+        from tsml_eval.sktime_estimators.regression.deep_learning import ResNetRegressor
+
+        return ResNetRegressor(random_state=random_state)
+
     elif r == "knn" or r == "kneighborstimeseriesregressor":
         from sktime.regression.distance_based import KNeighborsTimeSeriesRegressor
 
