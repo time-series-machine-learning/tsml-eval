@@ -101,7 +101,7 @@ class ResNetRegressor(BaseDeepRegressor):
         output : a compiled Keras Model
         """
         import tensorflow as tf
-        from tf import keras
+        from tensorflow import keras
 
         tf.random.set_seed(self.random_state)
 
