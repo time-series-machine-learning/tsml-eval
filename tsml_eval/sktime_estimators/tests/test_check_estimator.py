@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+"""Test estimators implemented in tsml-eval."""
+
 import pytest
 from sklearn.utils.estimator_checks import parametrize_with_checks
 from sktime.utils.estimator_checks import check_estimator
@@ -27,28 +29,30 @@ from tsml_eval.sktime_estimators.regression.sklearn.rotation_forest import (
 )
 
 classification_estimators = [
+    HYDRA,
     # WEASEL_DILATION,
     # MUSE_DILATION,
-    SFADilation,
-    HYDRA,
+    MPDist,
     RDST,
     RDSTEnsemble,
     RandomShapeletForest,
-    MPDist,
+    SFADilation,
 ]
 regression_estimators = [
-    DrCIF,
-    ShapeletTransformRegressor,
-    # RandomShapeletTransform,
     Arsenal,
     TemporalDictionaryEnsemble,
-    # SFA,
     HIVECOTEV2,
+    DrCIF,
+    ShapeletTransformRegressor,
+    # SklearnBaseRegressor,
+    # RandomShapeletTransform,
+    # SFA,
 ]
 
 
 @pytest.mark.parametrize("est", classification_estimators + regression_estimators)
 def test_check_estimator(est):
+    """Test that sktime estimators adhere to sktime conventions."""
     check_estimator(est, return_exceptions=False)
 
 

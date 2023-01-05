@@ -39,6 +39,9 @@ dependencies = [
 dev = [
     "pre-commit",
     "pytest",
+    "pytest-randomly",
+    "pytest-timeout",
+    "pytest-xdist",
 ]
 
 docs = [
@@ -84,3 +87,6 @@ per-file-ignores = [
     "tsml_eval/experiments/threaded_clustering_experiments.py:T201",
     "tsml_eval/experiments/distance_clustering_experiments.py:E402,T201",
 ]
+
+[tool.pytest.ini_options]
+addopts = "--ignore tsml_eval/_wip --durations 10 --timeout 600 --showlocals --doctest-modules --numprocesses auto"
