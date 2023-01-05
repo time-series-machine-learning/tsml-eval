@@ -1,11 +1,10 @@
+# -*- coding: utf-8 -*-
 __author__ = ["James-Large, Withington, TonyBagnall"]
 
 from sktime.networks.base import BaseDeepNetwork
 from sktime.utils.validation._dependencies import _check_dl_dependencies
 
 _check_dl_dependencies(severity="warning")
-
-from tensorflow import keras
 
 
 class InceptionTimeNetwork(BaseDeepNetwork):
@@ -72,7 +71,7 @@ class InceptionTimeNetwork(BaseDeepNetwork):
             input_inception = input_tensor
 
         # kernel_size_s = [3, 5, 8, 11, 17]
-        kernel_size_s = [self.kernel_size // (2 ** i) for i in range(3)]
+        kernel_size_s = [self.kernel_size // (2**i) for i in range(3)]
 
         conv_list = []
 

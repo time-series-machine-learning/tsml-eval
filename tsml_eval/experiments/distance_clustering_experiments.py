@@ -17,7 +17,6 @@ import sys
 
 import numba
 import numpy as np
-import torch
 from sklearn.metrics import davies_bouldin_score
 from sktime.benchmarking.experiments import run_clustering_experiment
 from sktime.clustering.k_means import TimeSeriesKMeans

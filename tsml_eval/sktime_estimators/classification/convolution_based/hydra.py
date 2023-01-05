@@ -9,13 +9,17 @@ __author__ = ["patrickzib", "Arik Ermshaus"]
 __all__ = ["HYDRA"]
 
 import numpy as np
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
 from sklearn.linear_model import RidgeClassifierCV
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sktime.classification.base import BaseClassifier
+from sktime.utils.validation._dependencies import _check_soft_dependencies
+
+_check_soft_dependencies("tsfresh")
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 
 
 class HYDRA(BaseClassifier):

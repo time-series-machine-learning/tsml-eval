@@ -32,7 +32,6 @@ dependencies = [
     "stumpy",
     "networkx",
     "requests",
-    "torch",
 ]
 
 [project.optional-dependencies]
@@ -48,6 +47,11 @@ docs = [
     "numpydoc",
     "nbsphinx",
     "furo",
+]
+
+deep_learning = [
+    "tensorflow",
+    "torch",
 ]
 
 [project.urls]
