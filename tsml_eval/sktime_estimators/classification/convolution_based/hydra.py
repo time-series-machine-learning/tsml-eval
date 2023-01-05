@@ -31,13 +31,17 @@ class HYDRA(BaseClassifier):
         "classifier_type": "dictionary",
     }
 
-    def __init__(self, k=8, g=64, random_state=None):
+    def __init__(self, k=8, g=64, n_jobs=1, random_state=None):
 
         self.k = k
         self.g = g
+        self.n_jobs = n_jobs
         self.random_state = random_state
+
         if isinstance(random_state, int):
             torch.manual_seed(random_state)
+
+        torch.set_num_threads(n_jobs)
 
         super(HYDRA, self).__init__()
 
