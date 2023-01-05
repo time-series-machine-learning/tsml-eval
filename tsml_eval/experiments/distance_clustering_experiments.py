@@ -107,15 +107,15 @@ if __name__ == "__main__":
             tune_w = sys.argv[10].lower() == "true"
     else:  # Local run
         print(" Local Run")  # noqa
-        dataset = "Chinatown"
+        dataset = "PigAirwayPressure"
         data_dir = "c:/Data/"
         results_dir = "c:/temp/"
         resample = 0
         averaging = "mean"
         train_fold = True
-        distance = "dtw"
-        normalise = True
-        tune_w = True
+        distance = "msm"
+        normalise = False
+        tune_w = False
 
     if normalise:
         results_dir = results_dir + "normalised/"
