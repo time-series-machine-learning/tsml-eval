@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """InceptionTime classifier."""
 
-__author__ = ["James-Large", "TonyBagnall"]
+__author__ = ["James-Large", "TonyBagnall", "MatthewMiddlehurst"]
 
 import numpy as np
 from sklearn.utils import check_random_state
@@ -119,11 +119,6 @@ class InceptionTimeClassifier(BaseClassifier):
             probs += cls.predict_proba(X)
 
         probs = probs / self.n_classifiers
-
-        # check if binary classification
-        if probs.shape[1] == 1:
-            # first column is probability of class 0 and second is of class 1
-            probs = np.hstack([1 - probs, probs])
 
         return probs
 
