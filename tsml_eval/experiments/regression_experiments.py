@@ -16,7 +16,6 @@ os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
 import sys
 
 import numba
-import torch
 
 from tsml_eval.experiments import load_and_run_regression_experiment
 from tsml_eval.experiments.set_regressor import set_regressor
@@ -31,7 +30,6 @@ def run_experiment(args, overwrite=False):
     generated in Java.
     """
     numba.set_num_threads(1)
-    torch.set_num_threads(1)
 
     # cluster run (with args), this is fragile
     if args.__len__() > 1:  # cluster run, this is fragile
