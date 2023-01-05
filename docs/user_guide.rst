@@ -6,4 +6,4 @@ User Guide
 .. nbgallery::
     :glob:
 
-    examples/*.ipynb
+    examples/*
