@@ -55,14 +55,6 @@ def set_regressor(
         return KNeighborsTimeSeriesRegressor(
             distance="euclidean",
         )
-    elif r == "tsml-knn-ed":
-        from tsml_eval.sktime_estimators.regression.distance_based import (
-            KNeighborsTimeSeriesRegressor,
-        )
-
-        return KNeighborsTimeSeriesRegressor(
-            distance="euclidean",
-        )
     elif r == "sktime-knn-dtw":
         from sktime.regression.distance_based import KNeighborsTimeSeriesRegressor
 
@@ -71,12 +63,41 @@ def set_regressor(
             distance_params={"window": 0.1},
             n_jobs=n_jobs,
         )
-    elif r == "tsml-knn-dtw":
+    elif r == "1nn-ed":
         from tsml_eval.sktime_estimators.regression.distance_based import (
             KNeighborsTimeSeriesRegressor,
         )
 
         return KNeighborsTimeSeriesRegressor(
+            distance="euclidean",
+            n_neighbours=1,
+        )
+    elif r == "5nn-ed":
+        from tsml_eval.sktime_estimators.regression.distance_based import (
+            KNeighborsTimeSeriesRegressor,
+        )
+
+        return KNeighborsTimeSeriesRegressor(
+            distance="euclidean",
+            n_neighbours=5,
+        )
+    elif r == "1nn-dtw":
+        from tsml_eval.sktime_estimators.regression.distance_based import (
+            KNeighborsTimeSeriesRegressor,
+        )
+
+        return KNeighborsTimeSeriesRegressor(
+            n_neighbours=1,
+            distance="dtw",
+            distance_params={"window": 0.1},
+        )
+    elif r == "5nn-dtw":
+        from tsml_eval.sktime_estimators.regression.distance_based import (
+            KNeighborsTimeSeriesRegressor,
+        )
+
+        return KNeighborsTimeSeriesRegressor(
+            n_neighbours=5,
             distance="dtw",
             distance_params={"window": 0.1},
         )
