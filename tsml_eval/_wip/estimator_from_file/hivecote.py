@@ -124,13 +124,13 @@ class FromFileHIVECOTE(BaseClassifier):
                 all_lines.append(lines)
 
         if self.tune_alpha:
-            self._alpha = self._tune_alpha(all_lines, y)
+            self._alpha = self._tune_alpha(all_lines)
 
         # add a weight to the weight list based on the files accuracy
         for acc in acc_list:
             self._weights.append(acc**self._alpha)
 
-    def _tune_alpha(self, all_files_lines, y):
+    def _tune_alpha(self, all_files_lines):
         """Finds the best alpha value if self.tune_alpha == True.
 
         Parameters
@@ -147,25 +147,27 @@ class FromFileHIVECOTE(BaseClassifier):
         -----
         Estimates through cross validation the best alpha of a range of values.
         """
-        n_instances = len(y)
+        n_instances = len(all_files_lines[0]) - 3
         n_files = len(all_files_lines)
+
+        X_probas = np.zeros((n_instances, n_files, self.n_classes_))
+        y = []
+
+        for i, lines in enumerate(all_files_lines):
+            for j in range(n_instances):
+                line = lines[j + 3].split(",")
+                X_probas[j][i] = [float(k) for k in (line[3:])]
+
+                if i == 0:
+                    y.append(float(line[0]))
+
+        y = np.array(y)
 
         n_splits = 10
         _, counts = np.unique(y, return_counts=True)
         min_class = np.min(counts)
         if min_class < n_splits:
             n_splits = min_class
-
-        X_probas = np.zeros((n_instances, n_files, self.n_classes_))
-
-        le = preprocessing.LabelEncoder()
-        y = le.fit_transform(y)
-
-        for i, lines in enumerate(all_files_lines):
-            for j in range(n_instances):
-                line = lines[j + 3].split(",")
-                X_probas[j][i] = [float(k) for k in (line[3:])]
-                assert float(line[0]) == y[j]
 
         alpha_values = range(1, 10)  # tested alpha values
         avg_alpha_acc = np.zeros(len(alpha_values))  # performance of each alpha value
@@ -203,9 +205,6 @@ class FromFileHIVECOTE(BaseClassifier):
             avg_alpha_acc[i] = accuracy_score(y, preds)
 
         best_alpha = alpha_values[avg_alpha_acc.argmax()]
-
-        print(avg_alpha_acc)
-        print(best_alpha)
 
         return best_alpha
 
