@@ -78,9 +78,9 @@ def run_experiment(args, overwrite=False):
         # These are example parameters, change as required for local runs
         # Do not include paths to your local directories here in PRs
         # If threading is required, see the threaded version of this file
-        data_dir = "D:/CMP Machine Learning/Datasets/Regression/"
-        results_dir = "D:/CMP Machine Learning/temp/"
-        regressor_name = "Ridge"
+        data_dir = "../"
+        results_dir = "../"
+        regressor_name = "LR"
         dataset = "Covid3Month"
         resample = 0
         train_fold = False
