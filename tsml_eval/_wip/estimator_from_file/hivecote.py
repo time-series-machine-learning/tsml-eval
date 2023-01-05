@@ -160,6 +160,8 @@ class FromFileHIVECOTE(BaseClassifier):
 
                 if i == 0:
                     y.append(float(line[0]))
+                else:
+                    assert y[j] == float(line[0])
 
         y = np.array(y)
 
