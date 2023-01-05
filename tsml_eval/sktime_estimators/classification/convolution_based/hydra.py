@@ -14,6 +14,7 @@ from sklearn.linear_model import RidgeClassifierCV
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sktime.classification.base import BaseClassifier
+from sktime.utils.validation import check_n_jobs
 from sktime.utils.validation._dependencies import _check_soft_dependencies
 
 _check_soft_dependencies("torch")
@@ -41,6 +42,7 @@ class HYDRA(BaseClassifier):
         if isinstance(random_state, int):
             torch.manual_seed(random_state)
 
+        n_jobs = check_n_jobs(n_jobs)
         torch.set_num_threads(n_jobs)
 
         super(HYDRA, self).__init__()
