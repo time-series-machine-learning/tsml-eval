@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Inception Time Classifier."""
 __author__ = ["James-Large, Withington, TonyBagnall"]
 
 from sktime.networks.base import BaseDeepNetwork
@@ -8,8 +9,16 @@ _check_dl_dependencies(severity="warning")
 
 
 class InceptionTimeNetwork(BaseDeepNetwork):
-    """InceptionTime
+    """InceptionTime Network.
 
+        :param nb_filters: int,
+        :param use_residual: boolean,
+        :param use_bottleneck: boolean,
+        :param depth: int
+        :param kernel_size: int, specifying the length of the 1D convolution
+         window
+        :param bottleneck_size: int,
+        :param random_state: int, seed to any needed random actions
     Adapted from the implementation from Fawaz et. al
 
     https://github.com/hfawaz/InceptionTime/blob/master/classifiers/
@@ -37,18 +46,7 @@ class InceptionTimeNetwork(BaseDeepNetwork):
         kernel_size=41 - 1,
         random_state=0,
     ):
-        """
-        :param nb_filters: int,
-        :param use_residual: boolean,
-        :param use_bottleneck: boolean,
-        :param depth: int
-        :param kernel_size: int, specifying the length of the 1D convolution
-         window
-        :param bottleneck_size: int,
-        :param random_state: int, seed to any needed random actions
-        """
-
-        self.nb_filters = nb_filters
+        self.n_filters = nb_filters
         self.use_residual = use_residual
         self.use_bottleneck = use_bottleneck
         self.depth = depth
@@ -58,6 +56,7 @@ class InceptionTimeNetwork(BaseDeepNetwork):
         self.random_state = random_state
 
     def _inception_module(self, input_tensor, stride=1, activation="linear"):
+        from tensorflow import keras
 
         if self.use_bottleneck and int(input_tensor.shape[-1]) > 1:
             input_inception = keras.layers.Conv1D(
@@ -78,7 +77,7 @@ class InceptionTimeNetwork(BaseDeepNetwork):
         for i in range(len(kernel_size_s)):
             conv_list.append(
                 keras.layers.Conv1D(
-                    filters=self.nb_filters,
+                    filters=self.n_filters,
                     kernel_size=kernel_size_s[i],
                     strides=stride,
                     padding="same",
@@ -92,7 +91,7 @@ class InceptionTimeNetwork(BaseDeepNetwork):
         )(input_tensor)
 
         conv_6 = keras.layers.Conv1D(
-            filters=self.nb_filters,
+            filters=self.n_filters,
             kernel_size=1,
             padding="same",
             activation=activation,
@@ -107,6 +106,8 @@ class InceptionTimeNetwork(BaseDeepNetwork):
         return x
 
     def _shortcut_layer(self, input_tensor, out_tensor):
+        from tensorflow import keras
+
         shortcut_y = keras.layers.Conv1D(
             filters=int(out_tensor.shape[-1]),
             kernel_size=1,
@@ -121,16 +122,18 @@ class InceptionTimeNetwork(BaseDeepNetwork):
 
     def build_network(self, input_shape, **kwargs):
         """
-        Construct a network and return its input and output layers
-        ----------
+        Construct a network and return its input and output layers.
+
         input_shape : tuple
             The shape of the data fed into the input layer
+
         Returns
         -------
         input_layer : a keras layer
         output_layer : a keras layer
         """
         # not sure of the whole padding thing
+        from tensorflow import keras
 
         input_layer = keras.layers.Input(input_shape)
 

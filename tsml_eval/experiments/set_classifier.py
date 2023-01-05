@@ -415,7 +415,7 @@ def set_classifier(
         return TapNetClassifier(random_state=random_state)
 
     elif c == "inceptiontime" or c == "inceptiontimeclassifier":
-        from tsml_eval.sktime_estimators.classification.deep_learning.inception_time import (
+        from tsml_eval.sktime_estimators.classification.deep_learning.inception_time import (  # noqa; noqa
             IndividualInceptionTimeClassifier,
         )
 
