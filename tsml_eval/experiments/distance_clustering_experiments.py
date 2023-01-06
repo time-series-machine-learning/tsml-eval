@@ -58,7 +58,7 @@ def tune_window(metric: str, train_X, n_clusters):
             score = sys.float_info.max
         else:
             score = davies_bouldin_score(train_X, preds)
-        print(" Number of clusters = ", clusters, " score  = ", score)  # noqa
+        print(f" Number of clusters ={clusters} window = {w} score  = {score}")  # noqa
         if score < best_score:
             best_score = score
             best_w = w
@@ -114,15 +114,15 @@ if __name__ == "__main__":
             tune_w = sys.argv[10].lower() == "true"
     else:  # Local run
         print(" Local Run")  # noqa
-        dataset = "PigAirwayPressure"
+        dataset = "Coffee"
         data_dir = "c:/Data/"
         results_dir = "c:/temp/"
         resample = 0
         averaging = "mean"
         train_fold = True
-        distance = "msm"
-        normalise = False
-        tune_w = False
+        distance = "dtw"
+        normalise = True
+        tune_w = True
 
     if normalise:
         results_dir = results_dir + "normalised/"
@@ -195,7 +195,7 @@ if __name__ == "__main__":
             n_clusters=len(set(train_Y)),
             random_state=resample + 1,
         )
-
+    print(f" Window parameters for {clst.distance_params}")
     run_clustering_experiment(
         train_X,
         clst,
