@@ -23,7 +23,14 @@ from sktime.clustering.k_means import TimeSeriesKMeans
 from sktime.clustering.k_medoids import TimeSeriesKMedoids
 from sktime.datasets import load_from_tsfile as load_ts
 
-from tsml_eval.utils.experiments import _results_present_full_path
+
+def _results_present_full_path(path, dataset, res):
+    """Duplicate: check if results are present already without an estimator input."""
+    full_path = f"{path}/Predictions/{dataset}/testResample{res}.csv"
+    full_path2 = f"{path}/Predictions/{dataset}/trainResample{res}.csv"
+    if os.path.exists(full_path) and os.path.exists(full_path2):
+        return True
+    return False
 
 
 def config_clusterer(clusterer: str, **kwargs):
@@ -39,7 +46,7 @@ def tune_window(metric: str, train_X, n_clusters):
     """Tune window."""
     best_w = 0
     best_score = sys.float_info.max
-    for w in np.arange(0, 1, 0.01):
+    for w in np.arange(0, 1, 0.05):
         cls = TimeSeriesKMeans(
             metric=metric, distance_params={"window": w}, n_clusters=n_clusters
         )
@@ -50,7 +57,7 @@ def tune_window(metric: str, train_X, n_clusters):
             score = sys.float_info.max
         else:
             score = davies_bouldin_score(train_X, preds)
-        print(" Number of clusters = ", clusters, " score  = ", score)  # noqa
+        print(f" Number of clusters ={clusters} window = {w} score  = {score}")  # noqa
         if score < best_score:
             best_score = score
             best_w = w
@@ -105,15 +112,15 @@ if __name__ == "__main__":
             tune_w = sys.argv[10].lower() == "true"
     else:  # Local run
         print(" Local Run")  # noqa
-        dataset = "PigAirwayPressure"
+        dataset = "Coffee"
         data_dir = "c:/Data/"
         results_dir = "c:/temp/"
         resample = 0
         averaging = "mean"
         train_fold = True
-        distance = "msm"
-        normalise = False
-        tune_w = False
+        distance = "dtw"
+        normalise = True
+        tune_w = True
 
     if normalise:
         results_dir = results_dir + "normalised/"
@@ -186,7 +193,7 @@ if __name__ == "__main__":
             n_clusters=len(set(train_Y)),
             random_state=resample + 1,
         )
-
+    print(f" Window parameters for {clst.distance_params}")
     run_clustering_experiment(
         train_X,
         clst,
