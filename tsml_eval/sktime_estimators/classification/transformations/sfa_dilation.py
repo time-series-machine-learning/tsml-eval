@@ -651,8 +651,8 @@ class SFADilation(BaseTransformer):
         """
         # small window size for testing
         params = {
-            "word_length": 4,
-            "window_size": 4,
+            "word_length": 2,
+            "window_size": 6,
             "return_sparse": True,
             "return_pandas_data_series": True,
             "feature_selection": "chi2",
