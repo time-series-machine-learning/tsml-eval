@@ -24,7 +24,14 @@ from sktime.clustering.k_means import TimeSeriesKMeans
 from sktime.clustering.k_medoids import TimeSeriesKMedoids
 from sktime.datasets import load_from_tsfile as load_ts
 
-from tsml_eval.utils.experiments import _results_present_full_path
+
+def _results_present_full_path(path, dataset, res):
+    """Duplicate: check if results are present already without an estimator input."""
+    full_path = f"{path}/Predictions/{dataset}/testResample{res}.csv"
+    full_path2 = f"{path}/Predictions/{dataset}/trainResample{res}.csv"
+    if os.path.exists(full_path) and os.path.exists(full_path2):
+        return True
+    return False
 
 
 def config_clusterer(clusterer: str, **kwargs):
