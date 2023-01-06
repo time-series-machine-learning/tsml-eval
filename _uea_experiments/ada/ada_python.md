@@ -1,4 +1,5 @@
 # ADA Python
+###### tags: `sktime grant`
 
 Installation guide for Python packages on ADA and useful slurm commands.
 
@@ -30,13 +31,11 @@ The default location for files should be your user area. Either copy over the co
 
 >git clone GITHUB-LINK
 
-e.g.
-* https://github.com/sktime/sktime
-* https://github.com/time-series-machine-learning/tsml-estimator-evaluation
+e.g. https://github.com/time-series-machine-learning/tsml-eval
 
 ### 3. Activate an ADA Python installation
 
-Python is activated by default, but not the version we use. The ADA module should be added before creating and editing an environment.
+Python is activated by default, but it is good practice to manually select the version used. The ADA module should be added before creating and editing an environment.
 
 >module add python/anaconda/2019.10/3.7
 
@@ -52,9 +51,9 @@ You can check the current version using:
 
 ### 4. Create a conda environment
 
-Create a new environment with a name of your choice.
+Create a new environment with a name of your choice. Replace PYTHON_VERSION with 3.10 for CPU jobs and 3.8 for GPU jobs.
 
->conda create -n ENVNAME python=3.10
+>conda create -n ENVNAME python=PYTHON_VERSION
 
 Activate the new environment.
 
@@ -64,7 +63,7 @@ Your environment should be listed now when you use the following command:
 
 >conda info --envs
 
-Tip: instead of running the module, source, and conda activate commands every time, if the following line is added to the .bashrc file everything is done in one step (command ALIASNAME):
+__Tip__: instead of running the module, source, and conda activate commands every time, if the following line is added to the .bashrc file everything is done in one step (command ALIASNAME):
 
 > alias ALIASNAME="module add python/anaconda/2019.10/3.7; source /gpfs/software/ada/python/anaconda/2019.10/3.7/etc/profile.d/conda.sh; conda activate ENVNAME;"
 
@@ -78,53 +77,43 @@ After installation, the installed packages can be viewed with:
 
 >pip list
 
-#### 5.1 sktime development version
+>conda list
 
-Move to the sktime directory and run:
-
->pip install -e .[all_extras,dev]
-
-This will install all soft dependencies, including bulky ones like tensorflow. A more lightweight install can be done with
-
->pip install -e .
-
-
-#### 5.2 tsml-eval
+#### 5.1 tsml-eval CPU
 
 Move to the package directory and run:
 
 >pip install .
 
-or for version specific versions:
+For release specific dependency versions you can also run:
 
 >pip install -r requirements.txt
 
 Extras may be required, install as needed i.e.:
 
->pip install tensorflow
->pip install tensorflow-probability
->pip install esig
->pip install tsfresh
+>pip install esig tsfresh
 
-#### 5.3 tsml-eval with alternative sktime
+If any a dependency install is "Killed", it is likely the interactive session has run out of memory. Either give it more memory, or use a non-cached package i.e.
 
-At times you may want to run versions of packages other than the release. Using sktime as an example, we can directly install GitHub branches and forks.
+>pip install PACKAGE-NAME --no-cache-dir
 
-The current version of the package must first be uninstalled if it is present.
+#### 5.1 tsml-eval GPU
 
->pip uninstall sktime
+For GPU jobs we require two additional ADA modules, CUDA and cuDNN:
 
-The following will install the current main of sktime, and the example after a branch on the sktime repo.
+>module add cuda/10.2.89
+>module add cudnn/7.6.5
 
->pip install git+https://github.com/sktime/sktime.git@main
+A specific Tensorflow version is required to match the available CUDA install.
 
->pip install git+https://github.com/sktime/sktime.git@uea_debugging
+>pip install tensorflow==2.3.0 tensorflow_probability==0.11.1
 
-Forked versions of sktime can also be installed.
+Next, move to the package directory and run:
 
->pip install git+https://github.com/MatthewMiddlehurst/sktime-mm.git@main
+>pip install .
 
-## Running experiments
+
+## Running CPU experiments
 
 TODO
 
@@ -134,7 +123,7 @@ base it on scripts here, see comments for options e.g. queues
 https://github.com/time-series-machine-learning/tsml-eval/tree/main/ada_uea_experiments
 For GPU, you need a specific queue
 
-## Running deep learning experiments on the GPU queue
+## Running GPU experiments
 
 TODO
 
@@ -151,7 +140,7 @@ list processes for user (mind that the quotes may not be the correct ones)
 
 >squeue -u USERNAME --format="%12i %15P %20j %10u %10t %10M %10D %20R" -r
 
-to simplify and just use 'queue' in the terminal to list the processes, add this command, modifying the USERNAME to the .bashrc file located in your home (create if doesn't exist):
+__Tip__: to simplify and just use 'queue' in the terminal to run the above command, add this to the .bashrc file located in your home:
 
 > alias queue='squeue -u USERNAME --format="%12i %15P %20j %10u %10t %10M %10D %20R" -r'
 
@@ -171,12 +160,10 @@ To delete one job it’s:
 
 >scancel 11133013_1
 
-
 ## Helpful links
 
 ADA webpage:
 https://my.uea.ac.uk/divisions/it-and-computing-services/service-catalogue/research-it-services/hpc/ada-cluster
-
 
 ADA submitting jobs page:
 https://my.uea.ac.uk/divisions/it-and-computing-services/service-catalogue/research-it-services/hpc/ada-cluster/using-ada/jobs

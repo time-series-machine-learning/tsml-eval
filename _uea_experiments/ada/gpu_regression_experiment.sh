@@ -49,7 +49,7 @@ out_dir=$local_path"RegressionResults/output/"
 script_file_path=$local_path"Code/tsml-eval/tsml_eval/experiments/regression_experiments.py"
 
 # Environment name, change accordingly, for set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
-# Separate environments for GPU and CPU are recommended
+# Separate environments for GPU (Python 3.8) and CPU (Python 3.10) are recommended
 env_name="tsml-eval-gpu"
 
 # Generating train folds is usually slower, set to false unless you need them
@@ -116,10 +116,12 @@ echo "#!/bin/bash
 
 . /etc/profile
 
-module add python/anaconda/2020.11/3.8
-module add cudnn/8.2.0
+module add python/anaconda/2019.10/3.7
+module add cuda/10.2.89
+module add cudnn/7.6.5
 source activate $env_name
-export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/gpfs/home/${username}/.conda/envs/${env_name}/lib
+export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/gpfs/home/${username}/.conda/envs/${env_name}/lib/
+
 
 # Input args to the default regression_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/regression_experiments.py

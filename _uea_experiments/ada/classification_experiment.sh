@@ -45,7 +45,7 @@ out_dir=$local_path"ClassificationResults/output/"
 script_file_path=$local_path"Code/tsml-eval/tsml_eval/experiments/classification_experiments.py"
 
 # Environment name, change accordingly, for set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
-# Separate environments for GPU and CPU are recommended
+# Separate environments for GPU (Python 3.8) and CPU (Python 3.10) are recommended
 env_name="tsml-eval"
 
 # Generating train folds is usually slower, set to false unless you need them
