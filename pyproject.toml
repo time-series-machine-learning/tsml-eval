@@ -77,7 +77,10 @@ ignore = [
 [tool.flake8]
 max-line-length = 88
 extend-ignore = ["E203"]
-exclude = ["tsml_eval/_wip/*"]
+exclude = [
+    "tsml_eval/_wip/*",
+    "notebooks/_wip/*"
+]
 per-file-ignores = [
     "tsml_eval/experiments/classification_experiments.py:E402,T201",
     "tsml_eval/experiments/threaded_classification_experiments.py:T201",
@@ -87,6 +90,11 @@ per-file-ignores = [
     "tsml_eval/experiments/threaded_clustering_experiments.py:T201",
     "tsml_eval/experiments/distance_clustering_experiments.py:E402,T201",
 ]
+
+[tool.nbqa.exclude]
+black = "^docs/examples/|^notebooks/_wip/"
+flake8 = "^docs/examples/|^notebooks/_wip/"
+isort = "^docs/examples/|^notebooks/_wip/"
 
 [tool.pytest.ini_options]
 addopts = "--ignore tsml_eval/_wip --durations 10 --timeout 600 --showlocals --doctest-modules --numprocesses auto"
