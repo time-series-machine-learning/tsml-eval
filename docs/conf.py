@@ -70,31 +70,31 @@ nbsphinx_thumbnails = {
 }
 
 # todo
-nbsphinx_execute = "never"  # always  # whether to run notebooks
-nbsphinx_allow_errors = False  # False
-nbsphinx_timeout = 600  # seconds, set to -1 to disable timeout
-
-# add Binder launch buttom at the top
-current_file = "{{ env.doc2path( env.docname, base=None) }}"
-
-# make sure Binder points to latest stable release, not main
-binder_url = f"https://mybinder.org/v2/gh/sktime/sktime/{CURRENT_VERSION}?filepath={current_file}"  # noqa
-nbsphinx_prolog = f"""
-.. |binder| image:: https://mybinder.org/badge_logo.svg
-.. _Binder: {binder_url}
-|Binder|_
-"""
-
-# add link to original notebook at the bottom
-notebook_url = (
-    f"https://github.com/sktime/sktime/tree/{CURRENT_VERSION}/{current_file}"  # noqa
-)
-nbsphinx_epilog = f"""
-----
-Generated using nbsphinx_. The Jupyter notebook can be found here_.
-.. _here: {notebook_url}
-.. _nbsphinx: https://nbsphinx.readthedocs.io/
-"""
+# nbsphinx_execute = "never"  # always  # whether to run notebooks
+# nbsphinx_allow_errors = False  # False
+# nbsphinx_timeout = 600  # seconds, set to -1 to disable timeout
+#
+# # add Binder launch buttom at the top
+# current_file = "{{ env.doc2path( env.docname, base=None) }}"
+#
+# # make sure Binder points to latest stable release, not main
+# binder_url = f"https://mybinder.org/v2/gh/sktime/sktime/{CURRENT_VERSION}?filepath={current_file}"  # noqa
+# nbsphinx_prolog = f"""
+# .. |binder| image:: https://mybinder.org/badge_logo.svg
+# .. _Binder: {binder_url}
+# |Binder|_
+# """
+#
+# # add link to original notebook at the bottom
+# notebook_url = (
+#     f"https://github.com/sktime/sktime/tree/{CURRENT_VERSION}/{current_file}"  # noqa
+# )
+# nbsphinx_epilog = f"""
+# ----
+# Generated using nbsphinx_. The Jupyter notebook can be found here_.
+# .. _here: {notebook_url}
+# .. _nbsphinx: https://nbsphinx.readthedocs.io/
+# """
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
