@@ -57,6 +57,13 @@ exclude_patterns = ["_build", ".ipynb_checkpoints", "Thumbs.db", ".DS_Store"]
 # see https://github.com/numpy/numpydoc/issues/69
 numpydoc_show_class_members = False
 
+# nbsphinx
+
+# Notebook thumbnails
+nbsphinx_thumbnails = {
+    "examples/classification_experiments": "examples/images/TSC.png",
+}
+
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
