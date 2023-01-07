@@ -3,7 +3,113 @@
 User Guide
 ==========
 
-.. nbgallery::
-    :glob:
+.. grid:: 1 2 2 2
+    :gutter: 3
 
-    examples/*
+    .. grid-item-card::
+        :text-align: center
+
+        Installation
+
+        ^^^
+
+        Instructions to install ``tsml-eval``.
+
+        +++
+
+        .. button-ref:: examples/classification_experiments.ipynb
+            :color: primary
+            :click-parent:
+            :expand:
+
+            Installation
+
+    .. grid-item-card::
+        :text-align: center
+
+        User Guide
+
+        ^^^
+
+        Guides for users for running experiments using ``tsml-eval``.
+
+        +++
+
+        .. button-ref:: user_guide
+            :color: primary
+            :click-parent:
+            :expand:
+
+            User Guide
+
+    .. grid-item-card::
+        :text-align: center
+
+        Papers
+
+        ^^^
+
+        Supplementary material for publications using ``tsml-eval``.
+
+        +++
+
+        .. button-ref:: papers
+            :color: primary
+            :click-parent:
+            :expand:
+
+            Papers
+
+    .. grid-item-card::
+        :text-align: center
+
+        API
+
+        ^^^
+
+        ``tsml-eval`` API documentation.
+
+        +++
+
+        .. button-ref:: api
+            :color: primary
+            :click-parent:
+            :expand:
+
+            API
+
+    .. grid-item-card::
+        :text-align: center
+
+        API
+
+        ^^^
+
+        ``tsml-eval`` API documentation.
+
+        +++
+
+        .. button-ref:: api
+            :color: primary
+            :click-parent:
+            :expand:
+
+            API
+
+    .. grid-item-card::
+        :text-align: center
+
+        API
+
+        ^^^
+
+        ``tsml-eval`` API documentation.
+
+        +++
+
+        .. button-ref:: api
+            :color: primary
+            :click-parent:
+            :expand:
+
+            API
