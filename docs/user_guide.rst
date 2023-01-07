@@ -17,7 +17,7 @@ User Guide
 
         +++
 
-        .. button-ref:: link_
+        .. button-ref:: :ref:`examples/classification_experiments.ipynb`
             :color: primary
             :click-parent:
             :expand:
@@ -113,5 +113,3 @@ User Guide
             :expand:
 
             API
-
-.. _link: examples/classification_experiments.ipynb
