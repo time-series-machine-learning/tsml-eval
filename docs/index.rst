@@ -81,12 +81,11 @@ valuation of classification, regression and clustering algorithms.
 
             API
 
-
 .. toctree::
-   :maxdepth: 2
-   :hidden:
+    :maxdepth: 2
+    :hidden:
 
-   installation
-   user_guide
-   papers
-   api
+    installation
+    user_guide
+    papers
+    api

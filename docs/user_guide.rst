@@ -3,19 +3,37 @@
 User Guide
 ==========
 
-:ref:`/examples/classification_experiments.ipynb`
-
 .. grid:: 1 2 2 2
     :gutter: 3
 
     .. grid-item-card::
+        :img-top: examples/images/wip.png
         :text-align: center
 
-        Installation
+        Datasets
 
         ^^^
 
-        Instructions to install ``tsml-eval``.
+        Datasets.
+
+        +++
+
+        .. button-ref:: /examples/datasets.ipynb
+            :color: primary
+            :click-parent:
+            :expand:
+
+            Datasets
+
+    .. grid-item-card::
+        :img-top: examples/images/TSC.png
+        :text-align: center
+
+        TSC
+
+        ^^^
+
+        TSC.
 
         +++
 
@@ -24,94 +42,91 @@ User Guide
             :click-parent:
             :expand:
 
-            Installation
+            TSC
 
     .. grid-item-card::
+        :img-top: examples/images/TSR.png
         :text-align: center
 
-        User Guide
+        TSR
 
         ^^^
 
-        Guides for users for running experiments using ``tsml-eval``.
+        TSR.
 
         +++
 
-        .. button-ref:: user_guide
+        .. button-ref:: /examples/regression_experiments.ipynb
             :color: primary
             :click-parent:
             :expand:
 
-            User Guide
+            TSR
 
     .. grid-item-card::
+        :img-top: examples/images/TSCL.png
         :text-align: center
 
-        Papers
+        TSCL
 
         ^^^
 
-        Supplementary material for publications using ``tsml-eval``.
+        TSCL.
 
         +++
 
-        .. button-ref:: papers
+        .. button-ref:: /examples/clustering_experiments.ipynb
             :color: primary
             :click-parent:
             :expand:
 
-            Papers
+            TSCL
 
     .. grid-item-card::
+        :img-top: examples/images/wip.png
         :text-align: center
 
-        API
+        Evaluation
 
         ^^^
 
-        ``tsml-eval`` API documentation.
+        Evaluation.
 
         +++
 
-        .. button-ref:: api
+        .. button-ref:: /examples/evaluation.ipynb
             :color: primary
             :click-parent:
             :expand:
 
-            API
+            Evaluation
 
     .. grid-item-card::
+        :img-top: examples/images/wip.png
         :text-align: center
 
-        API
+        Results
 
         ^^^
 
-        ``tsml-eval`` API documentation.
+        Results.
 
         +++
 
-        .. button-ref:: api
+        .. button-ref:: /examples/results_format.ipynb
             :color: primary
             :click-parent:
             :expand:
 
-            API
+            Results
 
-    .. grid-item-card::
-        :text-align: center
+.. toctree::
+    :maxdepth: 2
+    :hidden:
 
-        API
-
-        ^^^
-
-        ``tsml-eval`` API documentation.
-
-        +++
-
-        .. button-ref:: api
-            :color: primary
-            :click-parent:
-            :expand:
-
-            API
+    /examples/datasets.ipynb
+    /examples/classification_experiments.ipynb
+    /examples/regression_experiments.ipynb
+    /examples/clustering_experiments.ipynb
+    /examples/evaluation.ipynb
+    /examples/results_format.ipynb
