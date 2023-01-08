@@ -3,7 +3,7 @@
 User Guide
 ==========
 
-:ref:`examples/classification_experiments.ipynb`
+:ref:`/examples/classification_experiments.ipynb`
 
 .. grid:: 1 2 2 2
     :gutter: 3
@@ -19,7 +19,7 @@ User Guide
 
         +++
 
-        .. button-ref:: installation
+        .. button-ref:: /examples/classification_experiments.ipynb
             :color: primary
             :click-parent:
             :expand:
