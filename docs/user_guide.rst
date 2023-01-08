@@ -121,7 +121,6 @@ User Guide
             Results
 
 .. toctree::
-    :maxdepth: 2
     :hidden:
 
     /examples/datasets.ipynb
