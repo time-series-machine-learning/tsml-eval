@@ -9,9 +9,8 @@ __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 import sys
 
-from set_classifier import set_classifier
-
 from tsml_eval.experiments import load_and_run_classification_experiment
+from tsml_eval.experiments.set_classifier import set_classifier
 from tsml_eval.utils.experiments import _results_present
 
 
