@@ -47,7 +47,7 @@ def tune_window(metric: str, train_X, n_clusters):
     """Tune window."""
     best_w = 0
     best_score = sys.float_info.max
-    for w in np.arange(0, 1, 0.05):
+    for w in np.arange(0, 0.2, 0.01):
         cls = TimeSeriesKMeans(
             metric=metric, distance_params={"window": w}, n_clusters=n_clusters
         )
@@ -114,16 +114,16 @@ if __name__ == "__main__":
             tune_w = sys.argv[10].lower() == "true"
     else:  # Local run
         print(" Local Run")  # noqa
-        dataset = "Coffee"
+        dataset = "Chinatown"
         data_dir = "c:/Data/"
         results_dir = "c:/temp/"
         resample = 0
         averaging = "mean"
         train_fold = True
-        distance = "dtw"
+        distance = "dtw5"
         normalise = True
-        tune_w = True
-
+        tune_w = False
+    cls_folder = distance
     if normalise:
         results_dir = results_dir + "normalised/"
     else:
@@ -164,6 +164,10 @@ if __name__ == "__main__":
             or distance == "wdtw"
         ):
             w = 0.2
+        elif distance == "dtw5":
+            w = 0.05
+            distance = "dtw"
+
     parameters = {
         "window": w,
         "epsilon": 0.05,
@@ -203,7 +207,7 @@ if __name__ == "__main__":
         trainY=train_Y,
         testX=test_X,
         testY=test_Y,
-        cls_name=distance,
+        cls_name=cls_folder,
         dataset_name=dataset,
         resample_id=resample,
         overwrite=False,
