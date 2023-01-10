@@ -47,7 +47,7 @@ def tune_window(metric: str, train_X, n_clusters):
     """Tune window."""
     best_w = 0
     best_score = sys.float_info.max
-    for w in np.arange(0, 1, 0.05):
+    for w in np.arange(0, 0.2, 0.01):
         cls = TimeSeriesKMeans(
             metric=metric, distance_params={"window": w}, n_clusters=n_clusters
         )
