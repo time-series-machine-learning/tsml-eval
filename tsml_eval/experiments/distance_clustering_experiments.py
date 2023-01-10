@@ -114,7 +114,7 @@ if __name__ == "__main__":
             tune_w = sys.argv[10].lower() == "true"
     else:  # Local run
         print(" Local Run")  # noqa
-        dataset = "Coffee"
+        dataset = "CricketX"
         data_dir = "c:/Data/"
         results_dir = "c:/temp/"
         resample = 0
@@ -123,7 +123,7 @@ if __name__ == "__main__":
         distance = "dtw"
         normalise = True
         tune_w = True
-
+    cls_folder = distance
     if normalise:
         results_dir = results_dir + "normalised/"
     else:
@@ -164,6 +164,10 @@ if __name__ == "__main__":
             or distance == "wdtw"
         ):
             w = 0.2
+        elif distance == "dtw_05":
+            w = 0.05
+            distance = "dtw"
+
     parameters = {
         "window": w,
         "epsilon": 0.05,
@@ -203,7 +207,7 @@ if __name__ == "__main__":
         trainY=train_Y,
         testX=test_X,
         testY=test_Y,
-        cls_name=distance,
+        cls_name=cls_folder,
         dataset_name=dataset,
         resample_id=resample,
         overwrite=False,
