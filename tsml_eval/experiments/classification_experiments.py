@@ -78,17 +78,17 @@ def run_experiment(args, overwrite=False):
         from tsml_eval._wip.estimator_from_file.hivecote import FromFileHIVECOTE
 
         file_paths = [
-            "C:/Users/Ander/git/tsml-estimator-evaluation/tsml_eval/_wip/estimator_from_file/tests/test_files/Arsenal/Predictions/",
-            "C:/Users/Ander/git/tsml-estimator-evaluation/tsml_eval/_wip/estimator_from_file/tests/test_files/DrCIF-500/Predictions/",
-            "C:/Users/Ander/git/tsml-estimator-evaluation/tsml_eval/_wip/estimator_from_file/tests/test_files/STC-2Hour/Predictions/",
-            "C:/Users/Ander/git/tsml-estimator-evaluation/tsml_eval/_wip/estimator_from_file/tests/test_files/TDE/Predictions/",
+            "C:/Users/zrc22qwu/PycharmProjects/tsml-eval/tsml_eval/_wip/estimator_from_file/tests/test_files/Arsenal/Predictions/",
+            "C:/Users/zrc22qwu/PycharmProjects/tsml-eval/tsml_eval/_wip/estimator_from_file/tests/test_files/DrCIF-500/Predictions/",
+            "C:/Users/zrc22qwu/PycharmProjects/tsml-eval/tsml_eval/_wip/estimator_from_file/tests/test_files/STC-2Hour/Predictions/",
+            "C:/Users/zrc22qwu/PycharmProjects/tsml-eval/tsml_eval/_wip/estimator_from_file/tests/test_files/TDE/Predictions/",
         ]
-        data_dir = "C:/Users/Ander/Downloads/Univariate2018_ts/Univariate_ts/"  # "/home/ajb/Data/"
-        results_dir = "C:/Users/Ander/git/tsml-estimator-evaluation/tsml_eval/_wip/estimator_from_file/tests/results/"
+        data_dir = "C:/Users/zrc22qwu/Documents/Univariate2018_ts/Univariate_ts"  # "/home/ajb/Data/"
+        results_dir = "C:/Users/zrc22qwu/PycharmProjects/tsml-eval/tsml_eval/_wip/estimator_from_file/tests/results/"
         cls_name = "HC2"
 
         f = open(
-            "C:/Users/Ander/git/tsml-estimator-evaluation/tsml_eval/_wip/estimator_from_file/tests/test_files/UnivariateDatasets.txt",
+            "C:/Users/zrc22qwu/PycharmProjects/tsml-eval/tsml_eval/_wip/estimator_from_file/tests/test_files/UnivariateDatasets.txt",
             "r",
         )
         lines = f.readlines()

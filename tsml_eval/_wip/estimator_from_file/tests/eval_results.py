@@ -12,24 +12,22 @@ from tsml_eval._wip.estimator_from_file.hivecote import FromFileHIVECOTE
 
 def eval_hivecote_from_file():
 
-    try:
-        f = open(
-            "C:/Users/Ander/git/tsml-estimator-evaluation/tsml_eval/_wip/estimator_from_file/tests/test_files/UnivariateDatasets.txt",
-            "r",
-        )
-        file = f.readlines()
-    finally:
-        f.close()
+    f = open(
+        "C:/Users/zrc22qwu/PycharmProjects/tsml-eval/tsml_eval/_wip/estimator_from_file/tests/test_files/UnivariateDatasets.txt",
+        #"C:/Users/Ander/git/tsml-estimator-evaluation/tsml_eval/_wip/estimator_from_file/tests/test_files/UnivariateDatasets.txt",
+        "r",
+    )
+    file = f.readlines()
 
     datasets_names = []
     for line in file:
         datasets_names.append(line.replace("\n", ""))
 
     file_paths = [
-        "test_files/results/HC2/",
-        "test_files/results/no_tune/",
-        "test_files/results/non_stratified/",
-        "test_files/results/stratified/",
+        "HC2",
+        "no_tune",
+        "non_stratified",
+        "stratified",
     ]
 
     accuracies_array = []
@@ -38,15 +36,19 @@ def eval_hivecote_from_file():
         for dataset in datasets_names:
             dataset_acc = []
             for resample in range(0, 30):
-                try:
-                    f = open(path + dataset + f"/trainResample{resample}.csv", "r")
-                    lines = f.readlines()
-                    dataset_acc.append(lines[2].split(",")[0])
-                finally:
-                    f.close()
-            folder_acc.append(dataset_acc)
-        accuracies_array.append(folder_acc)
+                f = open("test_files/results/" + path + "/" + dataset + f"/testResample{resample}.csv", "r")
+                lines = f.readlines()
+                dataset_acc.append(float(lines[2].split(",")[0]))
+            folder_acc.append(np.mean(dataset_acc))
+        accuracies_array.append(np.mean(folder_acc))
 
-    print(np.mean(accuracies_array, axis=1))
-
+    # print(np.mean(accuracies_array, axis=1))
+    print({file_paths[i]: accuracies_array[i] for i in range(len(file_paths))})
     # np.concatenate((a, b.T), axis=1)
+
+
+if __name__ == "__main__":
+    """
+    
+    """
+    eval_hivecote_from_file()
