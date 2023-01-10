@@ -170,7 +170,9 @@ class FromFileHIVECOTE(BaseClassifier):
         min_class = np.min(counts)
         if min_class < n_splits:
             n_splits = min_class
-
+            
+        if n_splits == 1:
+            return 4
         alpha_values = range(1, 10)  # tested alpha values
         avg_alpha_acc = np.zeros(len(alpha_values))  # performance of each alpha value
         for i, alpha in enumerate(alpha_values):
