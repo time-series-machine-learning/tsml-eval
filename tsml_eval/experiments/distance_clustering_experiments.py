@@ -163,7 +163,7 @@ if __name__ == "__main__":
             or distance == "dtw"
             or distance == "wdtw"
         ):
-            w = 0.2
+            w = 0.05
         elif distance == "dtw5":
             w = 0.05
             distance = "dtw"
