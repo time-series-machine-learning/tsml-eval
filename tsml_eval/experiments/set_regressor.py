@@ -250,8 +250,7 @@ def set_regressor(
 
         return HIVECOTEV2(random_state=random_state, n_jobs=n_jobs)
 
-    # sklearn regerssors
-    # todo experiments for these
+    # sklearn regressors
     elif r == "rotf" or r == "rotationforest":
         from tsml_eval.sktime_estimators.regression.sklearn import (
             RotationForest,
