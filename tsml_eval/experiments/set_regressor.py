@@ -54,50 +54,75 @@ def set_regressor(
         from sktime.regression.deep_learning.tapnet import TapNetRegressor
 
         return TapNetRegressor(random_state=random_state)
-    elif r == "knn" or r == "kneighborstimeseriesregressor":
+    elif r == "sktime-1nn-ed":
         from sktime.regression.distance_based import KNeighborsTimeSeriesRegressor
 
         return KNeighborsTimeSeriesRegressor(
-            # random_state=random_state,
+            n_neighbors=1,
+            distance="euclidean",
+        )
+    elif r == "sktime-1nn-dtw":
+        from sktime.regression.distance_based import KNeighborsTimeSeriesRegressor
+
+        return KNeighborsTimeSeriesRegressor(
+            distance="dtw",
+            distance_params={"window": 0.1},
+            n_neighbors=1,
+            n_jobs=n_jobs,
+        )
+    elif r == "sktime-5nn-ed":
+        from sktime.regression.distance_based import KNeighborsTimeSeriesRegressor
+
+        return KNeighborsTimeSeriesRegressor(
+            n_neighbors=5,
+            distance="euclidean",
+        )
+    elif r == "sktime-5nn-dtw":
+        from sktime.regression.distance_based import KNeighborsTimeSeriesRegressor
+
+        return KNeighborsTimeSeriesRegressor(
+            distance="dtw",
+            n_neighbors=5,
+            distance_params={"window": 0.1},
             n_jobs=n_jobs,
         )
     elif r == "1nn-ed":
-        from sktime.regression.distance_based import KNeighborsTimeSeriesRegressor
-
-        return KNeighborsTimeSeriesRegressor(
-            n_neighbors=1,
-            distance="euclidean",
-            # random_state=random_state,
-            n_jobs=n_jobs,
+        from tsml_eval.sktime_estimators.regression.distance_based import (
+            KNeighborsTimeSeriesRegressor,
         )
-    elif r == "1nn-dtw":
-        from sktime.regression.distance_based import KNeighborsTimeSeriesRegressor
 
         return KNeighborsTimeSeriesRegressor(
-            n_neighbors=1,
-            distance="dtw",
-            metric_params={"window": kwargs["n_ts"] * 0.1},
-            # random_state=random_state,
-            n_jobs=n_jobs,
+            distance="euclidean",
+            n_neighbours=1,
         )
     elif r == "5nn-ed":
-        from sktime.regression.distance_based import KNeighborsTimeSeriesRegressor
+        from tsml_eval.sktime_estimators.regression.distance_based import (
+            KNeighborsTimeSeriesRegressor,
+        )
 
         return KNeighborsTimeSeriesRegressor(
-            n_neighbors=5,
             distance="euclidean",
-            # random_state=random_state,
-            n_jobs=n_jobs,
+            n_neighbours=5,
+        )
+    elif r == "1nn-dtw":
+        from tsml_eval.sktime_estimators.regression.distance_based import (
+            KNeighborsTimeSeriesRegressor,
+        )
+
+        return KNeighborsTimeSeriesRegressor(
+            n_neighbours=1,
+            distance="dtw",
+            distance_params={"window": 0.1},
         )
     elif r == "5nn-dtw":
-        from sktime.regression.distance_based import KNeighborsTimeSeriesRegressor
+        from tsml_eval.sktime_estimators.regression.distance_based import (
+            KNeighborsTimeSeriesRegressor,
+        )
 
         return KNeighborsTimeSeriesRegressor(
-            n_neighbors=5,
+            n_neighbours=5,
             distance="dtw",
-            metric_params={"window": kwargs["n_ts"] * 0.1},
-            # random_state=random_state,
-            n_jobs=n_jobs,
+            distance_params={"window": 0.1},
         )
     elif r == "rocket" or r == "rocketregressor":
         from sktime.regression.kernel_based import RocketRegressor
@@ -228,10 +253,16 @@ def set_regressor(
     # sklearn regerssors
     # todo experiments for these
     elif r == "rotf" or r == "rotationforest":
-        from tsml_eval.sktime_estimators.regression.sklearn import RotationForest
-        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
-        
-        model_params = {"random_state": random_state, "save_transformed_data": build_train_file, "n_jobs": n_jobs}
+        from tsml_eval.sktime_estimators.regression.sklearn import (
+            RotationForest,
+            SklearnBaseRegressor,
+        )
+
+        model_params = {
+            "random_state": random_state,
+            "save_transformed_data": build_train_file,
+            "n_jobs": n_jobs,
+        }
 
         return SklearnBaseRegressor(RotationForest(**model_params))
 
