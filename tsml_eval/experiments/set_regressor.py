@@ -49,17 +49,35 @@ def set_regressor(
         from sktime.regression.deep_learning.tapnet import TapNetRegressor
 
         return TapNetRegressor(random_state=random_state)
-    elif r == "sktime-knn-ed":
+    elif r == "sktime-1nn-ed":
         from sktime.regression.distance_based import KNeighborsTimeSeriesRegressor
 
         return KNeighborsTimeSeriesRegressor(
+            n_neighbors=1,
             distance="euclidean",
         )
-    elif r == "sktime-knn-dtw":
+    elif r == "sktime-1nn-dtw":
         from sktime.regression.distance_based import KNeighborsTimeSeriesRegressor
 
         return KNeighborsTimeSeriesRegressor(
             distance="dtw",
+            distance_params={"window": 0.1},
+            n_neighbors=1,
+            n_jobs=n_jobs,
+        )
+    elif r == "sktime-5nn-ed":
+        from sktime.regression.distance_based import KNeighborsTimeSeriesRegressor
+
+        return KNeighborsTimeSeriesRegressor(
+            n_neighbors=5,
+            distance="euclidean",
+        )
+    elif r == "sktime-5nn-dtw":
+        from sktime.regression.distance_based import KNeighborsTimeSeriesRegressor
+
+        return KNeighborsTimeSeriesRegressor(
+            distance="dtw",
+            n_neighbors=5,
             distance_params={"window": 0.1},
             n_jobs=n_jobs,
         )
