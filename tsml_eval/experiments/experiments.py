@@ -756,6 +756,6 @@ def _load_data(problem_path, dataset, resample_id, predefined_resample):
         X_train, y_train = load_ts(f"{problem_path}/{dataset}/{dataset}_TRAIN.ts")
         X_test, y_test = load_ts(f"{problem_path}/{dataset}/{dataset}_TEST.ts")
 
-        resample_data = False if resample_id == 0 and resample_id is None else True
+        resample_data = True if resample_id != 0 else False
 
     return X_train, y_train, X_test, y_test, resample_data
