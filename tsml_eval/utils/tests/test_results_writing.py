@@ -191,3 +191,7 @@ def _generate_labels_and_predictions():
         probabilities[i, predictions[i]] = 1
 
     return labels, predictions, probabilities
+
+
+def test_fix_broken_second_line():
+    pass

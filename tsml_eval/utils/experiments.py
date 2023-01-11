@@ -10,6 +10,7 @@ __all__ = [
     "write_regression_results",
     "write_clustering_results",
     "write_results_to_tsml_format",
+    "fix_broken_second_line",
 ]
 
 import os
@@ -647,3 +648,23 @@ def _results_present_full_path(path, dataset, res):
     if os.path.exists(full_path) and os.path.exists(full_path2):
         return True
     return False
+
+
+def fix_broken_second_line(file_path, save_path=None):
+    if save_path is None:
+        save_path = file_path
+
+    f = open(file_path, "r")
+    lines = f.readlines()
+
+
+def _check_classification_third_line(line):
+    pass
+
+
+def _check_regression_third_line(line):
+    pass
+
+
+def _check_clustering_third_line(line):
+    pass
