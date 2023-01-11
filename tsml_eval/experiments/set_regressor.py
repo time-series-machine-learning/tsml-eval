@@ -229,12 +229,11 @@ def set_regressor(
     # todo experiments for these
     elif r == "rotf" or r == "rotationforest":
         from tsml_eval.sktime_estimators.regression.sklearn import RotationForest
+        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+        
+        model_params = {"random_state": random_state, "save_transformed_data": build_train_file, "n_jobs": n_jobs}
 
-        return RotationForest(
-            random_state=random_state,
-            save_transformed_data=build_train_file,
-            n_jobs=n_jobs,
-        )
+        return SklearnBaseRegressor(RotationForest(**model_params))
 
     elif r == "lr" or r == "linearregression":
         from sklearn.linear_model import LinearRegression
