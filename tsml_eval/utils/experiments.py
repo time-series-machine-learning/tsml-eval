@@ -696,6 +696,11 @@ def fix_broken_second_line(file_path, save_path=None):
         lines[1] = ",".join(lines[2:line_count])
         lines = lines[:2] + lines[line_count:]
 
+    try:
+        os.makedirs(os.path.dirname(save_path))
+    except os.error:
+        pass  # raises os.error if path already exists, so just ignore this
+
     with open(save_path, "w") as f:
         f.writelines(lines)
 
