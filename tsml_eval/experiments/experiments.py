@@ -104,9 +104,7 @@ def run_classification_experiment(
         f"Encoder dictionary: {str(encoder_dict)}"
     )
 
-    second = str(classifier.get_params())
-    second.replace("\n", " ")
-    second.replace("\r", " ")
+    second = str(classifier.get_params()).replace("\n", " ").replace("\r", " ")
 
     if build_test_file or classifier_train_probs:
         start = int(round(time.time() * 1000))
@@ -332,9 +330,7 @@ def run_regression_experiment(
         f"{datetime.now().strftime('%m/%d/%Y, %H:%M:%S')}"
     )
 
-    second = str(regressor.get_params())
-    second.replace("\n", " ")
-    second.replace("\r", " ")
+    second = str(regressor.get_params()).replace("\n", " ").replace("\r", " ")
 
     if build_test_file or regressor_train_preds:
         start = int(round(time.time() * 1000))
@@ -558,9 +554,7 @@ def run_clustering_experiment(
         f"Encoder dictionary: {str(encoder_dict)}"
     )
 
-    second = str(clusterer.get_params())
-    second.replace("\n", " ")
-    second.replace("\r", " ")
+    second = str(clusterer.get_params()).replace("\n", " ").replace("\r", " ")
 
     if build_train_file:
         start = int(round(time.time() * 1000))
@@ -735,9 +729,7 @@ def _check_existing_results(
             if os.path.exists(full_path):
                 build_train_file = False
 
-        return build_test_file, build_train_file
-    else:
-        return True, True
+    return build_test_file, build_train_file
 
 
 def _load_data(problem_path, dataset, resample_id, predefined_resample):
@@ -756,6 +748,6 @@ def _load_data(problem_path, dataset, resample_id, predefined_resample):
         X_train, y_train = load_ts(f"{problem_path}/{dataset}/{dataset}_TRAIN.ts")
         X_test, y_test = load_ts(f"{problem_path}/{dataset}/{dataset}_TEST.ts")
 
-        resample_data = False if resample_id == 0 and resample_id is None else True
+        resample_data = True if resample_id != 0 else False
 
     return X_train, y_train, X_test, y_test, resample_data
