@@ -120,7 +120,7 @@ if __name__ == "__main__":
         resample = 0
         averaging = "mean"
         train_fold = True
-        distance = "dtw5"
+        distance = "dtw"
         normalise = True
         tune_w = False
     cls_folder = distance
@@ -129,7 +129,7 @@ if __name__ == "__main__":
     else:
         results_dir = results_dir + "raw/"
     if tune_w:
-        results_dir = results_dir + "tune_w/"
+        results_dir = results_dir + "tune_w_20/"
 
     results_dir = results_dir + "/" + clusterer + "/" + averaging + "/"
     if _results_present_full_path(results_dir, dataset, resample):
@@ -157,13 +157,8 @@ if __name__ == "__main__":
     if tune_w:
         w = tune_window(distance, train_X, len(set(train_Y)))
     else:
-        if (
-            distance == "wdtw"
-            or distance == "dwdtw"
-            or distance == "dtw"
-            or distance == "wdtw"
-        ):
-            w = 0.05
+        if distance == "dtw" or distance == "wdtw":
+            w = 0.2
         elif distance == "dtw5":
             w = 0.05
             distance = "dtw"
