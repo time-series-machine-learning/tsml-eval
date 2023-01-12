@@ -657,14 +657,47 @@ def fix_broken_second_line(file_path, save_path=None):
     f = open(file_path, "r")
     lines = f.readlines()
 
+    line_count = 2
+    while (
+        not _check_classification_third_line(lines[line_count])
+        and not _check_regression_third_line(lines[line_count])
+        and not _check_clustering_third_line(lines[line_count])
+    ):
+        if line_count == len(lines):
+            raise ValueError("No valid third line found in input results file.")
+        line_count += 1
+
+    if line_count != 2:
+        lines[1] = ",".join(lines[2:line_count])
+        lines = lines[:2] + lines[line_count:]
+
 
 def _check_classification_third_line(line):
-    pass
+    line = line.split(",")
+    floats = [0, 1, 2, 3, 4, 5, 7, 8]
+    return _check_line_length_and_floats(line, 9, floats)
 
 
 def _check_regression_third_line(line):
-    pass
+    line = line.split(",")
+    floats = [0, 1, 2, 3, 4, 6, 7]
+    return _check_line_length_and_floats(line, 8, floats)
 
 
 def _check_clustering_third_line(line):
-    pass
+    line.split(",")
+    floats = [0, 1, 2, 3, 4, 5, 6]
+    return _check_line_length_and_floats(line, 7, floats)
+
+
+def _check_line_length_and_floats(line, length, floats):
+    if len(line) != length:
+        return False
+
+    for i in floats:
+        try:
+            float(line[i])
+        except ValueError:
+            return False
+
+    return True
