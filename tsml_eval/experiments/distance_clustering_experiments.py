@@ -124,14 +124,14 @@ if __name__ == "__main__":
         normalise = True
         tune_w = False
     cls_folder = distance
-    if normalise:
-        results_dir = results_dir + "normalised/"
-    else:
-        results_dir = results_dir + "raw/"
-    if tune_w:
-        results_dir = results_dir + "tune_w_20/"
+    #    if normalise:
+    #        results_dir = results_dir + "normalised/"
+    #    else:
+    #        results_dir = results_dir + "raw/"
+    #    if tune_w:
+    #        results_dir = results_dir + "tune_w_20/"
 
-    results_dir = results_dir + "/" + clusterer + "/" + averaging + "/"
+    #    results_dir = results_dir + "/" + clusterer + "/" + averaging + "/"
     if _results_present_full_path(results_dir, dataset, resample):
         print("Ignoring, results already present")  # noqa
     print(  # noqa
