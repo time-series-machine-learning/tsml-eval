@@ -693,7 +693,8 @@ def fix_broken_second_line(file_path, save_path=None):
         line_count += 1
 
     if line_count != 2:
-        lines[1] = ",".join(lines[2:line_count])
+        for i in range(2, line_count):
+            lines[1] = lines[1] + lines[i].replace("\n", " ").replace("\r", " ")
         lines = lines[:2] + lines[line_count:]
 
     try:

@@ -178,8 +178,8 @@ def test_validate_broken_results_file(path):
 @pytest.mark.parametrize(
     "path",
     [
-        "test_files/regressionResultsFile.csv",
-        "test_files/brokenRegressionResultsFile.csv",
+        ["test_files/regressionResultsFile.csv", 1],
+        ["test_files/brokenRegressionResultsFile.csv", 2],
     ],
 )
 def test_fix_broken_second_line(path):
@@ -190,6 +190,8 @@ def test_fix_broken_second_line(path):
         else "../../../test_output/"
     )
 
-    fix_broken_second_line(path, f"{output_path}/secondLineTest.csv")
+    fix_broken_second_line(path[0], f"{output_path}/secondLineTest{path[1]}.csv")
 
-    os.remove(f"{output_path}/secondLineTest.csv")
+    validate_results_file(f"{output_path}/secondLineTest{path[1]}.csv")
+
+    os.remove(f"{output_path}/secondLineTest{path[1]}.csv")
