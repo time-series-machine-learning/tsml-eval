@@ -137,7 +137,7 @@ if __name__ == "__main__":
     print(  # noqa
         f" Running {dataset} resample {resample} normalised = {normalise} "  # noqa
         f"clustering ={clusterer} distance = {distance} averaging = {averaging} "  # noqa
-        f"tune window = {tune_w}"  # noqa
+        f"tune window = {tune_w} results path = {results_dir}"  # noqa
     )  # noqa
     train_X, train_Y = load_ts(
         f"{data_dir}/{dataset}/{dataset}_TRAIN.ts", return_data_type="numpy2d"
