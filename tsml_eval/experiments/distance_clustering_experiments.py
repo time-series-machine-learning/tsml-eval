@@ -80,14 +80,8 @@ def run_clustering_experiment(
     """
     if not overwrite:
         full_path = (
-            results_path
-            + "/"
-            + cls_name
-            + "/Predictions/"
-            + dataset_name
-            + "/testResample"
-            + str(resample_id)
-            + ".csv"
+            f"{results_path}/{cls_name}/Predictions/"
+            f"{dataset_name}/testResample{resample_id}.csv"
         )
         if os.path.exists(full_path):
             return
