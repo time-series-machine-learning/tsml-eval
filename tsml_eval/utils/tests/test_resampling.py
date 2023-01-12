@@ -5,9 +5,14 @@ __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 import numpy as np
 import pandas as pd
+import pytest
 from sktime.datasets import load_arrow_head
 
-from tsml_eval.utils.experiments import resample_data, stratified_resample_data
+from tsml_eval.utils.experiments import (
+    compare_result_file_resample,
+    resample_data,
+    stratified_resample_data,
+)
 
 
 def test_resample_data():
@@ -56,3 +61,22 @@ def test_stratified_resample_data():
 
     assert list(counts_train_new) == list(counts_train)
     assert list(counts_test_new) == list(counts_test)
+
+
+@pytest.mark.parametrize(
+    "paths",
+    [
+        [
+            "test_files/classificationResultsFile1.csv",
+            "test_files/classificationResultsFile1.csv",
+            True,
+        ],
+        [
+            "test_files/classificationResultsFile1.csv",
+            "test_files/classificationResultsFile2.csv",
+            False,
+        ],
+    ],
+)
+def test_compare_result_file_resample(paths):
+    assert compare_result_file_resample(paths[0], paths[1]) == paths[2]

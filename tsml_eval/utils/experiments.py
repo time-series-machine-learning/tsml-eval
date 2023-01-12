@@ -10,7 +10,9 @@ __all__ = [
     "write_regression_results",
     "write_clustering_results",
     "write_results_to_tsml_format",
+    "validate_results_file",
     "fix_broken_second_line",
+    "compare_result_file_resample",
 ]
 
 import os
@@ -650,12 +652,35 @@ def _results_present_full_path(path, dataset, res):
     return False
 
 
+def validate_results_file(file_path):
+    with open(file_path, "r") as f:
+        lines = f.readlines()
+
+    if not _check_first_line(lines[0]) or not _check_second_line(lines[1]):
+        return False
+
+    if _check_classification_third_line(lines[2]) or _check_clustering_third_line(
+        lines[2]
+    ):
+        probabilities = True
+    elif _check_regression_third_line(lines[2]):
+        probabilities = False
+    else:
+        return False
+
+    for i in range(3, len(lines)):
+        if not _check_results_line(lines[i], probabilities=probabilities):
+            return False
+
+    return True
+
+
 def fix_broken_second_line(file_path, save_path=None):
     if save_path is None:
         save_path = file_path
 
-    f = open(file_path, "r")
-    lines = f.readlines()
+    with open(file_path, "r") as f:
+        lines = f.readlines()
 
     line_count = 2
     while (
@@ -671,6 +696,19 @@ def fix_broken_second_line(file_path, save_path=None):
         lines[1] = ",".join(lines[2:line_count])
         lines = lines[:2] + lines[line_count:]
 
+    with open(save_path, "w") as f:
+        f.writelines(lines)
+
+
+def _check_first_line(line):
+    line = line.split(",")
+    return len(line) >= 5
+
+
+def _check_second_line(line):
+    line = line.split(",")
+    return len(line) >= 1
+
 
 def _check_classification_third_line(line):
     line = line.split(",")
@@ -685,7 +723,7 @@ def _check_regression_third_line(line):
 
 
 def _check_clustering_third_line(line):
-    line.split(",")
+    line = line.split(",")
     floats = [0, 1, 2, 3, 4, 5, 6]
     return _check_line_length_and_floats(line, 7, floats)
 
@@ -698,6 +736,51 @@ def _check_line_length_and_floats(line, length, floats):
         try:
             float(line[i])
         except ValueError:
+            return False
+
+    return True
+
+
+def _check_results_line(line, probabilities=True):
+    line = line.split(",")
+
+    if len(line) < 2:
+        return False
+
+    try:
+        float(line[0])
+        float(line[1])
+    except ValueError:
+        return False
+
+    if probabilities:
+        if len(line) < 5 or line[2] != "":
+            return False
+
+        try:
+            float(line[3])
+            float(line[4])
+        except ValueError:
+            return False
+    else:
+        if len(line) != 2:
+            return False
+
+    return True
+
+
+def compare_result_file_resample(file_path1, file_path2):
+    with open(file_path1, "r") as f:
+        lines1 = f.readlines()
+
+    with open(file_path2, "r") as f:
+        lines2 = f.readlines()
+
+    if len(lines1) != len(lines2):
+        raise ValueError("Input results file have different numbers of lines.")
+
+    for i in range(3, len(lines1)):
+        if lines1[i].split(",")[0] != lines2[i].split(",")[0]:
             return False
 
     return True

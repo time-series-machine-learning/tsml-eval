@@ -11,8 +11,12 @@ import pytest
 from tsml_eval.utils.experiments import (
     _check_classification_third_line,
     _check_clustering_third_line,
+    _check_first_line,
     _check_regression_third_line,
+    _check_results_line,
+    _check_second_line,
     fix_broken_second_line,
+    validate_results_file,
     write_classification_results,
     write_clustering_results,
     write_regression_results,
@@ -48,7 +52,8 @@ def test_write_classification_results():
 
 
 def _check_classification_file_format(file_path):
-    lines = open(file_path, "r").readlines()
+    with open(file_path, "r") as f:
+        lines = f.readlines()
 
     assert _check_first_line(lines[0])
     assert _check_second_line(lines[1])
@@ -84,7 +89,8 @@ def test_write_regression_results():
 
 
 def _check_regression_file_format(file_path):
-    lines = open(file_path, "r").readlines()
+    with open(file_path, "r") as f:
+        lines = f.readlines()
 
     assert _check_first_line(lines[0])
     assert _check_second_line(lines[1])
@@ -125,7 +131,8 @@ def test_write_clustering_results():
 
 
 def _check_clustering_file_format(file_path):
-    lines = open(file_path, "r").readlines()
+    with open(file_path, "r") as f:
+        lines = f.readlines()
 
     assert _check_first_line(lines[0])
     assert _check_second_line(lines[1])
@@ -133,44 +140,6 @@ def _check_clustering_file_format(file_path):
 
     for i in range(3, 6):
         assert _check_results_line(lines[i])
-
-
-def _check_first_line(line):
-    line = line.split(",")
-    return len(line) >= 5
-
-
-def _check_second_line(line):
-    line = line.split(",")
-    return len(line) >= 1
-
-
-def _check_results_line(line, probabilities=True):
-    line = line.split(",")
-
-    if len(line) < 2:
-        return False
-
-    try:
-        float(line[0])
-        float(line[1])
-    except ValueError:
-        return False
-
-    if probabilities:
-        if len(line) < 5 or line[2] != "":
-            return False
-
-        try:
-            float(line[3])
-            float(line[4])
-        except ValueError:
-            return False
-    else:
-        if len(line) != 2:
-            return False
-
-    return True
 
 
 def _generate_labels_and_predictions():
@@ -182,6 +151,28 @@ def _generate_labels_and_predictions():
         probabilities[i, predictions[i]] = 1
 
     return labels, predictions, probabilities
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "test_files/regressionResultsFile.csv",
+        "test_files/classificationResultsFile1.csv",
+    ],
+)
+def test_validate_results_file(path):
+    assert validate_results_file(path)
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "test_files/brokenRegressionResultsFile.csv",
+        "test_files/brokenClassificationResultsFile.csv",
+    ],
+)
+def test_validate_broken_results_file(path):
+    assert not validate_results_file(path)
 
 
 @pytest.mark.parametrize(
