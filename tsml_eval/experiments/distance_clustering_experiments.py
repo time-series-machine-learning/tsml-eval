@@ -124,7 +124,7 @@ if __name__ == "__main__":
         distance = "dtw"
         normalise = True
         tune_w = False
-    cls_folder = distance
+    cls_folder = clusterer + "-" + distance
     #    if normalise:
     #        results_dir = results_dir + "normalised/"
     #    else:
