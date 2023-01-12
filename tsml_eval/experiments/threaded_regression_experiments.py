@@ -87,7 +87,7 @@ def run_experiment(args, overwrite=False):
             build_train_file=train_fold,
             n_jobs=n_jobs,
         )
-        print(f"Local Run of {regressor.__class__.__name__}.")
+        print(f"Local Run of {regressor_name} ({regressor.__class__.__name__}).")
 
         load_and_run_regression_experiment(
             data_dir,

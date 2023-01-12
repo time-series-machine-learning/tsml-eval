@@ -76,7 +76,7 @@ def run_experiment(args, overwrite=False):
         test_fold = False
         predefined_resample = False
         clusterer = set_clusterer(clusterer_name, resample)
-        print(f"Local Run of {clusterer.__class__.__name__}.")
+        print(f"Local Run of {clusterer_name} ({clusterer.__class__.__name__}).")
 
         load_and_run_clustering_experiment(
             data_dir,
