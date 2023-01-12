@@ -107,4 +107,4 @@ if __name__ == "__main__":
     """
     Example simple usage, with arguments input via script or hard coded for testing.
     """
-    run_experiment(sys.argv, overwrite=True)
+    run_experiment(sys.argv)
