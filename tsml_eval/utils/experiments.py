@@ -676,9 +676,6 @@ def validate_results_file(file_path):
 
 
 def fix_broken_second_line(file_path, save_path=None):
-    if save_path is None:
-        save_path = file_path
-
     with open(file_path, "r") as f:
         lines = f.readlines()
 
@@ -693,17 +690,22 @@ def fix_broken_second_line(file_path, save_path=None):
         line_count += 1
 
     if line_count != 2:
+        lines[1] = lines[1].replace("\n", " ").replace("\r", " ")
         for i in range(2, line_count):
             lines[1] = lines[1] + lines[i].replace("\n", " ").replace("\r", " ")
         lines = lines[:2] + lines[line_count:]
 
-    try:
-        os.makedirs(os.path.dirname(save_path))
-    except os.error:
-        pass  # raises os.error if path already exists, so just ignore this
+    if save_path is not None or line_count != 2:
+        if save_path is None:
+            save_path = file_path
 
-    with open(save_path, "w") as f:
-        f.writelines(lines)
+        try:
+            os.makedirs(os.path.dirname(save_path))
+        except os.error:
+            pass  # raises os.error if path already exists, so just ignore this
+
+        with open(save_path, "w") as f:
+            f.writelines(lines)
 
 
 def _check_first_line(line):
