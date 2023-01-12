@@ -192,6 +192,6 @@ def test_fix_broken_second_line(path):
 
     fix_broken_second_line(path[0], f"{output_path}/secondLineTest{path[1]}.csv")
 
-    validate_results_file(f"{output_path}/secondLineTest{path[1]}.csv")
+    assert validate_results_file(f"{output_path}/secondLineTest{path[1]}.csv")
 
     os.remove(f"{output_path}/secondLineTest{path[1]}.csv")

@@ -691,8 +691,9 @@ def fix_broken_second_line(file_path, save_path=None):
 
     if line_count != 2:
         lines[1] = lines[1].replace("\n", " ").replace("\r", " ")
-        for i in range(2, line_count):
+        for i in range(2, line_count - 1):
             lines[1] = lines[1] + lines[i].replace("\n", " ").replace("\r", " ")
+        lines[1] = lines[1] + lines[line_count - 1]
         lines = lines[:2] + lines[line_count:]
 
     if save_path is not None or line_count != 2:
