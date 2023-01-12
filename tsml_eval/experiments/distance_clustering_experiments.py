@@ -19,10 +19,11 @@ import numba
 import numpy as np
 import torch
 from sklearn.metrics import davies_bouldin_score
-from sktime.benchmarking.experiments import run_clustering_experiment
 from sktime.clustering.k_means import TimeSeriesKMeans
 from sktime.clustering.k_medoids import TimeSeriesKMedoids
 from sktime.datasets import load_from_tsfile as load_ts
+
+from tsml_eval.benchmarking.experiments import run_clustering_experiment
 
 
 def _results_present_full_path(path, dataset, res):
