@@ -78,10 +78,10 @@ def run_experiment(args, overwrite=False):
         # These are example parameters, change as required for local runs
         # Do not include paths to your local directories here in PRs
         # If threading is required, see the threaded version of this file
-        data_dir = "../"
-        results_dir = "../"
-        classifier_name = "DrCIF"
-        dataset = "ItalyPowerDemand"
+        data_dir = "C:/Data/"
+        results_dir = "C:/Temp/"
+        classifier_name = "1nn-dtw"
+        dataset = "Chinatown"
         resample = 0
         train_fold = False
         predefined_resample = False
