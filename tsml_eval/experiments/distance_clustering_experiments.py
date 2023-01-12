@@ -347,8 +347,8 @@ if __name__ == "__main__":
         train_fold = True
         distance = "dtw"
         normalise = True
-        tune_w = False
-    cls_folder = clusterer + "-" + distance
+        tune_w = True
+    #    cls_folder = clusterer + "-" + distance
     #    if normalise:
     #        results_dir = results_dir + "normalised/"
     #    else:
@@ -427,7 +427,7 @@ if __name__ == "__main__":
         trainY=train_Y,
         testX=test_X,
         testY=test_Y,
-        cls_name=cls_folder,
+        cls_name=distance,
         dataset_name=dataset,
         resample_id=resample,
         overwrite=False,
