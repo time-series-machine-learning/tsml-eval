@@ -294,13 +294,13 @@ def tune_window(metric: str, train_X, n_clusters):
     return best_w
 
 
-def tune_msm(metric: str, train_X, n_clusters):
+def tune_msm(train_X, n_clusters):
     """Tune window for MSM."""
     best_c = 0
     best_score = sys.float_info.max
     for c in np.arange(0, 5, 0.25):
         cls = TimeSeriesKMeans(
-            metric=metric, distance_params={"c": c}, n_clusters=n_clusters
+            metric="msm", distance_params={"c": c}, n_clusters=n_clusters
         )
         cls.fit(train_X)
         preds = cls.predict(train_X)
@@ -316,6 +316,38 @@ def tune_msm(metric: str, train_X, n_clusters):
             best_c = c
     print("best c =", best_c, " with score ", best_score)  # noqa
     return best_c
+
+
+def tune_twe(train_X, n_clusters):
+    """Tune window for MSM."""
+    best_nu = 0
+    best_lambda = 0
+    best_score = sys.float_info.max
+    for nu in np.arange(0, 1, 0.25):
+        for lam in np.arange(0, 1, 0.2):
+            cls = TimeSeriesKMeans(
+                metric="twe",
+                distance_params={"nu": nu, "lmbda": lam},
+                n_clusters=n_clusters,
+            )
+            cls.fit(train_X)
+            preds = cls.predict(train_X)
+            clusters = len(np.unique(preds))
+            if clusters <= 1:
+                score = sys.float_info.max
+            else:
+                score = davies_bouldin_score(train_X, preds)
+            print(
+                f" Number of clusters ={clusters} nu param = {nu} lambda para "
+                f"= {lam} score  = {score}"
+            )  #
+            # noqa
+            if score < best_score:
+                best_score = score
+                best_nu = nu
+                best_lambda = lam
+    print("best nu =", best_nu, f" lambda = {best_lambda} score ", best_score)  # noqa
+    return best_nu, best_lambda
 
 
 def _recreate_results(trainX, trainY):
@@ -372,7 +404,7 @@ if __name__ == "__main__":
         resample = 0
         averaging = "mean"
         train_fold = True
-        distance = "msm"
+        distance = "twe"
         normalise = True
         tune = True
     #    cls_folder = clusterer + "-" + distance
@@ -411,7 +443,10 @@ if __name__ == "__main__":
         if distance == "dtw" or distance == "wdtw":
             w = tune_window(distance, train_X, len(set(train_Y)))
         elif distance == "msm":
-            c = tune_msm(distance, train_X, len(set(train_Y)))
+            c = tune_msm(train_X, len(set(train_Y)))
+        elif distance == "twe":
+            nu, lam = tune_twe(train_X, len(set(train_Y)))
+
     else:
         if distance == "dtw" or distance == "wdtw":
             w = 0.2
@@ -424,8 +459,8 @@ if __name__ == "__main__":
         "epsilon": 0.05,
         "g": 0.05,
         "c": c,
-        "nu": 0.05,
-        "lmbda": 1.0,
+        "nu": nu,
+        "lmbda": lam,
         "strategy": "independent",
     }
     average_params = {
