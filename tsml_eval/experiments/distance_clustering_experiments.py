@@ -294,6 +294,30 @@ def tune_window(metric: str, train_X, n_clusters):
     return best_w
 
 
+def tune_msm(metric: str, train_X, n_clusters):
+    """Tune window for MSM."""
+    best_c = 0
+    best_score = sys.float_info.max
+    for c in np.arange(0, 5, 0.25):
+        cls = TimeSeriesKMeans(
+            metric=metric, distance_params={"c": c}, n_clusters=n_clusters
+        )
+        cls.fit(train_X)
+        preds = cls.predict(train_X)
+        clusters = len(np.unique(preds))
+        if clusters <= 1:
+            score = sys.float_info.max
+        else:
+            score = davies_bouldin_score(train_X, preds)
+        print(f" Number of clusters ={clusters} c parameter = {c} score  = {score}")  #
+        # noqa
+        if score < best_score:
+            best_score = score
+            best_c = c
+    print("best c =", best_c, " with score ", best_score)  # noqa
+    return best_c
+
+
 def _recreate_results(trainX, trainY):
     from sklearn.metrics import adjusted_rand_score
 
@@ -318,7 +342,7 @@ if __name__ == "__main__":
 
     clusterer = "kmeans"
     chris_config = True  # This is so chris doesn't have to change config each time
-    tune_w = False
+    tune = False
     normalise = True
     if sys.argv.__len__() > 1:  # cluster run, this is fragile, requires all args atm
         data_dir = sys.argv[1]
@@ -339,7 +363,7 @@ if __name__ == "__main__":
         if len(sys.argv) > 9:
             normalise = sys.argv[9].lower() == "true"
         if len(sys.argv) > 10:
-            tune_w = sys.argv[10].lower() == "true"
+            tune = sys.argv[10].lower() == "true"
     else:  # Local run
         print(" Local Run")  # noqa
         dataset = "Chinatown"
@@ -348,9 +372,9 @@ if __name__ == "__main__":
         resample = 0
         averaging = "mean"
         train_fold = True
-        distance = "dtw"
+        distance = "msm"
         normalise = True
-        tune_w = True
+        tune = True
     #    cls_folder = clusterer + "-" + distance
     #    if normalise:
     #        results_dir = results_dir + "normalised/"
@@ -365,7 +389,7 @@ if __name__ == "__main__":
     print(  # noqa
         f" Running {dataset} resample {resample} normalised = {normalise} "  # noqa
         f"clustering ={clusterer} distance = {distance} averaging = {averaging} "  # noqa
-        f"tune window = {tune_w} results path = {results_dir}"  # noqa
+        f"tune window = {tune} results path = {results_dir}"  # noqa
     )  # noqa
     train_X, train_Y = load_ts(
         f"{data_dir}/{dataset}/{dataset}_TRAIN.ts", return_data_type="numpy2d"
@@ -382,8 +406,12 @@ if __name__ == "__main__":
         test_X = s.fit_transform(test_X.T)
         test_X = test_X.T
     w = 1.0
-    if tune_w:
-        w = tune_window(distance, train_X, len(set(train_Y)))
+    c = 1.0
+    if tune:
+        if distance == "dtw" or distance == "wdtw":
+            w = tune_window(distance, train_X, len(set(train_Y)))
+        elif distance == "msm":
+            c = tune_msm(distance, train_X, len(set(train_Y)))
     else:
         if distance == "dtw" or distance == "wdtw":
             w = 0.2
@@ -395,7 +423,7 @@ if __name__ == "__main__":
         "window": w,
         "epsilon": 0.05,
         "g": 0.05,
-        "c": 1,
+        "c": c,
         "nu": 0.05,
         "lmbda": 1.0,
         "strategy": "independent",
