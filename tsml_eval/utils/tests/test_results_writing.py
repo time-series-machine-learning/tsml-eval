@@ -161,6 +161,13 @@ def _generate_labels_and_predictions():
     ],
 )
 def test_validate_results_file(path):
+    """Test results file validation with valid files."""
+    path = (
+        f"tsml_eval/utils/tests/{path}"
+        if os.getcwd().split("\\")[-1] != "tests"
+        else path
+    )
+
     assert validate_results_file(path)
 
 
@@ -172,6 +179,13 @@ def test_validate_results_file(path):
     ],
 )
 def test_validate_broken_results_file(path):
+    """Test results file validation with broken files."""
+    path = (
+        f"tsml_eval/utils/tests/{path}"
+        if os.getcwd().split("\\")[-1] != "tests"
+        else path
+    )
+
     assert not validate_results_file(path)
 
 
@@ -184,11 +198,11 @@ def test_validate_broken_results_file(path):
 )
 def test_fix_broken_second_line(path):
     """Test that the second line of a broken results file is fixed."""
-    output_path = (
-        "./test_output/"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else "../../../test_output/"
-    )
+    if os.getcwd().split("\\")[-1] != "tests":
+        path[0] = f"tsml_eval/utils/tests/{path[0]}"
+        output_path = "./test_output/"
+    else:
+        output_path = "../../../test_output/"
 
     fix_broken_second_line(path[0], f"{output_path}/secondLineTest{path[1]}.csv")
 

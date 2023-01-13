@@ -3,6 +3,8 @@
 
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
+import os
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -79,4 +81,9 @@ def test_stratified_resample_data():
     ],
 )
 def test_compare_result_file_resample(paths):
+    """Test compare result file resample function."""
+    if os.getcwd().split("\\")[-1] != "tests":
+        paths[0] = f"tsml_eval/utils/tests/{paths[0]}"
+        paths[1] = f"tsml_eval/utils/tests/{paths[1]}"
+
     assert compare_result_file_resample(paths[0], paths[1]) == paths[2]

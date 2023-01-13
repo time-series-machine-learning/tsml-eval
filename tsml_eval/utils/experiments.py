@@ -653,6 +653,24 @@ def _results_present_full_path(path, dataset, res):
 
 
 def validate_results_file(file_path):
+    """Validate that a results file is in the correct format.
+
+    Validates that the first, second, third and results lines follow the expected
+    format. This does not verify that the actual contents of the results file make
+    sense.
+
+    Works for classification, regression and clustering results files.
+
+    Parameters
+    ----------
+    file_path : str
+        Path to the results file to be validated, including the file itself.
+
+    Returns
+    -------
+    valid_file : bool
+        True if the results file is valid, False otherwise.
+    """
     with open(file_path, "r") as f:
         lines = f.readlines()
 
@@ -676,6 +694,19 @@ def validate_results_file(file_path):
 
 
 def fix_broken_second_line(file_path, save_path=None):
+    """Fix a results while where the written second line has line breaks.
+
+    This function will remove line breaks from any lines between the first line and the
+    first seen valid 'third_line' for any results file format.
+
+    Parameters
+    ----------
+    file_path : str
+        Path to the results file to be fixed, including the file itself.
+    save_path : str, default=None
+        Path to save the fixed results file to, including the file new files name.
+        If None, the new file will replace the original file.
+    """
     with open(file_path, "r") as f:
         lines = f.readlines()
 
@@ -779,6 +810,23 @@ def _check_results_line(line, probabilities=True):
 
 
 def compare_result_file_resample(file_path1, file_path2):
+    """Validate that a two results files use the same data resample.
+
+    Files are deemed as having the same resample if the file length is the same and all
+    true label values are the same in both files.
+
+    Parameters
+    ----------
+    file_path1 : str
+        Path to the first results file to be compared, including the file itself.
+    file_path1 : str
+        Path to the second results file to be compared, including the file itself.
+
+    Returns
+    -------
+    same_resample : bool
+        True if the results file use the same data resample, False otherwise.
+    """
     with open(file_path1, "r") as f:
         lines1 = f.readlines()
 
