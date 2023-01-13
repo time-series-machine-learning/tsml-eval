@@ -130,13 +130,11 @@ def run_clustering_experiment(
         timing_type="MILLISECONDS",
     )
 
-    #        preds = form_cluster_list(clusters, len(testY))
-    if "Composite" in cls_name:
-        second = "Para info too long!"
-    else:
-        second = str(clusterer.get_params())
-        second.replace("\n", " ")
-        second.replace("\r", " ")
+    second = str(clusterer.get_params())
+    if isinstance(clusterer, TimeSeriesLloyds):
+        second = f"{second},inertia,{clusterer.inertia_},n_its,{clusterer.n_iter_}"
+    second = second.replace("\n", " ")
+    second = second.replace("\r", " ")
     third = (
         f"0,{build_time},{test_time},-1,-1, {len(np.unique(trainY))},"
         f" {len(np.unique(trainY))}"
