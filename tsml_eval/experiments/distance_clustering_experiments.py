@@ -318,6 +318,30 @@ def tune_msm(train_X, n_clusters):
     return best_c
 
 
+def tune_wdtw(train_X, n_clusters):
+    """Tune window for MSM."""
+    best_g = 0
+    best_score = sys.float_info.max
+    for g in np.arange(0, 1, 0.05):
+        cls = TimeSeriesKMeans(
+            metric="wdtw", distance_params={"g": g}, n_clusters=n_clusters
+        )
+        cls.fit(train_X)
+        preds = cls.predict(train_X)
+        clusters = len(np.unique(preds))
+        if clusters <= 1:
+            score = sys.float_info.max
+        else:
+            score = davies_bouldin_score(train_X, preds)
+        print(f" Number of clusters ={clusters} g parameter = {g} score  = {score}")  #
+        # noqa
+        if score < best_score:
+            best_score = score
+            best_g = g
+    print("best g =", best_g, " with score ", best_score)  # noqa
+    return best_g
+
+
 def tune_twe(train_X, n_clusters):
     """Tune window for MSM."""
     best_nu = 0
@@ -348,6 +372,84 @@ def tune_twe(train_X, n_clusters):
                 best_lambda = lam
     print("best nu =", best_nu, f" lambda = {best_lambda} score ", best_score)  # noqa
     return best_nu, best_lambda
+
+
+def tune_erp(train_X, n_clusters):
+    """Tune window for MSM."""
+    best_g = 0
+    best_score = sys.float_info.max
+    for g in np.arange(0, 2, 0.2):
+        cls = TimeSeriesKMeans(
+            metric="erp", distance_params={"g": g}, n_clusters=n_clusters
+        )
+        cls.fit(train_X)
+        preds = cls.predict(train_X)
+        clusters = len(np.unique(preds))
+        if clusters <= 1:
+            score = sys.float_info.max
+        else:
+            score = davies_bouldin_score(train_X, preds)
+        print(f" Number of clusters ={clusters} g parameter = {g} score  = {score}")  #
+        # noqa
+        if score < best_score:
+            best_score = score
+            best_g = g
+    print("best g =", best_g, " with score ", best_score)  # noqa
+    return best_g
+
+
+def tune_edr(train_X, n_clusters):
+    """Tune window for MSM."""
+    best_e = 0
+    best_score = sys.float_info.max
+    for e in np.arange(0.0, 0.2, 0.01):
+        cls = TimeSeriesKMeans(
+            metric="edr", distance_params={"epsilon": e}, n_clusters=n_clusters
+        )
+        cls.fit(train_X)
+        preds = cls.predict(train_X)
+        clusters = len(np.unique(preds))
+        if clusters <= 1:
+            score = sys.float_info.max
+        else:
+            score = davies_bouldin_score(train_X, preds)
+        print(
+            f" Number of clusters ={clusters} epsilon parameter = {e} score  ="
+            f" {score}"
+        )  #
+        # noqa
+        if score < best_score:
+            best_score = score
+            best_e = e
+    print("best e =", best_e, " with score ", best_score)  # noqa
+    return best_e
+
+
+def tune_lcss(train_X, n_clusters):
+    """Tune window for MSM."""
+    best_e = 0
+    best_score = sys.float_info.max
+    for e in np.arange(0, 0.2, 0.01):
+        cls = TimeSeriesKMeans(
+            metric="lcss", distance_params={"epsilon": e}, n_clusters=n_clusters
+        )
+        cls.fit(train_X)
+        preds = cls.predict(train_X)
+        clusters = len(np.unique(preds))
+        if clusters <= 1:
+            score = sys.float_info.max
+        else:
+            score = davies_bouldin_score(train_X, preds)
+        print(
+            f" Number of clusters ={clusters} epsilon parameter = {e} score  ="
+            f" {score}"
+        )  #
+        # noqa
+        if score < best_score:
+            best_score = score
+            best_e = e
+    print("best e =", best_e, " with score ", best_score)  # noqa
+    return best_e
 
 
 def _recreate_results(trainX, trainY):
@@ -404,7 +506,7 @@ if __name__ == "__main__":
         resample = 0
         averaging = "mean"
         train_fold = True
-        distance = "twe"
+        distance = "lcss"
         normalise = True
         tune = True
     #    cls_folder = clusterer + "-" + distance
@@ -439,6 +541,12 @@ if __name__ == "__main__":
         test_X = test_X.T
     w = 1.0
     c = 1.0
+    epsilon = 0.05
+    g = 0.05
+    c = 1.0
+    nu = 0.05
+    lam = 1.0
+
     if tune:
         if distance == "dtw" or distance == "wdtw":
             w = tune_window(distance, train_X, len(set(train_Y)))
@@ -446,6 +554,14 @@ if __name__ == "__main__":
             c = tune_msm(train_X, len(set(train_Y)))
         elif distance == "twe":
             nu, lam = tune_twe(train_X, len(set(train_Y)))
+        elif distance == "erp":
+            g = tune_erp(train_X, len(set(train_Y)))
+        elif distance == "wdtw":
+            g = tune_wdtw(train_X, len(set(train_Y)))
+        elif distance == "edr":
+            epsilon = tune_edr(train_X, len(set(train_Y)))
+        elif distance == "lcss":
+            epsilon = tune_lcss(train_X, len(set(train_Y)))
 
     else:
         if distance == "dtw" or distance == "wdtw":
@@ -456,8 +572,8 @@ if __name__ == "__main__":
 
     parameters = {
         "window": w,
-        "epsilon": 0.05,
-        "g": 0.05,
+        "epsilon": epsilon,
+        "g": g,
         "c": c,
         "nu": nu,
         "lmbda": lam,
