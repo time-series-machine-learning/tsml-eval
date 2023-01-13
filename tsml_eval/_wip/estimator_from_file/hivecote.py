@@ -55,11 +55,15 @@ class FromFileHIVECOTE(BaseClassifier):
         file_paths,
         alpha=4,
         tune_alpha=False,
+        overwrite_y=False,
+        skip_y_check=False,
         random_state=None,
     ):
         self.file_paths = file_paths
         self.alpha = alpha
         self.tune_alpha = tune_alpha
+        self.overwrite_y = overwrite_y
+        self.skip_y_check = skip_y_check
         self.random_state = random_state
 
         self._alpha = alpha
@@ -96,9 +100,12 @@ class FromFileHIVECOTE(BaseClassifier):
         else:
             file_name = "trainResample.csv"
 
+        if self.tune_alpha:
+            X_probas = np.zeros((n_instances, len(self.file_paths), self.n_classes_))
+
         acc_list = []
         all_lines = []
-        for path in self.file_paths:
+        for i, path in enumerate(self.file_paths):
             f = open(path + file_name, "r")
             lines = f.readlines()
             line2 = lines[2].split(",")
@@ -119,18 +126,35 @@ class FromFileHIVECOTE(BaseClassifier):
                     line2[5],
                 )
 
+            for j in range(n_instances):
+                line = lines[j + 3].split(",")
+
+                if self.overwrite_y:
+                    if i == 0:
+                        y[j] = float(line[0])
+                    elif not self.skip_y_check:
+                        assert y[j] == float(line[0])
+                elif not self.skip_y_check:
+                    if i == 0:
+                        le = preprocessing.LabelEncoder()
+                        y = le.fit_transform(y)
+                    assert float(line[0]) == y[j]
+
+                if self.tune_alpha:
+                    X_probas[j][i] = [float(k) for k in (line[3:])]
+
             acc_list.append(float(line2[0]))
             if self.tune_alpha:
                 all_lines.append(lines)
 
         if self.tune_alpha:
-            self._alpha = self._tune_alpha(all_lines)
+            self._alpha = self._tune_alpha(X_probas, y)
 
         # add a weight to the weight list based on the files accuracy
         for acc in acc_list:
             self._weights.append(acc**self._alpha)
 
-    def _tune_alpha(self, all_files_lines):
+    def _tune_alpha(self, X_probas, y):
         """Finds the best alpha value if self.tune_alpha == True.
 
         Parameters
@@ -147,32 +171,18 @@ class FromFileHIVECOTE(BaseClassifier):
         -----
         Estimates through cross validation the best alpha of a range of values.
         """
-        n_instances = len(all_files_lines[0]) - 3
-        n_files = len(all_files_lines)
-
-        X_probas = np.zeros((n_instances, n_files, self.n_classes_))
-        y = []
-
-        for i, lines in enumerate(all_files_lines):
-            for j in range(n_instances):
-                line = lines[j + 3].split(",")
-                X_probas[j][i] = [float(k) for k in (line[3:])]
-
-                if i == 0:
-                    y.append(float(line[0]))
-                else:
-                    assert y[j] == float(line[0])
-
-        y = np.array(y)
+        n_instances = len(y)
+        n_files = X_probas.shape[1]
 
         n_splits = 10
         _, counts = np.unique(y, return_counts=True)
         min_class = np.min(counts)
         if min_class < n_splits:
             n_splits = min_class
-            
+
         if n_splits == 1:
-            return 4
+            return self.alpha
+
         alpha_values = range(1, 10)  # tested alpha values
         avg_alpha_acc = np.zeros(len(alpha_values))  # performance of each alpha value
         for i, alpha in enumerate(alpha_values):
@@ -251,6 +261,9 @@ class FromFileHIVECOTE(BaseClassifier):
 
         dists = np.zeros((n_instances, self.n_classes_))
 
+        if not self.skip_y_check:
+            y = np.zeros(n_instances)
+
         for i, path in enumerate(self.file_paths):
             f = open(path + file_name, "r")
             lines = f.readlines()
@@ -274,11 +287,19 @@ class FromFileHIVECOTE(BaseClassifier):
 
             #   apply this files weights to the probabilities in the test file
             for j in range(n_instances):
+                line = lines[j + 3].split(",")
+
                 dists[j] = np.add(
                     dists[j],
-                    [float(k) for k in (lines[j + 3].split(",")[3:])]
+                    [float(k) for k in (line[3:])]
                     * (np.ones(self.n_classes_) * self._weights[i]),
                 )
+
+                if not self.skip_y_check:
+                    if i == 0:
+                        y[j] = float(line[0])
+                    else:
+                        assert y[j] == float(line[0])
 
         # Make each instances probability array sum to 1 and return
         return dists / dists.sum(axis=1, keepdims=True)
@@ -309,4 +330,4 @@ class FromFileHIVECOTE(BaseClassifier):
             "test_files/Test/Test1/",
             "test_files/Test/Test2/",
         ]
-        return {"file_paths": file_paths, "random_state": 0}
+        return {"file_paths": file_paths, "skip_y_check": True, "random_state": 0}
