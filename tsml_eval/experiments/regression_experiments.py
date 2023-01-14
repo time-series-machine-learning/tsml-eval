@@ -78,15 +78,15 @@ def run_experiment(args, overwrite=False):
         # If threading is required, see the threaded version of this file
         data_dir = "../"
         results_dir = "../"
-        regressor_name = "DrCIF"
-        dataset = "Covid3Months"
+        regressor_name = "LR"
+        dataset = "Covid3Month"
         resample = 0
         train_fold = False
         predefined_resample = False
         regressor = set_regressor(
             regressor_name, random_state=resample, build_train_file=train_fold
         )
-        print(f"Local Run of {regressor.__class__.__name__}.")
+        print(f"Local Run of {regressor_name} ({regressor.__class__.__name__}).")
 
         load_and_run_regression_experiment(
             data_dir,
@@ -105,4 +105,4 @@ if __name__ == "__main__":
     """
     Example simple usage, with arguments input via script or hard coded for testing.
     """
-    run_experiment(sys.argv)
+    run_experiment(sys.argv, overwrite=True)

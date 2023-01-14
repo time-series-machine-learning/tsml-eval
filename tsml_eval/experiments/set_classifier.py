@@ -180,7 +180,9 @@ def set_classifier(
 
         return ProximityStump(random_state=random_state, n_jobs=n_jobs)
     elif c == "dtw" or c == "1nn-dtw" or c == "kneighborstimeseriesclassifier":
-        from sktime.classification.distance_based import KNeighborsTimeSeriesClassifier
+        from tsml_eval.sktime_estimators.classification.distance_based import (
+            KNeighborsTimeSeriesClassifier,
+        )
 
         return KNeighborsTimeSeriesClassifier(n_jobs=n_jobs)
     elif c == "ed" or c == "1nn-euclidean" or c == "1nn-ed":

@@ -51,17 +51,80 @@ def set_regressor(
 
         return TapNetRegressor(random_state=random_state)
 
-    if r == "resnet" or r == "resnetregressor":
+    elif r == "resnet" or r == "resnetregressor":
         from tsml_eval.sktime_estimators.regression.deep_learning import ResNetRegressor
 
         return ResNetRegressor(random_state=random_state)
 
-    elif r == "knn" or r == "kneighborstimeseriesregressor":
+    elif r == "sktime-1nn-ed":
         from sktime.regression.distance_based import KNeighborsTimeSeriesRegressor
 
         return KNeighborsTimeSeriesRegressor(
-            # random_state=resample_id,
+            n_neighbors=1,
+            distance="euclidean",
+        )
+    elif r == "sktime-1nn-dtw":
+        from sktime.regression.distance_based import KNeighborsTimeSeriesRegressor
+
+        return KNeighborsTimeSeriesRegressor(
+            distance="dtw",
+            distance_params={"window": 0.1},
+            n_neighbors=1,
             n_jobs=n_jobs,
+        )
+    elif r == "sktime-5nn-ed":
+        from sktime.regression.distance_based import KNeighborsTimeSeriesRegressor
+
+        return KNeighborsTimeSeriesRegressor(
+            n_neighbors=5,
+            distance="euclidean",
+        )
+    elif r == "sktime-5nn-dtw":
+        from sktime.regression.distance_based import KNeighborsTimeSeriesRegressor
+
+        return KNeighborsTimeSeriesRegressor(
+            distance="dtw",
+            n_neighbors=5,
+            distance_params={"window": 0.1},
+            n_jobs=n_jobs,
+        )
+    elif r == "1nn-ed":
+        from tsml_eval.sktime_estimators.regression.distance_based import (
+            KNeighborsTimeSeriesRegressor,
+        )
+
+        return KNeighborsTimeSeriesRegressor(
+            distance="euclidean",
+            n_neighbours=1,
+        )
+    elif r == "5nn-ed":
+        from tsml_eval.sktime_estimators.regression.distance_based import (
+            KNeighborsTimeSeriesRegressor,
+        )
+
+        return KNeighborsTimeSeriesRegressor(
+            distance="euclidean",
+            n_neighbours=5,
+        )
+    elif r == "1nn-dtw":
+        from tsml_eval.sktime_estimators.regression.distance_based import (
+            KNeighborsTimeSeriesRegressor,
+        )
+
+        return KNeighborsTimeSeriesRegressor(
+            n_neighbours=1,
+            distance="dtw",
+            distance_params={"window": 0.1},
+        )
+    elif r == "5nn-dtw":
+        from tsml_eval.sktime_estimators.regression.distance_based import (
+            KNeighborsTimeSeriesRegressor,
+        )
+
+        return KNeighborsTimeSeriesRegressor(
+            n_neighbours=5,
+            distance="dtw",
+            distance_params={"window": 0.1},
         )
     elif r == "rocket" or r == "rocketregressor":
         from sktime.regression.kernel_based import RocketRegressor
