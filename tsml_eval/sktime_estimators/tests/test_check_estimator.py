@@ -20,6 +20,10 @@ from tsml_eval.sktime_estimators.classification.shapelet_based.rsf import (
 )
 from tsml_eval.sktime_estimators.classification.transformations import SFADilation
 from tsml_eval.sktime_estimators.regression.convolution_based.arsenal import Arsenal
+from tsml_eval.sktime_estimators.regression.deep_learning import ResNetRegressor
+from tsml_eval.sktime_estimators.regression.deep_learning.inception_time import (
+    InceptionTimeRegressor,
+)
 from tsml_eval.sktime_estimators.regression.dictionary_based.tde import (
     TemporalDictionaryEnsemble,
 )
@@ -46,6 +50,8 @@ classification_estimators = [
 ]
 regression_estimators = [
     Arsenal,
+    InceptionTimeRegressor,
+    ResNetRegressor,
     TemporalDictionaryEnsemble,
     HIVECOTEV2,
     DrCIF,
