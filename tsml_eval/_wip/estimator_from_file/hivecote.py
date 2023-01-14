@@ -66,6 +66,8 @@ class FromFileHIVECOTE(BaseClassifier):
         self.skip_y_check = skip_y_check
         self.random_state = random_state
 
+        self.predict_y = []
+
         self._alpha = alpha
         self._weights = []
 
@@ -300,6 +302,9 @@ class FromFileHIVECOTE(BaseClassifier):
                         y[j] = float(line[0])
                     else:
                         assert y[j] == float(line[0])
+
+        if self.overwrite_y:
+            self.predict_y = y
 
         # Make each instances probability array sum to 1 and return
         return dists / dists.sum(axis=1, keepdims=True)

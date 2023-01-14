@@ -100,7 +100,7 @@ def run_experiment(args, overwrite=False):
                 classifier = FromFileHIVECOTE(
                     file_paths=[s + dataset + "/" for s in file_paths],
                     random_state=resample,
-                    tune_alpha=True,
+                    tune_alpha=False,
                 )  # set_classifier("fromfile")
                 load_and_run_classification_experiment(
                     overwrite=False,
@@ -110,6 +110,7 @@ def run_experiment(args, overwrite=False):
                     classifier=classifier,
                     dataset=dataset,
                     resample_id=resample,
+                    predefined_resample=True,
                 )
 
     # local run (no args)
