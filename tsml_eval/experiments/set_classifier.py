@@ -398,9 +398,7 @@ def set_classifier(
 
     # Deep learning based
     elif c == "cnn" or c == "cnnclassifier":
-        from tsml_eval.sktime_estimators.classification.deep_learning.cnn import (
-            CNNClassifier,
-        )
+        from sktime.classification.deep_learning import CNNClassifier
 
         return CNNClassifier(random_state=random_state)
     elif c == "fcnn" or c == "fcnclassifier":

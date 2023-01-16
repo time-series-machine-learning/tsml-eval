@@ -519,7 +519,9 @@ if __name__ == "__main__":
 
     #    results_dir = results_dir + "/" + clusterer + "/" + averaging + "/"
     if _results_present_full_path(results_dir, dataset, resample):
-        print("Ignoring, results already present")  # noqa
+        print(
+            f"Ignoring dataset{dataset}, results already present at {results_dir}"
+        )  # noqa
     print(  # noqa
         f" Running {dataset} resample {resample} normalised = {normalise} "  # noqa
         f"clustering ={clusterer} distance = {distance} averaging = {averaging} "  # noqa
