@@ -6,10 +6,11 @@ from sklearn.utils.estimator_checks import parametrize_with_checks
 from sktime.utils.estimator_checks import check_estimator
 
 from tsml_eval.sktime_estimators.classification.convolution_based.hydra import HYDRA
-from tsml_eval.sktime_estimators.classification.deep_learning.inception_time import (
-    InceptionTimeClassifier,
-    IndividualInceptionTimeClassifier,
-)
+
+# from tsml_eval.sktime_estimators.classification.deep_learning.inception_time import (
+#    InceptionTimeClassifier,
+#    IndividualInceptionTimeClassifier,
+# )
 from tsml_eval.sktime_estimators.classification.distance_based.mpdist import MPDist
 from tsml_eval.sktime_estimators.classification.shapelet_based.rdst import (
     RDST,
@@ -20,10 +21,11 @@ from tsml_eval.sktime_estimators.classification.shapelet_based.rsf import (
 )
 from tsml_eval.sktime_estimators.classification.transformations import SFADilation
 from tsml_eval.sktime_estimators.regression.convolution_based.arsenal import Arsenal
-from tsml_eval.sktime_estimators.regression.deep_learning import ResNetRegressor
-from tsml_eval.sktime_estimators.regression.deep_learning.inception_time import (
-    InceptionTimeRegressor,
-)
+
+# from tsml_eval.sktime_estimators.regression.deep_learning import ResNetRegressor
+# from tsml_eval.sktime_estimators.regression.deep_learning.inception_time import (
+#    InceptionTimeRegressor,
+# )
 from tsml_eval.sktime_estimators.regression.dictionary_based.tde import (
     TemporalDictionaryEnsemble,
 )
@@ -38,8 +40,8 @@ from tsml_eval.sktime_estimators.regression.sklearn.rotation_forest import (
 
 classification_estimators = [
     HYDRA,
-    InceptionTimeClassifier,
-    IndividualInceptionTimeClassifier,
+    # InceptionTimeClassifier,
+    # IndividualInceptionTimeClassifier,
     # WEASEL_DILATION,
     # MUSE_DILATION,
     MPDist,
@@ -50,8 +52,9 @@ classification_estimators = [
 ]
 regression_estimators = [
     Arsenal,
-    InceptionTimeRegressor,
-    ResNetRegressor,
+    # InceptionTimeRegressor,
+    # IndividualInceptionTimeRegressor,
+    # ResNetRegressor,
     TemporalDictionaryEnsemble,
     HIVECOTEV2,
     DrCIF,

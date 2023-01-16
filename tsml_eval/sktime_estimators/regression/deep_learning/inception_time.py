@@ -86,7 +86,7 @@ class InceptionTimeRegressor(BaseRegressor):
         rng = check_random_state(self.random_state)
 
         for _ in range(0, self.n_regressors):
-            cls = IndividualInceptionTimeRegressor(
+            estimator = IndividualInceptionTimeRegressor(
                 n_filters=self.n_filters,
                 use_bottleneck=self.use_bottleneck,
                 bottleneck_size=self.bottleneck_size,
@@ -98,19 +98,57 @@ class InceptionTimeRegressor(BaseRegressor):
                 random_state=rng.randint(0, np.iinfo(np.int32).max),
                 verbose=self.verbose,
             )
-            cls.fit(X, y)
-            self.regressors_.append(cls)
+            estimator.fit(X, y)
+            self.regressors_.append(estimator)
 
         return self
 
     def _predict(self, X) -> np.ndarray:
         preds = np.zeros(X.shape[0])
 
-        for cls in self.regressors_:
-            preds += cls.predict(X)
+        for estimator in self.regressors_:
+            preds += estimator.predict(X)
 
         preds = preds / self.n_regressors
         return preds
+
+    def get_test_params(cls, parameter_set="default"):
+        """Return testing parameter settings for the estimator.
+
+        Parameters
+        ----------
+        parameter_set : str, default="default"
+            Name of the set of test parameters to return, for use in tests. If no
+            special parameters are defined for a value, will return `"default"` set.
+            For classifiers, a "default" set of parameters should be provided for
+            general testing, and a "results_comparison" set for comparing against
+            previously recorded results if the general set does not produce suitable
+            probabilities to compare against.
+
+        Returns
+        -------
+        params : dict or list of dict, default={}
+            Parameters to create testing instances of the class.
+            Each dict are parameters to construct an "interesting" test instance, i.e.,
+            `MyClass(**params)` or `MyClass(**params[i])` creates a valid test instance.
+            `create_test_instance` uses the first (or only) dictionary in `params`.
+        """
+        param1 = {
+            "n_regressors": 2,
+            "batch_size": 4,
+            "kernel_size": 4,
+            "nb_epochs": 30,
+            "use_residual": False,
+            "use_bottleneck": True,
+        }
+        param2 = {
+            "n_regressors": 3,
+            "batch_size": 6,
+            "use_bias": True,
+            "nb_epochs": 40,
+        }
+
+        return [param1, param2]
 
 
 class IndividualInceptionTimeRegressor(BaseDeepRegressor, InceptionTimeNetwork):
@@ -175,7 +213,7 @@ class IndividualInceptionTimeRegressor(BaseDeepRegressor, InceptionTimeNetwork):
         self.random_state = random_state
         self.verbose = verbose
 
-    def build_model(self, input_shape, n_classes, **kwargs):
+    def build_model(self, input_shape, **kwargs):
         """
         Construct a compiled, un-trained, keras model that is ready for training.
 
@@ -195,14 +233,13 @@ class IndividualInceptionTimeRegressor(BaseDeepRegressor, InceptionTimeNetwork):
 
         input_layer, output_layer = self.build_network(input_shape, **kwargs)
 
-        output_layer = keras.layers.Dense(n_classes, activation="softmax")(output_layer)
+        output_layer = keras.layers.Dense(units=1)(output_layer)
 
         model = keras.models.Model(inputs=input_layer, outputs=output_layer)
-
         model.compile(
-            loss="categorical_crossentropy",
+            loss="mean_squared_error",
             optimizer=keras.optimizers.Adam(),
-            metrics=["accuracy"],
+            metrics=["mean_squared_error"],
         )
 
         # if user hasn't provided a custom ReduceLROnPlateau via init already,
@@ -250,7 +287,6 @@ class IndividualInceptionTimeRegressor(BaseDeepRegressor, InceptionTimeNetwork):
         self : object
         """
         self.random_state = check_random_state(self.random_state)
-        y_onehot = self.convert_y_to_keras(y)
         # Transpose to conform to Keras input style.
         X = X.transpose(0, 2, 1)
 
@@ -262,14 +298,14 @@ class IndividualInceptionTimeRegressor(BaseDeepRegressor, InceptionTimeNetwork):
             self.batch_size = int(min(X.shape[0] / 10, 16))
         else:
             self.batch_size = self.batch_size
-        self.model_ = self.build_model(self.input_shape, self.n_classes_)
+        self.model_ = self.build_model(self.input_shape)
 
         if self.verbose:
             self.model_.summary()
 
         self.history = self.model_.fit(
             X,
-            y_onehot,
+            y,
             batch_size=self.batch_size,
             epochs=self.nb_epochs,
             verbose=self.verbose,
@@ -280,3 +316,41 @@ class IndividualInceptionTimeRegressor(BaseDeepRegressor, InceptionTimeNetwork):
         #        self._is_fitted = True
 
         return self
+
+    def get_test_params(cls, parameter_set="default"):
+        """Return testing parameter settings for the estimator.
+
+        Parameters
+        ----------
+        parameter_set : str, default="default"
+            Name of the set of test parameters to return, for use in tests. If no
+            special parameters are defined for a value, will return `"default"` set.
+            For classifiers, a "default" set of parameters should be provided for
+            general testing, and a "results_comparison" set for comparing against
+            previously recorded results if the general set does not produce suitable
+            probabilities to compare against.
+
+        Returns
+        -------
+        params : dict or list of dict, default={}
+            Parameters to create testing instances of the class.
+            Each dict are parameters to construct an "interesting" test instance, i.e.,
+            `MyClass(**params)` or `MyClass(**params[i])` creates a valid test instance.
+            `create_test_instance` uses the first (or only) dictionary in `params`.
+        """
+        param1 = {
+            "n_regressors": 2,
+            "batch_size": 4,
+            "kernel_size": 4,
+            "nb_epochs": 30,
+            "use_residual": False,
+            "use_bottleneck": True,
+        }
+        param2 = {
+            "n_regressors": 3,
+            "batch_size": 6,
+            "use_bias": True,
+            "nb_epochs": 40,
+        }
+
+        return [param1, param2]

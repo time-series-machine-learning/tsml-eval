@@ -12,7 +12,7 @@ from sktime.utils.validation._dependencies import _check_dl_dependencies
 _check_dl_dependencies(severity="warning")
 
 
-class ResNetRegressor(BaseDeepRegressor):
+class ResNetRegressor(BaseDeepRegressor, ResNetNetwork):
     """
     Residual Neural Network as described in [1].
 
@@ -81,7 +81,6 @@ class ResNetRegressor(BaseDeepRegressor):
         self.use_bias = use_bias
         self.optimizer = optimizer
         self.history = None
-        self._network = ResNetNetwork(random_state=random_state)
 
     def build_model(self, input_shape, **kwargs):
         """Construct a compiled, un-trained, keras model that is ready for training.
@@ -110,7 +109,7 @@ class ResNetRegressor(BaseDeepRegressor):
         else:
             metrics = self.metrics
 
-        input_layer, output_layer = self._network.build_network(input_shape, **kwargs)
+        input_layer, output_layer = self.build_network(input_shape, **kwargs)
 
         output_layer = keras.layers.Dense(
             units=1, activation=self.activation, use_bias=self.use_bias
@@ -126,7 +125,6 @@ class ResNetRegressor(BaseDeepRegressor):
             optimizer=self.optimizer_,
             metrics=metrics,
         )
-
         return model
 
     def _fit(self, X, y):
@@ -160,6 +158,7 @@ class ResNetRegressor(BaseDeepRegressor):
             )
             self._callbacks.append(reduce_lr)
 
+        # Reshape for keras, which requires [n_instance][series_length][n_dimensions]
         X = X.transpose(0, 2, 1)
 
         check_random_state(self.random_state)
