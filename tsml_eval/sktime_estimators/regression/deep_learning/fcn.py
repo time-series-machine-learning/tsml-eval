@@ -107,6 +107,7 @@ class FCNRegressor(BaseDeepRegressor, FCNNetwork):
 
         check_random_state(self.random_state)
         self.input_shape = X.shape[1:]
+        self.batch_size = int(max(1, min(X.shape[0] / 10, self.batch_size)))
         self.model_ = self.build_model(self.input_shape)
         if self.verbose:
             self.model_.summary()
@@ -114,7 +115,7 @@ class FCNRegressor(BaseDeepRegressor, FCNNetwork):
             X,
             y,
             batch_size=self.batch_size,
-            epochs=self.n_epochs,
+            epochs=self.nb_epochs,
             verbose=self.verbose,
             callbacks=self._callbacks,
         )
