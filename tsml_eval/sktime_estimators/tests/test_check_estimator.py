@@ -6,10 +6,11 @@ from sklearn.utils.estimator_checks import parametrize_with_checks
 from sktime.utils.estimator_checks import check_estimator
 
 from tsml_eval.sktime_estimators.classification.convolution_based.hydra import HYDRA
-from tsml_eval.sktime_estimators.classification.deep_learning.inception_time import (
-    InceptionTimeClassifier,
-    IndividualInceptionTimeClassifier,
-)
+
+# from tsml_eval.sktime_estimators.classification.deep_learning.inception_time import (
+#    InceptionTimeClassifier,
+#    IndividualInceptionTimeClassifier,
+# )
 from tsml_eval.sktime_estimators.classification.distance_based.mpdist import MPDist
 from tsml_eval.sktime_estimators.classification.shapelet_based.rdst import (
     RDST,
@@ -39,8 +40,8 @@ from tsml_eval.sktime_estimators.regression.sklearn.rotation_forest import (
 
 classification_estimators = [
     HYDRA,
-    InceptionTimeClassifier,
-    IndividualInceptionTimeClassifier,
+    # InceptionTimeClassifier,
+    # IndividualInceptionTimeClassifier,
     # WEASEL_DILATION,
     # MUSE_DILATION,
     MPDist,
