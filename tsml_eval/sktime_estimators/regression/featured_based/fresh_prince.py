@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-"""FreshPRINCE Classifier.
+"""FreshPRINCE regressor.
 
-Pipeline classifier using the full set of TSFresh features and a RotationForest
-classifier.
+Pipeline regressor using the full set of TSFresh features and a RotationForest
+regressor.
 """
 
 __author__ = ["MatthewMiddlehurst", "David Guijo-Rubio"]
@@ -17,9 +17,9 @@ from tsml_eval.sktime_estimators.regression.sklearn import RotationForest
 
 
 class FreshPRINCERegressor(BaseRegressor):
-    """Fresh Pipeline with RotatIoN forest Classifier.
+    """Fresh Pipeline with RotatIoN forest regressor.
 
-    This classifier simply transforms the input data using the TSFresh [1]_
+    This regressor simply transforms the input data using the TSFresh [1]_
     transformer with comprehensive features and builds a RotationForest estimator using
     the transformed data.
 
@@ -50,7 +50,7 @@ class FreshPRINCERegressor(BaseRegressor):
 
     See Also
     --------
-    TSFreshFeatureExtractor, TSFreshClassifier, RotationForest
+    TSFreshFeatureExtractor, TSFreshRegressor, RotationForest
 
     References
     ----------
@@ -157,43 +157,6 @@ class FreshPRINCERegressor(BaseRegressor):
         """
         return self._rotf.predict(self._tsfresh.transform(X))
 
-    def _predict_proba(self, X) -> np.ndarray:
-        """Predict class probabilities for n instances in X.
-
-        Parameters
-        ----------
-        X : 3D np.array of shape = [n_instances, n_dimensions, series_length]
-            The data to make predict probabilities for.
-
-        Returns
-        -------
-        y : array-like, shape = [n_instances, n_classes_]
-            Predicted probabilities using the ordering in classes_.
-        """
-        return self._rotf.predict_proba(self._tsfresh.transform(X))
-
-    def _get_train_probs(self, X, y) -> np.ndarray:
-        self.check_is_fitted()
-        X, y = check_X_y(X, y, coerce_to_numpy=True)
-
-        n_instances, n_dims, series_length = X.shape
-
-        if (
-            n_instances != self.n_instances_
-            or n_dims != self.n_dims_
-            or series_length != self.series_length_
-        ):
-            raise ValueError(
-                "n_instances, n_dims, series_length mismatch. X should be "
-                "the same as the training data used in fit for generating train "
-                "probabilities."
-            )
-
-        if not self.save_transformed_data:
-            raise ValueError("Currently only works with saved transform data from fit.")
-
-        return self._rotf._get_train_probs(self.transformed_data_, y)
-
     @classmethod
     def get_test_params(cls, parameter_set="default"):
         """Return testing parameter settings for the estimator.
@@ -203,7 +166,7 @@ class FreshPRINCERegressor(BaseRegressor):
         parameter_set : str, default="default"
             Name of the set of test parameters to return, for use in tests. If no
             special parameters are defined for a value, will return `"default"` set.
-            For classifiers, a "default" set of parameters should be provided for
+            For regressors, a "default" set of parameters should be provided for
             general testing, and a "results_comparison" set for comparing against
             previously recorded results if the general set does not produce suitable
             probabilities to compare against.
