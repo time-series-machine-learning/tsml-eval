@@ -56,10 +56,17 @@ def set_regressor(
 
         return ResNetRegressor(random_state=random_state)
 
-    elif r == "inception" or r == "inceptiontimeregressor":
-        from tsml_eval.sktime_estimators.regression.deep_learning import InceptionTimeRegressor
+    elif r == "inception" or r == "inceptiontime" or r == "inceptiontimeregressor":
+        from tsml_eval.sktime_estimators.regression.deep_learning import (
+            InceptionTimeRegressor,
+        )
 
         return InceptionTimeRegressor(random_state=random_state)
+
+    elif r == "fcnn" or r == "fcn" or r == "fcnnregressor":
+        from tsml_eval.sktime_estimators.regression.deep_learning import FCNRegressor
+
+        return FCNRegressor(random_state=random_state)
 
     elif r == "sktime-1nn-ed":
         from sktime.regression.distance_based import KNeighborsTimeSeriesRegressor
