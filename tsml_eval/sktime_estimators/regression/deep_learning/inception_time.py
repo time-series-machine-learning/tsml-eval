@@ -86,7 +86,7 @@ class InceptionTimeRegressor(BaseRegressor):
         rng = check_random_state(self.random_state)
 
         for _ in range(0, self.n_regressors):
-            cls = IndividualInceptionTimeRegressor(
+            estimator = IndividualInceptionTimeRegressor(
                 n_filters=self.n_filters,
                 use_bottleneck=self.use_bottleneck,
                 bottleneck_size=self.bottleneck_size,
@@ -98,16 +98,16 @@ class InceptionTimeRegressor(BaseRegressor):
                 random_state=rng.randint(0, np.iinfo(np.int32).max),
                 verbose=self.verbose,
             )
-            cls.fit(X, y)
-            self.regressors_.append(cls)
+            estimator.fit(X, y)
+            self.regressors_.append(estimator)
 
         return self
 
     def _predict(self, X) -> np.ndarray:
         preds = np.zeros(X.shape[0])
 
-        for cls in self.regressors_:
-            preds += cls.predict(X)
+        for estimator in self.regressors_:
+            preds += estimator.predict(X)
 
         preds = preds / self.n_regressors
         return preds
@@ -134,19 +134,18 @@ class InceptionTimeRegressor(BaseRegressor):
             `create_test_instance` uses the first (or only) dictionary in `params`.
         """
         param1 = {
-            "n_classifiers": 2,
-            "n_epochs": 10,
+            "n_regressors": 2,
             "batch_size": 4,
             "kernel_size": 4,
+            "nb_epochs": 30,
             "use_residual": False,
             "use_bottleneck": True,
         }
-
         param2 = {
-            "n_classifiers": 3,
-            "n_epochs": 12,
+            "n_regressors": 3,
             "batch_size": 6,
             "use_bias": True,
+            "nb_epochs": 40,
         }
 
         return [param1, param2]
@@ -214,7 +213,7 @@ class IndividualInceptionTimeRegressor(BaseDeepRegressor, InceptionTimeNetwork):
         self.random_state = random_state
         self.verbose = verbose
 
-    def build_model(self, input_shape, n_classes, **kwargs):
+    def build_model(self, input_shape, **kwargs):
         """
         Construct a compiled, un-trained, keras model that is ready for training.
 
@@ -234,14 +233,13 @@ class IndividualInceptionTimeRegressor(BaseDeepRegressor, InceptionTimeNetwork):
 
         input_layer, output_layer = self.build_network(input_shape, **kwargs)
 
-        output_layer = keras.layers.Dense(n_classes, activation="softmax")(output_layer)
+        output_layer = keras.layers.Dense(units=1)(output_layer)
 
         model = keras.models.Model(inputs=input_layer, outputs=output_layer)
-
         model.compile(
-            loss="categorical_crossentropy",
+            loss="mean_squared_error",
             optimizer=keras.optimizers.Adam(),
-            metrics=["accuracy"],
+            metrics=["mean_squared_error"],
         )
 
         # if user hasn't provided a custom ReduceLROnPlateau via init already,
@@ -300,7 +298,7 @@ class IndividualInceptionTimeRegressor(BaseDeepRegressor, InceptionTimeNetwork):
             self.batch_size = int(min(X.shape[0] / 10, 16))
         else:
             self.batch_size = self.batch_size
-        self.model_ = self.build_model(self.input_shape, self.n_classes_)
+        self.model_ = self.build_model(self.input_shape)
 
         if self.verbose:
             self.model_.summary()
@@ -341,17 +339,18 @@ class IndividualInceptionTimeRegressor(BaseDeepRegressor, InceptionTimeNetwork):
             `create_test_instance` uses the first (or only) dictionary in `params`.
         """
         param1 = {
-            "n_epochs": 10,
+            "n_regressors": 2,
             "batch_size": 4,
             "kernel_size": 4,
+            "nb_epochs": 30,
             "use_residual": False,
             "use_bottleneck": True,
         }
-
         param2 = {
-            "n_epochs": 12,
+            "n_regressors": 3,
             "batch_size": 6,
             "use_bias": True,
+            "nb_epochs": 40,
         }
 
         return [param1, param2]
