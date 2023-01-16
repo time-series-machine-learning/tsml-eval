@@ -8,7 +8,12 @@ from sklearn.pipeline import make_pipeline
 
 
 def set_regressor(
-    regressor_name, random_state=None, build_train_file=False, n_jobs=1, fit_contract=0
+    regressor_name,
+    random_state=None,
+    build_train_file=False,
+    n_jobs=1,
+    fit_contract=0,
+    kwargs=None,
 ):
     """Return a regressor matching a given input name.
 
@@ -145,6 +150,32 @@ def set_regressor(
             random_state=random_state,
             n_jobs=n_jobs,
         )
+    elif r == "minirocket" or r == "minirocketregressor":
+        from sktime.regression.kernel_based import RocketRegressor
+
+        return RocketRegressor(
+            rocket_transform="minirocket",
+            random_state=random_state,
+            n_jobs=n_jobs,
+        )
+
+    elif r == "multirocket" or r == "multirocketregressor":
+        from sktime.regression.kernel_based import RocketRegressor
+
+        return RocketRegressor(
+            rocket_transform="multirocket",
+            random_state=random_state,
+            n_jobs=n_jobs,
+        )
+    elif r == "hydra" or r == "hydraregressor":
+        from tsml_eval.sktime_estimators.regression.convolution_based import (
+            HydraRegressor,
+        )
+
+        return HydraRegressor(
+            random_state=random_state,
+            n_jobs=n_jobs,
+        )
     elif r == "tsf" or r == "timeseriesforestregressor":
         from sktime.regression.interval_based import TimeSeriesForestRegressor
 
@@ -152,6 +183,7 @@ def set_regressor(
             random_state=random_state,
             n_jobs=n_jobs,
         )
+
     # Other
     elif r == "dummy" or r == "dummyregressor":
         # todo we need an actual dummy for this. use tiny rocket for testing purposes
@@ -237,16 +269,20 @@ def set_regressor(
 
         return HIVECOTEV2(random_state=random_state, n_jobs=n_jobs)
 
-    # sklearn regerssors
-    # todo experiments for these
+    # sklearn regressors
     elif r == "rotf" or r == "rotationforest":
-        from tsml_eval.sktime_estimators.regression.sklearn import RotationForest
-
-        return RotationForest(
-            random_state=random_state,
-            save_transformed_data=build_train_file,
-            n_jobs=n_jobs,
+        from tsml_eval.sktime_estimators.regression.sklearn import (
+            RotationForest,
+            SklearnBaseRegressor,
         )
+
+        model_params = {
+            "random_state": random_state,
+            "save_transformed_data": build_train_file,
+            "n_jobs": n_jobs,
+        }
+
+        return SklearnBaseRegressor(RotationForest(**model_params))
 
     elif r == "lr" or r == "linearregression":
         from sklearn.linear_model import LinearRegression
@@ -274,7 +310,25 @@ def set_regressor(
         model_params = {"kernel": "rbf", "C": 1}
 
         return SklearnBaseRegressor(SVR(**model_params))
+    elif r == "grid-svr" or r == "grid-supportvectorregressor":
+        from sklearn.model_selection import GridSearchCV
+        from sklearn.svm import SVR
 
+        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+
+        param_grid = [
+            {
+                "kernel": ["rbf", "sigmoid"],
+                "C": [0.1, 1, 10, 100],
+                "gamma": [0.001, 0.01, 0.1, 1],
+            }
+        ]
+
+        scoring = "neg_mean_squared_error"
+
+        return SklearnBaseRegressor(
+            GridSearchCV(SVR(), param_grid, scoring=scoring, n_jobs=n_jobs, cv=3)
+        )
     elif r == "rf" or r == "randomforest":
         from sklearn.ensemble import RandomForestRegressor
 
