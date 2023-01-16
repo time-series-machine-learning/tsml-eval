@@ -53,6 +53,7 @@ classification_estimators = [
 regression_estimators = [
     Arsenal,
     # InceptionTimeRegressor,
+    # IndividualInceptionTimeRegressor,
     # ResNetRegressor,
     TemporalDictionaryEnsemble,
     HIVECOTEV2,
