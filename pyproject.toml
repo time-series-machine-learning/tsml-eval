@@ -26,10 +26,12 @@ classifiers = [
     "Programming Language :: Python",
 ]
 dependencies = [
-    "sktime>=0.14.0",
+    "sktime>=0.15.0",
+    "sklearn",
     "convst",
     "wildboar",
     "stumpy",
+    "xgboost",
     "networkx",
     "requests",
 ]
