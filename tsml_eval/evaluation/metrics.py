@@ -5,6 +5,8 @@ __author__ = ["MatthewMiddlehurst"]
 
 __all__ = ["clustering_accuracy", "davies_bouldin_score_from_file"]
 
+import sys
+
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 from sklearn.metrics import confusion_matrix, davies_bouldin_score
@@ -23,7 +25,11 @@ def davies_bouldin_score_from_file(X, file_path):
     y = np.zeros(len(X))
     with open(file_path, "r") as f:
         lines = f.readlines()
-        for i, line in enumerate(lines[2:]):
+        for i, line in enumerate(lines[3:]):
             y[i] = float(line.split(",")[1])
 
-    return davies_bouldin_score(X, y)
+    clusters = len(np.unique(y))
+    if clusters <= 1:
+        return sys.float_info.max
+    else:
+        return davies_bouldin_score(X, y)
