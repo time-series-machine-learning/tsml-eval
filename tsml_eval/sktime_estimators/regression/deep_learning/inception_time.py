@@ -250,7 +250,6 @@ class IndividualInceptionTimeRegressor(BaseDeepRegressor, InceptionTimeNetwork):
         self : object
         """
         self.random_state = check_random_state(self.random_state)
-        y_onehot = self.convert_y_to_keras(y)
         # Transpose to conform to Keras input style.
         X = X.transpose(0, 2, 1)
 
@@ -269,7 +268,7 @@ class IndividualInceptionTimeRegressor(BaseDeepRegressor, InceptionTimeNetwork):
 
         self.history = self.model_.fit(
             X,
-            y_onehot,
+            y,
             batch_size=self.batch_size,
             epochs=self.nb_epochs,
             verbose=self.verbose,
