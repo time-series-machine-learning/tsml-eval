@@ -275,7 +275,7 @@ def tune_window(metric: str, train_X, n_clusters):
     """Tune window."""
     best_w = 0
     best_score = sys.float_info.max
-    for w in np.arange(0, 0.2, 0.01):
+    for w in np.arange(0.0, 0.2, 0.01):
         cls = TimeSeriesKMeans(
             metric=metric, distance_params={"window": w}, n_clusters=n_clusters
         )
@@ -298,7 +298,7 @@ def tune_msm(train_X, n_clusters):
     """Tune window for MSM."""
     best_c = 0
     best_score = sys.float_info.max
-    for c in np.arange(0, 5, 0.25):
+    for c in np.arange(0.0, 5.0, 0.25):
         cls = TimeSeriesKMeans(
             metric="msm", distance_params={"c": c}, n_clusters=n_clusters
         )
@@ -322,7 +322,7 @@ def tune_wdtw(train_X, n_clusters):
     """Tune window for MSM."""
     best_g = 0
     best_score = sys.float_info.max
-    for g in np.arange(0, 1, 0.05):
+    for g in np.arange(0.0, 1.0, 0.05):
         cls = TimeSeriesKMeans(
             metric="wdtw", distance_params={"g": g}, n_clusters=n_clusters
         )
@@ -347,8 +347,8 @@ def tune_twe(train_X, n_clusters):
     best_nu = 0
     best_lambda = 0
     best_score = sys.float_info.max
-    for nu in np.arange(0, 1, 0.25):
-        for lam in np.arange(0, 1, 0.2):
+    for nu in np.arange(0.0, 1.0, 0.25):
+        for lam in np.arange(0.0, 1.0, 0.2):
             cls = TimeSeriesKMeans(
                 metric="twe",
                 distance_params={"nu": nu, "lmbda": lam},
@@ -378,7 +378,7 @@ def tune_erp(train_X, n_clusters):
     """Tune window for MSM."""
     best_g = 0
     best_score = sys.float_info.max
-    for g in np.arange(0, 2, 0.2):
+    for g in np.arange(0.0, 2.0, 0.2):
         cls = TimeSeriesKMeans(
             metric="erp", distance_params={"g": g}, n_clusters=n_clusters
         )
@@ -429,7 +429,7 @@ def tune_lcss(train_X, n_clusters):
     """Tune window for MSM."""
     best_e = 0
     best_score = sys.float_info.max
-    for e in np.arange(0, 0.2, 0.01):
+    for e in np.arange(0.0, 0.2, 0.01):
         cls = TimeSeriesKMeans(
             metric="lcss", distance_params={"epsilon": e}, n_clusters=n_clusters
         )

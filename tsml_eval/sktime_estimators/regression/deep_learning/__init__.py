@@ -4,8 +4,10 @@ __all__ = [
     "ResNetRegressor",
     "InceptionTimeRegressor",
     "IndividualInceptionTimeRegressor",
+    "FCNRegressor",
 ]
 
+from tsml_eval.sktime_estimators.regression.deep_learning.fcn import FCNRegressor
 from tsml_eval.sktime_estimators.regression.deep_learning.inception_time import (
     InceptionTimeRegressor,
     IndividualInceptionTimeRegressor,
