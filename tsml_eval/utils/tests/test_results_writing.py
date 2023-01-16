@@ -6,8 +6,17 @@ __author__ = ["MatthewMiddlehurst"]
 import os
 
 import numpy as np
+import pytest
 
 from tsml_eval.utils.experiments import (
+    _check_classification_third_line,
+    _check_clustering_third_line,
+    _check_first_line,
+    _check_regression_third_line,
+    _check_results_line,
+    _check_second_line,
+    fix_broken_second_line,
+    validate_results_file,
     write_classification_results,
     write_clustering_results,
     write_regression_results,
@@ -43,23 +52,15 @@ def test_write_classification_results():
 
 
 def _check_classification_file_format(file_path):
-    lines = open(file_path, "r").readlines()
+    with open(file_path, "r") as f:
+        lines = f.readlines()
 
-    _check_first_line(lines[0])
-    _check_second_line(lines[1])
-
-    line = lines[2].split(",")
-    float(line[0])
-    float(line[1])
-    float(line[2])
-    float(line[3])
-    float(line[4])
-    float(line[5])
-    float(line[7])
-    float(line[8])
+    assert _check_first_line(lines[0])
+    assert _check_second_line(lines[1])
+    assert _check_classification_third_line(lines[2])
 
     for i in range(3, 6):
-        _check_results_line(lines[i])
+        assert _check_results_line(lines[i])
 
 
 def test_write_regression_results():
@@ -88,22 +89,15 @@ def test_write_regression_results():
 
 
 def _check_regression_file_format(file_path):
-    lines = open(file_path, "r").readlines()
+    with open(file_path, "r") as f:
+        lines = f.readlines()
 
-    _check_first_line(lines[0])
-    _check_second_line(lines[1])
-
-    line = lines[2].split(",")
-    float(line[0])
-    float(line[1])
-    float(line[2])
-    float(line[3])
-    float(line[4])
-    float(line[6])
-    float(line[7])
+    assert _check_first_line(lines[0])
+    assert _check_second_line(lines[1])
+    assert _check_regression_third_line(lines[2])
 
     for i in range(3, 6):
-        _check_results_line(lines[i], probabilities=False)
+        assert _check_results_line(lines[i], probabilities=False)
 
 
 def test_write_clustering_results():
@@ -137,49 +131,15 @@ def test_write_clustering_results():
 
 
 def _check_clustering_file_format(file_path):
-    lines = open(file_path, "r").readlines()
+    with open(file_path, "r") as f:
+        lines = f.readlines()
 
-    _check_first_line(lines[0])
-    _check_second_line(lines[1])
-
-    line = lines[2].split(",")
-    float(line[0])
-    float(line[1])
-    float(line[2])
-    float(line[3])
-    float(line[4])
-    float(line[5])
-    float(line[6])
+    assert _check_first_line(lines[0])
+    assert _check_second_line(lines[1])
+    assert _check_clustering_third_line(lines[2])
 
     for i in range(3, 6):
-        _check_results_line(lines[i])
-
-
-def _check_first_line(line):
-    line = line.split(",")
-    assert len(line) >= 5
-
-
-def _check_second_line(line):
-    line = line.split(",")
-    assert len(line) >= 1
-
-
-def _check_results_line(line, probabilities=True):
-    line = line.split(",")
-    assert len(line) >= 2
-
-    float(line[0])
-    float(line[1])
-
-    if probabilities:
-        assert len(line) >= 5
-
-        assert line[2] == ""
-        float(line[3])
-        float(line[4])
-    else:
-        assert len(line) == 2
+        assert _check_results_line(lines[i])
 
 
 def _generate_labels_and_predictions():
@@ -191,3 +151,61 @@ def _generate_labels_and_predictions():
         probabilities[i, predictions[i]] = 1
 
     return labels, predictions, probabilities
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "test_files/regressionResultsFile.csv",
+        "test_files/classificationResultsFile1.csv",
+    ],
+)
+def test_validate_results_file(path):
+    """Test results file validation with valid files."""
+    path = (
+        f"tsml_eval/utils/tests/{path}"
+        if os.getcwd().split("\\")[-1] != "tests"
+        else path
+    )
+
+    assert validate_results_file(path)
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "test_files/brokenRegressionResultsFile.csv",
+        "test_files/brokenClassificationResultsFile.csv",
+    ],
+)
+def test_validate_broken_results_file(path):
+    """Test results file validation with broken files."""
+    path = (
+        f"tsml_eval/utils/tests/{path}"
+        if os.getcwd().split("\\")[-1] != "tests"
+        else path
+    )
+
+    assert not validate_results_file(path)
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        ["test_files/regressionResultsFile.csv", 1],
+        ["test_files/brokenRegressionResultsFile.csv", 2],
+    ],
+)
+def test_fix_broken_second_line(path):
+    """Test that the second line of a broken results file is fixed."""
+    if os.getcwd().split("\\")[-1] != "tests":
+        path[0] = f"tsml_eval/utils/tests/{path[0]}"
+        output_path = "./test_output/"
+    else:
+        output_path = "../../../test_output/"
+
+    fix_broken_second_line(path[0], f"{output_path}/secondLineTest{path[1]}.csv")
+
+    assert validate_results_file(f"{output_path}/secondLineTest{path[1]}.csv")
+
+    os.remove(f"{output_path}/secondLineTest{path[1]}.csv")
