@@ -219,25 +219,20 @@ class DrCIF(BaseRegressor):
         X_p = np.concatenate((X, X_p), axis=2)
         X_p = np.abs(np.fft.fft(X_p)[:, :, : int(X_p.shape[2] / 2)])
 
-        X_d = np.diff(X, 1)
-
         if self.n_intervals is None:
-            self._n_intervals = [None, None, None]
-            self._n_intervals[0] = 4 + int(
-                (math.sqrt(self.series_length_) * math.sqrt(self.n_dims_)) / 3
+            self._n_intervals = [None, None]
+            self._n_intervals[0] = 6 + int(
+                (math.sqrt(self.series_length_) * math.sqrt(self.n_dims_)) / 2
             )
-            self._n_intervals[1] = 4 + int(
-                (math.sqrt(X_p.shape[2]) * math.sqrt(self.n_dims_)) / 3
-            )
-            self._n_intervals[2] = 4 + int(
-                (math.sqrt(X_d.shape[2]) * math.sqrt(self.n_dims_)) / 3
+            self._n_intervals[1] = 6 + int(
+                (math.sqrt(X_p.shape[2]) * math.sqrt(self.n_dims_)) / 2
             )
         elif isinstance(self.n_intervals, int):
-            self._n_intervals = [self.n_intervals, self.n_intervals, self.n_intervals]
-        elif isinstance(self.n_intervals, list) and len(self.n_intervals) == 3:
+            self._n_intervals = [self.n_intervals, self.n_intervals]
+        elif isinstance(self.n_intervals, list) and len(self.n_intervals) == 2:
             self._n_intervals = self.n_intervals
         else:
-            raise ValueError("DrCIF n_intervals must be an int or list of length 3.")
+            raise ValueError("DrCIF n_intervals must be an int or list of length 2.")
         for i, n in enumerate(self._n_intervals):
             if n <= 0:
                 self._n_intervals[i] = 1
@@ -249,35 +244,30 @@ class DrCIF(BaseRegressor):
             self._min_interval = [
                 self.min_interval,
                 self.min_interval,
-                self.min_interval,
             ]
-        elif isinstance(self.min_interval, list) and len(self.min_interval) == 3:
+        elif isinstance(self.min_interval, list) and len(self.min_interval) == 2:
             self._min_interval = self.min_interval
         else:
-            raise ValueError("DrCIF min_interval must be an int or list of length 3.")
+            raise ValueError("DrCIF min_interval must be an int or list of length 2.")
         if self.series_length_ <= self._min_interval[0]:
             self._min_interval[0] = self.series_length_ - 1
         if X_p.shape[2] <= self._min_interval[1]:
             self._min_interval[1] = X_p.shape[2] - 1
-        if X_d.shape[2] <= self._min_interval[2]:
-            self._min_interval[2] = X_d.shape[2] - 1
 
         if self.max_interval is None:
             self._max_interval = [
                 int(self.series_length_ / 2),
                 int(X_p.shape[2] / 2),
-                int(X_d.shape[2] / 2),
             ]
         elif isinstance(self.max_interval, int):
             self._max_interval = [
                 self.max_interval,
                 self.max_interval,
-                self.max_interval,
             ]
-        elif isinstance(self.max_interval, list) and len(self.max_interval) == 3:
+        elif isinstance(self.max_interval, list) and len(self.max_interval) == 2:
             self._max_interval = self.max_interval
         else:
-            raise ValueError("DrCIF max_interval must be an int or list of length 3.")
+            raise ValueError("DrCIF max_interval must be an int or list of length 2.")
         for i, n in enumerate(self._max_interval):
             if n < self._min_interval[i]:
                 self._max_interval[i] = self._min_interval[i]
@@ -300,7 +290,6 @@ class DrCIF(BaseRegressor):
                     delayed(self._fit_estimator)(
                         X,
                         X_p,
-                        X_d,
                         y,
                         i,
                     )
@@ -328,7 +317,6 @@ class DrCIF(BaseRegressor):
                 delayed(self._fit_estimator)(
                     X,
                     X_p,
-                    X_d,
                     y,
                     i,
                 )
@@ -366,13 +354,10 @@ class DrCIF(BaseRegressor):
         X_p = np.concatenate((X, X_p), axis=2)
         X_p = np.abs(np.fft.fft(X_p)[:, :, : int(X_p.shape[2] / 2)])
 
-        X_d = np.diff(X, 1)
-
         y_preds = Parallel(n_jobs=self._threads_to_use)(
             delayed(self._predict_for_estimator)(
                 X,
                 X_p,
-                X_d,
                 self.estimators_[i],
                 self.intervals_[i],
                 self.dims_[i],
@@ -427,9 +412,9 @@ class DrCIF(BaseRegressor):
 
         return results
 
-    def _fit_estimator(self, X, X_p, X_d, y, idx):
+    def _fit_estimator(self, X, X_p, y, idx):
         c22 = Catch22(outlier_norm=True)
-        T = [X, X_p, X_d]
+        T = [X, X_p]
         rs = 255 if self.random_state == 0 else self.random_state
         rs = (
             None
@@ -507,9 +492,9 @@ class DrCIF(BaseRegressor):
             transformed_x if self.save_transformed_data else None,
         ]
 
-    def _predict_for_estimator(self, X, X_p, X_d, classifier, intervals, dims, atts):
+    def _predict_for_estimator(self, X, X_p, classifier, intervals, dims, atts):
         c22 = Catch22(outlier_norm=True)
-        T = [X, X_p, X_d]
+        T = [X, X_p]
 
         transformed_x = np.empty(
             shape=(self._att_subsample_size * self.total_intervals_, X.shape[0]),
