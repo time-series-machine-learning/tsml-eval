@@ -1,5 +1,4 @@
 # ADA Python
-###### tags: `sktime grant`
 
 Installation guide for Python packages on ADA and useful slurm commands.
 
