@@ -554,8 +554,8 @@ if __name__ == "__main__":
     c = 1.0
     nu = 0.05
     lam = 1.0
-    init = "kmeans++"
-    max_its = 30
+    init = "forgy"
+    max_its = 300
     n_init = 1
     if _results_present_full_path(results_dir + "/" + distance, dataset, resample):
         print(
