@@ -1,105 +1,101 @@
-# Kraken
+# CMP CPU Server
 
-aka cmpcpusvr.uea.ac.uk
+_aka_ the Kraken
 
-### machine names for putty/winscp
+Unlike ADA, the CMP CPU server is not a cluster, but a single server with many cores and a lot of memory. There are much fewer restrictions on what can be run regarding runtime and memory. The server is still a shared resource and should be treated as such, however.
 
-ADA
-ada.uea.ac.uk
+Server address: cmpcpusvr.uea.ac.uk
 
-Kraken
+## Windows interaction with the Kraken
 
+You need to be on a UEA network machine or have the VPN running to connect to the Kraken. Connect to cmpcpusvr.uea.ac.uk.
 
-Beast https://www.overleaf.com/dash
-cmpresearchsvr.uea.ac.uk\ueatsc
+The recommended way of connecting to the Kraken is using Putty as a command-line interface and WinSCP for file management.
 
-https://docs.conda.io/projects/conda/en/4.6.0/_downloads/52a95608c49671267e40c689e0bc00ca/conda-cheatsheet.pdf
+The tsml research group has a shared storage space on the Kraken under /storage/tsml/ where you can store and read datasets from.
 
+## Installing on the Kraken
 
-# Kraken and ADA commands
+Complete these steps sequentially for a fresh install.
 
-Tonys solutions to running and managing sktime
+### 1. Clone the code from GitHub
 
-## Installing sktime using conda:
+The default location for files should be your user area. Either copy over the code files you want to run manually or clone them from a GitHub page.
 
+>git clone GITHUB_LINK
 
+e.g. https://github.com/time-series-machine-learning/tsml-eval
 
-### on the cluster
-#### install the modules
-module add python/anaconda/2019.10/3.7
-source /gpfs/software/ada/python/anaconda/2019.10/3.7/etc/profile.d/conda.sh
+### 2. Create a conda environment
 
-### get the code
+Create a new environment with a name of your choice. Replace PYTHON_VERSION with 3.10 for CPU jobs and 3.8 for GPU jobs.
 
-#### on kraken and cluster,
+>conda create -n ENV_NAME python=PYTHON_VERSION
 
-git clone https://github.com/alan-turing-institute/sktime
-cd sktime
-#### on windows
-install anaconda
-install git
-clone repository through desktop
+Activate the new environment.
 
-### create an sktime development environment
+>conda activate ENV_NAME
 
-conda create -n sktime python=3.8 (3.7 for cluster)
-conda activate sktime
-conda install -c conda-forge pystan
-conda install -c conda-forge prophet
-pip install -e .[all_extras,dev]
+Your environment should be listed now when you use the following command:
 
-the extra ones may not be necessary.
+>conda info --envs
 
-### create an experimental
+### 3 Install package and dependencies
 
-## Running sktime on kraken
+Move to the package directory and run:
+
+>pip install --editable .
+
+For release specific dependency versions you can also run:
+
+>pip install -r requirements.txt
+
+Extras may be required, install as needed i.e.:
+
+>pip install esig tsfresh
+
+After installation, the installed packages can be viewed with:
+
+>pip list
+
+>conda list
+
+## Running tsml-eval on the Kraken
+
+Make sure the correct conda environment is activated prior to running any code.
+
+> conda activate ENV_NAME
+
+Python code can be run directly from the command line:
+
+> python PYTHON_FILE
+
+i.e. to run DrCIF on ItalyPowerDemand resample 0 with 6 threads, something similar to the following would be run:
+
+> python Code/tsml_eval/experiments/threaded_classification_experiments.py tsml/TSCProblems2018TS results/ DrCIF ItalyPowerDemand 0 6
+
+To run many single threaded experiments in parallel you can use the GNU parallel tool.
+
 organisation:
 code in Code directory
 have a file for each input parameter
 Code/ClassificationInputFiles
 Code/ClusteringInputFiles
 
-conda activate sktime
+> parallel -delimiter "\n" --verbose --jobs 90% --memfree 30G --arg-file SubmissionFiles/data_dir.txt --arg-file SubmissionFiles/results_dir.txt --arg-file SubmissionFiles/classifiers.txt --arg-file SubmissionFiles/datasets.txt --arg-file SubmissionFiles/resamples.txt --arg-file SubmissionFiles/generate_train_files.txt --arg-file SubmissionFiles/predefined_folds.txt python Code/tsml_eval/experiments/classification_experiments.py > output.txt
 
-conda create -n exp-eval python=3.8 (3.7 for cluster)
-conda activate exp-eval
-pip install sktime
+More information on the parallel command can be found at https://www.gnu.org/software/parallel/.
 
+## Monitoring jobs on the Kraken
 
-cd ClassificationInputFiles
-parallel -d "\n" --verbose --jobs 90% --memfree 30G -a data_dir.txt -a results_dir.txt -a classifier.txt -a dataset.txt -a resamples.txt -a generate_train_files.txt -a predefined_folds.txt python sktime_estimator_evaluation/experiments/classification_experiments.py > output.txt
+To list current resource usage and processes:
 
-need to activate environment?
+> htop
 
-Example: for clustering
+To view the processes for a single user:
 
-parallel -d "\n" --verbose --jobs 90% --memfree 30G -a data_dir.txt -a results_dir.txt -a distances.txt -a dataset_list.txt -a resamples.txt -a clusterer.txt -a averaging.txt python --wd ignore sktime/_contrib/clustering_experiments.py > kmedoids_twe.txt
+> htop -u USERNAME
 
+To kill all processes for a single user:
 
-
-## Running sktime on ADA
-base it on script /gpfs/home/code/clustering_distances.sh
-
-## Monitoring jobs on Kraken
-list processes         >htop -u ajb
-kills all processes    >pkill -u ajb
-
-## Monitoring jobs on ADA
-
-list processes
-
->squeue -u ajb --format="%12i %15P %20j %10u %10t %10M %10D %20R" -r
-
-GPU queue
->squeue -p gpu-rtx6000-2
-
-to kill all ajb jobs
->scancel -u ajb
-
-To delete all jobs on a queue it’s:
-
->scancel -p gpu-rtx6000-2
-
-To delete one job it’s:
-
->scancel 11133013_1
+> pkill -u USERNAME
