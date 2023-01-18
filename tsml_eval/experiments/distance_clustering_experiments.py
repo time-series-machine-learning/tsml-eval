@@ -275,7 +275,7 @@ def tune_window(metric: str, train_X, n_clusters):
     """Tune window."""
     best_w = 0
     best_score = sys.float_info.max
-    for w in np.arange(0, 0.2, 0.01):
+    for w in np.arange(0.0, 0.2, 0.01):
         cls = TimeSeriesKMeans(
             metric=metric, distance_params={"window": w}, n_clusters=n_clusters
         )
@@ -298,7 +298,7 @@ def tune_msm(train_X, n_clusters):
     """Tune window for MSM."""
     best_c = 0
     best_score = sys.float_info.max
-    for c in np.arange(0, 5, 0.25):
+    for c in np.arange(0.0, 5.0, 0.25):
         cls = TimeSeriesKMeans(
             metric="msm", distance_params={"c": c}, n_clusters=n_clusters
         )
@@ -322,7 +322,7 @@ def tune_wdtw(train_X, n_clusters):
     """Tune window for MSM."""
     best_g = 0
     best_score = sys.float_info.max
-    for g in np.arange(0, 1, 0.05):
+    for g in np.arange(0.0, 1.0, 0.05):
         cls = TimeSeriesKMeans(
             metric="wdtw", distance_params={"g": g}, n_clusters=n_clusters
         )
@@ -347,8 +347,8 @@ def tune_twe(train_X, n_clusters):
     best_nu = 0
     best_lambda = 0
     best_score = sys.float_info.max
-    for nu in np.arange(0, 1, 0.25):
-        for lam in np.arange(0, 1, 0.2):
+    for nu in np.arange(0.0, 1.0, 0.25):
+        for lam in np.arange(0.0, 1.0, 0.2):
             cls = TimeSeriesKMeans(
                 metric="twe",
                 distance_params={"nu": nu, "lmbda": lam},
@@ -378,7 +378,7 @@ def tune_erp(train_X, n_clusters):
     """Tune window for MSM."""
     best_g = 0
     best_score = sys.float_info.max
-    for g in np.arange(0, 2, 0.2):
+    for g in np.arange(0.0, 2.0, 0.2):
         cls = TimeSeriesKMeans(
             metric="erp", distance_params={"g": g}, n_clusters=n_clusters
         )
@@ -429,7 +429,7 @@ def tune_lcss(train_X, n_clusters):
     """Tune window for MSM."""
     best_e = 0
     best_score = sys.float_info.max
-    for e in np.arange(0, 0.2, 0.01):
+    for e in np.arange(0.0, 0.2, 0.01):
         cls = TimeSeriesKMeans(
             metric="lcss", distance_params={"epsilon": e}, n_clusters=n_clusters
         )
@@ -469,6 +469,34 @@ def _recreate_results(trainX, trainY):
     print("Score = ", score)  # noqa
 
 
+def tune_cls(distance, train_X, n_clusters):
+    """Tune clusterer."""
+    best_init = "kmeans++"
+    best_score = sys.float_info.max
+
+    for init in ["kmeans++", "random", "forgy"]:
+        cls = TimeSeriesKMedoids(
+            init_algorithm=init,
+            metric=distance,
+            n_clusters=len(set(train_Y)),
+        )
+        cls.fit(train_X)
+        preds = cls.predict(train_X)
+        clusters = len(np.unique(preds))
+        if clusters <= 1:
+            score = sys.float_info.max
+        else:
+            score = davies_bouldin_score(train_X, preds)
+        print(
+            f" Number of clusters ={clusters} init alg = {init} score  =" f" {score}"
+        )  #
+        # noqa
+        if score < best_score:
+            best_score = score
+            best_init = init
+    return best_init
+
+
 if __name__ == "__main__":
     """Example simple usage, with args input via script or hard coded for testing."""
     numba.set_num_threads(1)
@@ -502,13 +530,14 @@ if __name__ == "__main__":
         print(" Local Run")  # noqa
         dataset = "Chinatown"
         data_dir = "c:/Data/"
-        results_dir = "c:/temp/"
+        results_dir = "c:/temp/kmedoids/"
         resample = 0
         averaging = "mean"
         train_fold = True
-        distance = "lcss"
+        distance = "dtw"
         normalise = True
-        tune = True
+        tune = False
+        clusterer = "kmedoids"
     #    cls_folder = clusterer + "-" + distance
     #    if normalise:
     #        results_dir = results_dir + "normalised/"
@@ -518,13 +547,29 @@ if __name__ == "__main__":
     #        results_dir = results_dir + "tune_w_20/"
 
     #    results_dir = results_dir + "/" + clusterer + "/" + averaging + "/"
-    if _results_present_full_path(results_dir, dataset, resample):
-        print("Ignoring, results already present")  # noqa
-    print(  # noqa
-        f" Running {dataset} resample {resample} normalised = {normalise} "  # noqa
-        f"clustering ={clusterer} distance = {distance} averaging = {averaging} "  # noqa
-        f"tune window = {tune} results path = {results_dir}"  # noqa
-    )  # noqa
+    w = 1.0
+    c = 1.0
+    epsilon = 0.05
+    g = 0.05
+    c = 1.0
+    nu = 0.05
+    lam = 1.0
+    init = "kmeans++"
+    max_its = 300
+    n_init = 1
+    if _results_present_full_path(results_dir + "/" + distance, dataset, resample):
+        print(
+            f"Ignoring dataset{dataset}, results already present at {results_dir}"
+        )  # noqa
+    else:
+        print(  # noqa
+            f" Running {dataset} resample {resample} normalised = {normalise} "  # noqa
+            f"clustering ={clusterer} distance = {distance} averaging = {averaging} "  # noqa
+            f"tune window = {tune} results path = {results_dir} init algo = {init} n "
+            f"iterations = {n_init}"
+            # noqa
+        )  # noqa
+
     train_X, train_Y = load_ts(
         f"{data_dir}/{dataset}/{dataset}_TRAIN.ts", return_data_type="numpy2d"
     )
@@ -539,13 +584,6 @@ if __name__ == "__main__":
         train_X = train_X.T
         test_X = s.fit_transform(test_X.T)
         test_X = test_X.T
-    w = 1.0
-    c = 1.0
-    epsilon = 0.05
-    g = 0.05
-    c = 1.0
-    nu = 0.05
-    lam = 1.0
 
     if tune:
         if distance == "dtw" or distance == "wdtw":
@@ -586,6 +624,9 @@ if __name__ == "__main__":
     if clusterer == "kmeans":
         format_kwargs = {**average_params, **parameters}
         clst = TimeSeriesKMeans(
+            init_algorithm=init,
+            max_iter=max_its,
+            n_init=n_init,
             averaging_method=averaging,
             average_params=format_kwargs,
             metric=distance,
@@ -596,6 +637,9 @@ if __name__ == "__main__":
         )
     else:
         clst = TimeSeriesKMedoids(
+            init_algorithm=init,
+            max_iter=max_its,
+            n_init=n_init,
             metric=distance,
             distance_params=parameters,
             n_clusters=len(set(train_Y)),

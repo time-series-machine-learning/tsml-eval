@@ -97,4 +97,11 @@ flake8 = "^docs/examples/|^notebooks/_wip/"
 isort = "^docs/examples/|^notebooks/_wip/"
 
 [tool.pytest.ini_options]
-addopts = "--ignore tsml_eval/_wip --durations 10 --timeout 600 --showlocals --doctest-modules --numprocesses auto"
+addopts = '''
+    --ignore tsml_eval/_wip
+    --durations 10
+    --timeout 600
+    --showlocals
+    --doctest-modules
+    --numprocesses auto
+'''
