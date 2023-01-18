@@ -469,6 +469,34 @@ def _recreate_results(trainX, trainY):
     print("Score = ", score)  # noqa
 
 
+def tune_cls(distance, train_X, n_clusters):
+    """Tune clusterer."""
+    best_init = "kmeans++"
+    best_score = sys.float_info.max
+
+    for init in ["kmeans++", "random", "forgy"]:
+        cls = TimeSeriesKMedoids(
+            init_algorithm=init,
+            metric=distance,
+            n_clusters=len(set(train_Y)),
+        )
+        cls.fit(train_X)
+        preds = cls.predict(train_X)
+        clusters = len(np.unique(preds))
+        if clusters <= 1:
+            score = sys.float_info.max
+        else:
+            score = davies_bouldin_score(train_X, preds)
+        print(
+            f" Number of clusters ={clusters} init alg = {init} score  =" f" {score}"
+        )  #
+        # noqa
+        if score < best_score:
+            best_score = score
+            best_init = init
+    return best_init
+
+
 if __name__ == "__main__":
     """Example simple usage, with args input via script or hard coded for testing."""
     numba.set_num_threads(1)
@@ -508,7 +536,7 @@ if __name__ == "__main__":
         train_fold = True
         distance = "lcss"
         normalise = True
-        tune = True
+        tune = False
     #    cls_folder = clusterer + "-" + distance
     #    if normalise:
     #        results_dir = results_dir + "normalised/"
@@ -548,6 +576,11 @@ if __name__ == "__main__":
     c = 1.0
     nu = 0.05
     lam = 1.0
+    init = "kmeans++"
+    max_its = 30
+    n_init = 1
+    if tune_cls:
+        init = tune_cls(distance, train_X, len(set(train_Y)))
 
     if tune:
         if distance == "dtw" or distance == "wdtw":
@@ -588,6 +621,9 @@ if __name__ == "__main__":
     if clusterer == "kmeans":
         format_kwargs = {**average_params, **parameters}
         clst = TimeSeriesKMeans(
+            init_algorithm=init,
+            max_iter=max_its,
+            n_init=n_init,
             averaging_method=averaging,
             average_params=format_kwargs,
             metric=distance,
@@ -598,6 +634,9 @@ if __name__ == "__main__":
         )
     else:
         clst = TimeSeriesKMedoids(
+            init_algorithm=init,
+            max_iter=max_its,
+            n_init=n_init,
             metric=distance,
             distance_params=parameters,
             n_clusters=len(set(train_Y)),
