@@ -63,7 +63,7 @@ nbsphinx_execute = "never"
 nbsphinx_allow_errors = False
 nbsphinx_timeout = 600  # seconds, set to -1 to disable timeout
 
-current_file = "{{ env.doc2path( env.docname, base=None) }}"
+current_file = "{{ env.doc2path(env.docname, base=None) }}"
 
 # add link to original notebook at the bottom and add Binder launch button
 # points to latest stable release, not main
@@ -71,7 +71,9 @@ notebook_url = f"https://github.com/time-series-machine-learning/tsml-eval/tree/
 binder_url = f"https://mybinder.org/v2/gh/time-series-machine-learning/tsml-eval/v{version}?filepath={current_file}"  # noqa
 nbsphinx_epilog = f"""
 ----
+
 Generated using nbsphinx_. The Jupyter notebook can be found here_. |Binder|_
+
 .. _nbsphinx: https://nbsphinx.readthedocs.io/
 .. _here: {notebook_url}
 .. |binder| image:: https://mybinder.org/badge_logo.svg
