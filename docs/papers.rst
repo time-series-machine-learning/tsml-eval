@@ -12,7 +12,18 @@ todo: papers!
 
 :ref:`(Placeholder) Bakeoff paper <bakeoff>`
 
+.. toctree::
+    :hidden:
+
+    regression
+    bakeoff
+
 2022
 ----
 
 :ref:`Placeholder <placeholderpaper>`
+
+.. toctree::
+    :hidden:
+
+    placeholderpaper

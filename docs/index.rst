@@ -82,7 +82,7 @@ valuation of classification, regression and clustering algorithms.
             API
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 3
     :hidden:
 
     installation
