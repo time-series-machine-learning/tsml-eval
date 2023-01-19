@@ -59,42 +59,24 @@ numpydoc_show_class_members = False
 
 # nbsphinx
 
-# Notebook thumbnails
-nbsphinx_thumbnails = {
-    "examples/classification_experiments": "examples/images/TSC.png",
-    "examples/regression_experiments": "examples/images/TSR.png",
-    "examples/clustering_experiments": "examples/images/TSCL.png",
-    "examples/datasets": "examples/images/wip.png",
-    "examples/evaluation": "examples/images/wip.png",
-    "examples/results_format": "examples/images/wip.png",
-}
+nbsphinx_execute = "never"
+nbsphinx_allow_errors = False
+nbsphinx_timeout = 600  # seconds, set to -1 to disable timeout
 
-# todo
-# nbsphinx_execute = "never"  # always  # whether to run notebooks
-# nbsphinx_allow_errors = False  # False
-# nbsphinx_timeout = 600  # seconds, set to -1 to disable timeout
-#
-# # add Binder launch buttom at the top
-# current_file = "{{ env.doc2path( env.docname, base=None) }}"
-#
-# # make sure Binder points to latest stable release, not main
-# binder_url = f"https://mybinder.org/v2/gh/sktime/sktime/{CURRENT_VERSION}?filepath={current_file}"  # noqa
-# nbsphinx_prolog = f"""
-# .. |binder| image:: https://mybinder.org/badge_logo.svg
-# .. _Binder: {binder_url}
-# |Binder|_
-# """
-#
-# # add link to original notebook at the bottom
-# notebook_url = (
-#     f"https://github.com/sktime/sktime/tree/{CURRENT_VERSION}/{current_file}"  # noqa
-# )
-# nbsphinx_epilog = f"""
-# ----
-# Generated using nbsphinx_. The Jupyter notebook can be found here_.
-# .. _here: {notebook_url}
-# .. _nbsphinx: https://nbsphinx.readthedocs.io/
-# """
+current_file = "{{ env.doc2path( env.docname, base=None) }}"
+
+# add link to original notebook at the bottom and add Binder launch button
+# points to latest stable release, not main
+notebook_url = f"https://github.com/time-series-machine-learning/tsml-eval/tree/{CURRENT_VERSION}/{current_file}"  # noqa
+binder_url = f"https://mybinder.org/v2/gh/time-series-machine-learning/tsml-eval/{CURRENT_VERSION}?filepath={current_file}"  # noqa
+nbsphinx_epilog = f"""
+----
+Generated using nbsphinx_. The Jupyter notebook can be found here_. |Binder|_
+.. _nbsphinx: https://nbsphinx.readthedocs.io/
+.. _here: {notebook_url}
+.. |binder| image:: https://mybinder.org/badge_logo.svg
+.. _Binder: {binder_url}
+"""
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
