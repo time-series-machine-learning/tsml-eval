@@ -67,8 +67,8 @@ current_file = "{{ env.doc2path( env.docname, base=None) }}"
 
 # add link to original notebook at the bottom and add Binder launch button
 # points to latest stable release, not main
-notebook_url = f"https://github.com/time-series-machine-learning/tsml-eval/tree/{CURRENT_VERSION}/{current_file}"  # noqa
-binder_url = f"https://mybinder.org/v2/gh/time-series-machine-learning/tsml-eval/{CURRENT_VERSION}?filepath={current_file}"  # noqa
+notebook_url = f"https://github.com/time-series-machine-learning/tsml-eval/tree/v{version}/{current_file}"  # noqa
+binder_url = f"https://mybinder.org/v2/gh/time-series-machine-learning/tsml-eval/v{version}?filepath={current_file}"  # noqa
 nbsphinx_epilog = f"""
 ----
 Generated using nbsphinx_. The Jupyter notebook can be found here_. |Binder|_
