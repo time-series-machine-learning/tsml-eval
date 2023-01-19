@@ -17,13 +17,3 @@ todo: papers!
 
     regression
     bakeoff
-
-2022
-----
-
-:ref:`Placeholder <placeholderpaper>`
-
-.. toctree::
-    :hidden:
-
-    placeholderpaper
