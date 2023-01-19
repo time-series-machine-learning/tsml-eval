@@ -8,6 +8,11 @@ todo: papers!
 2023
 ----
 
-:ref:`Regression paper <regression>`
+:ref:`(Placeholder) Regression paper <regression>`
 
-:ref:`Bakeoff paper <bakeoff>`
+:ref:`(Placeholder) Bakeoff paper <bakeoff>`
+
+2022
+----
+
+:ref:`Placeholder <placeholderpaper>`

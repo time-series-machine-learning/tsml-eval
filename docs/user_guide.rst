@@ -10,11 +10,11 @@ User Guide
         :img-top: examples/images/wip.png
         :text-align: center
 
-        Datasets
+        tsml-eval Data Format
 
         ^^^
 
-        Datasets.
+        Placeholder.
 
         +++
 
@@ -29,11 +29,11 @@ User Guide
         :img-top: examples/images/TSC.png
         :text-align: center
 
-        TSC
+        Time Series Classification
 
         ^^^
 
-        TSC.
+        Placeholder.
 
         +++
 
@@ -48,11 +48,11 @@ User Guide
         :img-top: examples/images/TSR.png
         :text-align: center
 
-        TSR
+        Time Series Regression
 
         ^^^
 
-        TSR.
+        Placeholder.
 
         +++
 
@@ -67,11 +67,11 @@ User Guide
         :img-top: examples/images/TSCL.png
         :text-align: center
 
-        TSCL
+        Time Series Clustering
 
         ^^^
 
-        TSCL.
+        Placeholder.
 
         +++
 
@@ -86,11 +86,11 @@ User Guide
         :img-top: examples/images/wip.png
         :text-align: center
 
-        Evaluation
+        tsml-eval Results Evaluation
 
         ^^^
 
-        Evaluation.
+        Placeholder.
 
         +++
 
@@ -105,11 +105,11 @@ User Guide
         :img-top: examples/images/wip.png
         :text-align: center
 
-        Results
+        tsml-eval Results Format
 
         ^^^
 
-        Results.
+        Placeholder.
 
         +++
 

@@ -18,6 +18,7 @@ Functions for evaluating the performance of a model.
     :template: function.rst
 
     metrics.clustering_accuracy
+    metrics.davies_bouldin_score_from_file
 
 Experiments: tsml_eval.experiments
 ----------------------------------
@@ -54,3 +55,6 @@ Public utility functions used elsewhere in the package.
     experiments.write_regression_results
     experiments.write_clustering_results
     experiments.write_results_to_tsml_format
+    experiments.validate_results_file
+    experiments.fix_broken_second_line
+    experiments.compare_result_file_resample
