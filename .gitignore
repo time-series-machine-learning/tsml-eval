@@ -127,7 +127,13 @@ dmypy.json
 # Test output
 test_output/
 
-# local code and Test files
+# HTcondor files
+*/condor_output/*
+task_params.txt
+task.sub
+run_condor.py
+
+# local code and debug files
 local/
 local_code.py
 debug.py
