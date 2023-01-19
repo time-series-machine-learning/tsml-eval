@@ -48,20 +48,34 @@ author = "Matthew Middlehurst"
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
+    "sphinx.ext.autosectionlabel",
     "sphinx.ext.intersphinx",
     "sphinx.ext.linkcode",
     "numpydoc",
     "nbsphinx",
-    "sphinx_gallery.load_style",
     "sphinx_design",
 ]
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", ".ipynb_checkpoints", "Thumbs.db", ".DS_Store"]
 
+# auto doc/summary
+
+autodoc_default_options = {
+    "members": True,
+    "inherited-members": True,
+    "member-order": "bysource",
+}
+
+# numpydoc
+
+# see http://stackoverflow.com/q/12206334/562769
+numpydoc_show_class_members = True
 # this is needed for some reason...
 # see https://github.com/numpy/numpydoc/issues/69
-numpydoc_show_class_members = False
+numpydoc_class_members_toctree = False
+
+numpydoc_validation_checks = {"all"}
 
 # nbsphinx
 
