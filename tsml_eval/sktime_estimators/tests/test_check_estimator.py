@@ -15,15 +15,13 @@ from tsml_eval.sktime_estimators.classification.shapelet_based.rsf import (
     RandomShapeletForest,
 )
 from tsml_eval.sktime_estimators.classification.transformations import SFADilation
-from tsml_eval.sktime_estimators.regression.convolution_based.arsenal import (
-    Arsenal,
-    HydraRegressor
-)
-from tsml_eval.sktime_estimators.regression.featured_based.fresh_prince import (
-    FreshPRINCERegressor
-)
+from tsml_eval.sktime_estimators.regression.convolution_based import HydraRegressor
+from tsml_eval.sktime_estimators.regression.convolution_based.arsenal import Arsenal
 from tsml_eval.sktime_estimators.regression.dictionary_based.tde import (
     TemporalDictionaryEnsemble,
+)
+from tsml_eval.sktime_estimators.regression.featured_based.fresh_prince import (
+    FreshPRINCERegressor,
 )
 from tsml_eval.sktime_estimators.regression.hybrid.hivecote_v2 import HIVECOTEV2
 from tsml_eval.sktime_estimators.regression.interval_based.drcif import DrCIF
