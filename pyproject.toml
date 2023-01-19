@@ -92,9 +92,9 @@ per-file-ignores = [
 ]
 
 [tool.nbqa.exclude]
-black = "^docs/examples/|^notebooks/_wip/"
-flake8 = "^docs/examples/|^notebooks/_wip/"
-isort = "^docs/examples/|^notebooks/_wip/"
+black = "^docs/notebooks/"
+flake8 = "^docs/notebooks/"
+isort = "^docs/notebooks/"
 
 [tool.pytest.ini_options]
 addopts = '''

@@ -10,13 +10,25 @@ import sys
 
 import tsml_eval
 
+# The version info for the project you're documenting, acts as replacement for
+# |version| and |release|, also used in various other places throughout the
+# built documents.
+
+version = tsml_eval.__version__
+release = tsml_eval.__version__
+
+github_tag = f"v{version}"
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-ON_READTHEDOCS = os.environ.get("READTHEDOCS") == "True"
-if not ON_READTHEDOCS:
+on_readthedocs = os.environ.get("READTHEDOCS") == "True"
+if not on_readthedocs:
     sys.path.insert(0, os.path.abspath(".."))
-RTD_VERSION = os.environ.get("READTHEDOCS_VERSION", "local")
+else:
+    rtd_version = os.environ.get("READTHEDOCS_VERSION")
+    if rtd_version == "latest":
+        github_tag = "main"
 
 
 # For the full list of built-in configuration values, see the documentation:
@@ -29,12 +41,6 @@ project = "tsml-eval"
 copyright = "2022 - 2023, The tsml developers (BSD-3 License)"
 author = "Matthew Middlehurst"
 
-# The version info for the project you're documenting, acts as replacement for
-# |version| and |release|, also used in various other places throughout the
-# built documents.
-
-version = tsml_eval.__version__
-release = tsml_eval.__version__
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -67,12 +73,13 @@ current_file = "{{ env.doc2path(env.docname, base=None) }}"
 
 # add link to original notebook at the bottom and add Binder launch button
 # points to latest stable release, not main
-notebook_url = f"https://github.com/time-series-machine-learning/tsml-eval/tree/v{version}/{current_file}"  # noqa
-binder_url = f"https://mybinder.org/v2/gh/time-series-machine-learning/tsml-eval/v{version}?filepath={current_file}"  # noqa
+notebook_url = f"https://github.com/time-series-machine-learning/tsml-eval/tree/{github_tag}/{current_file}"  # noqa
+binder_url = f"https://mybinder.org/v2/gh/time-series-machine-learning/tsml-eval/{github_tag}?filepath={current_file}"  # noqa
 nbsphinx_epilog = f"""
 ----
 
-Generated using nbsphinx_. The Jupyter notebook can be found here_. |Binder|_
+Generated using nbsphinx_. The Jupyter notebook can be found here_.
+|Binder|_
 
 .. _nbsphinx: https://nbsphinx.readthedocs.io/
 .. _here: {notebook_url}
