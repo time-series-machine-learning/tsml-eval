@@ -51,7 +51,7 @@ regression_estimators = [
     HIVECOTEV2,
     DrCIF,
     ShapeletTransformRegressor,
-    FreshPRINCERegressor,
+    # FreshPRINCERegressor,
     # SklearnBaseRegressor,
     # RandomShapeletTransform,
     # SFA,

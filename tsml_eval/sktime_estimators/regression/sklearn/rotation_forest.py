@@ -390,6 +390,10 @@ class RotationForest(BaseEstimator):
             [pcas[i].transform(X[:, group]) for i, group in enumerate(groups)], axis=1
         )
         X_t = np.nan_to_num(X_t, False, 0, 0, 0)
+
+        # todo hack
+        X_t[X_t > np.finfo(np.float32).max] = np.finfo(np.float32).max
+
         tree = _clone_estimator(self._base_estimator, random_state=rs)
         tree.fit(X_t, y)
 
@@ -400,6 +404,9 @@ class RotationForest(BaseEstimator):
             [pcas[i].transform(X[:, group]) for i, group in enumerate(groups)], axis=1
         )
         X_t = np.nan_to_num(X_t, False, 0, 0, 0)
+
+        # todo hack
+        X_t[X_t > np.finfo(np.float32).max] = np.finfo(np.float32).max
 
         return clf.predict(X_t)
 
