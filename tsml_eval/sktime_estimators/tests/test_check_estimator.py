@@ -15,8 +15,10 @@ from tsml_eval.sktime_estimators.classification.shapelet_based.rsf import (
     RandomShapeletForest,
 )
 from tsml_eval.sktime_estimators.classification.transformations import SFADilation
-from tsml_eval.sktime_estimators.regression.convolution_based import HydraRegressor
-from tsml_eval.sktime_estimators.regression.convolution_based.arsenal import Arsenal
+from tsml_eval.sktime_estimators.regression.convolution_based import (
+    Arsenal,
+    HydraRegressor,
+)
 from tsml_eval.sktime_estimators.regression.dictionary_based.tde import (
     TemporalDictionaryEnsemble,
 )
