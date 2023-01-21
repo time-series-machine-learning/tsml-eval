@@ -179,7 +179,7 @@ def set_regressor(
         # raise ValueError(f" Regressor {name} is not avaiable")
 
     # regression package regressors
-    elif r == "fresh-prince":
+    elif r == "fresh-prince" or r == "freshprince":
         from tsml_eval.sktime_estimators.regression.featured_based import (
             FreshPRINCERegressor,
         )
