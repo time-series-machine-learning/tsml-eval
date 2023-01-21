@@ -2,7 +2,7 @@
 # CHECK:
 #   datasets (list of problems)
 #   results_dir (where to check/write results),
-#   for regressor in (the regressors we are running)
+#   for clusterer in (the clusterers we are running)
 
 # While reading is fine, please dont write anything to the default directories in this script
 
@@ -11,7 +11,7 @@ max_folds=30
 start_fold=1
 
 # To avoid dumping 1000s of jobs in the queue we have a higher level queue
-max_num_submitted=500
+max_num_submitted=100
 
 # Queue options are https://my.uea.ac.uk/divisions/it-and-computing-services/service-catalogue/research-it-services/hpc/ada-cluster/using-ada
 queue="compute-64-512"
@@ -27,38 +27,38 @@ max_memory=8000
 # Max allowable is 7 days - 168 hours
 max_time="168:00:00"
 
-# Start point for the script i.e. 3 datasets, 3 regressors = 9 jobs to submit, start_point=5 will skip to job 5
+# Start point for the script i.e. 3 datasets, 3 clusterers = 9 jobs to submit, start_point=5 will skip to job 5
 start_point=1
 
 # Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
 data_dir="/gpfs/home/ajb/Data/"
-datasets="/gpfs/home/ajb/DataSetLists/Regression.txt"
+datasets="/gpfs/home/ajb/DataSetLists/TSC_112_2019.txt"
 
 # Put your home directory here
-local_path="/gpfs/home/"$username"/"
+local_path="/gpfs/home/$username/"
 
 # Results and output file write location. Change these to reflect your own file structure
-results_dir=$local_path"RegressionResults/sktime/"
-out_dir=$local_path"RegressionResults/output/"
+results_dir=$local_path"ClusteringResults/results/"
+out_dir=$local_path"ClusteringResults/output/"
 
 # The python script we are running
-script_file_path=$local_path"Code/tsml-eval/tsml_eval/experiments/regression_experiments.py"
+script_file_path=$local_path"Code/tsml-eval/tsml_eval/experiments/clustering_experiments.py"
 
 # Environment name, change accordingly, for set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
-# Separate environments for GPU (default python/anaconda/2020.11/3.8) and CPU (default python/anaconda/2019.10/3.7) are recommended
-env_name="eval"
+# Separate environments for GPU (Python 3.8) and CPU (Python 3.10) are recommended
+env_name="tsml-eval"
 
-# Generating train folds is usually slower, set to false unless you need them
-generate_train_files="false"
+# generate a results file for the test data as well as train
+generate_test_files="true"
 
 # If set for true, looks for <problem><fold>_TRAIN.ts file. This is useful for running tsml resamples
 predefined_folds="false"
 
-# List valid regressors e.g KNeighborsTimeSeriesRegressor, RocketRegressor, TimeSeriesForestRegressor
-# See set_regressor for aliases
+# List valid clusterers e.g KMeans KMedoids
+# See set_clusterer for aliases
 count=0
 while read dataset; do
-for regressor in TimeSeriesForestRegressor
+for clusterer in KMeans KMedoids
 do
 
 # Dont change anything after here for regular runs
@@ -78,14 +78,14 @@ done
 ((count++))
 if ((count>=start_point)); then
 
-mkdir -p ${out_dir}${regressor}/${dataset}/
+mkdir -p ${out_dir}${clusterer}/${dataset}/
 
 # This skips jobs which have test/train files already written to the results directory. Only looks for Resamples, not Folds (old file name)
 array_jobs=""
 for (( i=start_fold-1; i<max_folds; i++ ))
 do
-    if [ -f "${results_dir}${regressor}/Predictions/${dataset}/testResample${i}.csv" ]; then
-        if [ "${generate_train_files}" == "true" ] && ! [ -f "${results_dir}${regressor}/Predictions/${dataset}/trainResample${i}.csv" ]; then
+    if [ -f "${results_dir}${clusterer}/Predictions/${dataset}/trainResample${i}.csv" ]; then
+        if [ "${generate_test_files}" == "true" ] && ! [ -f "${results_dir}${clusterer}/Predictions/${dataset}/testResample${i}.csv" ]; then
             array_jobs="${array_jobs}${array_jobs:+,}$((i + 1))"
         fi
     else
@@ -102,27 +102,27 @@ echo "#!/bin/bash
 #SBATCH --mail-user=${mailto}
 #SBATCH -p ${queue}
 #SBATCH -t ${max_time}
-#SBATCH --job-name=${regressor}${dataset}
+#SBATCH --job-name=${clusterer}${dataset}
 #SBATCH --array=${array_jobs}
 #SBATCH --mem=${max_memory}M
-#SBATCH -o ${out_dir}${regressor}/${dataset}/%A-%a.out
-#SBATCH -e ${out_dir}${regressor}/${dataset}/%A-%a.err
+#SBATCH -o ${out_dir}${clusterer}/${dataset}/%A-%a.out
+#SBATCH -e ${out_dir}${clusterer}/${dataset}/%A-%a.err
 
 . /etc/profile
 
 module add python/anaconda/2019.10/3.7
 source activate $env_name
 
-# Input args to the default regression_experiments are in main method of
-# https://github.com/time-series-machine-learning/tsml-estimator-evaluation/blob/main/tsml_eval/experiments/regression_experiments.py
-python -u ${script_file_path} ${data_dir} ${results_dir} ${regressor} ${dataset} \$SLURM_ARRAY_TASK_ID ${generate_train_files} ${predefined_folds}"  > generatedFile.sub
+# Input args to the default clustering_experiments are in main method of
+# https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/clustering_experiments.py
+python -u ${script_file_path} ${data_dir} ${results_dir} ${clusterer} ${dataset} \$SLURM_ARRAY_TASK_ID ${generate_test_files} ${predefined_folds}"  > generatedFile.sub
 
-echo ${count} ${regressor}/${dataset}
+echo ${count} ${clusterer}/${dataset}
 
 sbatch < generatedFile.sub
 
 else
-    echo ${count} ${regressor}/${dataset} has finished all required resamples, skipping
+    echo ${count} ${clusterer}/${dataset} has finished all required resamples, skipping
 fi
 
 fi

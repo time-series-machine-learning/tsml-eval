@@ -11,7 +11,7 @@ max_folds=30
 start_fold=1
 
 # To avoid dumping 1000s of jobs in the queue we have a higher level queue
-max_num_submitted=500
+max_num_submitted=100
 
 # Queue options are https://my.uea.ac.uk/divisions/it-and-computing-services/service-catalogue/research-it-services/hpc/ada-cluster/using-ada
 queue="compute-64-512"
@@ -35,19 +35,18 @@ data_dir="/gpfs/home/ajb/Data/"
 datasets="/gpfs/home/ajb/DataSetLists/TSC_112_2019.txt"
 
 # Put your home directory here
-local_path="/gpfs/home/"$username"/"
+local_path="/gpfs/home/$username/"
 
 # Results and output file write location. Change these to reflect your own file structure
-results_dir=$local_path"ClassificationResults/sktime/"
+results_dir=$local_path"ClassificationResults/results/"
 out_dir=$local_path"ClassificationResults/output/"
 
 # The python script we are running
-script_file_path=$local_path"Code/tsml-eval/tsml_eval/experiments
-/classification_experiments.py"
+script_file_path=$local_path"Code/tsml-eval/tsml_eval/experiments/classification_experiments.py"
 
 # Environment name, change accordingly, for set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
-# Separate environments for GPU (default python/anaconda/2020.11/3.8) and CPU (default python/anaconda/2019.10/3.7) are recommended
-env_name="eval"
+# Separate environments for GPU (Python 3.8) and CPU (Python 3.10) are recommended
+env_name="tsml-eval"
 
 # Generating train folds is usually slower, set to false unless you need them
 generate_train_files="false"
@@ -59,7 +58,7 @@ predefined_folds="false"
 # See set_classifier for aliases
 count=0
 while read dataset; do
-for classifier in ShapeletTransformClassifier
+for classifier in ROCKET DrCIF
 do
 
 # Dont change anything after here for regular runs
@@ -117,7 +116,7 @@ module add python/anaconda/2019.10/3.7
 source activate $env_name
 
 # Input args to the default classification_experiments are in main method of
-# https://github.com/time-series-machine-learning/tsml-estimator-evaluation/blob/main/tsml_eval/experiments/classification_experiments.py
+# https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/classification_experiments.py
 python -u ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} \$SLURM_ARRAY_TASK_ID ${generate_train_files} ${predefined_folds}"  > generatedFile.sub
 
 echo ${count} ${classifier}/${dataset}

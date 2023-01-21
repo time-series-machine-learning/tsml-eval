@@ -39,18 +39,18 @@ data_dir="/gpfs/home/ajb/Data/"
 datasets="/gpfs/home/ajb/DataSetLists/Regression.txt"
 
 # Put your home directory here
-local_path="/gpfs/home/"$username"/"
+local_path="/gpfs/home/$username/"
 
-# CHECK Change these to reflect your own file structure
-results_dir=$local_path"RegressionResults/sktime/"
+# Results and output file write location. Change these to reflect your own file structure
+results_dir=$local_path"RegressionResults/results/"
 out_dir=$local_path"RegressionResults/output/"
 
 # The python script we are running
-script_file_path=$local_path"Code/tsml-estimator-evaluation/tsml_eval/experiments/regression_experiments.py"
+script_file_path=$local_path"Code/tsml-eval/tsml_eval/experiments/regression_experiments.py"
 
 # Environment name, change accordingly, for set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
-# Separate environments for GPU (default python/anaconda/2020.11/3.8) and CPU (default python/anaconda/2019.10/3.7) are recommended
-env_name="est-eval-gpu"
+# Separate environments for GPU (Python 3.8) and CPU (Python 3.10) are recommended
+env_name="tsml-eval-gpu"
 
 # Generating train folds is usually slower, set to false unless you need them
 generate_train_files="false"
@@ -101,7 +101,7 @@ if [ "${array_jobs}" != "" ]; then
 
 # This creates the scrip to run the job based on the info above
 echo "#!/bin/bash
-#SBATCH --qos=gpu-rtx
+#SBATCH --qos=gpu-rtx #gpu-rtx-reserved
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=12
 #SBATCH --mail-type=${mail}
@@ -116,21 +116,23 @@ echo "#!/bin/bash
 
 . /etc/profile
 
-module add python/anaconda/2020.11/3.8
-module add cudnn/8.2.0
+module add python/anaconda/2019.10/3.7
+module add cuda/10.2.89
+module add cudnn/7.6.5
 source activate $env_name
-export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/gpfs/home/${username}/.conda/envs/${env_name}/lib
+export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/gpfs/home/${username}/.conda/envs/${env_name}/lib/
+
 
 # Input args to the default regression_experiments are in main method of
-# https://github.com/time-series-machine-learning/tsml-estimator-evaluation/blob/main/tsml_eval/experiments/regression_experiments.py
+# https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/regression_experiments.py
 python -u ${script_file_path} ${data_dir} ${results_dir} ${regressor} ${dataset} \$SLURM_ARRAY_TASK_ID ${generate_train_files} ${predefined_folds}"  > generatedFileGPU.sub
 
-echo ${count} ${classifier}/${dataset}
+echo ${count} ${regressor}/${dataset}
 
 sbatch < generatedFileGPU.sub
 
 else
-    echo ${count} ${classifier}/${dataset} has finished all required resamples, skipping
+    echo ${count} ${regressor}/${dataset} has finished all required resamples, skipping
 fi
 
 fi
