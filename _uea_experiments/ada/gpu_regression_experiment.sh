@@ -101,7 +101,7 @@ if [ "${array_jobs}" != "" ]; then
 
 # This creates the scrip to run the job based on the info above
 echo "#!/bin/bash
-#SBATCH --qos=gpu-rtx
+#SBATCH --qos=gpu-rtx #gpu-rtx-reserved
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=12
 #SBATCH --mail-type=${mail}
@@ -127,12 +127,12 @@ export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/gpfs/home/${username}/.conda/envs/${en
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/regression_experiments.py
 python -u ${script_file_path} ${data_dir} ${results_dir} ${regressor} ${dataset} \$SLURM_ARRAY_TASK_ID ${generate_train_files} ${predefined_folds}"  > generatedFileGPU.sub
 
-echo ${count} ${classifier}/${dataset}
+echo ${count} ${regressor}/${dataset}
 
 sbatch < generatedFileGPU.sub
 
 else
-    echo ${count} ${classifier}/${dataset} has finished all required resamples, skipping
+    echo ${count} ${regressor}/${dataset} has finished all required resamples, skipping
 fi
 
 fi

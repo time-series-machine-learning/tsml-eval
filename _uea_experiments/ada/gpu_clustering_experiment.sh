@@ -101,7 +101,7 @@ if [ "${array_jobs}" != "" ]; then
 
 # This creates the scrip to run the job based on the info above
 echo "#!/bin/bash
-#SBATCH --qos=gpu-rtx
+#SBATCH --qos=gpu-rtx #gpu-rtx-reserved
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=12
 #SBATCH --mail-type=${mail}
