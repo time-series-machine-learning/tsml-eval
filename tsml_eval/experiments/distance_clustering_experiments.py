@@ -530,13 +530,14 @@ if __name__ == "__main__":
         print(" Local Run")  # noqa
         dataset = "Chinatown"
         data_dir = "c:/Data/"
-        results_dir = "c:/temp/"
+        results_dir = "c:/temp/kmedoids/"
         resample = 0
         averaging = "mean"
         train_fold = True
-        distance = "lcss"
+        distance = "dtw"
         normalise = True
         tune = False
+        clusterer = "kmedoids"
     #    cls_folder = clusterer + "-" + distance
     #    if normalise:
     #        results_dir = results_dir + "normalised/"
@@ -546,15 +547,29 @@ if __name__ == "__main__":
     #        results_dir = results_dir + "tune_w_20/"
 
     #    results_dir = results_dir + "/" + clusterer + "/" + averaging + "/"
-    if _results_present_full_path(results_dir, dataset, resample):
+    w = 1.0
+    c = 1.0
+    epsilon = 0.05
+    g = 0.05
+    c = 1.0
+    nu = 0.05
+    lam = 1.0
+    init = "kmeans++"
+    max_its = 300
+    n_init = 1
+    if _results_present_full_path(results_dir + "/" + distance, dataset, resample):
         print(
             f"Ignoring dataset{dataset}, results already present at {results_dir}"
         )  # noqa
-    print(  # noqa
-        f" Running {dataset} resample {resample} normalised = {normalise} "  # noqa
-        f"clustering ={clusterer} distance = {distance} averaging = {averaging} "  # noqa
-        f"tune window = {tune} results path = {results_dir}"  # noqa
-    )  # noqa
+    else:
+        print(  # noqa
+            f" Running {dataset} resample {resample} normalised = {normalise} "  # noqa
+            f"clustering ={clusterer} distance = {distance} averaging = {averaging} "  # noqa
+            f"tune window = {tune} results path = {results_dir} init algo = {init} n "
+            f"iterations = {n_init}"
+            # noqa
+        )  # noqa
+
     train_X, train_Y = load_ts(
         f"{data_dir}/{dataset}/{dataset}_TRAIN.ts", return_data_type="numpy2d"
     )
