@@ -2,9 +2,12 @@
 # CHECK:
 #   datasets (list of problems)
 #   results_dir (where to check/write results),
-#   for distance in (the distance we are running)
+#   for clusterer in (the clusterers we are running)
 
-# While reading is fine, please dont write anything to the default directories in this script
+# While reading from them is fine, please dont write anything to the default directories in this script
+
+# To use GPU resources you need to be given access (gpu qos), which involves emailing hpc.admin@uea.ac.uk
+# Ask Tony or on slack, and read the GPU section in https://my.uea.ac.uk/divisions/it-and-computing-services/service-catalogue/research-it-services/hpc/ada-cluster/using-ada/jobs
 
 # Start and end for resamples
 max_folds=30
@@ -14,7 +17,8 @@ start_fold=1
 max_num_submitted=100
 
 # Queue options are https://my.uea.ac.uk/divisions/it-and-computing-services/service-catalogue/research-it-services/hpc/ada-cluster/using-ada
-queue="compute-64-512"
+# Make sure GPU jobs are on one of the "gpu-" queues, .sub file qos may need to change for ones other than "gpu-rtx6000-2"
+queue="gpu-rtx6000-2"
 
 # Enter your username and email here
 username="ajb"
@@ -35,27 +39,30 @@ data_dir="/gpfs/home/ajb/Data/"
 datasets="/gpfs/home/ajb/DataSetLists/TSC_112_2019.txt"
 
 # Put your home directory here
-local_path="/gpfs/home/"$username"/"
+local_path="/gpfs/home/$username/"
 
 # Results and output file write location. Change these to reflect your own file structure
-results_dir=$local_path"ClusteringResults/sktime/"
+results_dir=$local_path"ClusteringResults/results/"
 out_dir=$local_path"ClusteringResults/output/"
 
 # The python script we are running
-script_file_path=$local_path"Code/tsml-estimator-evaluation/tsml_eval/experiments/clustering_experiments.py"
+script_file_path=$local_path"Code/tsml-eval/tsml_eval/experiments/clustering_experiments.py"
 
 # Environment name, change accordingly, for set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
-# Separate environments for GPU (default python/anaconda/2020.11/3.8) and CPU (default python/anaconda/2019.10/3.7) are recommended
-env_name="eval"
+# Separate environments for GPU (Python 3.8) and CPU (Python 3.10) are recommended
+env_name="tsml-eval-gpu"
 
-# todo this is currently only in for file skipping, should always be generating train files. need to rework clustering experiments more
-generate_train_files="true"
+# generate a results file for the test data as well as train
+generate_test_files="true"
 
-# List valid clusterers e.g KMeans KMdoids
+# If set for true, looks for <problem><fold>_TRAIN.ts file. This is useful for running tsml resamples
+predefined_folds="false"
+
+# List valid clusterers e.g ???
 # See set_clusterer for aliases
 count=0
 while read dataset; do
-for clusterer in KMeans
+for clusterer in ???
 do
 
 # Dont change anything after here for regular runs
@@ -81,8 +88,8 @@ mkdir -p ${out_dir}${clusterer}/${dataset}/
 array_jobs=""
 for (( i=start_fold-1; i<max_folds; i++ ))
 do
-    if [ -f "${results_dir}${clusterer}/Predictions/${dataset}/testResample${i}.csv" ]; then
-        if [ "${generate_train_files}" == "true" ] && ! [ -f "${results_dir}${clusterer}/Predictions/${dataset}/trainResample${i}.csv" ]; then
+    if [ -f "${results_dir}${clusterer}/Predictions/${dataset}/trainResample${i}.csv" ]; then
+        if [ "${generate_test_files}" == "true" ] && ! [ -f "${results_dir}${clusterer}/Predictions/${dataset}/testResample${i}.csv" ]; then
             array_jobs="${array_jobs}${array_jobs:+,}$((i + 1))"
         fi
     else
@@ -94,7 +101,9 @@ if [ "${array_jobs}" != "" ]; then
 
 # This creates the scrip to run the job based on the info above
 echo "#!/bin/bash
-#SBATCH --qos=ht
+#SBATCH --qos=gpu-rtx #gpu-rtx-reserved
+#SBATCH --gres=gpu:1
+#SBATCH --cpus-per-task=12
 #SBATCH --mail-type=${mail}
 #SBATCH --mail-user=${mailto}
 #SBATCH -p ${queue}
@@ -108,15 +117,19 @@ echo "#!/bin/bash
 . /etc/profile
 
 module add python/anaconda/2019.10/3.7
+module add cuda/10.2.89
+module add cudnn/7.6.5
 source activate $env_name
+export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/gpfs/home/${username}/.conda/envs/${env_name}/lib/
+
 
 # Input args to the default clustering_experiments are in main method of
-# https://github.com/time-series-machine-learning/tsml-estimator-evaluation/blob/main/tsml_eval/experiments/clustering_experiments.py
-python -u ${script_file_path} ${data_dir} ${results_dir} ${clusterer} ${dataset} \$SLURM_ARRAY_TASK_ID"  > generatedFile.sub
+# https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/clustering_experiments.py
+python -u ${script_file_path} ${data_dir} ${results_dir} ${clusterer} ${dataset} \$SLURM_ARRAY_TASK_ID ${generate_test_files} ${predefined_folds}"  > generatedFileGPU.sub
 
 echo ${count} ${clusterer}/${dataset}
 
-sbatch < generatedFile.sub
+sbatch < generatedFileGPU.sub
 
 else
     echo ${count} ${clusterer}/${dataset} has finished all required resamples, skipping
