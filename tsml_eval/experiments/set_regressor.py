@@ -349,6 +349,24 @@ def set_regressor(
 
         return SklearnBaseRegressor(XGBRegressor(**model_params))
 
+    # SoFR
+    elif r == "fpcr":
+        from tsml_eval.sktime_estimators.regression.sofr import FPCRegressor
+
+        return FPCRegressor(n_components=10)
+
+    elif r == "fpcr-b-spline":
+        from tsml_eval.sktime_estimators.regression.sofr import FPCRegressor
+
+        model_params = {
+            "smooth": "B-spline",
+            "order": 4,
+            "n_components": 10,
+            "n_basis": 10,
+        }
+
+        return FPCRegressor(**model_params)
+
     # invalid regressor
     else:
         raise Exception("UNKNOWN REGRESSOR ", r, " in set_regressor")
