@@ -52,9 +52,6 @@ class FPCATransformer(BaseTransformer):
         self.n_instances_, self.n_dims_, self.series_length_ = X.shape
         X_t = np.zeros((self.n_instances_, self.n_dims_, self.n_components))
 
-        # create the inputs (N x L X, transformer, dimension)
-        inputs = []
-
         for j in range(self.n_dims_):
             # represent the time X in functional form
             fd = FDataGrid(X[:, j, :], list(range(self.series_length_)))
@@ -66,20 +63,10 @@ class FPCATransformer(BaseTransformer):
                 basis = BSpline(n_basis=self.n_basis, order=self.order)
                 fd = fd.to_basis(basis)
 
-            inputs.append((fd, copy.deepcopy(self._transformer), j))
+            individual_transformer = copy.deepcopy(self._transformer)
 
-        # todo: multithreading
-        outputs = []
-        for k in range(len(inputs)):
-            outputs.append(
-                (inputs[k][1].fit_transform(inputs[k][0]), inputs[k][1], inputs[k][2])
-            )
-
-        # expand the outputs
-        for i in range(len(outputs)):
-            dim = outputs[i][2]
-            self.transformers.append(outputs[i][1])
-            X_t[:, dim, :] = outputs[i][0]
+            X_t[:, j, :] = individual_transformer.fit_transform(fd)
+            self.transformers.append(individual_transformer)
 
         return X_t
 
@@ -94,10 +81,8 @@ class FPCATransformer(BaseTransformer):
         self.n_instances_, self.n_dims_, self.series_length_ = X.shape
         X_t = np.zeros((self.n_instances_, self.n_dims_, self.n_components))
 
-        # create the inputs
-        inputs = []
         for j in range(self.n_dims_):
-            transformer = self.transformers[j]
+            individual_transformer = self.transformers[j]
 
             # represent the time X in functional form
             fd = FDataGrid(X[:, j, :], list(range(self.series_length_)))
@@ -109,18 +94,6 @@ class FPCATransformer(BaseTransformer):
                 basis = BSpline(n_basis=self.n_basis, order=self.order)
                 fd = fd.to_basis(basis)
 
-            inputs.append((fd, transformer, j))
-
-        # todo: multithreading
-        outputs = []
-        for k in range(len(inputs)):
-            outputs.append(
-                (inputs[k][1].transform(inputs[k][0]), inputs[k][1], inputs[k][2])
-            )
-
-        # expands the outputs
-        for i in range(len(outputs)):
-            dim = outputs[i][2]
-            X_t[:, dim, :] = outputs[i][0]
+            X_t[:, j, :] = individual_transformer.transform(fd)
 
         return X_t
