@@ -38,7 +38,7 @@ Your environment should be listed now when you use the following command:
 
 >conda info --envs
 
-### 3 Install package and dependencies
+### 3. Install package and dependencies
 
 >pip install tensorflow==2.11.0 tensorflow_probability==0.19.0
 
@@ -82,7 +82,7 @@ have a file for each input parameter
 Code/ClassificationInputFiles
 Code/ClusteringInputFiles
 
-> parallel -delimiter "\n" --verbose --jobs 4 --memfree 10G --arg-file SubmissionFiles/data_dir.txt --arg-file SubmissionFiles/results_dir.txt --arg-file SubmissionFiles/classifiers.txt --arg-file SubmissionFiles/datasets.txt --arg-file SubmissionFiles/resamples.txt --arg-file SubmissionFiles/generate_train_files.txt --arg-file SubmissionFiles/predefined_folds.txt python Code/tsml_eval/experiments/classification_experiments.py > output.txt
+> parallel --delimiter "\n" --verbose --jobs 4 --memfree 10G --arg-file SubmissionFiles/data_dir.txt --arg-file SubmissionFiles/results_dir.txt --arg-file SubmissionFiles/classifiers.txt --arg-file SubmissionFiles/datasets.txt --arg-file SubmissionFiles/resamples.txt --arg-file SubmissionFiles/generate_train_files.txt --arg-file SubmissionFiles/predefined_folds.txt python Code/tsml_eval/experiments/classification_experiments.py > output.txt
 
 More information on the parallel command can be found at https://www.gnu.org/software/parallel/.
 

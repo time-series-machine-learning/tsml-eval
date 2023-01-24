@@ -70,7 +70,7 @@ __Tip__: instead of running the module, source, and conda activate commands ever
 
 Note that this ALIAS_NAME has to be run after the interactive.
 
-### 5 Install package and dependencies
+### 5. Install package and dependencies
 
 Install the package and required dependencies. The following are examples for a few packages and scenarios.
 
@@ -80,7 +80,7 @@ After installation, the installed packages can be viewed with:
 
 >conda list
 
-#### 5.1 tsml-eval CPU
+#### 5.1. tsml-eval CPU
 
 Move to the package directory and run:
 
@@ -98,7 +98,7 @@ If any a dependency install is "Killed", it is likely the interactive session ha
 
 >pip install PACKAGE_NAME --no-cache-dir
 
-#### 5.1 tsml-eval GPU
+#### 5.1. tsml-eval GPU
 
 For GPU jobs we require two additional ADA modules, CUDA and cuDNN:
 
