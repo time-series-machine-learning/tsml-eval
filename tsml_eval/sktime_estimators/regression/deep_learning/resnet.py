@@ -64,7 +64,7 @@ class ResNetRegressor(BaseDeepRegressor, ResNetNetwork):
         metrics=None,
         batch_size=16,
         random_state=None,
-        activation="sigmoid",
+        activation="linear",
         use_bias=True,
         optimizer=None,
     ):
