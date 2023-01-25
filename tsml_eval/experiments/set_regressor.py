@@ -55,12 +55,10 @@ def set_regressor(
         from sktime.regression.deep_learning.tapnet import TapNetRegressor
 
         return TapNetRegressor(random_state=random_state)
-    # resnet implementation is we think buggy do not use yet
-    #    elif r == "resnet" or r == "resnetregressor":
-    #        from tsml_eval.sktime_estimators.regression.deep_learning import
-    #        ResNetRegressor
-    #
-    #        return ResNetRegressor(random_state=random_state)
+    elif r == "resnet" or r == "resnetregressor":
+        from tsml_eval.sktime_estimators.regression.deep_learning import ResNetRegressor
+
+        return ResNetRegressor(random_state=random_state)
 
     elif r == "inception" or r == "inceptiontime" or r == "inceptiontimeregressor":
         from tsml_eval.sktime_estimators.regression.deep_learning import (
