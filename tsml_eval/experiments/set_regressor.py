@@ -69,6 +69,12 @@ def set_regressor(
 
         return InceptionTimeRegressor(random_state=random_state)
 
+    elif r == "singleinception" or r == "individualinception":
+        from tsml_eval.sktime_estimators.regression.deep_learning import (
+            IndividualInceptionTimeRegressor,
+        )
+
+        return IndividualInceptionTimeRegressor(random_state=random_state)
     elif r == "fcnn" or r == "fcn" or r == "fcnnregressor":
         from tsml_eval.sktime_estimators.regression.deep_learning import FCNRegressor
 
