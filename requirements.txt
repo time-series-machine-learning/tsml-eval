@@ -1,6 +1,6 @@
-sktime==0.14.1
 convst==0.2.4
-wildboar==1.1.1
 networkx==2.8.8
 requests==2.28.1
+sktime==0.14.1
 torch==1.13.0
+wildboar==1.1.1

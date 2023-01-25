@@ -6,6 +6,10 @@ __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 import numpy as np
 from sklearn.pipeline import make_pipeline
 
+from tsml_eval.sktime_estimators.regression.column_ensemble import (
+    ColumnEnsembleRegressor,
+)
+
 
 def set_regressor(
     regressor_name,
@@ -164,6 +168,13 @@ def set_regressor(
             random_state=random_state,
             n_jobs=n_jobs,
         )
+    elif r == "tsf-i":
+        from sktime.regression.interval_based import TimeSeriesForestRegressor
+
+        estimators = [
+            ("tsf", TimeSeriesForestRegressor(random_state=random_state), None)
+        ]
+        return ColumnEnsembleRegressor(estimators)
 
     # Other
     elif r == "dummy" or r == "dummyregressor":
@@ -179,6 +190,18 @@ def set_regressor(
         # raise ValueError(f" Regressor {name} is not avaiable")
 
     # regression package regressors
+    elif r == "fresh-prince" or r == "freshprince":
+        from tsml_eval.sktime_estimators.regression.featured_based import (
+            FreshPRINCERegressor,
+        )
+
+        return FreshPRINCERegressor(
+            n_estimators=500,
+            random_state=random_state,
+            save_transformed_data=build_train_file,
+            n_jobs=n_jobs,
+        )
+
     elif r == "drcif":
         from tsml_eval.sktime_estimators.regression.interval_based import DrCIF
 
