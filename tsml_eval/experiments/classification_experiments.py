@@ -73,46 +73,6 @@ def run_experiment(args, overwrite=False):
                 build_train_file=train_fold,
                 predefined_resample=predefined_resample,
             )
-
-    if args is not None:  # from file version  #  and args[0] == "from_file":
-        from tsml_eval._wip.estimator_from_file.hivecote import FromFileHIVECOTE
-
-        file_paths = [
-            "C:/Users/zrc22qwu/PycharmProjects/tsml-eval/tsml_eval/_wip/estimator_from_file/tests/test_files/Arsenal/Predictions/",
-            "C:/Users/zrc22qwu/PycharmProjects/tsml-eval/tsml_eval/_wip/estimator_from_file/tests/test_files/DrCIF-500/Predictions/",
-            "C:/Users/zrc22qwu/PycharmProjects/tsml-eval/tsml_eval/_wip/estimator_from_file/tests/test_files/STC-2Hour/Predictions/",
-            "C:/Users/zrc22qwu/PycharmProjects/tsml-eval/tsml_eval/_wip/estimator_from_file/tests/test_files/TDE/Predictions/",
-        ]
-        data_dir = "C:/Users/zrc22qwu/Documents/Univariate2018_ts/Univariate_ts"  # "/home/ajb/Data/"
-        results_dir = "C:/Users/zrc22qwu/PycharmProjects/tsml-eval/tsml_eval/_wip/estimator_from_file/tests/results/"
-        cls_name = "HC2"
-
-        f = open(
-            "C:/Users/zrc22qwu/PycharmProjects/tsml-eval/tsml_eval/_wip/estimator_from_file/tests/test_files/UnivariateDatasets.txt",
-            "r",
-        )
-        lines = f.readlines()
-        for line in lines:
-            dataset = line.replace("\n", "")
-            print(f" Local Run of {cls_name} on dataset {dataset}")
-            for resample in range(0, 30):
-                print(resample)
-                classifier = FromFileHIVECOTE(
-                    file_paths=[s + dataset + "/" for s in file_paths],
-                    random_state=resample,
-                    tune_alpha=False,
-                )  # set_classifier("fromfile")
-                load_and_run_classification_experiment(
-                    overwrite=False,
-                    problem_path=data_dir,
-                    results_path=results_dir,
-                    classifier_name=cls_name,
-                    classifier=classifier,
-                    dataset=dataset,
-                    resample_id=resample,
-                    predefined_resample=True,
-                )
-
     # local run (no args)
     else:
         # These are example parameters, change as required for local runs
