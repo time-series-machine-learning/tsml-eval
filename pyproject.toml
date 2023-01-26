@@ -26,13 +26,14 @@ classifiers = [
     "Programming Language :: Python",
 ]
 dependencies = [
-    "sktime>=0.14.0",
+    "sktime>=0.15.0",
+    "sklearn",
     "convst",
     "wildboar",
     "stumpy",
+    "xgboost",
     "networkx",
     "requests",
-    "torch",
 ]
 
 [project.optional-dependencies]
@@ -52,6 +53,12 @@ docs = [
     "numpydoc",
     "jupyter",
     "furo",
+]
+
+deep_learning = [
+    "tensorflow",
+    "tensorflow-probability",
+    "torch",
 ]
 
 [project.urls]

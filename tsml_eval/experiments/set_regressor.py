@@ -54,10 +54,34 @@ def set_regressor(
         from sktime.regression.deep_learning.cnn import CNNRegressor
 
         return CNNRegressor(random_state=random_state)
+
     elif r == "tapnet" or r == "tapnetregressor":
         from sktime.regression.deep_learning.tapnet import TapNetRegressor
 
         return TapNetRegressor(random_state=random_state)
+    elif r == "resnet" or r == "resnetregressor":
+        from tsml_eval.sktime_estimators.regression.deep_learning import ResNetRegressor
+
+        return ResNetRegressor(random_state=random_state)
+
+    elif r == "inception" or r == "inceptiontime" or r == "inceptiontimeregressor":
+        from tsml_eval.sktime_estimators.regression.deep_learning import (
+            InceptionTimeRegressor,
+        )
+
+        return InceptionTimeRegressor(random_state=random_state)
+
+    elif r == "singleinception" or r == "individualinception":
+        from tsml_eval.sktime_estimators.regression.deep_learning import (
+            IndividualInceptionTimeRegressor,
+        )
+
+        return IndividualInceptionTimeRegressor(random_state=random_state)
+    elif r == "fcnn" or r == "fcn" or r == "fcnnregressor":
+        from tsml_eval.sktime_estimators.regression.deep_learning import FCNRegressor
+
+        return FCNRegressor(random_state=random_state)
+
     elif r == "sktime-1nn-ed":
         from sktime.regression.distance_based import KNeighborsTimeSeriesRegressor
 
