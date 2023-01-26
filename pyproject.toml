@@ -34,6 +34,7 @@ dependencies = [
     "xgboost",
     "networkx",
     "requests",
+    "gpustat",
 ]
 
 [project.optional-dependencies]
@@ -58,7 +59,7 @@ docs = [
 deep_learning = [
     "tensorflow",
     "tensorflow-probability",
-    "torch",
+    "torch>=1.13.1",
 ]
 
 [project.urls]

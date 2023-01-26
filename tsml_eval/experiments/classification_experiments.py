@@ -19,7 +19,7 @@ import numba
 
 from tsml_eval.experiments import load_and_run_classification_experiment
 from tsml_eval.experiments.set_classifier import set_classifier
-from tsml_eval.utils.experiments import _results_present
+from tsml_eval.utils.experiments import _results_present, assign_gpu
 
 
 def run_experiment(args, overwrite=False):
@@ -30,6 +30,14 @@ def run_experiment(args, overwrite=False):
     generated in Java.
     """
     numba.set_num_threads(1)
+
+    try:
+        gpu = assign_gpu()
+        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+        os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
+        print(f"Assigned GPU {gpu} to process.")
+    except Exception:
+        print("Unable to assign GPU to process.")
 
     # cluster run (with args), this is fragile
     if args is not None and args.__len__() > 1:
