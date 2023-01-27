@@ -31,13 +31,14 @@ def run_experiment(args, overwrite=False):
     """
     numba.set_num_threads(1)
 
-    try:
-        gpu = assign_gpu()
-        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-        os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
-        print(f"Assigned GPU {gpu} to process.")
-    except Exception:
-        print("Unable to assign GPU to process.")
+    if os.environ.get("CUDA_VISIBLE_DEVICES") is None:
+        try:
+            gpu = assign_gpu()
+            os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+            os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
+            print(f"Assigned GPU {gpu} to process.")
+        except Exception:
+            print("Unable to assign GPU to process.")
 
     # cluster run (with args), this is fragile
     if args.__len__() > 1:  # cluster run, this is fragile
