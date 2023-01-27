@@ -83,14 +83,18 @@ def run_experiment(args, overwrite=False):
         resample = 0
         train_fold = False
         predefined_resample = False
-
+        jobs = 90
         regressor = set_regressor(
             regressor_name,
             random_state=resample,
             build_train_file=train_fold,
-            n_jobs=90,
+            n_jobs=jobs,
         )
         print(f"Local Run of {regressor_name} ({regressor.__class__.__name__}).")
+        print(
+            f"Dataset {dataset} resample {resample} n_jobs {jobs} verify "
+            f"{regressor.n_jobs}."
+        )
 
         load_and_run_regression_experiment(
             data_dir,
