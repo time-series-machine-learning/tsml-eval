@@ -19,7 +19,7 @@ import numba
 
 from tsml_eval.experiments import load_and_run_regression_experiment
 from tsml_eval.experiments.set_regressor import set_regressor
-from tsml_eval.utils.experiments import _results_present, assign_gpu
+from tsml_eval.utils.experiments import _results_present
 
 
 def run_experiment(args, overwrite=False):
@@ -30,14 +30,6 @@ def run_experiment(args, overwrite=False):
     generated in Java.
     """
     numba.set_num_threads(1)
-
-    try:
-        gpu = assign_gpu()
-        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-        os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
-        print(f"Assigned GPU {gpu} to process.")
-    except Exception:
-        print("Unable to assign GPU to process.")
 
     # cluster run (with args), this is fragile
     if args.__len__() > 1:  # cluster run, this is fragile
@@ -84,15 +76,19 @@ def run_experiment(args, overwrite=False):
         # These are example parameters, change as required for local runs
         # Do not include paths to your local directories here in PRs
         # If threading is required, see the threaded version of this file
-        data_dir = "../"
-        results_dir = "../"
-        regressor_name = "LR"
-        dataset = "Covid3Month"
+        data_dir = "/home/ajb/Data/"
+        results_dir = "./home/ajb/Results Working Area/Regression/"
+        regressor_name = "freshprince"
+        dataset = "AustraliaRainfall"
         resample = 0
         train_fold = False
         predefined_resample = False
+
         regressor = set_regressor(
-            regressor_name, random_state=resample, build_train_file=train_fold
+            regressor_name,
+            random_state=resample,
+            build_train_file=train_fold,
+            n_jobs=90,
         )
         print(f"Local Run of {regressor_name} ({regressor.__class__.__name__}).")
 
@@ -113,4 +109,4 @@ if __name__ == "__main__":
     """
     Example simple usage, with arguments input via script or hard coded for testing.
     """
-    run_experiment(sys.argv)
+    run_experiment(sys.argv, overwrite=True)
