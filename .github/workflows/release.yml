@@ -74,14 +74,6 @@ jobs:
       - name: Tests
         run: python -m pytest
 
-  test_windows_wheels:
-    needs: build_project
-    name: Test wheels on ${{ matrix.os }} with ${{ matrix.python-version }}
-    runs-on: windows-latest
-
-    strategy:
-      matrix:
-
   upload_wheels:
     needs: test_wheels
     runs-on: ubuntu-latest
