@@ -82,7 +82,7 @@ include = ["tsml_eval"]
 [tool.check-manifest]
 ignore = [
     "ada_uea_experiments/**",
-    "notebooks/**",
+    "examples/**",
     "results/**",
     "docs/**",
     "requirements.txt",
@@ -94,7 +94,7 @@ max-line-length = 88
 extend-ignore = ["E203"]
 exclude = [
     "tsml_eval/_wip/*",
-    "notebooks/_wip/*"
+    "examples/_wip/*"
 ]
 per-file-ignores = [
     "tsml_eval/experiments/classification_experiments.py:E402,T201",
@@ -107,9 +107,9 @@ per-file-ignores = [
 ]
 
 [tool.nbqa.exclude]
-black = "^docs/notebooks/|^notebooks/_wip/"
-flake8 = "^docs/notebooks/|^notebooks/_wip/"
-isort = "^docs/notebooks/|^notebooks/_wip/"
+black = "^docs/examples/|^examples/_wip/"
+flake8 = "^docs/examples/|^examples/_wip/"
+isort = "^docs/examples/|^examples/_wip/"
 
 [tool.pytest.ini_options]
 addopts = '''
