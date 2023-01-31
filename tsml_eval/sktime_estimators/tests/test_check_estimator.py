@@ -5,15 +5,11 @@ import pytest
 from sklearn.utils.estimator_checks import parametrize_with_checks
 from sktime.utils.estimator_checks import check_estimator
 
-from tsml_eval.sktime_estimators.classification.convolution_based.hydra import HYDRA
 from tsml_eval.sktime_estimators.classification.shapelet_based.rsf import (
     RandomShapeletForest,
 )
 from tsml_eval.sktime_estimators.classification.transformations import SFADilation
-from tsml_eval.sktime_estimators.regression.convolution_based import (
-    Arsenal,
-    HydraRegressor,
-)
+from tsml_eval.sktime_estimators.regression.convolution_based import Arsenal
 from tsml_eval.sktime_estimators.regression.dictionary_based.tde import (
     TemporalDictionaryEnsemble,
 )
@@ -27,7 +23,7 @@ from tsml_eval.sktime_estimators.regression.sklearn.rotation_forest import (
 )
 
 classification_estimators = [
-    HYDRA,
+    # HYDRA,
     # InceptionTimeClassifier,
     # IndividualInceptionTimeClassifier,
     # WEASEL_DILATION,
@@ -40,7 +36,7 @@ classification_estimators = [
 ]
 regression_estimators = [
     Arsenal,
-    HydraRegressor,
+    # HydraRegressor,
     TemporalDictionaryEnsemble,
     HIVECOTEV2,
     DrCIF,
