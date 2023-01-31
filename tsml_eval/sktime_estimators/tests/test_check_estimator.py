@@ -6,16 +6,6 @@ from sklearn.utils.estimator_checks import parametrize_with_checks
 from sktime.utils.estimator_checks import check_estimator
 
 from tsml_eval.sktime_estimators.classification.convolution_based.hydra import HYDRA
-
-# from tsml_eval.sktime_estimators.classification.deep_learning.inception_time import (
-#    InceptionTimeClassifier,
-#    IndividualInceptionTimeClassifier,
-# )
-from tsml_eval.sktime_estimators.classification.distance_based.mpdist import MPDist
-from tsml_eval.sktime_estimators.classification.shapelet_based.rdst import (
-    RDST,
-    RDSTEnsemble,
-)
 from tsml_eval.sktime_estimators.classification.shapelet_based.rsf import (
     RandomShapeletForest,
 )
@@ -27,10 +17,6 @@ from tsml_eval.sktime_estimators.regression.convolution_based import (
 from tsml_eval.sktime_estimators.regression.dictionary_based.tde import (
     TemporalDictionaryEnsemble,
 )
-
-# from tsml_eval.sktime_estimators.regression.featured_based.fresh_prince import (
-#    FreshPRINCERegressor,
-# )
 from tsml_eval.sktime_estimators.regression.hybrid.hivecote_v2 import HIVECOTEV2
 from tsml_eval.sktime_estimators.regression.interval_based.drcif import DrCIF
 from tsml_eval.sktime_estimators.regression.shapelet_based.str import (
@@ -46,9 +32,9 @@ classification_estimators = [
     # IndividualInceptionTimeClassifier,
     # WEASEL_DILATION,
     # MUSE_DILATION,
-    MPDist,
-    RDST,
-    RDSTEnsemble,
+    # MPDist,
+    # RDST,
+    # RDSTEnsemble,
     RandomShapeletForest,
     SFADilation,
 ]
