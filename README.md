@@ -4,6 +4,7 @@
 [![docs-main](https://img.shields.io/readthedocs/tsml-eval/latest?logo=readthedocs&label=docs%20%28main%29)](https://tsml-eval.readthedocs.io/en/latest/)
 [![codecov](https://img.shields.io/codecov/c/github/time-series-machine-learning/tsml-eval?label=codecov&logo=codecov)](https://codecov.io/gh/time-series-machine-learning/tsml-eval)
 [![pypi](https://img.shields.io/pypi/v/tsml-eval?logo=python)](https://pypi.org/project/tsml-eval/)
+[![conda](https://img.shields.io/conda/vn/conda-forge/tsml-eval?logo=anaconda)]()
 [![python-versions](https://img.shields.io/pypi/pyversions/tsml-eval?logo=python)](https://www.python.org/)
 [![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![license](https://img.shields.io/badge/license-BSD%203--Clause-green?logo=style)](https://github.com/time-series-machine-learning/tsml-eval/blob/main/LICENSE.txt)
