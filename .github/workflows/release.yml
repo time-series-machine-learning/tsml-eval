@@ -1,0 +1,99 @@
+name: Release
+
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  build_project:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Build project
+        run: |
+          python -m pip install build
+          python -m build
+
+      - name: Store built files
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist
+          path: dist/*
+
+  test_wheels:
+    needs: build_project
+    name: Test wheels on ${{ matrix.os }} with ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest]
+        python-version: ['3.8', '3.9', '3.10']
+        include:
+          - os: windows-latest
+            python: 38
+            python-version: '3.8'
+            bitness: 64
+            platform_id: win_amd64
+          - os: windows-latest
+            python: 39
+            python-version: '3.9'
+            bitness: 64
+            platform_id: win_amd64
+          - os: windows-latest
+            python: 310
+            python-version: '3.10'
+            bitness: 64
+            platform_id: win_amd64
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: dist
+          path: dist
+
+      - name: Wheel filename
+        run: echo "WHEELNAME=$(ls ./wheelhouse/tsml-eval-*-none-any.whl)" >> $GITHUB_ENV
+
+      - name: Install
+        run: python -m pip install "${{ env.WHEELNAME }}[dev]"
+
+      - name: Tests
+        run: python -m pytest
+
+  test_windows_wheels:
+    needs: build_project
+    name: Test wheels on ${{ matrix.os }} with ${{ matrix.python-version }}
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+
+  upload_wheels:
+    needs: test_wheels
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: dist
+          path: dist
+
+      - name: Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.TEST_PYPI_TOKEN }}
+          repository_url: https://test.pypi.org/legacy/
