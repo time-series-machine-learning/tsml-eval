@@ -15,15 +15,22 @@ requires-python = ">=3.8,<3.11"
 keywords = [
     "data-science",
     "machine-learning",
-    "data-mining",
     "time-series",
-    "classification",
-    "regression",
-    "clustering",
+    "evaluation",
+    "benchmarking",
 ]
 classifiers = [
+    "Intended Audience :: Science/Research",
     "License :: OSI Approved :: BSD License",
+    "Topic :: Scientific/Engineering",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Operating System :: MacOS",
     "Programming Language :: Python",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
 ]
 dependencies = [
     "sktime>=0.15.0",

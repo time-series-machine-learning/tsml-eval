@@ -2,7 +2,7 @@ name: Cancel
 
 on:
   workflow_run:
-    workflows: ["Install"]
+    workflows: ["Tests"]
     types:
       - requested
 
