@@ -74,7 +74,7 @@ jobs:
 
       - if: matrix.os == windows-latest
         name: Windows install
-        run: python -m pip install "${{ env:WHEELNAME }}[dev,deep_learning]"
+        run: python -m pip install "${env:WHEELNAME}[dev,deep_learning]"
       - if: matrix.os != windows-latest
         name: Unix install
         run: python -m pip install "${{ env.WHEELNAME }}[dev,deep_learning]"
