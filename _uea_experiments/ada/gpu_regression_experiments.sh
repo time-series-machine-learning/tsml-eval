@@ -124,7 +124,7 @@ export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/gpfs/home/${username}/.conda/envs/${en
 
 # Input args to the default regression_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/regression_experiments.py
-python -u ${script_file_path} ${data_dir} ${results_dir} ${regressor} ${dataset} $((\$SLURM_ARRAY_TASK_ID-1)) ${generate_train_files} ${predefined_folds}"  > generatedFileGPU.sub
+python -u ${script_file_path} ${data_dir} ${results_dir} ${regressor} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_train_files} ${predefined_folds}"  > generatedFileGPU.sub
 
 echo ${count} ${regressor}/${dataset}
 

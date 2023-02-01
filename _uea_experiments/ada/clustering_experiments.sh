@@ -115,7 +115,7 @@ source activate $env_name
 
 # Input args to the default clustering_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/clustering_experiments.py
-python -u ${script_file_path} ${data_dir} ${results_dir} ${clusterer} ${dataset} $((\$SLURM_ARRAY_TASK_ID-1)) ${generate_test_files} ${predefined_folds}"  > generatedFile.sub
+python -u ${script_file_path} ${data_dir} ${results_dir} ${clusterer} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_test_files} ${predefined_folds}"  > generatedFile.sub
 
 echo ${count} ${clusterer}/${dataset}
 

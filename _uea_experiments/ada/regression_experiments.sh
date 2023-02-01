@@ -115,7 +115,7 @@ source activate $env_name
 
 # Input args to the default regression_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/regression_experiments.py
-python -u ${script_file_path} ${data_dir} ${results_dir} ${regressor} ${dataset} $((\$SLURM_ARRAY_TASK_ID-1)) ${generate_train_files} ${predefined_folds}"  > generatedFile.sub
+python -u ${script_file_path} ${data_dir} ${results_dir} ${regressor} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_train_files} ${predefined_folds}"  > generatedFile.sub
 
 echo ${count} ${regressor}/${dataset}
 
