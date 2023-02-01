@@ -80,12 +80,14 @@ include = ["tsml_eval"]
 
 [tool.check-manifest]
 ignore = [
-    "ada_uea_experiments/**",
+    "_uea_experiments/**",
     "examples/**",
     "results/**",
     "docs/**",
     "requirements.txt",
     "*.yaml",
+    "*.yml",
+    ".coveragerc",
 ]
 
 [tool.flake8]
