@@ -3,4 +3,4 @@
 Bakeoff
 =======
 
-todo: bakeoff!
+todo: classification bakeoff!
