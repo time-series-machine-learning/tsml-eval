@@ -30,7 +30,7 @@ def test_run_classification_experiment():
         result_path,
         classifier,
         dataset,
-        "1",
+        "0",
         "True",
         "False",
     ]

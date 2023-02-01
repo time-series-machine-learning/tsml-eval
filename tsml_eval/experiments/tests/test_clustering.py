@@ -30,7 +30,7 @@ def test_run_clustering_experiment():
         result_path,
         clusterer,
         dataset,
-        "1",
+        "0",
     ]
     run_experiment(args, overwrite=True)
 
