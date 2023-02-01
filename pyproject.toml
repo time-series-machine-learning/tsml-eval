@@ -62,7 +62,6 @@ docs = [
     "jupyter",
     "furo",
 ]
-
 deep_learning = [
     "tensorflow",
     "tensorflow-probability",
