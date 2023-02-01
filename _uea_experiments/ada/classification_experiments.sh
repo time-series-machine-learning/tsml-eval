@@ -117,7 +117,7 @@ source activate $env_name
 
 # Input args to the default classification_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/classification_experiments.py
-python -u ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} \$SLURM_ARRAY_TASK_ID ${generate_train_files} ${predefined_folds}"  > generatedFile.sub
+python -u ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} $((\$SLURM_ARRAY_TASK_ID-1)) ${generate_train_files} ${predefined_folds}"  > generatedFile.sub
 
 echo ${count} ${classifier}/${dataset}
 
