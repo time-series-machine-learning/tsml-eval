@@ -76,13 +76,21 @@ i.e. to run DrCIF on ItalyPowerDemand resample 0 with 6 threads, something simil
 
 To run many single threaded experiments in parallel you can use the GNU parallel tool.
 
-organisation:
-code in Code directory
-have a file for each input parameter
-Code/ClassificationInputFiles
-Code/ClusteringInputFiles
+> parallel --delimiter "\n" --verbose --jobs 90% --memfree 30G --arg-file SubmissionFiles/data_dir.txt --arg-file SubmissionFiles/results_dir.txt --arg-file SubmissionFiles/classifiers.txt --arg-file SubmissionFiles/datasets.txt --arg-file SubmissionFiles/resamples.txt --arg-file SubmissionFiles/generate_train_files.txt --arg-file SubmissionFiles/predefined_folds.txt python Code/tsml_eval/experiments/classification_experiments.py
 
-> parallel --delimiter "\n" --verbose --jobs 90% --memfree 30G --arg-file SubmissionFiles/data_dir.txt --arg-file SubmissionFiles/results_dir.txt --arg-file SubmissionFiles/classifiers.txt --arg-file SubmissionFiles/datasets.txt --arg-file SubmissionFiles/resamples.txt --arg-file SubmissionFiles/generate_train_files.txt --arg-file SubmissionFiles/predefined_folds.txt python Code/tsml_eval/experiments/classification_experiments.py > output.txt
+A file containing the different argument values to loop through should be stored in text files i.e.
+- data_dir.txt
+- results_dir.txt
+- classifiers.txt
+- datasets.txt
+- resamples.txt
+- generate_train_files.txt
+- predefined_folds.txt
+
+To run 5 resamples, resamples.txt would have 5 lines with the resample numbers (i.e. 0, 1, 2, 3, 4) on each line.
+
+At the end of the command, the python file to run is specified i.e.
+>python Code/tsml_eval/experiments/classification_experiments.py
 
 More information on the parallel command can be found at https://www.gnu.org/software/parallel/.
 

@@ -21,7 +21,7 @@ username="ajb"
 mail="NONE"
 mailto=$username"@uea.ac.uk"
 
-# MB for jobs, max is maybe 64000 before you need to use huge memory queue. Do not use more than you need
+# MB for jobs, increase incrementally and try not to use more than you need. If you need hundreds of GB consider the huge memory queue.
 max_memory=8000
 
 # Max allowable is 7 days - 168 hours
