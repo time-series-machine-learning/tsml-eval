@@ -30,8 +30,7 @@ def run_experiment(args, overwrite=False):
         results_dir = args[2]
         classifier_name = args[3]
         dataset = args[4]
-        # ADA starts indexing its jobs at 1, so we need to subtract 1
-        resample = int(args[5]) - 1
+        resample = int(args[5])
         n_jobs = int(sys.argv[6])
 
         if len(sys.argv) > 7:
