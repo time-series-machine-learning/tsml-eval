@@ -1,4 +1,4 @@
-[![github-actions-release](https://img.shields.io/github/actions/workflow/status/time-series-machine-learning/tsml-eval/release.yml?event=release&logo=github)](https://github.com/time-series-machine-learning/tsml-eval/actions/workflows/release.yml)
+[![github-actions-release](https://img.shields.io/github/actions/workflow/status/time-series-machine-learning/tsml-eval/release.yml?event=release&logo=github&label=build%20%28release%29)](https://github.com/time-series-machine-learning/tsml-eval/actions/workflows/release.yml)
 [![docs-release](https://img.shields.io/readthedocs/tsml-eval/stable?logo=readthedocs&label=docs%20%28stable%29)](https://tsml-eval.readthedocs.io/en/stable/)
 [![github-actions-main](https://img.shields.io/github/actions/workflow/status/time-series-machine-learning/tsml-eval/tests.yml?logo=github&branch=main&label=build%20%28main%29)](https://github.com/time-series-machine-learning/tsml-eval/actions/workflows/tests.yml)
 [![docs-main](https://img.shields.io/readthedocs/tsml-eval/latest?logo=readthedocs&label=docs%20%28latest%29)](https://tsml-eval.readthedocs.io/en/latest/)
