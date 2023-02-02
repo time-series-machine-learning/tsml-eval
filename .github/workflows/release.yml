@@ -6,7 +6,22 @@ on:
       - published
 
 jobs:
+  check_manifest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - uses: pre-commit/action@v3.0.0
+        with:
+          extra_args: check-manifest --hook-stage manual
+
   build_project:
+    needs: check_manifest
     runs-on: ubuntu-latest
 
     steps:
