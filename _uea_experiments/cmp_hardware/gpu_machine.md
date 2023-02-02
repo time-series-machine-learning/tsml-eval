@@ -10,7 +10,7 @@ You need to be on a UEA network machine or have the VPN running to connect to th
 
 The recommended way of connecting to the GPU server is using Putty as a command-line interface and WinSCP for file management.
 
-The tsml research group has a shared storage space on the GPU server under /storage/tsml/ where you can store and read datasets from.
+The tsml research group has a shared storage space on the GPU server under /data/tsml/ where you can store and read datasets from.
 
 ## Installing on the GPU server
 
