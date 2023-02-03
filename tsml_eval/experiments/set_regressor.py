@@ -367,6 +367,16 @@ def set_regressor(
             "n_jobs": n_jobs,
             "random_state": random_state,
         }
+    elif r == "rf500":
+        from sklearn.ensemble import RandomForestRegressor
+
+        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+
+        model_params = {
+            "n_estimators": 500,
+            "n_jobs": n_jobs,
+            "random_state": random_state,
+        }
 
         return SklearnBaseRegressor(RandomForestRegressor(**model_params))
 
