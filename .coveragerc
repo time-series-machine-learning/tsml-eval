@@ -1,0 +1,6 @@
+[run]
+branch = True
+source = tsml_eval
+parallel = True
+omit =
+    */tsml_eval/_wip/*
