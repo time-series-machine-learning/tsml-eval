@@ -1,0 +1,26 @@
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+        # If true PRs will always pass and reports are just for information
+        informational: true
+    patch:
+      default:
+        target: auto
+        threshold: 1%
+        # If true PRs will always pass and reports are just for information
+        informational: true
+
+# post comment on PR
+comment: false
+
+# ignore files
+ignore:
+  - ".github/"
+  - "ada_uea_experiments/"
+  - "docs/"
+  - "examples/"
+  - "results/"
+  - "tsml_eval/_wip/"

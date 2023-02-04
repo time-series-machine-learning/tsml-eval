@@ -199,8 +199,9 @@ class DrCIF(BaseRegressor):
         start_time = time.time()
         train_time = 0
 
-        if self.base_estimator.lower() == "dtr":
-            self._base_estimator = DecisionTreeRegressor(criterion="squared_error")
+        if isinstance(self.base_estimator, str):
+            if self.base_estimator.lower() == "dtr":
+                self._base_estimator = DecisionTreeRegressor(criterion="squared_error")
         elif isinstance(self.base_estimator, BaseEstimator):
             self._base_estimator = self.base_estimator
         else:
