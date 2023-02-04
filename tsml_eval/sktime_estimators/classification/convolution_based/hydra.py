@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """HYDRA classifier.
+
 HYDRA: Competing convolutional kernels for fast and accurate time series classification
 By Angus Dempster, Daniel F. Schmidt, Geoffrey I. Webb
 https://arxiv.org/abs/2203.13652
@@ -9,13 +10,18 @@ __author__ = ["patrickzib", "Arik Ermshaus"]
 __all__ = ["HYDRA"]
 
 import numpy as np
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
 from sklearn.linear_model import RidgeClassifierCV
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sktime.classification.base import BaseClassifier
+from sktime.utils.validation import check_n_jobs
+from sktime.utils.validation._dependencies import _check_soft_dependencies
+
+_check_soft_dependencies("torch")
+
+import torch  # noqa: E402
+import torch.nn as nn  # noqa: E402
+import torch.nn.functional as F  # noqa: E402
 
 
 class HYDRA(BaseClassifier):
@@ -26,13 +32,18 @@ class HYDRA(BaseClassifier):
         "classifier_type": "dictionary",
     }
 
-    def __init__(self, k=8, g=64, random_state=None):
+    def __init__(self, k=8, g=64, n_jobs=1, random_state=None):
 
         self.k = k
         self.g = g
+        self.n_jobs = n_jobs
         self.random_state = random_state
+
         if isinstance(random_state, int):
             torch.manual_seed(random_state)
+
+        n_jobs = check_n_jobs(n_jobs)
+        torch.set_num_threads(n_jobs)
 
         super(HYDRA, self).__init__()
 

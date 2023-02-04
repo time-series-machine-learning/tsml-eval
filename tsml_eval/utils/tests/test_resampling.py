@@ -30,7 +30,7 @@ def test_resample_data():
     assert isinstance(X_train, pd.DataFrame)
     assert isinstance(X_test, pd.DataFrame)
     assert isinstance(y_test, np.ndarray)
-    assert isinstance(y_test, pd.np.ndarray)
+    assert isinstance(y_test, np.ndarray)
 
     assert X_train.shape == train_size
     assert X_test.shape == test_size
@@ -53,7 +53,7 @@ def test_stratified_resample_data():
     assert isinstance(X_train, pd.DataFrame)
     assert isinstance(X_test, pd.DataFrame)
     assert isinstance(y_test, np.ndarray)
-    assert isinstance(y_test, pd.np.ndarray)
+    assert isinstance(y_test, np.ndarray)
 
     assert X_train.shape == train_size
     assert X_test.shape == test_size
