@@ -16,10 +16,11 @@ os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
 import sys
 
 import numba
+import torch
 
 from tsml_eval.experiments import load_and_run_clustering_experiment
+from tsml_eval.experiments.classification_experiments import _results_present
 from tsml_eval.experiments.set_clusterer import set_clusterer
-from tsml_eval.utils.experiments import _results_present, assign_gpu
 
 
 def run_experiment(args, overwrite=False):
@@ -30,15 +31,7 @@ def run_experiment(args, overwrite=False):
     generated in Java.
     """
     numba.set_num_threads(1)
-
-    if os.environ.get("CUDA_VISIBLE_DEVICES") is None:
-        try:
-            gpu = assign_gpu()
-            os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-            os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
-            print(f"Assigned GPU {gpu} to process.")
-        except Exception:
-            print("Unable to assign GPU to process.")
+    torch.set_num_threads(1)
 
     # cluster run (with args), this is fragile
     if args.__len__() > 1:

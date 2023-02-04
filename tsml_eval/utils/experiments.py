@@ -13,12 +13,10 @@ __all__ = [
     "validate_results_file",
     "fix_broken_second_line",
     "compare_result_file_resample",
-    "assign_gpu",
 ]
 
 import os
 
-import gpustat
 import numpy as np
 import pandas as pd
 from sklearn.utils import check_random_state
@@ -843,24 +841,3 @@ def compare_result_file_resample(file_path1, file_path2):
             return False
 
     return True
-
-
-def assign_gpu():
-    """Assign a GPU to the current process.
-
-    Looks at the available Nvidia GPUs and assigns the GPU with the lowest used memory.
-
-    Returns
-    -------
-    gpu : int
-        The GPU assigned to the current process.
-    """
-    stats = gpustat.GPUStatCollection.new_query()
-    pairs = [
-        [
-            gpu.entry["index"],
-            float(gpu.entry["memory.used"]) / float(gpu.entry["memory.total"]),
-        ]
-        for gpu in stats
-    ]
-    return min(pairs, key=lambda x: x[1])[0]

@@ -16,7 +16,7 @@ import numpy as np
 from sklearn import preprocessing
 from sklearn.metrics import accuracy_score, mean_squared_error
 from sklearn.model_selection import cross_val_predict
-from sktime.datasets import load_from_tsfile_to_dataframe
+from sktime.datasets import load_from_tsfile_to_dataframe as load_ts
 
 from tsml_eval.evaluation.metrics import clustering_accuracy
 from tsml_eval.utils.experiments import (
@@ -358,7 +358,7 @@ def run_regression_experiment(
             parameter_info=second,
             mse=test_mse,
             fit_time=fit_time,
-            predict_time=test_time,
+            predict_time=-test_time,
         )
 
     if build_train_file:
@@ -736,21 +736,17 @@ def _load_data(problem_path, dataset, resample_id, predefined_resample):
     if resample_id is not None and predefined_resample:
         resample_str = "" if resample_id is None else str(resample_id)
 
-        X_train, y_train = load_from_tsfile_to_dataframe(
+        X_train, y_train = load_ts(
             f"{problem_path}/{dataset}/{dataset}{resample_str}_TRAIN.ts"
         )
-        X_test, y_test = load_from_tsfile_to_dataframe(
+        X_test, y_test = load_ts(
             f"{problem_path}/{dataset}/{dataset}{resample_str}_TEST.ts"
         )
 
         resample_data = False
     else:
-        X_train, y_train = load_from_tsfile_to_dataframe(
-            f"{problem_path}/{dataset}/{dataset}_TRAIN.ts"
-        )
-        X_test, y_test = load_from_tsfile_to_dataframe(
-            f"{problem_path}/{dataset}/{dataset}_TEST.ts"
-        )
+        X_train, y_train = load_ts(f"{problem_path}/{dataset}/{dataset}_TRAIN.ts")
+        X_test, y_test = load_ts(f"{problem_path}/{dataset}/{dataset}_TEST.ts")
 
         resample_data = True if resample_id != 0 else False
 

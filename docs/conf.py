@@ -8,27 +8,13 @@ import inspect
 import os
 import sys
 
-import tsml_eval
-
-# The version info for the project you're documenting, acts as replacement for
-# |version| and |release|, also used in various other places throughout the
-# built documents.
-
-version = tsml_eval.__version__
-release = tsml_eval.__version__
-
-github_tag = f"v{version}"
-
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-on_readthedocs = os.environ.get("READTHEDOCS") == "True"
-if not on_readthedocs:
+ON_READTHEDOCS = os.environ.get("READTHEDOCS") == "True"
+if not ON_READTHEDOCS:
     sys.path.insert(0, os.path.abspath(".."))
-else:
-    rtd_version = os.environ.get("READTHEDOCS_VERSION")
-    if rtd_version == "latest":
-        github_tag = "main"
+RTD_VERSION = os.environ.get("READTHEDOCS_VERSION", "local")
 
 
 # For the full list of built-in configuration values, see the documentation:
@@ -38,8 +24,20 @@ else:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "tsml-eval"
-copyright = "2022 - 2023, The tsml developers (BSD-3 License)"
+copyright = "2022, Matthew Middlehurst"
 author = "Matthew Middlehurst"
+
+# The version info for the project you're documenting, acts as replacement for
+# |version| and |release|, also used in various other places throughout the
+# built documents.
+# import tsml_eval  # noqa: E402
+#
+# version = tsml_estimator_evaluation.__version__
+# release = tsml_estimator_evaluation.__version__
+
+# todo
+version = "0.0.1"
+release = "0.0.1"
 
 
 # -- General configuration ---------------------------------------------------
@@ -48,9 +46,9 @@ author = "Matthew Middlehurst"
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
-    "sphinx.ext.autosectionlabel",
     "sphinx.ext.intersphinx",
     "sphinx.ext.linkcode",
+    "sphinx_gallery.load_style",
     "numpydoc",
     "nbsphinx",
     "sphinx_design",
@@ -59,47 +57,10 @@ extensions = [
 templates_path = ["_templates"]
 exclude_patterns = ["_build", ".ipynb_checkpoints", "Thumbs.db", ".DS_Store"]
 
-# auto doc/summary
-
-autodoc_default_options = {
-    "members": True,
-    "inherited-members": True,
-    "member-order": "bysource",
-}
-
-# numpydoc
-
-# see http://stackoverflow.com/q/12206334/562769
-numpydoc_show_class_members = True
 # this is needed for some reason...
 # see https://github.com/numpy/numpydoc/issues/69
-numpydoc_class_members_toctree = False
+numpydoc_show_class_members = False
 
-numpydoc_validation_checks = {"all"}
-
-# nbsphinx
-
-nbsphinx_execute = "never"
-nbsphinx_allow_errors = False
-nbsphinx_timeout = 600  # seconds, set to -1 to disable timeout
-
-current_file = "{{ env.doc2path(env.docname, base=None) }}"
-
-# add link to original notebook at the bottom and add Binder launch button
-# points to latest stable release, not main
-notebook_url = f"https://github.com/time-series-machine-learning/tsml-eval/tree/{github_tag}/{current_file}"  # noqa
-binder_url = f"https://mybinder.org/v2/gh/time-series-machine-learning/tsml-eval/{github_tag}?filepath={current_file}"  # noqa
-nbsphinx_epilog = f"""
-----
-
-Generated using nbsphinx_. The Jupyter notebook can be found here_.
-|Binder|_
-
-.. _nbsphinx: https://nbsphinx.readthedocs.io/
-.. _here: {notebook_url}
-.. |binder| image:: https://mybinder.org/badge_logo.svg
-.. _Binder: {binder_url}
-"""
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
@@ -120,7 +81,12 @@ def linkcode_resolve(domain, info):
             obj = getattr(obj, part)
 
         fn = inspect.getsourcefile(obj)
-        fn = os.path.relpath(fn, start=os.path.dirname(tsml_eval.__file__))
+        fn = os.path.relpath(
+            # fn, start=os.path.dirname(tsml_eval.__file__)
+            # todo
+            fn,
+            start=os.path.dirname(os.path.abspath(".") + "\\tsml_eval\\__init__.py"),
+        )
         source, lineno = inspect.getsourcelines(obj)
         return fn, lineno, lineno + len(source) - 1
 

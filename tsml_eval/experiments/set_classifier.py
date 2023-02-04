@@ -398,7 +398,7 @@ def set_classifier(
 
     # Deep learning based
     elif c == "cnn" or c == "cnnclassifier":
-        from sktime.classification.deep_learning import CNNClassifier
+        from sktime.classification.deep_learning.cnn import CNNClassifier
 
         return CNNClassifier(random_state=random_state)
     elif c == "fcnn" or c == "fcnclassifier":
@@ -413,14 +413,6 @@ def set_classifier(
         from sktime.classification.deep_learning.tapnet import TapNetClassifier
 
         return TapNetClassifier(random_state=random_state)
-
-    elif c == "inceptiontime" or c == "inceptiontimeclassifier":
-        from tsml_eval.sktime_estimators.classification.deep_learning.inception_time import (  # noqa; noqa
-            IndividualInceptionTimeClassifier,
-        )
-
-        return IndividualInceptionTimeClassifier(random_state=random_state)
-
     # Other
     elif c == "dummy" or c == "dummyclassifier":
         from sktime.classification.dummy import DummyClassifier
