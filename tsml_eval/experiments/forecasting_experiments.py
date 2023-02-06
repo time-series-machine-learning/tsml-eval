@@ -65,7 +65,7 @@ def run_experiment(args, overwrite=False):
                     random_state=resample,
                 ),
                 resample_id=resample,
-                regressor_name=forecaster_name,
+                forecaster_name=forecaster_name,
                 overwrite=overwrite,
             )
     # local run (no args)
@@ -76,7 +76,7 @@ def run_experiment(args, overwrite=False):
         data_dir = "../"
         results_dir = "../"
         forecaster_name = "LR"
-        dataset = "??"
+        dataset = "ShampooSales"
         resample = 0
         forecaster = set_forecaster(
             forecaster_name,
@@ -90,7 +90,7 @@ def run_experiment(args, overwrite=False):
             dataset,
             forecaster,
             resample_id=resample,
-            regressor_name=forecaster_name,
+            forecaster_name=forecaster_name,
             overwrite=overwrite,
         )
 

@@ -9,6 +9,7 @@ __all__ = [
     "write_classification_results",
     "write_regression_results",
     "write_clustering_results",
+    "write_forecasting_results",
     "write_results_to_tsml_format",
     "validate_results_file",
     "fix_broken_second_line",
@@ -490,6 +491,94 @@ def write_clustering_results(
         dataset_name,
         output_path,
         predicted_probabilities=cluster_probabilities,
+        full_path=full_path,
+        split=split,
+        resample_id=resample_id,
+        timing_type=timing_type,
+        first_line_comment=first_line_comment,
+        second_line=parameter_info,
+        third_line=third_line,
+    )
+
+
+def write_forecasting_results(
+    predictions,
+    labels,
+    forecaster_name,
+    dataset_name,
+    output_path,
+    full_path=True,
+    split=None,
+    resample_id=None,
+    timing_type="N/A",
+    first_line_comment=None,
+    parameter_info="No Parameter Info",
+    mape=-1,
+    fit_time=-1,
+    predict_time=-1,
+    benchmark_time=-1,
+    memory_usage=-1,
+):
+    """Write the predictions for a forecasting experiment in the format used by tsml.
+
+    Parameters
+    ----------
+    predictions : np.array
+        The predicted values to write to file. Must be the same length as labels.
+    labels : np.array
+        The actual label values written to file with the predicted values.
+    forecaster_name : str
+        Name of the forecaster that made the predictions. Written to file and can
+        determine file structure if full_path is False.
+    dataset_name : str
+        Name of the problem the regressor was built on.
+    output_path : str
+        Path to write the results file to or the directory to build the default file
+        structure if full_path is False.
+    full_path : boolean, default=True
+        If True, results are written directly to the directory passed in output_path.
+        If False, then a standard file structure using the regressor and dataset names
+        is created and used to write the results file.
+    split : str or None, default=None
+        Either None, 'TRAIN' or 'TEST'. Influences the result file name and first line
+        of the file.
+    resample_id : int or None, default=None
+        Indicates what random seed was used to resample the data or used as a
+        random_state for the regressor.
+    timing_type : str, default="N/A"
+        The format used for timings in the file, i.e. 'Seconds', 'Milliseconds',
+        'Nanoseconds'
+    first_line_comment : str or None, default=None
+        Optional comment appended to the end of the first line, i.e. the file used to
+        generate the results.
+    parameter_info : str, default="No Parameter Info"
+        Unstructured estimator dependant information, i.e. estimator parameters or
+        values from the model build.
+    mape: float, default=-1
+        The mean absolute percentage error of the predictions.
+    fit_time : int, default=-1
+        The time taken to fit the regressor.
+    predict_time : int, default=-1
+        The time taken to predict the regression labels.
+    benchmark_time : int, default=-1
+        A benchmark time for the hardware used to scale other timings.
+    memory_usage : int, default=-1
+        The memory usage of the regressor.
+    """
+    third_line = (
+        f"{mape},"
+        f"{fit_time},"
+        f"{predict_time},"
+        f"{benchmark_time},"
+        f"{memory_usage},"
+    )
+
+    write_results_to_tsml_format(
+        predictions,
+        labels,
+        forecaster_name,
+        dataset_name,
+        output_path,
         full_path=full_path,
         split=split,
         resample_id=resample_id,
