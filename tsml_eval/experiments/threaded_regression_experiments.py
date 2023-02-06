@@ -25,7 +25,7 @@ def run_experiment(args, overwrite=False):
     # cluster run (with args), this is fragile
     # don't run threaded jobs on ADA unless you have reserved the whole node and know
     # what you are doing
-    if args.__len__() > 1:  # cluster run, this is fragile
+    if args is not None and args.__len__() > 1:  # cluster run, this is fragile
         print("Input args = ", args)
         data_dir = args[1]
         results_dir = args[2]
