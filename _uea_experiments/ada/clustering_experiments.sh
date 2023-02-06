@@ -21,7 +21,7 @@ username="ajb"
 mail="NONE"
 mailto=$username"@uea.ac.uk"
 
-# MB for jobs, max is maybe 64000 before you need to use huge memory queue. Do not use more than you need
+# MB for jobs, increase incrementally and try not to use more than you need. If you need hundreds of GB consider the huge memory queue.
 max_memory=8000
 
 # Max allowable is 7 days - 168 hours
@@ -115,7 +115,7 @@ source activate $env_name
 
 # Input args to the default clustering_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/clustering_experiments.py
-python -u ${script_file_path} ${data_dir} ${results_dir} ${clusterer} ${dataset} \$SLURM_ARRAY_TASK_ID ${generate_test_files} ${predefined_folds}"  > generatedFile.sub
+python -u ${script_file_path} ${data_dir} ${results_dir} ${clusterer} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_test_files} ${predefined_folds}"  > generatedFile.sub
 
 echo ${count} ${clusterer}/${dataset}
 

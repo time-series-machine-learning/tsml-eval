@@ -30,7 +30,7 @@ def test_run_regression_experiment():
         result_path,
         regressor,
         dataset,
-        "1",
+        "0",
         "True",
         "False",
     ]

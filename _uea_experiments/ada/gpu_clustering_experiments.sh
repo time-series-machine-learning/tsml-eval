@@ -14,7 +14,7 @@ max_folds=30
 start_fold=1
 
 # To avoid dumping 1000s of jobs in the queue we have a higher level queue
-max_num_submitted=100
+max_num_submitted=10
 
 # Queue options are https://my.uea.ac.uk/divisions/it-and-computing-services/service-catalogue/research-it-services/hpc/ada-cluster/using-ada
 # Make sure GPU jobs are on one of the "gpu-" queues, .sub file qos may need to change for ones other than "gpu-rtx6000-2"
@@ -25,8 +25,8 @@ username="ajb"
 mail="NONE"
 mailto=$username"@uea.ac.uk"
 
-# MB for jobs, max is maybe 64000 before you need to use huge memory queue. Do not use more than you need
-max_memory=8000
+# MB for jobs, this is less important for GPU jobs but if you swap nodes check how much is available and how many jobs can be submitted.
+max_memory=90000
 
 # Max allowable is 7 days - 168 hours
 max_time="168:00:00"
@@ -122,10 +122,9 @@ module add cudnn/7.6.5
 source activate $env_name
 export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/gpfs/home/${username}/.conda/envs/${env_name}/lib/
 
-
 # Input args to the default clustering_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/clustering_experiments.py
-python -u ${script_file_path} ${data_dir} ${results_dir} ${clusterer} ${dataset} \$SLURM_ARRAY_TASK_ID ${generate_test_files} ${predefined_folds}"  > generatedFileGPU.sub
+python -u ${script_file_path} ${data_dir} ${results_dir} ${clusterer} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_test_files} ${predefined_folds}"  > generatedFileGPU.sub
 
 echo ${count} ${clusterer}/${dataset}
 

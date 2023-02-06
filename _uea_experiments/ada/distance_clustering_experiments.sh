@@ -11,7 +11,7 @@ max_folds=30
 start_fold=1
 
 # To avoid dumping 1000s of jobs in the queue we have a higher level queue
-max_num_submitted=600
+max_num_submitted=100
 
 # Queue options are https://my.uea.ac.uk/divisions/it-and-computing-services/service-catalogue/research-it-services/hpc/ada-cluster/using-ada
 queue="compute-64-512"
@@ -21,7 +21,7 @@ username="ajb"
 mail="NONE"
 mailto=$username"@uea.ac.uk"
 
-# MB for jobs, max is maybe 64000 before you need to use huge memory queue. Do not use more than you need
+# MB for jobs, increase incrementally and try not to use more than you need. If you need hundreds of GB consider the huge memory queue.
 max_memory=8000
 
 # Max allowable is 7 days - 168 hours
@@ -114,7 +114,7 @@ echo "#!/bin/bash
 module add python/anaconda/2019.10/3.7
 source activate $env_name
 
-python -u ${script_file_path} ${data_dir} ${results_dir} ${clusterer}  ${dataset} \$SLURM_ARRAY_TASK_ID ${distance} ${generate_train_files} ${averaging} ${normalise} ${tune}"  > generatedFile.sub
+python -u ${script_file_path} ${data_dir} ${results_dir} ${clusterer}  ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${distance} ${generate_train_files} ${averaging} ${normalise} ${tune}"  > generatedFile.sub
 #                         data_dir = sys.argv[1]
 #                         results_dir = sys.argv[2]
 #                         clusterer = sys.argv[3]
