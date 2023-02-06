@@ -22,3 +22,8 @@ tsml-eval is available on PyPI and can be installed via pip:
     pip install tsml-eval
 
 More information available on out documentation webpage: https://tsml-eval.readthedocs.io/en/stable/
+
+Acknowledgements
+----------------
+
+This work is supported by the UK Engineering and Physical Sciences Research Council (EPSRC) EP/W030756/1

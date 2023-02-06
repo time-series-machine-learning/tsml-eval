@@ -70,7 +70,7 @@ deep_learning = [
 
 [project.urls]
 homepage = "https://www.timeseriesclassification.com/"
-repository = "https://github.com/time-series-machine-learning/tsml-estimator-evaluation/"
+repository = "https://github.com/time-series-machine-learning/tsml-eval/"
 
 [project.license]
 file = "LICENSE"
