@@ -41,7 +41,7 @@ def run_experiment(args, overwrite=False):
             print("Unable to assign GPU to process.")
 
     # cluster run (with args), this is fragile
-    if args.__len__() > 1:
+    if args is not None and args.__len__() > 1:
         print("Input args = ", args)
         data_dir = args[1]
         results_dir = args[2]

@@ -506,7 +506,9 @@ if __name__ == "__main__":
     chris_config = True  # This is so chris doesn't have to change config each time
     tune = False
     normalise = True
-    if sys.argv.__len__() > 1:  # cluster run, this is fragile, requires all args atm
+    if (
+        sys.argv is not None and sys.argv.__len__() > 1
+    ):  # cluster run, this is fragile, requires all args atm
         data_dir = sys.argv[1]
         results_dir = sys.argv[2]
         clusterer = sys.argv[3]
