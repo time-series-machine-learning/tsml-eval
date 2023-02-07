@@ -37,6 +37,8 @@ Functions for running experiments.
     load_and_run_regression_experiment
     run_clustering_experiment
     load_and_run_clustering_experiment
+    run_forecasting_experiment
+    load_and_run_forecasting_experiment
 
 Utilities: tsml_eval.utils
 --------------------------
@@ -54,6 +56,7 @@ Public utility functions used elsewhere in the package.
     experiments.write_classification_results
     experiments.write_regression_results
     experiments.write_clustering_results
+    experiments.write_forecasting_results
     experiments.write_results_to_tsml_format
     experiments.validate_results_file
     experiments.fix_broken_second_line

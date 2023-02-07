@@ -87,5 +87,5 @@ valuation of classification, regression and clustering algorithms.
 
     installation
     user_guide
-    papers
+    publications
     api
