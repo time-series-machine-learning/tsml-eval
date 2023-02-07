@@ -725,22 +725,36 @@ def write_results_to_tsml_format(
     file.close()
 
 
-def _results_present(path, estimator, dataset, res):
+def _results_present(path, estimator, dataset, resample_id=None, split="TEST"):
     """Check if results are present already."""
-    full_path = f"{path}/{estimator}/Predictions/{dataset}/testResample{res}.csv"
-    full_path2 = f"{path}/{estimator}/Predictions/{dataset}/trainResample{res}.csv"
-    if os.path.exists(full_path) and os.path.exists(full_path2):
-        return True
+    resample_str = "Results" if resample_id is None else f"Resample{resample_id}"
+    path = f"{path}/{estimator}/Predictions/{dataset}/"
+
+    if split == "BOTH":
+        full_path = f"{path}test{resample_str}.csv"
+        full_path2 = f"{path}train{resample_str}.csv"
+
+        if os.path.exists(full_path) and os.path.exists(full_path2):
+            return True
+    else:
+        if split is None or split == "" or split == "NONE":
+            full_path = f"{path}{resample_str.lower()}.csv"
+        elif split == "TEST":
+            full_path = f"{path}test{resample_str}.csv"
+        elif split == "TRAIN":
+            full_path = f"{path}train{resample_str}.csv"
+        else:
+            raise ValueError(f"Unknown split value: {split}")
+
+        if os.path.exists(full_path):
+            return True
+
     return False
 
 
-def _results_present_full_path(path, dataset, res):
+def _results_present_full_path(path, dataset, resample_id=None, split="TEST"):
     """Duplicate: check if results are present already without an estimator input."""
-    full_path = f"{path}/Predictions/{dataset}/testResample{res}.csv"
-    full_path2 = f"{path}/Predictions/{dataset}/trainResample{res}.csv"
-    if os.path.exists(full_path) and os.path.exists(full_path2):
-        return True
-    return False
+    return _results_present(path, "", dataset, resample_id, split)
 
 
 def validate_results_file(file_path):

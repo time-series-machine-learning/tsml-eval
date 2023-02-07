@@ -106,6 +106,7 @@ per-file-ignores = [
     "tsml_eval/experiments/threaded_clustering_experiments.py:T201",
     "tsml_eval/experiments/forecasting_experiments.py:E402,T201",
     "tsml_eval/experiments/distance_clustering_experiments.py:E402,T201",
+    "tsml_eval/publications/forecasting23/run_m4.py:E402,T201",
 ]
 
 [tool.nbqa.exclude]
