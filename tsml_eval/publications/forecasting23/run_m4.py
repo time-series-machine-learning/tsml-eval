@@ -48,7 +48,7 @@ def run_experiment(args, overwrite=False):
         results_dir = args[2]
         forecaster_name = args[3]
         dataset = args[4]
-        series_number = args[5]
+        series_number = int(args[5])
     else:
         # https://github.com/Mcompetitions/M4-methods/tree/master/Dataset
         # Set these variables:
