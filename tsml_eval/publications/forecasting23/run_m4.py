@@ -54,7 +54,7 @@ def run_experiment(args, overwrite=False):
         # Set these variables:
         data_dir = "D:/CMP Machine Learning/Datasets/Forecasting/M4/"
         results_dir = "D:/CMP Machine Learning/Datasets/Forecasting/M4Results/"
-        forecaster_name = "DrCIF"
+        forecaster_name = "Tuned-DrCIF"
         dataset = "Daily"  # Hourly, Daily, Weekly, Monthly, Quarterly, Yearly
         series_number = 0  # Index from 0, skips header
 
@@ -67,12 +67,22 @@ def run_experiment(args, overwrite=False):
         "Yearly": 3,
     }
 
+    horizons = {
+        "Hourly": 48,
+        "Daily": 14,
+        "Weekly": 13,
+        "Monthly": 18,
+        "Quarterly": 8,
+        "Yearly": 6,
+    }
+
     try:
         forecaster = _set_forecaster(
             forecaster_name,
             random_state=0,
             n_jobs=1,
             window_length=window_lengths[dataset],
+            forecasting_horizon=horizons[dataset],
         )
     except KeyError:
         raise ValueError(f"Unknown dataset {dataset}")
