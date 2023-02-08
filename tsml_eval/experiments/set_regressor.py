@@ -367,6 +367,16 @@ def set_regressor(
             "n_jobs": n_jobs,
             "random_state": random_state,
         }
+    elif r == "rf500":
+        from sklearn.ensemble import RandomForestRegressor
+
+        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+
+        model_params = {
+            "n_estimators": 500,
+            "n_jobs": n_jobs,
+            "random_state": random_state,
+        }
 
         return SklearnBaseRegressor(RandomForestRegressor(**model_params))
 
@@ -377,6 +387,17 @@ def set_regressor(
 
         model_params = {
             "n_estimators": 100,
+            "n_jobs": n_jobs,
+            "learning_rate": 0.1,
+            "random_state": random_state,
+        }
+    elif r == "xgb500":
+        from xgboost import XGBRegressor  # pip install xgboost
+
+        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+
+        model_params = {
+            "n_estimators": 500,
             "n_jobs": n_jobs,
             "learning_rate": 0.1,
             "random_state": random_state,

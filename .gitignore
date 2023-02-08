@@ -132,6 +132,7 @@ test_output/
 task_params.txt
 task.sub
 run_condor.py
+regression_experiments_condor.py
 
 # local code and debug files
 local/
