@@ -54,7 +54,7 @@ def run_experiment(args, overwrite=False):
         # Set these variables:
         data_dir = "D:/CMP Machine Learning/Datasets/Forecasting/M4/"
         results_dir = "D:/CMP Machine Learning/Datasets/Forecasting/M4Results/"
-        forecaster_name = "DrCIF"
+        forecaster_name = "Tuned-DrCIF"
         dataset = "Daily"  # Hourly, Daily, Weekly, Monthly, Quarterly, Yearly
         series_number = 0  # Index from 0, skips header
 

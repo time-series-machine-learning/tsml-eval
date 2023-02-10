@@ -114,7 +114,11 @@ def set_forecaster(forecaster_name, random_state=None, n_jobs=1):
         from sktime.transformations.series.detrend import Detrender
 
         regressor = RocketRegressor(random_state=random_state, n_jobs=n_jobs)
-        return make_reduction(regressor, window_length=15, strategy="recursive")
+        return make_pipeline(
+            Detrender(PolynomialTrendForecaster(degree=1, with_intercept=True)),
+            StandardScaler(),
+            make_reduction(regressor, window_length=15, strategy="recursive"),
+        )
     elif f == "freshprince":
         from sklearn.preprocessing import StandardScaler
         from sktime.forecasting.compose import make_reduction

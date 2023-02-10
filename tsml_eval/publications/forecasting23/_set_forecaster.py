@@ -4,7 +4,13 @@
 __author__ = ["MatthewMiddlehurst"]
 
 
-def _set_forecaster(forecaster_name, random_state=None, n_jobs=1, window_length=-1):
+def _set_forecaster(
+    forecaster_name,
+    random_state=None,
+    n_jobs=1,
+    window_length=-1,
+    forecasting_horizon=-1,
+):
     """Return a forecaster matching a given input name.
 
     Basic way of creating a forecaster to build using the default or alternative
@@ -124,8 +130,12 @@ def _set_forecaster(forecaster_name, random_state=None, n_jobs=1, window_length=
         from sktime.transformations.series.detrend import Detrender
 
         regressor = RocketRegressor(random_state=random_state, n_jobs=n_jobs)
-        return make_reduction(
-            regressor, window_length=window_length, strategy="recursive"
+        return make_pipeline(
+            Detrender(PolynomialTrendForecaster(degree=1, with_intercept=True)),
+            StandardScaler(),
+            make_reduction(
+                regressor, window_length=window_length, strategy="recursive"
+            ),
         )
     elif f == "freshprince":
         from sklearn.preprocessing import StandardScaler
@@ -179,6 +189,58 @@ def _set_forecaster(forecaster_name, random_state=None, n_jobs=1, window_length=
             StandardScaler(),
             make_reduction(
                 regressor, window_length=window_length, strategy="recursive"
+            ),
+        )
+
+    elif f == "tuned-drcif":
+        from sklearn.preprocessing import StandardScaler
+        from sktime.forecasting.compose import make_reduction
+        from sktime.forecasting.model_selection import (
+            ForecastingGridSearchCV,
+            SingleWindowSplitter,
+        )
+        from sktime.forecasting.trend import PolynomialTrendForecaster
+        from sktime.pipeline import make_pipeline
+        from sktime.transformations.series.detrend import Detrender
+
+        from tsml_eval.sktime_estimators.regression.interval_based import DrCIF
+
+        window_length = max(6, window_length)
+        regressor = DrCIF(n_estimators=500, random_state=random_state, n_jobs=n_jobs)
+        return make_pipeline(
+            Detrender(PolynomialTrendForecaster(degree=1, with_intercept=True)),
+            StandardScaler(),
+            ForecastingGridSearchCV(
+                make_reduction(
+                    regressor, window_length=window_length, strategy="recursive"
+                ),
+                cv=SingleWindowSplitter(forecasting_horizon),
+                param_grid={"window_length": [6, 9, 12, 15, 18, 21, 24, 27, 30]},
+            ),
+        )
+    elif f == "tuned-rotf":
+        from sklearn.preprocessing import StandardScaler
+        from sktime.forecasting.compose import make_reduction
+        from sktime.forecasting.model_selection import (
+            ForecastingGridSearchCV,
+            SingleWindowSplitter,
+        )
+        from sktime.forecasting.trend import PolynomialTrendForecaster
+        from sktime.pipeline import make_pipeline
+        from sktime.transformations.series.detrend import Detrender
+
+        from tsml_eval.sktime_estimators.regression.sklearn import RotationForest
+
+        regressor = RotationForest(random_state=random_state, n_jobs=n_jobs)
+        return make_pipeline(
+            Detrender(PolynomialTrendForecaster(degree=1, with_intercept=True)),
+            StandardScaler(),
+            ForecastingGridSearchCV(
+                make_reduction(
+                    regressor, window_length=window_length, strategy="recursive"
+                ),
+                cv=SingleWindowSplitter(forecasting_horizon),
+                param_grid={"window_length": [3, 6, 9, 12, 15, 18, 21, 24, 27, 30]},
             ),
         )
 
