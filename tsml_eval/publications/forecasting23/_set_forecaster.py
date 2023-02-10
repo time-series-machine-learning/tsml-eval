@@ -216,6 +216,7 @@ def _set_forecaster(
                 ),
                 cv=SingleWindowSplitter(forecasting_horizon),
                 param_grid={"window_length": [6, 9, 12, 15, 18, 21, 24, 27, 30]},
+                n_jobs=n_jobs,
             ),
         )
     elif f == "tuned-rotf":
@@ -241,7 +242,24 @@ def _set_forecaster(
                 ),
                 cv=SingleWindowSplitter(forecasting_horizon),
                 param_grid={"window_length": [3, 6, 9, 12, 15, 18, 21, 24, 27, 30]},
+                n_jobs=n_jobs,
             ),
+        )
+
+    elif f == "drcif-50":
+        from sklearn.preprocessing import StandardScaler
+        from sktime.forecasting.compose import make_reduction
+        from sktime.forecasting.trend import PolynomialTrendForecaster
+        from sktime.pipeline import make_pipeline
+        from sktime.transformations.series.detrend import Detrender
+
+        from tsml_eval.sktime_estimators.regression.interval_based import DrCIF
+
+        regressor = DrCIF(n_estimators=500, random_state=random_state, n_jobs=n_jobs)
+        return make_pipeline(
+            Detrender(PolynomialTrendForecaster(degree=1, with_intercept=True)),
+            StandardScaler(),
+            make_reduction(regressor, window_length=50, strategy="recursive"),
         )
 
     # invalid regressor
