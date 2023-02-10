@@ -62,7 +62,11 @@ def run_experiment(args, overwrite=False):
         # this is also checked in load_and_run, but doing a quick check here so can
         # print a message and make sure data is not loaded
         if not overwrite and _results_present(
-            results_dir, regressor_name, dataset, resample
+            results_dir,
+            regressor_name,
+            dataset,
+            resample_id=resample,
+            split="BOTH" if train_fold else "TEST",
         ):
             print("Ignoring, results already present")
         else:
