@@ -58,21 +58,22 @@ def run_experiment(args, overwrite=False):
         dataset = "Daily"  # Hourly, Daily, Weekly, Monthly, Quarterly, Yearly
         series_number = 0  # Index from 0, skips header
 
-    window_lengths = {
-        "Hourly": 24,
-        "Daily": 3,
-        "Weekly": 3,
-        "Monthly": 12,
-        "Quarterly": 4,
-        "Yearly": 3,
-    }
-
+    #    window_lengths = {
+    #        "Hourly": 24,
+    #        "Daily": 3,
+    #        "Weekly": 3,
+    #        "Monthly": 12,
+    #        "Quarterly": 4,
+    #        "Yearly": 3,
+    #    }
+    fixed_window = 100
     try:
         forecaster = _set_forecaster(
             forecaster_name,
             random_state=0,
             n_jobs=1,
-            window_length=window_lengths[dataset],
+            window_length=fixed_window,
+            #            window_length=window_lengths[dataset],
         )
     except KeyError:
         raise ValueError(f"Unknown dataset {dataset}")
@@ -123,7 +124,6 @@ def run_experiment(args, overwrite=False):
             raise IOError(
                 f"Unable to read M4 dataset {dataset} test series {series_number}"
             )
-
         run_forecasting_experiment(
             train,
             test,
@@ -133,6 +133,10 @@ def run_experiment(args, overwrite=False):
             dataset_name=series_name,
         )
 
+
+#        else:
+#            print(f"Series too short, {len(train)} dataset {dataset} series number
+#            {series_number}")
 
 if __name__ == "__main__":
     """
