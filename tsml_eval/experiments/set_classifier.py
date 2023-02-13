@@ -296,6 +296,11 @@ def set_classifier(
         )
 
     # Interval based
+    elif c == "rstsf" or c == "r-stsf":
+        from tsml_eval.sktime_estimators.classification.interval_based.rstsf import \
+            RSTSF
+        
+        return RSTSF(random_state=random_state, n_estimators=500)
     elif c == "rise-500":
         from sktime.classification.interval_based import RandomIntervalSpectralEnsemble
 
