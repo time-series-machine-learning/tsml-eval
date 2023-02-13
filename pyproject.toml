@@ -120,8 +120,7 @@ addopts = '''
     --timeout 600
     --showlocals
     --doctest-modules
+    --numprocesses auto
+    --cov tsml_eval
+    --cov-report xml
 '''
-
-#    --numprocesses auto
-#    --cov tsml_eval
-#    --cov-report xml
