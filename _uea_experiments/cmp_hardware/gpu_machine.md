@@ -76,7 +76,7 @@ i.e. to run CNN on ItalyPowerDemand resample 0, something similar to the followi
 
 To run many single threaded experiments in parallel you can use the GNU parallel tool.
 
-> parallel --delimiter "\n" --verbose --jobs 4 --memfree 10G --arg-file SubmissionFiles/data_dir.txt --arg-file SubmissionFiles/results_dir.txt --arg-file SubmissionFiles/classifiers.txt --arg-file SubmissionFiles/datasets.txt --arg-file SubmissionFiles/resamples.txt --arg-file SubmissionFiles/generate_train_files.txt --arg-file SubmissionFiles/predefined_folds.txt python Code/tsml_eval/experiments/classification_experiments.py
+> parallel --delimiter "\n" --verbose --jobs 4 --memfree 10G --delay 180 --arg-file SubmissionFiles/data_dir.txt --arg-file SubmissionFiles/results_dir.txt --arg-file SubmissionFiles/classifiers.txt --arg-file SubmissionFiles/datasets.txt --arg-file SubmissionFiles/resamples.txt --arg-file SubmissionFiles/generate_train_files.txt --arg-file SubmissionFiles/predefined_folds.txt python Code/tsml_eval/experiments/classification_experiments.py
 
 A file containing the different argument values to loop through should be stored in text files i.e.
 - data_dir.txt
@@ -91,6 +91,8 @@ To run 5 resamples, resamples.txt would have 5 lines with the resample numbers (
 
 At the end of the command, the python file to run is specified i.e.
 >python Code/tsml_eval/experiments/classification_experiments.py
+
+By default tsml-eval will look for the GPU with the lowest usage and assign a process to that GPU. Some problems can take a while to load data or start actually processing on the GPU, however. For that reason the above parallel command includes a 3 minute delay between submitting jobs (--delay 180).
 
 More information on the parallel command can be found at https://www.gnu.org/software/parallel/.
 
