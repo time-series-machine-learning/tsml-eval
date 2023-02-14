@@ -92,11 +92,13 @@ To run 5 resamples, resamples.txt would have 5 lines with the resample numbers (
 At the end of the command, the python file to run is specified i.e.
 >python Code/tsml_eval/experiments/classification_experiments.py
 
-By default tsml-eval will look for the GPU with the lowest usage and assign a process to that GPU. Some problems can take a while to load data or start actually processing on the GPU, however. For that reason the above parallel command includes a 3 minute delay between submitting jobs (--delay 180).
+By default, tsml-eval will look for the GPU with the lowest usage and assign a process to that GPU. Some problems can take a while to load data or start actually processing on the GPU, however. This can result in multiple processes being assigned to the same GPU. For that reason the above parallel command includes a 3 minute delay between submitting jobs (--delay 180).
 
 More information on the parallel command can be found at https://www.gnu.org/software/parallel/.
 
 ## Monitoring jobs on the GPU server
+
+To view GPU usage:
 
 > watch -d -n 0.5 nvidia-smi
 
