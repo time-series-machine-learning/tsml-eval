@@ -414,13 +414,19 @@ def set_classifier(
 
         return TapNetClassifier(random_state=random_state)
 
-    elif c == "inceptiontime" or c == "inceptiontimeclassifier":
+    elif c == "singleinception" or c == "singleinceptionclassifier":
         from tsml_eval.sktime_estimators.classification.deep_learning.inception_time import (  # noqa; noqa
             IndividualInceptionTimeClassifier,
         )
 
         return IndividualInceptionTimeClassifier(random_state=random_state)
 
+    elif c == "inceptiontime" or c == "inceptiontimeclassifier":
+        from tsml_eval.sktime_estimators.classification.deep_learning.inception_time import (  # noqa; noqa
+            InceptionTimeClassifier,
+        )
+
+        return InceptionTimeClassifier(random_state=random_state)
     # Other
     elif c == "dummy" or c == "dummyclassifier":
         from sktime.classification.dummy import DummyClassifier
