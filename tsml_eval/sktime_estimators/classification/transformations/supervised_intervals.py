@@ -295,8 +295,8 @@ class SupervisedIntervals(BaseTransformer):
         if self.min_interval_length < 3:
             self._min_interval_length = 3
 
-        if self.series_length_ < 8:
-            raise ValueError("Series length must be at least 8.")
+        if self.series_length_ < 7:
+            raise ValueError("Series length must be at least 7.")
         elif self._min_interval_length * 2 + 1 > self.series_length_:
             raise ValueError(
                 "Minimum interval length must be less than half the series length."
