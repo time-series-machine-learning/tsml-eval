@@ -43,15 +43,17 @@ class IntervalSplitter:
 
         min_interval = min(16, length)
         acf_min_values = 4
+
+        splitter.istart = splitter.rng.randint(0, length - min_interval)
+        splitter.iend = splitter.rng.randint(splitter.istart + min_interval, length)
         acf_lag = 100
-        if acf_lag > length - acf_min_values:
-            acf_lag = length - acf_min_values
+        if acf_lag > splitter.iend - splitter.istart - acf_min_values:
+            acf_lag = splitter.iend - splitter.istart - acf_min_values
         if acf_lag < 0:
             acf_lag = 1
 
         splitter.acf_lag = acf_lag
-        splitter.istart = splitter.rng.randint(0, length - min_interval)
-        splitter.iend = splitter.rng.randint(splitter.istart + min_interval, length)
+
         splitter.transform = splitter.rng.choice(FEATURE_CANDIDATES)
         X_transformed = splitter.transform(
             X[:, splitter.dim, :], splitter.istart, splitter.iend, splitter.acf_lag
