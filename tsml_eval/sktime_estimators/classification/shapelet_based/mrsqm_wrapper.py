@@ -5,6 +5,11 @@ from sktime.classification import BaseClassifier
 
 
 class MrSQM(BaseClassifier):
+
+    _tags = {
+        "X_inner_mtype": "nested_univ",  # input in nested dataframe
+    }
+
     def __init__(
         self,
         random_state=None,
