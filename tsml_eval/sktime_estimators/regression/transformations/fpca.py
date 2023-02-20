@@ -20,7 +20,6 @@ class FPCATransformer(BaseTransformer):
         n_basis=None,
         order=None,
     ):
-
         self.n_components = n_components
         self.smooth = smooth
         self.n_basis = n_basis
