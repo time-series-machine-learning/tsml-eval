@@ -358,7 +358,7 @@ def run_regression_experiment(
             parameter_info=second,
             mse=test_mse,
             fit_time=fit_time,
-            predict_time=-test_time,
+            predict_time=test_time,
         )
 
     if build_train_file:

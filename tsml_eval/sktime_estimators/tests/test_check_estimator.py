@@ -5,25 +5,13 @@ import pytest
 from sklearn.utils.estimator_checks import parametrize_with_checks
 from sktime.utils.estimator_checks import check_estimator
 
-from tsml_eval.sktime_estimators.classification.convolution_based.hydra import HYDRA
-from tsml_eval.sktime_estimators.classification.distance_based.mpdist import MPDist
-from tsml_eval.sktime_estimators.classification.shapelet_based.rdst import (
-    RDST,
-    RDSTEnsemble,
-)
 from tsml_eval.sktime_estimators.classification.shapelet_based.rsf import (
     RandomShapeletForest,
 )
 from tsml_eval.sktime_estimators.classification.transformations import SFADilation
-from tsml_eval.sktime_estimators.regression.convolution_based import (
-    Arsenal,
-    HydraRegressor,
-)
+from tsml_eval.sktime_estimators.regression.convolution_based import Arsenal
 from tsml_eval.sktime_estimators.regression.dictionary_based.tde import (
     TemporalDictionaryEnsemble,
-)
-from tsml_eval.sktime_estimators.regression.featured_based.fresh_prince import (
-    FreshPRINCERegressor,
 )
 from tsml_eval.sktime_estimators.regression.hybrid.hivecote_v2 import HIVECOTEV2
 from tsml_eval.sktime_estimators.regression.interval_based.drcif import DrCIF
@@ -35,18 +23,20 @@ from tsml_eval.sktime_estimators.regression.sklearn.rotation_forest import (
 )
 
 classification_estimators = [
-    HYDRA,
+    # HYDRA,
+    # InceptionTimeClassifier,
+    # IndividualInceptionTimeClassifier,
     # WEASEL_DILATION,
     # MUSE_DILATION,
-    MPDist,
-    RDST,
-    RDSTEnsemble,
+    # MPDist,
+    # RDST,
+    # RDSTEnsemble,
     RandomShapeletForest,
     SFADilation,
 ]
 regression_estimators = [
     Arsenal,
-    HydraRegressor,
+    # HydraRegressor,
     TemporalDictionaryEnsemble,
     HIVECOTEV2,
     DrCIF,

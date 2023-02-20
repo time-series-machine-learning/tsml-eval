@@ -16,11 +16,10 @@ os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
 import sys
 
 import numba
-import torch
 
 from tsml_eval.experiments import load_and_run_classification_experiment
 from tsml_eval.experiments.set_classifier import set_classifier
-from tsml_eval.utils.experiments import _results_present
+from tsml_eval.utils.experiments import _results_present, assign_gpu
 
 
 def run_experiment(args, overwrite=False):
@@ -31,7 +30,15 @@ def run_experiment(args, overwrite=False):
     generated in Java.
     """
     numba.set_num_threads(1)
-    torch.set_num_threads(1)
+
+    if os.environ.get("CUDA_VISIBLE_DEVICES") is None:
+        try:
+            gpu = assign_gpu()
+            os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+            os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
+            print(f"Assigned GPU {gpu} to process.")
+        except Exception:
+            print("Unable to assign GPU to process.")
 
     # cluster run (with args), this is fragile
     if args is not None and args.__len__() > 1:
@@ -78,10 +85,10 @@ def run_experiment(args, overwrite=False):
         # These are example parameters, change as required for local runs
         # Do not include paths to your local directories here in PRs
         # If threading is required, see the threaded version of this file
-        data_dir = "C:/Data/"
-        results_dir = "C:/Temp/"
-        classifier_name = "1nn-dtw"
-        dataset = "Chinatown"
+        data_dir = "../"
+        results_dir = "../"
+        classifier_name = "DrCIF"
+        dataset = "ItalyPowerDemand"
         resample = 0
         train_fold = False
         predefined_resample = False

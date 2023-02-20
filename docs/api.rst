@@ -3,7 +3,7 @@
 API
 ===
 
-This page contains the auto-generated API documnetation for tsml-eval package functions
+This page contains the auto-generated API documentation for tsml-eval package functions
 and classes.
 
 Evaluation: tsml_eval.evaluation

@@ -7,7 +7,7 @@ User Guide
     :gutter: 3
 
     .. grid-item-card::
-        :img-top: notebooks/images/wip.png
+        :img-top: examples/images/wip.png
         :text-align: center
 
         tsml-eval Data Format
@@ -18,7 +18,7 @@ User Guide
 
         +++
 
-        .. button-ref:: /notebooks/datasets.ipynb
+        .. button-ref:: /examples/datasets.ipynb
             :color: primary
             :click-parent:
             :expand:
@@ -26,7 +26,7 @@ User Guide
             Datasets
 
     .. grid-item-card::
-        :img-top: notebooks/images/TSC.png
+        :img-top: examples/images/TSC.png
         :text-align: center
 
         Time Series Classification
@@ -37,7 +37,7 @@ User Guide
 
         +++
 
-        .. button-ref:: /notebooks/classification_experiments.ipynb
+        .. button-ref:: /examples/classification_experiments.ipynb
             :color: primary
             :click-parent:
             :expand:
@@ -45,7 +45,7 @@ User Guide
             TSC
 
     .. grid-item-card::
-        :img-top: notebooks/images/TSR.png
+        :img-top: examples/images/TSR.png
         :text-align: center
 
         Time Series Regression
@@ -56,7 +56,7 @@ User Guide
 
         +++
 
-        .. button-ref:: /notebooks/regression_experiments.ipynb
+        .. button-ref:: /examples/regression_experiments.ipynb
             :color: primary
             :click-parent:
             :expand:
@@ -64,7 +64,7 @@ User Guide
             TSR
 
     .. grid-item-card::
-        :img-top: notebooks/images/TSCL.png
+        :img-top: examples/images/TSCL.png
         :text-align: center
 
         Time Series Clustering
@@ -75,7 +75,7 @@ User Guide
 
         +++
 
-        .. button-ref:: /notebooks/clustering_experiments.ipynb
+        .. button-ref:: /examples/clustering_experiments.ipynb
             :color: primary
             :click-parent:
             :expand:
@@ -83,7 +83,7 @@ User Guide
             TSCL
 
     .. grid-item-card::
-        :img-top: notebooks/images/wip.png
+        :img-top: examples/images/wip.png
         :text-align: center
 
         tsml-eval Results Evaluation
@@ -94,7 +94,7 @@ User Guide
 
         +++
 
-        .. button-ref:: /notebooks/evaluation.ipynb
+        .. button-ref:: /examples/evaluation.ipynb
             :color: primary
             :click-parent:
             :expand:
@@ -102,7 +102,7 @@ User Guide
             Evaluation
 
     .. grid-item-card::
-        :img-top: notebooks/images/wip.png
+        :img-top: examples/images/wip.png
         :text-align: center
 
         tsml-eval Results Format
@@ -113,7 +113,7 @@ User Guide
 
         +++
 
-        .. button-ref:: /notebooks/results_format.ipynb
+        .. button-ref:: /examples/results_format.ipynb
             :color: primary
             :click-parent:
             :expand:
@@ -123,9 +123,9 @@ User Guide
 .. toctree::
     :hidden:
 
-    /notebooks/datasets.ipynb
-    /notebooks/classification_experiments.ipynb
-    /notebooks/regression_experiments.ipynb
-    /notebooks/clustering_experiments.ipynb
-    /notebooks/evaluation.ipynb
-    /notebooks/results_format.ipynb
+    /examples/datasets.ipynb
+    /examples/classification_experiments.ipynb
+    /examples/regression_experiments.ipynb
+    /examples/clustering_experiments.ipynb
+    /examples/evaluation.ipynb
+    /examples/results_format.ipynb

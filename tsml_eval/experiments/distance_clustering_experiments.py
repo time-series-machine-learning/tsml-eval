@@ -584,6 +584,18 @@ if __name__ == "__main__":
         train_X = train_X.T
         test_X = s.fit_transform(test_X.T)
         test_X = test_X.T
+    w = 1.0
+    c = 1.0
+    epsilon = 0.05
+    g = 0.05
+    c = 1.0
+    nu = 0.05
+    lam = 1.0
+    init = "kmeans++"
+    max_its = 30
+    n_init = 1
+    if tune_cls:
+        init = tune_cls(distance, train_X, len(set(train_Y)))
 
     if tune:
         if distance == "dtw" or distance == "wdtw":

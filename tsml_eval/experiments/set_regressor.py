@@ -6,6 +6,10 @@ __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 import numpy as np
 from sklearn.pipeline import make_pipeline
 
+from tsml_eval.sktime_estimators.regression.column_ensemble import (
+    ColumnEnsembleRegressor,
+)
+
 
 def set_regressor(
     regressor_name,
@@ -50,10 +54,34 @@ def set_regressor(
         from sktime.regression.deep_learning.cnn import CNNRegressor
 
         return CNNRegressor(random_state=random_state)
+
     elif r == "tapnet" or r == "tapnetregressor":
         from sktime.regression.deep_learning.tapnet import TapNetRegressor
 
         return TapNetRegressor(random_state=random_state)
+    elif r == "resnet" or r == "resnetregressor":
+        from tsml_eval.sktime_estimators.regression.deep_learning import ResNetRegressor
+
+        return ResNetRegressor(random_state=random_state)
+
+    elif r == "inception" or r == "inceptiontime" or r == "inceptiontimeregressor":
+        from tsml_eval.sktime_estimators.regression.deep_learning import (
+            InceptionTimeRegressor,
+        )
+
+        return InceptionTimeRegressor(random_state=random_state)
+
+    elif r == "singleinception" or r == "individualinception":
+        from tsml_eval.sktime_estimators.regression.deep_learning import (
+            IndividualInceptionTimeRegressor,
+        )
+
+        return IndividualInceptionTimeRegressor(random_state=random_state)
+    elif r == "fcnn" or r == "fcn" or r == "fcnnregressor":
+        from tsml_eval.sktime_estimators.regression.deep_learning import FCNRegressor
+
+        return FCNRegressor(random_state=random_state)
+
     elif r == "sktime-1nn-ed":
         from sktime.regression.distance_based import KNeighborsTimeSeriesRegressor
 
@@ -164,6 +192,13 @@ def set_regressor(
             random_state=random_state,
             n_jobs=n_jobs,
         )
+    elif r == "tsf-i":
+        from sktime.regression.interval_based import TimeSeriesForestRegressor
+
+        estimators = [
+            ("tsf", TimeSeriesForestRegressor(random_state=random_state), None)
+        ]
+        return ColumnEnsembleRegressor(estimators)
 
     # Other
     elif r == "dummymeanpred":
@@ -334,6 +369,16 @@ def set_regressor(
             "n_jobs": n_jobs,
             "random_state": random_state,
         }
+    elif r == "rf500":
+        from sklearn.ensemble import RandomForestRegressor
+
+        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+
+        model_params = {
+            "n_estimators": 500,
+            "n_jobs": n_jobs,
+            "random_state": random_state,
+        }
 
         return SklearnBaseRegressor(RandomForestRegressor(**model_params))
 
@@ -344,6 +389,17 @@ def set_regressor(
 
         model_params = {
             "n_estimators": 100,
+            "n_jobs": n_jobs,
+            "learning_rate": 0.1,
+            "random_state": random_state,
+        }
+    elif r == "xgb500":
+        from xgboost import XGBRegressor  # pip install xgboost
+
+        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+
+        model_params = {
+            "n_estimators": 500,
             "n_jobs": n_jobs,
             "learning_rate": 0.1,
             "random_state": random_state,
