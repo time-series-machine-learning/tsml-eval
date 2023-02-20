@@ -6,6 +6,7 @@ import copy
 import numpy as np
 from skfda import FDataGrid
 from skfda.preprocessing.dim_reduction.projection import FPCA
+from skfda.representation.basis import BSpline
 from sktime.transformations.base import BaseTransformer
 
 
@@ -58,8 +59,6 @@ class FPCATransformer(BaseTransformer):
 
             # smooth the X if needed
             if self.smooth == "B-spline":
-                from skfda.representation.basis import BSpline
-
                 basis = BSpline(n_basis=self.n_basis, order=self.order)
                 fd = fd.to_basis(basis)
 
@@ -89,8 +88,6 @@ class FPCATransformer(BaseTransformer):
 
             # smooth the X if needed
             if self.smooth == "B-spline":
-                from skfda.representation.basis import BSpline
-
                 basis = BSpline(n_basis=self.n_basis, order=self.order)
                 fd = fd.to_basis(basis)
 
