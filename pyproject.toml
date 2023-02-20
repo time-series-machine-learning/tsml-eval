@@ -42,6 +42,7 @@ dependencies = [
     "networkx",
     "requests",
     "gpustat",
+    "skfda",
 ]
 
 [project.optional-dependencies]
