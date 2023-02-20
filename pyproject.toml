@@ -42,7 +42,7 @@ dependencies = [
     "networkx",
     "requests",
     "gpustat",
-    "skfda",
+    "scikit-fda",
 ]
 
 [project.optional-dependencies]
