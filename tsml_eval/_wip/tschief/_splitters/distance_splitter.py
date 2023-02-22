@@ -21,8 +21,11 @@ DISTANCE_CANDIDATES = [
 
 
 class DistanceSplitter:
+    """EE-based splitter for TS-CHIEF implementation."""
+
     @staticmethod
     def generate(X, y, random_state=None):
+        """Generate a randomized distance splitter candidate."""
         _, dims, length = X.shape
         rng = check_random_state(random_state)
 
@@ -200,6 +203,7 @@ class DistanceSplitter:
         return splitter
 
     def split(self, X):
+        """Split incoming data."""
         samples, _, _ = X.shape
 
         split_idx = np.empty(samples, dtype=int)

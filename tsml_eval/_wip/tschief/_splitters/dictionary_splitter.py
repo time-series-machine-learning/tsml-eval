@@ -8,8 +8,11 @@ from sktime.transformations.panel.dictionary_based import SFAFast
 
 
 class DictionarySplitter:
+    """BOSS-based splitter for TS-CHIEF implementation."""
+
     @staticmethod
     def generate(X_boss, y, sfas, random_state=None):
+        """Generate a randomized dictionary splitter candidate."""
         dims, num_transforms = X_boss.shape
         rng = check_random_state(random_state)
 
@@ -30,6 +33,7 @@ class DictionarySplitter:
         return splitter
 
     def split_train(self, X_boss):
+        """Split the training data without needlessly SFAing again."""
         X_boss = X_boss[self.dim, self.transform_idx]
         samples, _ = X_boss.shape
 
@@ -43,6 +47,7 @@ class DictionarySplitter:
         return split_idx
 
     def split(self, X):
+        """Split incoming data."""
         X = X[:, [self.dim], :]
         X_boss = self.sfa.transform(X)
         samples, _ = X_boss.shape
@@ -58,6 +63,7 @@ class DictionarySplitter:
 
 
 def generate_boss_transforms(X, num_transforms_per_dim=1000, random_state=None):
+    """Generate random SFA transformations for splitters."""
     rng = check_random_state(random_state)
     _, dims, length = X.shape
 

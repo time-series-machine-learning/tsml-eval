@@ -34,8 +34,11 @@ FEATURE_CANDIDATES = [_acf, _ps]
 
 
 class IntervalSplitter:
+    """RISE-based splitter for TS-CHIEF implementation."""
+
     @staticmethod
     def generate(X, y, random_state=None):
+        """Generate a randomized interval splitter candidate."""
         samples, dims, length = X.shape
         splitter = IntervalSplitter()
         splitter.rng = check_random_state(random_state)
@@ -66,6 +69,7 @@ class IntervalSplitter:
         return splitter
 
     def split(self, X):
+        """Split incoming data."""
         X = X[:, self.dim, :]
         X_transformed = self.transform(X, self.istart, self.iend, self.acf_lag)
 
