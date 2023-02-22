@@ -10,6 +10,8 @@ from tsml_eval._wip.tschief._splitters import (
 
 
 class TsChiefNode:
+    """Tree node for the TS-CHIEF model."""
+
     def __init__(self, n_dictionary, n_distance, n_interval, random_state):
         self.rng = check_random_state(random_state)
         self.n_dictionary = n_dictionary
@@ -19,6 +21,9 @@ class TsChiefNode:
         self.is_leaf = False
 
     def fit(self, X, y, X_boss, sfas):
+        """Fit the tree node with respective subset of data."""
+        self._class_dtype = y.dtype
+
         if len(np.unique(y)) == 1:
             self.is_leaf = True
             self.label = y[0]
@@ -80,12 +85,13 @@ class TsChiefNode:
         return self
 
     def predict(self, X):
+        """Predict class labels for subset of data."""
         samples = X.shape[0]
 
         if self.is_leaf:
             return np.repeat(self.label, samples)
 
-        preds = np.empty(samples)
+        preds = np.empty(samples, dtype=self._class_dtype)
         split_idx = self.splitter_.split(X)
         for split in np.unique(split_idx):
             down_idx = np.argwhere(split_idx == split).ravel()

@@ -11,6 +11,8 @@ __all__ = ["TsChief"]
 
 
 class TsChief(BaseClassifier):
+    """Unfinished implementation of the TS-CHIEF classifier."""
+
     _tags = {
         "X_inner_mtype": "numpy3D",
         "capability:multivariate": True,
@@ -35,6 +37,7 @@ class TsChief(BaseClassifier):
         super(TsChief, self).__init__()
 
     def _fit(self, X, y):
+        self._class_dtype = y.dtype
         self.random_state = check_random_state(self.random_state)
 
         sfas, X_boss = generate_boss_transforms(
@@ -56,8 +59,8 @@ class TsChief(BaseClassifier):
     def _predict(self, X):
         samples = X.shape[0]
 
-        votes = np.empty((samples, self.n_trees))
-        preds = np.empty(samples)
+        votes = np.empty((samples, self.n_trees), dtype=self._class_dtype)
+        preds = np.empty(samples, dtype=self._class_dtype)
 
         for i, tree in enumerate(self.trees_):
             votes[:, i] = tree.predict(X)
