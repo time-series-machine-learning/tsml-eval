@@ -33,24 +33,8 @@ jobs:
 
     strategy:
       matrix:
-        os: [ ubuntu-latest, macOS-latest ]
+        os: [ ubuntu-latest, macOS-latest, windows-latest ]
         python-version: [ '3.8', '3.9', '3.10' ]
-        include:
-          - os: windows-latest
-            python: 38
-            python-version: '3.8'
-            bitness: 64
-            platform_id: win_amd64
-          - os: windows-latest
-            python: 39
-            python-version: '3.9'
-            bitness: 64
-            platform_id: win_amd64
-          - os: windows-latest
-            python: 310
-            python-version: '3.10'
-            bitness: 64
-            platform_id: win_amd64
 
     steps:
       - uses: actions/checkout@v3
