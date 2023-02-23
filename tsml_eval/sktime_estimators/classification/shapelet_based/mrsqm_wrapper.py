@@ -13,7 +13,7 @@ class MrSQM(BaseClassifier):
         super(MrSQM, self).__init__()
 
     def _fit(self, X, y):
-        self.clf = MrSQMClassifier(random_state=self.random_state)
+        self.clf = MrSQMClassifier(random_state=self.random_state, nsax=0, nsfa=5)
         self.clf.fit(X, y)
 
     def _predict(self, X) -> np.ndarray:
