@@ -13,7 +13,7 @@ from sktime.classification.base import BaseClassifier
 from sktime.transformations.panel.tsfresh import TSFreshFeatureExtractor
 from sktime.utils.validation.panel import check_X_y
 
-from tsml_eval.sktime_estimators.regression.sklearn import RotationForest
+from tsml_eval.sktime_estimators.classification._rotation_forest import RotationForest
 
 
 class FreshPRINCE(BaseClassifier):
