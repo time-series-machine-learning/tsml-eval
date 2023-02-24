@@ -145,7 +145,7 @@ def run_classification_experiment(
         else:
             cv_size = 10
             _, counts = np.unique(y_train, return_counts=True)
-            min_class = np.min(counts)
+            min_class = max(2, np.min(counts))
             if min_class < cv_size:
                 cv_size = min_class
 
