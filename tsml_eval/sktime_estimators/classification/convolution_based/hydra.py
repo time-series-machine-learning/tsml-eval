@@ -34,6 +34,8 @@ class HYDRA(BaseClassifier):
 
     def __init__(self, k=8, g=64, n_jobs=1, random_state=None):
 
+        print("check")
+
         self.k = k
         self.g = g
         self.n_jobs = n_jobs
