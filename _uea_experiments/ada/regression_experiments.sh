@@ -4,10 +4,7 @@
 #   results_dir (where to check/write results),
 #   for regressor in (the regressors we are running)
 
-# While reading from them is fine, please dont write anything to the default directories in this script
-
-# To use GPU resources you need to be given access (gpu qos), which involves emailing hpc.admin@uea.ac.uk
-# Ask Tony or on slack, and read the GPU section in https://my.uea.ac.uk/divisions/it-and-computing-services/service-catalogue/research-it-services/hpc/ada-cluster/using-ada/jobs
+# While reading is fine, please dont write anything to the default directories in this script
 
 # Start and end for resamples
 max_folds=30
@@ -17,15 +14,14 @@ start_fold=1
 max_num_submitted=100
 
 # Queue options are https://my.uea.ac.uk/divisions/it-and-computing-services/service-catalogue/research-it-services/hpc/ada-cluster/using-ada
-# Make sure GPU jobs are on one of the "gpu-" queues, .sub file qos may need to change for ones other than "gpu-rtx6000-2"
-queue="gpu-rtx6000-2"
+queue="compute-64-512"
 
 # Enter your username and email here
 username="ajb"
 mail="NONE"
 mailto=$username"@uea.ac.uk"
 
-# MB for jobs, max is maybe 64000 before you need to use huge memory queue. Do not use more than you need
+# MB for jobs, increase incrementally and try not to use more than you need. If you need hundreds of GB consider the huge memory queue.
 max_memory=8000
 
 # Max allowable is 7 days - 168 hours
@@ -50,7 +46,7 @@ script_file_path=$local_path"Code/tsml-eval/tsml_eval/experiments/regression_exp
 
 # Environment name, change accordingly, for set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
 # Separate environments for GPU (Python 3.8) and CPU (Python 3.10) are recommended
-env_name="tsml-eval-gpu"
+env_name="tsml-eval"
 
 # Generating train folds is usually slower, set to false unless you need them
 generate_train_files="false"
@@ -58,29 +54,27 @@ generate_train_files="false"
 # If set for true, looks for <problem><fold>_TRAIN.ts file. This is useful for running tsml resamples
 predefined_folds="false"
 
-# List valid regressors e.g CNNRegressor, TapNetRegressor
+# List valid regressors e.g KNeighborsTimeSeriesRegressor, RocketRegressor, TimeSeriesForestRegressor
 # See set_regressor for aliases
 count=0
 while read dataset; do
-for regressor in CNNRegressor
+for regressor in RocketRegressor TimeSeriesForestRegressor
 do
 
 # Dont change anything after here for regular runs
 
-# This is the loop to keep from dumping everything in the queue which is maintained around max_num_submitted jobs
-num_pending=$(squeue -u ${username} --format="%10i %15P %20j %10u %10t %10M %10D %20R" -r | awk '{print $5, $2}' | grep "PD ${queue}" | wc -l)
-num_running=$(squeue -u ${username} --format="%10i %15P %20j %10u %10t %10M %10D %20R" -r | awk '{print $5, $2}' | grep "R ${queue}" | wc -l)
-while [ "$((num_pending+num_running))" -ge "${max_num_submitted}" ]
-do
-    echo Waiting 90s, $((num_pending+num_running)) currently submitted on ${queue}, user-defined max is ${max_num_submitted}
-	sleep 90
-	num_pending=$(squeue -u ${username} --format="%10i %15P %20j %10u %10t %10M %10D %20R" -r | awk '{print $5, $2}' | grep "PD ${queue}" | wc -l)
-	num_running=$(squeue -u ${username} --format="%10i %15P %20j %10u %10t %10M %10D %20R" -r | awk '{print $5, $2}' | grep "R ${queue}" | wc -l)
-done
-
 # Skip to the script start point
 ((count++))
 if ((count>=start_point)); then
+
+# This is the loop to keep from dumping everything in the queue which is maintained around max_num_submitted jobs
+num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue}" -e "PD ${queue}" | wc -l)
+while [ "${num_jobs}" -ge "${max_num_submitted}" ]
+do
+    echo Waiting 60s, ${num_jobs} currently submitted on ${queue}, user-defined max is ${max_num_submitted}
+    sleep 60
+    num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue}" -e "PD ${queue}" | wc -l)
+done
 
 mkdir -p ${out_dir}${regressor}/${dataset}/
 
@@ -101,9 +95,7 @@ if [ "${array_jobs}" != "" ]; then
 
 # This creates the scrip to run the job based on the info above
 echo "#!/bin/bash
-#SBATCH --qos=gpu-rtx #gpu-rtx-reserved
-#SBATCH --gres=gpu:1
-#SBATCH --cpus-per-task=12
+#SBATCH --qos=ht
 #SBATCH --mail-type=${mail}
 #SBATCH --mail-user=${mailto}
 #SBATCH -p ${queue}
@@ -117,19 +109,15 @@ echo "#!/bin/bash
 . /etc/profile
 
 module add python/anaconda/2019.10/3.7
-module add cuda/10.2.89
-module add cudnn/7.6.5
 source activate $env_name
-export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/gpfs/home/${username}/.conda/envs/${env_name}/lib/
-
 
 # Input args to the default regression_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/regression_experiments.py
-python -u ${script_file_path} ${data_dir} ${results_dir} ${regressor} ${dataset} \$SLURM_ARRAY_TASK_ID ${generate_train_files} ${predefined_folds}"  > generatedFileGPU.sub
+python -u ${script_file_path} ${data_dir} ${results_dir} ${regressor} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_train_files} ${predefined_folds}"  > generatedFile.sub
 
 echo ${count} ${regressor}/${dataset}
 
-sbatch < generatedFileGPU.sub
+sbatch < generatedFile.sub
 
 else
     echo ${count} ${regressor}/${dataset} has finished all required resamples, skipping
