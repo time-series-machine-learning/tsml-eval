@@ -35,6 +35,7 @@ classifiers = [
 dependencies = [
     "sktime>=0.15.0,<=0.16.0",
     "scikit-learn",
+    "tsml",
     "convst",
     "wildboar",
     "stumpy",
