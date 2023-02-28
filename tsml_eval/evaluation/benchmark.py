@@ -7,6 +7,7 @@ from time import perf_counter
 
 import numpy as np
 import psutil
+from sklearn.base import clone
 from sklearn.model_selection import train_test_split
 from sklearn.utils.validation import check_random_state
 
@@ -71,7 +72,7 @@ def benchmark_estimator(
     result : BenchmarkResult
         Benchmark aggregated results.
     """
-    estimator = estimator.clone()
+    estimator = clone(estimator)
     rng = check_random_state(random_state)
     if y is None:
         # Suppose clustering
@@ -85,7 +86,6 @@ def benchmark_estimator(
             y,
             train_size=train_size,
             test_size=test_size,
-            stratify=y,
             random_state=rng,
         )
 
@@ -236,7 +236,7 @@ def compare_estimators(
     else:
         raise ValueError(
             f"Invalid varying method: {varying}. Allowed values"
-            + " are {'{'}total, train, test{'}'}."
+            + " are {'total', 'train', 'test'}."
         )
 
 
