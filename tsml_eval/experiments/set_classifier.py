@@ -94,6 +94,12 @@ def set_classifier(
         )
 
         return HYDRA(random_state=random_state)
+    elif c == "hydra-multirocket":
+        from tsml_eval.sktime_estimators.classification.convolution_based.hydra import (
+            HydraMultiRocket,
+        )
+
+        return HydraMultiRocket(random_state=random_state)
 
     # Dictionary based
     if c == "boss" or c == "bossensemble":
@@ -422,7 +428,6 @@ def set_classifier(
         return IndividualInceptionTimeClassifier(random_state=random_state)
 
     elif c == "inceptiontime" or c == "inceptiontimeclassifier":
-
         from tsml_eval.sktime_estimators.classification.deep_learning.inception_time import (  # noqa; noqa
             InceptionTimeClassifier,
         )
