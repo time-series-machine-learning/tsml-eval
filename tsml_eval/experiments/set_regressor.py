@@ -6,7 +6,7 @@ __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 import numpy as np
 from sklearn.pipeline import make_pipeline
 
-from tsml_eval.sktime_estimators.regression.column_ensemble import (
+from tsml_eval.estimators.regression.column_ensemble import (
     ColumnEnsembleRegressor,
 )
 
@@ -60,25 +60,25 @@ def set_regressor(
 
         return TapNetRegressor(random_state=random_state)
     elif r == "resnet" or r == "resnetregressor":
-        from tsml_eval.sktime_estimators.regression.deep_learning import ResNetRegressor
+        from tsml_eval.estimators.regression.deep_learning import ResNetRegressor
 
         return ResNetRegressor(random_state=random_state)
 
     elif r == "inception" or r == "inceptiontime" or r == "inceptiontimeregressor":
-        from tsml_eval.sktime_estimators.regression.deep_learning import (
+        from tsml_eval.estimators.regression.deep_learning import (
             InceptionTimeRegressor,
         )
 
         return InceptionTimeRegressor(random_state=random_state)
 
     elif r == "singleinception" or r == "individualinception":
-        from tsml_eval.sktime_estimators.regression.deep_learning import (
+        from tsml_eval.estimators.regression.deep_learning import (
             IndividualInceptionTimeRegressor,
         )
 
         return IndividualInceptionTimeRegressor(random_state=random_state)
     elif r == "fcnn" or r == "fcn" or r == "fcnnregressor":
-        from tsml_eval.sktime_estimators.regression.deep_learning import FCNRegressor
+        from tsml_eval.estimators.regression.deep_learning import FCNRegressor
 
         return FCNRegressor(random_state=random_state)
 
@@ -115,7 +115,7 @@ def set_regressor(
             n_jobs=n_jobs,
         )
     elif r == "1nn-ed":
-        from tsml_eval.sktime_estimators.regression.distance_based import (
+        from tsml_eval.estimators.regression.distance_based import (
             KNeighborsTimeSeriesRegressor,
         )
 
@@ -124,7 +124,7 @@ def set_regressor(
             n_neighbours=1,
         )
     elif r == "5nn-ed":
-        from tsml_eval.sktime_estimators.regression.distance_based import (
+        from tsml_eval.estimators.regression.distance_based import (
             KNeighborsTimeSeriesRegressor,
         )
 
@@ -133,7 +133,7 @@ def set_regressor(
             n_neighbours=5,
         )
     elif r == "1nn-dtw":
-        from tsml_eval.sktime_estimators.regression.distance_based import (
+        from tsml_eval.estimators.regression.distance_based import (
             KNeighborsTimeSeriesRegressor,
         )
 
@@ -143,7 +143,7 @@ def set_regressor(
             distance_params={"window": 0.1},
         )
     elif r == "5nn-dtw":
-        from tsml_eval.sktime_estimators.regression.distance_based import (
+        from tsml_eval.estimators.regression.distance_based import (
             KNeighborsTimeSeriesRegressor,
         )
 
@@ -177,7 +177,7 @@ def set_regressor(
             n_jobs=n_jobs,
         )
     elif r == "hydra" or r == "hydraregressor":
-        from tsml_eval.sktime_estimators.regression.convolution_based import (
+        from tsml_eval.estimators.regression.convolution_based import (
             HydraRegressor,
         )
 
@@ -203,13 +203,13 @@ def set_regressor(
     # Other
     elif r == "dummymeanpred":
         # the dummy regressor is to predict the mean value of the output.
-        from tsml_eval.sktime_estimators.regression.dummy import MeanPredictorRegressor
+        from tsml_eval.estimators.regression.dummy import MeanPredictorRegressor
 
         return MeanPredictorRegressor()
 
     elif r == "dummymedianpred":
         # the dummy regressor is to predict the mean value of the output.
-        from tsml_eval.sktime_estimators.regression.dummy import (
+        from tsml_eval.estimators.regression.dummy import (
             MedianPredictorRegressor,
         )
 
@@ -217,7 +217,7 @@ def set_regressor(
 
     # regression package regressors
     elif r == "fresh-prince" or r == "freshprince":
-        from tsml_eval.sktime_estimators.regression.featured_based import (
+        from tsml_eval.estimators.regression.featured_based import (
             FreshPRINCERegressor,
         )
 
@@ -229,7 +229,7 @@ def set_regressor(
         )
 
     elif r == "drcif":
-        from tsml_eval.sktime_estimators.regression.interval_based import DrCIF
+        from tsml_eval.estimators.regression.interval_based import DrCIF
 
         return DrCIF(
             n_estimators=500,
@@ -238,7 +238,7 @@ def set_regressor(
             n_jobs=n_jobs,
         )
     elif r == "stc" or r == "str":
-        from tsml_eval.sktime_estimators.regression.shapelet_based import (
+        from tsml_eval.estimators.regression.shapelet_based import (
             ShapeletTransformRegressor,
         )
 
@@ -249,7 +249,7 @@ def set_regressor(
             n_jobs=n_jobs,
         )
     elif r == "str-default":
-        from tsml_eval.sktime_estimators.regression.shapelet_based import (
+        from tsml_eval.estimators.regression.shapelet_based import (
             ShapeletTransformRegressor,
         )
 
@@ -262,7 +262,7 @@ def set_regressor(
         from sklearn.linear_model import RidgeCV
         from sklearn.preprocessing import StandardScaler
 
-        from tsml_eval.sktime_estimators.regression.shapelet_based import (
+        from tsml_eval.estimators.regression.shapelet_based import (
             ShapeletTransformRegressor,
         )
 
@@ -277,7 +277,7 @@ def set_regressor(
             n_jobs=n_jobs,
         )
     elif r == "tde":
-        from tsml_eval.sktime_estimators.regression.dictionary_based import (
+        from tsml_eval.estimators.regression.dictionary_based import (
             TemporalDictionaryEnsemble,
         )
 
@@ -287,7 +287,7 @@ def set_regressor(
             n_jobs=n_jobs,
         )
     elif r == "arsenal":
-        from tsml_eval.sktime_estimators.regression.convolution_based import Arsenal
+        from tsml_eval.estimators.regression.convolution_based import Arsenal
 
         return Arsenal(
             random_state=random_state,
@@ -295,13 +295,13 @@ def set_regressor(
             n_jobs=n_jobs,
         )
     elif r == "hc2" or r == "hivecotev2":
-        from tsml_eval.sktime_estimators.regression.hybrid import HIVECOTEV2
+        from tsml_eval.estimators.regression.hybrid import HIVECOTEV2
 
         return HIVECOTEV2(random_state=random_state, n_jobs=n_jobs)
 
     # sklearn regressors
     elif r == "rotf" or r == "rotationforest":
-        from tsml_eval.sktime_estimators.regression.sklearn import (
+        from tsml_eval.estimators.regression.sklearn import (
             RotationForest,
             SklearnBaseRegressor,
         )
@@ -317,7 +317,7 @@ def set_regressor(
     elif r == "lr" or r == "linearregression":
         from sklearn.linear_model import LinearRegression
 
-        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+        from tsml_eval.estimators.regression.sklearn import SklearnBaseRegressor
 
         model_params = {"fit_intercept": True, "n_jobs": n_jobs}
 
@@ -326,7 +326,7 @@ def set_regressor(
     elif r == "ridgecv" or r == "ridge":
         from sklearn.linear_model import RidgeCV
 
-        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+        from tsml_eval.estimators.regression.sklearn import SklearnBaseRegressor
 
         model_params = {"fit_intercept": True, "alphas": np.logspace(-3, 3, 10)}
 
@@ -335,7 +335,7 @@ def set_regressor(
     elif r == "svr" or r == "supportvectorregressor":
         from sklearn.svm import SVR
 
-        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+        from tsml_eval.estimators.regression.sklearn import SklearnBaseRegressor
 
         model_params = {"kernel": "rbf", "C": 1}
 
@@ -344,7 +344,7 @@ def set_regressor(
         from sklearn.model_selection import GridSearchCV
         from sklearn.svm import SVR
 
-        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+        from tsml_eval.estimators.regression.sklearn import SklearnBaseRegressor
 
         param_grid = [
             {
@@ -362,7 +362,7 @@ def set_regressor(
     elif r == "rf" or r == "randomforest":
         from sklearn.ensemble import RandomForestRegressor
 
-        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+        from tsml_eval.estimators.regression.sklearn import SklearnBaseRegressor
 
         model_params = {
             "n_estimators": 100,
@@ -372,7 +372,7 @@ def set_regressor(
     elif r == "rf500":
         from sklearn.ensemble import RandomForestRegressor
 
-        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+        from tsml_eval.estimators.regression.sklearn import SklearnBaseRegressor
 
         model_params = {
             "n_estimators": 500,
@@ -385,7 +385,7 @@ def set_regressor(
     elif r == "xgb" or r == "xgboost":
         from xgboost import XGBRegressor  # pip install xgboost
 
-        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+        from tsml_eval.estimators.regression.sklearn import SklearnBaseRegressor
 
         model_params = {
             "n_estimators": 100,
@@ -396,7 +396,7 @@ def set_regressor(
     elif r == "xgb500":
         from xgboost import XGBRegressor  # pip install xgboost
 
-        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+        from tsml_eval.estimators.regression.sklearn import SklearnBaseRegressor
 
         model_params = {
             "n_estimators": 500,
@@ -410,7 +410,7 @@ def set_regressor(
     elif r == "xgb500" or r == "xgboost500":
         from xgboost import XGBRegressor  # pip install xgboost
 
-        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+        from tsml_eval.estimators.regression.sklearn import SklearnBaseRegressor
 
         model_params = {
             "n_estimators": 500,
@@ -424,7 +424,7 @@ def set_regressor(
     elif r == "rf500" or r == "randomforest500":
         from sklearn.ensemble import RandomForestRegressor
 
-        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+        from tsml_eval.estimators.regression.sklearn import SklearnBaseRegressor
 
         model_params = {
             "n_estimators": 500,
@@ -436,12 +436,12 @@ def set_regressor(
 
     # SoFR
     elif r == "fpcr":
-        from tsml_eval.sktime_estimators.regression.sofr import FPCRegressor
+        from tsml_eval.estimators.regression.sofr import FPCRegressor
 
         return FPCRegressor(n_components=10)
 
     elif r == "fpcr-b-spline":
-        from tsml_eval.sktime_estimators.regression.sofr import FPCRegressor
+        from tsml_eval.estimators.regression.sofr import FPCRegressor
 
         model_params = {
             "smooth": "B-spline",

@@ -8,18 +8,18 @@ import os
 import numpy as np
 import pandas as pd
 import pytest
-from sktime.datasets import load_arrow_head
 
 from tsml_eval.utils.experiments import (
     compare_result_file_resample,
     resample_data,
     stratified_resample_data,
 )
+from tsml.datasets import load_minimal_chinatown
 
 
 def test_resample_data():
     """Test resampling returns valid data."""
-    X_train, y_train = load_arrow_head(split="TRAIN")
+    X_train, y_train = load_minimal_chinatown(split="TRAIN")
     X_test, y_test = load_arrow_head(split="TEST")
 
     train_size = X_train.shape

@@ -5,11 +5,14 @@ __author__ = ["MatthewMiddlehurst"]
 
 import os
 
+import pytest
+
 from tsml_eval.experiments.regression_experiments import run_experiment
 from tsml_eval.utils.tests.test_results_writing import _check_regression_file_format
 
 
-def test_run_regression_experiment():
+@pytest.mark.parametrize("regressor", ["DummyRegressor-tsml", "DummyRegressor-sktime"])
+def test_run_regression_experiment(regressor):
     """Test regression experiments with test data and regressor."""
     result_path = (
         "./test_output/regression/"
@@ -21,7 +24,6 @@ def test_run_regression_experiment():
         if os.getcwd().split("\\")[-1] != "tests"
         else "../../datasets/"
     )
-    regressor = "dummymeanpred"
     dataset = "Covid3Month"
 
     args = [

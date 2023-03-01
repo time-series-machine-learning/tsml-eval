@@ -89,7 +89,7 @@ def set_classifier(
             time_limit_in_minutes=fit_contract,
         )
     elif c == "hydra":
-        from tsml_eval.sktime_estimators.classification.convolution_based.hydra import (
+        from tsml_eval.estimators.classification.convolution_based.hydra import (
             HYDRA,
         )
 
@@ -154,13 +154,13 @@ def set_classifier(
             random_state=random_state, n_jobs=n_jobs, support_probabilities=True
         )
     elif c == "weasel-dilation":
-        from tsml_eval.sktime_estimators.classification.dictionary_based.weasel import (
+        from tsml_eval.estimators.classification.dictionary_based.weasel import (
             WEASEL_DILATION,
         )
 
         return WEASEL_DILATION(random_state=random_state, n_jobs=n_jobs)
     elif c == "muse-dilation":
-        from tsml_eval.sktime_estimators.classification.dictionary_based.muse import (
+        from tsml_eval.estimators.classification.dictionary_based.muse import (
             MUSE_DILATION,
         )
 
@@ -180,7 +180,7 @@ def set_classifier(
 
         return ProximityStump(random_state=random_state, n_jobs=n_jobs)
     elif c == "dtw" or c == "1nn-dtw" or c == "kneighborstimeseriesclassifier":
-        from tsml_eval.sktime_estimators.classification.distance_based import (
+        from tsml_eval.estimators.classification.distance_based import (
             KNeighborsTimeSeriesClassifier,
         )
 
@@ -380,17 +380,17 @@ def set_classifier(
             time_limit_in_minutes=fit_contract,
         )
     elif c == "rdst":
-        from tsml_eval.sktime_estimators.classification.shapelet_based.rdst import RDST
+        from tsml_eval.estimators.classification.shapelet_based.rdst import RDST
 
         return RDST(random_state=random_state)
     elif c == "rdst-ensemble":
-        from tsml_eval.sktime_estimators.classification.shapelet_based.rdst import (
+        from tsml_eval.estimators.classification.shapelet_based.rdst import (
             RDSTEnsemble,
         )
 
         return RDSTEnsemble(random_state=random_state)
     elif c == "rsf":
-        from tsml_eval.sktime_estimators.classification.shapelet_based.rsf import (
+        from tsml_eval.estimators.classification.shapelet_based.rsf import (
             RandomShapeletForest,
         )
 
@@ -415,7 +415,7 @@ def set_classifier(
         return TapNetClassifier(random_state=random_state)
 
     elif c == "singleinception" or c == "singleinceptionclassifier":
-        from tsml_eval.sktime_estimators.classification.deep_learning.inception_time import (  # noqa; noqa
+        from tsml_eval.estimators.classification.deep_learning.inception_time import (  # noqa; noqa
             IndividualInceptionTimeClassifier,
         )
 
@@ -423,7 +423,7 @@ def set_classifier(
 
     elif c == "inceptiontime" or c == "inceptiontimeclassifier":
 
-        from tsml_eval.sktime_estimators.classification.deep_learning.inception_time import (  # noqa; noqa
+        from tsml_eval.estimators.classification.deep_learning.inception_time import (  # noqa; noqa
             InceptionTimeClassifier,
         )
 

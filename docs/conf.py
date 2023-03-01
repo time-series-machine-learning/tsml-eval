@@ -38,7 +38,7 @@ else:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "tsml-eval"
-copyright = "2022 - 2023, The tsml developers (BSD-3 License)"
+copyright = "The tsml developers (BSD-3 License)"
 author = "Matthew Middlehurst"
 
 

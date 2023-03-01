@@ -5,11 +5,14 @@ __author__ = ["MatthewMiddlehurst"]
 
 import os
 
+import pytest
+
 from tsml_eval.experiments.clustering_experiments import run_experiment
 from tsml_eval.utils.tests.test_results_writing import _check_clustering_file_format
 
 
-def test_run_clustering_experiment():
+@pytest.mark.parametrize("clusterer", ["DummyClusterer-tsml", "DummyClusterer-sktime"])
+def test_run_clustering_experiment(clusterer):
     """Test clustering experiments with test data and clusterer."""
     result_path = (
         "./test_output/clustering/"
@@ -21,7 +24,6 @@ def test_run_clustering_experiment():
         if os.getcwd().split("\\")[-1] != "tests"
         else "../../datasets/"
     )
-    clusterer = "KMeans"
     dataset = "UnitTest"
 
     args = [
