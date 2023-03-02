@@ -89,11 +89,15 @@ def set_classifier(
             time_limit_in_minutes=fit_contract,
         )
     elif c == "hydra":
-        from tsml_eval.estimators.classification.convolution_based.hydra import (
-            HYDRA,
-        )
+        from tsml_eval.estimators.classification.convolution_based.hydra import HYDRA
 
         return HYDRA(random_state=random_state)
+    elif c == "hydra-multirocket":
+        from tsml_eval.sktime_estimators.classification.convolution_based.hydra import (
+            HydraMultiRocket,
+        )
+
+        return HydraMultiRocket(random_state=random_state)
 
     # Dictionary based
     if c == "boss" or c == "bossensemble":
@@ -296,6 +300,12 @@ def set_classifier(
         )
 
     # Interval based
+    elif c == "rstsf" or c == "r-stsf":
+        from tsml_eval.sktime_estimators.classification.interval_based.rstsf import (
+            RSTSF,
+        )
+
+        return RSTSF(random_state=random_state, n_estimators=500)
     elif c == "rise-500":
         from sktime.classification.interval_based import RandomIntervalSpectralEnsemble
 
@@ -384,9 +394,7 @@ def set_classifier(
 
         return RDST(random_state=random_state)
     elif c == "rdst-ensemble":
-        from tsml_eval.estimators.classification.shapelet_based.rdst import (
-            RDSTEnsemble,
-        )
+        from tsml_eval.estimators.classification.shapelet_based.rdst import RDSTEnsemble
 
         return RDSTEnsemble(random_state=random_state)
     elif c == "rsf":
@@ -395,6 +403,12 @@ def set_classifier(
         )
 
         return RandomShapeletForest(random_state=random_state)
+    elif c == "mrsqm":
+        from tsml_eval.sktime_estimators.classification.shapelet_based.mrsqm_wrapper import (
+            MrSQM,
+        )
+
+        return MrSQM(random_state=random_state)
 
     # Deep learning based
     elif c == "cnn" or c == "cnnclassifier":
@@ -422,7 +436,6 @@ def set_classifier(
         return IndividualInceptionTimeClassifier(random_state=random_state)
 
     elif c == "inceptiontime" or c == "inceptiontimeclassifier":
-
         from tsml_eval.estimators.classification.deep_learning.inception_time import (  # noqa; noqa
             InceptionTimeClassifier,
         )
