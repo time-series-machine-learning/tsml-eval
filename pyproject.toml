@@ -33,7 +33,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
 ]
 dependencies = [
-    "sktime>=0.15.0",
+    "sktime>=0.15.0,<=0.16.0",
     "scikit-learn",
     "convst",
     "wildboar",
@@ -42,7 +42,9 @@ dependencies = [
     "networkx",
     "requests",
     "gpustat",
+    "scikit-fda",
     "pyfftw",
+    "psutil",
 ]
 
 [project.optional-dependencies]
