@@ -269,7 +269,7 @@ def set_classifier(
 
         return MatrixProfileClassifier(random_state=random_state, n_jobs=n_jobs)
     elif c == "freshprince":
-        from tsml_eval.sktime_estimators.classification._fresh_prince import FreshPRINCE
+        from tsml_eval.estimators.classification._fresh_prince import FreshPRINCE
 
         return FreshPRINCE(random_state=random_state, n_jobs=n_jobs)
     elif c == "tsfresh-nofs":
@@ -289,7 +289,7 @@ def set_classifier(
 
     # hybrids
     elif c == "hc1" or c == "hivecotev1":
-        from tsml_eval.sktime_estimators.classification._hivecote_v1 import HIVECOTEV1
+        from tsml_eval.estimators.classification._hivecote_v1 import HIVECOTEV1
 
         return HIVECOTEV1(random_state=random_state, n_jobs=n_jobs)
     elif c == "hc2" or c == "hivecotev2":
@@ -450,9 +450,7 @@ def set_classifier(
         return ComposableTimeSeriesForestClassifier(random_state=random_state)
 
     elif c == "rotf":
-        from tsml_eval.sktime_estimators.classification._rotation_forest import (
-            RotationForest,
-        )
+        from tsml_eval.estimators.classification._rotation_forest import RotationForest
 
         return RotationForest(random_state=random_state, n_jobs=n_jobs)
 
