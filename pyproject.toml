@@ -121,6 +121,4 @@ addopts = '''
     --showlocals
     --doctest-modules
     --numprocesses auto
-    --cov tsml_eval
-    --cov-report xml
 '''
