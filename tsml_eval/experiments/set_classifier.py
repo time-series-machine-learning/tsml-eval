@@ -401,6 +401,12 @@ def set_classifier(
         )
 
         return RandomShapeletForest(random_state=random_state)
+    elif c == "mrsqm":
+        from tsml_eval.sktime_estimators.classification.shapelet_based.mrsqm_wrapper import (
+            MrSQM,
+        )
+
+        return MrSQM(random_state=random_state)
 
     # Deep learning based
     elif c == "cnn" or c == "cnnclassifier":
