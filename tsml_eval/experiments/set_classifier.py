@@ -93,7 +93,7 @@ def set_classifier(
 
         return HYDRA(random_state=random_state)
     elif c == "hydra-multirocket":
-        from tsml_eval.sktime_estimators.classification.convolution_based.hydra import (
+        from tsml_eval.estimators.classification.convolution_based.hydra import (
             HydraMultiRocket,
         )
 
@@ -301,9 +301,7 @@ def set_classifier(
 
     # Interval based
     elif c == "rstsf" or c == "r-stsf":
-        from tsml_eval.sktime_estimators.classification.interval_based.rstsf import (
-            RSTSF,
-        )
+        from tsml_eval.estimators.classification.interval_based.rstsf import RSTSF
 
         return RSTSF(random_state=random_state, n_estimators=500)
     elif c == "rise-500":
@@ -404,7 +402,7 @@ def set_classifier(
 
         return RandomShapeletForest(random_state=random_state)
     elif c == "mrsqm":
-        from tsml_eval.sktime_estimators.classification.shapelet_based.mrsqm_wrapper import (
+        from tsml_eval.estimators.classification.shapelet_based.mrsqm_wrapper import (
             MrSQM,
         )
 
