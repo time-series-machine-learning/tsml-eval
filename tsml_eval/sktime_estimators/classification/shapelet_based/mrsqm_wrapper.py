@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-from mrsqm import MrSQMClassifier
 from sktime.classification import BaseClassifier
 
 
@@ -18,6 +17,8 @@ class MrSQM(BaseClassifier):
         super(MrSQM, self).__init__()
 
     def _fit(self, X, y):
+        from mrsqm import MrSQMClassifier
+
         self.clf = MrSQMClassifier(random_state=self.random_state, nsax=0, nsfa=5)
         self.clf.fit(X, y)
 
