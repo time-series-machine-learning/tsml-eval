@@ -37,9 +37,12 @@ def set_classifier(
         The classifier matching the input classifier name.
     """
     c = classifier_name.lower()
-
     # Convolution based
-    if c == "rocket" or c == "rocketclassifier":
+    if c == "rotf" or c == "rotationforest":
+        from sktime.classification.sklearn import RotationForest
+        return RotationForest(random_state=random_state, n_jobs=n_jobs)
+    # Convolution based
+    elif c == "rocket" or c == "rocketclassifier":
         from sktime.classification.kernel_based import RocketClassifier
 
         return RocketClassifier(random_state=random_state, n_jobs=n_jobs)
