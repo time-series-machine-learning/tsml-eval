@@ -6,9 +6,7 @@ __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 import numpy as np
 from sklearn.pipeline import make_pipeline
 
-from tsml_eval.estimators.regression.column_ensemble import (
-    ColumnEnsembleRegressor,
-)
+from tsml_eval.estimators.regression.column_ensemble import ColumnEnsembleRegressor
 
 
 def set_regressor(
@@ -65,9 +63,7 @@ def set_regressor(
         return ResNetRegressor(random_state=random_state)
 
     elif r == "inception" or r == "inceptiontime" or r == "inceptiontimeregressor":
-        from tsml_eval.estimators.regression.deep_learning import (
-            InceptionTimeRegressor,
-        )
+        from tsml_eval.estimators.regression.deep_learning import InceptionTimeRegressor
 
         return InceptionTimeRegressor(random_state=random_state)
 
@@ -177,9 +173,7 @@ def set_regressor(
             n_jobs=n_jobs,
         )
     elif r == "hydra" or r == "hydraregressor":
-        from tsml_eval.estimators.regression.convolution_based import (
-            HydraRegressor,
-        )
+        from tsml_eval.estimators.regression.convolution_based import HydraRegressor
 
         return HydraRegressor(
             random_state=random_state,
@@ -209,17 +203,13 @@ def set_regressor(
 
     elif r == "dummymedianpred":
         # the dummy regressor is to predict the mean value of the output.
-        from tsml_eval.estimators.regression.dummy import (
-            MedianPredictorRegressor,
-        )
+        from tsml_eval.estimators.regression.dummy import MedianPredictorRegressor
 
         return MedianPredictorRegressor()
 
     # regression package regressors
     elif r == "fresh-prince" or r == "freshprince":
-        from tsml_eval.estimators.regression.featured_based import (
-            FreshPRINCERegressor,
-        )
+        from tsml_eval.estimators.regression.featured_based import FreshPRINCERegressor
 
         return FreshPRINCERegressor(
             n_estimators=500,
@@ -451,6 +441,20 @@ def set_regressor(
         }
 
         return FPCRegressor(**model_params)
+
+    elif r == "dummyregressor-tsml":
+        from tsml.interval_based import TSFRegressor
+
+        # todo replace with actual dummy when available
+        return TSFRegressor(n_estimators=1)
+    elif r == "dummy" or r == "dummyregressor" or r == "dummyregressor-sktime":
+        from sktime.regression.dummy import DummyRegressor
+
+        return DummyRegressor()
+    elif r == "dummyregressor-sklearn":
+        from sklearn.dummy import DummyRegressor
+
+        return DummyRegressor()
 
     # invalid regressor
     else:

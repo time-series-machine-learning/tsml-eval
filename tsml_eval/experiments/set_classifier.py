@@ -440,10 +440,6 @@ def set_classifier(
 
         return InceptionTimeClassifier(random_state=random_state)
     # Other
-    elif c == "dummy" or c == "dummyclassifier":
-        from sktime.classification.dummy import DummyClassifier
-
-        return DummyClassifier()
     elif c == "composabletimeseriesforestclassifier":
         from sktime.classification.compose import ComposableTimeSeriesForestClassifier
 
@@ -476,6 +472,21 @@ def set_classifier(
             "Cannot create a WeightedEnsembleClassifier"
             "without passing base classifiers"
         )
+
+    # Dummy classifiers
+    elif c == "dummyclassifier-tsml":
+        from tsml.interval_based import TSFClassifier
+
+        # todo replace with actual dummy when available
+        return TSFClassifier(n_estimators=1)
+    elif c == "dummy" or c == "dummyclassifier" or c == "dummyclassifier-sktime":
+        from sktime.classification.dummy import DummyClassifier
+
+        return DummyClassifier()
+    elif c == "dummyclassifier-sklearn":
+        from sklearn.dummy import DummyClassifier
+
+        return DummyClassifier()
 
     # invalid classifier
     else:

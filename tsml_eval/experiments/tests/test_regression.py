@@ -11,7 +11,10 @@ from tsml_eval.experiments.regression_experiments import run_experiment
 from tsml_eval.utils.tests.test_results_writing import _check_regression_file_format
 
 
-@pytest.mark.parametrize("regressor", ["DummyRegressor-tsml", "DummyRegressor-sktime"])
+@pytest.mark.parametrize(
+    "regressor",
+    ["DummyRegressor-tsml", "DummyRegressor-sktime", "DummyRegressor-sklearn"],
+)
 def test_run_regression_experiment(regressor):
     """Test regression experiments with test data and regressor."""
     result_path = (
@@ -24,7 +27,7 @@ def test_run_regression_experiment(regressor):
         if os.getcwd().split("\\")[-1] != "tests"
         else "../../datasets/"
     )
-    dataset = "Covid3Month"
+    dataset = "MinimalGasPrices"
 
     args = [
         None,

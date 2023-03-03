@@ -11,7 +11,10 @@ from tsml_eval.experiments.classification_experiments import run_experiment
 from tsml_eval.utils.tests.test_results_writing import _check_classification_file_format
 
 
-@pytest.mark.parametrize("classifier", ["DummyClassifier-tsml", "DummyClassifier-sktime"])
+@pytest.mark.parametrize(
+    "classifier",
+    ["DummyClassifier-tsml", "DummyClassifier-sktime", "DummyClassifier-sklearn"],
+)
 def test_run_classification_experiment(classifier):
     """Test classification experiments with test data and classifier."""
     result_path = (
@@ -24,7 +27,7 @@ def test_run_classification_experiment(classifier):
         if os.getcwd().split("\\")[-1] != "tests"
         else "../../datasets/"
     )
-    dataset = "UnitTest"
+    dataset = "MinimalChinatown"
 
     args = [
         None,
