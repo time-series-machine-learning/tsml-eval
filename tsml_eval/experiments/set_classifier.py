@@ -40,6 +40,7 @@ def set_classifier(
     # Convolution based
     if c == "rotf" or c == "rotationforest":
         from sktime.classification.sklearn import RotationForest
+
         return RotationForest(random_state=random_state, n_jobs=n_jobs)
     # Convolution based
     elif c == "rocket" or c == "rocketclassifier":
