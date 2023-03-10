@@ -482,19 +482,6 @@ def set_classifier(
             "without passing base classifiers"
         )
 
-    # Reading results from file
-    elif c == "fromfile":
-        from tsml_eval._wip.estimator_from_file.hivecote import FromFileHIVECOTE
-
-        file_paths = [
-            "tsml_eval/_wip.estimator_from_file/tests/test_files/Arsenal/",
-            "tsml_eval/_wip.estimator_from_file/tests/test_files/DrCIF/",
-            "tsml_eval/_wip.estimator_from_file/tests/test_files/STC/",
-            "tsml_eval/_wip.estimator_from_file/tests/test_files/TDE/",
-        ]
-
-        return FromFileHIVECOTE(file_paths=file_paths, random_state=0)
-
     # invalid classifier
     else:
         raise Exception("UNKNOWN CLASSIFIER ", c, " in set_classifier")
