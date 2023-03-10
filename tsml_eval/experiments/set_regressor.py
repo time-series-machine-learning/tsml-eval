@@ -201,17 +201,19 @@ def set_regressor(
         return ColumnEnsembleRegressor(estimators)
 
     # Other
-    elif r == "dummy" or r == "dummyregressor":
-        # todo we need an actual dummy for this. use tiny rocket for testing purposes
-        #  currently
-        from sktime.regression.kernel_based import RocketRegressor
+    elif r == "dummymeanpred":
+        # the dummy regressor is to predict the mean value of the output.
+        from tsml_eval.sktime_estimators.regression.dummy import MeanPredictorRegressor
 
-        return RocketRegressor(
-            num_kernels=50,
-            random_state=random_state,
-            n_jobs=n_jobs,
+        return MeanPredictorRegressor()
+
+    elif r == "dummymedianpred":
+        # the dummy regressor is to predict the mean value of the output.
+        from tsml_eval.sktime_estimators.regression.dummy import (
+            MedianPredictorRegressor,
         )
-        # raise ValueError(f" Regressor {name} is not avaiable")
+
+        return MedianPredictorRegressor()
 
     # regression package regressors
     elif r == "fresh-prince" or r == "freshprince":
@@ -404,6 +406,51 @@ def set_regressor(
         }
 
         return SklearnBaseRegressor(XGBRegressor(**model_params))
+
+    elif r == "xgb500" or r == "xgboost500":
+        from xgboost import XGBRegressor  # pip install xgboost
+
+        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+
+        model_params = {
+            "n_estimators": 500,
+            "n_jobs": n_jobs,
+            "learning_rate": 0.1,
+            "random_state": random_state,
+        }
+
+        return SklearnBaseRegressor(XGBRegressor(**model_params))
+
+    elif r == "rf500" or r == "randomforest500":
+        from sklearn.ensemble import RandomForestRegressor
+
+        from tsml_eval.sktime_estimators.regression.sklearn import SklearnBaseRegressor
+
+        model_params = {
+            "n_estimators": 500,
+            "n_jobs": n_jobs,
+            "random_state": random_state,
+        }
+
+        return SklearnBaseRegressor(RandomForestRegressor(**model_params))
+
+    # SoFR
+    elif r == "fpcr":
+        from tsml_eval.sktime_estimators.regression.sofr import FPCRegressor
+
+        return FPCRegressor(n_components=10)
+
+    elif r == "fpcr-b-spline":
+        from tsml_eval.sktime_estimators.regression.sofr import FPCRegressor
+
+        model_params = {
+            "smooth": "B-spline",
+            "order": 4,
+            "n_components": 10,
+            "n_basis": 10,
+        }
+
+        return FPCRegressor(**model_params)
 
     # invalid regressor
     else:
