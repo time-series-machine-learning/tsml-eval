@@ -9,19 +9,21 @@ import time
 
 import numpy as np
 import pandas as pd
-import torch
-import torch.nn as nn  # , torch.optim as optim
-import torch.nn.functional as F
 from sklearn.linear_model import RidgeCV
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils import check_random_state
 from sktime.regression.base import BaseRegressor
 
+_check_soft_dependencies("torch")
+
+import torch  # noqa: E402
+import torch.nn as nn  # noqa: E402
+import torch.nn.functional as F  # noqa: E402
+
 
 class Hydra(nn.Module):
     def __init__(self, ts_shape, k=8, g=64, max_num_channels=8):
-
         super().__init__()
 
         self.k = k  # num kernels per group
@@ -63,7 +65,6 @@ class Hydra(nn.Module):
         return W
 
     def forward(self, X):
-
         num_examples = X.shape[0]
 
         X = torch.from_numpy(X).float()
@@ -74,14 +75,12 @@ class Hydra(nn.Module):
         Z = []
 
         for dilation_index in range(self.num_dilations):
-
             d = self.dilations[dilation_index].item()
             p = self.paddings[dilation_index].item()
 
             # diff_index == 0 -> X
             # diff_index == 1 -> diff(X)
             for diff_index in range(min(2, self.g)):
-
                 if self.n_dims_ > 1:  # Multivariate
                     _Z = F.conv1d(
                         X[:, self.I[dilation_index][diff_index]].sum(2)
@@ -141,7 +140,6 @@ class HydraRegressor(BaseRegressor):
     }
 
     def __init__(self, k=8, g=64, max_num_channels=8, random_state=1, n_jobs=1):
-
         self.random_state = random_state
         if isinstance(random_state, int):
             torch.manual_seed(random_state)
@@ -155,7 +153,6 @@ class HydraRegressor(BaseRegressor):
         super().__init__()
 
     def _fit(self, X, y):
-
         self.regressor = make_pipeline(
             HydraPipeline(
                 ts_shape=X.shape,
@@ -170,7 +167,6 @@ class HydraRegressor(BaseRegressor):
         self.regressor.fit(X, y)
 
     def _predict(self, X):
-
         y_pred = self.regressor.predict(X)
 
         return y_pred

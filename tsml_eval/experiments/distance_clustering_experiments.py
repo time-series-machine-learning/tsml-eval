@@ -19,7 +19,6 @@ from datetime import datetime
 
 import numba
 import numpy as np
-import torch
 from sklearn import preprocessing
 from sklearn.metrics import davies_bouldin_score
 from sktime.clustering.k_means import TimeSeriesKMeans
@@ -500,7 +499,6 @@ def tune_cls(distance, train_X, n_clusters):
 if __name__ == "__main__":
     """Example simple usage, with args input via script or hard coded for testing."""
     numba.set_num_threads(1)
-    torch.set_num_threads(1)
 
     clusterer = "kmeans"
     chris_config = True  # This is so chris doesn't have to change config each time

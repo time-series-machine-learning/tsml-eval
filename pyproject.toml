@@ -34,10 +34,10 @@ classifiers = [
 ]
 dependencies = [
     "sktime>=0.15.0,<=0.16.0",
-    "scikit-learn",
-    "tsml>=0.0.2",
-    "convst",
-    "wildboar",
+    "scikit-learn>=1.0.2",
+    "tsml>=0.0.3",
+    "convst>=0.2.4",
+    "wildboar>=1.1.0",
     "stumpy",
     "xgboost",
     "networkx",
@@ -67,8 +67,8 @@ docs = [
     "furo",
 ]
 deep_learning = [
-    "tensorflow",
-    "tensorflow-probability",
+    "tensorflow>=2.5.0",
+    "tensorflow-probability>=0.13.0",
     "torch>=1.13.1",
 ]
 
@@ -119,6 +119,8 @@ isort = "^docs/examples/|^examples/_wip/"
 [tool.pytest.ini_options]
 addopts = '''
     --ignore tsml_eval/_wip
+    --ignore examples
+    --ignore docs
     --durations 10
     --timeout 600
     --showlocals

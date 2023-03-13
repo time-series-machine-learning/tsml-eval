@@ -5,7 +5,7 @@ from sklearn.ensemble import ExtraTreesClassifier
 from sktime.classification import BaseClassifier
 from statsmodels.regression.linear_model import burg
 
-from tsml_eval.sktime_estimators.classification.transformations.supervised_intervals import (
+from tsml_eval.estimators.classification.transformations.supervised_intervals import (
     SupervisedIntervals,
 )
 

@@ -442,12 +442,11 @@ def set_regressor(
 
         return FPCRegressor(**model_params)
 
-    elif r == "dummyregressor-tsml":
-        from tsml.interval_based import TSFRegressor
+    elif r == "dummy" or r == "dummyregressor" or r == "dummyregressor-tsml":
+        from tsml.dummy import DummyRegressor
 
-        # todo replace with actual dummy when available
-        return TSFRegressor(n_estimators=1)
-    elif r == "dummy" or r == "dummyregressor" or r == "dummyregressor-sktime":
+        return DummyRegressor()
+    elif r == "dummyregressor-sktime":
         from sktime.regression.dummy import DummyRegressor
 
         return DummyRegressor()

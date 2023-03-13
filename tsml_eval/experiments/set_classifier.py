@@ -474,12 +474,11 @@ def set_classifier(
         )
 
     # Dummy classifiers
-    elif c == "dummyclassifier-tsml":
-        from tsml.interval_based import TSFClassifier
+    elif c == "dummy" or c == "dummyclassifier" or c == "dummyclassifier-tsml":
+        from tsml.dummy import DummyClassifier
 
-        # todo replace with actual dummy when available
-        return TSFClassifier(n_estimators=1)
-    elif c == "dummy" or c == "dummyclassifier" or c == "dummyclassifier-sktime":
+        return DummyClassifier()
+    elif c == "dummyclassifier-sktime":
         from sktime.classification.dummy import DummyClassifier
 
         return DummyClassifier()

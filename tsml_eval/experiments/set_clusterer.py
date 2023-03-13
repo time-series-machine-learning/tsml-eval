@@ -50,16 +50,10 @@ def set_clusterer(clusterer_name, random_state=None, n_jobs=1):
         )
 
     # Dummy clusterer
-    elif c == "dummyclusterer-tsml":
-        from sktime.clustering.k_means import TimeSeriesKMeans
+    elif c == "dummy" or c == "dummyclusterer" or c == "dummyclusterer-tsml":
+        from tsml.dummy import DummyClusterer
 
-        # todo replace with tsml version
-        return TimeSeriesKMeans(
-            n_clusters=2,
-            metric="euclidean",
-            max_iter=1,
-            random_state=0,
-        )
+        return DummyClusterer(strategy="random", random_state=random_state)
     elif c == "dummyclusterer-sktime":
         from sktime.clustering.k_means import TimeSeriesKMeans
 
