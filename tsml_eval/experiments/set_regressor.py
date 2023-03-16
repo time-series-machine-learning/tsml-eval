@@ -17,6 +17,7 @@ def set_regressor(
     build_train_file=False,
     n_jobs=1,
     fit_contract=0,
+    checkpoint=None,
     kwargs=None,
 ):
     """Return a regressor matching a given input name.

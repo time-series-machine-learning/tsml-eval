@@ -235,7 +235,7 @@ def load_and_run_classification_experiment(
     )
 
     if not build_test_file and not build_train_file:
-        warnings.warn("All files exist and not overwriting, skipping.")
+        warnings.warn("All files exist and not overwriting, skipping.", stacklevel=1)
         return
 
     X_train, y_train, X_test, y_test, resample = _load_data(
@@ -335,12 +335,16 @@ def run_regression_experiment(
     if build_test_file or regressor_train_preds:
         start = int(round(time.time() * 1000))
         regressor.fit(X_train, y_train)
-        fit_time = int(round(time.time() * 1000)) - start
+        fit_time = (int(round(time.time() * 1000)) - start) + int(
+            round(getattr(regressor, "_fit_time", 0) * 1000)
+        )
 
     if build_test_file:
         start = int(round(time.time() * 1000))
         test_preds = regressor.predict(X_test)
-        test_time = int(round(time.time() * 1000)) - start
+        test_time = (int(round(time.time() * 1000)) - start) + int(
+            round(getattr(regressor, "_test_time", 0) * 1000)
+        )
 
         test_mse = mean_squared_error(y_test, test_preds)
 
@@ -448,7 +452,7 @@ def load_and_run_regression_experiment(
     )
 
     if not build_test_file and not build_train_file:
-        warnings.warn("All files exist and not overwriting, skipping.")
+        warnings.warn("All files exist and not overwriting, skipping.", stacklevel=1)
         return
 
     X_train, y_train, X_test, y_test, resample = _load_data(
@@ -672,7 +676,7 @@ def load_and_run_clustering_experiment(
     )
 
     if not build_test_file and not build_train_file:
-        warnings.warn("All files exist and not overwriting, skipping.")
+        warnings.warn("All files exist and not overwriting, skipping.", stacklevel=1)
         return
 
     X_train, y_train, X_test, y_test, resample = _load_data(
