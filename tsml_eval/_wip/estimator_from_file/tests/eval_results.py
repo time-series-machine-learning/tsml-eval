@@ -87,64 +87,77 @@ def eval_mean_acc(caminho, datasets_names):
     ranks_per_components = []
     for dataset in datasets_names:
         dataset_acc = []
-        for path in components:
+        for compo in components:
             component_acc = []
             for resample in range(0, 30):
                 f = open(
-                    "C:/Users/zrc22qwu/Documents/test_files/" + path + "/Predictions/" + dataset + f"/testResample{resample}.csv",
+                    "C:/Users/zrc22qwu/Documents/test_files/" + compo + "/Predictions/" + dataset + f"/testResample{resample}.csv",
                     "r")
                 lines = f.readlines()
                 component_acc.append(float(lines[2].split(",")[0]))
             dataset_acc.append(np.mean(component_acc))
         ranks_per_components.append(ranklist(dataset_acc))
         acc_per_components.append(dataset_acc)
-    variance = []
-    max_minus_min = []
-    small_minus_min = []
+    print(acc_per_components)
+    #variance = []
+    min_div_max = []  # min/max acc
     for i, temp in enumerate(acc_per_components):
-        variance.append(np.var(temp))
-        max_minus_min.append(np.max(temp)-np.min(temp))
+        #variance.append(np.var(temp))
+        min_div_max.append(np.min(temp)/np.max(temp))
         temp2 = np.min(temp)
-        del temp[np.argmin(temp)]
-        small_minus_min.append(np.min(temp)-temp2)
     temp = (np.array(accuracies_array[0]) - np.array(accuracies_array[1])) > 0.01
-    print("Accuracy drop > 1% on no_tune:")
+    print("Accuracy drop > 1% on remove worst:")
     keys = np.array(datasets_names)[temp]
-    vals = [np.array(acc_per_components)[temp], np.array(variance)[temp], np.array(max_minus_min)[temp], np.array(small_minus_min)[temp], np.array(accuracies_array[0])[temp], np.array(accuracies_array[1])[temp]]
+    vals = [np.array(acc_per_components)[temp], np.array(min_div_max)[temp], np.array(accuracies_array[0])[temp], np.array(accuracies_array[1])[temp]]
     dict_acc = dict(zip(keys, zip(*vals)))
     for x in dict_acc:
         print(x, dict_acc[x])
-    print ("mean variance: ")
-    print(np.mean(np.array(variance)[temp]))
-    print("mean max_minus_min: ")
-    print(np.mean(np.array(max_minus_min)[temp]))
-    print("mean small_minus_min: ")
-    print(np.mean(np.array(small_minus_min)[temp]))
+    #print ("mean variance: ")
+    #print(np.mean(np.array(variance)[temp]))
+    print("mean min/max acc: ")
+    print(np.mean(np.array(min_div_max)[temp]))
 
     temp = (np.array(accuracies_array[0]) - np.array(accuracies_array[1])) < -0.01
-    print("Accuracy better by > 1% on no_tune:")
+    print("Accuracy better by > 1% on remove_worst:")
     keys = np.array(datasets_names)[temp]
-    vals = [np.array(acc_per_components)[temp], np.array(variance)[temp], np.array(max_minus_min)[temp], np.array(small_minus_min)[temp], np.array(accuracies_array[0])[temp],
+    vals = [np.array(acc_per_components)[temp], np.array(min_div_max)[temp], np.array(accuracies_array[0])[temp],
             np.array(accuracies_array[1])[temp]]
     dict_acc = dict(zip(keys, zip(*vals)))
     for x in dict_acc:
         print(x, dict_acc[x])
-    print("mean variance: ")
-    print(np.mean(np.array(variance)[temp]))
-    print("mean max_minus_min: ")
-    print(np.mean(np.array(max_minus_min)[temp]))
-    print("mean small_minus_min: ")
-    print(np.mean(np.array(small_minus_min)[temp]))
-    '''
+    #print("mean variance: ")
+    #print(np.mean(np.array(variance)[temp]))
+    print("mean min/max acc: ")
+    print(np.mean(np.array(min_div_max)[temp]))
+
+
     print("All:")
     keys = np.array(datasets_names)
-    vals = [np.array(acc_per_components), np.array(variance), np.array(max_minus_min),
+    vals = [np.array(acc_per_components), np.array(min_div_max),
             np.array(accuracies_array[0]),
-            np.array(accuracies_array[1])]
+            np.array(accuracies_array[1]),
+            ]
     dict_acc = dict(zip(keys, zip(*vals)))
+    '''
     for x in dict_acc:
         print(x, dict_acc[x])
     '''
+    print("min_div_max < 0.7:")
+    print(np.array(datasets_names)[np.array(min_div_max)<0.7])
+    print("array(Arsenal, DrCIF, STC, TDE), min_div_max, acc_original, acc_RemoveWorst")
+    for i in np.array(datasets_names)[np.array(min_div_max)<0.7]:
+        print(dict_acc[i])
+
+    print("min_div_max < 0.8:")
+    print(np.array(datasets_names)[np.array(min_div_max) < 0.8])
+    print("array(Arsenal, DrCIF, STC, TDE), min_div_max, acc_original, acc_RemoveWorst")
+    for i in np.array(datasets_names)[np.array(min_div_max) < 0.8]:
+        print(dict_acc[i])
+    print("min_div_max < 0.9:")
+    print(np.array(datasets_names)[np.array(min_div_max) < 0.9])
+    print("array(Arsenal, DrCIF, STC, TDE), min_div_max, acc_original, acc_RemoveWorst")
+    for i in np.array(datasets_names)[np.array(min_div_max) < 0.9]:
+        print(dict_acc[i])
     #print("mean variance: ")
     #print(np.mean(np.array(variance)[temp]))
     #print(np.array(variance)[temp])
