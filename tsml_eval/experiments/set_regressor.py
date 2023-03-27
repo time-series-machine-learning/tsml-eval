@@ -294,7 +294,7 @@ def set_regressor(
     elif r == "rotf" or r == "rotationforest":
         from tsml_eval.estimators.regression.sklearn import (
             RotationForest,
-            SklearnBaseRegressor,
+            SklearnToTsmlRegressor,
         )
 
         model_params = {
@@ -303,39 +303,39 @@ def set_regressor(
             "n_jobs": n_jobs,
         }
 
-        return SklearnBaseRegressor(RotationForest(**model_params))
+        return SklearnToTsmlRegressor(RotationForest(**model_params))
 
     elif r == "lr" or r == "linearregression":
         from sklearn.linear_model import LinearRegression
 
-        from tsml_eval.estimators.regression.sklearn import SklearnBaseRegressor
+        from tsml_eval.estimators.regression.sklearn import SklearnToTsmlRegressor
 
         model_params = {"fit_intercept": True, "n_jobs": n_jobs}
 
-        return SklearnBaseRegressor(LinearRegression(**model_params))
+        return SklearnToTsmlRegressor(LinearRegression(**model_params))
 
     elif r == "ridgecv" or r == "ridge":
         from sklearn.linear_model import RidgeCV
 
-        from tsml_eval.estimators.regression.sklearn import SklearnBaseRegressor
+        from tsml_eval.estimators.regression.sklearn import SklearnToTsmlRegressor
 
         model_params = {"fit_intercept": True, "alphas": np.logspace(-3, 3, 10)}
 
-        return SklearnBaseRegressor(RidgeCV(**model_params))
+        return SklearnToTsmlRegressor(RidgeCV(**model_params))
 
     elif r == "svr" or r == "supportvectorregressor":
         from sklearn.svm import SVR
 
-        from tsml_eval.estimators.regression.sklearn import SklearnBaseRegressor
+        from tsml_eval.estimators.regression.sklearn import SklearnToTsmlRegressor
 
         model_params = {"kernel": "rbf", "C": 1}
 
-        return SklearnBaseRegressor(SVR(**model_params))
+        return SklearnToTsmlRegressor(SVR(**model_params))
     elif r == "grid-svr" or r == "grid-supportvectorregressor":
         from sklearn.model_selection import GridSearchCV
         from sklearn.svm import SVR
 
-        from tsml_eval.estimators.regression.sklearn import SklearnBaseRegressor
+        from tsml_eval.estimators.regression.sklearn import SklearnToTsmlRegressor
 
         param_grid = [
             {
@@ -347,13 +347,13 @@ def set_regressor(
 
         scoring = "neg_mean_squared_error"
 
-        return SklearnBaseRegressor(
+        return SklearnToTsmlRegressor(
             GridSearchCV(SVR(), param_grid, scoring=scoring, n_jobs=n_jobs, cv=3)
         )
     elif r == "rf" or r == "randomforest":
         from sklearn.ensemble import RandomForestRegressor
 
-        from tsml_eval.estimators.regression.sklearn import SklearnBaseRegressor
+        from tsml_eval.estimators.regression.sklearn import SklearnToTsmlRegressor
 
         model_params = {
             "n_estimators": 100,
@@ -363,7 +363,7 @@ def set_regressor(
     elif r == "rf500":
         from sklearn.ensemble import RandomForestRegressor
 
-        from tsml_eval.estimators.regression.sklearn import SklearnBaseRegressor
+        from tsml_eval.estimators.regression.sklearn import SklearnToTsmlRegressor
 
         model_params = {
             "n_estimators": 500,
@@ -371,12 +371,12 @@ def set_regressor(
             "random_state": random_state,
         }
 
-        return SklearnBaseRegressor(RandomForestRegressor(**model_params))
+        return SklearnToTsmlRegressor(RandomForestRegressor(**model_params))
 
     elif r == "xgb" or r == "xgboost":
         from xgboost import XGBRegressor  # pip install xgboost
 
-        from tsml_eval.estimators.regression.sklearn import SklearnBaseRegressor
+        from tsml_eval.estimators.regression.sklearn import SklearnToTsmlRegressor
 
         model_params = {
             "n_estimators": 100,
@@ -387,7 +387,7 @@ def set_regressor(
     elif r == "xgb500":
         from xgboost import XGBRegressor  # pip install xgboost
 
-        from tsml_eval.estimators.regression.sklearn import SklearnBaseRegressor
+        from tsml_eval.estimators.regression.sklearn import SklearnToTsmlRegressor
 
         model_params = {
             "n_estimators": 500,
@@ -396,12 +396,12 @@ def set_regressor(
             "random_state": random_state,
         }
 
-        return SklearnBaseRegressor(XGBRegressor(**model_params))
+        return SklearnToTsmlRegressor(XGBRegressor(**model_params))
 
     elif r == "xgb500" or r == "xgboost500":
         from xgboost import XGBRegressor  # pip install xgboost
 
-        from tsml_eval.estimators.regression.sklearn import SklearnBaseRegressor
+        from tsml_eval.estimators.regression.sklearn import SklearnToTsmlRegressor
 
         model_params = {
             "n_estimators": 500,
@@ -410,12 +410,12 @@ def set_regressor(
             "random_state": random_state,
         }
 
-        return SklearnBaseRegressor(XGBRegressor(**model_params))
+        return SklearnToTsmlRegressor(XGBRegressor(**model_params))
 
     elif r == "rf500" or r == "randomforest500":
         from sklearn.ensemble import RandomForestRegressor
 
-        from tsml_eval.estimators.regression.sklearn import SklearnBaseRegressor
+        from tsml_eval.estimators.regression.sklearn import SklearnToTsmlRegressor
 
         model_params = {
             "n_estimators": 500,
@@ -423,7 +423,7 @@ def set_regressor(
             "random_state": random_state,
         }
 
-        return SklearnBaseRegressor(RandomForestRegressor(**model_params))
+        return SklearnToTsmlRegressor(RandomForestRegressor(**model_params))
 
     # SoFR
     elif r == "fpcr":

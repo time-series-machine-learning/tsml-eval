@@ -8,12 +8,11 @@
 import time
 
 import numpy as np
-import pandas as pd
 from aeon.regression.base import BaseRegressor
+from aeon.utils.validation._dependencies import _check_soft_dependencies
 from sklearn.linear_model import RidgeCV
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.utils import check_random_state
 
 _check_soft_dependencies("torch")
 
