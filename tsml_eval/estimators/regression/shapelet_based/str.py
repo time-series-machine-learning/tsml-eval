@@ -9,11 +9,11 @@ __author__ = ["TonyBagnall", "MatthewMiddlehurst", "DavidGuijoRubio"]
 __all__ = ["ShapeletTransformRegressor"]
 
 import numpy as np
+from aeon.base._base import _clone_estimator
+from aeon.regression.base import BaseRegressor
+from aeon.utils.validation.panel import check_X_y
 from sklearn.model_selection import cross_val_predict
 from sklearn.utils.multiclass import type_of_target
-from sktime.base._base import _clone_estimator
-from sktime.regression.base import BaseRegressor
-from sktime.utils.validation.panel import check_X_y
 
 from tsml_eval.estimators.regression.sklearn import RotationForest
 from tsml_eval.estimators.regression.transformations.shapelet_transform import (
@@ -114,9 +114,9 @@ class ShapeletTransformRegressor(BaseRegressor):
 
     Examples
     --------
-    >>> from sktime.classification.shapelet_based import ShapeletTransformClassifier
-    >>> from sktime.classification.sklearn import RotationForest
-    >>> from sktime.datasets import load_unit_test
+    >>> from aeon.classification.shapelet_based import ShapeletTransformClassifier
+    >>> from aeon.classification.sklearn import RotationForest
+    >>> from aeon.datasets import load_unit_test
     >>> X_train, y_train = load_unit_test(split="train", return_X_y=True)
     >>> X_test, y_test = load_unit_test(split="test", return_X_y=True)
     >>> clf = ShapeletTransformClassifier(

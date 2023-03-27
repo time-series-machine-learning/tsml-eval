@@ -11,17 +11,13 @@ __all__ = ["HIVECOTEV2"]
 from datetime import datetime
 
 import numpy as np
+from aeon.regression.base import BaseRegressor
 from sklearn.metrics import mean_squared_error
-from sktime.regression.base import BaseRegressor
 
 from tsml_eval.estimators.regression.convolution_based import Arsenal
-from tsml_eval.estimators.regression.dictionary_based import (
-    TemporalDictionaryEnsemble,
-)
+from tsml_eval.estimators.regression.dictionary_based import TemporalDictionaryEnsemble
 from tsml_eval.estimators.regression.interval_based import DrCIF
-from tsml_eval.estimators.regression.shapelet_based import (
-    ShapeletTransformRegressor,
-)
+from tsml_eval.estimators.regression.shapelet_based import ShapeletTransformRegressor
 
 
 class HIVECOTEV2(BaseRegressor):

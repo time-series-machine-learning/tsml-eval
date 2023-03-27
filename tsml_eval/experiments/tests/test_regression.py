@@ -38,6 +38,7 @@ def test_run_regression_experiment(regressor):
         "0",
         "True",
         "False",
+        None,
     ]
     run_experiment(args, overwrite=True)
 

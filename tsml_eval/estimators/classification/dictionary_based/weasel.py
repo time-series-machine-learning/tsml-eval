@@ -15,6 +15,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
+from aeon.classification.base import BaseClassifier
 from joblib import Parallel, delayed
 from scipy.sparse import hstack
 
@@ -23,11 +24,10 @@ from sklearn.linear_model import RidgeClassifierCV
 
 # from sklearn.pipeline import make_pipeline
 from sklearn.utils import check_random_state
-from sktime.classification.base import BaseClassifier
 
 from tsml_eval.estimators.classification.transformations import SFADilation
 
-# from sktime.transformations.panel.rocket import MiniRocket
+# from aeon.transformations.panel.rocket import MiniRocket
 
 
 class WEASEL_DILATION(BaseClassifier):
@@ -221,7 +221,7 @@ class WEASEL_DILATION(BaseClassifier):
         )
 
         sfa_words = []
-        for (words, transformer) in parallel_res:
+        for words, transformer in parallel_res:
             self.SFA_transformers.extend(transformer)
             sfa_words.extend(words)
 

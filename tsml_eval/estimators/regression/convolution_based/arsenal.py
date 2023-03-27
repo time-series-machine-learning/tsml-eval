@@ -10,21 +10,21 @@ __all__ = ["Arsenal"]
 import time
 
 import numpy as np
-from joblib import Parallel, delayed
-from sklearn.linear_model import RidgeCV
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import StandardScaler
-from sklearn.utils import check_random_state
-from sktime.base._base import _clone_estimator
-from sktime.regression.base import BaseRegressor
-from sktime.transformations.panel.rocket import (
+from aeon.base._base import _clone_estimator
+from aeon.regression.base import BaseRegressor
+from aeon.transformations.panel.rocket import (
     MiniRocket,
     MiniRocketMultivariate,
     MultiRocket,
     MultiRocketMultivariate,
     Rocket,
 )
-from sktime.utils.validation.panel import check_X_y
+from aeon.utils.validation.panel import check_X_y
+from joblib import Parallel, delayed
+from sklearn.linear_model import RidgeCV
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.utils import check_random_state
 
 
 class Arsenal(BaseRegressor):
@@ -97,17 +97,6 @@ class Arsenal(BaseRegressor):
     .. [1] Middlehurst, Matthew, James Large, Michael Flynn, Jason Lines, Aaron Bostrom,
        and Anthony Bagnall. "HIVE-COTE 2.0: a new meta ensemble for time series
        classification." arXiv preprint arXiv:2104.07551 (2021).
-
-    Examples
-    --------
-    >>> from sktime.classification.kernel_based import Arsenal
-    >>> from sktime.datasets import load_unit_test
-    >>> X_train, y_train = load_unit_test(split="train", return_X_y=True)
-    >>> X_test, y_test =load_unit_test(split="test", return_X_y=True)
-    >>> clf = Arsenal(num_kernels=100, n_estimators=5)
-    >>> clf.fit(X_train, y_train)
-    Arsenal(...)
-    >>> y_pred = clf.predict(X_test)
     """
 
     _tags = {

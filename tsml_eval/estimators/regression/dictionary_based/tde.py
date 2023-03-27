@@ -14,14 +14,14 @@ import warnings
 from collections import defaultdict
 
 import numpy as np
+from aeon.regression.base import BaseRegressor
+from aeon.utils.validation.panel import check_X_y
 from joblib import Parallel, delayed
 from numba import njit, types
 from numba.typed import Dict
 from sklearn import preprocessing
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.utils import check_random_state
-from sktime.regression.base import BaseRegressor
-from sktime.utils.validation.panel import check_X_y
 
 from tsml_eval.estimators.regression.transformations.sfa import SFA
 
@@ -134,8 +134,8 @@ class TemporalDictionaryEnsemble(BaseRegressor):
 
     Examples
     --------
-    >>> from sktime.classification.dictionary_based import TemporalDictionaryEnsemble
-    >>> from sktime.datasets import load_unit_test
+    >>> from aeon.classification.dictionary_based import TemporalDictionaryEnsemble
+    >>> from aeon.datasets import load_unit_test
     >>> X_train, y_train = load_unit_test(split="train", return_X_y=True)
     >>> X_test, y_test = load_unit_test(split="test", return_X_y=True)
     >>> clf = TemporalDictionaryEnsemble(
@@ -627,8 +627,8 @@ class IndividualTDE(BaseRegressor):
 
     Examples
     --------
-    >>> from sktime.classification.dictionary_based import IndividualTDE
-    >>> from sktime.datasets import load_unit_test
+    >>> from aeon.classification.dictionary_based import IndividualTDE
+    >>> from aeon.datasets import load_unit_test
     >>> X_train, y_train = load_unit_test(split="train", return_X_y=True)
     >>> X_test, y_test = load_unit_test(split="test", return_X_y=True)
     >>> clf = IndividualTDE()

@@ -10,13 +10,13 @@ __author__ = ["patrickzib", "Arik Ermshaus"]
 __all__ = ["HYDRA", "HydraMultiRocket"]
 
 import numpy as np
+from aeon.classification.base import BaseClassifier
+from aeon.transformations.panel.rocket import MultiRocket
+from aeon.utils.validation import check_n_jobs
+from aeon.utils.validation._dependencies import _check_soft_dependencies
 from sklearn.linear_model import RidgeClassifierCV
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
-from sktime.classification.base import BaseClassifier
-from sktime.transformations.panel.rocket import MultiRocket
-from sktime.utils.validation import check_n_jobs
-from sktime.utils.validation._dependencies import _check_soft_dependencies
 
 _check_soft_dependencies("torch")
 
@@ -26,7 +26,7 @@ import torch.nn.functional as F  # noqa: E402
 
 
 class HYDRA(BaseClassifier):
-    """Sktime-HYDRA classifier-adaptor."""
+    """aeon-HYDRA classifier-adaptor."""
 
     _tags = {
         "capability:multithreading": False,
@@ -63,7 +63,7 @@ class HYDRA(BaseClassifier):
 
 
 class HydraMultiRocket(BaseClassifier):
-    """Sktime-HydraMultiRocket classifier-adaptor."""
+    """aeon-HydraMultiRocket classifier-adaptor."""
 
     _tags = {
         "capability:multithreading": False,

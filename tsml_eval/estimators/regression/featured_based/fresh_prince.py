@@ -9,8 +9,8 @@ __author__ = ["MatthewMiddlehurst", "David Guijo-Rubio"]
 __all__ = ["FreshPRINCERegressor"]
 
 import numpy as np
-from sktime.regression.base import BaseRegressor
-from sktime.transformations.panel.tsfresh import TSFreshFeatureExtractor
+from aeon.regression.base import BaseRegressor
+from aeon.transformations.panel.tsfresh import TSFreshFeatureExtractor
 
 from tsml_eval.estimators.regression.sklearn import RotationForest
 

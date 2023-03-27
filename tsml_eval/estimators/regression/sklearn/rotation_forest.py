@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """A rotation forest (RotF) vector classifier.
 
-A rotation Forest sktime implementation for continuous values only. Fits sklearn
+A rotation Forest aeon implementation for continuous values only. Fits sklearn
 conventions.
 """
 
@@ -12,14 +12,14 @@ import time
 
 import numpy as np
 import pandas as pd
+from aeon.base._base import _clone_estimator
+from aeon.exceptions import NotFittedError
+from aeon.utils.validation import check_n_jobs
 from joblib import Parallel, delayed
 from sklearn.base import BaseEstimator
 from sklearn.decomposition import PCA
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils import check_random_state
-from sktime.base._base import _clone_estimator
-from sktime.exceptions import NotFittedError
-from sktime.utils.validation import check_n_jobs
 
 
 class RotationForest(BaseEstimator):
@@ -30,7 +30,7 @@ class RotationForest(BaseEstimator):
     transformed using PCA.
 
     Intended as a benchmark for time series data and a base classifier for
-    transformation based appraoches such as ShapeletTransformClassifier, this sktime
+    transformation based appraoches such as ShapeletTransformClassifier, this aeon
     implementation only works with continuous attributes.
 
     Parameters
@@ -98,19 +98,6 @@ class RotationForest(BaseEstimator):
     .. [2] Bagnall, A., et al. "Is rotation forest the best classifier for problems
        with continuous features?." arXiv preprint arXiv:1809.06705 (2018).
 
-    Examples
-    --------
-    >>> from sktime.classification.sklearn import RotationForest
-    >>> from sktime.datasets import load_unit_test
-    >>> from sktime.datatypes._panel._convert import from_nested_to_3d_numpy
-    >>> X_train, y_train = load_unit_test(split="train", return_X_y=True)
-    >>> X_test, y_test = load_unit_test(split="test", return_X_y=True)
-    >>> X_train = from_nested_to_3d_numpy(X_train)
-    >>> X_test = from_nested_to_3d_numpy(X_test)
-    >>> clf = RotationForest(n_estimators=10)
-    >>> clf.fit(X_train, y_train)
-    RotationForest(...)
-    >>> y_pred = clf.predict(X_test)
     """
 
     def __init__(

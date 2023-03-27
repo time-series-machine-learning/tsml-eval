@@ -12,15 +12,15 @@ import math
 import time
 
 import numpy as np
+from aeon.base._base import _clone_estimator
+from aeon.classification.sklearn._continuous_interval_tree import _drcif_feature
+from aeon.regression.base import BaseRegressor
+from aeon.transformations.panel.catch22 import Catch22
+from aeon.utils.validation.panel import check_X_y
 from joblib import Parallel, delayed
 from sklearn.base import BaseEstimator
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils import check_random_state
-from sktime.base._base import _clone_estimator
-from sktime.classification.sklearn._continuous_interval_tree import _drcif_feature
-from sktime.regression.base import BaseRegressor
-from sktime.transformations.panel.catch22 import Catch22
-from sktime.utils.validation.panel import check_X_y
 
 
 class DrCIF(BaseRegressor):
@@ -63,7 +63,7 @@ class DrCIF(BaseRegressor):
         string for suggested options.
         "DTC" uses the sklearn DecisionTreeClassifier using entropy as a splitting
         measure.
-        "CIT" uses the sktime ContinuousIntervalTree, an implementation of the original
+        "CIT" uses the aeon ContinuousIntervalTree, an implementation of the original
         tree used with embedded attribute processing for faster predictions.
     time_limit_in_minutes : int, default=0
         Time contract to limit build time in minutes, overriding n_estimators.
@@ -124,8 +124,8 @@ class DrCIF(BaseRegressor):
 
     Examples
     --------
-    >>> from sktime.classification.interval_based import DrCIF
-    >>> from sktime.datasets import load_unit_test
+    >>> from aeon.classification.interval_based import DrCIF
+    >>> from aeon.datasets import load_unit_test
     >>> X_train, y_train = load_unit_test(split="train", return_X_y=True)
     >>> X_test, y_test = load_unit_test(split="test", return_X_y=True)
     >>> clf = DrCIF(n_estimators=3, n_intervals=2, att_subsample_size=2)

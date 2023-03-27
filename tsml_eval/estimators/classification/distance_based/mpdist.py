@@ -6,13 +6,13 @@ __all__ = ["MPDist"]
 
 import numpy as np
 import stumpy
+from aeon.classification.base import BaseClassifier
+from aeon.utils.validation.panel import check_X
 from sklearn.metrics import pairwise
-from sktime.classification.base import BaseClassifier
-from sktime.utils.validation.panel import check_X
 
 
 class MPDist(BaseClassifier):
-    """Sktime-MPDist k-NN classifier-adaptor."""
+    """aeon-MPDist k-NN classifier-adaptor."""
 
     _tags = {
         "capability:multithreading": True,

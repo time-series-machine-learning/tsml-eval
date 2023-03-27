@@ -11,9 +11,9 @@ from itertools import chain
 
 import numpy as np
 import pandas as pd
+from aeon.base import _HeterogenousMetaEstimator
+from aeon.regression.base import BaseRegressor
 from sklearn.preprocessing import LabelEncoder
-from sktime.base import _HeterogenousMetaEstimator
-from sktime.regression.base import BaseRegressor
 
 
 class BaseColumnEnsembleRegressor(_HeterogenousMetaEstimator, BaseRegressor):
@@ -242,9 +242,9 @@ class ColumnEnsembleRegressor(BaseColumnEnsembleRegressor):
             `MyClass(**params)` or `MyClass(**params[i])` creates a valid test instance.
             `create_test_instance` uses the first (or only) dictionary in `params`.
         """
-        from sktime.classification.dictionary_based import ContractableBOSS
-        from sktime.classification.interval_based import CanonicalIntervalForest
-        from sktime.classification.interval_based import (
+        from aeon.classification.dictionary_based import ContractableBOSS
+        from aeon.classification.interval_based import CanonicalIntervalForest
+        from aeon.classification.interval_based import (
             TimeSeriesForestClassifier as TSFC,
         )
 

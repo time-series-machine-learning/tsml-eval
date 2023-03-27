@@ -3,7 +3,7 @@
 
  Built on sklearn KNeighborsClassifier, this class supports a range of distance
  measure specifically for time series. These distance functions are defined in numba
- in sktime.distances. Python versions are in sktime.distances.elastic
+ in aeon.distances. Python versions are in aeon.distances.elastic
  but these are orders of magnitude slower.
 
 Please note that many aspects of this class are taken from scikit-learn's
@@ -25,6 +25,10 @@ __all__ = ["KNeighborsTimeSeriesClassifier"]
 from functools import partial
 
 import numpy as np
+from aeon.classification.base import BaseClassifier
+
+# New imports using Numba
+from aeon.distances import distance_factory
 from joblib import effective_n_jobs
 from scipy import stats
 from sklearn.metrics import pairwise_distances_chunked
@@ -33,10 +37,6 @@ from sklearn.neighbors._base import _check_weights, _get_weights
 from sklearn.utils.extmath import weighted_mode
 from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_array
-from sktime.classification.base import BaseClassifier
-
-# New imports using Numba
-from sktime.distances import distance_factory
 
 
 class KNeighborsTimeSeriesClassifier(_KNeighborsClassifier, BaseClassifier):
@@ -83,8 +83,8 @@ class KNeighborsTimeSeriesClassifier(_KNeighborsClassifier, BaseClassifier):
 
     Examples
     --------
-    >>> from sktime.classification.distance_based import KNeighborsTimeSeriesClassifier
-    >>> from sktime.datasets import load_unit_test
+    >>> from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
+    >>> from aeon.datasets import load_unit_test
     >>> X_train, y_train = load_unit_test(return_X_y=True, split="train")
     >>> X_test, y_test = load_unit_test(return_X_y=True, split="test")
     >>> classifier = KNeighborsTimeSeriesClassifier(distance="euclidean")
@@ -144,7 +144,7 @@ class KNeighborsTimeSeriesClassifier(_KNeighborsClassifier, BaseClassifier):
 
         Parameters
         ----------
-        X : sktime-format pandas dataframe with shape(n,d),
+        X : aeon-format pandas dataframe with shape(n,d),
         or numpy ndarray with shape(n,d,m)
 
         y : {array-like, sparse matrix}
@@ -207,7 +207,7 @@ class KNeighborsTimeSeriesClassifier(_KNeighborsClassifier, BaseClassifier):
 
         Parameters
         ----------
-        X : sktime-format pandas dataframe with shape([n_cases,n_dimensions]),
+        X : aeon-format pandas dataframe with shape([n_cases,n_dimensions]),
         or numpy ndarray with shape([n_cases,n_readings,n_dimensions])
         y : {array-like, sparse matrix}
             Target values of shape = [n_samples]
@@ -259,7 +259,6 @@ class KNeighborsTimeSeriesClassifier(_KNeighborsClassifier, BaseClassifier):
 
         n_jobs = effective_n_jobs(self.n_jobs)
         if self._fit_method == "brute":
-
             reduce_func = partial(
                 self._kneighbors_reduce_func,
                 n_neighbors=n_neighbors,
@@ -326,7 +325,7 @@ class KNeighborsTimeSeriesClassifier(_KNeighborsClassifier, BaseClassifier):
 
         Parameters
         ----------
-        X : sktime-format pandas dataframe or array-like, shape (n_query,
+        X : aeon-format pandas dataframe or array-like, shape (n_query,
         n_features), or (n_query, n_indexed) if metric == 'precomputed' test samples.
 
         Returns

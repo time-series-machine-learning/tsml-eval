@@ -2,7 +2,7 @@
 # Simple usages for building classifiers
 
 import numpy as np
-from sktime.classification.compose import ClassifierPipeline
+from aeon.classification.compose import ClassifierPipeline
 from sktime.classification.feature_based import FreshPRINCE
 from sktime.datasets import load_arrow_head, load_UCR_UEA_dataset
 from sktime.transformations.panel.catch22 import Catch22

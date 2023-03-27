@@ -16,6 +16,9 @@ from operator import itemgetter
 
 import numpy as np
 import pandas as pd
+from aeon.transformations.base import BaseTransformer
+from aeon.utils.numba.general import z_normalise_series
+from aeon.utils.validation import check_n_jobs
 from joblib import Parallel, delayed
 from numba import njit
 from numba.typed.typedlist import List
@@ -24,9 +27,6 @@ from sklearn import preprocessing
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils import check_random_state
 from sklearn.utils.multiclass import class_distribution
-from sktime.transformations.base import BaseTransformer
-from sktime.utils.numba.general import z_normalise_series
-from sktime.utils.validation import check_n_jobs
 
 
 class RandomShapeletTransform(BaseTransformer):
@@ -127,10 +127,10 @@ class RandomShapeletTransform(BaseTransformer):
 
     Examples
     --------
-    >>> from sktime.transformations.panel.shapelet_transform import (
+    >>> from aeon.transformations.panel.shapelet_transform import (
     ...     RandomShapeletTransform
     ... )
-    >>> from sktime.datasets import load_unit_test
+    >>> from aeon.datasets import load_unit_test
     >>> X_train, y_train = load_unit_test(split="train", return_X_y=True)
     >>> t = RandomShapeletTransform(
     ...     n_shapelet_samples=500,

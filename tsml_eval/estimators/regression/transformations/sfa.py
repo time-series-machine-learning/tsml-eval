@@ -13,14 +13,14 @@ import warnings
 
 import numpy as np
 import pandas as pd
+from aeon.transformations.base import BaseTransformer
+from aeon.utils.validation.panel import check_X
 from joblib import Parallel, delayed
 from numba import NumbaTypeSafetyWarning, njit, types
 from numba.typed import Dict
 from sklearn.feature_selection import f_classif
 from sklearn.preprocessing import KBinsDiscretizer
 from sklearn.tree import DecisionTreeRegressor
-from sktime.transformations.base import BaseTransformer
-from sktime.utils.validation.panel import check_X
 
 warnings.simplefilter("ignore", category=NumbaTypeSafetyWarning)
 

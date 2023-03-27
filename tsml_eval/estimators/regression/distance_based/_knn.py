@@ -5,8 +5,8 @@ __author__ = ["TonyBagnall", "GuiArcencio"]
 __all__ = ["KNeighborsTimeSeriesRegressor"]
 
 import numpy as np
-from sktime.distances import distance_factory
-from sktime.regression.base import BaseRegressor
+from aeon.distances import distance_factory
+from aeon.regression.base import BaseRegressor
 
 
 class KNeighborsTimeSeriesRegressor(BaseRegressor):

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-from sktime.classification import BaseClassifier
+from aeon.classification import BaseClassifier
 
 
 class RDST(BaseClassifier):

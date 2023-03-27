@@ -13,6 +13,7 @@ import warnings
 from pathlib import Path
 
 import numpy as np
+from aeon.classification.base import BaseClassifier
 from joblib import Parallel, delayed
 from scipy.sparse import hstack
 
@@ -20,7 +21,6 @@ from scipy.sparse import hstack
 from sklearn.linear_model import LogisticRegression, RidgeClassifierCV
 from sklearn.pipeline import make_pipeline
 from sklearn.utils import check_random_state
-from sktime.classification.base import BaseClassifier
 
 from tsml_eval.estimators.classification.transformations import SFADilation
 
@@ -128,7 +128,6 @@ class MUSE_DILATION(BaseClassifier):
         n_jobs=1,
         random_state=None,
     ):
-
         self.alphabet_sizes = alphabet_sizes
 
         # feature selection is applied based on the chi-squared test.
