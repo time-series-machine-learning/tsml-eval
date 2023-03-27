@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Evaluation module for sktime estimators."""
+"""Evaluation module for aeon estimators."""
 __all__ = [
     "evaluate_raw_results",
     "evaluate_metric_results",
