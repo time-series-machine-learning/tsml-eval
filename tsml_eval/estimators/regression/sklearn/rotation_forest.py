@@ -98,19 +98,6 @@ class RotationForest(BaseEstimator):
     .. [2] Bagnall, A., et al. "Is rotation forest the best classifier for problems
        with continuous features?." arXiv preprint arXiv:1809.06705 (2018).
 
-    Examples
-    --------
-    >>> from aeon.classification.sklearn import RotationForest
-    >>> from aeon.datasets import load_unit_test
-    >>> from aeon.datatypes._panel._convert import from_nested_to_3d_numpy
-    >>> X_train, y_train = load_unit_test(split="train", return_X_y=True)
-    >>> X_test, y_test = load_unit_test(split="test", return_X_y=True)
-    >>> X_train = from_nested_to_3d_numpy(X_train)
-    >>> X_test = from_nested_to_3d_numpy(X_test)
-    >>> clf = RotationForest(n_estimators=10)
-    >>> clf.fit(X_train, y_train)
-    RotationForest(...)
-    >>> y_pred = clf.predict(X_test)
     """
 
     def __init__(
