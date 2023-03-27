@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tsml-eval"
-version = "0.0.2"
+version = "0.0.3"
 description = "A package for benchmarking time series machine learning tools."
 authors = [
     {name = "Matthew Middlehurst", email = "m.middlehurst@uea.ac.uk"},
@@ -35,7 +35,7 @@ classifiers = [
 dependencies = [
     "aeon==0.1.0rc0",
     "scikit-learn>=1.0.2",
-    "tsml>=0.0.3",
+    "tsml>=0.0.4",
     "convst>=0.2.4",
     "wildboar>=1.1.0",
     "stumpy",
