@@ -37,9 +37,13 @@ def set_classifier(
         The classifier matching the input classifier name.
     """
     c = classifier_name.lower()
-
     # Convolution based
-    if c == "rocket" or c == "rocketclassifier":
+    if c == "rotf" or c == "rotationforest":
+        from sktime.classification.sklearn import RotationForest
+
+        return RotationForest(random_state=random_state, n_jobs=n_jobs)
+    # Convolution based
+    elif c == "rocket" or c == "rocketclassifier":
         from sktime.classification.kernel_based import RocketClassifier
 
         return RocketClassifier(random_state=random_state, n_jobs=n_jobs)
@@ -94,6 +98,12 @@ def set_classifier(
         )
 
         return HYDRA(random_state=random_state)
+    elif c == "hydra-multirocket":
+        from tsml_eval.sktime_estimators.classification.convolution_based.hydra import (
+            HydraMultiRocket,
+        )
+
+        return HydraMultiRocket(random_state=random_state)
 
     # Dictionary based
     if c == "boss" or c == "bossensemble":
@@ -296,6 +306,12 @@ def set_classifier(
         )
 
     # Interval based
+    elif c == "rstsf" or c == "r-stsf":
+        from tsml_eval.sktime_estimators.classification.interval_based.rstsf import (
+            RSTSF,
+        )
+
+        return RSTSF(random_state=random_state, n_estimators=500)
     elif c == "rise-500":
         from sktime.classification.interval_based import RandomIntervalSpectralEnsemble
 
@@ -395,6 +411,12 @@ def set_classifier(
         )
 
         return RandomShapeletForest(random_state=random_state)
+    elif c == "mrsqm":
+        from tsml_eval.sktime_estimators.classification.shapelet_based.mrsqm_wrapper import (
+            MrSQM,
+        )
+
+        return MrSQM(random_state=random_state)
 
     # Deep learning based
     elif c == "cnn" or c == "cnnclassifier":
@@ -414,13 +436,19 @@ def set_classifier(
 
         return TapNetClassifier(random_state=random_state)
 
-    elif c == "inceptiontime" or c == "inceptiontimeclassifier":
+    elif c == "singleinception" or c == "singleinceptionclassifier":
         from tsml_eval.sktime_estimators.classification.deep_learning.inception_time import (  # noqa; noqa
             IndividualInceptionTimeClassifier,
         )
 
         return IndividualInceptionTimeClassifier(random_state=random_state)
 
+    elif c == "inceptiontime" or c == "inceptiontimeclassifier":
+        from tsml_eval.sktime_estimators.classification.deep_learning.inception_time import (  # noqa; noqa
+            InceptionTimeClassifier,
+        )
+
+        return InceptionTimeClassifier(random_state=random_state)
     # Other
     elif c == "dummy" or c == "dummyclassifier":
         from sktime.classification.dummy import DummyClassifier

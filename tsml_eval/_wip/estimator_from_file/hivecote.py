@@ -16,6 +16,38 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.utils import check_random_state
 from sktime.classification import BaseClassifier
 
+def ranklist(A):
+    """Function to rank elements of list
+
+    Parameters
+    ----------
+    A : list
+        The accuracies.
+
+    Returns
+    -------
+    R : list
+        The ranks.
+
+    Notes
+    -----
+    The minor rank is 1 and it's the worst, higher numbers means higher rank
+    """
+    R = [0 for x in range(len(A))]
+
+    # Counts the number of less than and equal elements of each element in A
+    for i in range(len(A)):
+        (less, equal) = (1, 1)
+        for j in range(len(A)):
+            if j != i and A[j] < A[i]:
+                less += 1
+            if j != i and A[j] == A[i]:
+                equal += 1
+
+        # The rank is the number of less than plus the midpoint of the number of ties
+        R[i] = less + (equal - 1) / 2
+
+    return R
 
 class FromFileHIVECOTE(BaseClassifier):
     """Hierarchical Vote Collective of Transformation-based Ensembles (HIVE-COTE) from file.
@@ -27,11 +59,19 @@ class FromFileHIVECOTE(BaseClassifier):
     file_paths : list
         The paths for Arsenal, DrCIF, STC and TDE files.
     alpha : int, default=4
-        The exponent to extenuate diferences in classifers and weighting with the accuracy estimate.
+        The exponent to extenuate differences in classifiers and weighting with the accuracy estimate.
     tune_alpha : bool, default=False
         Tests alpha [1..10] and sets the best one
+    new_weights : list, default = None
+        The list of accuracies used to determinate the weights
+    remove_worst : str, default = None
+        Removes the worst component based or on accuracies on training data (="worst") or test data (="oracle")
+    remove_threshold: float, default = None
+        The %age that used to determinate the threshold. Discards any component below its %age of the best
     random_state : int or None, default=None
         Seed for random number generation.
+    dataset_name : str
+        Name of the dataset
 
     Attributes
     ----------
@@ -53,23 +93,32 @@ class FromFileHIVECOTE(BaseClassifier):
     def __init__(
         self,
         file_paths,
+        dataset_name,
         alpha=4,
         tune_alpha=False,
         overwrite_y=False,
         skip_y_check=False,
         random_state=None,
+        new_weights=None,
+        remove_worst=None,
+        remove_threshold=None
     ):
         self.file_paths = file_paths
+        self.dataset_name = dataset_name
         self.alpha = alpha
         self.tune_alpha = tune_alpha
         self.overwrite_y = overwrite_y
         self.skip_y_check = skip_y_check
         self.random_state = random_state
+        self.new_weights = new_weights
+        self.remove_worst = remove_worst
+        self.remove_threshold = remove_threshold
 
         self.predict_y = []
 
         self._alpha = alpha
         self._weights = []
+        self._test_weights = []
 
         super(FromFileHIVECOTE, self).__init__()
 
@@ -92,69 +141,98 @@ class FromFileHIVECOTE(BaseClassifier):
         -----
         Updates the attribute _weights with the loaded from file accuracies to the power of alfa.
         """
-        n_instances, _, _ = X.shape
-        self._weights = []
-
-        # load train file at path (trainResample.csv if random_state is None,
-        # trainResample{self.random_state}.csv otherwise)
-        if self.random_state is not None:
-            file_name = f"trainResample{self.random_state}.csv"
-        else:
-            file_name = "trainResample.csv"
-
-        if self.tune_alpha:
-            X_probas = np.zeros((n_instances, len(self.file_paths), self.n_classes_))
-
         acc_list = []
-        all_lines = []
-        for i, path in enumerate(self.file_paths):
-            f = open(path + file_name, "r")
-            lines = f.readlines()
-            line2 = lines[2].split(",")
 
-            # verify file matches data
-            if len(lines) - 3 != n_instances:  # verify n_instances
-                print(
-                    "ERROR n_instances does not match in: ",
-                    path + file_name,
-                    len(lines) - 3,
-                    n_instances,
-                )
-            if len(np.unique(y)) != int(line2[5]):  # verify n_classes
-                print(
-                    "ERROR n_classes does not match in: ",
-                    path + file_name,
-                    self.n_classes_,
-                    line2[5],
-                )
+        if self.new_weights:
+            acc_list=self.new_weights
+        else:
 
-            for j in range(n_instances):
-                line = lines[j + 3].split(",")
+            n_instances, _, _ = X.shape
+            self._weights = []
 
-                if self.overwrite_y:
-                    if i == 0:
-                        y[j] = float(line[0])
-                    elif not self.skip_y_check:
-                        assert y[j] == float(line[0])
-                elif not self.skip_y_check:
-                    if i == 0:
-                        le = preprocessing.LabelEncoder()
-                        y = le.fit_transform(y)
-                    assert float(line[0]) == y[j]
+            # load train file at path (trainResample.csv if random_state is None,
+            # trainResample{self.random_state}.csv otherwise)
+            if self.random_state is not None:
+                file_name = f"trainResample{self.random_state}.csv"
+            else:
+                file_name = "trainResample.csv"
 
-                if self.tune_alpha:
-                    X_probas[j][i] = [float(k) for k in (line[3:])]
-
-            acc_list.append(float(line2[0]))
             if self.tune_alpha:
-                all_lines.append(lines)
+                X_probas = np.zeros((n_instances, len(self.file_paths), self.n_classes_))
 
-        if self.tune_alpha:
-            self._alpha = self._tune_alpha(X_probas, y)
+            all_lines = []
+            for i, path in enumerate(self.file_paths):
+                f = open(path + file_name, "r")
+                lines = f.readlines()
+                line2 = lines[2].split(",")
+
+                # verify file matches data
+                if len(lines) - 3 != n_instances:  # verify n_instances
+                    print(
+                        "ERROR n_instances does not match in: ",
+                        path + file_name,
+                        len(lines) - 3,
+                        n_instances,
+                    )
+                if len(np.unique(y)) != int(line2[5]):  # verify n_classes
+                    print(
+                        "ERROR n_classes does not match in: ",
+                        path + file_name,
+                        self.n_classes_,
+                        line2[5],
+                    )
+
+                for j in range(n_instances):
+                    line = lines[j + 3].split(",")
+
+                    if self.overwrite_y:
+                        if i == 0:
+                            y[j] = float(line[0])
+                        elif not self.skip_y_check:
+                            assert y[j] == float(line[0])
+                    elif not self.skip_y_check:
+                        if i == 0:
+                            le = preprocessing.LabelEncoder()
+                            y = le.fit_transform(y)
+                        assert float(line[0]) == y[j]
+
+                    if self.tune_alpha:
+                        X_probas[j][i] = [float(k) for k in (line[3:])]
+
+                acc_list.append(float(line2[0]))
+                if self.tune_alpha:
+                    all_lines.append(lines)
+
+            if self.tune_alpha:
+                self._alpha = self._tune_alpha(X_probas, y)
 
         # add a weight to the weight list based on the files accuracy
         for acc in acc_list:
             self._weights.append(acc**self._alpha)
+
+
+        if self.remove_worst == "oracle":
+            # load train file at path (testResample.csv if random_state is None,
+            # trainResample{self.random_state}.csv otherwise)
+            if self.random_state is not None:
+                file_name = f"testResample{self.random_state}.csv"
+            else:
+                file_name = "testResample.csv"
+
+            all_lines = []
+            for i, path in enumerate(self.file_paths):
+                f = open(path + file_name, "r")
+                lines = f.readlines()
+                line2 = lines[2].split(",")
+
+                for j in range(len(lines)-3):
+                    line = lines[j + 3].split(",")
+                acc_list.append(float(line2[0]))
+
+            # add a weight to the weight list based on the files accuracy
+            for acc in acc_list:
+                self._test_weights.append(acc)
+
 
     def _tune_alpha(self, X_probas, y):
         """Finds the best alpha value if self.tune_alpha == True.
@@ -289,13 +367,33 @@ class FromFileHIVECOTE(BaseClassifier):
 
             #   apply this files weights to the probabilities in the test file
             for j in range(n_instances):
+                if self.remove_threshold and not self.remove_worst:
+                    raise ValueError("To use a threshold you have to settle remove_worst equals \"worst\" or \"oracle\"")
+
                 line = lines[j + 3].split(",")
 
-                dists[j] = np.add(
-                    dists[j],
-                    [float(k) for k in (line[3:])]
-                    * (np.ones(self.n_classes_) * self._weights[i]),
-                )
+                if self.remove_worst == "worst":
+                    rankarray = ranklist(self._weights)
+                    if (not self.remove_threshold and int(rankarray[i]) != 1) or (self.remove_threshold and (np.max(self._weights)*self.remove_threshold/100 < self._weights[i])):
+                        dists[j] = np.add(
+                            dists[j],
+                            [float(k) for k in (line[3:])]
+                            * (np.ones(self.n_classes_) * self._weights[i]),
+                        )
+                elif self.remove_worst == "oracle":
+                    rankarray = ranklist(self._test_weights)
+                    if (not self.remove_threshold and int(rankarray[i]) != 1) or (self.remove_threshold and (np.max(self._test_weights)*self.remove_threshold/100 < self._test_weights[i])):
+                        dists[j] = np.add(
+                            dists[j],
+                            [float(k) for k in (line[3:])]
+                            * (np.ones(self.n_classes_) * self._weights[i]),
+                        )
+                else:  # equals None
+                    dists[j] = np.add(
+                        dists[j],
+                        [float(k) for k in (line[3:])]
+                        * (np.ones(self.n_classes_) * self._weights[i]),
+                    )
 
                 if not self.skip_y_check:
                     if i == 0:

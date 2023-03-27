@@ -21,7 +21,7 @@ def test_run_regression_experiment():
         if os.getcwd().split("\\")[-1] != "tests"
         else "../../datasets/"
     )
-    regressor = "DummyRegressor"
+    regressor = "dummymeanpred"
     dataset = "Covid3Month"
 
     args = [
@@ -33,6 +33,7 @@ def test_run_regression_experiment():
         "0",
         "True",
         "False",
+        None,
     ]
     run_experiment(args, overwrite=True)
 
