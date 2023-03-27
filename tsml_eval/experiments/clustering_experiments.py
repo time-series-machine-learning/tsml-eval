@@ -41,14 +41,13 @@ def run_experiment(args, overwrite=False):
             print("Unable to assign GPU to process.")
 
     # cluster run (with args), this is fragile
-    if args.__len__() > 1:
+    if args is not None and args.__len__() > 1:
         print("Input args = ", args)
         data_dir = args[1]
         results_dir = args[2]
         clusterer_name = args[3]
         dataset = args[4]
-        # ADA starts indexing its jobs at 1, so we need to subtract 1
-        resample = int(args[5]) - 1
+        resample = int(args[5])
 
         if len(args) > 6:
             test_fold = args[6].lower() == "false"
@@ -63,7 +62,11 @@ def run_experiment(args, overwrite=False):
         # this is also checked in load_and_run, but doing a quick check here so can
         # print a message and make sure data is not loaded
         if not overwrite and _results_present(
-            results_dir, clusterer_name, dataset, resample
+            results_dir,
+            clusterer_name,
+            dataset,
+            resample_id=resample,
+            split="BOTH" if test_fold else "TRAIN",
         ):
             print("Ignoring, results already present")
         else:

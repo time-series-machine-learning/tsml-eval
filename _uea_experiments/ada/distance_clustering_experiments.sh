@@ -11,7 +11,7 @@ max_folds=30
 start_fold=1
 
 # To avoid dumping 1000s of jobs in the queue we have a higher level queue
-max_num_submitted=600
+max_num_submitted=100
 
 # Queue options are https://my.uea.ac.uk/divisions/it-and-computing-services/service-catalogue/research-it-services/hpc/ada-cluster/using-ada
 queue="compute-64-512"
@@ -21,7 +21,7 @@ username="ajb"
 mail="NONE"
 mailto=$username"@uea.ac.uk"
 
-# MB for jobs, max is maybe 64000 before you need to use huge memory queue. Do not use more than you need
+# MB for jobs, increase incrementally and try not to use more than you need. If you need hundreds of GB consider the huge memory queue.
 max_memory=8000
 
 # Max allowable is 7 days - 168 hours
@@ -64,20 +64,18 @@ do
 
 # Dont change anything after here for regular runs
 
-# This is the loop to keep from dumping everything in the queue which is maintained around max_num_submitted jobs
-num_pending=$(squeue -u ${username} --format="%10i %15P %20j %10u %10t %10M %10D %20R" -r | awk '{print $5, $2}' | grep "PD ${queue}" | wc -l)
-num_running=$(squeue -u ${username} --format="%10i %15P %20j %10u %10t %10M %10D %20R" -r | awk '{print $5, $2}' | grep "R ${queue}" | wc -l)
-while [ "$((num_pending+num_running))" -ge "${max_num_submitted}" ]
-do
-    echo Waiting 90s, $((num_pending+num_running)) currently submitted on ${queue}, user-defined max is ${max_num_submitted}
-	sleep 90
-	num_pending=$(squeue -u ${username} --format="%10i %15P %20j %10u %10t %10M %10D %20R" -r | awk '{print $5, $2}' | grep "PD ${queue}" | wc -l)
-	num_running=$(squeue -u ${username} --format="%10i %15P %20j %10u %10t %10M %10D %20R" -r | awk '{print $5, $2}' | grep "R ${queue}" | wc -l)
-done
-
 # Skip to the script start point
 ((count++))
 if ((count>=start_point)); then
+
+# This is the loop to keep from dumping everything in the queue which is maintained around max_num_submitted jobs
+num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue}" -e "PD ${queue}" | wc -l)
+while [ "${num_jobs}" -ge "${max_num_submitted}" ]
+do
+    echo Waiting 60s, ${num_jobs} currently submitted on ${queue}, user-defined max is ${max_num_submitted}
+    sleep 60
+    num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue}" -e "PD ${queue}" | wc -l)
+done
 
 mkdir -p ${out_dir}${clusterer}/${dataset}/
 
@@ -114,7 +112,7 @@ echo "#!/bin/bash
 module add python/anaconda/2019.10/3.7
 source activate $env_name
 
-python -u ${script_file_path} ${data_dir} ${results_dir} ${clusterer}  ${dataset} \$SLURM_ARRAY_TASK_ID ${distance} ${generate_train_files} ${averaging} ${normalise} ${tune}"  > generatedFile.sub
+python -u ${script_file_path} ${data_dir} ${results_dir} ${clusterer}  ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${distance} ${generate_train_files} ${averaging} ${normalise} ${tune}"  > generatedFile.sub
 #                         data_dir = sys.argv[1]
 #                         results_dir = sys.argv[2]
 #                         clusterer = sys.argv[3]

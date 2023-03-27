@@ -30,8 +30,7 @@ def run_experiment(args, overwrite=False):
         results_dir = args[2]
         classifier_name = args[3]
         dataset = args[4]
-        # ADA starts indexing its jobs at 1, so we need to subtract 1
-        resample = int(args[5]) - 1
+        resample = int(args[5])
         n_jobs = int(sys.argv[6])
 
         if len(sys.argv) > 7:
@@ -47,7 +46,11 @@ def run_experiment(args, overwrite=False):
         # this is also checked in load_and_run, but doing a quick check here so can
         # print a message and make sure data is not loaded
         if not overwrite and _results_present(
-            results_dir, classifier_name, dataset, resample
+            results_dir,
+            classifier_name,
+            dataset,
+            resample_id=resample,
+            split="BOTH" if train_fold else "TEST",
         ):
             print("Ignoring, results already present")
         else:
