@@ -64,7 +64,7 @@ After installation, the installed packages can be viewed with:
 
 Some CUDA/CUDNN libraries have versions higher than what our tensorflow version looks for. Symbolic links are used to point to the correct versions.
 
-> export PATH="${PATH}:/usr/local/cuda/bin
+> export PATH=$PATH:/usr/local/cuda/bin
 
 > export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/pfm15hbu/symlinks/
 
