@@ -10,11 +10,12 @@ __author__ = ["MatthewMiddlehurst", "ander-hg"]
 __all__ = ["FromFileHIVECOTE"]
 
 import numpy as np
+from aeon.classification import BaseClassifier
 from sklearn import preprocessing
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import StratifiedKFold
 from sklearn.utils import check_random_state
-from sktime.classification import BaseClassifier
+
 
 def ranklist(A):
     """Function to rank elements of list
@@ -48,6 +49,7 @@ def ranklist(A):
         R[i] = less + (equal - 1) / 2
 
     return R
+
 
 class FromFileHIVECOTE(BaseClassifier):
     """Hierarchical Vote Collective of Transformation-based Ensembles (HIVE-COTE) from file.
@@ -101,7 +103,7 @@ class FromFileHIVECOTE(BaseClassifier):
         random_state=None,
         new_weights=None,
         remove_worst=None,
-        remove_threshold=None
+        remove_threshold=None,
     ):
         self.file_paths = file_paths
         self.dataset_name = dataset_name
@@ -144,9 +146,8 @@ class FromFileHIVECOTE(BaseClassifier):
         acc_list = []
 
         if self.new_weights:
-            acc_list=self.new_weights
+            acc_list = self.new_weights
         else:
-
             n_instances, _, _ = X.shape
             self._weights = []
 
@@ -158,7 +159,9 @@ class FromFileHIVECOTE(BaseClassifier):
                 file_name = "trainResample.csv"
 
             if self.tune_alpha:
-                X_probas = np.zeros((n_instances, len(self.file_paths), self.n_classes_))
+                X_probas = np.zeros(
+                    (n_instances, len(self.file_paths), self.n_classes_)
+                )
 
             all_lines = []
             for i, path in enumerate(self.file_paths):
@@ -210,7 +213,6 @@ class FromFileHIVECOTE(BaseClassifier):
         for acc in acc_list:
             self._weights.append(acc**self._alpha)
 
-
         if self.remove_worst == "oracle":
             # load train file at path (testResample.csv if random_state is None,
             # trainResample{self.random_state}.csv otherwise)
@@ -225,14 +227,13 @@ class FromFileHIVECOTE(BaseClassifier):
                 lines = f.readlines()
                 line2 = lines[2].split(",")
 
-                for j in range(len(lines)-3):
+                for j in range(len(lines) - 3):
                     line = lines[j + 3].split(",")
                 acc_list.append(float(line2[0]))
 
             # add a weight to the weight list based on the files accuracy
             for acc in acc_list:
                 self._test_weights.append(acc)
-
 
     def _tune_alpha(self, X_probas, y):
         """Finds the best alpha value if self.tune_alpha == True.
@@ -275,7 +276,7 @@ class FromFileHIVECOTE(BaseClassifier):
             )
             preds = np.zeros(n_instances)
 
-            for (train_index, test_index) in kf.split(X_probas, y):
+            for train_index, test_index in kf.split(X_probas, y):
                 weight_list = []
                 for n in range(n_files):
                     train_preds = np.argmax(X_probas[train_index, n], axis=1)
@@ -368,13 +369,21 @@ class FromFileHIVECOTE(BaseClassifier):
             #   apply this files weights to the probabilities in the test file
             for j in range(n_instances):
                 if self.remove_threshold and not self.remove_worst:
-                    raise ValueError("To use a threshold you have to settle remove_worst equals \"worst\" or \"oracle\"")
+                    raise ValueError(
+                        'To use a threshold you have to settle remove_worst equals "worst" or "oracle"'
+                    )
 
                 line = lines[j + 3].split(",")
 
                 if self.remove_worst == "worst":
                     rankarray = ranklist(self._weights)
-                    if (not self.remove_threshold and int(rankarray[i]) != 1) or (self.remove_threshold and (np.max(self._weights)*self.remove_threshold/100 < self._weights[i])):
+                    if (not self.remove_threshold and int(rankarray[i]) != 1) or (
+                        self.remove_threshold
+                        and (
+                            np.max(self._weights) * self.remove_threshold / 100
+                            < self._weights[i]
+                        )
+                    ):
                         dists[j] = np.add(
                             dists[j],
                             [float(k) for k in (line[3:])]
@@ -382,7 +391,13 @@ class FromFileHIVECOTE(BaseClassifier):
                         )
                 elif self.remove_worst == "oracle":
                     rankarray = ranklist(self._test_weights)
-                    if (not self.remove_threshold and int(rankarray[i]) != 1) or (self.remove_threshold and (np.max(self._test_weights)*self.remove_threshold/100 < self._test_weights[i])):
+                    if (not self.remove_threshold and int(rankarray[i]) != 1) or (
+                        self.remove_threshold
+                        and (
+                            np.max(self._test_weights) * self.remove_threshold / 100
+                            < self._test_weights[i]
+                        )
+                    ):
                         dists[j] = np.add(
                             dists[j],
                             [float(k) for k in (line[3:])]

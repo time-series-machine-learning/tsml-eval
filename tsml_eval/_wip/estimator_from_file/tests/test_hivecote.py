@@ -4,9 +4,9 @@
 __author__ = ["MatthewMiddlehurst"]
 
 import numpy as np
-from sktime.datasets import load_arrow_head, load_italy_power_demand
-from sktime.utils._testing.estimator_checks import _assert_array_almost_equal
-from sktime.utils.estimator_checks import check_estimator
+from aeon.datasets import load_arrow_head, load_italy_power_demand
+from aeon.utils._testing.estimator_checks import _assert_array_almost_equal
+from aeon.utils.estimator_checks import check_estimator
 
 from tsml_eval._wip.estimator_from_file.hivecote import FromFileHIVECOTE
 
