@@ -35,7 +35,7 @@ classifiers = [
 dependencies = [
     "aeon==0.1.0rc0",
     "scikit-learn>=1.0.2",
-    "tsml>=0.0.4",
+    "tsml>=0.0.5",
     "convst>=0.2.4",
     "wildboar>=1.1.0",
     "stumpy",

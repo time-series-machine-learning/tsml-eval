@@ -24,11 +24,11 @@ from tsml.base import BaseTimeSeriesEstimator
 from tsml.datasets import load_from_ts_file
 from tsml.utils.validation import is_clusterer
 
-from tsml_eval.estimators.classification.sklearn_classifier import (
+from tsml_eval.estimators import (
     SklearnToTsmlClassifier,
+    SklearnToTsmlClusterer,
+    SklearnToTsmlRegressor,
 )
-from tsml_eval.estimators.clustering.sklearn_clusterer import SklearnToTsmlClusterer
-from tsml_eval.estimators.regression.sklearn_regressor import SklearnToTsmlRegressor
 from tsml_eval.evaluation.metrics import clustering_accuracy
 from tsml_eval.utils.experiments import (
     resample_data,
@@ -99,7 +99,7 @@ def run_classification_experiment(
     ):
         pass
     elif isinstance(classifier, BaseEstimator) and is_classifier(classifier):
-        classifier = SklearnToTsmlClassifier(classifier)
+        classifier = SklearnToTsmlClassifier(classifier=classifier)
     else:
         raise TypeError("classifier must be a tsml, sktime or sklearn classifier.")
 
@@ -342,7 +342,7 @@ def run_regression_experiment(
     ):
         pass
     elif isinstance(regressor, BaseEstimator) and is_regressor(regressor):
-        regressor = SklearnToTsmlRegressor(regressor)
+        regressor = SklearnToTsmlRegressor(regressor=regressor)
     else:
         raise TypeError("regressor must be a tsml, sktime or sklearn regressor.")
 
@@ -571,7 +571,7 @@ def run_clustering_experiment(
     ):
         pass
     elif isinstance(clusterer, BaseEstimator) and is_clusterer(clusterer):
-        clusterer = SklearnToTsmlClusterer(clusterer)
+        clusterer = SklearnToTsmlClusterer(clusterer=clusterer)
     else:
         raise TypeError("clusterer must be a tsml, sktime or sklearn clusterer.")
 
@@ -600,10 +600,19 @@ def run_clustering_experiment(
 
     if build_train_file:
         start = int(round(time.time() * 1000))
-        train_probs = clusterer.predict_proba(X_train)
+        if callable(getattr(clusterer, "predict_proba", None)):
+            train_probs = clusterer.predict_proba(X_train)
+            train_preds = np.argmax(train_probs, axis=1)
+        else:
+            train_preds = (
+                clusterer.labels_
+                if hasattr(clusterer, "labels_")
+                else clusterer.predict(X_train)
+            )
+            train_probs = np.zeros((len(train_preds), len(np.unique(train_preds))))
+            train_probs[:, train_preds] = 1
         train_time = int(round(time.time() * 1000)) - start
 
-        train_preds = np.argmax(train_probs, axis=1)
         train_acc = clustering_accuracy(y_train, train_preds)
 
         write_clustering_results(
@@ -631,10 +640,15 @@ def run_clustering_experiment(
             raise Exception("Test data not provided, cannot build test file.")
 
         start = int(round(time.time() * 1000))
-        test_probs = clusterer.predict_proba(X_test)
+        if callable(getattr(clusterer, "predict_proba", None)):
+            test_probs = clusterer.predict_proba(X_test)
+            test_preds = np.argmax(test_probs, axis=1)
+        else:
+            test_preds = clusterer.predict(X_test)
+            test_probs = np.zeros((len(test_preds), len(np.unique(test_preds))))
+            test_probs[:, test_preds] = 1
         test_time = int(round(time.time() * 1000)) - start
 
-        test_preds = np.argmax(test_probs, axis=1)
         test_acc = clustering_accuracy(y_test, test_preds)
 
         write_clustering_results(

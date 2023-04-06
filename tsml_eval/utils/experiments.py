@@ -459,8 +459,8 @@ def write_clustering_results(
     cluster_predictions : np.array
         The predicted values to write to file. Must be the same length as labels.
     cluster_probabilities : np.ndarray
-        Estimated class probabilities. If passed, these are written after the
-        predicted values for each case.
+        Estimated cluster probabilities. These are written after the predicted values
+        for each case.
     class_labels : np.array
         The actual class values written to file with the predicted values. If no label
         is available for a case, a NaN value should be substituted.
