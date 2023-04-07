@@ -20,26 +20,25 @@ import os
 
 import gpustat
 import numpy as np
-import pandas as pd
 from sklearn.utils import check_random_state
 
 
 def resample_data(X_train, y_train, X_test, y_test, random_state=None):
     """Resample data without replacement using a random state.
 
-    Reproducable resampling. Combines train and test, randomly resamples, then returns
+    Reproducible resampling. Combines train and test, randomly resamples, then returns
     new train and test.
 
     Parameters
     ----------
-    X_train : pd.DataFrame
-        Train data attributes in sktime pandas format.
-    y_train : np.array
-        Train data class labels.
-    X_test : pd.DataFrame
-        Test data attributes in sktime pandas format.
-    y_test : np.array
-        Test data class labels.
+    X_train : np.ndarray or list of np.ndarray
+        Train data in a 2d or 3d ndarray or list of arrays.
+    y_train : np.ndarray
+        Train data labels.
+    X_test : np.ndarray or list of np.ndarray
+        Test data in a 2d or 3d ndarray or list of arrays.
+    y_test : np.ndarray
+        Test data labels.
     random_state : int, RandomState instance or None, default=None
         If `int`, random_state is the seed used by the random number generator;
         If `RandomState` instance, random_state is the random number generator;
@@ -48,51 +47,66 @@ def resample_data(X_train, y_train, X_test, y_test, random_state=None):
 
     Returns
     -------
-    (train_X, train_y, test_X, test_y) : tuple of pd.DataFrames
-        New train and test data and class label splits.
+    train_X : np.ndarray or list of np.ndarray
+        New train data.
+    train_y : np.ndarray
+        New train labels.
+    test_X : np.ndarray or list of np.ndarray
+        New test data.
+    test_y : np.ndarray
+        New test labels.
     """
-    all_targets = np.concatenate((y_train, y_test), axis=None)
-    all_data = pd.concat([X_train, X_test])
+    if isinstance(X_train, np.ndarray):
+        is_array = True
+    elif isinstance(X_train, list):
+        is_array = False
+    else:
+        raise ValueError(
+            "X_train must be a np.ndarray array or list of np.ndarray arrays"
+        )
 
-    # add the target labeleds to the dataset
-    all_data["target"] = all_targets
+    # add both train and test to a single dataset
+    all_labels = np.concatenate((y_train, y_test), axis=None)
+    all_data = (
+        np.concatenate([X_train, X_test], axis=0) if is_array else X_train + X_test
+    )
 
-    # randomly shuffle all instances
-    shuffled = all_data.sample(frac=1, random_state=random_state)
+    # shuffle data indices
+    rng = check_random_state(random_state)
+    indices = np.arange(len(all_data), dtype=int)
+    rng.shuffle(indices)
 
-    # extract and remove the target column
-    all_targets = shuffled["target"].to_numpy()
-    shuffled = shuffled.drop("target", axis=1)
+    train_cases = y_train.size
+    train_indices = indices[:train_cases]
+    test_indices = indices[train_cases:]
 
     # split the shuffled data into train and test
-    train_cases = y_train.size
-    X_train = shuffled.iloc[:train_cases]
-    X_test = shuffled.iloc[train_cases:]
-    y_train = all_targets[:train_cases]
-    y_test = all_targets[train_cases:]
+    X_train = (
+        all_data[train_indices] if is_array else [all_data[i] for i in train_indices]
+    )
+    y_train = all_labels[train_indices]
+    X_test = all_data[test_indices] if is_array else [all_data[i] for i in test_indices]
+    y_test = all_labels[test_indices]
 
-    # reset indices and return
-    X_train = X_train.reset_index(drop=True)
-    X_test = X_test.reset_index(drop=True)
     return X_train, y_train, X_test, y_test
 
 
 def stratified_resample_data(X_train, y_train, X_test, y_test, random_state=None):
     """Stratified resample data without replacement using a random state.
 
-    Reproducable resampling. Combines train and test, resamples to get the same class
+    Reproducible resampling. Combines train and test, resamples to get the same class
     distribution, then returns new train and test.
 
     Parameters
     ----------
-    X_train : pd.DataFrame
-        Train data attributes in sktime pandas format.
-    y_train : np.array
-        Train data class labels.
-    X_test : pd.DataFrame
-        Test data attributes in sktime pandas format.
-    y_test : np.array
-        Test data class labels.
+    X_train : np.ndarray or list of np.ndarray
+        Train data in a 2d or 3d ndarray or list of arrays.
+    y_train : np.ndarray
+        Train data labels.
+    X_test : np.ndarray or list of np.ndarray
+        Test data in a 2d or 3d ndarray or list of arrays.
+    y_test : np.ndarray
+        Test data labels.
     random_state : int, RandomState instance or None, default=None
         If `int`, random_state is the seed used by the random number generator;
         If `RandomState` instance, random_state is the random number generator;
@@ -101,13 +115,32 @@ def stratified_resample_data(X_train, y_train, X_test, y_test, random_state=None
 
     Returns
     -------
-    (train_X, train_y, test_X, test_y) : tuple of pd.DataFrames
-        New train and test data and class label splits.
+    train_X : np.ndarray or list of np.ndarray
+        New train data.
+    train_y : np.ndarray
+        New train labels.
+    test_X : np.ndarray or list of np.ndarray
+        New test data.
+    test_y : np.ndarray
+        New test labels.
     """
-    all_labels = np.concatenate((y_train, y_test), axis=None)
-    all_data = pd.concat([X_train, X_test])
+    if isinstance(X_train, np.ndarray):
+        is_array = True
+    elif isinstance(X_train, list):
+        is_array = False
+    else:
+        raise ValueError(
+            "X_train must be a np.ndarray array or list of np.ndarray arrays"
+        )
 
-    random_state = check_random_state(random_state)
+    # add both train and test to a single dataset
+    all_labels = np.concatenate((y_train, y_test), axis=None)
+    all_data = (
+        np.concatenate([X_train, X_test], axis=0) if is_array else X_train + X_test
+    )
+
+    # shuffle data indices
+    rng = check_random_state(random_state)
 
     # count class occurrences
     unique_train, counts_train = np.unique(y_train, return_counts=True)
@@ -116,40 +149,52 @@ def stratified_resample_data(X_train, y_train, X_test, y_test, random_state=None
     # ensure same classes exist in both train and test
     assert list(unique_train) == list(unique_test)
 
-    X_train = pd.DataFrame()
-    y_train = np.array([])
-    X_test = pd.DataFrame()
-    y_test = np.array([])
+    if is_array:
+        shape = list(X_train.shape)
+        shape[0] = 0
+
+    X_train = np.zeros(shape) if is_array else []
+    y_train = np.zeros(0)
+    X_test = np.zeros(shape) if is_array else []
+    y_test = np.zeros(0)
 
     # for each class
-    for label_index in range(0, len(unique_train)):
-        # get the indices of all instances with this class label
+    for label_index in range(len(unique_train)):
+        # get the indices of all instances with this class label and shuffle them
         label = unique_train[label_index]
         indices = np.where(all_labels == label)[0]
+        rng.shuffle(indices)
 
-        # shuffle them
-        random_state.shuffle(indices)
-
-        # take the first lot of instances for train, remainder for test
-        num_instances = counts_train[label_index]
-        train_indices = indices[0:num_instances]
-        test_indices = indices[num_instances:]
+        train_cases = counts_train[label_index]
+        train_indices = indices[:train_cases]
+        test_indices = indices[train_cases:]
 
         # extract data from corresponding indices
-        train_instances = all_data.iloc[train_indices, :]
-        test_instances = all_data.iloc[test_indices, :]
+        train_cases = (
+            all_data[train_indices]
+            if is_array
+            else [all_data[i] for i in train_indices]
+        )
         train_labels = all_labels[train_indices]
+        test_cases = (
+            all_data[test_indices] if is_array else [all_data[i] for i in test_indices]
+        )
         test_labels = all_labels[test_indices]
 
         # concat onto current data from previous loop iterations
-        X_train = pd.concat([X_train, train_instances])
-        X_test = pd.concat([X_test, test_instances])
+        X_train = (
+            np.concatenate([X_train, train_cases], axis=0)
+            if is_array
+            else X_train + train_cases
+        )
         y_train = np.concatenate([y_train, train_labels], axis=None)
+        X_test = (
+            np.concatenate([X_test, test_cases], axis=0)
+            if is_array
+            else X_test + test_cases
+        )
         y_test = np.concatenate([y_test, test_labels], axis=None)
 
-    # reset indices and return
-    X_train = X_train.reset_index(drop=True)
-    X_test = X_test.reset_index(drop=True)
     return X_train, y_train, X_test, y_test
 
 
@@ -414,8 +459,8 @@ def write_clustering_results(
     cluster_predictions : np.array
         The predicted values to write to file. Must be the same length as labels.
     cluster_probabilities : np.ndarray
-        Estimated class probabilities. If passed, these are written after the
-        predicted values for each case.
+        Estimated cluster probabilities. These are written after the predicted values
+        for each case.
     class_labels : np.array
         The actual class values written to file with the predicted values. If no label
         is available for a case, a NaN value should be substituted.

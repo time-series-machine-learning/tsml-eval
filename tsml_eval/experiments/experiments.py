@@ -14,10 +14,21 @@ from datetime import datetime
 
 import numpy as np
 from sklearn import preprocessing
+from sklearn.base import BaseEstimator, is_classifier, is_regressor
 from sklearn.metrics import accuracy_score, mean_squared_error
 from sklearn.model_selection import cross_val_predict
-from sktime.datasets import load_from_tsfile_to_dataframe
+from sktime.classification import BaseClassifier
+from sktime.clustering import BaseClusterer
+from sktime.regression.base import BaseRegressor
+from tsml.base import BaseTimeSeriesEstimator
+from tsml.datasets import load_from_ts_file
+from tsml.utils.validation import is_clusterer
 
+from tsml_eval.estimators import (
+    SklearnToTsmlClassifier,
+    SklearnToTsmlClusterer,
+    SklearnToTsmlRegressor,
+)
 from tsml_eval.evaluation.metrics import clustering_accuracy
 from tsml_eval.utils.experiments import (
     resample_data,
@@ -82,6 +93,15 @@ def run_classification_experiment(
             "Both test_file and train_file are set to False. "
             "At least one must be written."
         )
+
+    if isinstance(classifier, BaseClassifier) or (
+        isinstance(classifier, BaseTimeSeriesEstimator) and is_classifier(classifier)
+    ):
+        pass
+    elif isinstance(classifier, BaseEstimator) and is_classifier(classifier):
+        classifier = SklearnToTsmlClassifier(classifier=classifier)
+    else:
+        raise TypeError("classifier must be a tsml, sktime or sklearn classifier.")
 
     if classifier_name is None:
         classifier_name = type(classifier).__name__
@@ -317,6 +337,15 @@ def run_regression_experiment(
             "At least one must be written."
         )
 
+    if isinstance(regressor, BaseRegressor) or (
+        isinstance(regressor, BaseTimeSeriesEstimator) and is_regressor(regressor)
+    ):
+        pass
+    elif isinstance(regressor, BaseEstimator) and is_regressor(regressor):
+        regressor = SklearnToTsmlRegressor(regressor=regressor)
+    else:
+        raise TypeError("regressor must be a tsml, sktime or sklearn regressor.")
+
     if regressor_name is None:
         regressor_name = type(regressor).__name__
 
@@ -537,6 +566,15 @@ def run_clustering_experiment(
             "At least one must be written."
         )
 
+    if isinstance(clusterer, BaseClusterer) or (
+        isinstance(clusterer, BaseTimeSeriesEstimator) and is_clusterer(clusterer)
+    ):
+        pass
+    elif isinstance(clusterer, BaseEstimator) and is_clusterer(clusterer):
+        clusterer = SklearnToTsmlClusterer(clusterer=clusterer)
+    else:
+        raise TypeError("clusterer must be a tsml, sktime or sklearn clusterer.")
+
     if clusterer_name is None:
         clusterer_name = type(clusterer).__name__
 
@@ -562,10 +600,19 @@ def run_clustering_experiment(
 
     if build_train_file:
         start = int(round(time.time() * 1000))
-        train_probs = clusterer.predict_proba(X_train)
+        if callable(getattr(clusterer, "predict_proba", None)):
+            train_probs = clusterer.predict_proba(X_train)
+            train_preds = np.argmax(train_probs, axis=1)
+        else:
+            train_preds = (
+                clusterer.labels_
+                if hasattr(clusterer, "labels_")
+                else clusterer.predict(X_train)
+            )
+            train_probs = np.zeros((len(train_preds), len(np.unique(train_preds))))
+            train_probs[:, train_preds] = 1
         train_time = int(round(time.time() * 1000)) - start
 
-        train_preds = np.argmax(train_probs, axis=1)
         train_acc = clustering_accuracy(y_train, train_preds)
 
         write_clustering_results(
@@ -593,10 +640,15 @@ def run_clustering_experiment(
             raise Exception("Test data not provided, cannot build test file.")
 
         start = int(round(time.time() * 1000))
-        test_probs = clusterer.predict_proba(X_test)
+        if callable(getattr(clusterer, "predict_proba", None)):
+            test_probs = clusterer.predict_proba(X_test)
+            test_preds = np.argmax(test_probs, axis=1)
+        else:
+            test_preds = clusterer.predict(X_test)
+            test_probs = np.zeros((len(test_preds), len(np.unique(test_preds))))
+            test_probs[:, test_preds] = 1
         test_time = int(round(time.time() * 1000)) - start
 
-        test_preds = np.argmax(test_probs, axis=1)
         test_acc = clustering_accuracy(y_test, test_preds)
 
         write_clustering_results(
@@ -740,19 +792,19 @@ def _load_data(problem_path, dataset, resample_id, predefined_resample):
     if resample_id is not None and predefined_resample:
         resample_str = "" if resample_id is None else str(resample_id)
 
-        X_train, y_train = load_from_tsfile_to_dataframe(
+        X_train, y_train = load_from_ts_file(
             f"{problem_path}/{dataset}/{dataset}{resample_str}_TRAIN.ts"
         )
-        X_test, y_test = load_from_tsfile_to_dataframe(
+        X_test, y_test = load_from_ts_file(
             f"{problem_path}/{dataset}/{dataset}{resample_str}_TEST.ts"
         )
 
         resample_data = False
     else:
-        X_train, y_train = load_from_tsfile_to_dataframe(
+        X_train, y_train = load_from_ts_file(
             f"{problem_path}/{dataset}/{dataset}_TRAIN.ts"
         )
-        X_test, y_test = load_from_tsfile_to_dataframe(
+        X_test, y_test = load_from_ts_file(
             f"{problem_path}/{dataset}/{dataset}_TEST.ts"
         )
 

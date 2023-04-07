@@ -1,8 +1,8 @@
-%# This is a cut down version of the problem ChinaTown, useful for code examples and very slow unit tests
-% The Train set is the same as ChinaTown, but the test set is reduced from 340 cases to 22 cases
+% This is a cut down version of the problem ChinaTown, useful for code examples and unit tests
+% http://www.timeseriesclassification.com/description.php?Dataset=Chinatown
+% The train set is the same as ChinaTown, but the test set is reduced from 345 cases to 20 cases
 %
-@problemName UnitTest
-@problemName Chinatown
+@problemName MinimalChinatown
 @timeStamps false
 @missing false
 @univariate true
@@ -10,8 +10,6 @@
 @seriesLength 24
 @classLabel true 1 2
 @data
-501.0,328.0,195.0,218.0,67.0,17.0,28.0,72.0,132.0,215.0,406.0,765.0,1207.0,1427.0,1234.0,1238.0,1107.0,1190.0,1255.0,1144.0,905.0,690.0,386.0,192.0:1
-880.0,752.0,913.0,863.0,402.0,112.0,60.0,112.0,119.0,186.0,365.0,596.0,990.0,1193.0,1040.0,1063.0,1009.0,1025.0,1089.0,979.0,706.0,585.0,356.0,187.0:1
 493.0,389.0,174.0,121.0,82.0,36.0,27.0,64.0,127.0,203.0,415.0,747.0,1164.0,1414.0,1520.0,1295.0,1265.0,1430.0,1637.0,1697.0,1456.0,1319.0,1179.0,848.0:1
 616.0,323.0,162.0,166.0,68.0,26.0,34.0,68.0,123.0,263.0,815.0,1611.0,1823.0,2019.0,1763.0,1728.0,1568.0,1439.0,1431.0,1282.0,1078.0,857.0,498.0,248.0:1
 389.0,276.0,161.0,124.0,35.0,26.0,51.0,75.0,71.0,126.0,225.0,496.0,968.0,1128.0,1117.0,993.0,819.0,879.0,998.0,1057.0,1014.0,987.0,836.0,680.0:1

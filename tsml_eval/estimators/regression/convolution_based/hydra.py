@@ -8,15 +8,17 @@
 import time
 
 import numpy as np
-import pandas as pd
-import torch
-import torch.nn as nn  # , torch.optim as optim
-import torch.nn.functional as F
 from aeon.regression.base import BaseRegressor
+from aeon.utils.validation._dependencies import _check_soft_dependencies
 from sklearn.linear_model import RidgeCV
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.utils import check_random_state
+
+_check_soft_dependencies("torch")
+
+import torch  # noqa: E402
+import torch.nn as nn  # noqa: E402
+import torch.nn.functional as F  # noqa: E402
 
 
 class Hydra(nn.Module):

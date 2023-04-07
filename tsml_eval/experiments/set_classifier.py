@@ -273,7 +273,7 @@ def set_classifier(
 
         return MatrixProfileClassifier(random_state=random_state, n_jobs=n_jobs)
     elif c == "freshprince":
-        from sktime.classification.feature_based import FreshPRINCE
+        from tsml_eval.estimators.classification._fresh_prince import FreshPRINCE
 
         return FreshPRINCE(random_state=random_state, n_jobs=n_jobs)
     elif c == "tsfresh-nofs":
@@ -293,7 +293,7 @@ def set_classifier(
 
     # hybrids
     elif c == "hc1" or c == "hivecotev1":
-        from sktime.classification.hybrid import HIVECOTEV1
+        from tsml_eval.estimators.classification._hivecote_v1 import HIVECOTEV1
 
         return HIVECOTEV1(random_state=random_state, n_jobs=n_jobs)
     elif c == "hc2" or c == "hivecotev2":
@@ -444,14 +444,15 @@ def set_classifier(
 
         return InceptionTimeClassifier(random_state=random_state)
     # Other
-    elif c == "dummy" or c == "dummyclassifier":
-        from sktime.classification.dummy import DummyClassifier
-
-        return DummyClassifier()
     elif c == "composabletimeseriesforestclassifier":
         from sktime.classification.compose import ComposableTimeSeriesForestClassifier
 
         return ComposableTimeSeriesForestClassifier(random_state=random_state)
+
+    elif c == "rotf":
+        from tsml_eval.estimators.classification._rotation_forest import RotationForest
+
+        return RotationForest(random_state=random_state, n_jobs=n_jobs)
 
     # requires constructor arguments
     elif c == "columnensemble" or c == "columnensembleclassifier":
@@ -475,6 +476,20 @@ def set_classifier(
             "Cannot create a WeightedEnsembleClassifier"
             "without passing base classifiers"
         )
+
+    # Dummy classifiers
+    elif c == "dummy" or c == "dummyclassifier" or c == "dummyclassifier-tsml":
+        from tsml.dummy import DummyClassifier
+
+        return DummyClassifier()
+    elif c == "dummyclassifier-sktime":
+        from sktime.classification.dummy import DummyClassifier
+
+        return DummyClassifier()
+    elif c == "dummyclassifier-sklearn":
+        from sklearn.dummy import DummyClassifier
+
+        return DummyClassifier()
 
     # invalid classifier
     else:

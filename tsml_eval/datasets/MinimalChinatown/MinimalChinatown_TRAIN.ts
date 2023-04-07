@@ -1,7 +1,8 @@
-%# This is a cut down version of the problem ChinaTown, useful for code examples and very slow unit tests
-% The Train set is the same as ChinaTown, but the test set is reduced from 340 cases to 22 cases
+% This is a cut down version of the problem ChinaTown, useful for code examples and unit tests
+% http://www.timeseriesclassification.com/description.php?Dataset=Chinatown
+% The train set is the same as ChinaTown, but the test set is reduced from 345 cases to 20 cases
 %
-@problemName UnitTest
+@problemName MinimalChinatown
 @timeStamps false
 @missing false
 @univariate true

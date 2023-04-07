@@ -19,8 +19,7 @@ jobs:
         with:
           python-version: "3.10"
 
-      - id: file_changes
-        uses: trilom/file-changes-action@v1.2.4
+      - uses: trilom/file-changes-action@v1.2.4
         with:
           output: " "
 

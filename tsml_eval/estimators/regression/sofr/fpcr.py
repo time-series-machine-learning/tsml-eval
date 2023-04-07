@@ -43,9 +43,9 @@ class FPCRegressor(BaseRegressor):
         if self.regression_technique is None:
             from sklearn.linear_model import LinearRegression
 
-            from tsml_eval.estimators.regression.sklearn import SklearnBaseRegressor
+            from tsml_eval.estimators.regression.sklearn import SklearnToTsmlRegressor
 
-            self.regression_technique = SklearnBaseRegressor(
+            self.regression_technique = SklearnToTsmlRegressor(
                 LinearRegression(fit_intercept=True, n_jobs=self.n_jobs)
             )
 

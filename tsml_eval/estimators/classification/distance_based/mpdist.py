@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
-"""HYDRA classifier.
-
-HYDRA: Competing convolutional kernels for fast and accurate time series classification
-By Angus Dempster, Daniel F. Schmidt, Geoffrey I. Webb
-https://arxiv.org/abs/2203.13652
-"""
+""""""
 
 __author__ = ["TonyBagnall", "patrickzib"]
 __all__ = ["MPDist"]
