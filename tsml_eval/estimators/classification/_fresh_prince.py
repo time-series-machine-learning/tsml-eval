@@ -12,8 +12,7 @@ import numpy as np
 from sktime.classification.base import BaseClassifier
 from sktime.transformations.panel.tsfresh import TSFreshFeatureExtractor
 from sktime.utils.validation.panel import check_X_y
-
-from tsml_eval.estimators.classification._rotation_forest import RotationForest
+from tsml.vector import RotationForestClassifier
 
 
 class FreshPRINCE(BaseClassifier):
@@ -120,7 +119,7 @@ class FreshPRINCE(BaseClassifier):
         """
         self.n_instances_, self.n_dims_, self.series_length_ = X.shape
 
-        self._rotf = RotationForest(
+        self._rotf = RotationForestClassifier(
             n_estimators=self.n_estimators,
             save_transformed_data=self.save_transformed_data,
             n_jobs=self._threads_to_use,

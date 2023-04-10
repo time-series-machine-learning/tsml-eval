@@ -3,9 +3,102 @@
 
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
+from tsml_eval.utils.functions import str_in_nested_list
+
+convolution_based_classifiers = [
+    ["RocketClassifier", "rocket"],
+    ["minirocket", "mini-rocket"],
+    ["multirocket", "multi-rocket"],
+    ["arsenalclassifier", "Arsenal"],
+    ["miniarsenal", "mini-arsenal"],
+    ["multiarsenal", "multi-arsenal"],
+    "HYDRA",
+    ["HydraMultiRocket", "hydra-multirocket"],
+]
+deep_learning_classifiers = [
+    ["CNNClassifier", "cnn"],
+    ["FCNClassifier", "fcnn"],
+    ["MLPClassifier", "mlp"],
+    ["TapNetClassifier", "tapnet"],
+    ["IndividualInceptionClassifier", "singleinception"],
+    ["InceptionTimeClassifier", "inceptiontime"],
+]
+dictionary_based_classifiers = [
+    ["BOSSEnsemble", "boss"],
+    "IndividualBOSS",
+    ["ContractableBOSS", "cboss"],
+    ["TemporalDictionaryEnsemble", "tde"],
+    "IndividualTDE",
+    "WEASEL",
+    "weasel-logistic",
+    "MUSE",
+    "muse-logistic",
+    ["WEASELDilation", "weasel-dilation"],
+    ["MUSEDilation", "muse-dilation"],
+]
+distance_based_classifiers = [
+    ["KNeighborsTimeSeriesClassifier", "dtw", "1nn-dtw"],
+    ["ed", "1nn-euclidean", "1nn-ed"],
+    ["msm", "1nn-msm"],
+    ["ElasticEnsemble", "ee"],
+    "ShapeDTW",
+    ["MatrixProfileClassifier", "matrixprofile"],
+]
+feature_based_classifiers = [
+    "summary-500",
+    ["SummaryClassifier", "summary"],
+    "catch22-500",
+    ["Catch22Classifier", "catch22"],
+    "FreshPRINCE",
+    "tsfresh-nofs",
+    ["TSFreshClassifier", "tsfresh"],
+    ["SignatureClassifier", "signatures"],
+]
+hybrid_classifiers = [
+    ["HIVECOTEV1", "hc1"],
+    ["HIVECOTEV2", "hc2"],
+]
+interval_based_classifiers = [
+    ["RSTSF", "r-stsf"],
+    "rise-500",
+    ["RandomIntervalSpectralEnsemble", "rise"],
+    "tsf-500",
+    ["TimeSeriesForestClassifier", "tsf"],
+    "cif-500",
+    ["CanonicalIntervalForest", "cif"],
+    "stsf-500",
+    ["SupervisedTimeSeriesForest", "stsf"],
+    "drcif-500",
+    "DrCIF",
+    "summary-intervals",
+    ["randomintervals-rf", "catch22-intervals-rf"],
+    ["RandomIntervalClassifier", "randomintervals", "catch22-intervals"],
+]
+other_classifiers = [
+    ["DummyClassifier", "dummy", "dummyclassifier-aeon"],
+    "dummyclassifier-tsml",
+    "dummyclassifier-sklearn",
+]
+shapelet_based_classifiers = [
+    "stc-2hour",
+    ["ShapeletTransformClassifier", "stc"],
+    "RDST",
+    ["RDSTEnsemble", "rdst-ensemble"],
+    ["RandomShapeletForest", "rsf"],
+    "MrSQM",
+]
+vector_classifiers = [
+    ["RotationForestClassifier", "rotationforest", "rotf"],
+]
+
 
 def set_classifier(
-    classifier_name, random_state=None, build_train_file=False, n_jobs=1, fit_contract=0
+    classifier_name,
+    random_state=None,
+    n_jobs=1,
+    build_train_file=False,
+    fit_contract=0,
+    **kwargs,
 ):
     """Return a classifier matching a given input name.
 
@@ -36,198 +129,423 @@ def set_classifier(
     classifier : A BaseClassifier.
         The classifier matching the input classifier name.
     """
-    c = classifier_name.lower()
-    # Convolution based
-    if c == "rotf" or c == "rotationforest":
-        from sktime.classification.sklearn import RotationForest
+    c = classifier_name.casefold()
 
-        return RotationForest(random_state=random_state, n_jobs=n_jobs)
-    # Convolution based
-    elif c == "rocket" or c == "rocketclassifier":
-        from sktime.classification.kernel_based import RocketClassifier
+    if str_in_nested_list(convolution_based_classifiers, c):
+        return _set_classifier_convolution_based(
+            c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+        )
+    elif str_in_nested_list(deep_learning_classifiers, c):
+        return _set_classifier_deep_learning(
+            c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+        )
+    elif str_in_nested_list(dictionary_based_classifiers, c):
+        return _set_classifier_dictionary_based(
+            c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+        )
+    elif str_in_nested_list(distance_based_classifiers, c):
+        return _set_classifier_distance_based(
+            c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+        )
+    elif str_in_nested_list(feature_based_classifiers, c):
+        return _set_classifier_feature_based(
+            c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+        )
+    elif str_in_nested_list(hybrid_classifiers, c):
+        return _set_classifier_hybrid(
+            c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+        )
+    elif str_in_nested_list(interval_based_classifiers, c):
+        return _set_classifier_interval_based(
+            c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+        )
+    elif str_in_nested_list(other_classifiers, c):
+        return _set_classifier_other(
+            c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+        )
+    elif str_in_nested_list(shapelet_based_classifiers, c):
+        return _set_classifier_shapelet_based(
+            c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+        )
+    elif str_in_nested_list(vector_classifiers, c):
+        return _set_classifier_vector(
+            c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+        )
+    else:
+        raise ValueError(f"UNKNOWN CLASSIFIER {c} in set_classifier")
 
-        return RocketClassifier(random_state=random_state, n_jobs=n_jobs)
-    elif c == "mini-rocket":
-        from sktime.classification.kernel_based import RocketClassifier
+
+def _set_classifier_convolution_based(
+    c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+):
+    if c == "rocketclassifier" or c == "rocket":
+        from aeon.classification.convolution_based import RocketClassifier
+
+        return RocketClassifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "minirocket" or c == "mini-rocket":
+        from aeon.classification.convolution_based import RocketClassifier
 
         return RocketClassifier(
             rocket_transform="minirocket",
             random_state=random_state,
             n_jobs=n_jobs,
+            **kwargs,
         )
-    elif c == "multi-rocket":
-        from sktime.classification.kernel_based import RocketClassifier
+    elif c == "multirocket" or c == "multi-rocket":
+        from aeon.classification.convolution_based import RocketClassifier
 
         return RocketClassifier(
             rocket_transform="multirocket",
             random_state=random_state,
             n_jobs=n_jobs,
+            **kwargs,
         )
-    elif c == "arsenal":
-        from sktime.classification.kernel_based import Arsenal
+    elif c == "arsenalclassifier" or c == "arsenal":
+        from aeon.classification.convolution_based import Arsenal
 
         return Arsenal(
             random_state=random_state,
-            save_transformed_data=build_train_file,
             n_jobs=n_jobs,
+            save_transformed_data=build_train_file,
             time_limit_in_minutes=fit_contract,
+            **kwargs,
         )
-    elif c == "mini-arsenal":
-        from sktime.classification.kernel_based import Arsenal
+    elif c == "miniarsenal" or c == "mini-arsenal":
+        from aeon.classification.convolution_based import Arsenal
 
         return Arsenal(
             rocket_transform="minirocket",
             random_state=random_state,
-            save_transformed_data=build_train_file,
             n_jobs=n_jobs,
+            save_transformed_data=build_train_file,
             time_limit_in_minutes=fit_contract,
+            **kwargs,
         )
-    elif c == "multi-arsenal":
-        from sktime.classification.kernel_based import Arsenal
+    elif c == "multiarsenal" or c == "multi-arsenal":
+        from aeon.classification.convolution_based import Arsenal
 
         return Arsenal(
             rocket_transform="multirocket",
             random_state=random_state,
-            save_transformed_data=build_train_file,
             n_jobs=n_jobs,
+            save_transformed_data=build_train_file,
             time_limit_in_minutes=fit_contract,
+            **kwargs,
         )
     elif c == "hydra":
         from tsml_eval.estimators.classification.convolution_based.hydra import HYDRA
 
-        return HYDRA(random_state=random_state)
-    elif c == "hydra-multirocket":
+        return HYDRA(random_state=random_state, **kwargs)
+    elif c == "hydramultirocket" or c == "hydra-multirocket":
         from tsml_eval.estimators.classification.convolution_based.hydra import (
             HydraMultiRocket,
         )
 
-        return HydraMultiRocket(random_state=random_state)
+        return HydraMultiRocket(random_state=random_state, **kwargs)
 
-    # Dictionary based
-    if c == "boss" or c == "bossensemble":
-        from sktime.classification.dictionary_based import BOSSEnsemble
+
+def _set_classifier_deep_learning(
+    c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+):
+    if c == "cnnclassifier" or c == "cnn":
+        from aeon.classification.deep_learning import CNNClassifier
+
+        return CNNClassifier(random_state=random_state, **kwargs)
+    elif c == "fcnclassifier" or c == "fcnn":
+        from aeon.classification.deep_learning.fcn import FCNClassifier
+
+        return FCNClassifier(random_state=random_state, **kwargs)
+    elif c == "mlpclassifier" or c == "mlp":
+        from aeon.classification.deep_learning.mlp import MLPClassifier
+
+        return MLPClassifier(random_state=random_state, **kwargs)
+    elif c == "tapnetclassifier" or c == "tapnet":
+        from aeon.classification.deep_learning.tapnet import TapNetClassifier
+
+        return TapNetClassifier(random_state=random_state, **kwargs)
+    elif c == "individualinceptionclassifier" or c == "singleinception":
+        from aeon.classification.deep_learning.inception_time import (
+            IndividualInceptionClassifier,
+        )
+
+        return IndividualInceptionClassifier(random_state=random_state, **kwargs)
+    elif c == "inceptiontimeclassifier" or c == "inceptiontime":
+        from aeon.classification.deep_learning.inception_time import (
+            InceptionTimeClassifier,
+        )
+
+        return InceptionTimeClassifier(random_state=random_state, **kwargs)
+
+
+def _set_classifier_dictionary_based(
+    c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+):
+    if c == "bossensemble" or c == "boss":
+        from aeon.classification.dictionary_based import BOSSEnsemble
 
         return BOSSEnsemble(
             random_state=random_state,
             n_jobs=n_jobs,
             save_train_predictions=build_train_file,
+            **kwargs,
         )
     elif c == "individualboss":
-        from sktime.classification.dictionary_based import IndividualBOSS
+        from aeon.classification.dictionary_based import IndividualBOSS
 
         return IndividualBOSS(
             random_state=random_state,
             n_jobs=n_jobs,
+            **kwargs,
         )
-    elif c == "cboss" or c == "contractableboss":
-        from sktime.classification.dictionary_based import ContractableBOSS
+    elif c == "contractableboss" or c == "cboss":
+        from aeon.classification.dictionary_based import ContractableBOSS
 
         return ContractableBOSS(
             random_state=random_state,
             n_jobs=n_jobs,
             save_train_predictions=build_train_file,
             time_limit_in_minutes=fit_contract,
+            **kwargs,
         )
-    elif c == "tde" or c == "temporaldictionaryensemble":
-        from sktime.classification.dictionary_based import TemporalDictionaryEnsemble
+    elif c == "temporaldictionaryensemble" or c == "tde":
+        from aeon.classification.dictionary_based import TemporalDictionaryEnsemble
 
         return TemporalDictionaryEnsemble(
             random_state=random_state,
             save_train_predictions=build_train_file,
             n_jobs=n_jobs,
             time_limit_in_minutes=fit_contract,
+            **kwargs,
         )
     elif c == "individualtde":
-        from sktime.classification.dictionary_based import IndividualTDE
+        from aeon.classification.dictionary_based import IndividualTDE
 
-        return IndividualTDE(random_state=random_state, n_jobs=n_jobs)
+        return IndividualTDE(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "weasel":
-        from sktime.classification.dictionary_based import WEASEL
+        from aeon.classification.dictionary_based import WEASEL
 
-        return WEASEL(random_state=random_state, n_jobs=n_jobs)
+        return WEASEL(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "weasel-logistic":
-        from sktime.classification.dictionary_based import WEASEL
+        from aeon.classification.dictionary_based import WEASEL
 
         return WEASEL(
-            random_state=random_state, n_jobs=n_jobs, support_probabilities=True
+            random_state=random_state,
+            n_jobs=n_jobs,
+            support_probabilities=True,
+            **kwargs,
         )
     elif c == "muse":
-        from sktime.classification.dictionary_based import MUSE
+        from aeon.classification.dictionary_based import MUSE
 
-        return MUSE(random_state=random_state, n_jobs=n_jobs)
+        return MUSE(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "muse-logistic":
-        from sktime.classification.dictionary_based import MUSE
+        from aeon.classification.dictionary_based import MUSE
 
         return MUSE(
-            random_state=random_state, n_jobs=n_jobs, support_probabilities=True
+            random_state=random_state,
+            n_jobs=n_jobs,
+            support_probabilities=True,
+            **kwargs,
         )
-    elif c == "weasel-dilation":
+    elif c == "weaseldilation" or c == "weasel-dilation":
         from tsml_eval.estimators.classification.dictionary_based.weasel import (
-            WEASEL_DILATION,
+            WEASELDilation,
         )
 
-        return WEASEL_DILATION(random_state=random_state, n_jobs=n_jobs)
-    elif c == "muse-dilation":
+        return WEASELDilation(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "musedilation" or c == "muse-dilation":
         from tsml_eval.estimators.classification.dictionary_based.muse import (
-            MUSE_DILATION,
+            MUSEDilation,
         )
 
-        return MUSE_DILATION(random_state=random_state, n_jobs=n_jobs)
+        return MUSEDilation(random_state=random_state, n_jobs=n_jobs, **kwargs)
 
-    # Distance based
-    elif c == "pf" or c == "proximityforest":
-        from sktime.classification.distance_based import ProximityForest
 
-        return ProximityForest(random_state=random_state, n_jobs=n_jobs)
-    elif c == "pt" or c == "proximitytree":
-        from sktime.classification.distance_based import ProximityTree
-
-        return ProximityTree(random_state=random_state, n_jobs=n_jobs)
-    elif c == "ps" or c == "proximitystump":
-        from sktime.classification.distance_based import ProximityStump
-
-        return ProximityStump(random_state=random_state, n_jobs=n_jobs)
-    elif c == "dtw" or c == "1nn-dtw" or c == "kneighborstimeseriesclassifier":
+def _set_classifier_distance_based(
+    c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+):
+    if c == "kneighborstimeseriesclassifier" or c == "dtw" or c == "1nn-dtw":
         from tsml_eval.estimators.classification.distance_based import (
             KNeighborsTimeSeriesClassifier,
         )
 
-        return KNeighborsTimeSeriesClassifier(n_jobs=n_jobs)
+        return KNeighborsTimeSeriesClassifier(n_jobs=n_jobs, **kwargs)
     elif c == "ed" or c == "1nn-euclidean" or c == "1nn-ed":
-        from sktime.classification.distance_based import KNeighborsTimeSeriesClassifier
+        from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
 
-        return KNeighborsTimeSeriesClassifier(distance="euclidean", n_jobs=n_jobs)
+        return KNeighborsTimeSeriesClassifier(
+            distance="euclidean", n_jobs=n_jobs, **kwargs
+        )
     elif c == "msm" or c == "1nn-msm":
-        from sktime.classification.distance_based import KNeighborsTimeSeriesClassifier
+        from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
 
-        return KNeighborsTimeSeriesClassifier(distance="msm", n_jobs=n_jobs)
-    elif c == "ee" or c == "elasticensemble":
-        from sktime.classification.distance_based import ElasticEnsemble
+        return KNeighborsTimeSeriesClassifier(distance="msm", n_jobs=n_jobs, **kwargs)
+    elif c == "elasticensemble" or c == "ee":
+        from aeon.classification.distance_based import ElasticEnsemble
 
-        return ElasticEnsemble(random_state=random_state, n_jobs=n_jobs)
+        return ElasticEnsemble(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "shapedtw":
-        from sktime.classification.distance_based import ShapeDTW
+        from aeon.classification.distance_based import ShapeDTW
 
-        return ShapeDTW()
+        return ShapeDTW(**kwargs)
+    elif c == "matrixprofileclassifier" or c == "matrixprofile":
+        from aeon.classification.feature_based import MatrixProfileClassifier
 
-    # Feature based
-    elif c == "summary-500":
+        return MatrixProfileClassifier(
+            random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
+
+
+def _set_classifier_feature_based(
+    c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+):
+    if c == "summary-500":
+        from aeon.classification.feature_based import SummaryClassifier
         from sklearn.ensemble import RandomForestClassifier
-        from sktime.classification.feature_based import SummaryClassifier
 
         return SummaryClassifier(
             estimator=RandomForestClassifier(n_estimators=500),
             random_state=random_state,
             n_jobs=n_jobs,
+            **kwargs,
         )
     elif c == "summaryclassifier" or c == "summary":
-        from sktime.classification.feature_based import SummaryClassifier
+        from aeon.classification.feature_based import SummaryClassifier
 
-        return SummaryClassifier(random_state=random_state, n_jobs=n_jobs)
-    elif c == "summary-intervals":
+        return SummaryClassifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "catch22-500":
+        from aeon.classification.feature_based import Catch22Classifier
         from sklearn.ensemble import RandomForestClassifier
-        from sktime.classification.feature_based import RandomIntervalClassifier
-        from sktime.transformations.series.summarize import SummaryTransformer
+
+        return Catch22Classifier(
+            estimator=RandomForestClassifier(n_estimators=500),
+            random_state=random_state,
+            n_jobs=n_jobs,
+            **kwargs,
+        )
+    elif c == "catch22classifier" or c == "catch22":
+        from aeon.classification.feature_based import Catch22Classifier
+
+        return Catch22Classifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "freshprince":
+        from tsml_eval.estimators.classification._fresh_prince import FreshPRINCE
+
+        return FreshPRINCE(random_state=random_state, n_jobs=n_jobs)
+    elif c == "tsfresh-nofs":
+        from aeon.classification.feature_based import TSFreshClassifier
+
+        return TSFreshClassifier(
+            relevant_feature_extractor=False,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            **kwargs,
+        )
+    elif c == "tsfreshclassifier" or c == "tsfresh":
+        from aeon.classification.feature_based import TSFreshClassifier
+
+        return TSFreshClassifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "signatureclassifier" or c == "signatures":
+        from aeon.classification.feature_based import SignatureClassifier
+
+        return SignatureClassifier(random_state=random_state, **kwargs)
+
+
+def _set_classifier_hybrid(
+    c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+):
+    if c == "hivecotev1" or c == "hc1":
+        from tsml_eval.estimators.classification._hivecote_v1 import HIVECOTEV1
+
+        return HIVECOTEV1(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "hivecotev2" or c == "hc2":
+        from aeon.classification.hybrid import HIVECOTEV2
+
+        return HIVECOTEV2(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+
+
+def _set_classifier_interval_based(
+    c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+):
+    if c == "rstsf" or c == "r-stsf":
+        from tsml_eval.estimators.classification.interval_based.rstsf import RSTSF
+
+        return RSTSF(random_state=random_state, n_estimators=500, **kwargs)
+    elif c == "rise-500":
+        from aeon.classification.interval_based import RandomIntervalSpectralEnsemble
+
+        return RandomIntervalSpectralEnsemble(
+            n_estimators=500, random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
+    elif c == "randomintervalspectralensemble" or c == "rise":
+        from aeon.classification.interval_based import RandomIntervalSpectralEnsemble
+
+        return RandomIntervalSpectralEnsemble(
+            random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
+    elif c == "tsf-500":
+        from aeon.classification.interval_based import TimeSeriesForestClassifier
+
+        return TimeSeriesForestClassifier(
+            n_estimators=500, random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
+    elif c == "timeseriesforestclassifier" or c == "tsf":
+        from aeon.classification.interval_based import TimeSeriesForestClassifier
+
+        return TimeSeriesForestClassifier(
+            random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
+    elif c == "cif-500":
+        from aeon.classification.interval_based import CanonicalIntervalForest
+
+        return CanonicalIntervalForest(
+            n_estimators=500, random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
+    elif c == "canonicalintervalforest" or c == "cif":
+        from aeon.classification.interval_based import CanonicalIntervalForest
+
+        return CanonicalIntervalForest(random_state=random_state, n_jobs=n_jobs)
+    elif c == "stsf-500":
+        from aeon.classification.interval_based import SupervisedTimeSeriesForest
+
+        return SupervisedTimeSeriesForest(
+            n_estimators=500, random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
+    elif c == "supervisedtimeseriesforest" or c == "stsf":
+        from aeon.classification.interval_based import SupervisedTimeSeriesForest
+
+        return SupervisedTimeSeriesForest(
+            random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
+    elif c == "drcif-500":
+        from aeon.classification.interval_based import DrCIF
+
+        return DrCIF(
+            n_estimators=500,
+            random_state=random_state,
+            save_transformed_data=build_train_file,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "drcif":
+        from aeon.classification.interval_based import DrCIF
+
+        return DrCIF(
+            random_state=random_state,
+            save_transformed_data=build_train_file,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "summary-intervals":
+        from aeon.classification.interval_based import RandomIntervalClassifier
+        from aeon.transformations.series.summarize import SummaryTransformer
+        from sklearn.ensemble import RandomForestClassifier
 
         return RandomIntervalClassifier(
             interval_transformers=SummaryTransformer(
@@ -237,260 +555,102 @@ def set_classifier(
             estimator=RandomForestClassifier(n_estimators=500),
             random_state=random_state,
             n_jobs=n_jobs,
+            **kwargs,
         )
-    elif c == "randominterval-rf" or c == "catch22intervals-rf":
+    elif c == "randomintervals-rf" or c == "catch22-intervals-rf":
+        from aeon.classification.interval_based import RandomIntervalClassifier
         from sklearn.ensemble import RandomForestClassifier
-        from sktime.classification.feature_based import RandomIntervalClassifier
 
         return RandomIntervalClassifier(
             estimator=RandomForestClassifier(n_estimators=500),
             random_state=random_state,
             n_jobs=n_jobs,
+            **kwargs,
         )
     elif (
         c == "randomintervalclassifier"
-        or c == "randominterval"
-        or c == "catch22intervals"
+        or c == "randomintervals"
+        or c == "catch22-intervals"
     ):
-        from sktime.classification.feature_based import RandomIntervalClassifier
+        from aeon.classification.interval_based import RandomIntervalClassifier
 
-        return RandomIntervalClassifier(random_state=random_state, n_jobs=n_jobs)
-    elif c == "catch22-500":
-        from sklearn.ensemble import RandomForestClassifier
-        from sktime.classification.feature_based import Catch22Classifier
-
-        return Catch22Classifier(
-            estimator=RandomForestClassifier(n_estimators=500),
-            random_state=random_state,
-            n_jobs=n_jobs,
-        )
-    elif c == "catch22" or c == "catch22classifier":
-        from sktime.classification.feature_based import Catch22Classifier
-
-        return Catch22Classifier(random_state=random_state, n_jobs=n_jobs)
-    elif c == "matrixprofile" or c == "matrixprofileclassifier":
-        from sktime.classification.feature_based import MatrixProfileClassifier
-
-        return MatrixProfileClassifier(random_state=random_state, n_jobs=n_jobs)
-    elif c == "freshprince":
-        from tsml_eval.estimators.classification._fresh_prince import FreshPRINCE
-
-        return FreshPRINCE(random_state=random_state, n_jobs=n_jobs)
-    elif c == "tsfresh-nofs":
-        from sktime.classification.feature_based import TSFreshClassifier
-
-        return TSFreshClassifier(
-            relevant_feature_extractor=False, random_state=random_state, n_jobs=n_jobs
-        )
-    elif c == "tsfreshclassifier" or c == "tsfresh":
-        from sktime.classification.feature_based import TSFreshClassifier
-
-        return TSFreshClassifier(random_state=random_state, n_jobs=n_jobs)
-    elif c == "signatureclassifier" or c == "signatures":
-        from sktime.classification.feature_based import SignatureClassifier
-
-        return SignatureClassifier(random_state=random_state)
-
-    # hybrids
-    elif c == "hc1" or c == "hivecotev1":
-        from tsml_eval.estimators.classification._hivecote_v1 import HIVECOTEV1
-
-        return HIVECOTEV1(random_state=random_state, n_jobs=n_jobs)
-    elif c == "hc2" or c == "hivecotev2":
-        from sktime.classification.hybrid import HIVECOTEV2
-
-        return HIVECOTEV2(
-            random_state=random_state, n_jobs=n_jobs, time_limit_in_minutes=fit_contract
+        return RandomIntervalClassifier(
+            random_state=random_state, n_jobs=n_jobs, **kwargs
         )
 
-    # Interval based
-    elif c == "rstsf" or c == "r-stsf":
-        from tsml_eval.estimators.classification.interval_based.rstsf import RSTSF
 
-        return RSTSF(random_state=random_state, n_estimators=500)
-    elif c == "rise-500":
-        from sktime.classification.interval_based import RandomIntervalSpectralEnsemble
+def _set_classifier_other(
+    c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+):
+    if c == "dummyclassifier" or c == "dummy" or c == "dummyclassifier-aeon":
+        from aeon.classification import DummyClassifier
 
-        return RandomIntervalSpectralEnsemble(
-            n_estimators=500, random_state=random_state, n_jobs=n_jobs
-        )
-    elif (
-        c == "rise"
-        or c == "randomintervalspectralforest"
-        or c == "randomintervalspectralensemble"
-    ):
-        from sktime.classification.interval_based import RandomIntervalSpectralEnsemble
+        return DummyClassifier(random_state=random_state, **kwargs)
+    elif c == "dummyclassifier-tsml":
+        from tsml.dummy import DummyClassifier
 
-        return RandomIntervalSpectralEnsemble(random_state=random_state, n_jobs=n_jobs)
-    elif c == "tsf-500":
-        from sktime.classification.interval_based import TimeSeriesForestClassifier
+        return DummyClassifier(random_state=random_state, **kwargs)
+    elif c == "dummyclassifier-sklearn":
+        from sklearn.dummy import DummyClassifier
 
-        return TimeSeriesForestClassifier(
-            n_estimators=500, random_state=random_state, n_jobs=n_jobs
-        )
-    elif c == "tsf" or c == "timeseriesforestclassifier":
-        from sktime.classification.interval_based import TimeSeriesForestClassifier
+        return DummyClassifier(random_state=random_state, **kwargs)
 
-        return TimeSeriesForestClassifier(random_state=random_state, n_jobs=n_jobs)
-    elif c == "cif-500":
-        from sktime.classification.interval_based import CanonicalIntervalForest
 
-        return CanonicalIntervalForest(
-            n_estimators=500, random_state=random_state, n_jobs=n_jobs
-        )
-    elif c == "cif" or c == "canonicalintervalforest":
-        from sktime.classification.interval_based import CanonicalIntervalForest
-
-        return CanonicalIntervalForest(random_state=random_state, n_jobs=n_jobs)
-    elif c == "stsf-500":
-        from sktime.classification.interval_based import SupervisedTimeSeriesForest
-
-        return SupervisedTimeSeriesForest(
-            n_estimators=500, random_state=random_state, n_jobs=n_jobs
-        )
-    elif c == "stsf" or c == "supervisedtimeseriesforest":
-        from sktime.classification.interval_based import SupervisedTimeSeriesForest
-
-        return SupervisedTimeSeriesForest(random_state=random_state, n_jobs=n_jobs)
-    elif c == "drcif-500":
-        from sktime.classification.interval_based import DrCIF
-
-        return DrCIF(
-            n_estimators=500,
-            random_state=random_state,
-            save_transformed_data=build_train_file,
-            n_jobs=n_jobs,
-            time_limit_in_minutes=fit_contract,
-        )
-    elif c == "drcif":
-        from sktime.classification.interval_based import DrCIF
-
-        return DrCIF(
-            random_state=random_state,
-            save_transformed_data=build_train_file,
-            n_jobs=n_jobs,
-            time_limit_in_minutes=fit_contract,
-        )
-
-    # Shapelet based
-    elif c == "stc-2hour":
-        from sktime.classification.shapelet_based import ShapeletTransformClassifier
+def _set_classifier_shapelet_based(
+    c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+):
+    if c == "stc-2hour":
+        from aeon.classification.shapelet_based import ShapeletTransformClassifier
 
         return ShapeletTransformClassifier(
             transform_limit_in_minutes=120,
             random_state=random_state,
             save_transformed_data=build_train_file,
             n_jobs=n_jobs,
+            **kwargs,
         )
-    elif c == "stc" or c == "shapelettransformclassifier":
-        from sktime.classification.shapelet_based import ShapeletTransformClassifier
+    elif c == "shapelettransformclassifier" or c == "stc":
+        from aeon.classification.shapelet_based import ShapeletTransformClassifier
 
         return ShapeletTransformClassifier(
             random_state=random_state,
             save_transformed_data=build_train_file,
             n_jobs=n_jobs,
             time_limit_in_minutes=fit_contract,
+            **kwargs,
         )
     elif c == "rdst":
         from tsml_eval.estimators.classification.shapelet_based.rdst import RDST
 
-        return RDST(random_state=random_state)
-    elif c == "rdst-ensemble":
+        return RDST(random_state=random_state, **kwargs)
+    elif c == "rdstensemble" or c == "rdst-ensemble":
         from tsml_eval.estimators.classification.shapelet_based.rdst import RDSTEnsemble
 
-        return RDSTEnsemble(random_state=random_state)
-    elif c == "rsf":
+        return RDSTEnsemble(random_state=random_state, **kwargs)
+    elif c == "randomshapeletforest" or c == "rsf":
         from tsml_eval.estimators.classification.shapelet_based.rsf import (
             RandomShapeletForest,
         )
 
-        return RandomShapeletForest(random_state=random_state)
+        return RandomShapeletForest(random_state=random_state, **kwargs)
     elif c == "mrsqm":
         from tsml_eval.estimators.classification.shapelet_based.mrsqm_wrapper import (
             MrSQM,
         )
 
-        return MrSQM(random_state=random_state)
+        return MrSQM(random_state=random_state, **kwargs)
 
-    # Deep learning based
-    elif c == "cnn" or c == "cnnclassifier":
-        from sktime.classification.deep_learning import CNNClassifier
 
-        return CNNClassifier(random_state=random_state)
-    elif c == "fcnn" or c == "fcnclassifier":
-        from sktime.classification.deep_learning.fcn import FCNClassifier
+def _set_classifier_vector(
+    c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+):
+    if c == "rotationforestclassifier" or c == "rotationforest" or c == "rotf":
+        from tsml.vector import RotationForestClassifier
 
-        return FCNClassifier(random_state=random_state)
-    elif c == "mlp" or c == "mlpclassifier":
-        from sktime.classification.deep_learning.mlp import MLPClassifier
-
-        return MLPClassifier(random_state=random_state)
-    elif c == "tapnet" or c == "tapnetclassifier":
-        from sktime.classification.deep_learning.tapnet import TapNetClassifier
-
-        return TapNetClassifier(random_state=random_state)
-
-    elif c == "singleinception" or c == "singleinceptionclassifier":
-        from tsml_eval.estimators.classification.deep_learning.inception_time import (  # noqa; noqa
-            IndividualInceptionTimeClassifier,
+        return RotationForestClassifier(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            save_transformed_data=build_train_file,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
         )
-
-        return IndividualInceptionTimeClassifier(random_state=random_state)
-
-    elif c == "inceptiontime" or c == "inceptiontimeclassifier":
-        from tsml_eval.estimators.classification.deep_learning.inception_time import (  # noqa; noqa
-            InceptionTimeClassifier,
-        )
-
-        return InceptionTimeClassifier(random_state=random_state)
-    # Other
-    elif c == "composabletimeseriesforestclassifier":
-        from sktime.classification.compose import ComposableTimeSeriesForestClassifier
-
-        return ComposableTimeSeriesForestClassifier(random_state=random_state)
-
-    elif c == "rotf":
-        from tsml_eval.estimators.classification._rotation_forest import RotationForest
-
-        return RotationForest(random_state=random_state, n_jobs=n_jobs)
-
-    # requires constructor arguments
-    elif c == "columnensemble" or c == "columnensembleclassifier":
-        raise Exception(
-            "Cannot create a ColumnEnsembleClassifier without passing a base "
-            "classifier "
-        )
-    elif c == "probabilitythresholdearlyclassifier":
-        raise Exception(
-            "probabilitythresholdearlyclassifier is for early classification, "
-            "not applicable here"
-        )
-    elif c == "classifierpipeline" or c == "sklearnclassifierpipeline":
-        raise Exception(
-            "Cannot create a ClassifierPipeline or SklearnClassifierPipeline "
-            "without passing a base "
-            "classifier and transform(s)"
-        )
-    elif c == "weightedensembleclassifier" or c == "weightedensemble":
-        raise Exception(
-            "Cannot create a WeightedEnsembleClassifier"
-            "without passing base classifiers"
-        )
-
-    # Dummy classifiers
-    elif c == "dummy" or c == "dummyclassifier" or c == "dummyclassifier-tsml":
-        from tsml.dummy import DummyClassifier
-
-        return DummyClassifier()
-    elif c == "dummyclassifier-sktime":
-        from sktime.classification.dummy import DummyClassifier
-
-        return DummyClassifier()
-    elif c == "dummyclassifier-sklearn":
-        from sklearn.dummy import DummyClassifier
-
-        return DummyClassifier()
-
-    # invalid classifier
-    else:
-        raise Exception("UNKNOWN CLASSIFIER ", c, " in set_classifier")

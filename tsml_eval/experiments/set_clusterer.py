@@ -3,8 +3,30 @@
 
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
+from tsml_eval.utils.functions import str_in_nested_list
 
-def set_clusterer(clusterer_name, random_state=None, n_jobs=1):
+distance_based_clusterers = [
+    ["TimeSeriesKMeans", "kmeans-dtw", "k-means-dtw"],
+    ["TimeSeriesKMedoids", "kmedoids-dtw", "k-medoids-dtw"],
+]
+other_clusterers = [
+    ["DummyClusterer", "dummy", "dummyclusterer-tsml"],
+    "dummyclusterer-aeon",
+    "dummyclusterer-sklearn",
+]
+vector_clusterers = [
+    "KMeans",
+]
+
+
+def set_clusterer(
+    clusterer_name,
+    random_state=None,
+    n_jobs=1,
+    build_train_file=False,
+    fit_contract=0,
+    **kwargs,
+):
     """Return a clusterer matching a given input name.
 
     Basic way of creating a clusterer to build using the default or alternative
@@ -31,43 +53,74 @@ def set_clusterer(clusterer_name, random_state=None, n_jobs=1):
     """
     c = clusterer_name.lower()
 
-    # Distance based
-    if c == "kmeans" or c == "k-means":
+    if str_in_nested_list(distance_based_clusterers, c):
+        return _set_clusterer_distance_based(
+            c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+        )
+    elif str_in_nested_list(other_clusterers, c):
+        return _set_clusterer_other(
+            c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+        )
+    elif str_in_nested_list(vector_clusterers, c):
+        return _set_clusterer_vector(
+            c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+        )
+    else:
+        raise ValueError(f"UNKNOWN CLUSTERER {c} in set_clusterer")
+
+
+def _set_clusterer_distance_based(
+    c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+):
+    if c == "timeserieskmeans" or c == "kmeans-dtw" or c == "k-means-dtw":
         from sktime.clustering.k_means import TimeSeriesKMeans
 
-        return TimeSeriesKMeans(
-            n_clusters=5,
-            max_iter=50,
-            random_state=random_state,
-        )
-    elif c == "kmedoids" or c == "k-medoids":
+        return TimeSeriesKMeans(random_state=random_state, **kwargs)
+    elif c == "timeserieskmedoids" or c == "kmedoids-dtw" or c == "k-medoids-dtw":
         from sktime.clustering.k_medoids import TimeSeriesKMedoids
 
-        return TimeSeriesKMedoids(
-            n_clusters=5,
-            max_iter=50,
-            random_state=random_state,
-        )
+        return TimeSeriesKMedoids(random_state=random_state, **kwargs)
 
-    # Dummy clusterer
-    elif c == "dummy" or c == "dummyclusterer" or c == "dummyclusterer-tsml":
+
+def _set_clusterer_other(
+    c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+):
+    if c == "dummyclusterer" or c == "dummy" or c == "dummyclusterer-tsml":
         from tsml.dummy import DummyClusterer
 
-        return DummyClusterer(strategy="random", random_state=random_state)
-    elif c == "dummyclusterer-sktime":
-        from sktime.clustering.k_means import TimeSeriesKMeans
+        return DummyClusterer(
+            strategy="random", n_clusters=1, random_state=random_state, **kwargs
+        )
+
+    elif c == "dummyclusterer-aeon":
+        from aeon.clustering.k_means import TimeSeriesKMeans
 
         return TimeSeriesKMeans(
-            n_clusters=2,
+            n_clusters=1,
+            n_init=1,
+            init_algorithm="random",
             metric="euclidean",
-            max_iter=1,
-            random_state=0,
+            max_iter=0,
+            random_state=random_state,
+            **kwargs,
         )
     elif c == "dummyclusterer-sklearn":
         from sklearn.cluster import KMeans
 
-        return KMeans(n_clusters=2, max_iter=1, random_state=0)
+        return KMeans(
+            n_clusters=1,
+            n_init=1,
+            init="random",
+            max_iter=0,
+            random_state=random_state,
+            **kwargs,
+        )
 
-    # invalid clusterer
-    else:
-        raise Exception("UNKNOWN CLUSTERER ", c, " in set_clusterer")
+
+def _set_clusterer_vector(
+    c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+):
+    if c == "kmeans":
+        from sklearn.cluster import KMeans
+
+        return KMeans(random_state=random_state, **kwargs)

@@ -49,6 +49,15 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+all_extras = [
+    "aeon[all_extras]",
+    "tsml[extras]",
+]
+deep_learning = [
+    "tensorflow>=2.5.0",
+    "tensorflow-probability>=0.13.0",
+    "torch>=1.13.1",
+]
 dev = [
     "pre-commit",
     "pytest",
@@ -65,11 +74,6 @@ docs = [
     "numpydoc",
     "jupyter",
     "furo",
-]
-deep_learning = [
-    "tensorflow>=2.5.0",
-    "tensorflow-probability>=0.13.0",
-    "torch>=1.13.1",
 ]
 
 [project.urls]

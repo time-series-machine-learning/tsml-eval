@@ -5,7 +5,7 @@ and logistic regression.
 """
 
 __author__ = ["patrickzib"]
-__all__ = ["MUSE_DILATION"]
+__all__ = ["MUSEDilation"]
 
 import math
 import sys
@@ -25,7 +25,7 @@ from sklearn.utils import check_random_state
 from tsml_eval.estimators.classification.transformations import SFADilation
 
 
-class MUSE_DILATION(BaseClassifier):
+class MUSEDilation(BaseClassifier):
     """MUSE (MUltivariate Symbolic Extension).
     Also known as WEASLE-MUSE: implementation of multivariate version of WEASEL,
     referred to as just MUSE from [1].
@@ -156,7 +156,7 @@ class MUSE_DILATION(BaseClassifier):
         self.total_features_count = 0
         self.feature_selection = feature_selection
 
-        super(MUSE_DILATION, self).__init__()
+        super(MUSEDilation, self).__init__()
 
     def _fit(self, X, y):
         """Build a WEASEL+MUSE classifiers from the training set (X, y).

@@ -13,9 +13,13 @@ from tsml_eval.utils.tests.test_results_writing import _check_regression_file_fo
 
 @pytest.mark.parametrize(
     "regressor",
-    ["DummyRegressor-tsml", "DummyRegressor-sktime", "DummyRegressor-sklearn"],
+    ["DummyRegressor-tsml", "DummyRegressor-aeon", "DummyRegressor-sklearn"],
 )
-def test_run_regression_experiment(regressor):
+@pytest.mark.parametrize(
+    "dataset",
+    ["MinimalGasPrices", "UnequalMinimalGasPrices"],
+)
+def test_run_regression_experiment(regressor, dataset):
     """Test regression experiments with test data and regressor."""
     result_path = (
         "./test_output/regression/"
@@ -27,7 +31,6 @@ def test_run_regression_experiment(regressor):
         if os.getcwd().split("\\")[-1] != "tests"
         else "../../datasets/"
     )
-    dataset = "MinimalGasPrices"
 
     args = [
         None,
@@ -40,7 +43,15 @@ def test_run_regression_experiment(regressor):
         "False",
         None,
     ]
-    run_experiment(args, overwrite=True)
+
+    # aeon estimators don't support unequal length series lists currently
+    try:
+        run_experiment(args, overwrite=True)
+    except ValueError as e:
+        if "not support unequal length series" in str(e):
+            return
+        else:
+            raise e
 
     test_file = f"{result_path}{regressor}/Predictions/{dataset}/testResample0.csv"
     train_file = f"{result_path}{regressor}/Predictions/{dataset}/trainResample0.csv"
