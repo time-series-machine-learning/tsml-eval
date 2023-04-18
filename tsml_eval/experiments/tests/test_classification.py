@@ -9,6 +9,10 @@ import pytest
 
 from tsml_eval.experiments import set_classifier
 from tsml_eval.experiments.classification_experiments import run_experiment
+from tsml_eval.experiments.tests.experiment_tests import (
+    EXEMPT_ESTIMATOR_NAMES,
+    _check_set_method,
+)
 from tsml_eval.utils.tests.test_results_writing import _check_classification_file_format
 
 
@@ -83,7 +87,16 @@ def test_set_classifier():
     all_classifier_names = []
 
     for classifier_list in classifier_lists:
-        _check_set_classifier(classifier_list, classifier_dict, all_classifier_names)
+        _check_set_method(
+            set_classifier.set_classifier,
+            classifier_list,
+            classifier_dict,
+            all_classifier_names,
+        )
+
+    for estimator in EXEMPT_ESTIMATOR_NAMES:
+        if estimator in classifier_dict:
+            classifier_dict.pop(estimator)
 
     if not all(classifier_dict.values()):
         missing_keys = [key for key, value in classifier_dict.items() if not value]
@@ -93,27 +106,3 @@ def test_set_classifier():
             "class name (usually with default parameters). Classifiers with missing "
             f"entries: {missing_keys}."
         )
-
-
-def _check_set_classifier(classifier_sub_list, classifier_dict, all_classifier_names):
-    for classifier_names in classifier_sub_list:
-        classifier_names = (
-            [classifier_names]
-            if isinstance(classifier_names, str)
-            else classifier_names
-        )
-
-        for classifier_alias in classifier_names:
-            assert classifier_alias not in all_classifier_names
-            all_classifier_names.append(classifier_alias)
-
-            try:
-                c = set_classifier.set_classifier(classifier_alias)
-            except ModuleNotFoundError:
-                continue
-
-            c_name = c.__class__.__name__
-            if c_name == classifier_alias:
-                classifier_dict[c_name] = True
-            elif c_name not in classifier_dict:
-                classifier_dict[c_name] = False

@@ -9,6 +9,10 @@ import pytest
 
 from tsml_eval.experiments import set_clusterer
 from tsml_eval.experiments.clustering_experiments import run_experiment
+from tsml_eval.experiments.tests.experiment_tests import (
+    EXEMPT_ESTIMATOR_NAMES,
+    _check_set_method,
+)
 from tsml_eval.utils.tests.test_results_writing import _check_clustering_file_format
 
 
@@ -74,7 +78,16 @@ def test_set_clusterer():
     all_clusterer_names = []
 
     for clusterer_list in clusterer_lists:
-        _check_set_clusterer(clusterer_list, clusterer_dict, all_clusterer_names)
+        _check_set_method(
+            set_clusterer.set_clusterer,
+            clusterer_list,
+            clusterer_dict,
+            all_clusterer_names,
+        )
+
+    for estimator in EXEMPT_ESTIMATOR_NAMES:
+        if estimator in clusterer_dict:
+            clusterer_dict.pop(estimator)
 
     if not all(clusterer_dict.values()):
         missing_keys = [key for key, value in clusterer_dict.items() if not value]
@@ -84,25 +97,3 @@ def test_set_clusterer():
             "class name (usually with default parameters). Clusterers with missing "
             f"entries: {missing_keys}."
         )
-
-
-def _check_set_clusterer(clusterer_sub_list, clusterer_dict, all_clusterer_names):
-    for clusterer_names in clusterer_sub_list:
-        clusterer_names = (
-            [clusterer_names] if isinstance(clusterer_names, str) else clusterer_names
-        )
-
-        for clusterer_alias in clusterer_names:
-            assert clusterer_alias not in all_clusterer_names
-            all_clusterer_names.append(clusterer_alias)
-
-            try:
-                c = set_clusterer.set_clusterer(clusterer_alias)
-            except ModuleNotFoundError:
-                continue
-
-            c_name = c.__class__.__name__
-            if c_name == clusterer_alias:
-                clusterer_dict[c_name] = True
-            elif c_name not in clusterer_dict:
-                clusterer_dict[c_name] = False

@@ -4,8 +4,10 @@
 Classical Scalar on Function Regression approach that allows transforming
 via B-spline if desired.
 """
+from sklearn.linear_model import LinearRegression
 from sktime.regression.base import BaseRegressor
 
+from tsml_eval.estimators import SklearnToTsmlRegressor
 from tsml_eval.estimators.regression.transformations import FPCATransformer
 
 __author__ = ["David Guijo-Rubio"]
@@ -41,10 +43,6 @@ class FPCRegressor(BaseRegressor):
         self.fpca = None
 
         if self.regression_technique is None:
-            from sklearn.linear_model import LinearRegression
-
-            from tsml_eval.estimators.regression.sklearn import SklearnToTsmlRegressor
-
             self.regression_technique = SklearnToTsmlRegressor(
                 LinearRegression(fit_intercept=True, n_jobs=self.n_jobs)
             )

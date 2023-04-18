@@ -98,6 +98,7 @@ def set_classifier(
     n_jobs=1,
     build_train_file=False,
     fit_contract=0,
+    checkpoint=None,
     **kwargs,
 ):
     """Return a classifier matching a given input name.
@@ -133,50 +134,50 @@ def set_classifier(
 
     if str_in_nested_list(convolution_based_classifiers, c):
         return _set_classifier_convolution_based(
-            c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+            c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
         )
     elif str_in_nested_list(deep_learning_classifiers, c):
         return _set_classifier_deep_learning(
-            c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+            c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
         )
     elif str_in_nested_list(dictionary_based_classifiers, c):
         return _set_classifier_dictionary_based(
-            c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+            c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
         )
     elif str_in_nested_list(distance_based_classifiers, c):
         return _set_classifier_distance_based(
-            c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+            c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
         )
     elif str_in_nested_list(feature_based_classifiers, c):
         return _set_classifier_feature_based(
-            c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+            c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
         )
     elif str_in_nested_list(hybrid_classifiers, c):
         return _set_classifier_hybrid(
-            c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+            c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
         )
     elif str_in_nested_list(interval_based_classifiers, c):
         return _set_classifier_interval_based(
-            c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+            c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
         )
     elif str_in_nested_list(other_classifiers, c):
         return _set_classifier_other(
-            c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+            c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
         )
     elif str_in_nested_list(shapelet_based_classifiers, c):
         return _set_classifier_shapelet_based(
-            c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+            c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
         )
     elif str_in_nested_list(vector_classifiers, c):
         return _set_classifier_vector(
-            c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+            c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
         )
     else:
         raise ValueError(f"UNKNOWN CLASSIFIER {c} in set_classifier")
 
 
 def _set_classifier_convolution_based(
-    c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+    c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
     if c == "rocketclassifier" or c == "rocket":
         from aeon.classification.convolution_based import RocketClassifier
@@ -245,7 +246,7 @@ def _set_classifier_convolution_based(
 
 
 def _set_classifier_deep_learning(
-    c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+    c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
     if c == "cnnclassifier" or c == "cnn":
         from aeon.classification.deep_learning import CNNClassifier
@@ -278,7 +279,7 @@ def _set_classifier_deep_learning(
 
 
 def _set_classifier_dictionary_based(
-    c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+    c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
     if c == "bossensemble" or c == "boss":
         from aeon.classification.dictionary_based import BOSSEnsemble
@@ -362,7 +363,7 @@ def _set_classifier_dictionary_based(
 
 
 def _set_classifier_distance_based(
-    c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+    c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
     if c == "kneighborstimeseriesclassifier" or c == "dtw" or c == "1nn-dtw":
         from tsml_eval.estimators.classification.distance_based import (
@@ -397,7 +398,7 @@ def _set_classifier_distance_based(
 
 
 def _set_classifier_feature_based(
-    c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+    c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
     if c == "summary-500":
         from aeon.classification.feature_based import SummaryClassifier
@@ -451,7 +452,7 @@ def _set_classifier_feature_based(
 
 
 def _set_classifier_hybrid(
-    c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+    c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
     if c == "hivecotev1" or c == "hc1":
         from tsml_eval.estimators.classification._hivecote_v1 import HIVECOTEV1
@@ -469,7 +470,7 @@ def _set_classifier_hybrid(
 
 
 def _set_classifier_interval_based(
-    c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+    c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
     if c == "rstsf" or c == "r-stsf":
         from tsml_eval.estimators.classification.interval_based.rstsf import RSTSF
@@ -580,7 +581,7 @@ def _set_classifier_interval_based(
 
 
 def _set_classifier_other(
-    c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+    c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
     if c == "dummyclassifier" or c == "dummy" or c == "dummyclassifier-aeon":
         from aeon.classification import DummyClassifier
@@ -597,7 +598,7 @@ def _set_classifier_other(
 
 
 def _set_classifier_shapelet_based(
-    c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+    c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
     if c == "stc-2hour":
         from aeon.classification.shapelet_based import ShapeletTransformClassifier
@@ -642,7 +643,7 @@ def _set_classifier_shapelet_based(
 
 
 def _set_classifier_vector(
-    c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+    c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
     if c == "rotationforestclassifier" or c == "rotationforest" or c == "rotf":
         from tsml.vector import RotationForestClassifier

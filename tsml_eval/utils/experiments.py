@@ -842,7 +842,7 @@ def _check_line_length_and_floats(line, length, floats):
     return True
 
 
-def _check_results_line(line, probabilities=True):
+def _check_results_line(line, probabilities=True, n_probas=1):
     line = line.split(",")
 
     if len(line) < 2:
@@ -855,12 +855,12 @@ def _check_results_line(line, probabilities=True):
         return False
 
     if probabilities:
-        if len(line) < 5 or line[2] != "":
+        if len(line) < 3 + n_probas or line[2] != "":
             return False
 
         try:
-            float(line[3])
-            float(line[4])
+            for i in range(n_probas):
+                float(line[3 + i])
         except ValueError:
             return False
     else:

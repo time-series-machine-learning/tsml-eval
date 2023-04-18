@@ -25,6 +25,7 @@ def set_clusterer(
     n_jobs=1,
     build_train_file=False,
     fit_contract=0,
+    checkpoint=None,
     **kwargs,
 ):
     """Return a clusterer matching a given input name.
@@ -55,22 +56,22 @@ def set_clusterer(
 
     if str_in_nested_list(distance_based_clusterers, c):
         return _set_clusterer_distance_based(
-            c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+            c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
         )
     elif str_in_nested_list(other_clusterers, c):
         return _set_clusterer_other(
-            c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+            c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
         )
     elif str_in_nested_list(vector_clusterers, c):
         return _set_clusterer_vector(
-            c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+            c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
         )
     else:
         raise ValueError(f"UNKNOWN CLUSTERER {c} in set_clusterer")
 
 
 def _set_clusterer_distance_based(
-    c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+    c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
     if c == "timeserieskmeans" or c == "kmeans-dtw" or c == "k-means-dtw":
         from sktime.clustering.k_means import TimeSeriesKMeans
@@ -83,7 +84,7 @@ def _set_clusterer_distance_based(
 
 
 def _set_clusterer_other(
-    c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+    c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
     if c == "dummyclusterer" or c == "dummy" or c == "dummyclusterer-tsml":
         from tsml.dummy import DummyClusterer
@@ -100,7 +101,7 @@ def _set_clusterer_other(
             n_init=1,
             init_algorithm="random",
             metric="euclidean",
-            max_iter=0,
+            max_iter=1,
             random_state=random_state,
             **kwargs,
         )
@@ -111,14 +112,14 @@ def _set_clusterer_other(
             n_clusters=1,
             n_init=1,
             init="random",
-            max_iter=0,
+            max_iter=1,
             random_state=random_state,
             **kwargs,
         )
 
 
 def _set_clusterer_vector(
-    c, random_state, n_jobs, build_train_file, fit_contract, kwargs
+    c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
     if c == "kmeans":
         from sklearn.cluster import KMeans

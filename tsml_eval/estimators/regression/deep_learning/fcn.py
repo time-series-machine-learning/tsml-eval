@@ -4,10 +4,10 @@
 __author__ = ["James-Large", "TonyBagnall"]
 __all__ = ["FCNRegressor"]
 
-from aeon.networks.fcn import FCNNetwork
-from aeon.regression.deep_learning.base import BaseDeepRegressor
-from aeon.utils.validation._dependencies import _check_dl_dependencies
 from sklearn.utils import check_random_state
+from sktime.networks.fcn import FCNNetwork
+from sktime.regression.deep_learning.base import BaseDeepRegressor
+from sktime.utils.validation._dependencies import _check_dl_dependencies
 
 _check_dl_dependencies(severity="warning")
 
