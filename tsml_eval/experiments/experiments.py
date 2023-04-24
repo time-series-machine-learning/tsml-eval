@@ -13,13 +13,13 @@ import warnings
 from datetime import datetime
 
 import numpy as np
+from aeon.classification import BaseClassifier
+from aeon.clustering import BaseClusterer
+from aeon.regression.base import BaseRegressor
 from sklearn import preprocessing
 from sklearn.base import BaseEstimator, is_classifier, is_regressor
 from sklearn.metrics import accuracy_score, mean_squared_error
 from sklearn.model_selection import cross_val_predict
-from sktime.classification import BaseClassifier
-from sktime.clustering import BaseClusterer
-from sktime.regression.base import BaseRegressor
 from tsml.base import BaseTimeSeriesEstimator
 from tsml.datasets import load_from_ts_file
 from tsml.utils.validation import is_clusterer
@@ -60,7 +60,7 @@ def run_classification_experiment(
 
     Parameters
     ----------
-    X_train : pd.DataFrame or np.array
+    X_train : pd.DataFrame or np.array todo
         The data to train the classifier.
     y_train : np.array
         Training data class labels.
@@ -94,14 +94,27 @@ def run_classification_experiment(
             "At least one must be written."
         )
 
+    if isinstance(classifier, BaseClassifier) and isinstance(X_train, list):
+        raise ValueError(
+            "aeon estimators currently do not support unequal length series. "
+            "Returning without running experiment."
+        )
+
     if isinstance(classifier, BaseClassifier) or (
         isinstance(classifier, BaseTimeSeriesEstimator) and is_classifier(classifier)
     ):
         pass
     elif isinstance(classifier, BaseEstimator) and is_classifier(classifier):
-        classifier = SklearnToTsmlClassifier(classifier=classifier)
+        classifier = SklearnToTsmlClassifier(
+            classifier=classifier,
+            pad_unequal=True,
+            concatenate_channels=True,
+            random_state=classifier.random_state
+            if hasattr(classifier, "random_state")
+            else None,
+        )
     else:
-        raise TypeError("classifier must be a tsml, sktime or sklearn classifier.")
+        raise TypeError("classifier must be a tsml, aeon or sklearn classifier.")
 
     if classifier_name is None:
         classifier_name = type(classifier).__name__
@@ -337,14 +350,27 @@ def run_regression_experiment(
             "At least one must be written."
         )
 
+    if isinstance(regressor, BaseRegressor) and isinstance(X_train, list):
+        raise ValueError(
+            "aeon estimators currently do not support unequal length series. "
+            "Returning without running experiment."
+        )
+
     if isinstance(regressor, BaseRegressor) or (
         isinstance(regressor, BaseTimeSeriesEstimator) and is_regressor(regressor)
     ):
         pass
     elif isinstance(regressor, BaseEstimator) and is_regressor(regressor):
-        regressor = SklearnToTsmlRegressor(regressor=regressor)
+        regressor = SklearnToTsmlRegressor(
+            regressor=regressor,
+            pad_unequal=True,
+            concatenate_channels=True,
+            random_state=regressor.random_state
+            if hasattr(regressor, "random_state")
+            else None,
+        )
     else:
-        raise TypeError("regressor must be a tsml, sktime or sklearn regressor.")
+        raise TypeError("regressor must be a tsml, aeon or sklearn regressor.")
 
     if regressor_name is None:
         regressor_name = type(regressor).__name__
@@ -566,14 +592,27 @@ def run_clustering_experiment(
             "At least one must be written."
         )
 
+    if isinstance(clusterer, BaseClusterer) and isinstance(X_train, list):
+        raise ValueError(
+            "aeon estimators currently do not support unequal length series. "
+            "Returning without running experiment."
+        )
+
     if isinstance(clusterer, BaseClusterer) or (
         isinstance(clusterer, BaseTimeSeriesEstimator) and is_clusterer(clusterer)
     ):
         pass
     elif isinstance(clusterer, BaseEstimator) and is_clusterer(clusterer):
-        clusterer = SklearnToTsmlClusterer(clusterer=clusterer)
+        clusterer = SklearnToTsmlClusterer(
+            clusterer=clusterer,
+            pad_unequal=True,
+            concatenate_channels=True,
+            random_state=clusterer.random_state
+            if hasattr(clusterer, "random_state")
+            else None,
+        )
     else:
-        raise TypeError("clusterer must be a tsml, sktime or sklearn clusterer.")
+        raise TypeError("clusterer must be a tsml, aeon or sklearn clusterer.")
 
     if clusterer_name is None:
         clusterer_name = type(clusterer).__name__

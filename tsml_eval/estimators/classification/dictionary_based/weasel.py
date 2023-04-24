@@ -9,7 +9,7 @@ Rocket-Science on WEASEL
 """
 
 __author__ = ["patrickzib"]
-__all__ = ["WEASEL_DILATION"]
+__all__ = ["WEASELDilation"]
 
 import sys
 from pathlib import Path
@@ -30,7 +30,7 @@ from tsml_eval.estimators.classification.transformations import SFADilation
 # from aeon.transformations.panel.rocket import MiniRocket
 
 
-class WEASEL_DILATION(BaseClassifier):
+class WEASELDilation(BaseClassifier):
     """Word Extraction for Time Series Classification (WEASEL).
     Overview: Input n series length m
     WEASEL is a dictionary classifier that builds a bag-of-patterns using SFA
@@ -148,7 +148,7 @@ class WEASEL_DILATION(BaseClassifier):
 
         # set_num_threads(n_jobs)
 
-        super(WEASEL_DILATION, self).__init__()
+        super(WEASELDilation, self).__init__()
 
     def _fit(self, X, y):
         """Build a WEASEL classifiers from the training set (X, y).

@@ -33,22 +33,32 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
 ]
 dependencies = [
-    "aeon==0.1.0rc0",
+    "aeon==0.1.0",
     "scikit-learn>=1.0.2",
-    "tsml>=0.0.5",
+    "tsml==0.0.7",
+    "gpustat",
+    #
     "convst>=0.2.4",
     "wildboar>=1.1.0",
     "stumpy",
-    "xgboost",
     "networkx",
     "requests",
-    "gpustat",
     "scikit-fda",
     "pyfftw",
     "psutil",
 ]
 
 [project.optional-dependencies]
+all_extras = [
+    "aeon[all_extras]",
+    "tsml[extras]",
+    "xgboost",
+]
+deep_learning = [
+    "tensorflow>=2.5.0",
+    "tensorflow-probability>=0.13.0",
+    "torch>=1.13.1",
+]
 dev = [
     "pre-commit",
     "pytest",
@@ -65,11 +75,6 @@ docs = [
     "numpydoc",
     "jupyter",
     "furo",
-]
-deep_learning = [
-    "tensorflow>=2.5.0",
-    "tensorflow-probability>=0.13.0",
-    "torch>=1.13.1",
 ]
 
 [project.urls]

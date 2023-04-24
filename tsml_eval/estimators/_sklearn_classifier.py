@@ -14,10 +14,16 @@ from tsml.base import BaseTimeSeriesEstimator, _clone_estimator
 class SklearnToTsmlClassifier(ClassifierMixin, BaseTimeSeriesEstimator):
     """Wrapper for sklearn estimators."""
 
-    def __init__(self, classifier=None, concatenate_channels=False, random_state=None):
+    def __init__(
+        self,
+        classifier=None,
+        pad_unequal=False,
+        concatenate_channels=False,
+        random_state=None,
+    ):
         self.classifier = classifier
+        self.pad_unequal = pad_unequal
         self.concatenate_channels = concatenate_channels
-
         self.random_state = random_state
 
         super(SklearnToTsmlClassifier, self).__init__()
@@ -27,7 +33,11 @@ class SklearnToTsmlClassifier(ClassifierMixin, BaseTimeSeriesEstimator):
             raise ValueError("Classifier not set")
 
         X, y = self._validate_data(X=X, y=y)
-        X = self._convert_X(X, concatenate_channels=self.concatenate_channels)
+        X = self._convert_X(
+            X,
+            pad_unequal=self.pad_unequal,
+            concatenate_channels=self.concatenate_channels,
+        )
 
         check_classification_targets(y)
         self.classes_ = np.unique(y)
@@ -41,7 +51,11 @@ class SklearnToTsmlClassifier(ClassifierMixin, BaseTimeSeriesEstimator):
         check_is_fitted(self)
 
         X = self._validate_data(X=X, reset=False)
-        X = self._convert_X(X, concatenate_channels=self.concatenate_channels)
+        X = self._convert_X(
+            X,
+            pad_unequal=self.pad_unequal,
+            concatenate_channels=self.concatenate_channels,
+        )
 
         return self._classifier.predict(X)
 
@@ -49,9 +63,18 @@ class SklearnToTsmlClassifier(ClassifierMixin, BaseTimeSeriesEstimator):
         check_is_fitted(self)
 
         X = self._validate_data(X=X, reset=False)
-        X = self._convert_X(X, concatenate_channels=self.concatenate_channels)
+        X = self._convert_X(
+            X,
+            pad_unequal=self.pad_unequal,
+            concatenate_channels=self.concatenate_channels,
+        )
 
         return self._classifier.predict_proba(X)
 
     def _more_tags(self):
-        return {"X_types": ["2darray"]}
+        return {
+            "X_types": ["2darray"],
+            "equal_length_only": False
+            if self.pad_unequal or self.concatenate_channels
+            else True,
+        }
