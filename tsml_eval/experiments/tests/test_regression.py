@@ -9,10 +9,7 @@ import pytest
 
 from tsml_eval.experiments import set_regressor
 from tsml_eval.experiments.regression_experiments import run_experiment
-from tsml_eval.experiments.tests.experiment_tests import (
-    EXEMPT_ESTIMATOR_NAMES,
-    _check_set_method,
-)
+from tsml_eval.utils.test_utils import EXEMPT_ESTIMATOR_NAMES, _check_set_method
 from tsml_eval.utils.tests.test_results_writing import _check_regression_file_format
 
 
