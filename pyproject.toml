@@ -70,11 +70,13 @@ dev = [
 docs = [
     "sphinx",
     "sphinx-design",
-    "sphinx-gallery",
     "nbsphinx",
     "numpydoc",
     "jupyter",
     "furo",
+    "sphinx_issues",
+    "myst-parser",
+    "sphinx-copybutton",
 ]
 
 [project.urls]
