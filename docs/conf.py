@@ -52,12 +52,27 @@ extensions = [
     "numpydoc",
     "nbsphinx",
     "sphinx_design",
+    "sphinx_issues",
+    "sphinx_copybutton",
+    "myst_parser",
 ]
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", ".ipynb_checkpoints", "Thumbs.db", ".DS_Store"]
 
+# The suffix(es) of source filenames.
+# You can specify multiple suffix as a list of string:
+source_suffix = {
+    ".rst": "restructuredtext",
+    ".md": "markdown",
+}
+
+# The main toctree document.
+master_doc = "index"
+
 # auto doc/summary
+
+autosummary_generate = True
 
 autodoc_default_options = {
     "members": True,
@@ -74,6 +89,12 @@ numpydoc_show_class_members = True
 numpydoc_class_members_toctree = False
 
 numpydoc_validation_checks = {"all"}
+
+# Link to GitHub repo for github_issues extension
+issues_github_path = "time-series-machine-learning/tsml-eval"
+
+# sphinx-copybutton configuration
+copybutton_exclude = ".linenos, .gp, .go"
 
 # nbsphinx
 
@@ -99,11 +120,22 @@ Generated using nbsphinx_. The Jupyter notebook can be found here_.
 .. _Binder: {binder_url}
 """
 
-# -- Options for HTML output -------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
+# MyST Parser configuration
 
-html_theme = "furo"
-html_static_path = ["_static"]
+# When building HTML using the sphinx.ext.mathjax (enabled by default),
+# Myst-Parser injects the tex2jax_ignore (MathJax v2) and mathjax_ignore (MathJax v3)
+# classes in to the top-level section of each MyST document, and adds some default
+# configuration. This ensures that MathJax processes only math, identified by the
+# dollarmath and amsmath extensions, or specified in math directives. We here silence
+# the corresponding warning that this override happens.
+suppress_warnings = ["myst.mathjax"]
+
+# Recommended by sphinx_design when using the MyST Parser
+myst_enable_extensions = ["colon_fence"]
+
+myst_heading_anchors = 2
+
+# linkcode
 
 
 def linkcode_resolve(domain, info):
@@ -133,3 +165,10 @@ def linkcode_resolve(domain, info):
         version,
         filename,
     )
+
+
+# -- Options for HTML output -------------------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
+
+html_theme = "furo"
+html_static_path = ["_static"]

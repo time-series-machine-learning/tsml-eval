@@ -3,8 +3,8 @@
 tsml-eval's documentation
 =========================
 
-``tsml-eval`` is a package containing tools for running experiments with and the e
-valuation of classification, regression and clustering algorithms.
+``tsml-eval`` is a package containing tools for running experiments with and the
+evaluation of classification, regression and clustering algorithms.
 
 .. grid:: 1 2 2 2
     :gutter: 3
