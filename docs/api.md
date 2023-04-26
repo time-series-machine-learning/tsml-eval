@@ -3,8 +3,6 @@
 This page contains the auto-generated API documentation for tsml-eval package functions
 and classes.
 
-{currentmodule} tsml_eval
-
 ## Evaluation: [tsml_eval.evaluation](https://github.com/time-series-machine-learning/tsml-eval/tree/main/tsml_eval/evaluation)
 
 Functions for evaluating the performance of a model.
