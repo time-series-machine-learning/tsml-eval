@@ -21,12 +21,12 @@ import numba
 import numpy as np
 from sklearn import preprocessing
 from sklearn.metrics import davies_bouldin_score
-from sktime.clustering.k_means import TimeSeriesKMeans
-from sktime.clustering.k_medoids import TimeSeriesKMedoids
-from sktime.clustering.partitioning import TimeSeriesLloyds
-from sktime.datasets import load_from_tsfile as load_ts
-from sktime.datasets import write_results_to_uea_format
-from sktime.utils.sampling import stratified_resample
+from aeon.clustering.k_means import TimeSeriesKMeans
+from aeon.clustering.k_medoids import TimeSeriesKMedoids
+from aeon.clustering.partitioning import TimeSeriesLloyds
+from aeon.datasets import load_from_tsfile as load_ts
+from aeon.datasets import write_results_to_uea_format
+from aeon.utils.sampling import stratified_resample
 
 
 def run_clustering_experiment(
