@@ -19,7 +19,7 @@ repos:
     hooks:
       - id: isort
         name: isort (python)
-        args: [ "--profile=black", "--multi_line_output=3" ]
+        args: [ "--profile=black", "--multi-line=3" ]
 
   - repo: https://github.com/psf/black
     rev: 23.1.0
