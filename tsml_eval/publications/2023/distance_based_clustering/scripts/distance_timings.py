@@ -43,7 +43,7 @@ def timing_experiment(x, y, distance_callable, distance_params=None, average=200
 
 
 def univariate_experiment(start=1000, end=10000, increment=1000):
-    sktime_timing = []
+    aeon_timing = []
     tslearn_timing = []
     dtw_python_timing = []
     rust_dtw_timing = []
@@ -56,10 +56,10 @@ def univariate_experiment(start=1000, end=10000, increment=1000):
 
         x = distance_m_d[0][0]
         y = distance_m_d[1][0]
-        numba_sktime = distance_factory(x, y, metric="dtw")
+        numba_aeon = distance_factory(x, y, metric="dtw")
         print(f" length = {i} )")
-        sktime_time = timing_experiment(distance_m_d[0], distance_m_d[1], numba_sktime)
-        print(f" sktime = {sktime_time} )")
+        aeon_time = timing_experiment(distance_m_d[0], distance_m_d[1], numba_aeon)
+        print(f" aeon = {aeon_time} )")
         tslearn_time = timing_experiment(x, y, tslearn_dtw)
         print(f" tslearn = {tslearn_time} )")
         rust_dtw_time = timing_experiment(
@@ -68,7 +68,7 @@ def univariate_experiment(start=1000, end=10000, increment=1000):
         print(f" rust = {rust_dtw_time} )")
         dtw_python_time = timing_experiment(x, y, dtw_python_dtw)
         print(f" dtw_python_time = {dtw_python_time} )")
-        sktime_timing.append(sktime_time)
+        aeon_timing.append(aeon_time)
         tslearn_timing.append(tslearn_time)
         dtw_python_timing.append(dtw_python_time)
         rust_dtw_timing.append(rust_dtw_time)
@@ -76,7 +76,7 @@ def univariate_experiment(start=1000, end=10000, increment=1000):
     uni_df = pd.DataFrame(
         {
             "time points": col_headers,
-            "sktime": sktime_timing,
+            "aeon": aeon_timing,
             "tslearn": tslearn_timing,
             "rust-dtw": rust_dtw_timing,
             "dtw-python": dtw_python_timing,
@@ -86,7 +86,7 @@ def univariate_experiment(start=1000, end=10000, increment=1000):
 
 
 def multivariate_experiment(start=100, end=500, increment=100):
-    sktime_timing = []
+    aeon_timing = []
     tslearn_timing = []
 
     col_headers = []
@@ -99,18 +99,18 @@ def multivariate_experiment(start=100, end=500, increment=100):
         y = distance_m_d[1]
         tslearn_x = x.reshape((x.shape[1], x.shape[0]))  # tslearn wants m, d format
         tslearn_y = y.reshape((y.shape[1], y.shape[0]))  # tslearn wants m, d format
-        numba_sktime = distance_factory(x, y, metric="dtw")
+        numba_aeon = distance_factory(x, y, metric="dtw")
 
         tslearn_time = timing_experiment(tslearn_x, tslearn_y, tslearn_dtw)
-        sktime_time = timing_experiment(x, y, numba_sktime)
+        aeon_time = timing_experiment(x, y, numba_aeon)
 
-        sktime_timing.append(sktime_time)
+        aeon_timing.append(aeon_time)
         tslearn_timing.append(tslearn_time)
 
     multi_df = pd.DataFrame(
         {
             "time points": col_headers,
-            "sktime": sktime_timing,
+            "aeon": aeon_timing,
             "tslearn": tslearn_timing,
         }
     )

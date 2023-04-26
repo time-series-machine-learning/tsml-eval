@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
 
-from sktime.distances import dtw_distance, dtw_alignment_path
-from sktime.distances import distance_factory, distance, distance_alignment_path
-from sktime.distances import pairwise_distance
+from aeon.distances import dtw_distance, dtw_alignment_path
+from aeon.distances import distance_factory, distance, distance_alignment_path
+from aeon.distances import pairwise_distance
 import numpy as np
 
 a = np.array(
     [0.018, 1.537, -0.141, -0.761, -0.177, -2.192, -0.193, -0.465, -0.944, -0.240]
 )
 b = np.array([-0.755, 0.446, 1.198, 0.171, 0.564, 0.689, 1.794, 0.066, 0.288, 1.634])
-from sktime.clustering.k_means import TimeSeriesKMeans
-from sktime.clustering.k_medoids import TimeSeriesKMedoids
-from sktime.datasets import load_arrow_head, load_unit_test
-from sktime.benchmarking.experiments import run_clustering_experiment
+from aeon.clustering.k_means import TimeSeriesKMeans
+from aeon.clustering.k_medoids import TimeSeriesKMedoids
+from aeon.datasets import load_arrow_head, load_unit_test
+from aeon.benchmarking.experiments import run_clustering_experiment
 
 ## Code listing 1
 d1 = dtw_distance(a, b)
