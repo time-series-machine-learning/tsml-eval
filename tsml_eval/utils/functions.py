@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 """Miscellaneous functions for tsml_eval."""
 
+__all__ = ["str_in_nested_list"]
 
-def str_in_nested_list(l, i):
+
+def str_in_nested_list(nested_list, item):
     """Find an item in a nested list."""
-    if i in (s.casefold() for s in l if isinstance(s, str)):
+    if item in (s.casefold() for s in nested_list if isinstance(s, str)):
         return True
     else:
-        return any(str_in_nested_list(nl, i) for nl in l if isinstance(nl, list))
+        return any(
+            str_in_nested_list(nl, item) for nl in nested_list if isinstance(nl, list)
+        )
