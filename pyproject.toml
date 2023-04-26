@@ -61,6 +61,7 @@ deep_learning = [
 ]
 dev = [
     "pre-commit",
+    "tomli",
     "pytest",
     "pytest-randomly",
     "pytest-timeout",

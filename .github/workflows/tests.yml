@@ -30,7 +30,6 @@ jobs:
       - uses: tj-actions/changed-files@v35.9.0
         id: changed-files
 
-
       - uses: pre-commit/action@v3.0.0
         with:
           extra_args: --files ${{ steps.changed-files.outputs.all_changed_files }}
