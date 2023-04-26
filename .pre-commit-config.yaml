@@ -51,7 +51,7 @@ repos:
     hooks:
       - id: pydocstyle
         args: ["--convention=numpy", "--match=^((?!_wip).)*$"]
-        additional_dependencies: [ toml ]
+        additional_dependencies: [ toml, tomli ]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.0.1
