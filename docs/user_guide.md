@@ -103,7 +103,7 @@ Placeholder.
 
 +++
 
-```{button-ref}: /examples/evaluation.ipynb
+```{button-ref} /examples/evaluation.ipynb
 :color: primary
 :click-parent:
 :expand:

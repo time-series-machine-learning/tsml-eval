@@ -16,7 +16,7 @@ pip install tsml-eval[all_extras]
 ```
 
 All extra dependency sets can be found in the [pyproject.toml](https://github.com/time-series-machine-learning/tsml-eval/blob/main/pyproject.toml)
-file.
+file ``[project.optional-dependencies]`` options.
 
 To install a specific [release](https://github.com/time-series-machine-learning/tsml-eval/releases)
 version, specify the version number when installing:

@@ -5,23 +5,23 @@ and classes.
 
 {currentmodule} tsml_eval
 
-## Evaluation: [tsml_eval.evaluation]
+## Evaluation: [tsml_eval.evaluation](https://github.com/time-series-machine-learning/tsml-eval/tree/main/tsml_eval/evaluation)
 
 Functions for evaluating the performance of a model.
 
-::{autosummary}
+```{autosummary}
 :toctree: auto_generated/
 :template: function.rst
 
 evaluation.metrics.clustering_accuracy
 evaluation.metrics.davies_bouldin_score_from_file
-::
+```
 
-## Experiments: [tsml_eval.experiments]
+## Experiments: [tsml_eval.experiments](https://github.com/time-series-machine-learning/tsml-eval/tree/main/tsml_eval/experiments)
 
 Functions for running experiments.
 
-::{autosummary}
+```{autosummary}
 :toctree: auto_generated/
 :template: function.rst
 
@@ -31,13 +31,13 @@ experiments.run_regression_experiment
 experiments.load_and_run_regression_experiment
 experiments.run_clustering_experiment
 experiments.load_and_run_clustering_experiment
-::
+```
 
-## Utilities: [tsml_eval.utils]
+## Utilities: [tsml_eval.utils](https://github.com/time-series-machine-learning/tsml-eval/tree/main/tsml_eval/utils)
 
 Public utility functions used elsewhere in the package.
 
-::{autosummary}
+```{autosummary}
 :toctree: auto_generated/
 :template: function.rst
 
@@ -52,4 +52,4 @@ utils.experiments.validate_results_file
 utils.experiments.fix_broken_second_line
 utils.experiments.compare_result_file_resample
 utils.experiments.assign_gpu
-::
+```

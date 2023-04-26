@@ -26,7 +26,7 @@ Instructions to install ``tsml-eval``.
 
 +++
 
-```{button-ref} installation.md
+```{button-ref} installation
 :color: primary
 :click-parent:
 :expand:
@@ -47,7 +47,7 @@ Guides for users for running experiments using ``tsml-eval``.
 
 +++
 
-```{button-ref} user_guide.md
+```{button-ref} user_guide
 :color: primary
 :click-parent:
 :expand:
@@ -68,7 +68,7 @@ Supplementary material for publications using ``tsml-eval``.
 
 +++
 
-```{button-ref} publications.md
+```{button-ref} publications
 :color: primary
 :click-parent:
 :expand:
@@ -89,7 +89,7 @@ API
 
 +++
 
-```{button-ref} api.md
+```{button-ref} api
 :color: primary
 :click-parent:
 :expand:
