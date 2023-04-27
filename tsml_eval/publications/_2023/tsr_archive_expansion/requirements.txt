@@ -1,0 +1,8 @@
+gpustat
+scikit-fda
+scikit-learn
+sktime>=0.15.0,<=0.16.0
+tensorflow
+tensorflow-probability
+tsfresh
+xgboost
