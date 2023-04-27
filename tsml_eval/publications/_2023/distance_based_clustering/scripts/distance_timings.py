@@ -2,13 +2,12 @@
 import time
 import warnings
 
+import pandas as pd
 from aeon.distances import distance_factory
-from tslearn.metrics import dtw as tslearn_dtw
+from aeon.distances.tests._utils import create_test_distance_numpy
 from dtw import dtw as dtw_python_dtw
 from rust_dtw import dtw as rust_dtw_dtw
-from aeon.distances.tests._utils import create_test_distance_numpy
-
-import pandas as pd
+from tslearn.metrics import dtw as tslearn_dtw
 
 warnings.filterwarnings(
     "ignore"
