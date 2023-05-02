@@ -97,6 +97,10 @@ If any a dependency install is "Killed", it is likely the interactive session ha
 
 >pip install PACKAGE_NAME --no-cache-dir
 
+For some extras you may need a gcc installation i.e.:
+
+>module add gcc/11.1.0
+
 #### 5.1. tsml-eval GPU
 
 For GPU jobs we require two additional ADA modules, CUDA and cuDNN:
