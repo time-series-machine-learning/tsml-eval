@@ -17,37 +17,45 @@ def _set_expansion_regressor(
 
         return CNNRegressor(random_state=random_state)
     elif r == "resnet" or r == "resnetregressor":
-        from regressors.resnet import ResNetRegressor
+        from tsml_eval.estimators.regression.deep_learning import ResNetRegressor
 
         return ResNetRegressor(random_state=random_state)
     elif r == "inception" or r == "inceptiontime" or r == "inceptiontimeregressor":
-        from regressors.inception_time import InceptionTimeRegressor
+        from tsml_eval.estimators.regression.deep_learning import InceptionTimeRegressor
 
         return InceptionTimeRegressor(random_state=random_state)
     elif r == "singleinception" or r == "individualinception":
-        from regressors.inception_time import IndividualInceptionTimeRegressor
+        from tsml_eval.estimators.regression.deep_learning import (
+            IndividualInceptionTimeRegressor,
+        )
 
         return IndividualInceptionTimeRegressor(random_state=random_state)
     elif r == "fcnn" or r == "fcn" or r == "fcnnregressor":
-        from regressors.fcn import FCNRegressor
+        from tsml_eval.estimators.regression.deep_learning import FCNRegressor
 
         return FCNRegressor(random_state=random_state)
     elif r == "1nn-ed":
-        from regressors.knn import KNeighborsTimeSeriesRegressor
+        from tsml_eval.estimators.regression.distance_based import (
+            KNeighborsTimeSeriesRegressor,
+        )
 
         return KNeighborsTimeSeriesRegressor(
             distance="euclidean",
             n_neighbours=1,
         )
     elif r == "5nn-ed":
-        from regressors.knn import KNeighborsTimeSeriesRegressor
+        from tsml_eval.estimators.regression.distance_based import (
+            KNeighborsTimeSeriesRegressor,
+        )
 
         return KNeighborsTimeSeriesRegressor(
             distance="euclidean",
             n_neighbours=5,
         )
     elif r == "1nn-dtw":
-        from regressors.knn import KNeighborsTimeSeriesRegressor
+        from tsml_eval.estimators.regression.distance_based import (
+            KNeighborsTimeSeriesRegressor,
+        )
 
         return KNeighborsTimeSeriesRegressor(
             n_neighbours=1,
@@ -55,7 +63,9 @@ def _set_expansion_regressor(
             distance_params={"window": 0.1},
         )
     elif r == "5nn-dtw":
-        from regressors.knn import KNeighborsTimeSeriesRegressor
+        from tsml_eval.estimators.regression.distance_based import (
+            KNeighborsTimeSeriesRegressor,
+        )
 
         return KNeighborsTimeSeriesRegressor(
             n_neighbours=5,
@@ -78,8 +88,11 @@ def _set_expansion_regressor(
             n_jobs=n_jobs,
         )
     elif r == "tsf":
-        from regressors.column_ensemble import ColumnEnsembleRegressor
         from sktime.regression.interval_based import TimeSeriesForestRegressor
+
+        from tsml_eval.estimators.regression.column_ensemble import (
+            ColumnEnsembleRegressor,
+        )
 
         estimators = [
             (
@@ -92,7 +105,7 @@ def _set_expansion_regressor(
         ]
         return ColumnEnsembleRegressor(estimators)
     elif r == "fresh-prince" or r == "freshprince":
-        from regressors.fresh_prince import FreshPRINCERegressor
+        from tsml_eval.estimators.regression.featured_based import FreshPRINCERegressor
 
         return FreshPRINCERegressor(
             n_estimators=500,
@@ -100,7 +113,7 @@ def _set_expansion_regressor(
             n_jobs=n_jobs,
         )
     elif r == "drcif":
-        from regressors.drcif import DrCIF
+        from tsml_eval.estimators.regression.interval_based import DrCIF
 
         return DrCIF(
             n_estimators=500,
@@ -108,33 +121,38 @@ def _set_expansion_regressor(
             n_jobs=n_jobs,
         )
     elif r == "rotf" or r == "rotationforest":
-        from regressors.rotation_forest import RotationForest
-        from regressors.sklearn_regressor import SklearnBaseRegressor
+        from tsml_eval.estimators.regression.sklearn import (
+            RotationForest,
+            SklearnToTsmlRegressor,
+        )
 
         model_params = {
             "random_state": random_state,
             "n_jobs": n_jobs,
         }
 
-        return SklearnBaseRegressor(RotationForest(**model_params))
+        return SklearnToTsmlRegressor(RotationForest(**model_params))
     elif r == "lr" or r == "linearregression":
-        from regressors.sklearn_regressor import SklearnBaseRegressor
         from sklearn.linear_model import LinearRegression
+
+        from tsml_eval.estimators import SklearnToTsmlRegressor
 
         model_params = {"fit_intercept": True, "n_jobs": n_jobs}
 
-        return SklearnBaseRegressor(LinearRegression(**model_params))
+        return SklearnToTsmlRegressor(LinearRegression(**model_params))
     elif r == "ridgecv" or r == "ridge":
-        from regressors.sklearn_regressor import SklearnBaseRegressor
         from sklearn.linear_model import RidgeCV
+
+        from tsml_eval.estimators import SklearnToTsmlRegressor
 
         model_params = {"fit_intercept": True, "alphas": np.logspace(-3, 3, 10)}
 
-        return SklearnBaseRegressor(RidgeCV(**model_params))
+        return SklearnToTsmlRegressor(RidgeCV(**model_params))
     elif r == "grid-svr" or r == "grid-supportvectorregressor":
-        from regressors.sklearn_regressor import SklearnBaseRegressor
         from sklearn.model_selection import GridSearchCV
         from sklearn.svm import SVR
+
+        from tsml_eval.estimators import SklearnToTsmlRegressor
 
         param_grid = [
             {
@@ -146,12 +164,13 @@ def _set_expansion_regressor(
 
         scoring = "neg_mean_squared_error"
 
-        return SklearnBaseRegressor(
+        return SklearnToTsmlRegressor(
             GridSearchCV(SVR(), param_grid, scoring=scoring, n_jobs=n_jobs, cv=3)
         )
     elif r == "rf" or r == "randomforest":
-        from regressors.sklearn_regressor import SklearnBaseRegressor
         from sklearn.ensemble import RandomForestRegressor
+
+        from tsml_eval.estimators import SklearnToTsmlRegressor
 
         model_params = {
             "n_estimators": 500,
@@ -159,10 +178,11 @@ def _set_expansion_regressor(
             "random_state": random_state,
         }
 
-        return SklearnBaseRegressor(RandomForestRegressor(**model_params))
+        return SklearnToTsmlRegressor(RandomForestRegressor(**model_params))
     elif r == "xgb" or r == "xgboost":
-        from regressors.sklearn_regressor import SklearnBaseRegressor
         from xgboost import XGBRegressor
+
+        from tsml_eval.estimators import SklearnToTsmlRegressor
 
         model_params = {
             "n_estimators": 500,
@@ -171,14 +191,14 @@ def _set_expansion_regressor(
             "random_state": random_state,
         }
 
-        return SklearnBaseRegressor(XGBRegressor(**model_params))
+        return SklearnToTsmlRegressor(XGBRegressor(**model_params))
     elif r == "fpcr":
-        from regressors.sofr import FPCRegressor
+        from tsml_eval.estimators.regression.sofr.fpcr import FPCRegressor
 
         return FPCRegressor(n_components=10)
 
     elif r == "fpcr-b-spline":
-        from regressors.sofr import FPCRegressor
+        from tsml_eval.estimators.regression.sofr.fpcr import FPCRegressor
 
         model_params = {
             "smooth": "B-spline",
