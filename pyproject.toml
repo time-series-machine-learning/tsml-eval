@@ -100,8 +100,6 @@ ignore = [
 ]
 
 [tool.flake8]
-max-line-length = 88
-extend-ignore = ["E203"]
 exclude = [
     "tsml_eval/_wip/*",
     "examples/_wip/*"

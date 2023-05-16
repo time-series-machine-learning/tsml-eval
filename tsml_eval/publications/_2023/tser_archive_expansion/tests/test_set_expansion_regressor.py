@@ -11,7 +11,7 @@ def test_set_expansion_regressor():
     all_regressor_names = []
 
     _check_set_method(
-        set_expansion_regressor._set_expansion_regressor,
+        set_expansion_regressor._set_tser_exp_regressor,
         set_expansion_regressor.expansion_regressors,
         regressor_dict,
         all_regressor_names,

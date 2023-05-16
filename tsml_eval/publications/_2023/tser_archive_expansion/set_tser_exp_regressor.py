@@ -36,7 +36,7 @@ expansion_regressors = [
 ]
 
 
-def _set_expansion_regressor(
+def _set_tser_exp_regressor(
     regressor_name,
     random_state=None,
     n_jobs=1,
