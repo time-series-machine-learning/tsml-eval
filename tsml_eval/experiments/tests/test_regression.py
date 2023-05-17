@@ -23,15 +23,15 @@ from tsml_eval.utils.tests.test_results_writing import _check_regression_file_fo
 )
 def test_run_regression_experiment(regressor, dataset):
     """Test regression experiments with test data and regressor."""
-    result_path = (
-        "./test_output/regression/"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else "../../../test_output/regression/"
-    )
     data_path = (
         "./tsml_eval/datasets/"
         if os.getcwd().split("\\")[-1] != "tests"
         else "../../datasets/"
+    )
+    result_path = (
+        "./test_output/regression/"
+        if os.getcwd().split("\\")[-1] != "tests"
+        else "../../../test_output/regression/"
     )
 
     args = [
@@ -68,6 +68,7 @@ def test_run_regression_experiment(regressor, dataset):
 
 
 def test_set_regressor():
+    """Test set_regressor method."""
     regressor_lists = [
         set_regressor.convolution_based_regressors,
         set_regressor.deep_learning_regressors,
