@@ -23,19 +23,18 @@ from tsml_eval.utils.tests.test_results_writing import _check_clustering_file_fo
 )
 def test_run_clustering_experiment(clusterer, dataset):
     """Test clustering experiments with test data and clusterer."""
-
     if clusterer == "DummyClusterer-sklearn" and dataset == "MinimalJapaneseVowels":
         return
 
-    result_path = (
-        "./test_output/clustering/"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else "../../../test_output/clustering/"
-    )
     data_path = (
         "./tsml_eval/datasets/"
         if os.getcwd().split("\\")[-1] != "tests"
         else "../../datasets/"
+    )
+    result_path = (
+        "./test_output/clustering/"
+        if os.getcwd().split("\\")[-1] != "tests"
+        else "../../../test_output/clustering/"
     )
 
     args = [
@@ -69,6 +68,7 @@ def test_run_clustering_experiment(clusterer, dataset):
 
 
 def test_set_clusterer():
+    """Test set_clusterer method."""
     clusterer_lists = [
         set_clusterer.distance_based_clusterers,
         set_clusterer.other_clusterers,

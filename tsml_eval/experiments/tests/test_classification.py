@@ -23,15 +23,15 @@ from tsml_eval.utils.tests.test_results_writing import _check_classification_fil
 )
 def test_run_classification_experiment(classifier, dataset):
     """Test classification experiments with test data and classifier."""
-    result_path = (
-        "./test_output/classification/"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else "../../../test_output/classification/"
-    )
     data_path = (
         "./tsml_eval/datasets/"
         if os.getcwd().split("\\")[-1] != "tests"
         else "../../datasets/"
+    )
+    result_path = (
+        "./test_output/classification/"
+        if os.getcwd().split("\\")[-1] != "tests"
+        else "../../../test_output/classification/"
     )
 
     args = [
@@ -67,6 +67,7 @@ def test_run_classification_experiment(classifier, dataset):
 
 
 def test_set_classifier():
+    """Test set_classifier method."""
     classifier_lists = [
         set_classifier.convolution_based_classifiers,
         set_classifier.deep_learning_classifiers,

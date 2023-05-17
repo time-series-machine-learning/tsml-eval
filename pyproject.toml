@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tsml-eval"
-version = "0.0.3"
+version = "0.1.0"
 description = "A package for benchmarking time series machine learning tools."
 authors = [
     {name = "Matthew Middlehurst", email = "m.middlehurst@uea.ac.uk"},
@@ -35,7 +35,7 @@ classifiers = [
 dependencies = [
     "aeon==0.1.0",
     "scikit-learn>=1.0.2,<=1.2.2",
-    "tsml==0.0.7",
+    "tsml==0.1.0",
     "gpustat",
     "convst>=0.2.4,<=0.2.7",
     "wildboar>=1.1.0",
@@ -100,8 +100,6 @@ ignore = [
 ]
 
 [tool.flake8]
-max-line-length = 88
-extend-ignore = ["E203"]
 exclude = [
     "tsml_eval/_wip/*",
     "examples/_wip/*"
@@ -114,7 +112,7 @@ per-file-ignores = [
     "tsml_eval/experiments/clustering_experiments.py:E402,T201",
     "tsml_eval/experiments/threaded_clustering_experiments.py:T201",
     "tsml_eval/experiments/distance_clustering_experiments.py:E402,T201",
-    "tsml_eval/publications/_2023/tser_archive_expansion/run_experiments.py:E501,T201",
+    "tsml_eval/publications/*:E402,T201",
 ]
 
 [tool.nbqa.exclude]

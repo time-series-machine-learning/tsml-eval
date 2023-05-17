@@ -32,19 +32,20 @@ repos:
     hooks:
       - id: flake8
         additional_dependencies: [ flake8-bugbear, flake8-print, Flake8-pyproject ]
+        args: [ "--max-line-length=88", "--extend-ignore=E203" ]
 
   - repo: https://github.com/nbQA-dev/nbQA
     rev: 1.6.1
     hooks:
       - id: nbqa-isort
         additional_dependencies: [ isort==5.10.1 ]
-        args: [ "--nbqa-dont-skip-bad-cells" ]
+        args: [ "--nbqa-dont-skip-bad-cells", "--profile=black", "--multi-line=3" ]
       - id: nbqa-black
         additional_dependencies: [ black==22.10.0 ]
         args: [ "--nbqa-dont-skip-bad-cells" ]
       - id: nbqa-flake8
         additional_dependencies: [ flake8==5.0.4 ]
-        args: [ "--nbqa-dont-skip-bad-cells", "--extend-ignore=E402,E203" ]
+        args: [ "--nbqa-dont-skip-bad-cells", "--extend-ignore=E402,E203", "--max-line-length=88" ]
 
   - repo: https://github.com/pycqa/pydocstyle
     rev: 6.3.0
