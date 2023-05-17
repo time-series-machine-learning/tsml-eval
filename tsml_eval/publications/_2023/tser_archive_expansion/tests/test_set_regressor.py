@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 """Tests for publication experiments estimator selection."""
 
-from tsml_eval.publications._2023.tser_archive_expansion import set_expansion_regressor
+from tsml_eval.publications._2023.tser_archive_expansion import _set_tser_exp_regressor
+from tsml_eval.publications._2023.tser_archive_expansion.set_tser_exp_regressor import (
+    expansion_regressors,
+)
 from tsml_eval.utils.test_utils import EXEMPT_ESTIMATOR_NAMES, _check_set_method
 
 
@@ -11,8 +14,8 @@ def test_set_expansion_regressor():
     all_regressor_names = []
 
     _check_set_method(
-        set_expansion_regressor._set_tser_exp_regressor,
-        set_expansion_regressor.expansion_regressors,
+        _set_tser_exp_regressor,
+        expansion_regressors,
         regressor_dict,
         all_regressor_names,
     )
