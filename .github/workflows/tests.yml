@@ -8,15 +8,11 @@ on:
     branches:
       - main
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  cancel:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: styfle/cancel-workflow-action@0.11.0
-        with:
-          workflow_id: ${{ github.event.workflow.id }}
-
   pre-commit:
     runs-on: ubuntu-latest
 
@@ -41,7 +37,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest, macOS-latest, windows-latest ]
-        python-version: [ '3.8', '3.9', '3.10' ]
+        python-version: [ "3.8", "3.9", "3.10", "3.11" ]
 
     steps:
       - uses: actions/checkout@v3
