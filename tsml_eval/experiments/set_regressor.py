@@ -266,7 +266,7 @@ def _set_regressor_distance_based(
             KNeighborsTimeSeriesRegressor,
         )
 
-        return KNeighborsTimeSeriesRegressor(n_neighbours=5, **kwargs)
+        return KNeighborsTimeSeriesRegressor(n_neighbors=5, **kwargs)
     elif r == "1nn-dtw":
         from tsml_eval.estimators.regression.distance_based import (
             KNeighborsTimeSeriesRegressor,
@@ -281,7 +281,27 @@ def _set_regressor_distance_based(
         )
 
         return KNeighborsTimeSeriesRegressor(
-            n_neighbours=5, distance="dtw", distance_params={"window": 0.1}, **kwargs
+            n_neighbors=5, distance="dtw", distance_params={"window": 0.1}, **kwargs
+        )
+    elif r == "1nn-msm":
+        from tsml_eval.estimators.regression.distance_based import (
+            KNeighborsTimeSeriesRegressor,
+        )
+
+        return KNeighborsTimeSeriesRegressor(
+            n_neighbors=1,
+            distance="msm",
+            distance_params={"window": None, "independent": True, "c": 1},
+        )
+    elif r == "5nn-msm":
+        from tsml_eval.estimators.regression.distance_based import (
+            KNeighborsTimeSeriesRegressor,
+        )
+
+        return KNeighborsTimeSeriesRegressor(
+            n_neighbors=5,
+            distance="msm",
+            distance_params={"window": None, "independent": True, "c": 1},
         )
 
 
