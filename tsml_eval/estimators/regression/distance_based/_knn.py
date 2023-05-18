@@ -5,7 +5,7 @@ __author__ = ["TonyBagnall", "GuiArcencio"]
 __all__ = ["KNeighborsTimeSeriesRegressor"]
 
 import numpy as np
-from aeon.distances import distance_factory
+from aeon.distances import get_distance_function
 from aeon.regression.base import BaseRegressor
 
 
@@ -57,12 +57,7 @@ class KNeighborsTimeSeriesRegressor(BaseRegressor):
         self : reference to self.
         """
         if isinstance(self.distance, str):
-            if self.distance_params is None:
-                self.metric = distance_factory(X[0], X[0], metric=self.distance)
-            else:
-                self.metric = distance_factory(
-                    X[0], X[0], metric=self.distance, **self.distance_params
-                )
+            self.metric = get_distance_function(metric=self.distance)
 
         self._X = X
         self._y = y
@@ -83,7 +78,10 @@ class KNeighborsTimeSeriesRegressor(BaseRegressor):
         preds = np.zeros(X.shape[0])
         for i in range(X.shape[0]):
             distances = np.array(
-                [self.metric(X[i], self._X[j]) for j in range(self._X.shape[0])]
+                [
+                    self.metric(X[i], self._X[j], **self.distance_params)
+                    for j in range(self._X.shape[0])
+                ]
             )
 
             # Find indices of k nearest neighbors using partitioning:
