@@ -40,6 +40,7 @@ distance_based_classifiers = [
     ["KNeighborsTimeSeriesClassifier", "dtw", "1nn-dtw"],
     ["ed", "1nn-euclidean", "1nn-ed"],
     ["msm", "1nn-msm"],
+    "grid-1nn-dtw",
     ["ElasticEnsemble", "ee"],
     "ShapeDTW",
     ["MatrixProfileClassifier", "matrixprofile"],
