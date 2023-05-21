@@ -402,7 +402,7 @@ def _set_classifier_distance_based(
     elif c == "grid-1nn-dtw":
         from sklearn.model_selection import GridSearchCV
         param_grid = [
-            {   "distance_parameters": {"window": [0,0.01,1]}
+            {   "distance_parameters": {[{"window": x / 100} for x in range(0, 100)]}
             }
         ]
         return GridSearchCV(
