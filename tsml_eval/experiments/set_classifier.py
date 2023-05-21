@@ -381,6 +381,10 @@ def _set_classifier_distance_based(
         from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
 
         return KNeighborsTimeSeriesClassifier(distance="msm", n_jobs=n_jobs, **kwargs)
+    elif c == "twe" or c == "1nn-twe":
+        from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
+
+        return KNeighborsTimeSeriesClassifier(distance="twe", n_jobs=n_jobs, **kwargs)
     elif c == "elasticensemble" or c == "ee":
         from aeon.classification.distance_based import ElasticEnsemble
 
@@ -394,6 +398,18 @@ def _set_classifier_distance_based(
 
         return MatrixProfileClassifier(
             random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
+    elif c == "grid-1nn-dtw":
+        from sklearn.model_selection import GridSearchCV
+        param_grid = [
+            {   "distance_parameters": {"window": [0,0.01,1]}
+            }
+        ]
+        return GridSearchCV(
+            estimator=KNeighborsTimeSeriesClassifier(),
+            param_grid=param_grid,
+            scoring="accuracy",
+            **kwargs,
         )
 
 
