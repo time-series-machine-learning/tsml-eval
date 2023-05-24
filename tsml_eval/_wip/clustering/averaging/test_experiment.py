@@ -8,15 +8,15 @@ os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
 import sklearn.metrics
-import sktime.datasets.tsc_dataset_names as dataset_lists
+import aeon.datasets.tsc_dataset_names as dataset_lists
 from sklearn.metrics import davies_bouldin_score
 from sklearn.model_selection import GridSearchCV
 from sklearn.preprocessing import normalize
-from sktime.benchmarking.experiments import run_clustering_experiment
-from sktime.clustering.k_means import TimeSeriesKMeans
-from sktime.clustering.k_medoids import TimeSeriesKMedoids
-from sktime.datasets import load_from_tsfile as load_ts
-from sktime.datasets import load_gunpoint
+from aeon.benchmarking.experiments import run_clustering_experiment
+from aeon.clustering.k_means import TimeSeriesKMeans
+from aeon.clustering.k_medoids import TimeSeriesKMedoids
+from aeon.datasets import load_from_tsfile as load_ts
+from aeon.datasets import load_gunpoint
 
 
 def test_experiment():
