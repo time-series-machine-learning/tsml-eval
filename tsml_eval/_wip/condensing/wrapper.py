@@ -13,6 +13,7 @@ class WrapperBA(BaseTransformer):
     ----------
     distance
     distance_params
+
     Examples
     --------
      >>> from ...
@@ -26,7 +27,7 @@ class WrapperBA(BaseTransformer):
 
     def __init__(
         self,
-        distance="dtw",
+        distance="msm",
         distance_params=None,
     ):
         self.distance = distance
@@ -43,13 +44,6 @@ class WrapperBA(BaseTransformer):
         super(WrapperBA, self).__init__()
 
     def _fit(self):
-        """
-        Implement the Wrapper for BA.
-
-        Returns
-        -------
-        self
-        """
         return self
 
     def _transform(self, X, y):
@@ -68,13 +62,3 @@ class WrapperBA(BaseTransformer):
         condensed_X, condensed_y = self._transform(X, y)
 
         return condensed_X, condensed_y
-
-
-# from aeon.datasets._single_problem_loaders import load_unit_test
-# x_train, y_train = load_unit_test("TRAIN")
-
-# wa = WrapperBA()
-# x_condensed, y_condensed = wa._fit_transform(x_train, y_train)
-
-# print(x_condensed)
-# print(y_condensed)
