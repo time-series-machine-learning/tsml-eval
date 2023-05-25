@@ -555,7 +555,7 @@ if __name__ == "__main__":
     lam = 1.0
     init = "random"
     max_its = 300
-    n_init = 1
+    n_init = 10
     if _results_present_full_path(results_dir + "/" + distance, dataset, resample):
         print(
             f"Ignoring dataset{dataset}, results already present at {results_dir}"
