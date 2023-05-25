@@ -19,14 +19,14 @@ from datetime import datetime
 
 import numba
 import numpy as np
-from sklearn import preprocessing
-from sklearn.metrics import davies_bouldin_score
 from aeon.clustering.k_means import TimeSeriesKMeans
 from aeon.clustering.k_medoids import TimeSeriesKMedoids
 from aeon.clustering.partitioning import TimeSeriesLloyds
 from aeon.datasets import load_from_tsfile as load_ts
 from aeon.datasets import write_results_to_uea_format
 from aeon.utils.sampling import stratified_resample
+from sklearn import preprocessing
+from sklearn.metrics import davies_bouldin_score
 
 
 def run_clustering_experiment(
@@ -529,14 +529,14 @@ if __name__ == "__main__":
         print(" Local Run")  # noqa
         dataset = "Chinatown"
         data_dir = "c:/Data/"
-        results_dir = "c:/temp/kmedoids/"
         resample = 0
         averaging = "mean"
         train_fold = True
         distance = "dtw"
         normalise = True
         tune = False
-        clusterer = "kmedoids"
+        clusterer = "kmeans"
+    results_dir = "c:/temp/" + clusterer
     #    cls_folder = clusterer + "-" + distance
     #    if normalise:
     #        results_dir = results_dir + "normalised/"
@@ -569,12 +569,14 @@ if __name__ == "__main__":
             # noqa
         )  # noqa
 
-    train_X, train_Y = load_ts(
-        f"{data_dir}/{dataset}/{dataset}_TRAIN.ts", return_data_type="numpy2d"
-    )
-    test_X, test_Y = load_ts(
-        f"{data_dir}/{dataset}/{dataset}_TEST.ts", return_data_type="numpy2d"
-    )
+    train_X, train_Y = load_ts(f"{data_dir}/{dataset}/{dataset}_TRAIN.ts")
+    test_X, test_Y = load_ts(f"{data_dir}/{dataset}/{dataset}_TEST.ts")
+    if resample != 0:
+        train_X, train_Y, test_X, test_Y = stratified_resample(
+            train_X, train_Y, test_X, test_Y, resample
+        )
+    train_X = train_X.squeeze()
+    test_X = test_X.squeeze()
     if normalise:
         from sklearn.preprocessing import StandardScaler
 
