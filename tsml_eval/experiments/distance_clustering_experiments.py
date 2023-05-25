@@ -536,7 +536,7 @@ if __name__ == "__main__":
         normalise = True
         tune = False
         clusterer = "kmeans"
-    results_dir = "c:/temp/" + clusterer
+        results_dir = "c:/temp/" + clusterer
     #    cls_folder = clusterer + "-" + distance
     #    if normalise:
     #        results_dir = results_dir + "normalised/"
