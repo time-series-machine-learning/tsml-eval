@@ -367,9 +367,9 @@ def _set_classifier_distance_based(
     c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
     if c == "kneighborstimeseriesclassifier" or c == "dtw" or c == "1nn-dtw":
-        from aeon.distance_based import KNeighborsTimeSeriesClassifier
+        from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
 
-        return KNeighborsTimeSeriesClassifier(n_jobs=n_jobs, **kwargs)
+        return KNeighborsTimeSeriesClassifier(distance="dtw", n_jobs=n_jobs, **kwargs)
     elif c == "ed" or c == "1nn-euclidean" or c == "1nn-ed":
         from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
 
@@ -442,7 +442,7 @@ def _set_classifier_feature_based(
 
         return Catch22Classifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "freshprince":
-        from tsml_eval.estimators.classification._fresh_prince import FreshPRINCE
+        from aeon.classification.feature_based import FreshPRINCE
 
         return FreshPRINCE(random_state=random_state, n_jobs=n_jobs)
     elif c == "tsfresh-nofs":
