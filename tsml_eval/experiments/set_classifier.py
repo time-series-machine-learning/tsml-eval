@@ -367,9 +367,7 @@ def _set_classifier_distance_based(
     c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
     if c == "kneighborstimeseriesclassifier" or c == "dtw" or c == "1nn-dtw":
-        from tsml_eval.estimators.classification.distance_based import (
-            KNeighborsTimeSeriesClassifier,
-        )
+        from aeon.distance_based import KNeighborsTimeSeriesClassifier
 
         return KNeighborsTimeSeriesClassifier(n_jobs=n_jobs, **kwargs)
     elif c == "ed" or c == "1nn-euclidean" or c == "1nn-ed":
@@ -402,7 +400,8 @@ def _set_classifier_distance_based(
         )
     elif c == "grid-1nn-dtw":
         from sklearn.model_selection import GridSearchCV
-        param_grid ={"distance_params": [{"window": x / 100} for x in range(0, 100)]}
+
+        param_grid = {"distance_params": [{"window": x / 100} for x in range(0, 100)]}
         return GridSearchCV(
             estimator=KNeighborsTimeSeriesClassifier(),
             param_grid=param_grid,
