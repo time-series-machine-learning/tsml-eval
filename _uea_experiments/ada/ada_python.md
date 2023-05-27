@@ -93,19 +93,28 @@ Extras may be required, install as needed i.e.:
 
 >pip install esig tsfresh
 
-If any a dependency install is "Killed", it is likely the interactive session has run out of memory. Either give it more memory, or use a non-cached package i.e.
-
->pip install PACKAGE_NAME --no-cache-dir
-
 For some extras you may need a gcc installation i.e.:
 
 >module add gcc/11.1.0
+
+Most extra dependencies can be installed with the all_extras dependency set:
+
+>pip install -e .[all_extras]
+
+Some dependencies are unstable, so the following may fail to install.
+
+>pip install -e .[all_extras,unstable_extras]
+
+If any a dependency install is "Killed", it is likely the interactive session has run out of memory. Either give it more memory, or use a non-cached package i.e.
+
+>pip install PACKAGE_NAME --no-cache-dir
 
 #### 5.1. tsml-eval GPU
 
 For GPU jobs we require two additional ADA modules, CUDA and cuDNN:
 
 >module add cuda/10.2.89
+
 >module add cudnn/7.6.5
 
 A specific Tensorflow version is required to match the available CUDA install.
@@ -114,7 +123,7 @@ A specific Tensorflow version is required to match the available CUDA install.
 
 Next, move to the package directory and run:
 
->pip install --editable .
+>pip install --editable .[dl]
 
 # Running experiments
 

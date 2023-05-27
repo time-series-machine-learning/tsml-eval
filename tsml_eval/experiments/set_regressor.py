@@ -6,7 +6,6 @@ __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 import numpy as np
 from sklearn.pipeline import make_pipeline
 
-from tsml_eval.estimators.regression.column_ensemble import ColumnEnsembleRegressor
 from tsml_eval.utils.functions import str_in_nested_list
 
 convolution_based_regressors = [
@@ -307,6 +306,14 @@ def _set_regressor_feature_based(
             save_transformed_data=build_train_file,
             **kwargs,
         )
+    elif r == "fpcaregressor" or r == "fpcregressor" or r == "fpcr":
+        from tsml.feature_based import FPCARegressor
+
+        return FPCARegressor(n_jobs=n_jobs, **kwargs)
+    elif r == "fpcar-b-spline" or r == "fpcr-b-spline":
+        from tsml.feature_based import FPCARegressor
+
+        return FPCARegressor(n_jobs=n_jobs, bspline=True, order=4, n_basis=10, **kwargs)
 
 
 def _set_regressor_hybrid(
@@ -334,6 +341,10 @@ def _set_regressor_interval_based(
         )
     elif r == "tsf-i":
         from aeon.regression.interval_based import TimeSeriesForestRegressor
+
+        from tsml_eval.estimators.regression.column_ensemble import (
+            ColumnEnsembleRegressor,
+        )
 
         estimators = [
             (
@@ -398,16 +409,6 @@ def _set_regressor_other(
         from tsml_eval.estimators.regression.dummy import MedianPredictorRegressor
 
         return MedianPredictorRegressor(**kwargs)
-    elif r == "fpcregressor" or r == "fpcr":
-        from tsml_eval.estimators.regression.sofr import FPCRegressor
-
-        return FPCRegressor(n_jobs=n_jobs, **kwargs)
-    elif r == "fpcr-b-spline":
-        from tsml_eval.estimators.regression.sofr import FPCRegressor
-
-        return FPCRegressor(
-            n_jobs=n_jobs, smooth="B-spline", order=4, n_basis=10, **kwargs
-        )
 
 
 def _set_regressor_shapelet_based(
