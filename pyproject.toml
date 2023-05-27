@@ -65,6 +65,10 @@ dev = [
     "pytest-xdist",
     "pytest-cov",
 ]
+binder = [
+    "notebook",
+    "jupyterlab",
+]
 docs = [
     "sphinx",
     "sphinx-design",
