@@ -35,17 +35,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install .[all_extras,binder,dev]
+          python-version: "3.10"
+
+      - name: Install
+        run: python -m pip install .[all_extras,binder,dev]
 
       - name: Run example notebooks
-        run: build_tools/_run_examples.sh
+        run: _build_tools/run_examples.sh
         shell: bash
 
   pytest:
