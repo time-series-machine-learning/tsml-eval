@@ -554,7 +554,7 @@ if __name__ == "__main__":
     nu = 0.05
     lam = 1.0
     init = "random"
-    max_its = 300
+    max_its = 30
     n_init = 10
     if _results_present_full_path(results_dir + "/" + distance, dataset, resample):
         print(
