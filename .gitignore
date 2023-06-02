@@ -127,6 +127,9 @@ dmypy.json
 # Test output
 test_output/
 
+# Test datasts
+test_datasets/
+
 # HTcondor files
 */condor_output/*
 task_params.txt
