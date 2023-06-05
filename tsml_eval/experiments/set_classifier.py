@@ -58,6 +58,7 @@ feature_based_classifiers = [
 hybrid_classifiers = [
     ["HIVECOTEV1", "hc1"],
     ["HIVECOTEV2", "hc2"],
+    ["TS-CHIEF", "ts-chief", "tschief"],
 ]
 interval_based_classifiers = [
     ["RSTSF", "r-stsf"],
