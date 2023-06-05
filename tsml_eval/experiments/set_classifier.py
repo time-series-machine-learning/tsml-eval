@@ -480,6 +480,19 @@ def _set_classifier_hybrid(
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
+    elif c == "hivecotev2" or c == "hc2":
+        from aeon.classification.hybrid import HIVECOTEV2
+
+        return HIVECOTEV2(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "ts-chief" or c == "tschief":
+        from tsml_eval._wip.tschief.tschief import TsChief
+
+        return TsChief(random_state=random_state, **kwargs)
 
 
 def _set_classifier_interval_based(
