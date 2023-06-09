@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-from aeon.clustering.metrics.averaging._dba import dba
-from aeon.distances import get_distance_function
-from aeon.transformations.base import BaseTransformer
+from aeon.classification.base import BaseClassifier
+from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
+from aeon.clustering.metrics.averaging import elastic_barycenter_average
 
 
-class WrapperBA(BaseTransformer):
+class WrapperBA(BaseClassifier):
     """
     Wrapper for BA methods using condensing approach.
 
@@ -27,38 +27,44 @@ class WrapperBA(BaseTransformer):
 
     def __init__(
         self,
-        distance="msm",
+        distance="dtw",
         distance_params=None,
     ):
         self.distance = distance
-        self._distance_params = distance_params
-        if self._distance_params is None:
-            self._distance_params = {}
-
-        if isinstance(self.distance, str):
-            self.metric_ = get_distance_function(metric=self.distance)
+        self.distance_params = distance_params
+        if self.distance_params is None:
+            self.distance_params = {}
 
         self.selected_series = []
         self.y_selected_series = []
 
+        self.classifier = KNeighborsTimeSeriesClassifier(
+            distance=self.distance, distance_params=self.distance_params
+        )
+
         super(WrapperBA, self).__init__()
 
-    def _fit(self):
-        return self
-
-    def _transform(self, X, y):
+    def _fit(self, X, y):
         for i in np.unique(y):
             idxs = np.where(y == i)
 
-            self.selected_series.append(
-                dba(X[idxs], metric=self.distance, kwargs=self._distance_params)
+            series = elastic_barycenter_average(
+                X[idxs],
+                metric=self.distance,
+                **self.distance_params,
             )
 
+            if len(series.shape) == 3:
+                series = np.squeeze(series, axis=0)
+
+            self.selected_series.append(series)
+
             self.y_selected_series.append(i)
-        return np.array(self.selected_series), np.array(self.y_selected_series)
 
-    def _fit_transform(self, X, y):
-        self._fit()
-        condensed_X, condensed_y = self._transform(X, y)
+        self.classifier.fit(
+            np.array(self.selected_series), np.array(self.y_selected_series)
+        )
+        return self
 
-        return condensed_X, condensed_y
+    def _predict(self, X):
+        return self.classifier.predict(X)

@@ -3,8 +3,6 @@
 
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
-from sklearn.pipeline import make_pipeline
-
 from tsml_eval.utils.functions import str_in_nested_list
 
 convolution_based_classifiers = [
@@ -385,23 +383,13 @@ def _set_classifier_distance_based(
 
         return KNeighborsTimeSeriesClassifier(distance="msm", n_jobs=n_jobs, **kwargs)
     elif c == "condensed-1nn-dtw":
-        from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
-
         from tsml_eval._wip.condensing.wrapper import WrapperBA
 
-        return make_pipeline(
-            WrapperBA(distance="dtw", **kwargs),
-            KNeighborsTimeSeriesClassifier(distance="dtw", n_jobs=n_jobs, **kwargs),
-        )
+        return WrapperBA(distance="dtw", **kwargs)
     elif c == "condensed-1nn-msm":
-        from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
-
         from tsml_eval._wip.condensing.wrapper import WrapperBA
 
-        return make_pipeline(
-            WrapperBA(distance="msm", **kwargs),
-            KNeighborsTimeSeriesClassifier(distance="msm", n_jobs=n_jobs, **kwargs),
-        )
+        return WrapperBA(distance="msm", **kwargs)
     elif c == "elasticensemble" or c == "ee":
         from aeon.classification.distance_based import ElasticEnsemble
 
