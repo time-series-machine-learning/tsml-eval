@@ -40,7 +40,9 @@ distance_based_classifiers = [
     ["KNeighborsTimeSeriesClassifier", "dtw", "1nn-dtw"],
     ["ed", "1nn-euclidean", "1nn-ed"],
     ["msm", "1nn-msm"],
-    ["condensed-1nn-msm", "condensed-1nn-dtw"],
+    ["1-condensed-1nn-msm", "1-condensed-1nn-dtw"],
+    ["2-condensed-1nn-msm", "2-condensed-1nn-dtw"],
+    ["3-condensed-1nn-msm", "3-condensed-1nn-dtw"],
     ["ElasticEnsemble", "ee"],
     "ShapeDTW",
     ["MatrixProfileClassifier", "matrixprofile"],
@@ -382,14 +384,45 @@ def _set_classifier_distance_based(
         from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
 
         return KNeighborsTimeSeriesClassifier(distance="msm", n_jobs=n_jobs, **kwargs)
-    elif c == "condensed-1nn-dtw":
+    elif c == "1-condensed-1nn-dtw":
         from tsml_eval._wip.condensing.wrapper import WrapperBA
 
-        return WrapperBA(distance="dtw", **kwargs)
-    elif c == "condensed-1nn-msm":
+        return WrapperBA(
+            metric="dtw",
+            num_instances_per_class=1,
+            metric_params={"window": 0.2},
+            **kwargs,
+        )
+    elif c == "1-condensed-1nn-msm":
         from tsml_eval._wip.condensing.wrapper import WrapperBA
 
-        return WrapperBA(distance="msm", **kwargs)
+        return WrapperBA(metric="msm", num_instances_per_class=1, **kwargs)
+    elif c == "2-condensed-1nn-dtw":
+        from tsml_eval._wip.condensing.wrapper import WrapperBA
+
+        return WrapperBA(
+            metric="dtw",
+            num_instances_per_class=2,
+            metric_params={"window": 0.2},
+            **kwargs,
+        )
+    elif c == "2-condensed-1nn-msm":
+        from tsml_eval._wip.condensing.wrapper import WrapperBA
+
+        return WrapperBA(metric="msm", num_instances_per_class=2, **kwargs)
+    elif c == "3-condensed-1nn-dtw":
+        from tsml_eval._wip.condensing.wrapper import WrapperBA
+
+        return WrapperBA(
+            metric="dtw",
+            num_instances_per_class=3,
+            metric_params={"window": 0.2},
+            **kwargs,
+        )
+    elif c == "3-condensed-1nn-msm":
+        from tsml_eval._wip.condensing.wrapper import WrapperBA
+
+        return WrapperBA(metric="msm", num_instances_per_class=3, **kwargs)
     elif c == "elasticensemble" or c == "ee":
         from aeon.classification.distance_based import ElasticEnsemble
 
