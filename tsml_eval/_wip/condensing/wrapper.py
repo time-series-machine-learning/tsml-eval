@@ -3,7 +3,6 @@ import numpy as np
 from aeon.classification.base import BaseClassifier
 from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
 from aeon.clustering.k_means import TimeSeriesKMeans
-from aeon.clustering.metrics.averaging import elastic_barycenter_average
 
 
 class WrapperBA(BaseClassifier):
@@ -34,6 +33,7 @@ class WrapperBA(BaseClassifier):
         num_instances_per_class=1,
     ):
         self.metric = metric
+
         self.metric_params = metric_params
         if self.metric_params is None:
             self.metric_params = {}
@@ -47,18 +47,18 @@ class WrapperBA(BaseClassifier):
         if self.classifier is None:
             self.classifier = KNeighborsTimeSeriesClassifier(
                 distance=self.metric,
+                weights="distance",
                 distance_params=self.metric_params,
                 n_neighbors=1,
             )
 
-        if self.num_instances_per_class > 1:
-            self.clusterer = TimeSeriesKMeans(
-                n_clusters=self.num_instances_per_class,
-                metric=self.metric,
-                distance_params=self.metric_params,
-                averaging_method="ba",
-                average_params=self.metric_params,
-            )
+        self.clusterer = TimeSeriesKMeans(
+            n_clusters=self.num_instances_per_class,
+            metric=self.metric,
+            distance_params=self.metric_params,
+            averaging_method="ba",
+            average_params=self.metric_params,
+        )
 
         super(WrapperBA, self).__init__()
 
@@ -66,21 +66,13 @@ class WrapperBA(BaseClassifier):
         for i in np.unique(y):
             idxs_class = np.where(y == i)
 
-            if self.num_instances_per_class > 1:
-                self.clusterer.fit(X[idxs_class])
-                series = self.clusterer.cluster_centers_
-            else:
-                series = elastic_barycenter_average(
-                    X[idxs_class],
-                    metric=self.metric,
-                    **self.metric_params,
-                )
+            self.clusterer.fit(X[idxs_class])
+            averaged_series_class_i = self.clusterer.cluster_centers_
 
-            if len(series.shape) == 3:
-                series = np.squeeze(series, axis=1)
+            if len(averaged_series_class_i.shape) == 3:
+                averaged_series_class_i = np.squeeze(averaged_series_class_i, axis=1)
 
-            self.selected_series.append(series)
-
+            self.selected_series.append(averaged_series_class_i)
             self.y_selected_series.append(i)
 
         self.classifier.fit(
