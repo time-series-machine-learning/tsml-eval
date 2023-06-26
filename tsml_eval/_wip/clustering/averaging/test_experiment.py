@@ -7,16 +7,17 @@ import numpy as np
 os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
-import sklearn.metrics
+
 import aeon.datasets.tsc_dataset_names as dataset_lists
-from sklearn.metrics import davies_bouldin_score
-from sklearn.model_selection import GridSearchCV
-from sklearn.preprocessing import normalize
+import sklearn.metrics
 from aeon.benchmarking.experiments import run_clustering_experiment
 from aeon.clustering.k_means import TimeSeriesKMeans
 from aeon.clustering.k_medoids import TimeSeriesKMedoids
 from aeon.datasets import load_from_tsfile as load_ts
 from aeon.datasets import load_gunpoint
+from sklearn.metrics import davies_bouldin_score
+from sklearn.model_selection import GridSearchCV
+from sklearn.preprocessing import normalize
 
 
 def test_experiment():
