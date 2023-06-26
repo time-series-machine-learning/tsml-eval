@@ -20,12 +20,14 @@ repos:
       - id: isort
         name: isort (python)
         args: [ "--profile=black", "--multi-line=3" ]
+        exclude: "_wip/*"
 
   - repo: https://github.com/psf/black
     rev: 23.1.0
     hooks:
       - id: black
         language_version: python3
+        exclude: "_wip/*"
 
   - repo: https://github.com/pycqa/flake8
     rev: 6.0.0
