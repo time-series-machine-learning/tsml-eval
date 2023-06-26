@@ -35,6 +35,8 @@ distance_based_regressors = [
 feature_based_regressors = [
     ["FreshPRINCERegressor", "fresh-prince", "freshprince"],
     "freshprince-500",
+    ["FPCARegressor", "fpcregressor", "fpcr"],
+    "fpcr-b-spline",
 ]
 hybrid_regressors = [
     ["HIVECOTEV2", "hc2"],
@@ -52,8 +54,6 @@ other_regressors = [
     "dummyregressor-sklearn",
     ["MeanPredictorRegressor", "dummymeanpred"],
     ["MedianPredictorRegressor", "dummymedianpred"],
-    ["FPCRegressor", "fpcr"],
-    "fpcr-b-spline",
 ]
 shapelet_based_regressors = [
     "str-2hour",
@@ -308,7 +308,7 @@ def _set_regressor_feature_based(
     r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
     if r == "freshprinceregressor" or r == "fresh-prince" or r == "freshprince":
-        from tsml_eval.estimators.regression.featured_based import FreshPRINCERegressor
+        from tsml_eval.estimators.regression.feature_based import FreshPRINCERegressor
 
         return FreshPRINCERegressor(
             random_state=random_state,
@@ -317,7 +317,7 @@ def _set_regressor_feature_based(
             **kwargs,
         )
     elif r == "freshprince-500":
-        from tsml_eval.estimators.regression.featured_based import FreshPRINCERegressor
+        from tsml_eval.estimators.regression.feature_based import FreshPRINCERegressor
 
         return FreshPRINCERegressor(
             n_estimators=500,

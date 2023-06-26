@@ -471,7 +471,7 @@ def _set_classifier_hybrid(
     c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
     if c == "hivecotev1" or c == "hc1":
-        from tsml_eval.estimators.classification._hivecote_v1 import HIVECOTEV1
+        from aeon.classification.hybrid import HIVECOTEV1
 
         return HIVECOTEV1(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "hivecotev2" or c == "hc2":

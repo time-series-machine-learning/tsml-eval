@@ -33,7 +33,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
 ]
 dependencies = [
-    "aeon==0.2.0",
+    "aeon==0.3.0",
     "scikit-learn>=1.0.2,<=1.2.2",
     "tsml==0.1.1",
     "gpustat",
@@ -131,5 +131,5 @@ addopts = '''
     --timeout 600
     --showlocals
     --doctest-modules
-    --numprocesses auto
+    --numprocesses 3
 '''
