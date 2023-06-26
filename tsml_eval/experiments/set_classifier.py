@@ -40,7 +40,8 @@ distance_based_classifiers = [
     ["KNeighborsTimeSeriesClassifier", "dtw", "1nn-dtw"],
     ["ed", "1nn-euclidean", "1nn-ed"],
     ["msm", "1nn-msm"],
-    "grid-1nn-dtw",
+    ["twe", "1nn-twe"],
+    "1nn-dtw-cv",
     ["ElasticEnsemble", "ee"],
     "ShapeDTW",
     ["MatrixProfileClassifier", "matrixprofile"],
@@ -58,7 +59,7 @@ feature_based_classifiers = [
 hybrid_classifiers = [
     ["HIVECOTEV1", "hc1"],
     ["HIVECOTEV2", "hc2"],
-    ["TS-CHIEF", "ts-chief", "tschief"],
+    ["TsChief", "ts-chief"],
 ]
 interval_based_classifiers = [
     ["RSTSF", "r-stsf"],
@@ -399,7 +400,8 @@ def _set_classifier_distance_based(
         return MatrixProfileClassifier(
             random_state=random_state, n_jobs=n_jobs, **kwargs
         )
-    elif c == "grid-1nn-dtw":
+    elif c == "1nn-dtw-cv":
+        from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
         from sklearn.model_selection import GridSearchCV
 
         param_grid = {"distance_params": [{"window": x / 100} for x in range(0, 100)]}
@@ -490,7 +492,7 @@ def _set_classifier_hybrid(
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
-    elif c == "ts-chief" or c == "tschief":
+    elif c == "tschief" or c == "ts-chief":
         from tsml_eval._wip.tschief.tschief import TsChief
 
         return TsChief(random_state=random_state, **kwargs)
