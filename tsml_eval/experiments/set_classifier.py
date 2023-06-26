@@ -51,7 +51,7 @@ feature_based_classifiers = [
     ["SummaryClassifier", "summary"],
     "catch22-500",
     ["Catch22Classifier", "catch22"],
-    "FreshPRINCE",
+    ["FreshPRINCEClassifier", "FreshPRINCE"],
     "tsfresh-nofs",
     ["TSFreshClassifier", "tsfresh"],
     ["SignatureClassifier", "signatures"],
@@ -444,10 +444,10 @@ def _set_classifier_feature_based(
         from aeon.classification.feature_based import Catch22Classifier
 
         return Catch22Classifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
-    elif c == "freshprince":
-        from aeon.classification.feature_based import FreshPRINCE
+    elif c == "freshprinceclassifier" and c == "freshprince":
+        from aeon.classification.feature_based import FreshPRINCEClassifier
 
-        return FreshPRINCE(random_state=random_state, n_jobs=n_jobs)
+        return FreshPRINCEClassifier(random_state=random_state, n_jobs=n_jobs)
     elif c == "tsfresh-nofs":
         from aeon.classification.feature_based import TSFreshClassifier
 
