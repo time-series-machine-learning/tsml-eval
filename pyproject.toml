@@ -50,6 +50,7 @@ all_extras = [
     "aeon[all_extras]",
     "tsml[extras]",
     "xgboost<=1.7.5",
+    "convst==0.3.0"
 ]
 unstable_extras = [
     "aeon[unstable_extras]",
@@ -131,5 +132,5 @@ addopts = '''
     --timeout 600
     --showlocals
     --doctest-modules
-    --numprocesses 3
+    --numprocesses auto
 '''
