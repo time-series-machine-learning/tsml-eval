@@ -133,7 +133,7 @@ For running jobs on ADA, we recommend using the submission scripts provided in t
 
 ## Running tsml-eval CPU experiments
 
-For GPU experiments use one of the following scripts:
+For CPU experiments start with one of the following scripts:
 
 >classification_experiments.sh
 >
@@ -143,7 +143,7 @@ For GPU experiments use one of the following scripts:
 
 The default queue for CPU jobs is _compute-64-512_, but you may want to swap to _compute-24-128_ or _compute-24-96_ if they have more resources available.
 
-Do not run threaded code on the cluster without reserving whole nodes, as there is nothing to stop the job from using the CPU resources allocated to others. The default python file in the scripts attempts to avoid threading as much as possible. You should ensure other files are not intentionally using multiple threads if you change it.
+Do not run threaded code on the cluster without reserving whole nodes, as there is nothing to stop the job from using the CPU resources allocated to others. The default python file in the scripts attempts to avoid threading as much as possible. You should ensure processes are not intentionally using multiple threads if you change it.
 
 Requesting memory for a job will allocate it all on the jobs assigned node. New jobs will not be submitted to a node if the total allocated memory exceeds the amount available for the node. As such, requesting too much memory can block new jobs from using the node. This is ok if the memory is actually being used, but large amounts of memory should not be requested unless you know it will be required for the jobs you are submitting. ADA is a shared resource, and instantly requesting hundreds of GB will hurt the overall efficiency of the cluster.
 

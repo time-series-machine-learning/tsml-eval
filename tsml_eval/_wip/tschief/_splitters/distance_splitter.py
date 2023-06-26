@@ -3,7 +3,17 @@ from math import floor
 
 import numpy as np
 from sklearn.utils.validation import check_random_state
-from sktime.distances import distance_factory
+from aeon.distances import (
+    euclidean_pairwise_distance,
+    dtw_pairwise_distance,
+    ddtw_pairwise_distance,
+    wdtw_pairwise_distance,
+    wddtw_pairwise_distance,
+    erp_pairwise_distance,
+    lcss_pairwise_distance,
+    twe_pairwise_distance,
+    msm_pairwise_distance
+)
 
 DISTANCE_CANDIDATES = [
     "euclidean",
@@ -34,58 +44,40 @@ class DistanceSplitter:
 
         metric = rng.choice(DISTANCE_CANDIDATES)
         example = X[0, splitter.dim, :]
+        splitter.metric = metric
         if metric == "euclidean":
-            splitter.distance = distance_factory(example, example, "euclidean")
+            pass
         elif metric == "dtw":
-            splitter.distance = distance_factory(example, example, "dtw")
+            pass
         elif metric == "ddtw":
-            splitter.distance = distance_factory(example, example, "ddtw")
+            pass
         elif metric == "dtw-r":
             max_warp = floor((length + 1) / 4)
             warp = rng.randint(0, max_warp + 1)
-            splitter.distance = distance_factory(
-                example, example, "dtw", kwargs={"window": warp / length}
-            )
+            splitter.window = warp / length
         elif metric == "ddtw-r":
             max_warp = floor((length + 1) / 4)
             warp = rng.randint(0, max_warp + 1)
-            splitter.distance = distance_factory(
-                example, example, "ddtw", kwargs={"window": warp / length}
-            )
+            splitter.window = warp / length
         elif metric == "wdtw":
-            g = rng.uniform(0, 1)
-            splitter.distance = distance_factory(
-                example, example, "wdtw", kwargs={"g": g}
-            )
+            splitter.g = rng.uniform(0, 1)
         elif metric == "wddtw":
-            g = rng.uniform(0, 1)
-            splitter.distance = distance_factory(
-                example, example, "wddtw", kwargs={"g": g}
-            )
+            splitter.g = rng.uniform(0, 1)
         elif metric == "erp":
             sigma = np.std(X[:, splitter.dim, :])
-            g = rng.uniform(sigma / 5, sigma)
-            splitter.distance = distance_factory(
-                example, example, "erp", kwargs={"g": g}
-            )
+            splitter.g = rng.uniform(sigma / 5, sigma)
         elif metric == "lcss":
             sigma = np.std(X[:, splitter.dim, :])
-            epsilon = rng.uniform(sigma / 5, sigma)
+            splitter.epsilon = rng.uniform(sigma / 5, sigma)
             max_warp = floor((length + 1) / 4)
-            warp = rng.randint(0, max_warp + 1)
-            splitter.distance = distance_factory(
-                example, example, "lcss", kwargs={"epsilon": epsilon, "window": warp}
-            )
+            splitter.window = rng.randint(0, max_warp + 1)
         elif metric == "twe":
-            nu = rng.choice(
+            splitter.nu = rng.choice(
                 [0.00001, 0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1]
             )
-            lmbda = rng.choice(np.arange(0, 10) / 9)
-            splitter.distance = distance_factory(
-                example, example, "twe", kwargs={"lmbda": lmbda, "nu": nu}
-            )
+            splitter.lmbda = rng.choice(np.arange(0, 10) / 9)
         elif metric == "msm":
-            c = rng.choice(
+            splitter.c = rng.choice(
                 [
                     0.01,
                     0.01375,
@@ -189,9 +181,6 @@ class DistanceSplitter:
                     100,
                 ]
             )
-            splitter.distance = distance_factory(
-                example, example, "msm", kwargs={"c": c}
-            )
 
         splitter.exemplars = []
         classes = np.unique(y)
@@ -199,19 +188,39 @@ class DistanceSplitter:
             group = np.argwhere(y == c).ravel()
             exemplar_idx = rng.choice(group)
             splitter.exemplars.append(X[exemplar_idx, splitter.dim, :])
+        splitter.exemplars = np.array(splitter.exemplars)
 
         return splitter
 
     def split(self, X):
         """Split incoming data."""
         samples, _, _ = X.shape
+        X = X[:, self.dim, :]
+        y = self.exemplars
 
-        split_idx = np.empty(samples, dtype=int)
-        for i in range(samples):
-            distances = [
-                self.distance(X[i, self.dim, :], exemplar)
-                for exemplar in self.exemplars
-            ]
-            split_idx[i] = np.argmin(distances)
+        if self.metric == "euclidean":
+            pairwise_distances = euclidean_pairwise_distance(X, y)
+        elif self.metric == "dtw":
+            pairwise_distances = dtw_pairwise_distance(X, y)
+        elif self.metric == "ddtw":
+            pairwise_distances = ddtw_pairwise_distance(X, y)
+        elif self.metric == "dtw-r":
+            pairwise_distances = dtw_pairwise_distance(X, y, self.window)
+        elif self.metric == "ddtw-r":
+            pairwise_distances = dtw_pairwise_distance(X, y, self.window)
+        elif self.metric == "wdtw":
+            pairwise_distances = wdtw_pairwise_distance(X, y, g=self.g)
+        elif self.metric == "wddtw":
+            pairwise_distances = wddtw_pairwise_distance(X, y, g=self.g)
+        elif self.metric == "erp":
+            pairwise_distances = erp_pairwise_distance(X, y, g=self.g)
+        elif self.metric == "lcss":
+            pairwise_distances = lcss_pairwise_distance(X, y, window=self.window, epsilon=self.epsilon)
+        elif self.metric == "twe":
+            pairwise_distances = twe_pairwise_distance(X, y, lmbda=self.lmbda, nu=self.nu)
+        else:
+            pairwise_distances = msm_pairwise_distance(X, y, c=self.c)
+
+        split_idx = np.argmin(pairwise_distances, axis=1)
 
         return split_idx

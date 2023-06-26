@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 from sklearn.utils.validation import check_random_state
-from sktime.classification.base import BaseClassifier
+from aeon.classification.base import BaseClassifier
 
 from tsml_eval._wip.tschief._splitters import generate_boss_transforms
 from tsml_eval._wip.tschief.tschiefnode import TsChiefNode

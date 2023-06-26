@@ -12,7 +12,9 @@ def _check_set_method(
         )
 
         for estimator_alias in estimator_names:
-            assert estimator_alias not in all_estimator_names
+            assert (
+                estimator_alias not in all_estimator_names
+            ), f"Estimator {estimator_alias} is duplicated"
             all_estimator_names.append(estimator_alias)
 
             try:
@@ -20,7 +22,7 @@ def _check_set_method(
             except ModuleNotFoundError:
                 continue
 
-            assert e is not None
+            assert e is not None, f"Estimator {estimator_alias} not found"
 
             c_name = e.__class__.__name__
             if c_name == estimator_alias:
