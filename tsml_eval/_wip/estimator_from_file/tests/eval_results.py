@@ -6,8 +6,8 @@ __author__ = ["ander-hg"]
 import numpy as np
 from tsfresh.feature_extraction import extract_features, MinimalFCParameters
 import pandas as pd
-import sktime
-from sktime.datasets import load_from_tsfile_to_dataframe
+import aeon
+from aeon.datasets import load_from_tsfile_to_dataframe
 
 
 def ranklist(A):

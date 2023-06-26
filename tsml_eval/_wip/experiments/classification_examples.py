@@ -3,9 +3,9 @@
 
 import numpy as np
 from aeon.classification.compose import ClassifierPipeline
-from sktime.classification.feature_based import FreshPRINCE
-from sktime.datasets import load_arrow_head, load_UCR_UEA_dataset
-from sktime.transformations.panel.catch22 import Catch22
+from aeon.classification.feature_based import FreshPRINCE
+from aeon.datasets import load_arrow_head, load_UCR_UEA_dataset
+from aeon.transformations.panel.catch22 import Catch22
 
 from tsml_eval.evaluation import fetch_classifier_metric
 from tsml_eval.evaluation.diagrams import critical_difference_diagram, scatter_diagram

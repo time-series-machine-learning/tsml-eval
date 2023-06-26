@@ -142,7 +142,7 @@ def linkcode_resolve(domain, info):
     """Return URL to source code for sphinx.ext.linkcode."""
 
     def find_source():
-        # try to find the file and line number, used in sktime and tslearn conf.py.
+        # try to find the file and line number, used in aeon and tslearn conf.py.
         # originally based on code from numpy:
         # https://github.com/numpy/numpy/blob/master/doc/source/conf.py#L393
         obj = sys.modules[info["module"]]

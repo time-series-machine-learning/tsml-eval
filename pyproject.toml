@@ -102,7 +102,7 @@ ignore = [
 [tool.flake8]
 exclude = [
     "tsml_eval/_wip/*",
-    "examples/_wip/*"
+    "examples/_wip/*",
 ]
 per-file-ignores = [
     "tsml_eval/experiments/classification_experiments.py:E402,T201",
@@ -116,9 +116,9 @@ per-file-ignores = [
 ]
 
 [tool.nbqa.exclude]
-black = "^docs/examples/|^examples/_wip/"
-flake8 = "^docs/examples/|^examples/_wip/"
-isort = "^docs/examples/|^examples/_wip/"
+black = "examples/_wip/"
+flake8 = "examples/_wip/"
+isort = "examples/_wip/"
 
 [tool.pytest.ini_options]
 addopts = '''

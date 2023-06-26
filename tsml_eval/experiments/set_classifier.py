@@ -40,6 +40,8 @@ distance_based_classifiers = [
     ["KNeighborsTimeSeriesClassifier", "dtw", "1nn-dtw"],
     ["ed", "1nn-euclidean", "1nn-ed"],
     ["msm", "1nn-msm"],
+    ["twe", "1nn-twe"],
+    "1nn-dtw-cv",
     ["ElasticEnsemble", "ee"],
     "ShapeDTW",
     ["MatrixProfileClassifier", "matrixprofile"],
@@ -49,7 +51,7 @@ feature_based_classifiers = [
     ["SummaryClassifier", "summary"],
     "catch22-500",
     ["Catch22Classifier", "catch22"],
-    "FreshPRINCE",
+    ["FreshPRINCEClassifier", "freshprince"],
     "tsfresh-nofs",
     ["TSFreshClassifier", "tsfresh"],
     ["SignatureClassifier", "signatures"],
@@ -57,6 +59,7 @@ feature_based_classifiers = [
 hybrid_classifiers = [
     ["HIVECOTEV1", "hc1"],
     ["HIVECOTEV2", "hc2"],
+    ["TsChief", "ts-chief"],
 ]
 interval_based_classifiers = [
     ["RSTSF", "r-stsf"],
@@ -366,11 +369,9 @@ def _set_classifier_distance_based(
     c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
     if c == "kneighborstimeseriesclassifier" or c == "dtw" or c == "1nn-dtw":
-        from tsml_eval.estimators.classification.distance_based import (
-            KNeighborsTimeSeriesClassifier,
-        )
+        from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
 
-        return KNeighborsTimeSeriesClassifier(n_jobs=n_jobs, **kwargs)
+        return KNeighborsTimeSeriesClassifier(distance="dtw", n_jobs=n_jobs, **kwargs)
     elif c == "ed" or c == "1nn-euclidean" or c == "1nn-ed":
         from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
 
@@ -381,6 +382,10 @@ def _set_classifier_distance_based(
         from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
 
         return KNeighborsTimeSeriesClassifier(distance="msm", n_jobs=n_jobs, **kwargs)
+    elif c == "twe" or c == "1nn-twe":
+        from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
+
+        return KNeighborsTimeSeriesClassifier(distance="twe", n_jobs=n_jobs, **kwargs)
     elif c == "elasticensemble" or c == "ee":
         from aeon.classification.distance_based import ElasticEnsemble
 
@@ -394,6 +399,17 @@ def _set_classifier_distance_based(
 
         return MatrixProfileClassifier(
             random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
+    elif c == "1nn-dtw-cv":
+        from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
+        from sklearn.model_selection import GridSearchCV
+
+        param_grid = {"distance_params": [{"window": x / 100} for x in range(0, 100)]}
+        return GridSearchCV(
+            estimator=KNeighborsTimeSeriesClassifier(),
+            param_grid=param_grid,
+            scoring="accuracy",
+            **kwargs,
         )
 
 
@@ -428,10 +444,10 @@ def _set_classifier_feature_based(
         from aeon.classification.feature_based import Catch22Classifier
 
         return Catch22Classifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
-    elif c == "freshprince":
-        from tsml_eval.estimators.classification._fresh_prince import FreshPRINCE
+    elif c == "freshprinceclassifier" or c == "freshprince":
+        from aeon.classification.feature_based import FreshPRINCEClassifier
 
-        return FreshPRINCE(random_state=random_state, n_jobs=n_jobs)
+        return FreshPRINCEClassifier(random_state=random_state, n_jobs=n_jobs)
     elif c == "tsfresh-nofs":
         from aeon.classification.feature_based import TSFreshClassifier
 
@@ -467,6 +483,19 @@ def _set_classifier_hybrid(
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
+    elif c == "hivecotev2" or c == "hc2":
+        from aeon.classification.hybrid import HIVECOTEV2
+
+        return HIVECOTEV2(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "tschief" or c == "ts-chief":
+        from tsml_eval._wip.tschief.tschief import TsChief
+
+        return TsChief(random_state=random_state, **kwargs)
 
 
 def _set_classifier_interval_based(
