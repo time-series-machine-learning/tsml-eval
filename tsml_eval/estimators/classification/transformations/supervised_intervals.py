@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-from joblib import Parallel, delayed
-from sklearn import preprocessing
-from sklearn.utils import check_random_state
-from sktime.transformations.base import BaseTransformer
-from sktime.utils.numba.general import z_normalise_series_3d
-from sktime.utils.numba.stats import (
+from aeon.transformations.base import BaseTransformer
+from aeon.utils.numba.general import z_normalise_series_3d
+from aeon.utils.numba.stats import (
     fisher_score,
     row_count_above_mean,
     row_count_mean_crossing,
@@ -18,7 +15,10 @@ from sktime.utils.numba.stats import (
     row_slope,
     row_std,
 )
-from sktime.utils.validation import check_n_jobs
+from aeon.utils.validation import check_n_jobs
+from joblib import Parallel, delayed
+from sklearn import preprocessing
+from sklearn.utils import check_random_state
 
 
 class SupervisedIntervals(BaseTransformer):
