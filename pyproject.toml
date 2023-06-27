@@ -33,14 +33,12 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
 ]
 dependencies = [
-    "aeon==0.2.0",
+    "aeon==0.3.0",
     "scikit-learn>=1.0.2,<=1.2.2",
     "tsml==0.1.1",
     "gpustat",
-    "convst>=0.2.4,<=0.2.7",
     "wildboar>=1.1.0",
     "stumpy<=1.11.1",
-    "scikit-fda<=0.8.1",
     "networkx",
     "requests",
     "pyfftw",
@@ -52,6 +50,11 @@ all_extras = [
     "aeon[all_extras]",
     "tsml[extras]",
     "xgboost<=1.7.5",
+    "convst==0.3.0"
+]
+unstable_extras = [
+    "aeon[unstable_extras]",
+    "tsml[unstable_extras]",
 ]
 deep_learning = [
     "aeon[dl]",

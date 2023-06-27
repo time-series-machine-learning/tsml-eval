@@ -220,7 +220,7 @@ def _set_tser_exp_regressor(
             n_jobs=n_jobs,
         )
     elif r == "fresh-prince" or r == "freshprince" or r == "freshprinceregressor":
-        from tsml_eval.estimators.regression.featured_based import FreshPRINCERegressor
+        from tsml_eval.estimators.regression.feature_based import FreshPRINCERegressor
 
         return FreshPRINCERegressor(
             n_estimators=500,
