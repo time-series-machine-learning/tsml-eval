@@ -12,7 +12,7 @@ import time
 import numpy as np
 from aeon.base._base import _clone_estimator
 from aeon.regression.base import BaseRegressor
-from aeon.transformations.panel.rocket import (
+from aeon.transformations.collection.rocket import (
     MiniRocket,
     MiniRocketMultivariate,
     MultiRocket,

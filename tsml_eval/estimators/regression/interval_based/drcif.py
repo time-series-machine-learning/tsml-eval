@@ -15,7 +15,7 @@ import numpy as np
 from aeon.base._base import _clone_estimator
 from aeon.classification.sklearn._continuous_interval_tree import _drcif_feature
 from aeon.regression.base import BaseRegressor
-from aeon.transformations.panel.catch22 import Catch22
+from aeon.transformations.collection.catch22 import Catch22
 from aeon.utils.validation.panel import check_X_y
 from joblib import Parallel, delayed
 from sklearn.base import BaseEstimator

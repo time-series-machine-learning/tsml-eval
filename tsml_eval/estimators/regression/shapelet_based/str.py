@@ -111,23 +111,6 @@ class ShapeletTransformRegressor(BaseRegressor):
     .. [2] A. Bostrom and A. Bagnall, "Binary Shapelet Transform for Multiclass Time
        Series Classification", Transactions on Large-Scale Data and Knowledge Centered
        Systems, 32, 2017.
-
-    Examples
-    --------
-    >>> from aeon.classification.shapelet_based import ShapeletTransformClassifier
-    >>> from aeon.classification.sklearn import RotationForest
-    >>> from aeon.datasets import load_unit_test
-    >>> X_train, y_train = load_unit_test(split="train", return_X_y=True)
-    >>> X_test, y_test = load_unit_test(split="test", return_X_y=True)
-    >>> clf = ShapeletTransformClassifier(
-    ...     estimator=RotationForest(n_estimators=3),
-    ...     n_shapelet_samples=100,
-    ...     max_shapelets=10,
-    ...     batch_size=20,
-    ... )
-    >>> clf.fit(X_train, y_train)
-    ShapeletTransformClassifier(...)
-    >>> y_pred = clf.predict(X_test)
     """
 
     _tags = {

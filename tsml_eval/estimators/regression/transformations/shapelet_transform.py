@@ -124,22 +124,6 @@ class RandomShapeletTransform(BaseTransformer):
     .. [2] A. Bostrom and A. Bagnall, "Binary Shapelet Transform for Multiclass Time
        Series Classification", Transactions on Large-Scale Data and Knowledge Centered
        Systems, 32, 2017.
-
-    Examples
-    --------
-    >>> from aeon.transformations.panel.shapelet_transform import (
-    ...     RandomShapeletTransform
-    ... )
-    >>> from aeon.datasets import load_unit_test
-    >>> X_train, y_train = load_unit_test(split="train", return_X_y=True)
-    >>> t = RandomShapeletTransform(
-    ...     n_shapelet_samples=500,
-    ...     max_shapelets=10,
-    ...     batch_size=100,
-    ... )
-    >>> t.fit(X_train, y_train)
-    RandomShapeletTransform(...)
-    >>> X_t = t.transform(X_train)
     """
 
     _tags = {

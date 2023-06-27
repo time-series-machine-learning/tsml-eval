@@ -1,26 +1,38 @@
 # -*- coding: utf-8 -*-
-"""Residual Network (ResNet) for regression."""
+"""Time Convolutional Neural Network (CNN) for classification.
+
+This is a duplicate of the aeon 0.0.1 version of the file.
+"""
 
 __author__ = ["James-Large", "TonyBagnall"]
-__all__ = ["ResNetRegressor"]
+__all__ = ["CNNClassifier"]
 
-from aeon.networks.resnet import ResNetNetwork
+from copy import deepcopy
+
+from aeon.networks.cnn import CNNNetwork
 from aeon.utils.validation._dependencies import _check_dl_dependencies
 from sklearn.utils import check_random_state
 
-from tsml_eval.estimators.networks.base_regressor import BaseDeepRegressor
+from tsml_eval.estimators.networks.base_classifier import BaseDeepClassifier
 
 
-class ResNetRegressor(BaseDeepRegressor, ResNetNetwork):
-    """
-    Residual Neural Network as described in [1].
+class CNNClassifier(BaseDeepClassifier):
+    """Time Convolutional Neural Network (CNN), as described in [1]_.
 
     Parameters
     ----------
-    n_epochs       : int, default = 1500
+    should inherited fields be listed here?
+    n_epochs       : int, default = 2000
         the number of epochs to train the model
     batch_size      : int, default = 16
         the number of samples per gradient update.
+    kernel_size     : int, default = 7
+        the length of the 1D convolution window
+    avg_pool_size   : int, default = 3
+        size of the average pooling windows
+    n_conv_layers   : int, default = 2
+        the number of convolutional plus average pooling layers
+    filter_sizes    : array of shape (n_conv_layers) default = [6, 12]
     random_state    : int or None, default=None
         Seed for random number generation.
     verbose         : boolean, default = False
@@ -28,63 +40,73 @@ class ResNetRegressor(BaseDeepRegressor, ResNetNetwork):
     loss            : string, default="mean_squared_error"
         fit parameter for the keras model
     optimizer       : keras.optimizer, default=keras.optimizers.Adam(),
-    metrics         : list of strings, default=["mean_squared_error"],
+    metrics         : list of strings, default=["accuracy"],
     activation      : string or a tf callable, default="sigmoid"
         Activation function used in the output linear layer.
         List of available activation functions:
         https://keras.io/api/layers/activations/
     use_bias        : boolean, default = True
         whether the layer uses a bias vector.
-    optimizer       : keras.optimizers object, default = Adam()
+    optimizer       : keras.optimizers object, default = Adam(lr=0.01)
         specify the optimizer and the learning rate to be used.
-
 
     Notes
     -----
-    Adapted from the implementation from source code
-    https://github.com/hfawaz/dl-4-tsc/blob/master/classifiers/resnet.py
+    Adapted from the implementation from Fawaz et. al
+    https://github.com/hfawaz/dl-4-tsc/blob/master/classifiers/cnn.py
 
     References
     ----------
-        .. [1] Wang et. al, Time series classification from
-    scratch with deep neural networks: A strong baseline,
-    International joint conference on neural networks (IJCNN), 2017.
-
+    .. [1] Zhao et. al, Convolutional neural networks for time series classification,
+    Journal of Systems Engineering and Electronics, 28(1):2017.
     """
 
-    _tags = {"python_dependencies": ["tensorflow"]}
+    _tags = {"python_dependencies": "tensorflow"}
 
     def __init__(
         self,
-        n_epochs=1500,
+        n_epochs=2000,
+        batch_size=16,
+        kernel_size=7,
+        avg_pool_size=3,
+        n_conv_layers=2,
         callbacks=None,
         verbose=False,
         loss="mean_squared_error",
         metrics=None,
-        batch_size=16,
         random_state=None,
-        activation="linear",
+        activation="sigmoid",
         use_bias=True,
         optimizer=None,
     ):
         _check_dl_dependencies(severity="error")
-        super(ResNetRegressor, self).__init__()
-        self.n_epochs = n_epochs
+        super(CNNClassifier, self).__init__()
+        self.n_conv_layers = n_conv_layers
+        self.avg_pool_size = avg_pool_size
+        self.kernel_size = kernel_size
         self.callbacks = callbacks
+        self.n_epochs = n_epochs
+        self.batch_size = batch_size
         self.verbose = verbose
         self.loss = loss
         self.metrics = metrics
-        self.batch_size = batch_size
         self.random_state = random_state
         self.activation = activation
         self.use_bias = use_bias
         self.optimizer = optimizer
         self.history = None
+        self._network = CNNNetwork(
+            kernel_size=self.kernel_size,
+            avg_pool_size=self.avg_pool_size,
+            n_conv_layers=self.n_conv_layers,
+            activation=self.activation,
+            random_state=self.random_state,
+        )
 
-    def build_model(self, input_shape, **kwargs):
+    def build_model(self, input_shape, n_classes, **kwargs):
         """Construct a compiled, un-trained, keras model that is ready for training.
 
-        In aeon, time series are stored in numpy arrays of shape (d,m), where d
+        In sktime, time series are stored in numpy arrays of shape (d,m), where d
         is the number of dimensions, m is the series length. Keras/tensorflow assume
         data is in shape (m,d). This method also assumes (m,d). Transpose should
         happen in fit.
@@ -93,6 +115,8 @@ class ResNetRegressor(BaseDeepRegressor, ResNetNetwork):
         ----------
         input_shape : tuple
             The shape of the data fed into the input layer, should be (m,d)
+        n_classes: int
+            The number of classes, which becomes the size of the output layer
 
         Returns
         -------
@@ -104,18 +128,19 @@ class ResNetRegressor(BaseDeepRegressor, ResNetNetwork):
         tf.random.set_seed(self.random_state)
 
         if self.metrics is None:
-            metrics = ["mean_squared_error"]
+            metrics = ["accuracy"]
         else:
             metrics = self.metrics
-
-        input_layer, output_layer = self.build_network(input_shape, **kwargs)
+        input_layer, output_layer = self._network.build_network(input_shape, **kwargs)
 
         output_layer = keras.layers.Dense(
-            units=1, activation=self.activation, use_bias=self.use_bias
+            units=n_classes, activation=self.activation, use_bias=self.use_bias
         )(output_layer)
 
         self.optimizer_ = (
-            keras.optimizers.Adam() if self.optimizer is None else self.optimizer
+            keras.optimizers.Adam(learning_rate=0.01)
+            if self.optimizer is None
+            else self.optimizer
         )
 
         model = keras.models.Model(inputs=input_layer, outputs=output_layer)
@@ -140,38 +165,22 @@ class ResNetRegressor(BaseDeepRegressor, ResNetNetwork):
         -------
         self : object
         """
-        from tensorflow import keras
-
-        if self.callbacks is None:
-            self._callbacks = []
-        else:
-            self._callbacks = self.callbacks
-        # if user hasn't provided a custom ReduceLROnPlateau via init already,
-        # add the default from literature
-        if not any(
-            isinstance(callback, keras.callbacks.ReduceLROnPlateau)
-            for callback in self._callbacks
-        ):
-            reduce_lr = keras.callbacks.ReduceLROnPlateau(
-                monitor="loss", factor=0.5, patience=50, min_lr=0.0001
-            )
-            self._callbacks.append(reduce_lr)
-
-        # Reshape for keras, which requires [n_instance][series_length][n_dimensions]
+        y_onehot = self.convert_y_to_keras(y)
+        # Transpose to conform to Keras input style.
         X = X.transpose(0, 2, 1)
 
         check_random_state(self.random_state)
         self.input_shape = X.shape[1:]
-        self.model_ = self.build_model(self.input_shape)
+        self.model_ = self.build_model(self.input_shape, self.n_classes_)
         if self.verbose:
             self.model_.summary()
         self.history = self.model_.fit(
             X,
-            y,
+            y_onehot,
             batch_size=self.batch_size,
             epochs=self.n_epochs,
             verbose=self.verbose,
-            callbacks=self._callbacks,
+            callbacks=deepcopy(self.callbacks) if self.callbacks else [],
         )
         return self
 
@@ -197,16 +206,30 @@ class ResNetRegressor(BaseDeepRegressor, ResNetNetwork):
             `MyClass(**params)` or `MyClass(**params[i])` creates a valid test instance.
             `create_test_instance` uses the first (or only) dictionary in `params`.
         """
+        from aeon.utils.validation._dependencies import _check_soft_dependencies
+
         param1 = {
             "n_epochs": 10,
             "batch_size": 4,
-            "use_bias": False,
+            "avg_pool_size": 4,
         }
 
         param2 = {
             "n_epochs": 12,
             "batch_size": 6,
-            "use_bias": True,
+            "kernel_size": 2,
+            "n_conv_layers": 1,
         }
+        test_params = [param1, param2]
 
-        return [param1, param2]
+        if _check_soft_dependencies("keras", severity="none"):
+            from keras.callbacks import LambdaCallback
+
+            test_params.append(
+                {
+                    "n_epochs": 2,
+                    "callbacks": [LambdaCallback()],
+                }
+            )
+
+        return test_params

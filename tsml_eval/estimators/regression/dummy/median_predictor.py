@@ -9,7 +9,7 @@ __all__ = ["MedianPredictorRegressor"]
 
 
 import numpy as np
-from sktime.regression.base import BaseRegressor
+from aeon.regression.base import BaseRegressor
 
 
 class MedianPredictorRegressor(BaseRegressor):

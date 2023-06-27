@@ -52,7 +52,7 @@ def _set_tser_exp_regressor(
         )
 
         return KNeighborsTimeSeriesRegressor(
-            n_neighbours=1,
+            n_neighbors=1,
             distance="dtw",
             distance_params={"window": 0.1},
         )
@@ -63,7 +63,7 @@ def _set_tser_exp_regressor(
 
         return KNeighborsTimeSeriesRegressor(
             distance="euclidean",
-            n_neighbours=1,
+            n_neighbors=1,
         )
     elif r == "5nn-dtw":
         from tsml_eval.estimators.regression.distance_based import (
@@ -71,7 +71,7 @@ def _set_tser_exp_regressor(
         )
 
         return KNeighborsTimeSeriesRegressor(
-            n_neighbours=5,
+            n_neighbors=5,
             distance="dtw",
             distance_params={"window": 0.1},
         )
@@ -82,7 +82,7 @@ def _set_tser_exp_regressor(
 
         return KNeighborsTimeSeriesRegressor(
             distance="euclidean",
-            n_neighbours=5,
+            n_neighbors=5,
         )
     elif r == "fcnn" or r == "fcn" or r == "fcnnregressor" or r == "fcnregressor":
         from tsml_eval.estimators.regression.deep_learning import FCNRegressor
@@ -220,7 +220,7 @@ def _set_tser_exp_regressor(
             n_jobs=n_jobs,
         )
     elif r == "fresh-prince" or r == "freshprince" or r == "freshprinceregressor":
-        from tsml_eval.estimators.regression.featured_based import FreshPRINCERegressor
+        from tsml_eval.estimators.regression.feature_based import FreshPRINCERegressor
 
         return FreshPRINCERegressor(
             n_estimators=500,

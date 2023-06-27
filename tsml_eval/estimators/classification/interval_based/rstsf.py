@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 import pyfftw
+from aeon.classification import BaseClassifier
 from sklearn.ensemble import ExtraTreesClassifier
-from sktime.classification import BaseClassifier
 from statsmodels.regression.linear_model import burg
 
 from tsml_eval.estimators.classification.transformations.supervised_intervals import (

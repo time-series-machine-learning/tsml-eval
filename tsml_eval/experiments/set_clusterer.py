@@ -74,13 +74,13 @@ def _set_clusterer_distance_based(
     c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
     if c == "timeserieskmeans" or c == "kmeans-dtw" or c == "k-means-dtw":
-        from sktime.clustering.k_means import TimeSeriesKMeans
+        from aeon.clustering.k_means import TimeSeriesKMeans
 
-        return TimeSeriesKMeans(random_state=random_state, **kwargs)
+        return TimeSeriesKMeans(metric="dtw", random_state=random_state, **kwargs)
     elif c == "timeserieskmedoids" or c == "kmedoids-dtw" or c == "k-medoids-dtw":
-        from sktime.clustering.k_medoids import TimeSeriesKMedoids
+        from aeon.clustering.k_medoids import TimeSeriesKMedoids
 
-        return TimeSeriesKMedoids(random_state=random_state, **kwargs)
+        return TimeSeriesKMedoids(metric="dtw", random_state=random_state, **kwargs)
 
 
 def _set_clusterer_other(
