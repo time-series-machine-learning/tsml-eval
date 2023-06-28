@@ -36,7 +36,7 @@ feature_based_regressors = [
     ["FreshPRINCERegressor", "fresh-prince", "freshprince"],
     "freshprince-500",
     ["FPCARegressor", "fpcregressor", "fpcr"],
-    "fpcr-b-spline",
+    ["fpcar-b-spline", "fpcr-b-spline", "fpcr-bs"],
 ]
 hybrid_regressors = [
     ["HIVECOTEV2", "hc2"],
@@ -330,7 +330,7 @@ def _set_regressor_feature_based(
         from tsml.feature_based import FPCARegressor
 
         return FPCARegressor(n_jobs=n_jobs, **kwargs)
-    elif r == "fpcar-b-spline" or r == "fpcr-b-spline":
+    elif r == "fpcar-b-spline" or r == "fpcr-b-spline" or r == "fpcr-bs":
         from tsml.feature_based import FPCARegressor
 
         return FPCARegressor(n_jobs=n_jobs, bspline=True, order=4, n_basis=10, **kwargs)

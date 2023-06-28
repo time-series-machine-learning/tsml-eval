@@ -12,8 +12,8 @@ expansion_regressors = [
     "5nn-dtw",
     "5nn-ed",
     ["fcnn", "fcn", "fcnnregressor", "FCNRegressor"],
-    ["fpcr", "FPCRegressor"],
-    ["fpcr-bs", "fpcr-b-spline"],
+    ["FPCARegressor", "fpcregressor", "fpcr"],
+    ["fpcar-b-spline", "fpcr-b-spline", "fpcr-bs"],
     ["grid-svr", "grid-supportvectorregressor"],
     [
         "inception",
@@ -88,21 +88,14 @@ def _set_tser_exp_regressor(
         from tsml_eval.estimators.regression.deep_learning import FCNRegressor
 
         return FCNRegressor(random_state=random_state)
-    elif r == "fpcr" or r == "fpcregressor":
-        from tsml_eval.estimators.regression.sofr.fpcr import FPCRegressor
+    elif r == "fpcaregressor" or r == "fpcregressor" or r == "fpcr":
+        from tsml.feature_based import FPCARegressor
 
-        return FPCRegressor(n_components=10, n_jobs=n_jobs)
+        return FPCARegressor(n_jobs=n_jobs)
+    elif r == "fpcar-b-spline" or r == "fpcr-b-spline" or r == "fpcr-bs":
+        from tsml.feature_based import FPCARegressor
 
-    elif r == "fpcr-bs" or r == "fpcr-b-spline":
-        from tsml_eval.estimators.regression.sofr.fpcr import FPCRegressor
-
-        return FPCRegressor(
-            smooth="B-spline",
-            order=4,
-            n_components=10,
-            n_basis=10,
-            n_jobs=n_jobs,
-        )
+        return FPCARegressor(n_jobs=n_jobs, bspline=True, order=4, n_basis=10)
     elif r == "grid-svr" or r == "grid-supportvectorregressor":
         from sklearn.model_selection import GridSearchCV
         from sklearn.svm import SVR
