@@ -33,7 +33,7 @@ dictionary_based_classifiers = [
     "weasel-logistic",
     "MUSE",
     "muse-logistic",
-    ["WEASELDilation", "weasel-dilation"],
+    ["WEASEL_V2", "weaseldilation", "weasel-dilation"],
     ["MUSEDilation", "muse-dilation"],
 ]
 distance_based_classifiers = [
@@ -62,7 +62,7 @@ hybrid_classifiers = [
     ["TsChief", "ts-chief"],
 ]
 interval_based_classifiers = [
-    ["RSTSF", "r-stsf"],
+    ["RSTSFClassifier", "rstsf", "r-stsf"],
     "rise-500",
     ["RandomIntervalSpectralEnsemble", "rise"],
     "tsf-500",
@@ -87,8 +87,8 @@ shapelet_based_classifiers = [
     ["ShapeletTransformClassifier", "stc"],
     "RDST",
     ["RDSTEnsemble", "rdst-ensemble"],
-    ["RandomShapeletForest", "rsf"],
-    "MrSQM",
+    ["RandomShapeletForestClassifier", "randomshapeletforest", "rsf"],
+    ["MrSQMClassifier", "mrsqm"],
 ]
 vector_classifiers = [
     ["RotationForestClassifier", "rotationforest", "rotf"],
@@ -351,12 +351,10 @@ def _set_classifier_dictionary_based(
             support_probabilities=True,
             **kwargs,
         )
-    elif c == "weaseldilation" or c == "weasel-dilation":
-        from tsml_eval.estimators.classification.dictionary_based.weasel import (
-            WEASELDilation,
-        )
+    elif c == "weasel_v2" or c == "weaseldilation" or c == "weasel-dilation":
+        from aeon.classification.dictionary_based import WEASEL_V2
 
-        return WEASELDilation(random_state=random_state, n_jobs=n_jobs, **kwargs)
+        return WEASEL_V2(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "musedilation" or c == "muse-dilation":
         from tsml_eval.estimators.classification.dictionary_based.muse import (
             MUSEDilation,
@@ -501,10 +499,10 @@ def _set_classifier_hybrid(
 def _set_classifier_interval_based(
     c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
-    if c == "rstsf" or c == "r-stsf":
-        from tsml_eval.estimators.classification.interval_based.rstsf import RSTSF
+    if c == "rstsfclassifier" or c == "rstsf" or c == "r-stsf":
+        from tsml.interval_based import RSTSFClassifier
 
-        return RSTSF(random_state=random_state, n_estimators=500, **kwargs)
+        return RSTSFClassifier(random_state=random_state, n_estimators=500, **kwargs)
     elif c == "rise-500":
         from aeon.classification.interval_based import RandomIntervalSpectralEnsemble
 
@@ -657,18 +655,18 @@ def _set_classifier_shapelet_based(
         from tsml_eval.estimators.classification.shapelet_based.rdst import RDSTEnsemble
 
         return RDSTEnsemble(random_state=random_state, **kwargs)
-    elif c == "randomshapeletforest" or c == "rsf":
-        from tsml_eval.estimators.classification.shapelet_based.rsf import (
-            RandomShapeletForest,
-        )
+    elif (
+        c == "randomshapeletforestclassifier"
+        or c == "randomshapeletforest"
+        or c == "rsf"
+    ):
+        from tsml.shapelet_based import RandomShapeletForestClassifier
 
-        return RandomShapeletForest(random_state=random_state, **kwargs)
+        return RandomShapeletForestClassifier(random_state=random_state, **kwargs)
     elif c == "mrsqm":
-        from tsml_eval.estimators.classification.shapelet_based.mrsqm_wrapper import (
-            MrSQM,
-        )
+        from aeon.classification.shapelet_based import MrSQMClassifier
 
-        return MrSQM(random_state=random_state, **kwargs)
+        return MrSQMClassifier(random_state=random_state, **kwargs)
 
 
 def _set_classifier_vector(
