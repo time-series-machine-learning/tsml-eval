@@ -7,8 +7,8 @@ CMD="jupyter nbconvert --to notebook --inplace --execute --ExecutePreprocessor.t
 
 excluded=("examples/_wip/diagrams.ipynb" "examples/_wip/evaluation_metric_results.ipynb" "examples/_wip/evaluation_raw_results.ipynb")
 
-# Loop over all notebooks in the examples directory.
-find "examples/" -name "*.ipynb" -print0 |
+# Loop over all notebooks in the examples and publications directory.
+find "examples/" "tsml_eval/publications/" -name "*.ipynb" -print0 |
   while IFS= read -r -d "" notebook; do
     # Skip notebooks in the excluded list.
     if printf "%s\0" "${excluded[@]}" | grep -Fxqz -- "$notebook"; then
