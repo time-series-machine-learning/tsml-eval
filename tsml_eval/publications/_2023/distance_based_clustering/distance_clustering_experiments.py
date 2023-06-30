@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Classifier Experiments: code to run experiments as an alternative to orchestration.
+"""Distance based clustering experiments.
 
 This file is configured for runs of the main method with command line arguments, or for
 single debugging runs. Results are written in a standard format.
@@ -93,8 +93,6 @@ def run_clustering_experiment(
     testY = le.transform(testY)
     start = int(round(time.time() * 1000))
     clusterer.fit(trainX)
-    build_time = int(round(time.time() * 1000)) - start
-    start = int(round(time.time() * 1000))
     train_preds = clusterer.predict(trainX)
     build_time = int(round(time.time() * 1000)) - start
     train_probs = clusterer.predict_proba(trainX)
@@ -156,102 +154,6 @@ def run_clustering_experiment(
     )
 
 
-def load_and_run_clustering_experiment(
-    problem_path,
-    results_path,
-    dataset,
-    clusterer,
-    resample_id=0,
-    cls_name=None,
-    overwrite=False,
-    format=".ts",
-    train_file=False,
-):
-    """Run a clustering experiment.
-
-    Method to run a basic experiment and write the results to files called
-    testFold<resampleID>.csv and, if required, trainFold<resampleID>.csv. This
-    version loads the data from file based on a path. The
-    clusterer is always trained on the
-
-    Parameters
-    ----------
-    problem_path : str
-        Location of problem files, full path.
-    results_path : str
-        Location of where to write results. Any required directories will be created
-    dataset : str
-        Name of problem. Files must be  <problem_path>/<dataset>/<dataset>+
-        "_TRAIN"+format, same for "_TEST"
-    clusterer : the clusterer
-    cls_name : str, default =None
-        determines what to call the write directory. If None, it is set to
-        type(clusterer).__name__
-    resample_id : int, default = 0
-        Seed for resampling. If set to 0, the default train/test split from file is
-        used. Also used in output file name.
-    overwrite : boolean, default = False
-        if False, this will only build results if there is not a result file already
-        present. If True, it will overwrite anything already there.
-    format: string, default = ".ts"
-        Valid formats are ".ts", ".arff", ".tsv" and ".long". For more info on
-        format, see   examples/loading_data.ipynb
-    train_file: boolean, default = False
-        whether to generate train files or not. If true, it performs a 10xCV on the
-        train and saves
-    """
-    if cls_name is None:
-        cls_name = type(clusterer).__name__
-
-    # Set up the file path in standard format
-    if not overwrite:
-        full_path = (
-            str(results_path)
-            + "/"
-            + str(cls_name)
-            + "/Predictions/"
-            + str(dataset)
-            + "/testResample"
-            + str(resample_id)
-            + ".csv"
-        )
-        if os.path.exists(full_path):
-            build_test = False
-        if train_file:
-            full_path = (
-                str(results_path)
-                + "/"
-                + str(cls_name)
-                + "/Predictions/"
-                + str(dataset)
-                + "/trainResample"
-                + str(resample_id)
-                + ".csv"
-            )
-            if os.path.exists(full_path):
-                train_file = False
-        if train_file is False and build_test is False:
-            return
-
-    # currently only works with .ts
-    trainX, trainY = load_ts(problem_path + dataset + "/" + dataset + "_TRAIN" + format)
-    testX, testY = load_ts(problem_path + dataset + "/" + dataset + "_TEST" + format)
-    if resample_id != 0:
-        trainX, trainY, testX, testY = stratified_resample(
-            trainX, trainY, testX, testY, resample_id
-        )
-    run_clustering_experiment(
-        trainX,
-        clusterer,
-        trainY=trainY,
-        testX=testX,
-        testY=testY,
-        cls_name=cls_name,
-        dataset_name=dataset,
-        results_path=results_path,
-    )
-
-
 def _results_present_full_path(path, dataset, res):
     """Duplicate: check if results are present already without an estimator input."""
     full_path = f"{path}/Predictions/{dataset}/testResample{res}.csv"
@@ -259,15 +161,6 @@ def _results_present_full_path(path, dataset, res):
     if os.path.exists(full_path) and os.path.exists(full_path2):
         return True
     return False
-
-
-def config_clusterer(clusterer: str, **kwargs):
-    """Config clusterer."""
-    if clusterer == "kmeans":
-        cls = TimeSeriesKMeans(**kwargs)
-    elif clusterer == "kmedoids":
-        cls = TimeSeriesKMedoids(**kwargs)
-    return cls
 
 
 def tune_window(metric: str, train_X, n_clusters):
@@ -308,8 +201,9 @@ def tune_msm(train_X, n_clusters):
             score = sys.float_info.max
         else:
             score = davies_bouldin_score(train_X, preds)
-        print(f" Number of clusters ={clusters} c parameter = {c} score  = {score}")  #
-        # noqa
+        print(
+            f" Number of clusters ={clusters} c parameter = {c} score  = {score}"
+        )  # noqa
         if score < best_score:
             best_score = score
             best_c = c
@@ -332,8 +226,9 @@ def tune_wdtw(train_X, n_clusters):
             score = sys.float_info.max
         else:
             score = davies_bouldin_score(train_X, preds)
-        print(f" Number of clusters ={clusters} g parameter = {g} score  = {score}")  #
-        # noqa
+        print(
+            f" Number of clusters ={clusters} g parameter = {g} score  = {score}"
+        )  # noqa
         if score < best_score:
             best_score = score
             best_g = g
@@ -363,8 +258,7 @@ def tune_twe(train_X, n_clusters):
             print(
                 f" Number of clusters ={clusters} nu param = {nu} lambda para "
                 f"= {lam} score  = {score}"
-            )  #
-            # noqa
+            )  # noqa
             if score < best_score:
                 best_score = score
                 best_nu = nu
@@ -388,8 +282,9 @@ def tune_erp(train_X, n_clusters):
             score = sys.float_info.max
         else:
             score = davies_bouldin_score(train_X, preds)
-        print(f" Number of clusters ={clusters} g parameter = {g} score  = {score}")  #
-        # noqa
+        print(
+            f" Number of clusters ={clusters} g parameter = {g} score  = {score}"
+        )  # noqa
         if score < best_score:
             best_score = score
             best_g = g
@@ -415,8 +310,7 @@ def tune_edr(train_X, n_clusters):
         print(
             f" Number of clusters ={clusters} epsilon parameter = {e} score  ="
             f" {score}"
-        )  #
-        # noqa
+        )  # noqa
         if score < best_score:
             best_score = score
             best_e = e
@@ -442,8 +336,7 @@ def tune_lcss(train_X, n_clusters):
         print(
             f" Number of clusters ={clusters} epsilon parameter = {e} score  ="
             f" {score}"
-        )  #
-        # noqa
+        )  # noqa
         if score < best_score:
             best_score = score
             best_e = e
@@ -451,62 +344,9 @@ def tune_lcss(train_X, n_clusters):
     return best_e
 
 
-def _recreate_results(trainX, trainY):
-    from sklearn.metrics import adjusted_rand_score
-
-    clst = TimeSeriesKMeans(
-        averaging_method="mean",
-        metric="dtw",
-        distance_params={"window": 0.2},
-        n_clusters=len(set(train_Y)),
-        random_state=1,
-        verbose=True,
-    )
-    clst.fit(trainX)
-    preds = clst.predict(trainY)
-    score = adjusted_rand_score(trainY, preds)
-    print("Score = ", score)  # noqa
-
-
-def tune_cls(distance, train_X, n_clusters):
-    """Tune clusterer."""
-    best_init = "kmeans++"
-    best_score = sys.float_info.max
-
-    for init in ["kmeans++", "random", "forgy"]:
-        cls = TimeSeriesKMedoids(
-            init_algorithm=init,
-            metric=distance,
-            n_clusters=len(set(train_Y)),
-        )
-        cls.fit(train_X)
-        preds = cls.predict(train_X)
-        clusters = len(np.unique(preds))
-        if clusters <= 1:
-            score = sys.float_info.max
-        else:
-            score = davies_bouldin_score(train_X, preds)
-        print(
-            f" Number of clusters ={clusters} init alg = {init} score  =" f" {score}"
-        )  #
-        # noqa
-        if score < best_score:
-            best_score = score
-            best_init = init
-    return best_init
-
-
-if __name__ == "__main__":
-    """Example simple usage, with args input via script or hard coded for testing."""
-    numba.set_num_threads(1)
-
-    clusterer = "kmeans"
-    chris_config = True  # This is so chris doesn't have to change config each time
-    tune = False
-    normalise = True
-    if (
-        sys.argv is not None and sys.argv.__len__() > 1
-    ):  # cluster run, this is fragile, requires all args atm
+def run_experiment():
+    if sys.argv is not None and sys.argv.__len__() > 1:
+        # run using command line arguments
         data_dir = sys.argv[1]
         results_dir = sys.argv[2]
         clusterer = sys.argv[3]
@@ -514,59 +354,50 @@ if __name__ == "__main__":
         resample = int(sys.argv[5])
         distance = sys.argv[6]
         if len(sys.argv) > 7:
-            train_fold = sys.argv[7].lower() == "true"
-        else:
-            train_fold = False
-        if len(sys.argv) > 8:
-            averaging = sys.argv[8]
+            averaging = sys.argv[7]
         else:
             averaging = "mean"
+        if len(sys.argv) > 8:
+            normalise = sys.argv[8].lower() == "true"
+        else:
+            normalise = True
         if len(sys.argv) > 9:
-            normalise = sys.argv[9].lower() == "true"
-        if len(sys.argv) > 10:
-            tune = sys.argv[10].lower() == "true"
-    else:  # Local run
+            tune = sys.argv[9].lower() == "true"
+        else:
+            tune = False
+    else:
+        # Local run
         print(" Local Run")  # noqa
         dataset = "Chinatown"
         data_dir = "c:/Data/"
         resample = 0
         averaging = "mean"
-        train_fold = True
         distance = "dtw"
         normalise = True
         tune = False
         clusterer = "kmeans"
         results_dir = "c:/temp/" + clusterer
-    #    cls_folder = clusterer + "-" + distance
-    #    if normalise:
-    #        results_dir = results_dir + "normalised/"
-    #    else:
-    #        results_dir = results_dir + "raw/"
-    #    if tune_w:
-    #        results_dir = results_dir + "tune_w_20/"
 
-    #    results_dir = results_dir + "/" + clusterer + "/" + averaging + "/"
     w = 1.0
     c = 1.0
     epsilon = 0.05
     g = 0.05
-    c = 1.0
     nu = 0.05
     lam = 1.0
     init = "random"
     max_its = 30
     n_init = 10
+
     if _results_present_full_path(results_dir + "/" + distance, dataset, resample):
         print(
             f"Ignoring dataset{dataset}, results already present at {results_dir}"
         )  # noqa
     else:
-        print(  # noqa
-            f" Running {dataset} resample {resample} normalised = {normalise} "  # noqa
-            f"clustering ={clusterer} distance = {distance} averaging = {averaging} "  # noqa
+        print(
+            f" Running {dataset} resample {resample} normalised = {normalise} "
+            f"clustering ={clusterer} distance = {distance} averaging = {averaging} "
             f"tune window = {tune} results path = {results_dir} init algo = {init} n "
             f"iterations = {n_init}"
-            # noqa
         )  # noqa
 
     train_X, train_Y = load_ts(f"{data_dir}/{dataset}/{dataset}_TRAIN.ts")
@@ -577,6 +408,7 @@ if __name__ == "__main__":
         )
     train_X = train_X.squeeze()
     test_X = test_X.squeeze()
+
     if normalise:
         from sklearn.preprocessing import StandardScaler
 
@@ -646,6 +478,7 @@ if __name__ == "__main__":
             n_clusters=len(set(train_Y)),
             random_state=resample + 1,
         )
+
     print(f" Window parameters for {clst.distance_params}")
     run_clustering_experiment(
         train_X,
@@ -660,3 +493,9 @@ if __name__ == "__main__":
         overwrite=False,
     )
     print("done")  # noqa
+
+
+if __name__ == "__main__":
+    """Example simple usage, with args input via script or hard coded for testing."""
+    numba.set_num_threads(1)
+    run_experiment()
