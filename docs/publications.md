@@ -5,8 +5,8 @@ A page for publications which use `tsml-eval`.
 2023
 ----
 
-[Distance-based clustering](./publications/2023/distance_based_clustering/distance_based_clustering.ipynb)
+[A Review and Evaluation of Elastic Distance Functions for Time Series Clustering](./publications/2023/distance_based_clustering/distance_based_clustering.ipynb)
 
-[Regression paper](./publications/2023/tser_archive_expansion/tser_archive_expansion.ipynb)
+[Unsupervised Feature Based Algorithms for Time Series Extrinsic Regression](./publications/2023/tser_archive_expansion/tser_archive_expansion.ipynb)
 
-[Bakeoff redux](./publications/2023/tsc_bakeoff/tsc_bakeoff_2023.ipynb)
+[Bake off redux: a review and experimental evaluation of recent time series classification algorithms](./publications/2023/tsc_bakeoff/tsc_bakeoff_2023.ipynb)
