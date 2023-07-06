@@ -76,5 +76,5 @@ def test_tuned_hivecote_from_file():
 
 
 def test_hivecote_from_file_check_estimator():
-    """Test HIVE-COTE meets the sktime estimator interface."""
+    """Test HIVE-COTE meets the aeon estimator interface."""
     check_estimator(FromFileHIVECOTE, return_exceptions=False)

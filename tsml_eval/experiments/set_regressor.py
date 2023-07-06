@@ -61,7 +61,7 @@ shapelet_based_regressors = [
     "str-2hour-ridge",
 ]
 vector_regressors = [
-    ["RotationForest", "rotf"],
+    ["RotationForestRegressor", "rotf", "rotationforest"],
     ["LinearRegression", "lr"],
     ["RidgeCV", "ridge"],
     ["SVR", "svm", "supportvectorregressor"],
@@ -203,19 +203,19 @@ def _set_regressor_deep_learning(
     r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
     if r == "cnnregressor" or r == "cnn":
-        from sktime.regression.deep_learning.cnn import CNNRegressor
+        from aeon.regression.deep_learning.cnn import CNNRegressor
 
         return CNNRegressor(random_state=random_state, **kwargs)
     elif r == "tapnetregressor" or r == "tapnet":
-        from sktime.regression.deep_learning.tapnet import TapNetRegressor
+        from aeon.regression.deep_learning.tapnet import TapNetRegressor
 
         return TapNetRegressor(random_state=random_state, **kwargs)
     elif r == "resnetregressor" or r == "resnet":
-        from tsml_eval.estimators.regression.deep_learning import ResNetRegressor
+        from aeon.regression.deep_learning import ResNetRegressor
 
         return ResNetRegressor(random_state=random_state, **kwargs)
     elif r == "inceptiontimeregressor" or r == "inception" or r == "inceptiontime":
-        from tsml_eval.estimators.regression.deep_learning import InceptionTimeRegressor
+        from aeon.regression.deep_learning import InceptionTimeRegressor
 
         return InceptionTimeRegressor(random_state=random_state, **kwargs)
     elif (
@@ -223,13 +223,11 @@ def _set_regressor_deep_learning(
         or r == "singleinception"
         or r == "individualinception"
     ):
-        from tsml_eval.estimators.regression.deep_learning import (
-            IndividualInceptionTimeRegressor,
-        )
+        from aeon.regression.deep_learning import IndividualInceptionTimeRegressor
 
         return IndividualInceptionTimeRegressor(random_state=random_state, **kwargs)
     elif r == "fcnregressor" or r == "fcnn" or r == "fcn":
-        from tsml_eval.estimators.regression.deep_learning import FCNRegressor
+        from aeon.regression.deep_learning import FCNRegressor
 
         return FCNRegressor(random_state=random_state, **kwargs)
 
@@ -255,37 +253,27 @@ def _set_regressor_distance_based(
     r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
     if r == "kneighborstimeseriesregressor" or r == "1nn-ed":
-        from tsml_eval.estimators.regression.distance_based import (
-            KNeighborsTimeSeriesRegressor,
-        )
+        from aeon.regression.distance_based import KNeighborsTimeSeriesRegressor
 
         return KNeighborsTimeSeriesRegressor(**kwargs)
     elif r == "5nn-ed":
-        from tsml_eval.estimators.regression.distance_based import (
-            KNeighborsTimeSeriesRegressor,
-        )
+        from aeon.regression.distance_based import KNeighborsTimeSeriesRegressor
 
         return KNeighborsTimeSeriesRegressor(n_neighbors=5, **kwargs)
     elif r == "1nn-dtw":
-        from tsml_eval.estimators.regression.distance_based import (
-            KNeighborsTimeSeriesRegressor,
-        )
+        from aeon.regression.distance_based import KNeighborsTimeSeriesRegressor
 
         return KNeighborsTimeSeriesRegressor(
             distance="dtw", distance_params={"window": 0.1}, **kwargs
         )
     elif r == "5nn-dtw":
-        from tsml_eval.estimators.regression.distance_based import (
-            KNeighborsTimeSeriesRegressor,
-        )
+        from aeon.regression.distance_based import KNeighborsTimeSeriesRegressor
 
         return KNeighborsTimeSeriesRegressor(
             n_neighbors=5, distance="dtw", distance_params={"window": 0.1}, **kwargs
         )
     elif r == "1nn-msm":
-        from tsml_eval.estimators.regression.distance_based import (
-            KNeighborsTimeSeriesRegressor,
-        )
+        from aeon.regression.distance_based import KNeighborsTimeSeriesRegressor
 
         return KNeighborsTimeSeriesRegressor(
             n_neighbors=1,
@@ -293,9 +281,7 @@ def _set_regressor_distance_based(
             distance_params={"window": None, "independent": True, "c": 1},
         )
     elif r == "5nn-msm":
-        from tsml_eval.estimators.regression.distance_based import (
-            KNeighborsTimeSeriesRegressor,
-        )
+        from aeon.regression.distance_based import KNeighborsTimeSeriesRegressor
 
         return KNeighborsTimeSeriesRegressor(
             n_neighbors=5,
@@ -308,7 +294,7 @@ def _set_regressor_feature_based(
     r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
     if r == "freshprinceregressor" or r == "fresh-prince" or r == "freshprince":
-        from tsml_eval.estimators.regression.feature_based import FreshPRINCERegressor
+        from aeon.regression.feature_based import FreshPRINCERegressor
 
         return FreshPRINCERegressor(
             random_state=random_state,
@@ -317,7 +303,7 @@ def _set_regressor_feature_based(
             **kwargs,
         )
     elif r == "freshprince-500":
-        from tsml_eval.estimators.regression.feature_based import FreshPRINCERegressor
+        from aeon.regression.feature_based import FreshPRINCERegressor
 
         return FreshPRINCERegressor(
             n_estimators=500,
@@ -484,10 +470,10 @@ def _set_regressor_shapelet_based(
 def _set_regressor_vector(
     r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
-    if r == "rotationforest" or r == "rotf":
-        from tsml_eval.estimators.regression.sklearn import RotationForest
+    if r == "rotationforestregressor" or r == "rotf" or r == "rotationforest":
+        from aeon.regression.sklearn import RotationForestRegressor
 
-        return RotationForest(
+        return RotationForestRegressor(
             random_state=random_state,
             n_jobs=n_jobs,
             save_transformed_data=build_train_file,

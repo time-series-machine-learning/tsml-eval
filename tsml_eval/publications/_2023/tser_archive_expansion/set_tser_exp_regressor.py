@@ -29,7 +29,7 @@ expansion_regressors = [
     ["xgb", "xgboost", "xgboostregressor", "XGBRegressor"],
     ["cnn", "CNNRegressor"],
     ["RidgeCV", "ridge"],
-    ["rotf", "RotationForest", "rotationforestregressor"],
+    ["RotationForestRegressor", "rotf", "rotationforest"],
     ["tsf", "timeseriesforestregressor"],
     ["DrCIF", "drcifregressor"],
     ["fresh-prince", "freshprince", "FreshPRINCERegressor"],
@@ -47,9 +47,7 @@ def _set_tser_exp_regressor(
         raise Exception("UNKNOWN REGRESSOR ", r, " in set_expansion_regressor")
 
     if r == "1nn-dtw":
-        from tsml_eval.estimators.regression.distance_based import (
-            KNeighborsTimeSeriesRegressor,
-        )
+        from aeon.regression.distance_based import KNeighborsTimeSeriesRegressor
 
         return KNeighborsTimeSeriesRegressor(
             n_neighbors=1,
@@ -57,18 +55,14 @@ def _set_tser_exp_regressor(
             distance_params={"window": 0.1},
         )
     elif r == "1nn-ed" or r == "kneighborstimeseriesregressor":
-        from tsml_eval.estimators.regression.distance_based import (
-            KNeighborsTimeSeriesRegressor,
-        )
+        from aeon.regression.distance_based import KNeighborsTimeSeriesRegressor
 
         return KNeighborsTimeSeriesRegressor(
             distance="euclidean",
             n_neighbors=1,
         )
     elif r == "5nn-dtw":
-        from tsml_eval.estimators.regression.distance_based import (
-            KNeighborsTimeSeriesRegressor,
-        )
+        from aeon.regression.distance_based import KNeighborsTimeSeriesRegressor
 
         return KNeighborsTimeSeriesRegressor(
             n_neighbors=5,
@@ -76,9 +70,7 @@ def _set_tser_exp_regressor(
             distance_params={"window": 0.1},
         )
     elif r == "5nn-ed":
-        from tsml_eval.estimators.regression.distance_based import (
-            KNeighborsTimeSeriesRegressor,
-        )
+        from aeon.regression.distance_based import KNeighborsTimeSeriesRegressor
 
         return KNeighborsTimeSeriesRegressor(
             distance="euclidean",
@@ -170,7 +162,7 @@ def _set_tser_exp_regressor(
             random_state=random_state,
         )
     elif r == "cnn" or r == "cnnregressor":
-        from sktime.regression.deep_learning.cnn import CNNRegressor
+        from tsml_eval.estimators.regression.deep_learning import CNNRegressor
 
         return CNNRegressor(random_state=random_state)
     elif r == "ridgecv" or r == "ridge":
@@ -180,10 +172,10 @@ def _set_tser_exp_regressor(
             fit_intercept=True,
             alphas=np.logspace(-3, 3, 10),
         )
-    elif r == "rotf" or r == "rotationforest" or r == "rotationforestregressor":
-        from tsml_eval.estimators.regression.sklearn import RotationForest
+    elif r == "rotationforestregressor" or r == "rotf" or r == "rotationforest":
+        from aeon.regression.sklearn import RotationForestRegressor
 
-        return RotationForest(
+        return RotationForestRegressor(
             random_state=random_state,
             n_jobs=n_jobs,
         )
@@ -213,7 +205,7 @@ def _set_tser_exp_regressor(
             n_jobs=n_jobs,
         )
     elif r == "fresh-prince" or r == "freshprince" or r == "freshprinceregressor":
-        from tsml_eval.estimators.regression.feature_based import FreshPRINCERegressor
+        from aeon.regression.feature_based import FreshPRINCERegressor
 
         return FreshPRINCERegressor(
             n_estimators=500,
