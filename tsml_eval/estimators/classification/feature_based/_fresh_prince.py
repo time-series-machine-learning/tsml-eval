@@ -1,26 +1,27 @@
 # -*- coding: utf-8 -*-
-"""FreshPRINCE regressor.
+"""FreshPRINCEClassifier.
 
-Pipeline regressor using the full set of TSFresh features and a RotationForest
-regressor.
+Pipeline classifier using the full set of TSFresh features and a
+RotationForestClassifier.
 """
 
-__author__ = ["MatthewMiddlehurst", "David Guijo-Rubio"]
-__all__ = ["FreshPRINCERegressor"]
+__author__ = ["MatthewMiddlehurst"]
+__all__ = ["FreshPRINCEClassifier"]
 
 import numpy as np
-from aeon.regression.base import BaseRegressor
+from aeon.classification.base import BaseClassifier
 from aeon.transformations.collection.tsfresh import TSFreshFeatureExtractor
+from aeon.utils.validation.panel import check_X_y
 
-from tsml_eval.estimators.regression.sklearn import RotationForest
+from tsml_eval.estimators.classification.sklearn import RotationForestClassifier
 
 
-class FreshPRINCERegressor(BaseRegressor):
-    """Fresh Pipeline with RotatIoN forest regressor.
+class FreshPRINCEClassifier(BaseClassifier):
+    """Fresh Pipeline with RotatIoN forest Classifier.
 
-    This regressor simply transforms the input data using the TSFresh [1]_
-    transformer with comprehensive features and builds a RotationForest estimator using
-    the transformed data.
+    This classifier simply transforms the input data using the TSFresh [1]_
+    transformer with comprehensive features and builds a RotationForestClassifier
+    estimator using the transformed data.
 
     Parameters
     ----------
@@ -28,7 +29,7 @@ class FreshPRINCERegressor(BaseRegressor):
         Set of TSFresh features to be extracted, options are "minimal", "efficient" or
         "comprehensive".
     n_estimators : int, default=200
-        Number of estimators for the RotationForest ensemble.
+        Number of estimators for the RotationForestClassifier ensemble.
     verbose : int, default=0
         Level of output printed to the console (for information only)
     n_jobs : int, default=1
@@ -49,12 +50,12 @@ class FreshPRINCERegressor(BaseRegressor):
 
     See Also
     --------
-    TSFreshFeatureExtractor, TSFreshRegressor, RotationForest
+    TSFreshFeatureExtractor, TSFreshClassifier, RotationForestClassifier
 
     References
     ----------
     .. [1] Christ, Maximilian, et al. "Time series feature extraction on basis of
-        scalable hypothesis tests (tsfresh–a python package)." Neurocomputing 307
+        scalable hypothesis tests (tsfresh-a python package)." Neurocomputing 307
         (2018): 72-77.
         https://www.sciencedirect.com/science/article/pii/S0925231218304843
     """
@@ -63,8 +64,7 @@ class FreshPRINCERegressor(BaseRegressor):
         "capability:multivariate": True,
         "capability:multithreading": True,
         "capability:train_estimate": True,
-        "classifier_type": "feature",
-        "python_version": "<3.10",
+        "algorithm_type": "feature",
         "python_dependencies": "tsfresh",
     }
 
@@ -95,7 +95,7 @@ class FreshPRINCERegressor(BaseRegressor):
         self._rotf = None
         self._tsfresh = None
 
-        super(FreshPRINCERegressor, self).__init__()
+        super(FreshPRINCEClassifier, self).__init__()
 
     def _fit(self, X, y):
         """Fit a pipeline on cases (X,y), where y is the target variable.
@@ -119,15 +119,15 @@ class FreshPRINCERegressor(BaseRegressor):
         """
         self.n_instances_, self.n_dims_, self.series_length_ = X.shape
 
-        self._rotf = RotationForest(
+        self._rotf = RotationForestClassifier(
             n_estimators=self.n_estimators,
             save_transformed_data=self.save_transformed_data,
-            n_jobs=self._threads_to_use,
+            n_jobs=self._n_jobs,
             random_state=self.random_state,
         )
         self._tsfresh = TSFreshFeatureExtractor(
             default_fc_parameters=self.default_fc_parameters,
-            n_jobs=self._threads_to_use,
+            n_jobs=self._n_jobs,
             chunksize=self.chunksize,
             show_warnings=self.verbose > 1,
             disable_progressbar=self.verbose < 1,
@@ -156,6 +156,43 @@ class FreshPRINCERegressor(BaseRegressor):
         """
         return self._rotf.predict(self._tsfresh.transform(X))
 
+    def _predict_proba(self, X) -> np.ndarray:
+        """Predict class probabilities for n instances in X.
+
+        Parameters
+        ----------
+        X : 3D np.array of shape = [n_instances, n_dimensions, series_length]
+            The data to make predict probabilities for.
+
+        Returns
+        -------
+        y : array-like, shape = [n_instances, n_classes_]
+            Predicted probabilities using the ordering in classes_.
+        """
+        return self._rotf.predict_proba(self._tsfresh.transform(X))
+
+    def _get_train_probs(self, X, y) -> np.ndarray:
+        self.check_is_fitted()
+        X, y = check_X_y(X, y, coerce_to_numpy=True)
+
+        n_instances, n_dims, series_length = X.shape
+
+        if (
+            n_instances != self.n_instances_
+            or n_dims != self.n_dims_
+            or series_length != self.series_length_
+        ):
+            raise ValueError(
+                "n_instances, n_dims, series_length mismatch. X should be "
+                "the same as the training data used in fit for generating train "
+                "probabilities."
+            )
+
+        if not self.save_transformed_data:
+            raise ValueError("Currently only works with saved transform data from fit.")
+
+        return self._rotf._get_train_probs(self.transformed_data_, y)
+
     @classmethod
     def get_test_params(cls, parameter_set="default"):
         """Return testing parameter settings for the estimator.
@@ -165,10 +202,13 @@ class FreshPRINCERegressor(BaseRegressor):
         parameter_set : str, default="default"
             Name of the set of test parameters to return, for use in tests. If no
             special parameters are defined for a value, will return `"default"` set.
-            For regressors, a "default" set of parameters should be provided for
-            general testing, and a "results_comparison" set for comparing against
-            previously recorded results if the general set does not produce suitable
-            probabilities to compare against.
+            FreshPRINCEClassifier provides the following special sets:
+                 "results_comparison" - used in some classifiers to compare against
+                    previously generated results where the default set of parameters
+                    cannot produce suitable probability estimates
+                "train_estimate" - used in some classifiers that set the
+                    "capability:train_estimate" tag to True to allow for more efficient
+                    testing when relevant parameters are available
 
         Returns
         -------
@@ -183,9 +223,14 @@ class FreshPRINCERegressor(BaseRegressor):
                 "n_estimators": 10,
                 "default_fc_parameters": "minimal",
             }
-        else:
+        elif parameter_set == "train_estimate":
             return {
                 "n_estimators": 2,
                 "default_fc_parameters": "minimal",
                 "save_transformed_data": True,
+            }
+        else:
+            return {
+                "n_estimators": 2,
+                "default_fc_parameters": "minimal",
             }

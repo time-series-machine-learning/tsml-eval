@@ -5,28 +5,25 @@ Shapelet transform classifier pipeline that simply performs a (configurable) sha
 transform then builds (by default) a rotation forest classifier on the output.
 """
 
-__author__ = ["TonyBagnall", "MatthewMiddlehurst", "DavidGuijoRubio"]
-__all__ = ["ShapeletTransformRegressor"]
+__author__ = ["TonyBagnall", "MatthewMiddlehurst"]
+__all__ = ["ShapeletTransformClassifier"]
 
 import numpy as np
 from aeon.base._base import _clone_estimator
-from aeon.regression.base import BaseRegressor
-from aeon.regression.sklearn import RotationForestRegressor
+from aeon.classification.base import BaseClassifier
+from aeon.transformations.collection.shapelet_transform import RandomShapeletTransform
 from aeon.utils.validation.panel import check_X_y
 from sklearn.model_selection import cross_val_predict
-from sklearn.utils.multiclass import type_of_target
 
-from tsml_eval.estimators.regression.transformations.shapelet_transform import (
-    RandomShapeletTransform,
-)
+from tsml_eval.estimators.classification.sklearn import RotationForestClassifier
 
 
-class ShapeletTransformRegressor(BaseRegressor):
+class ShapeletTransformClassifier(BaseClassifier):
     """A shapelet transform classifier (STC).
 
     Implementation of the binary shapelet transform classifier pipeline along the lines
     of [1][2] but with random shapelet sampling. Transforms the data using the
-    configurable `RandomShapeletTransform` and then builds a `RotationForest`
+    configurable `RandomShapeletTransform` and then builds a `RotationForestClassifier`
     classifier.
 
     As some implementations and applications contract the transformation solely,
@@ -47,7 +44,7 @@ class ShapeletTransformRegressor(BaseRegressor):
         max length is used
     estimator : BaseEstimator or None, default=None
         Base estimator for the ensemble, can be supplied a sklearn `BaseEstimator`. If
-        `None` a default `RotationForest` classifier is used.
+        `None` a default `RotationForestClassifier` classifier is used.
     transform_limit_in_minutes : int, default=0
         Time contract to limit transform time in minutes for the shapelet transform,
         overriding `n_shapelet_samples`. A value of `0` means ``n_shapelet_samples``
@@ -96,7 +93,7 @@ class ShapeletTransformRegressor(BaseRegressor):
     See Also
     --------
     RandomShapeletTransform : The randomly sampled shapelet transform.
-    RotationForest : The default rotation forest classifier used.
+    RotationForestClassifier : The default rotation forest classifier used.
 
     Notes
     -----
@@ -111,6 +108,23 @@ class ShapeletTransformRegressor(BaseRegressor):
     .. [2] A. Bostrom and A. Bagnall, "Binary Shapelet Transform for Multiclass Time
        Series Classification", Transactions on Large-Scale Data and Knowledge Centered
        Systems, 32, 2017.
+
+    Examples
+    --------
+    >>> from aeon.classification.shapelet_based import ShapeletTransformClassifier
+    >>> from aeon.classification.sklearn import RotationForestClassifier
+    >>> from aeon.datasets import load_unit_test
+    >>> X_train, y_train = load_unit_test(split="train", return_X_y=True)
+    >>> X_test, y_test = load_unit_test(split="test", return_X_y=True)
+    >>> clf = ShapeletTransformClassifier(
+    ...     estimator=RotationForestClassifier(n_estimators=3),
+    ...     n_shapelet_samples=100,
+    ...     max_shapelets=10,
+    ...     batch_size=20,
+    ... )
+    >>> clf.fit(X_train, y_train)
+    ShapeletTransformClassifier(...)
+    >>> y_pred = clf.predict(X_test)
     """
 
     _tags = {
@@ -118,7 +132,7 @@ class ShapeletTransformRegressor(BaseRegressor):
         "capability:train_estimate": True,
         "capability:contractable": True,
         "capability:multithreading": True,
-        "classifier_type": "shapelet",
+        "algorithm_type": "shapelet",
     }
 
     def __init__(
@@ -159,14 +173,14 @@ class ShapeletTransformRegressor(BaseRegressor):
         self._transform_limit_in_minutes = 0
         self._classifier_limit_in_minutes = 0
 
-        super(ShapeletTransformRegressor, self).__init__()
+        super(ShapeletTransformClassifier, self).__init__()
 
     def _fit(self, X, y):
         """Fit ShapeletTransformClassifier to training data.
 
         Parameters
         ----------
-        X : 3D np.array of shape = [n_instances, n_dimensions, series_length]
+        X : 3D np.array of shape = [n_instances, n_channels, series_length]
             The training data.
         y : array-like, shape = [n_instances]
             The class labels.
@@ -204,22 +218,22 @@ class ShapeletTransformRegressor(BaseRegressor):
         )
 
         self._estimator = _clone_estimator(
-            RotationForestRegressor() if self.estimator is None else self.estimator,
+            RotationForestClassifier() if self.estimator is None else self.estimator,
             self.random_state,
         )
 
-        if isinstance(self._estimator, RotationForestRegressor):
+        if isinstance(self._estimator, RotationForestClassifier):
             self._estimator.save_transformed_data = self.save_transformed_data
 
         m = getattr(self._estimator, "n_jobs", None)
         if m is not None:
-            self._estimator.n_jobs = self._threads_to_use
+            self._estimator.n_jobs = self._n_jobs
 
         m = getattr(self._estimator, "time_limit_in_minutes", None)
         if m is not None and self.time_limit_in_minutes > 0:
             self._estimator.time_limit_in_minutes = self._classifier_limit_in_minutes
 
-        X_t = self._transformer.fit_transform(X, y).to_numpy()
+        X_t = self._transformer.fit_transform(X, y)
 
         if self.save_transformed_data:
             self.transformed_data_ = X_t
@@ -241,11 +255,36 @@ class ShapeletTransformRegressor(BaseRegressor):
         y : array-like, shape = [n_instances]
             Predicted class labels.
         """
-        X_t = self._transformer.transform(X).to_numpy()
+        X_t = self._transformer.transform(X)
 
         return self._estimator.predict(X_t)
 
-    def _get_train_preds(self, X, y) -> np.ndarray:
+    def _predict_proba(self, X) -> np.ndarray:
+        """Predicts labels probabilities for sequences in X.
+
+        Parameters
+        ----------
+        X : 3D np.array of shape = [n_instances, n_dimensions, series_length]
+            The data to make predict probabilities for.
+
+        Returns
+        -------
+        y : array-like, shape = [n_instances, n_classes_]
+            Predicted probabilities using the ordering in classes_.
+        """
+        X_t = self._transformer.transform(X)
+
+        m = getattr(self._estimator, "predict_proba", None)
+        if callable(m):
+            return self._estimator.predict_proba(X_t)
+        else:
+            dists = np.zeros((X.shape[0], self.n_classes_))
+            preds = self._estimator.predict(X_t)
+            for i in range(0, X.shape[0]):
+                dists[i, np.where(self.classes_ == preds[i])] = 1
+            return dists
+
+    def _get_train_probs(self, X, y) -> np.ndarray:
         self.check_is_fitted()
         X, y = check_X_y(X, y, coerce_to_pandas=True)
 
@@ -261,24 +300,20 @@ class ShapeletTransformRegressor(BaseRegressor):
         if not self.save_transformed_data:
             raise ValueError("Currently only works with saved transform data from fit.")
 
-        if (
-            isinstance(self.estimator, RotationForestRegressor)
-            or self.estimator is None
+        if (isinstance(self.estimator, RotationForestClassifier)) or (
+            self.estimator is None
         ):
-            return self._estimator._get_train_preds(self.transformed_data_, y)
+            return self._estimator._get_train_probs(self.transformed_data_, y)
         else:
             m = getattr(self._estimator, "predict_proba", None)
             if not callable(m):
                 raise ValueError("Estimator must have a predict_proba method.")
 
-            if type_of_target(y) != "continuous":
-                cv_size = 10
-                _, counts = np.unique(y, return_counts=True)
-                min_class = np.min(counts)
-                if min_class < cv_size:
-                    cv_size = min_class
-            else:
-                cv_size = min(10, len(y))
+            cv_size = 10
+            _, counts = np.unique(y, return_counts=True)
+            min_class = np.min(counts)
+            if min_class < cv_size:
+                cv_size = min_class
 
             estimator = _clone_estimator(self.estimator, self.random_state)
 
@@ -287,7 +322,8 @@ class ShapeletTransformRegressor(BaseRegressor):
                 X=self.transformed_data_,
                 y=y,
                 cv=cv_size,
-                n_jobs=self._threads_to_use,
+                method="predict_proba",
+                n_jobs=self._n_jobs,
             )
 
     @classmethod
@@ -299,10 +335,16 @@ class ShapeletTransformRegressor(BaseRegressor):
         parameter_set : str, default="default"
             Name of the set of test parameters to return, for use in tests. If no
             special parameters are defined for a value, will return `"default"` set.
-            For classifiers, a "default" set of parameters should be provided for
-            general testing, and a "results_comparison" set for comparing against
-            previously recorded results if the general set does not produce suitable
-            probabilities to compare against.
+            ShapeletTransformClassifier provides the following special sets:
+                 "results_comparison" - used in some classifiers to compare against
+                    previously generated results where the default set of parameters
+                    cannot produce suitable probability estimates
+                "contracting" - used in classifiers that set the
+                    "capability:contractable" tag to True to test contacting
+                    functionality
+                "train_estimate" - used in some classifiers that set the
+                    "capability:train_estimate" tag to True to allow for more efficient
+                    testing when relevant parameters are available
 
         Returns
         -------
@@ -312,10 +354,35 @@ class ShapeletTransformRegressor(BaseRegressor):
             `MyClass(**params)` or `MyClass(**params[i])` creates a valid test instance.
             `create_test_instance` uses the first (or only) dictionary in `params`.
         """
-        return {
-            "estimator": RotationForestRegressor(n_estimators=2),
-            "n_shapelet_samples": 10,
-            "max_shapelets": 3,
-            "batch_size": 5,
-            "save_transformed_data": True,
-        }
+        from sklearn.ensemble import RandomForestClassifier
+
+        if parameter_set == "results_comparison":
+            return {
+                "estimator": RandomForestClassifier(n_estimators=5),
+                "n_shapelet_samples": 50,
+                "max_shapelets": 10,
+                "batch_size": 10,
+            }
+        elif parameter_set == "contracting":
+            return {
+                "time_limit_in_minutes": 5,
+                "estimator": RotationForestClassifier(contract_max_n_estimators=2),
+                "contract_max_n_shapelet_samples": 10,
+                "max_shapelets": 3,
+                "batch_size": 5,
+            }
+        elif parameter_set == "train_estimate":
+            return {
+                "estimator": RotationForestClassifier(n_estimators=2),
+                "n_shapelet_samples": 10,
+                "max_shapelets": 3,
+                "batch_size": 5,
+                "save_transformed_data": True,
+            }
+        else:
+            return {
+                "estimator": RotationForestClassifier(n_estimators=2),
+                "n_shapelet_samples": 10,
+                "max_shapelets": 3,
+                "batch_size": 5,
+            }

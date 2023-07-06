@@ -96,7 +96,7 @@ class CNNRegressor(BaseDeepRegressor):
         self._network = CNNNetwork(
             kernel_size=self.kernel_size,
             avg_pool_size=self.avg_pool_size,
-            n_conv_layers=self.n_conv_layers,
+            n_layers=self.n_conv_layers,
             activation=self.activation,
             random_state=self.random_state,
         )
@@ -104,7 +104,7 @@ class CNNRegressor(BaseDeepRegressor):
     def build_model(self, input_shape, **kwargs):
         """Construct a compiled, un-trained, keras model that is ready for training.
 
-        In sktime, time series are stored in numpy arrays of shape (d,m), where d
+        In aeon, time series are stored in numpy arrays of shape (d,m), where d
         is the number of dimensions, m is the series length. Keras/tensorflow assume
         data is in shape (m,d). This method also assumes (m,d). Transpose should
         happen in fit.

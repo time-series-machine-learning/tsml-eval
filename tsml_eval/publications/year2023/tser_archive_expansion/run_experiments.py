@@ -9,7 +9,7 @@ os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
 
 from tsml_eval.experiments import load_and_run_regression_experiment
-from tsml_eval.publications._2023.tser_archive_expansion.set_tser_exp_regressor import (
+from tsml_eval.publications.year2023.tser_archive_expansion.set_tser_exp_regressor import (
     _set_tser_exp_regressor,
 )
 from tsml_eval.utils.experiments import _results_present

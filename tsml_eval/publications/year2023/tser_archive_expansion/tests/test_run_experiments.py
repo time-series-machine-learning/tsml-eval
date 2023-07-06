@@ -2,7 +2,7 @@
 """Test files checking that the expansion regression experiments run correctly."""
 import os
 
-from tsml_eval.publications._2023.tser_archive_expansion import _run_experiment
+from tsml_eval.publications.year2023.tser_archive_expansion import _run_experiment
 from tsml_eval.utils.tests.test_results_writing import _check_regression_file_format
 
 

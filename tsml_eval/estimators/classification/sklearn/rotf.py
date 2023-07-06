@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""A rotation forest (RotF) vector classifier.
+"""A Rotation Forest (RotF) vector classifier.
 
-A rotation Forest aeon implementation for continuous values only. Fits sklearn
+A Rotation Forest aeon implementation for continuous values only. Fits sklearn
 conventions.
 """
 
 __author__ = ["MatthewMiddlehurst"]
-__all__ = ["RotationForest"]
+__all__ = ["RotationForestClassifier"]
 
 import time
 
@@ -16,13 +16,13 @@ from aeon.base._base import _clone_estimator
 from aeon.exceptions import NotFittedError
 from aeon.utils.validation import check_n_jobs
 from joblib import Parallel, delayed
-from sklearn.base import BaseEstimator, RegressorMixin
+from sklearn.base import BaseEstimator
 from sklearn.decomposition import PCA
-from sklearn.tree import DecisionTreeRegressor
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.utils import check_random_state
 
 
-class RotationForest(RegressorMixin, BaseEstimator):
+class RotationForestClassifier(BaseEstimator):
     """A rotation forest (RotF) vector classifier.
 
     Implementation of the Rotation Forest classifier described in Rodriguez et al
@@ -97,7 +97,6 @@ class RotationForest(RegressorMixin, BaseEstimator):
 
     .. [2] Bagnall, A., et al. "Is rotation forest the best classifier for problems
        with continuous features?." arXiv preprint arXiv:1809.06705 (2018).
-
     """
 
     def __init__(
@@ -124,7 +123,7 @@ class RotationForest(RegressorMixin, BaseEstimator):
         self.n_jobs = n_jobs
         self.random_state = random_state
 
-        super(RotationForest, self).__init__()
+        super(RotationForestClassifier, self).__init__()
 
     def fit(self, X, y):
         """Fit a forest of trees on cases (X,y), where y is the target variable.
@@ -152,24 +151,32 @@ class RotationForest(RegressorMixin, BaseEstimator):
             X = X.to_numpy()
         elif not isinstance(X, np.ndarray) or len(X.shape) > 2:
             raise ValueError(
-                "RotationForest is not a time series classifier. "
+                "RotationForestClassifier is not a time series classifier. "
                 "A valid sklearn input such as a 2d numpy array is required."
                 "Sparse input formats are currently not supported."
             )
         X, y = self._validate_data(X=X, y=y, ensure_min_samples=2)
 
-        self._label_average = np.mean(y)
-
         self._n_jobs = check_n_jobs(self.n_jobs)
 
         self.n_instances_, self.n_atts_ = X.shape
+        self.classes_ = np.unique(y)
+        self.n_classes_ = self.classes_.shape[0]
+        self._class_dictionary = {}
+        for index, classVal in enumerate(self.classes_):
+            self._class_dictionary[classVal] = index
+
+        # escape if only one class seen
+        if self.n_classes_ == 1:
+            self._is_fitted = True
+            return self
 
         time_limit = self.time_limit_in_minutes * 60
         start_time = time.time()
         train_time = 0
 
         if self.base_estimator is None:
-            self._base_estimator = DecisionTreeRegressor(criterion="squared_error")
+            self._base_estimator = DecisionTreeClassifier(criterion="entropy")
 
         # remove useless attributes
         self._useful_atts = ~np.all(X[1:] == X[:-1], axis=0)
@@ -182,6 +189,8 @@ class RotationForest(RegressorMixin, BaseEstimator):
         self._ptp = X.max(axis=0) - self._min
         X = (X - self._min) / self._ptp
 
+        X_cls_split = [X[np.where(y == i)] for i in self.classes_]
+
         if time_limit > 0:
             self._n_estimators = 0
             self.estimators_ = []
@@ -193,9 +202,10 @@ class RotationForest(RegressorMixin, BaseEstimator):
                 train_time < time_limit
                 and self._n_estimators < self.contract_max_n_estimators
             ):
-                fit = Parallel(n_jobs=self._n_jobs)(
+                fit = Parallel(n_jobs=self._n_jobs, prefer="threads")(
                     delayed(self._fit_estimator)(
                         X,
+                        X_cls_split,
                         y,
                         i,
                     )
@@ -214,9 +224,10 @@ class RotationForest(RegressorMixin, BaseEstimator):
         else:
             self._n_estimators = self.n_estimators
 
-            fit = Parallel(n_jobs=self._n_jobs)(
+            fit = Parallel(n_jobs=self._n_jobs, prefer="threads")(
                 delayed(self._fit_estimator)(
                     X,
+                    X_cls_split,
                     y,
                     i,
                 )
@@ -243,11 +254,36 @@ class RotationForest(RegressorMixin, BaseEstimator):
         y : array-like, shape = [n_instances]
             Predicted class labels.
         """
+        rng = check_random_state(self.random_state)
+        return np.array(
+            [
+                self.classes_[int(rng.choice(np.flatnonzero(prob == prob.max())))]
+                for prob in self.predict_proba(X)
+            ]
+        )
+
+    def predict_proba(self, X):
+        """Probability estimates for each class for all cases in X.
+
+        Parameters
+        ----------
+        X : 2d ndarray or DataFrame of shape = [n_instances, n_attributes]
+            The data to make predictions for.
+
+        Returns
+        -------
+        y : array-like, shape = [n_instances, n_classes_]
+            Predicted probabilities using the ordering in classes_.
+        """
         if not self._is_fitted:
             raise NotFittedError(
                 f"This instance of {self.__class__.__name__} has not "
                 f"been fitted yet; please call `fit` first."
             )
+
+        # treat case of single class seen in fit
+        if self.n_classes_ == 1:
+            return np.repeat([[1]], X.shape[0], axis=0)
 
         if isinstance(X, np.ndarray) and len(X.shape) == 3 and X.shape[1] == 1:
             X = np.reshape(X, (X.shape[0], -1))
@@ -255,7 +291,7 @@ class RotationForest(RegressorMixin, BaseEstimator):
             X = X.to_numpy()
         elif not isinstance(X, np.ndarray) or len(X.shape) > 2:
             raise ValueError(
-                "RotationForest is not a time series classifier. "
+                "RotationForestClassifier is not a time series classifier. "
                 "A valid sklearn input such as a 2d numpy array is required."
                 "Sparse input formats are currently not supported."
             )
@@ -267,8 +303,8 @@ class RotationForest(RegressorMixin, BaseEstimator):
         # normalise the data.
         X = (X - self._min) / self._ptp
 
-        y_preds = Parallel(n_jobs=self._n_jobs)(
-            delayed(self._predict_for_estimator)(
+        y_probas = Parallel(n_jobs=self._n_jobs, prefer="threads")(
+            delayed(self._predict_proba_for_estimator)(
                 X,
                 self.estimators_[i],
                 self._pcas[i],
@@ -277,11 +313,12 @@ class RotationForest(RegressorMixin, BaseEstimator):
             for i in range(self._n_estimators)
         )
 
-        output = np.sum(y_preds, axis=0) / self._n_estimators
-
+        output = np.sum(y_probas, axis=0) / (
+            np.ones(self.n_classes_) * self._n_estimators
+        )
         return output
 
-    def _get_train_preds(self, X, y):
+    def _get_train_probs(self, X, y):
         if not self._is_fitted:
             raise NotFittedError(
                 f"This instance of {self.__class__.__name__} has not "
@@ -293,11 +330,15 @@ class RotationForest(RegressorMixin, BaseEstimator):
             X = X.to_numpy()
         elif not isinstance(X, np.ndarray) or len(X.shape) > 2:
             raise ValueError(
-                "RotationForest is not a time series classifier. "
+                "RotationForestClassifier is not a time series classifier. "
                 "A valid sklearn input such as a 2d numpy array is required."
                 "Sparse input formats are currently not supported."
             )
         X = self._validate_data(X=X, reset=False)
+
+        # handle the single-class-label case
+        if len(self._class_dictionary) == 1:
+            return np.repeat([[1]], len(X), axis=0)
 
         n_instances, n_atts = X.shape
 
@@ -310,8 +351,8 @@ class RotationForest(RegressorMixin, BaseEstimator):
         if not self.save_transformed_data:
             raise ValueError("Currently only works with saved transform data from fit.")
 
-        p = Parallel(n_jobs=self._n_jobs)(
-            delayed(self._train_preds_for_estimator)(
+        p = Parallel(n_jobs=self._n_jobs, prefer="threads")(
+            delayed(self._train_probas_for_estimator)(
                 y,
                 i,
             )
@@ -327,12 +368,14 @@ class RotationForest(RegressorMixin, BaseEstimator):
 
         for i in range(n_instances):
             results[i] = (
-                self._label_average if divisors[i] == 0 else results[i] / divisors[i]
+                np.ones(self.n_classes_) * (1 / self.n_classes_)
+                if divisors[i] == 0
+                else results[i] / (np.ones(self.n_classes_) * divisors[i])
             )
 
         return results
 
-    def _fit_estimator(self, X, y, idx):
+    def _fit_estimator(self, X, X_cls_split, y, idx):
         rs = 255 if self.random_state == 0 else self.random_state
         rs = (
             None
@@ -346,13 +389,24 @@ class RotationForest(RegressorMixin, BaseEstimator):
 
         # construct the slices to fit the PCAs too.
         for group in groups:
-            sample_ind = rng.choice(
-                X.shape[0],
-                max(1, int(X.shape[0] * self.remove_proportion)),
+            classes = rng.choice(
+                range(self.n_classes_),
+                size=rng.randint(1, self.n_classes_ + 1),
                 replace=False,
             )
-            X_t = X[sample_ind, :]
-            X_t = X_t[:, group]
+
+            # randomly add the classes with the randomly selected attributes.
+            X_t = np.zeros((0, len(group)))
+            for cls_idx in classes:
+                c = X_cls_split[cls_idx]
+                X_t = np.concatenate((X_t, c[:, group]), axis=0)
+
+            sample_ind = rng.choice(
+                X_t.shape[0],
+                max(1, int(X_t.shape[0] * self.remove_proportion)),
+                replace=False,
+            )
+            X_t = X_t[sample_ind]
 
             # try to fit the PCA if it fails, remake it, and add 10 random data
             # instances.
@@ -376,7 +430,6 @@ class RotationForest(RegressorMixin, BaseEstimator):
         X_t = np.concatenate(
             [pcas[i].transform(X[:, group]) for i, group in enumerate(groups)], axis=1
         )
-        # todo hack
         X_t = X_t.astype(np.float32)
         X_t = np.nan_to_num(
             X_t, False, 0, np.finfo(np.float32).max, np.finfo(np.float32).min
@@ -387,19 +440,27 @@ class RotationForest(RegressorMixin, BaseEstimator):
 
         return tree, pcas, groups, X_t if self.save_transformed_data else None
 
-    def _predict_for_estimator(self, X, clf, pcas, groups):
+    def _predict_proba_for_estimator(self, X, clf, pcas, groups):
         X_t = np.concatenate(
             [pcas[i].transform(X[:, group]) for i, group in enumerate(groups)], axis=1
         )
-        # todo hack
         X_t = X_t.astype(np.float32)
         X_t = np.nan_to_num(
             X_t, False, 0, np.finfo(np.float32).max, np.finfo(np.float32).min
         )
 
-        return clf.predict(X_t)
+        probas = clf.predict_proba(X_t)
 
-    def _train_preds_for_estimator(self, y, idx):
+        if probas.shape[1] != self.n_classes_:
+            new_probas = np.zeros((probas.shape[0], self.n_classes_))
+            for i, cls in enumerate(clf.classes_):
+                cls_idx = self._class_dictionary[cls]
+                new_probas[:, cls_idx] = probas[:, i]
+            probas = new_probas
+
+        return probas
+
+    def _train_probas_for_estimator(self, y, idx):
         rs = 255 if self.random_state == 0 else self.random_state
         rs = (
             None
@@ -412,16 +473,23 @@ class RotationForest(RegressorMixin, BaseEstimator):
         subsample = rng.choice(self.n_instances_, size=self.n_instances_)
         oob = [n for n in indices if n not in subsample]
 
-        results = np.zeros(self.n_instances_)
+        results = np.zeros((self.n_instances_, self.n_classes_))
         if len(oob) == 0:
             return [results, oob]
 
         clf = _clone_estimator(self._base_estimator, rs)
         clf.fit(self.transformed_data_[idx][subsample], y[subsample])
-        preds = clf.predict(self.transformed_data_[idx][oob])
+        probas = clf.predict_proba(self.transformed_data_[idx][oob])
 
-        for n, pred in enumerate(preds):
-            results[oob[n]] = pred
+        if probas.shape[1] != self.n_classes_:
+            new_probas = np.zeros((probas.shape[0], self.n_classes_))
+            for i, cls in enumerate(clf.classes_):
+                cls_idx = self._class_dictionary[cls]
+                new_probas[:, cls_idx] = probas[:, i]
+            probas = new_probas
+
+        for n, proba in enumerate(probas):
+            results[oob[n]] += proba
 
         return [results, oob]
 
