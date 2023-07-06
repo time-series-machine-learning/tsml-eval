@@ -20,7 +20,7 @@ deep_learning_regressors = [
     ["TapNetRegressor", "tapnet"],
     ["ResNetRegressor", "resnet"],
     ["InceptionTimeRegressor", "inception", "inceptiontime"],
-    ["IndividualInceptionTimeRegressor", "singleinception", "individualinception"],
+    ["IndividualInceptionRegressor", "singleinception", "individualinception"],
     ["FCNRegressor", "fcnn", "fcn"],
 ]
 dictionary_based_regressors = [
@@ -211,23 +211,25 @@ def _set_regressor_deep_learning(
 
         return TapNetRegressor(random_state=random_state, **kwargs)
     elif r == "resnetregressor" or r == "resnet":
-        from aeon.regression.deep_learning import ResNetRegressor
+        from tsml_eval.estimators.regression.deep_learning import ResNetRegressor
 
         return ResNetRegressor(random_state=random_state, **kwargs)
     elif r == "inceptiontimeregressor" or r == "inception" or r == "inceptiontime":
-        from aeon.regression.deep_learning import InceptionTimeRegressor
+        from aeon.regression.deep_learning.inception_time import InceptionTimeRegressor
 
         return InceptionTimeRegressor(random_state=random_state, **kwargs)
     elif (
-        r == "individualinceptiontimeregressor"
+        r == "individualinceptionregressor"
         or r == "singleinception"
         or r == "individualinception"
     ):
-        from aeon.regression.deep_learning import IndividualInceptionTimeRegressor
+        from aeon.regression.deep_learning.inception_time import (
+            IndividualInceptionRegressor,
+        )
 
-        return IndividualInceptionTimeRegressor(random_state=random_state, **kwargs)
+        return IndividualInceptionRegressor(random_state=random_state, **kwargs)
     elif r == "fcnregressor" or r == "fcnn" or r == "fcn":
-        from aeon.regression.deep_learning import FCNRegressor
+        from tsml_eval.estimators.regression.deep_learning import FCNRegressor
 
         return FCNRegressor(random_state=random_state, **kwargs)
 

@@ -663,7 +663,7 @@ def _set_classifier_shapelet_based(
         from tsml.shapelet_based import RandomShapeletForestClassifier
 
         return RandomShapeletForestClassifier(random_state=random_state, **kwargs)
-    elif c == "mrsqm":
+    elif c == "mrsqmclassifier" or c == "mrsqm":
         from aeon.classification.shapelet_based import MrSQMClassifier
 
         return MrSQMClassifier(random_state=random_state, **kwargs)

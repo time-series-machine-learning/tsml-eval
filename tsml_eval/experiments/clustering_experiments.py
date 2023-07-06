@@ -88,8 +88,8 @@ def run_experiment(args, overwrite=False):
         # If threading is required, see the threaded version of this file
         data_dir = "../"
         results_dir = "../"
-        clusterer_name = "DrCIF"
-        dataset = "Covid3Months"
+        clusterer_name = "KMeans-DTW"
+        dataset = "ArrowHead"
         resample = 0
         test_fold = False
         predefined_resample = False
