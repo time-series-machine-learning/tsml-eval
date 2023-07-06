@@ -6,9 +6,9 @@ __all__ = [
     "_run_experiment",
 ]
 
-from tsml_eval.publications._2023.tser_archive_expansion.run_experiments import (
+from tsml_eval.publications.year2023.tser_archive_expansion.run_experiments import (
     _run_experiment,
 )
-from tsml_eval.publications._2023.tser_archive_expansion.set_tser_exp_regressor import (
+from tsml_eval.publications.year2023.tser_archive_expansion.set_tser_exp_regressor import (
     _set_tser_exp_regressor,
 )

@@ -5,7 +5,12 @@ set -euxo pipefail
 
 CMD="jupyter nbconvert --to notebook --inplace --execute --ExecutePreprocessor.timeout=600"
 
-excluded=("examples/_wip/diagrams.ipynb" "examples/_wip/evaluation_metric_results.ipynb" "examples/_wip/evaluation_raw_results.ipynb")
+excluded=(
+  "examples/_wip/diagrams.ipynb"
+  "examples/_wip/evaluation_metric_results.ipynb"
+  "examples/_wip/evaluation_raw_results.ipynb"
+  "tsml_eval/publications/year2023/distance_based_clustering/package_distance_timing.ipynb"
+)
 
 # Loop over all notebooks in the examples and publications directory.
 find "examples/" "tsml_eval/publications/" -name "*.ipynb" -print0 |
