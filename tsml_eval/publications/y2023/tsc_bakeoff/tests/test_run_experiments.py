@@ -1,4 +1,4 @@
-"""Test file checking that the tsc bakeoff experiments run correctly."""
+"""Test file checking that the TSC bakeoff experiments run correctly."""
 import os
 
 from tsml_eval.publications.y2023.tsc_bakeoff import _run_experiment
