@@ -37,11 +37,6 @@ dependencies = [
     "scikit-learn>=1.0.2,<=1.2.2",
     "tsml==0.1.1",
     "gpustat",
-    "wildboar>=1.1.0",
-    "stumpy<=1.11.1",
-    "networkx",
-    "requests",
-    "pyfftw",
     "psutil",
 ]
 
@@ -50,7 +45,7 @@ all_extras = [
     "aeon[all_extras]",
     "tsml[extras]",
     "xgboost<=1.7.5",
-    "convst==0.3.0"
+    "convst>=0.3.0,<=0.4.0",
 ]
 unstable_extras = [
     "aeon[unstable_extras]",
