@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Set classifier function."""
 
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
@@ -20,6 +19,7 @@ deep_learning_classifiers = [
     ["FCNClassifier", "fcnn"],
     ["MLPClassifier", "mlp"],
     ["TapNetClassifier", "tapnet"],
+    ["ResNetClassifier", "resnet"],
     ["IndividualInceptionClassifier", "singleinception"],
     ["InceptionTimeClassifier", "inceptiontime"],
 ]
@@ -33,8 +33,8 @@ dictionary_based_classifiers = [
     "weasel-logistic",
     "MUSE",
     "muse-logistic",
-    ["WEASEL_V2", "weaseldilation", "weasel-dilation"],
-    ["MUSEDilation", "muse-dilation"],
+    ["WEASEL_V2", "weaseldilation", "weasel-dilation", "weasel-d"],
+    ["MUSEDilation", "muse-dilation", "muse-d"],
 ]
 distance_based_classifiers = [
     ["KNeighborsTimeSeriesClassifier", "dtw", "1nn-dtw"],
@@ -62,6 +62,7 @@ hybrid_classifiers = [
     ["TsChief", "ts-chief"],
 ]
 interval_based_classifiers = [
+    "rstsf-500",
     ["RSTSFClassifier", "rstsf", "r-stsf"],
     "rise-500",
     ["RandomIntervalSpectralEnsemble", "rise"],
@@ -239,13 +240,13 @@ def _set_classifier_convolution_based(
     elif c == "hydra":
         from tsml_eval.estimators.classification.convolution_based.hydra import HYDRA
 
-        return HYDRA(random_state=random_state, **kwargs)
+        return HYDRA(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "hydramultirocket" or c == "hydra-multirocket":
         from tsml_eval.estimators.classification.convolution_based.hydra import (
             HydraMultiRocket,
         )
 
-        return HydraMultiRocket(random_state=random_state, **kwargs)
+        return HydraMultiRocket(random_state=random_state, n_jobs=n_jobs, **kwargs)
 
 
 def _set_classifier_deep_learning(
@@ -267,6 +268,10 @@ def _set_classifier_deep_learning(
         from aeon.classification.deep_learning.tapnet import TapNetClassifier
 
         return TapNetClassifier(random_state=random_state, **kwargs)
+    elif c == "resnetclassifier" or c == "resnet":
+        from aeon.classification.deep_learning.resnet import ResNetClassifier
+
+        return ResNetClassifier(random_state=random_state, **kwargs)
     elif c == "individualinceptionclassifier" or c == "singleinception":
         from aeon.classification.deep_learning.inception_time import (
             IndividualInceptionClassifier,
@@ -351,11 +356,16 @@ def _set_classifier_dictionary_based(
             support_probabilities=True,
             **kwargs,
         )
-    elif c == "weasel_v2" or c == "weaseldilation" or c == "weasel-dilation":
+    elif (
+        c == "weasel_v2"
+        or c == "weaseldilation"
+        or c == "weasel-dilation"
+        or c == "weasel-d"
+    ):
         from aeon.classification.dictionary_based import WEASEL_V2
 
         return WEASEL_V2(random_state=random_state, n_jobs=n_jobs, **kwargs)
-    elif c == "musedilation" or c == "muse-dilation":
+    elif c == "musedilation" or c == "muse-dilation" or c == "muse-d":
         from tsml_eval.estimators.classification.dictionary_based.muse import (
             MUSEDilation,
         )
@@ -445,7 +455,7 @@ def _set_classifier_feature_based(
     elif c == "freshprinceclassifier" or c == "freshprince":
         from aeon.classification.feature_based import FreshPRINCEClassifier
 
-        return FreshPRINCEClassifier(random_state=random_state, n_jobs=n_jobs)
+        return FreshPRINCEClassifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "tsfresh-nofs":
         from aeon.classification.feature_based import TSFreshClassifier
 
@@ -481,15 +491,6 @@ def _set_classifier_hybrid(
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
-    elif c == "hivecotev2" or c == "hc2":
-        from aeon.classification.hybrid import HIVECOTEV2
-
-        return HIVECOTEV2(
-            random_state=random_state,
-            n_jobs=n_jobs,
-            time_limit_in_minutes=fit_contract,
-            **kwargs,
-        )
     elif c == "tschief" or c == "ts-chief":
         from tsml_eval._wip.tschief.tschief import TsChief
 
@@ -499,10 +500,16 @@ def _set_classifier_hybrid(
 def _set_classifier_interval_based(
     c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
-    if c == "rstsfclassifier" or c == "rstsf" or c == "r-stsf":
+    if c == "rstsf-500":
         from tsml.interval_based import RSTSFClassifier
 
-        return RSTSFClassifier(random_state=random_state, n_estimators=500, **kwargs)
+        return RSTSFClassifier(
+            n_estimators=500, random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
+    elif c == "rstsfclassifier" or c == "rstsf" or c == "r-stsf":
+        from tsml.interval_based import RSTSFClassifier
+
+        return RSTSFClassifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "rise-500":
         from aeon.classification.interval_based import RandomIntervalSpectralEnsemble
 
@@ -536,7 +543,9 @@ def _set_classifier_interval_based(
     elif c == "canonicalintervalforest" or c == "cif":
         from aeon.classification.interval_based import CanonicalIntervalForest
 
-        return CanonicalIntervalForest(random_state=random_state, n_jobs=n_jobs)
+        return CanonicalIntervalForest(
+            random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
     elif c == "stsf-500":
         from aeon.classification.interval_based import SupervisedTimeSeriesForest
 
@@ -662,7 +671,9 @@ def _set_classifier_shapelet_based(
     ):
         from tsml.shapelet_based import RandomShapeletForestClassifier
 
-        return RandomShapeletForestClassifier(random_state=random_state, **kwargs)
+        return RandomShapeletForestClassifier(
+            random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
     elif c == "mrsqmclassifier" or c == "mrsqm":
         from aeon.classification.shapelet_based import MrSQMClassifier
 
