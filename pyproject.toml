@@ -42,10 +42,11 @@ dependencies = [
 
 [project.optional-dependencies]
 all_extras = [
-    "aeon[all_extras]",
+    "aeon[all_extras,dl]",
     "tsml[extras]",
     "xgboost<=1.7.5",
     "convst>=0.3.0,<=0.4.0",
+    "torch>=1.13.1",
 ]
 unstable_extras = [
     "aeon[unstable_extras]",
