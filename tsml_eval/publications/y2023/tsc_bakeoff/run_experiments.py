@@ -92,8 +92,8 @@ if __name__ == "__main__":
     """
     args = sys.argv
     overwrite = True
-    # The UCE 112 set this to true in the paper. This uses the randomly generated
-    # resamples from tsml-java if the file is present.
-    # If these datasets files are required, open an issue or contact us.
+    # The for the UCR 112 datasets set this to true to exactly reproduce results in the
+    # paper. This uses the randomly generated resamples from tsml-java if the file is
+    # present. If these datasets files are required, open an issue or contact us.
     predefined_resample = False
     _run_experiment(args, overwrite, predefined_resample)
