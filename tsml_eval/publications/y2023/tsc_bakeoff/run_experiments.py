@@ -43,7 +43,7 @@ top_classifiers = [
 ]
 
 
-def _run_experiment(args, overwrite):
+def _run_experiment(args, overwrite, predefined_resample):
     if args is None or args.__len__() <= 1:
         data_dir = "../"
         results_dir = "../"
@@ -82,6 +82,7 @@ def _run_experiment(args, overwrite):
             resample_id=resample,
             classifier_name=classifier_name,
             overwrite=overwrite,
+            predefined_resample=predefined_resample,
         )
 
 
@@ -91,4 +92,8 @@ if __name__ == "__main__":
     """
     args = sys.argv
     overwrite = True
-    _run_experiment(args, overwrite)
+    # The UCE 112 set this to true in the paper. This uses the randomly generated
+    # resamples from tsml-java if the file is present.
+    # If these datasets files are required, open an issue or contact us.
+    predefined_resample = False
+    _run_experiment(args, overwrite, predefined_resample)
