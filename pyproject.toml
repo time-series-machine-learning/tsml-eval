@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61", "wheel"]
+requires = ["setuptools>=61", "wheel", "toml", "build"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -11,11 +11,14 @@ authors = [
     {name = "Tony Bagnall", email = "ajb@uea.ac.uk"},
 ]
 readme = "README.md"
-requires-python = ">=3.8,<3.11"
+requires-python = ">=3.8,<3.12"
 keywords = [
     "data-science",
     "machine-learning",
     "time-series",
+    "time-series-classification",
+    "time-series-regression",
+    "time-series-clustering",
     "evaluation",
     "benchmarking",
 ]
@@ -31,11 +34,12 @@ classifiers = [
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
 ]
 dependencies = [
     "aeon==0.3.0",
     "scikit-learn>=1.0.2,<=1.2.2",
-    "tsml==0.1.1",
+    "tsml==0.2.0",
     "gpustat",
     "psutil",
 ]
@@ -124,11 +128,9 @@ flake8 = "examples/_wip/"
 isort = "examples/_wip/"
 
 [tool.pytest.ini_options]
+testpaths = "tsml_eval"
 addopts = '''
-    --ignore tsml_eval/_wip
-    --ignore examples
-    --ignore docs
-    --durations 10
+    --durations 20
     --timeout 600
     --showlocals
     --doctest-modules

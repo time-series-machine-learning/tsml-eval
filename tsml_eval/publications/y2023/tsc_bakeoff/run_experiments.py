@@ -94,6 +94,7 @@ if __name__ == "__main__":
     overwrite = True
     # The for the UCR 112 datasets set this to true to exactly reproduce results in the
     # paper. This uses the randomly generated resamples from tsml-java if the file is
-    # present. If these datasets files are required, open an issue or contact us.
+    # present (see notebook for link). Except for PF, the 30 new datasets use
+    # tsml-eval resamples.
     predefined_resample = False
     _run_experiment(args, overwrite, predefined_resample)

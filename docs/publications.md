@@ -2,8 +2,7 @@
 
 A page for publications which use `tsml-eval`.
 
-2023
-----
+## 2023
 
 [A Review and Evaluation of Elastic Distance Functions for Time Series Clustering](./publications/2023/distance_based_clustering/distance_based_clustering.ipynb)
 

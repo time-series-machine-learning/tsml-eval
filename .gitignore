@@ -139,5 +139,7 @@ regression_experiments_condor.py
 
 # local code and debug files
 local/
+local.py
+local_code/
 local_code.py
 debug.py
