@@ -14,7 +14,7 @@ rist_classifiers = [
     "DrCIF",
     ["RocketClassifier", "rocket"],
     ["HIVECOTEV2", "hc2"],
-    ["RIST", "rist-extrat"],
+    ["RISTClassifier", "rist", "rist-extrat"],
     "rist-rf",
     "rist-ridgecv",
     ["RandomIntervalClassifier", "intervalpipeline", "i-pipeline"],
@@ -76,7 +76,7 @@ def _set_rist_classifier(
             random_state=random_state,
             n_jobs=n_jobs,
         )
-    elif c == "rist" or c == "rist-extrat":
+    elif c == "ristclassifier" or c == "rist" or c == "rist-extrat":
         from sklearn.ensemble import ExtraTreesClassifier
         from tsml.hybrid import RISTClassifier
 

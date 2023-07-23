@@ -12,7 +12,7 @@ rist_regressors = [
     ["DrCIF", "drcifregressor"],
     ["fresh-prince", "freshprince", "FreshPRINCERegressor"],
     ["RDSTRegressor", "rdst"],
-    ["RIST", "rist-extrat"],
+    ["RISTRegressor", "rist", "rist-extrat"],
     "rist-rf",
     "rist-ridgecv",
 ]
@@ -64,7 +64,7 @@ def _set_rist_regressor(
         from tsml.shapelet_based import RDSTRegressor
 
         return RDSTRegressor(random_state=random_state, n_jobs=n_jobs)
-    elif r == "rist" or r == "rist-extrat":
+    elif r == "ristregressor" or r == "rist" or r == "rist-extrat":
         from sklearn.ensemble import ExtraTreesRegressor
         from tsml.hybrid import RISTRegressor
 

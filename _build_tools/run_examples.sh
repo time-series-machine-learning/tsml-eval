@@ -10,6 +10,8 @@ excluded=(
   "examples/_wip/evaluation_metric_results.ipynb"
   "examples/_wip/evaluation_raw_results.ipynb"
   "tsml_eval/publications/year2023/distance_based_clustering/package_distance_timing.ipynb"
+  "tsml_eval/publications/year2023/distance_based_clustering/distance_based_clustering.ipynb"
+  "tsml_eval/publications/year2023/distance_based_clustering/alignment_and_paths_figures.ipynb"
 )
 
 # Loop over all notebooks in the examples and publications directory.
