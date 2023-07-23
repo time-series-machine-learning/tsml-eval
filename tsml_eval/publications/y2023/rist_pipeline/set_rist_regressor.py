@@ -11,7 +11,7 @@ rist_regressors = [
     ["rocket", "RocketRegressor"],
     ["DrCIF", "drcifregressor"],
     ["fresh-prince", "freshprince", "FreshPRINCERegressor"],
-    "RDST",
+    ["RDSTRegressor", "rdst"],
     ["RIST", "rist-extrat"],
     "rist-rf",
     "rist-ridgecv",
@@ -60,7 +60,7 @@ def _set_rist_regressor(
             random_state=random_state,
             n_jobs=n_jobs,
         )
-    elif r == "rdst":
+    elif r == "rdstregressor" or r == "rdst":
         from tsml.shapelet_based import RDSTRegressor
 
         return RDSTRegressor(random_state=random_state, n_jobs=n_jobs)

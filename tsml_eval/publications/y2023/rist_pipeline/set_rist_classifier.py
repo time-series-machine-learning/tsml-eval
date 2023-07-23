@@ -9,7 +9,7 @@ from tsml_eval.utils.functions import str_in_nested_list
 rist_classifiers = [
     ["FreshPRINCEClassifier", "freshprince"],
     ["ShapeletTransformClassifier", "stc", "stc-2hour"],
-    "RDST",
+    ["RDSTClassifier", "rdst"],
     ["RSTSFClassifier", "rstsf", "r-stsf"],
     "DrCIF",
     ["RocketClassifier", "rocket"],
@@ -47,10 +47,10 @@ def _set_rist_classifier(
             random_state=random_state,
             n_jobs=n_jobs,
         )
-    elif c == "rdst":
-        from tsml_eval.estimators.classification.shapelet_based.rdst import RDST
+    elif c == "rdstclassifier" or c == "rdst":
+        from tsml.shapelet_based import RDSTClassifier
 
-        return RDST(random_state=random_state)
+        return RDSTClassifier(random_state=random_state)
     elif c == c == "rstsfclassifier" or c == "rstsf" or c == "r-stsf":
         from tsml.interval_based import RSTSFClassifier
 

@@ -10,7 +10,9 @@ os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
 
 from tsml_eval.experiments import load_and_run_regression_experiment
-from tsml_eval.publications.y2023.rist_pipeline import _set_rist_regressor
+from tsml_eval.publications.y2023.rist_pipeline.set_rist_regressor import (
+    _set_rist_regressor,
+)
 from tsml_eval.utils.experiments import _results_present
 
 regressors = [
