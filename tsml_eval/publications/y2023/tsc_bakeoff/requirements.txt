@@ -167,7 +167,7 @@ tornado==6.3.2
 tqdm==4.65.0
 tsfresh==0.20.1
 tslearn==0.6.1
-tsml==0.2.0
+tsml==0.2.1
 typing_extensions==4.5.0
 urllib3==1.26.16
 waitress==2.1.2

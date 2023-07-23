@@ -2,6 +2,8 @@
 
 __author__ = ["MatthewMiddlehurst"]
 
+import numpy as np
+
 from tsml_eval.utils.functions import str_in_nested_list
 
 rist_regressors = [
@@ -59,10 +61,37 @@ def _set_rist_regressor(
             n_jobs=n_jobs,
         )
     elif r == "rdst":
-        pass
+        from tsml.shapelet_based import RDSTRegressor
+
+        return RDSTRegressor(random_state=random_state, n_jobs=n_jobs)
     elif r == "rist" or r == "rist-extrat":
-        pass
+        from sklearn.ensemble import ExtraTreesRegressor
+        from tsml.hybrid import RISTRegressor
+
+        return RISTRegressor(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            estimator=ExtraTreesRegressor(n_estimators=500),
+        )
     elif r == "rist-rf":
-        pass
+        from sklearn.ensemble import RandomForestRegressor
+        from tsml.hybrid import RISTRegressor
+
+        return RISTRegressor(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            estimator=RandomForestRegressor(n_estimators=500),
+        )
     elif r == "rist-ridgecv":
-        pass
+        from sklearn.linear_model import RidgeCV
+        from sklearn.pipeline import make_pipeline
+        from sklearn.preprocessing import StandardScaler
+        from tsml.hybrid import RISTRegressor
+
+        return RISTRegressor(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            estimator=make_pipeline(
+                StandardScaler(with_mean=False), RidgeCV(alphas=np.logspace(-4, 4, 20))
+            ),
+        )

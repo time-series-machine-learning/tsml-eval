@@ -37,9 +37,9 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
 ]
 dependencies = [
-    "aeon==0.3.0",
+    "aeon>=0.3.0,<0.4.0",
     "scikit-learn>=1.0.2,<=1.2.2",
-    "tsml==0.2.0",
+    "tsml>=0.2.0,<0.3.0",
     "gpustat",
     "psutil",
 ]
@@ -118,7 +118,6 @@ per-file-ignores = [
     "tsml_eval/experiments/threaded_regression_experiments.py:T201",
     "tsml_eval/experiments/clustering_experiments.py:E402,T201",
     "tsml_eval/experiments/threaded_clustering_experiments.py:T201",
-    "tsml_eval/experiments/distance_clustering_experiments.py:E402,T201",
     "tsml_eval/publications/*:E402,T201",
 ]
 
