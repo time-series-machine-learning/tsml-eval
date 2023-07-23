@@ -1,1 +1,1 @@
-"""Bakeoff redux 2023 publication tests."""
+"""RIST pipeline publication tests."""

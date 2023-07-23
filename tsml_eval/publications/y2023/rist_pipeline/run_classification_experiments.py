@@ -1,6 +1,6 @@
-"""Experiment runner for bakeoff redux 2023 publication."""
+"""Experiment runner for RIST pipeline publication."""
 
-__author__ = ["TonyBagnall", "MatthewMiddlehurst"]
+__author__ = ["MatthewMiddlehurst"]
 
 import os
 import sys
@@ -10,44 +10,31 @@ os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
 
 from tsml_eval.experiments import load_and_run_classification_experiment
-from tsml_eval.publications.y2023.tsc_bakeoff.set_bakeoff_classifier import (
-    _set_bakeoff_classifier,
+from tsml_eval.publications.y2023.rist_pipeline.set_rist_classifier import (
+    _set_rist_classifier,
 )
 from tsml_eval.utils.experiments import _results_present
 
-# all classifiers ran without duplicates
-distance_based = ["1NN-DTW", "ShapeDTW"]
-feature_based = ["Catch22", "FreshPRINCE", "TSFresh", "Signatures"]
-shapelet_based = ["STC", "RDST", "RSF", "MrSQM"]
-interval_based = ["R-STSF", "RISE", "TSF", "CIF", "STSF", "DrCIF"]
-dictionary_based = ["BOSS", "cBOSS", "TDE", "WEASEL", "WEASEL-D"]
-convolution_based = [
-    "ROCKET",
-    "MiniROCKET",
-    "MultiROCKET",
-    "Arsenal",
-    "Hydra",
-    "Hydra-MultiROCKET",
-]
-deep_learning = ["CNN", "ResNet", "InceptionTime"]
-hybrid = ["HC1", "HC2"]
-# top performing classifiers
-top_classifiers = [
+classifiers = [
     "FreshPRINCE",
+    "STC",
     "RDST",
     "R-STSF",
-    "WEASEL-D",
-    "Hydra-MultiROCKET",
-    "InceptionTime",
+    "DrCIF",
+    "ROCKET",
     "HC2",
+    "RIST-ExtraT",
+    "RIST-RF",
+    "RIST-RidgeCV",
+    "IntervalPipeline",
 ]
 
 
-def _run_experiment(args, overwrite, predefined_resample):
+def _run_classification_experiment(args, overwrite):
     if args is None or args.__len__() <= 1:
         data_dir = "../"
         results_dir = "../"
-        classifier_name = "ROCKET"
+        classifier_name = "RIST"
         dataset = "ItalyPowerDemand"
         resample = 0
     else:
@@ -75,14 +62,13 @@ def _run_experiment(args, overwrite, predefined_resample):
             data_dir,
             results_dir,
             dataset,
-            _set_bakeoff_classifier(
+            _set_rist_classifier(
                 classifier_name,
                 random_state=resample,
             ),
             resample_id=resample,
             classifier_name=classifier_name,
             overwrite=overwrite,
-            predefined_resample=predefined_resample,
         )
 
 
@@ -92,8 +78,4 @@ if __name__ == "__main__":
     """
     args = sys.argv
     overwrite = True
-    # The for the UCR 112 datasets set this to true to exactly reproduce results in the
-    # paper. This uses the randomly generated resamples from tsml-java if the file is
-    # present. If these datasets files are required, open an issue or contact us.
-    predefined_resample = False
-    _run_experiment(args, overwrite, predefined_resample)
+    _run_classification_experiment(args, overwrite)
