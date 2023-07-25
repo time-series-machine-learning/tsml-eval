@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Set regressor function."""
 
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
@@ -27,9 +26,9 @@ dictionary_based_regressors = [
     ["TemporalDictionaryEnsemble", "tde"],
 ]
 distance_based_regressors = [
-    ["KNeighborsTimeSeriesRegressor", "1nn-ed"],
+    "1nn-ed",
     "5nn-ed",
-    "1nn-dtw",
+    ["KNeighborsTimeSeriesRegressor", "1nn-dtw"],
     "5nn-dtw",
 ]
 feature_based_regressors = [
@@ -254,7 +253,7 @@ def _set_regressor_dictionary_based(
 def _set_regressor_distance_based(
     r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
-    if r == "kneighborstimeseriesregressor" or r == "1nn-ed":
+    if r == "1nn-ed":
         from aeon.regression.distance_based import KNeighborsTimeSeriesRegressor
 
         return KNeighborsTimeSeriesRegressor(**kwargs)
@@ -262,7 +261,7 @@ def _set_regressor_distance_based(
         from aeon.regression.distance_based import KNeighborsTimeSeriesRegressor
 
         return KNeighborsTimeSeriesRegressor(n_neighbors=5, **kwargs)
-    elif r == "1nn-dtw":
+    elif r == "kneighborstimeseriesregressor" or r == "1nn-dtw":
         from aeon.regression.distance_based import KNeighborsTimeSeriesRegressor
 
         return KNeighborsTimeSeriesRegressor(

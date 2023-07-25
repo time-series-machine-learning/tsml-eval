@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61", "wheel"]
+requires = ["setuptools>=61", "wheel", "toml", "build"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -16,6 +16,9 @@ keywords = [
     "data-science",
     "machine-learning",
     "time-series",
+    "time-series-classification",
+    "time-series-regression",
+    "time-series-clustering",
     "evaluation",
     "benchmarking",
 ]
@@ -31,26 +34,23 @@ classifiers = [
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
 ]
 dependencies = [
-    "aeon==0.3.0",
+    "aeon>=0.3.0,<0.4.0",
     "scikit-learn>=1.0.2,<=1.2.2",
-    "tsml==0.1.1",
+    "tsml>=0.2.0,<0.3.0",
     "gpustat",
-    "wildboar>=1.1.0",
-    "stumpy<=1.11.1",
-    "networkx",
-    "requests",
-    "pyfftw",
     "psutil",
 ]
 
 [project.optional-dependencies]
 all_extras = [
-    "aeon[all_extras]",
+    "aeon[all_extras,dl]",
     "tsml[extras]",
     "xgboost<=1.7.5",
-    "convst==0.3.0"
+    "convst>=0.3.0,<=0.4.0",
+    "torch>=1.13.1",
 ]
 unstable_extras = [
     "aeon[unstable_extras]",
@@ -118,7 +118,6 @@ per-file-ignores = [
     "tsml_eval/experiments/threaded_regression_experiments.py:T201",
     "tsml_eval/experiments/clustering_experiments.py:E402,T201",
     "tsml_eval/experiments/threaded_clustering_experiments.py:T201",
-    "tsml_eval/experiments/distance_clustering_experiments.py:E402,T201",
     "tsml_eval/publications/*:E402,T201",
 ]
 
@@ -128,11 +127,10 @@ flake8 = "examples/_wip/"
 isort = "examples/_wip/"
 
 [tool.pytest.ini_options]
+testpaths = "tsml_eval"
 addopts = '''
     --ignore tsml_eval/_wip
-    --ignore examples
-    --ignore docs
-    --durations 10
+    --durations 20
     --timeout 600
     --showlocals
     --doctest-modules

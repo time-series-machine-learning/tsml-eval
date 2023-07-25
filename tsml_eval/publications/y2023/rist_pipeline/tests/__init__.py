@@ -1,0 +1,1 @@
+"""RIST pipeline publication tests."""
