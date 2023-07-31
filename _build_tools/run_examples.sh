@@ -27,7 +27,6 @@ find "examples/" "tsml_eval/publications/" -name "*.ipynb" -print0 |
     # Run the notebook.
     else
       echo "Running: $notebook"
-      $CMD "$notebook"
 
       start=$(date +%s)
       $CMD "$notebook"
