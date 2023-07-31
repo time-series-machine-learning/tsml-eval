@@ -37,6 +37,6 @@ find "examples/" "tsml_eval/publications/" -name "*.ipynb" -print0 |
     fi
   done
 
-# print first 5 items in runtimes array
+# print runtimes and notebooks
 echo "Runtimes:"
 paste <(printf "%s\n" "${runtimes[@]}") <(printf "%s\n" "${notebooks[@]}")
