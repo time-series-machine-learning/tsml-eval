@@ -15,6 +15,7 @@ excluded=(
 )
 
 shopt -s lastpipe
+notebooks=()
 runtimes=()
 
 # Loop over all notebooks in the examples and publications directory.
@@ -32,10 +33,11 @@ find "examples/" "tsml_eval/publications/" -name "*.ipynb" -print0 |
       $CMD "$notebook"
       end=$(date +%s)
 
-      runtimes+=( ($((end-start)) "$notebook"))
+      notebooks+=("$notebook")
+      runtimes+=($((end-start)))
     fi
   done
 
 # print first 5 items in runtimes array
 echo "Runtimes:"
-printf "'%s'\n" "${runtimes[@]:0:5}"
+printf "'%s'\n" "${runtimes[@]}"
