@@ -32,10 +32,10 @@ find "examples/" "tsml_eval/publications/" -name "*.ipynb" -print0 |
       $CMD "$notebook"
       end=$(date +%s)
 
-      runtimes+=($((end-start)))
+      runtimes+=( ($((end-start)) "$notebook"))
     fi
   done
 
 # print first 5 items in runtimes array
 echo "Runtimes:"
-echo "${runtimes[@]:0:5}"
+printf "'%s'\n" "${runtimes[@]:0:5}"
