@@ -14,6 +14,10 @@ excluded=(
   "tsml_eval/publications/y2023/distance_based_clustering/alignment_and_paths_figures.ipynb"
 )
 
+shopt -s lastpipe
+notebooks=()
+runtimes=()
+
 # Loop over all notebooks in the examples and publications directory.
 find "examples/" "tsml_eval/publications/" -name "*.ipynb" -print0 |
   while IFS= read -r -d "" notebook; do
@@ -23,6 +27,16 @@ find "examples/" "tsml_eval/publications/" -name "*.ipynb" -print0 |
     # Run the notebook.
     else
       echo "Running: $notebook"
+
+      start=$(date +%s)
       $CMD "$notebook"
+      end=$(date +%s)
+
+      notebooks+=("$notebook")
+      runtimes+=($((end-start)))
     fi
   done
+
+# print runtimes and notebooks
+echo "Runtimes:"
+paste <(printf "%s\n" "${runtimes[@]}") <(printf "%s\n" "${notebooks[@]}")
