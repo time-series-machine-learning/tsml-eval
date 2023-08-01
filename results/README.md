@@ -8,6 +8,10 @@ combination i.e. accuracy and root-mean-square error. Extended results may be av
 on [timeseriesclassification.com](https://timeseriesclassification.com) or the
 associated publication webpage the results are from.
 
+We cannot guarantee that the results here are the same as those you will obtain by
+running experiments using tsml-eval, as they have come from different sources, and the
+method of resampling for datasets may differ.
+
 Generally, all the results here use archive datasets from the UCR/UEA time series
 classification repository or the Monash/UEA/UCR time series extrinsic regression
 repository. We aim to provide results over 30 resamples, but this may not always be the
