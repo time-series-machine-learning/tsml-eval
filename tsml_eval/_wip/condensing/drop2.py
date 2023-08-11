@@ -78,6 +78,7 @@ class Drop2Condenser(BaseCollectionTransformer):
         associates = [[] for _ in range(n_samples)]
         kneighbors = [[] for _ in range(n_samples)]
         weights = [[] for _ in range(n_samples)]
+        distance_nearest_enemy = []
         distances = np.zeros((n_samples, n_samples))
 
         # Getting the kneighbors and the associates of the instance.
@@ -87,26 +88,29 @@ class Drop2Condenser(BaseCollectionTransformer):
                 distances[p2, p] = distances[p, p2]
 
         for p in range(n_samples):
-            weights[p], kneighbors[p] = zip(
-                *sorted(zip(distances[p], range(n_samples)))
+            weights[p], kneighbors[p], y_ordered = zip(
+                *sorted(zip(distances[p], range(n_samples), y))
             )
-
-            # todo: comprobar que tenemos que quitar el 1er elemento por ser él mismo.
-            # weights[p], kneighbors[p] = weights[p][1:], kneighbors[p][1:]
 
             for j in kneighbors[p][: self.num_instances]:
                 associates[j].append(p)
 
-        # print(kneighbors)
-        # print(associates)
+            # Drop2 order instances by their distance to the nearest enemy.
+            for k in kneighbors[p]:
+                if y_ordered[k] != y[p]:
+                    distance_nearest_enemy.append(weights[p][k])
+                    break
+
+        _, n_samples_ordered = zip(
+            *sorted(zip(distance_nearest_enemy, range(n_samples)))
+        )
 
         # Predicting with/without rule for each instance p in the set.
-        for p in range(n_samples):
+        for p in n_samples_ordered:
             without_P = 0
             with_P = 0
 
             for a in associates[p]:
-                # print(f"{a=}")
                 # WITH
                 y_pred_w_P = self._predict_KNN(
                     kneighbors[a],
@@ -127,7 +131,7 @@ class Drop2Condenser(BaseCollectionTransformer):
 
                 if y_pred_wo_P == y[a]:
                     without_P += 1
-            # print(without_P, with_P)
+
             if without_P < with_P:  # the instance is worth keeping.
                 print(f"Keeping instance {p}.")
                 self.selected_indices.append(p)
@@ -139,13 +143,6 @@ class Drop2Condenser(BaseCollectionTransformer):
                         if a not in associates[j]:
                             associates[j].append(a)
 
-                # for k in kneighbors[p]:
-                #     associates[k] = [a for a in associates[k] if a != p]
-
-                # print(associates)
-                # for k in kneighbors:
-                #     print(k[: self.num_instances], end=", ")
-                # # print(kneighbors)
         print(self.selected_indices)
         return X[self.selected_indices], y[self.selected_indices]
 

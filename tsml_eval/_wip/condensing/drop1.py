@@ -91,14 +91,11 @@ class Drop1Condenser(BaseCollectionTransformer):
                 *sorted(zip(distances[p], range(n_samples)))
             )
 
-            # todo: comprobar que tenemos que quitar el 1er elemento por ser él mismo.
+            # todo: maybe removing first element as is itself?
             # weights[p], kneighbors[p] = weights[p][1:], kneighbors[p][1:]
 
             for j in kneighbors[p][: self.num_instances]:
                 associates[j].append(p)
-
-        # print(kneighbors)
-        # print(associates)
 
         # Predicting with/without rule for each instance p in the set.
         for p in range(n_samples):
@@ -106,7 +103,6 @@ class Drop1Condenser(BaseCollectionTransformer):
             with_P = 0
 
             for a in associates[p]:
-                # print(f"{a=}")
                 # WITH
                 y_pred_w_P = self._predict_KNN(
                     kneighbors[a],
@@ -127,7 +123,7 @@ class Drop1Condenser(BaseCollectionTransformer):
 
                 if y_pred_wo_P == y[a]:
                     without_P += 1
-            # print(without_P, with_P)
+
             if without_P < with_P:  # the instance is worth keeping.
                 print(f"Keeping instance {p}.")
                 self.selected_indices.append(p)
@@ -142,10 +138,6 @@ class Drop1Condenser(BaseCollectionTransformer):
                 for k in kneighbors[p]:
                     associates[k] = [a for a in associates[k] if a != p]
 
-                # print(associates)
-                # for k in kneighbors:
-                #     print(k[: self.num_instances], end=", ")
-                # # print(kneighbors)
         print(self.selected_indices)
         return X[self.selected_indices], y[self.selected_indices]
 
@@ -161,5 +153,4 @@ class Drop1Condenser(BaseCollectionTransformer):
         for id, w in zip(neighbors, weights):
             predicted_class = y_[id]
             scores[predicted_class] += 1 / (w + np.finfo(float).eps)
-        # print(f"{neighbors=}\n{weights=}\n{classes_[np.argmax(scores)]=}")
         return classes_[np.argmax(scores)]
