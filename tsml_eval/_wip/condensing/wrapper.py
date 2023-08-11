@@ -38,9 +38,6 @@ class WrapperBA(BaseClassifier):
         if self.metric_params is None:
             self.metric_params = {}
 
-        self.selected_series = []
-        self.y_selected_series = []
-
         self.num_instances_per_class = num_instances_per_class
 
         self.classifier = classifier
@@ -51,6 +48,9 @@ class WrapperBA(BaseClassifier):
                 distance_params=self.metric_params,
                 n_neighbors=1,
             )
+
+        self.selected_series = []
+        self.y_selected_series = []
 
         self.clusterer = TimeSeriesKMeans(
             n_clusters=self.num_instances_per_class,

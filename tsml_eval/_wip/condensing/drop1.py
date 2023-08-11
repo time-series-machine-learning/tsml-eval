@@ -1,14 +1,10 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 from aeon.distances import get_distance_function
-from aeon.transformations.base import BaseTransformer
-
-from tsml_eval.estimators.classification.distance_based import (
-    KNeighborsTimeSeriesClassifier,
-)
+from aeon.transformations.collection.base import BaseCollectionTransformer
 
 
-class Drop1(BaseTransformer):
+class Drop1Condenser(BaseCollectionTransformer):
     """
     Class for the simple_rank condensing approach.
 
@@ -16,14 +12,12 @@ class Drop1(BaseTransformer):
     ----------
     distance
     distance_params
-    n_neighbors
+    num_instances_per_class
 
     References
     ----------
-    .. [1] Ueno, K., Xi, X., Keogh, E., & Lee, D. J. (2006, December). Anytime
-    classification using the nearest neighbor algorithm with applications to stream
-    mining. In Sixth International Conference on Data Mining (ICDM'06) (pp. 623-632).
-    IEEE.
+    .. [1] Wilson, D. R., & Martinez, T. R. (2000). Reduction techniques for
+    instance-based learning algorithms. Machine learning, 38, 257-286.
 
     Examples
     --------
@@ -34,31 +28,38 @@ class Drop1(BaseTransformer):
     _tags = {
         "univariate-only": True,
         "fit_is_empty": False,
+        "X_inner_mtype": ["np-list", "numpy3D"],
+        "requires_y": True,
+        "y_inner_mtype": ["numpy1D"],
     }
 
     def __init__(
         self,
         distance="dtw",
         distance_params=None,
-        n_neighbors=1,
+        num_instances=1,
     ):
         self.distance = distance
-        self._distance_params = distance_params
-        if self._distance_params is None:
-            self._distance_params = {}
+        self.distance_params = distance_params
+        if self.distance_params is None:
+            self.distance_params = {}
 
-        self.n_neighbors = n_neighbors
+        self.num_instances = num_instances
 
         if isinstance(self.distance, str):
-            self.metric_ = get_distance_function(metric=self.distance)
+            self.metric = get_distance_function(metric=self.distance)
 
         self.selected_indices = []
 
-        super(Drop1, self).__init__()
+        super(Drop1Condenser, self).__init__()
 
     def _fit(self, X, y):
+        n_classes = len(np.unique(y))
+        self.num_instances = self.num_instances * n_classes
+
+    def _transform(self, X, y):
         """
-        Implement of the SimpleRank prototype selection approach.
+        Implement of the Drop1 prototype selection approach.
 
         Parameters
         ----------
@@ -76,118 +77,89 @@ class Drop1(BaseTransformer):
 
         associates = [[] for _ in range(n_samples)]
         kneighbors = [[] for _ in range(n_samples)]
-        y_pred = []
+        weights = [[] for _ in range(n_samples)]
+        distances = np.zeros((n_samples, n_samples))
 
-        classifier = KNeighborsTimeSeriesClassifier(
-            distance=self.distance,
-            distance_params=self._distance_params,
-            n_neighbors=self.n_neighbors + 1,
-        )
+        # Getting the kneighbors and the associates of the instance.
+        for p in range(n_samples):
+            for p2 in range(p + 1, n_samples):
+                distances[p, p2] = self.metric(X[p], X[p2], **self.distance_params)
+                distances[p2, p] = distances[p, p2]
 
-        # Predicting class with the instance in the set.
-        # Also getting the kneighbors and the associates of the instance.
-        for i in range(n_samples):
-            classifier.fit(X, y)
-            y_pred.append(classifier.predict(X[i]))
-            i_kneighbors, i_distances = classifier._kneighbors(X[i])
+        for p in range(n_samples):
+            weights[p], kneighbors[p] = zip(
+                *sorted(zip(distances[p], range(n_samples)))
+            )
 
-            i_kneighbors = [x[1] for x in sorted(zip(i_distances, i_kneighbors))]
+            # todo: comprobar que tenemos que quitar el 1er elemento por ser él mismo.
+            # weights[p], kneighbors[p] = weights[p][1:], kneighbors[p][1:]
 
-            for j in i_kneighbors:
-                associates[j].append(i)
+            for j in kneighbors[p][: self.num_instances]:
+                associates[j].append(p)
 
-            kneighbors[i] = i_kneighbors
+        # print(kneighbors)
+        # print(associates)
 
-        # Predicting class without the instance in the set.
-        y_pred_wo_P = []
-        for i in range(n_samples):
-            X_wo_P = np.delete(X, i, axis=0)
-            y_wo_P = np.delete(y, i)
-            classifier.fit(X_wo_P, y_wo_P)
-            y_pred_wo_P.append(classifier.predict(X[i]))
+        # Predicting with/without rule for each instance p in the set.
+        for p in range(n_samples):
+            without_P = 0
+            with_P = 0
 
-        X_S = X.copy()
-        y_S = y.copy()
+            for a in associates[p]:
+                # print(f"{a=}")
+                # WITH
+                y_pred_w_P = self._predict_KNN(
+                    kneighbors[a],
+                    weights[a],
+                    y,
+                    self.num_instances,
+                )
 
-        for i in range(n_samples):
-            # Num of associates correctly classified with i (or P) as neighbor.
-            with_list = [
-                j
-                for j in associates[i]
-                if ((i in kneighbors[j]) and (y[j] == y_pred[j]))
-            ]
+                if y_pred_w_P == y[a]:
+                    with_P += 1
+                # WITHOUT
+                y_pred_wo_P = self._predict_KNN(
+                    [k for k in kneighbors[a] if k != p],
+                    [w for idx, w in enumerate(weights[a]) if idx != p],
+                    y,
+                    self.num_instances,
+                )
 
-            # Num of associates correctly classified without i (or P) as neighbor.
-            without_list = [j for j in associates[i] if (y[j] == y_pred_wo_P[j])]
+                if y_pred_wo_P == y[a]:
+                    without_P += 1
+            # print(without_P, with_P)
+            if without_P < with_P:  # the instance is worth keeping.
+                print(f"Keeping instance {p}.")
+                self.selected_indices.append(p)
+            else:  # the instance is not worth keeping.
+                print(f"Removing instance {p}.")
+                for a in associates[p]:
+                    kneighbors[a] = [kn for kn in kneighbors[a] if kn != p]
+                    for j in kneighbors[a][: self.num_instances]:
+                        if a not in associates[j]:
+                            associates[j].append(a)
 
-            # Check if removing i (or P) is better.
-            if len(without_list) >= len(with_list):
-                # Remove P from S.
-                i_S = self._find_index(i, X, X_S)
-                X_S = np.delete(X_S, i_S, axis=0)
-                y_S = np.delete(y_S, i_S)
+                for k in kneighbors[p]:
+                    associates[k] = [a for a in associates[k] if a != p]
 
-                # Remove P from the kneighbors of the associates.
-                for j in associates[i]:
-                    kneighbors[j].remove(i)
-
-                    # if self.n_neighbors + 1 >= len(X_S):
-                    #     classifier = KNeighborsTimeSeriesClassifier(
-                    #         distance=self.distance,
-                    #         distance_params=self._distance_params,
-                    #         n_neighbors=len(X_S),
-                    #     )
-
-                    # Find the next nearest neighbor for the j-th associate.
-                    classifier.fit(X_S, y_S)
-                    y_pred[j] = classifier.predict(X[j])
-                    j_kneighbors, _ = classifier._kneighbors(X[j])
-                    j_kneighbors = self._find_index(j_kneighbors, X_S, X)
-
-                    j_neighbor = list(
-                        set(j_kneighbors).symmetric_difference(set(kneighbors[j]))
-                    )[0]
-
-                    kneighbors[j].append(j_neighbor)
-                    associates[j_neighbor].append(j)
-
-                # Remove P from the associates of the neighbors.
-                for j in kneighbors[i]:
-                    associates[j].remove(i)
-
-                associates[i] = []
-                kneighbors[i] = []
-
-            # The instance worth staying.
-            else:
-                self.selected_indices.append(i)
-        return self
-
-    def _transform(self, X, y):
+                # print(associates)
+                # for k in kneighbors:
+                #     print(k[: self.num_instances], end=", ")
+                # # print(kneighbors)
+        print(self.selected_indices)
         return X[self.selected_indices], y[self.selected_indices]
 
     def _fit_transform(self, X, y):
-        self._fit(X, y)
-        condensed_X, condensed_y = self._transform(X, y)
+        self.fit(X, y)
+        return self._transform(X, y)
 
-        return condensed_X, condensed_y
-
-    def _get_selected_indices(self):
-        # todo: check that fit has already been called.
-        return self.selected_indices
-
-    def _find_index(self, values, training_set_instance, training_set_to_find):
-        if isinstance(values, int):
-            values = [values]
-
-        index = [
-            xdx
-            for xdx, x in enumerate(training_set_to_find)
-            for k in values
-            if np.array_equal(x, training_set_instance[k])
-        ]
-
-        if len(index) == 1:
-            return index[0]
-        else:
-            return index
+    def _predict_KNN(self, neighbors, weights, y, num_neighbors):
+        neighbors = neighbors[:(num_neighbors)]
+        weights = weights[:(num_neighbors)]
+        classes_, y_ = np.unique(y, return_inverse=True)
+        scores = np.zeros(len(classes_))
+        for id, w in zip(neighbors, weights):
+            predicted_class = y_[id]
+            scores[predicted_class] += 1 / (w + np.finfo(float).eps)
+        # print(f"{neighbors=}\n{weights=}\n{classes_[np.argmax(scores)]=}")
+        return classes_[np.argmax(scores)]

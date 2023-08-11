@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 from aeon.distances import get_distance_function
-from aeon.transformations.base import BaseTransformer
+from aeon.transformations.collection.base import BaseCollectionTransformer
 
 from tsml_eval.estimators.classification.distance_based import (
     KNeighborsTimeSeriesClassifier,
 )
 
 
-class SimpleRank(BaseTransformer):
+class SimpleRankCondenser(BaseCollectionTransformer):
     """
     Class for the simple_rank condensing approach.
 
@@ -34,98 +34,81 @@ class SimpleRank(BaseTransformer):
     _tags = {
         "univariate-only": True,
         "fit_is_empty": False,
+        "X_inner_mtype": ["np-list", "numpy3D"],
+        "requires_y": True,
+        "y_inner_mtype": ["numpy1D"],
     }
 
     def __init__(
         self,
         distance="dtw",
         distance_params=None,
-        n_neighbors=1,
+        num_instances_per_class=1,
     ):
         self.distance = distance
-        self._distance_params = distance_params
-        if self._distance_params is None:
-            self._distance_params = {}
+        self.distance_params = distance_params
+        if self.distance_params is None:
+            self.distance_params = {}
 
-        self.n_neighbors = n_neighbors
+        self.num_instances_per_class = num_instances_per_class
 
         if isinstance(self.distance, str):
             self.metric_ = get_distance_function(metric=self.distance)
 
         self.selected_indices = []
 
-        super(SimpleRank, self).__init__()
+        super(SimpleRankCondenser, self).__init__()
 
-    def _fit(self, X, y):
-        """
-        Implement of the SimpleRank prototype selection approach.
-
-        Parameters
-        ----------
-        X -- numpy array of shape (n_samples, n_features) representing the feature
-        vectors  of the instances.
-        y -- numpy array of shape (n_samples,) representing the corresponding class
-        labels.
-
-        Returns
-        -------
-        self
-        """
+    def _transform(self, X, y):
         n_samples = X.shape[0]
         rank = np.zeros(n_samples)
         distance = np.zeros(n_samples)
         num_classes = len(np.unique(y))
+        # As SR do not separate prototypes per class, the number should be multiplied by
+        # the number of instances per class of other methods.
+        self.num_instances_per_class = self.num_instances_per_class * num_classes
 
         for i in range(n_samples):
             X_train = np.delete(X, i, axis=0)
             y_train = np.delete(y, i)
             X_pattern_loo = X[i]
+            y_pattern_loo = y[i]
 
+            # Consider moving this to the init method.
             classifier = KNeighborsTimeSeriesClassifier(
                 distance=self.distance,
-                distance_params=self._distance_params,
-                n_neighbors=self.n_neighbors,
+                distance_params=self.distance_params,
+                n_neighbors=1,
             )
 
             classifier.fit(X_train, y_train)
             prediction = classifier.predict(X_pattern_loo)
 
-            if y[i] == prediction:
+            if y_pattern_loo == prediction:
                 rank[i] = 1
             else:
                 rank[i] = -2 / (num_classes - 1)
 
-            # compute distance to nearest neigh in class
+            # compute distance to nearest neighbour in class
             distance[i] = np.min(
                 np.array(
                     [
                         self.metric_(
                             X_pattern_loo,
-                            X_train[np.where(y_train == y[i])[0]][j],
-                            **self._distance_params,
+                            j,
+                            **self.distance_params,
                         )
-                        for j in range(len([np.where(y_train == y[i])[0]]))
+                        for j in X_train[np.where(y_train == y_pattern_loo)[0]]
                     ]
                 )
             )
+        order = sorted(zip(rank, -np.array(distance), range(n_samples)))[::-1]
 
-        samples_ordered = sorted(zip(rank, -np.array(distance), range(n_samples)))
+        self.selected_indices = [x[2] for x in order][: self.num_instances_per_class]
 
-        self.selected_indices = [x[2] for x in samples_ordered][::-1][
-            : self.n_neighbors
-        ]
-
-        return self
-
-    def _transform(self, X, y):
-        return X[self.selected_indices], y[self.selected_indices]
-
-    def _fit_transform(self, X, y):
-        self._fit(X, y)
-        condensed_X, condensed_y = self._transform(X, y)
+        condensed_X, condensed_y = X[self.selected_indices], y[self.selected_indices]
 
         return condensed_X, condensed_y
 
-    def _get_selected_indices(self):
-        # todo: check that fit has already been called.
-        return self.selected_indices
+    def _fit_transform(self, X, y):
+        return self._transform(X, y)
