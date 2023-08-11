@@ -11,11 +11,11 @@ __all__ = ["ShapeletTransformRegressor"]
 import numpy as np
 from aeon.base._base import _clone_estimator
 from aeon.regression.base import BaseRegressor
+from aeon.regression.sklearn import RotationForestRegressor
 from aeon.utils.validation.panel import check_X_y
 from sklearn.model_selection import cross_val_predict
 from sklearn.utils.multiclass import type_of_target
 
-from tsml_eval.estimators.regression.sklearn import RotationForest
 from tsml_eval.estimators.regression.transformations.shapelet_transform import (
     RandomShapeletTransform,
 )
@@ -204,11 +204,11 @@ class ShapeletTransformRegressor(BaseRegressor):
         )
 
         self._estimator = _clone_estimator(
-            RotationForest() if self.estimator is None else self.estimator,
+            RotationForestRegressor() if self.estimator is None else self.estimator,
             self.random_state,
         )
 
-        if isinstance(self._estimator, RotationForest):
+        if isinstance(self._estimator, RotationForestRegressor):
             self._estimator.save_transformed_data = self.save_transformed_data
 
         m = getattr(self._estimator, "n_jobs", None)
@@ -261,7 +261,10 @@ class ShapeletTransformRegressor(BaseRegressor):
         if not self.save_transformed_data:
             raise ValueError("Currently only works with saved transform data from fit.")
 
-        if isinstance(self.estimator, RotationForest) or self.estimator is None:
+        if (
+            isinstance(self.estimator, RotationForestRegressor)
+            or self.estimator is None
+        ):
             return self._estimator._get_train_preds(self.transformed_data_, y)
         else:
             m = getattr(self._estimator, "predict_proba", None)
@@ -309,20 +312,10 @@ class ShapeletTransformRegressor(BaseRegressor):
             `MyClass(**params)` or `MyClass(**params[i])` creates a valid test instance.
             `create_test_instance` uses the first (or only) dictionary in `params`.
         """
-        from sklearn.ensemble import RandomForestClassifier
-
-        if parameter_set == "results_comparison":
-            return {
-                "estimator": RandomForestClassifier(n_estimators=5),
-                "n_shapelet_samples": 50,
-                "max_shapelets": 10,
-                "batch_size": 10,
-            }
-        else:
-            return {
-                "estimator": RotationForest(n_estimators=2),
-                "n_shapelet_samples": 10,
-                "max_shapelets": 3,
-                "batch_size": 5,
-                "save_transformed_data": True,
-            }
+        return {
+            "estimator": RotationForestRegressor(n_estimators=2),
+            "n_shapelet_samples": 10,
+            "max_shapelets": 3,
+            "batch_size": 5,
+            "save_transformed_data": True,
+        }

@@ -3,8 +3,8 @@ from itertools import product
 
 import numpy as np
 from sklearn.utils.validation import check_random_state
-from sktime.classification.dictionary_based._boss import boss_distance
-from sktime.transformations.panel.dictionary_based import SFAFast
+from aeon.classification.dictionary_based._boss import boss_distance
+from aeon.transformations.collection.dictionary_based import SFAFast
 
 
 class DictionarySplitter:

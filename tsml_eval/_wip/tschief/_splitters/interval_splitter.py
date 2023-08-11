@@ -2,7 +2,7 @@
 import numpy as np
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.utils.validation import check_random_state
-from sktime.classification.interval_based._rise import (
+from aeon.classification.interval_based._rise import (
     _round_to_nearest_power_of_two,
     acf,
     ps,

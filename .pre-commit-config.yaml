@@ -4,13 +4,20 @@ repos:
     hooks:
     - id: check-added-large-files
       args: ["--maxkb=10000"]
+    - id: check-ast
     - id: check-case-conflict
+    - id: check-docstring-first
     - id: check-merge-conflict
     - id: check-symlinks
+    - id: check-toml
     - id: check-yaml
     - id: debug-statements
     - id: end-of-file-fixer
+    - id: fix-byte-order-marker
     - id: fix-encoding-pragma
+      args: ["--remove"]
+    - id: name-tests-test
+      args: ["--pytest-test-first"]
     - id: requirements-txt-fixer
     - id: trailing-whitespace
 
@@ -20,12 +27,14 @@ repos:
       - id: isort
         name: isort (python)
         args: [ "--profile=black", "--multi-line=3" ]
+        exclude: ^tsml_eval/_wip/
 
   - repo: https://github.com/psf/black
     rev: 23.1.0
     hooks:
       - id: black
         language_version: python3
+        exclude: ^tsml_eval/_wip/
 
   - repo: https://github.com/pycqa/flake8
     rev: 6.0.0
@@ -51,8 +60,9 @@ repos:
     rev: 6.3.0
     hooks:
       - id: pydocstyle
-        args: ["--convention=numpy", "--match=^((?!_wip).)*$"]
+        args: ["--convention=numpy"]
         additional_dependencies: [ toml, tomli ]
+        exclude: ^tsml_eval/_wip/
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.0.1

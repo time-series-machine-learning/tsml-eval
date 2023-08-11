@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Set classifier function."""
 
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
@@ -20,6 +19,7 @@ deep_learning_classifiers = [
     ["FCNClassifier", "fcnn"],
     ["MLPClassifier", "mlp"],
     ["TapNetClassifier", "tapnet"],
+    ["ResNetClassifier", "resnet"],
     ["IndividualInceptionClassifier", "singleinception"],
     ["InceptionTimeClassifier", "inceptiontime"],
 ]
@@ -33,13 +33,15 @@ dictionary_based_classifiers = [
     "weasel-logistic",
     "MUSE",
     "muse-logistic",
-    ["WEASELDilation", "weasel-dilation"],
-    ["MUSEDilation", "muse-dilation"],
+    ["WEASEL_V2", "weaseldilation", "weasel-dilation", "weasel-d"],
+    ["MUSEDilation", "muse-dilation", "muse-d"],
 ]
 distance_based_classifiers = [
     ["KNeighborsTimeSeriesClassifier", "dtw", "1nn-dtw"],
     ["ed", "1nn-euclidean", "1nn-ed"],
     ["msm", "1nn-msm"],
+    ["twe", "1nn-twe"],
+    "1nn-dtw-cv",
     "1-condensed-1nn-msm",
     "1-condensed-1nn-dtw",
     "1-condensed-1nn-twe",
@@ -63,7 +65,7 @@ feature_based_classifiers = [
     ["SummaryClassifier", "summary"],
     "catch22-500",
     ["Catch22Classifier", "catch22"],
-    "FreshPRINCE",
+    ["FreshPRINCEClassifier", "freshprince"],
     "tsfresh-nofs",
     ["TSFreshClassifier", "tsfresh"],
     ["SignatureClassifier", "signatures"],
@@ -71,9 +73,11 @@ feature_based_classifiers = [
 hybrid_classifiers = [
     ["HIVECOTEV1", "hc1"],
     ["HIVECOTEV2", "hc2"],
+    ["TsChief", "ts-chief"],
 ]
 interval_based_classifiers = [
-    ["RSTSF", "r-stsf"],
+    "rstsf-500",
+    ["RSTSFClassifier", "rstsf", "r-stsf"],
     "rise-500",
     ["RandomIntervalSpectralEnsemble", "rise"],
     "tsf-500",
@@ -98,8 +102,8 @@ shapelet_based_classifiers = [
     ["ShapeletTransformClassifier", "stc"],
     "RDST",
     ["RDSTEnsemble", "rdst-ensemble"],
-    ["RandomShapeletForest", "rsf"],
-    "MrSQM",
+    ["RandomShapeletForestClassifier", "randomshapeletforest", "rsf"],
+    ["MrSQMClassifier", "mrsqm"],
 ]
 vector_classifiers = [
     ["RotationForestClassifier", "rotationforest", "rotf"],
@@ -250,13 +254,13 @@ def _set_classifier_convolution_based(
     elif c == "hydra":
         from tsml_eval.estimators.classification.convolution_based.hydra import HYDRA
 
-        return HYDRA(random_state=random_state, **kwargs)
+        return HYDRA(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "hydramultirocket" or c == "hydra-multirocket":
         from tsml_eval.estimators.classification.convolution_based.hydra import (
             HydraMultiRocket,
         )
 
-        return HydraMultiRocket(random_state=random_state, **kwargs)
+        return HydraMultiRocket(random_state=random_state, n_jobs=n_jobs, **kwargs)
 
 
 def _set_classifier_deep_learning(
@@ -278,6 +282,10 @@ def _set_classifier_deep_learning(
         from aeon.classification.deep_learning.tapnet import TapNetClassifier
 
         return TapNetClassifier(random_state=random_state, **kwargs)
+    elif c == "resnetclassifier" or c == "resnet":
+        from aeon.classification.deep_learning.resnet import ResNetClassifier
+
+        return ResNetClassifier(random_state=random_state, **kwargs)
     elif c == "individualinceptionclassifier" or c == "singleinception":
         from aeon.classification.deep_learning.inception_time import (
             IndividualInceptionClassifier,
@@ -362,13 +370,16 @@ def _set_classifier_dictionary_based(
             support_probabilities=True,
             **kwargs,
         )
-    elif c == "weaseldilation" or c == "weasel-dilation":
-        from tsml_eval.estimators.classification.dictionary_based.weasel import (
-            WEASELDilation,
-        )
+    elif (
+        c == "weasel_v2"
+        or c == "weaseldilation"
+        or c == "weasel-dilation"
+        or c == "weasel-d"
+    ):
+        from aeon.classification.dictionary_based import WEASEL_V2
 
-        return WEASELDilation(random_state=random_state, n_jobs=n_jobs, **kwargs)
-    elif c == "musedilation" or c == "muse-dilation":
+        return WEASEL_V2(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "musedilation" or c == "muse-dilation" or c == "muse-d":
         from tsml_eval.estimators.classification.dictionary_based.muse import (
             MUSEDilation,
         )
@@ -380,11 +391,9 @@ def _set_classifier_distance_based(
     c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
     if c == "kneighborstimeseriesclassifier" or c == "dtw" or c == "1nn-dtw":
-        from tsml_eval.estimators.classification.distance_based import (
-            KNeighborsTimeSeriesClassifier,
-        )
+        from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
 
-        return KNeighborsTimeSeriesClassifier(n_jobs=n_jobs, **kwargs)
+        return KNeighborsTimeSeriesClassifier(distance="dtw", n_jobs=n_jobs, **kwargs)
     elif c == "ed" or c == "1nn-euclidean" or c == "1nn-ed":
         from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
 
@@ -395,6 +404,10 @@ def _set_classifier_distance_based(
         from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
 
         return KNeighborsTimeSeriesClassifier(distance="msm", n_jobs=n_jobs, **kwargs)
+    elif c == "twe" or c == "1nn-twe":
+        from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
+
+        return KNeighborsTimeSeriesClassifier(distance="twe", n_jobs=n_jobs, **kwargs)
     elif c == "1-condensed-1nn-dtw":
         from tsml_eval._wip.condensing.wrapper import WrapperBA
 
@@ -581,6 +594,17 @@ def _set_classifier_distance_based(
         return MatrixProfileClassifier(
             random_state=random_state, n_jobs=n_jobs, **kwargs
         )
+    elif c == "1nn-dtw-cv":
+        from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
+        from sklearn.model_selection import GridSearchCV
+
+        param_grid = {"distance_params": [{"window": x / 100} for x in range(0, 100)]}
+        return GridSearchCV(
+            estimator=KNeighborsTimeSeriesClassifier(),
+            param_grid=param_grid,
+            scoring="accuracy",
+            **kwargs,
+        )
 
 
 def _set_classifier_feature_based(
@@ -614,10 +638,10 @@ def _set_classifier_feature_based(
         from aeon.classification.feature_based import Catch22Classifier
 
         return Catch22Classifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
-    elif c == "freshprince":
-        from tsml_eval.estimators.classification._fresh_prince import FreshPRINCE
+    elif c == "freshprinceclassifier" or c == "freshprince":
+        from aeon.classification.feature_based import FreshPRINCEClassifier
 
-        return FreshPRINCE(random_state=random_state, n_jobs=n_jobs)
+        return FreshPRINCEClassifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "tsfresh-nofs":
         from aeon.classification.feature_based import TSFreshClassifier
 
@@ -641,7 +665,7 @@ def _set_classifier_hybrid(
     c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
     if c == "hivecotev1" or c == "hc1":
-        from tsml_eval.estimators.classification._hivecote_v1 import HIVECOTEV1
+        from aeon.classification.hybrid import HIVECOTEV1
 
         return HIVECOTEV1(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "hivecotev2" or c == "hc2":
@@ -653,15 +677,25 @@ def _set_classifier_hybrid(
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
+    elif c == "tschief" or c == "ts-chief":
+        from tsml_eval._wip.tschief.tschief import TsChief
+
+        return TsChief(random_state=random_state, **kwargs)
 
 
 def _set_classifier_interval_based(
     c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
-    if c == "rstsf" or c == "r-stsf":
-        from tsml_eval.estimators.classification.interval_based.rstsf import RSTSF
+    if c == "rstsf-500":
+        from tsml.interval_based import RSTSFClassifier
 
-        return RSTSF(random_state=random_state, n_estimators=500, **kwargs)
+        return RSTSFClassifier(
+            n_estimators=500, random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
+    elif c == "rstsfclassifier" or c == "rstsf" or c == "r-stsf":
+        from tsml.interval_based import RSTSFClassifier
+
+        return RSTSFClassifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "rise-500":
         from aeon.classification.interval_based import RandomIntervalSpectralEnsemble
 
@@ -695,7 +729,9 @@ def _set_classifier_interval_based(
     elif c == "canonicalintervalforest" or c == "cif":
         from aeon.classification.interval_based import CanonicalIntervalForest
 
-        return CanonicalIntervalForest(random_state=random_state, n_jobs=n_jobs)
+        return CanonicalIntervalForest(
+            random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
     elif c == "stsf-500":
         from aeon.classification.interval_based import SupervisedTimeSeriesForest
 
@@ -814,18 +850,20 @@ def _set_classifier_shapelet_based(
         from tsml_eval.estimators.classification.shapelet_based.rdst import RDSTEnsemble
 
         return RDSTEnsemble(random_state=random_state, **kwargs)
-    elif c == "randomshapeletforest" or c == "rsf":
-        from tsml_eval.estimators.classification.shapelet_based.rsf import (
-            RandomShapeletForest,
-        )
+    elif (
+        c == "randomshapeletforestclassifier"
+        or c == "randomshapeletforest"
+        or c == "rsf"
+    ):
+        from tsml.shapelet_based import RandomShapeletForestClassifier
 
-        return RandomShapeletForest(random_state=random_state, **kwargs)
-    elif c == "mrsqm":
-        from tsml_eval.estimators.classification.shapelet_based.mrsqm_wrapper import (
-            MrSQM,
+        return RandomShapeletForestClassifier(
+            random_state=random_state, n_jobs=n_jobs, **kwargs
         )
+    elif c == "mrsqmclassifier" or c == "mrsqm":
+        from aeon.classification.shapelet_based import MrSQMClassifier
 
-        return MrSQM(random_state=random_state, **kwargs)
+        return MrSQMClassifier(random_state=random_state, **kwargs)
 
 
 def _set_classifier_vector(

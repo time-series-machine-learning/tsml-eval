@@ -4,14 +4,12 @@
 __author__ = ["James-Large", "TonyBagnall", "MatthewMiddlehurst"]
 
 import numpy as np
+from aeon.regression.base import BaseRegressor
+from aeon.utils.validation._dependencies import _check_dl_dependencies
 from sklearn.utils import check_random_state
-from sktime.regression.base import BaseRegressor
-from sktime.regression.deep_learning.base import BaseDeepRegressor
-from sktime.utils.validation._dependencies import _check_dl_dependencies
 
+from tsml_eval.estimators.networks.base_regressor import BaseDeepRegressor
 from tsml_eval.estimators.networks.inception_time import InceptionTimeNetwork
-
-_check_dl_dependencies(severity="warning")
 
 
 class InceptionTimeRegressor(BaseRegressor):
