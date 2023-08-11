@@ -4,7 +4,7 @@ from aeon.distances import get_distance_function
 from aeon.transformations.collection.base import BaseCollectionTransformer
 
 
-class Drop1Condenser(BaseCollectionTransformer):
+class Drop3Condenser(BaseCollectionTransformer):
     """
     Class for the simple_rank condensing approach.
 
@@ -51,7 +51,7 @@ class Drop1Condenser(BaseCollectionTransformer):
 
         self.selected_indices = []
 
-        super(Drop1Condenser, self).__init__()
+        super(Drop3Condenser, self).__init__()
 
     def _fit(self, X, y):
         n_classes = len(np.unique(y))
@@ -74,10 +74,12 @@ class Drop1Condenser(BaseCollectionTransformer):
         self
         """
         n_samples = X.shape[0]
+        id_instances = []
 
         associates = [[] for _ in range(n_samples)]
         kneighbors = [[] for _ in range(n_samples)]
         weights = [[] for _ in range(n_samples)]
+        distance_nearest_enemy = []
         distances = np.zeros((n_samples, n_samples))
 
         # Getting the kneighbors and the associates of the instance.
@@ -87,18 +89,42 @@ class Drop1Condenser(BaseCollectionTransformer):
                 distances[p2, p] = distances[p, p2]
 
         for p in range(n_samples):
-            weights[p], kneighbors[p] = zip(
-                *sorted(zip(distances[p], range(n_samples)))
+            weights[p], kneighbors[p], y_ordered = zip(
+                *sorted(zip(distances[p], range(n_samples), y))
             )
-
             # todo: maybe removing first element as is itself?
             weights[p], kneighbors[p] = weights[p][1:], kneighbors[p][1:]
 
             for j in kneighbors[p][: self.num_instances]:
                 associates[j].append(p)
 
-        # Predicting with/without rule for each instance p in the set.
+        # compute knn for each instance.
         for p in range(n_samples):
+            y_pred = self._predict_KNN(
+                kneighbors[p],
+                weights[p],
+                y,
+                self.num_instances,
+            )
+
+            if y_pred == y[p]:
+                id_instances.append(p)
+        print(id_instances)
+        print(y[id_instances])
+        print(len(id_instances) == n_samples, len(id_instances), "of", n_samples)
+
+        for p in id_instances:
+            # Drop2 order instances by their distance to the nearest enemy.
+            for kdx, _ in enumerate(kneighbors[p]):
+                if y_ordered[kdx] != y[p]:
+                    # todo: maybe removing first element as is itself? if so, k-1
+                    distance_nearest_enemy.append(weights[p][kdx])
+                    break
+
+        _, n_samples_ordered = zip(*sorted(zip(distance_nearest_enemy, id_instances)))
+
+        # Predicting with/without rule for each instance p in the set.
+        for p in n_samples_ordered:
             without_P = 0
             with_P = 0
 
@@ -134,9 +160,6 @@ class Drop1Condenser(BaseCollectionTransformer):
                     for j in kneighbors[a][: self.num_instances]:
                         if a not in associates[j]:
                             associates[j].append(a)
-
-                for k in kneighbors[p]:
-                    associates[k] = [a for a in associates[k] if a != p]
 
         print(self.selected_indices)
         return X[self.selected_indices], y[self.selected_indices]

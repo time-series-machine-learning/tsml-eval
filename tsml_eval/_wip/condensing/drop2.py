@@ -92,13 +92,16 @@ class Drop2Condenser(BaseCollectionTransformer):
                 *sorted(zip(distances[p], range(n_samples), y))
             )
 
+            # todo: maybe removing first element as is itself?
+            weights[p], kneighbors[p] = weights[p][1:], kneighbors[p][1:]
+
             for j in kneighbors[p][: self.num_instances]:
                 associates[j].append(p)
 
             # Drop2 order instances by their distance to the nearest enemy.
-            for k in kneighbors[p]:
-                if y_ordered[k] != y[p]:
-                    distance_nearest_enemy.append(weights[p][k])
+            for kdx, _ in enumerate(kneighbors[p]):
+                if y_ordered[kdx] != y[p]:
+                    distance_nearest_enemy.append(weights[p][kdx])
                     break
 
         _, n_samples_ordered = zip(
@@ -158,5 +161,4 @@ class Drop2Condenser(BaseCollectionTransformer):
         for id, w in zip(neighbors, weights):
             predicted_class = y_[id]
             scores[predicted_class] += 1 / (w + np.finfo(float).eps)
-        # print(f"{neighbors=}\n{weights=}\n{classes_[np.argmax(scores)]=}")
         return classes_[np.argmax(scores)]
