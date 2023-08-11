@@ -31,14 +31,13 @@ class CondenserClassifier(BaseClassifier):
         classifier=None,
         num_instances=1,
     ):
-        if condenser is None or classifier is None:
-            self.distance = distance
+        self.distance = distance
 
-            self.distance_params = distance_params
-            if self.distance_params is None:
-                self.distance_params = {}
+        self.distance_params = distance_params
+        if self.distance_params is None:
+            self.distance_params = {}
 
-            self.num_instances = num_instances
+        self.num_instances = num_instances
 
         self.condenser = condenser
         if self.condenser is None:
