@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
 import numpy as np
 from aeon.distances import get_distance_function
 from aeon.transformations.collection.base import BaseCollectionTransformer
 
-from tsml_eval.estimators.classification.distance_based import (
+from aeon.classification.distance_based import (
     KNeighborsTimeSeriesClassifier,
 )
 
@@ -43,14 +42,14 @@ class SimpleRankCondenser(BaseCollectionTransformer):
         self,
         distance="dtw",
         distance_params=None,
-        num_instances_per_class=1,
+        num_instances=1,
     ):
         self.distance = distance
         self.distance_params = distance_params
         if self.distance_params is None:
             self.distance_params = {}
 
-        self.num_instances_per_class = num_instances_per_class
+        self.num_instances = num_instances
 
         if isinstance(self.distance, str):
             self.metric_ = get_distance_function(metric=self.distance)
@@ -59,14 +58,17 @@ class SimpleRankCondenser(BaseCollectionTransformer):
 
         super(SimpleRankCondenser, self).__init__()
 
+    def _fit(self, X, y):
+        # As SR do not separate prototypes per class, the number should be multiplied by
+        # the number of instances per class of other methods.
+        num_classes = len(np.unique(y))
+        self.num_instances = self.num_instances * num_classes
+
     def _transform(self, X, y):
         n_samples = X.shape[0]
         rank = np.zeros(n_samples)
         distance = np.zeros(n_samples)
         num_classes = len(np.unique(y))
-        # As SR do not separate prototypes per class, the number should be multiplied by
-        # the number of instances per class of other methods.
-        self.num_instances_per_class = self.num_instances_per_class * num_classes
 
         for i in range(n_samples):
             X_train = np.delete(X, i, axis=0)
@@ -104,11 +106,12 @@ class SimpleRankCondenser(BaseCollectionTransformer):
             )
         order = sorted(zip(rank, -np.array(distance), range(n_samples)))[::-1]
 
-        self.selected_indices = [x[2] for x in order][: self.num_instances_per_class]
+        self.selected_indices = [x[2] for x in order][: self.num_instances]
 
         condensed_X, condensed_y = X[self.selected_indices], y[self.selected_indices]
 
         return condensed_X, condensed_y
 
     def _fit_transform(self, X, y):
+        self._fit(X, y)
         return self._transform(X, y)

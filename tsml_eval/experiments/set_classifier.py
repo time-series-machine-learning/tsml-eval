@@ -53,6 +53,7 @@ distance_based_classifiers = [
     "3-condensed-1nn-twe",
     "SimpleRankCondenser",
     "kMeansCondenser",
+    "kMedoidsCondenser",
     "Drop1Condenser",
     "Drop2Condenser",
     "Drop3Condenser",
@@ -484,17 +485,14 @@ def _set_classifier_distance_based(
             condenser=SimpleRankCondenser(
                 distance="dtw",
                 distance_params={"window": 0.2},
-                num_instances_per_class=5,
+                num_instances=5,
             ),
-            distance="dtw",
-            distance_params={"window": 0.2},
             classifier=KNeighborsTimeSeriesClassifier(
                 distance="dtw",
                 weights="distance",
                 distance_params={"window": 0.2},
                 n_neighbors=1,
             ),
-            num_instances_per_class=1,
             **kwargs,
         )
     elif c == "kmeanscondenser":
@@ -509,15 +507,33 @@ def _set_classifier_distance_based(
                 distance_params={"window": 0.2},
                 num_instances_per_class=1,
             ),
-            distance="dtw",
-            distance_params={"window": 0.2},
             classifier=KNeighborsTimeSeriesClassifier(
                 distance="dtw",
                 weights="distance",
                 distance_params={"window": 0.2},
                 n_neighbors=1,
             ),
-            num_instances_per_class=1,
+            **kwargs,
+        )
+    elif c == "kmedoidscondenser":
+        from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
+
+        from tsml_eval._wip.condensing.condensing_classifier import CondenserClassifier
+        from tsml_eval._wip.condensing.kMedoids import kMedoidsCondenser
+
+        return CondenserClassifier(
+            condenser=kMedoidsCondenser(
+                distance="dtw",
+                distance_params={"window": 0.2},
+                num_instances_per_class=1,
+                random_state=random_state,
+            ),
+            classifier=KNeighborsTimeSeriesClassifier(
+                distance="dtw",
+                weights="distance",
+                distance_params={"window": 0.2},
+                n_neighbors=1,
+            ),
             **kwargs,
         )
     elif c == "drop1condenser":

@@ -1,9 +1,9 @@
 import numpy as np
-from aeon.clustering.k_means import TimeSeriesKMeans
+from aeon.clustering.k_medoids import TimeSeriesKMedoids
 from aeon.transformations.collection.base import BaseCollectionTransformer
 
 
-class kMeansCondenser(BaseCollectionTransformer):
+class kMedoidsCondenser(BaseCollectionTransformer):
     """
     Classifier wrapper for its use with any condensing approach.
 
@@ -46,23 +46,21 @@ class kMeansCondenser(BaseCollectionTransformer):
 
         self.random_state = random_state
 
-        super(kMeansCondenser, self).__init__()
+        super(kMedoidsCondenser, self).__init__()
 
     def _fit(self, X, y):
         self.num_instances_per_class = self.num_instances_per_class * len(np.unique(y))
-        self.clusterer = TimeSeriesKMeans(
+        self.clusterer = TimeSeriesKMedoids(
             n_clusters=self.num_instances_per_class,
-            metric=self.distance,
+            distance=self.distance,
             distance_params=self.distance_params,
-            averaging_method="ba",
-            average_params=self.distance_params,
+            method="pam",
             random_state=self.random_state,
         )
 
     def _transform(self, X, y):
         for i in np.unique(y):
             idxs_class = np.where(y == i)
-
             self.clusterer.fit(X[idxs_class])
             averaged_series_class_i = self.clusterer.cluster_centers_
 
