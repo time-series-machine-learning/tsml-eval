@@ -96,14 +96,15 @@ include = ["tsml_eval"]
 
 [tool.check-manifest]
 ignore = [
-    "_uea_experiments/**",
-    "examples/**",
-    "results/**",
-    "docs/**",
-    "requirements.txt",
-    "*.yaml",
-    "*.yml",
-    ".coveragerc",
+    # Ignore virtual environments in local builds
+    "venv/**",
+    # Ignore local files
+    "local/**",
+    # Ignore the docs symlinks and its contents
+    "docs/examples",
+    "docs/examples/**",
+    "docs/publications",
+    "docs/publications/**",
 ]
 
 [tool.flake8]
