@@ -15,7 +15,6 @@ include README.md
 recursive-exclude .github *
 recursive-exclude _build_tools *
 recursive-exclude _uea_experiments *
-
 exclude .codecov.yml
 exclude .gitattributes
 exclude .gitignore
