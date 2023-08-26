@@ -23,4 +23,4 @@ exclude .pre-commit-config.yaml
 exclude .readthedocs.yml
 
 # these are in _wip currently, may want to remove in the future
-#recursive-include tsml_eval *.csv *.ipynb *.sh *.txt
+recursive-include tsml_eval/_wip *.csv *.ipynb *.sh *.txt
