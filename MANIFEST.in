@@ -3,7 +3,7 @@ recursive-include examples *
 recursive-include results *
 recursive-include tsml_eval *.py
 recursive-include tsml_eval/datasets *.ts
-recursive-exclude tsml_eval/publications *.csv
+recursive-exclude tsml_eval/publications *.csv *.txt *.ipynb
 recursive-exclude tsml_eval/utils *.csv
 include tsml_eval/publications/2023
 include .coveragerc
