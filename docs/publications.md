@@ -1,8 +1,11 @@
 # Publications
 
-A page for publications which use `tsml-eval`.
+A page for publications which use `tsml-eval` and contain results and notebooks within
+the package.
 
 ## 2023
+
+[A Review and Evaluation of Elastic Distance Functions for Time Series Clustering](./publications/2023/distance_based_clustering/distance_based_clustering.ipynb)
 
 [Unsupervised Feature Based Algorithms for Time Series Extrinsic Regression](./publications/2023/tser_archive_expansion/tser_archive_expansion.ipynb)
 

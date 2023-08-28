@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Utility functions for experiments."""
 
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
@@ -16,11 +15,14 @@ __all__ = [
     "assign_gpu",
 ]
 
+import argparse
 import os
 
 import gpustat
 import numpy as np
 from sklearn.utils import check_random_state
+
+import tsml_eval
 
 
 def resample_data(X_train, y_train, X_test, y_test, random_state=None):
@@ -923,3 +925,120 @@ def assign_gpu():
         for gpu in stats
     ]
     return min(pairs, key=lambda x: x[1])[0]
+
+
+def parse_args(args):
+    parser = argparse.ArgumentParser(prog="tsml_eval")
+    parser.add_argument(
+        "data_path", help="The path to the directory storing dataset files."
+    )
+    parser.add_argument(
+        "results_path",
+        help="The path to the directory where results files are written to.",
+    )
+    parser.add_argument(
+        "estimator_name",
+        help="The name of the estimator to run. See the set_{task}.py file for each "
+        "task learning task for available options.",
+    )
+    parser.add_argument(
+        "dataset_name",
+        help="The name of the dataset to load. "
+        "{data_dir}/{dataset_name}/{dataset_name}_TRAIN.ts and "
+        "{data_dir}/{dataset_name}/{dataset_name}_TEST.ts will be loaded.",
+    )
+    parser.add_argument(
+        "resample_id",
+        type=int,
+        help="The resample ID to use when randomly resampling the data, as a random "
+        "seed for estimators and the suffix when writing results files. An ID of "
+        "0 will use the default TRAIN/TEST split.",
+    )
+    parser.add_argument(
+        "-ow",
+        "--overwrite",
+        action="store_false",
+        help="Overwrite existing results files. If False, existing results files "
+        "will be skipped (default: %(default)s).",
+    )
+    parser.add_argument(
+        "-pr",
+        "--predefined_resample",
+        action="store_false",
+        help="Load a dataset file with a predefined resample. The dataset file must "
+        "follow the naming format '{dataset_name}_{resample_id}.ts' "
+        "(default: %(default)s).",
+    )
+    parser.add_argument(
+        "-rs",
+        "--random_seed",
+        type=int,
+        help="Use a different random seed than the resample ID. If None use the "
+        "{resample_id} (default: %(default)s).",
+    )
+    parser.add_argument(
+        "-nj",
+        "--n_jobs",
+        type=int,
+        default=1,
+        help="The number of jobs to run in parallel. Only used if the experiments file "
+        "and selected estimator allows threading (default: %(default)s).",
+    )
+    parser.add_argument(
+        "-tr",
+        "--train_fold",
+        action="store_false",
+        help="Write a results file for the training data in the classification and "
+        "regression task (default: %(default)s).",
+    )
+    parser.add_argument(
+        "-te",
+        "--test_fold",
+        action="store_false",
+        help="Write a results file for the test data in the clustering task "
+        "(default: %(default)s).",
+    )
+    parser.add_argument(
+        "-fc",
+        "--fit_contract",
+        type=int,
+        help="A time limit for estimator fit in minutes. Only used if the estimator "
+        "can contract fit (default: %(default)s).",
+    )
+    parser.add_argument(
+        "-ch",
+        "--checkpoint",
+        action="store_false",
+        help="Save the estimator fit to file periodically while building. Only used if "
+        "the estimator can checkpoint (default: %(default)s).",
+    )
+    parser.add_argument(
+        "-rn",
+        "--row_normalise",
+        action="store_false",
+        help="Normalise the data rows prior to fitting and predicting. "
+        "(default: %(default)s).",
+    )
+    parser.add_argument(
+        "-nc",
+        "--n_clusters",
+        type=int,
+        help="The number of clusters to find for clusterers which have an {n_clusters} "
+        "parameter. If {-1}, use the number of classes in the dataset "
+        "(default: %(default)s).",
+    )
+    parser.add_argument(
+        "-kw",
+        "--kwargs",
+        "--kwarg",
+        action="append",
+        nargs=2,
+        metavar=("KEY", "VALUE"),
+        help="Additional keyword arguments to pass to the estimator. i.e. "
+        "{--kwargs n_estimators 200} to change the size of an ensemble. Can be "
+        "used multiple times (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--version", action="version", version=f"%(prog)s {tsml_eval.__version__}"
+    )
+    return parser.parse_args(args=args)

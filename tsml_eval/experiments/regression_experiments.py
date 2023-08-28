@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Regression Experiments: code for experiments as an alternative to orchestration.
 
 This file is configured for runs of the main method with command line arguments, or for
@@ -16,21 +15,29 @@ os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
 import sys
 
 import numba
+from aeon.utils.validation._dependencies import _check_soft_dependencies
 
 from tsml_eval.experiments import load_and_run_regression_experiment
 from tsml_eval.experiments.set_regressor import set_regressor
-from tsml_eval.utils.experiments import _results_present, assign_gpu
+from tsml_eval.utils.experiments import _results_present, assign_gpu, parse_args
 
 
-def run_experiment(args, overwrite=False):
+def run_experiment(args):
     """Mechanism for testing regressors on the UCR data format.
 
     This mirrors the mechanism used in the Java based tsml. Results generated using the
     method are in the same format as tsml and can be directly compared to the results
     generated in Java.
+
+    Attempts to avoid the use of threading as much as possible.
     """
     numba.set_num_threads(1)
+    if _check_soft_dependencies("torch", severity="none"):
+        import torch
 
+        torch.set_num_threads(1)
+
+    # if multiple GPUs are available, assign the one with lease usage to the process
     if os.environ.get("CUDA_VISIBLE_DEVICES") is None:
         try:
             gpu = assign_gpu()
@@ -43,82 +50,73 @@ def run_experiment(args, overwrite=False):
     # cluster run (with args), this is fragile
     if args is not None and args.__len__() > 1:
         print("Input args = ", args)
-        data_dir = args[1]
-        results_dir = args[2]
-        regressor_name = args[3]
-        dataset = args[4]
-        resample = int(args[5])
-
-        if len(args) > 6:
-            train_fold = args[6].lower() == "true"
-        else:
-            train_fold = False
-
-        if len(args) > 7:
-            predefined_resample = args[7].lower() == "true"
-        else:
-            predefined_resample = False
-
-        if len(args) > 8:
-            checkpoint = f"{args[8]}{regressor_name}/{dataset}/{resample}"
-        else:
-            checkpoint = None
+        args = parse_args(args)
 
         # this is also checked in load_and_run, but doing a quick check here so can
         # print a message and make sure data is not loaded
-        if not overwrite and _results_present(
-            results_dir,
-            regressor_name,
-            dataset,
-            resample_id=resample,
-            split="BOTH" if train_fold else "TEST",
+        if not args.overwrite and _results_present(
+            args.results_path,
+            args.estimator_name,
+            args.dataset_name,
+            resample_id=args.resample_id,
+            split="BOTH" if args.train_fold else "TEST",
         ):
             print("Ignoring, results already present")
         else:
             load_and_run_regression_experiment(
-                data_dir,
-                results_dir,
-                dataset,
+                args.data_path,
+                args.results_path,
+                args.dataset_name,
                 set_regressor(
-                    regressor_name,
-                    random_state=resample,
-                    build_train_file=train_fold,
-                    checkpoint=checkpoint,
+                    args.estimator_name,
+                    random_state=args.resample_id
+                    if args.random_seed is None
+                    else args.random_seed,
+                    build_train_file=args.train_fold,
+                    fit_contract=args.fit_contract,
+                    checkpoint=args.checkpoint,
+                    kwargs=args.kwargs,
                 ),
-                resample_id=resample,
-                regressor_name=regressor_name,
-                overwrite=overwrite,
-                build_train_file=train_fold,
-                predefined_resample=predefined_resample,
+                resample_id=args.resample_id,
+                regressor_name=args.estimator_name,
+                overwrite=args.overwrite,
+                build_train_file=args.train_fold,
+                predefined_resample=args.predefined_resample,
             )
     # local run (no args)
     else:
         # These are example parameters, change as required for local runs
         # Do not include paths to your local directories here in PRs
         # If threading is required, see the threaded version of this file
-        data_dir = "../"
-        results_dir = "../"
-        regressor_name = "LR"
-        dataset = "Covid3Month"
-        resample = 0
-        checkpoint = None
-        train_fold = False
+        data_path = "../"
+        results_path = "../"
+        estimator_name = "LR"
+        dataset_name = "Covid3Month"
+        resample_id = 0
+        overwrite = False
         predefined_resample = False
+        train_fold = False
+        fit_contract = None
+        checkpoint = None
+        kwargs = None
+
         regressor = set_regressor(
-            regressor_name,
-            random_state=resample,
+            estimator_name,
+            random_state=resample_id,
             build_train_file=train_fold,
+            fit_contract=fit_contract,
             checkpoint=checkpoint,
+            kwargs=kwargs,
         )
-        print(f"Local Run of {regressor_name} ({regressor.__class__.__name__}).")
+        print(f"Local Run of {estimator_name} ({regressor.__class__.__name__}).")
 
         load_and_run_regression_experiment(
-            data_dir,
-            results_dir,
-            dataset,
+            data_path,
+            results_path,
+            dataset_name,
             regressor,
-            resample_id=resample,
-            regressor_name=regressor_name,
+            resample_id=resample_id,
+            regressor_name=estimator_name,
             overwrite=overwrite,
             build_train_file=train_fold,
             predefined_resample=predefined_resample,

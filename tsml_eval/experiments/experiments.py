@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Functions to perform machine learning/data mining experiments.
 
 Results are saved a standardised format used by tsml.
@@ -29,6 +28,7 @@ from tsml_eval.estimators import (
     SklearnToTsmlClusterer,
     SklearnToTsmlRegressor,
 )
+from tsml_eval.estimators.transformations.scaler import TimeSeriesScaler
 from tsml_eval.evaluation.metrics import clustering_accuracy
 from tsml_eval.utils.experiments import (
     resample_data,
@@ -46,6 +46,7 @@ def run_classification_experiment(
     y_test,
     classifier,
     results_path,
+    row_normalise=False,
     classifier_name=None,
     dataset_name="N/A",
     resample_id=None,
@@ -72,6 +73,9 @@ def run_classification_experiment(
         Classifier to be used in the experiment.
     results_path : str
         Location of where to write results. Any required directories will be created.
+    row_normalise : bool, default=False
+        Whether to normalise the data rows (time series) prior to fitting and
+        predicting.
     classifier_name : str or None, default=None
         Name of classifier used in writing results. If None, the name is taken from
         the classifier.
@@ -118,6 +122,11 @@ def run_classification_experiment(
 
     if classifier_name is None:
         classifier_name = type(classifier).__name__
+
+    if row_normalise:
+        scaler = TimeSeriesScaler()
+        X_train = scaler.transform(X_train)
+        X_test = scaler.transform(X_test)
 
     le = preprocessing.LabelEncoder()
     y_train = le.fit_transform(y_train)
@@ -216,10 +225,11 @@ def load_and_run_classification_experiment(
     results_path,
     dataset,
     classifier,
-    resample_id=0,
+    row_normalise=False,
     classifier_name=None,
-    overwrite=False,
+    resample_id=0,
     build_train_file=False,
+    overwrite=False,
     predefined_resample=False,
 ):
     """Load a dataset and run a classification experiment.
@@ -239,19 +249,22 @@ def load_and_run_classification_experiment(
         same for "_TEST.ts".
     classifier : BaseClassifier
         Classifier to be used in the experiment.
+    row_normalise : bool, default=False
+        Whether to normalise the data rows (time series) prior to fitting and
+        predicting.
     classifier_name : str or None, default=None
         Name of classifier used in writing results. If None, the name is taken from
         the classifier.
     resample_id : int, default=0
         Seed for resampling. If set to 0, the default train/test split from file is
         used. Also used in output file name.
-    overwrite : bool, default=False
-        If set to False, this will only build results if there is not a result file
-        already present. If True, it will overwrite anything already there.
     build_train_file : bool, default=False
         Whether to generate train files or not. If true, it performs a 10-fold
         cross-validation on the train data and saves. If the classifier can produce its
         own estimates, those are used instead.
+    overwrite : bool, default=False
+        If set to False, this will only build results if there is not a result file
+        already present. If True, it will overwrite anything already there.
     predefined_resample : bool, default=False
         Read a predefined resample from file instead of performing a resample. If True
         the file format must include the resample_id at the end of the dataset name i.e.
@@ -287,6 +300,7 @@ def load_and_run_classification_experiment(
         y_test,
         classifier,
         results_path,
+        row_normalise=row_normalise,
         classifier_name=classifier_name,
         dataset_name=dataset,
         resample_id=resample_id,
@@ -302,6 +316,7 @@ def run_regression_experiment(
     y_test,
     regressor,
     results_path,
+    row_normalise=False,
     regressor_name=None,
     dataset_name="",
     resample_id=None,
@@ -328,6 +343,9 @@ def run_regression_experiment(
         Regressor to be used in the experiment.
     results_path : str
         Location of where to write results. Any required directories will be created.
+    row_normalise : bool, default=False
+        Whether to normalise the data rows (time series) prior to fitting and
+        predicting.
     regressor_name : str or None, default=None
         Name of regressor used in writing results. If None, the name is taken from
         the regressor.
@@ -374,6 +392,11 @@ def run_regression_experiment(
 
     if regressor_name is None:
         regressor_name = type(regressor).__name__
+
+    if row_normalise:
+        scaler = TimeSeriesScaler()
+        X_train = scaler.transform(X_train)
+        X_test = scaler.transform(X_test)
 
     regressor_train_preds = build_train_file and callable(
         getattr(regressor, "_get_train_preds", None)
@@ -455,10 +478,11 @@ def load_and_run_regression_experiment(
     results_path,
     dataset,
     regressor,
-    resample_id=0,
+    row_normalise=False,
     regressor_name=None,
-    overwrite=False,
+    resample_id=0,
     build_train_file=False,
+    overwrite=False,
     predefined_resample=False,
 ):
     """Load a dataset and run a regression experiment.
@@ -478,19 +502,22 @@ def load_and_run_regression_experiment(
         same for "_TEST.ts".
     regressor : BaseRegressor
         Regressor to be used in the experiment.
+    row_normalise : bool, default=False
+        Whether to normalise the data rows (time series) prior to fitting and
+        predicting.
     regressor_name : str or None, default=None
         Name of regressor used in writing results. If None, the name is taken from
         the regressor.
     resample_id : int, default=0
         Seed for resampling. If set to 0, the default train/test split from file is
         used. Also used in output file name.
-    overwrite : bool, default=False
-        If set to False, this will only build results if there is not a result file
-        already present. If True, it will overwrite anything already there.
     build_train_file : bool, default=False
         Whether to generate train files or not. If true, it performs a 10-fold
         cross-validation on the train data and saves. If the regressor can produce its
         own estimates, those are used instead.
+    overwrite : bool, default=False
+        If set to False, this will only build results if there is not a result file
+        already present. If True, it will overwrite anything already there.
     predefined_resample : bool, default=False
         Read a predefined resample from file instead of performing a resample. If True
         the file format must include the resample_id at the end of the dataset name i.e.
@@ -530,6 +557,7 @@ def load_and_run_regression_experiment(
         y_test,
         regressor,
         results_path,
+        row_normalise=row_normalise,
         regressor_name=regressor_name,
         dataset_name=dataset,
         resample_id=resample_id,
@@ -545,6 +573,8 @@ def run_clustering_experiment(
     results_path,
     X_test=None,
     y_test=None,
+    row_normalise=False,
+    n_clusters=None,
     clusterer_name=None,
     dataset_name="N/A",
     resample_id=None,
@@ -571,6 +601,13 @@ def run_clustering_experiment(
         The data used to test the fitted clusterer.
     y_test : np.array, default=None
         Testing data class labels.
+    row_normalise : bool, default=False
+        Whether to normalise the data rows (time series) prior to fitting and
+        predicting.
+    n_clusters : int or None, default=None
+        Number of clusters to use if the clusterer has an `n_clusters` parameter.
+        If None, the clusterers default is used. If -1, the number of classes in the
+        dataset is used.
     clusterer_name : str or None, default=None
         Name of clusterer used in writing results. If None, the name is taken from
         the clusterer.
@@ -617,13 +654,37 @@ def run_clustering_experiment(
     if clusterer_name is None:
         clusterer_name = type(clusterer).__name__
 
+    if build_test_file and (X_test is None or y_test is None):
+        raise Exception("Test data and labels not provided, cannot build test file.")
+
+    if row_normalise:
+        scaler = TimeSeriesScaler()
+        X_train = scaler.transform(X_train)
+        if build_test_file:
+            X_test = scaler.transform(X_test)
+
     le = preprocessing.LabelEncoder()
     y_train = le.fit_transform(y_train)
-    if y_test is not None:
+    if build_test_file:
         y_test = le.transform(y_test)
 
     encoder_dict = {label: i for i, label in enumerate(le.classes_)}
     n_classes = len(np.unique(y_train))
+
+    if isinstance(n_clusters, int):
+        try:
+            if n_clusters == -1:
+                n_clusters = n_classes
+
+            clusterer.set_params(n_clusters=n_clusters)
+        except ValueError:
+            warnings.warn(
+                f"{clusterer_name} does not have a n_clusters parameter, "
+                "so it cannot be set.",
+                stacklevel=1,
+            )
+    elif n_clusters is not None:
+        raise ValueError("n_clusters must be an int or None.")
 
     start = int(round(time.time() * 1000))
     clusterer.fit(X_train)
@@ -675,9 +736,6 @@ def run_clustering_experiment(
         )
 
     if build_test_file:
-        if X_test is None or y_test is None:
-            raise Exception("Test data not provided, cannot build test file.")
-
         start = int(round(time.time() * 1000))
         if callable(getattr(clusterer, "predict_proba", None)):
             test_probs = clusterer.predict_proba(X_test)
@@ -716,10 +774,12 @@ def load_and_run_clustering_experiment(
     results_path,
     dataset,
     clusterer,
-    resample_id=0,
+    row_normalise=False,
+    n_clusters=None,
     clusterer_name=None,
-    overwrite=False,
+    resample_id=0,
     build_test_file=False,
+    overwrite=False,
     predefined_resample=False,
 ):
     """Load a dataset and run a clustering experiment.
@@ -739,18 +799,25 @@ def load_and_run_clustering_experiment(
         same for "_TEST.ts".
     clusterer : BaseClusterer
         Clusterer to be used in the experiment.
-    resample_id : int, default=0
-        Seed for resampling. If set to 0, the default train/test split from file is
-        used. Also used in output file name.
+    row_normalise : bool, default=False
+        Whether to normalise the data rows (time series) prior to fitting and
+        predicting.
+    n_clusters : int or None, default=None
+        Number of clusters to use if the clusterer has an `n_clusters` parameter.
+        If None, the clusterers default is used. If -1, the number of classes in the
+        dataset is used.
     clusterer_name : str or None, default=None
         Name of clusterer used in writing results. If None, the name is taken from
         the clusterer.
-    overwrite : bool, default=False
-        If set to False, this will only build results if there is not a result file
-        already present. If True, it will overwrite anything already there.
+    resample_id : int, default=0
+        Seed for resampling. If set to 0, the default train/test split from file is
+        used. Also used in output file name.
     build_test_file : bool, default=False
         Whether to generate test files or not. If true, the clusterer will assign
         clusters to the loaded test data.
+    overwrite : bool, default=False
+        If set to False, this will only build results if there is not a result file
+        already present. If True, it will overwrite anything already there.
     predefined_resample : bool, default=False
         Read a predefined resample from file instead of performing a resample. If True
         the file format must include the resample_id at the end of the dataset name i.e.
@@ -786,6 +853,8 @@ def load_and_run_clustering_experiment(
         results_path,
         X_test=X_test,
         y_test=y_test,
+        row_normalise=row_normalise,
+        n_clusters=n_clusters,
         clusterer_name=clusterer_name,
         dataset_name=dataset,
         resample_id=resample_id,
