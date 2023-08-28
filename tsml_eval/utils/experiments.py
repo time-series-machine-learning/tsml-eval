@@ -13,6 +13,7 @@ __all__ = [
     "fix_broken_second_line",
     "compare_result_file_resample",
     "assign_gpu",
+    "parse_args",
 ]
 
 import argparse
@@ -928,6 +929,20 @@ def assign_gpu():
 
 
 def parse_args(args):
+    """Parse the command line arguments for tsml_eval.
+
+    todo: -h output
+
+    Parameters
+    ----------
+    args : list
+        List of command line arguments to parse.
+
+    Returns
+    -------
+    same_resample : todo
+        The parsed command line arguments.
+    """
     parser = argparse.ArgumentParser(prog="tsml_eval")
     parser.add_argument(
         "data_path", help="The path to the directory storing dataset files."
