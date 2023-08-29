@@ -20,6 +20,7 @@ from aeon.utils.validation._dependencies import _check_soft_dependencies
 from tsml_eval.experiments import load_and_run_classification_experiment
 from tsml_eval.experiments.set_classifier import set_classifier
 from tsml_eval.utils.experiments import _results_present, assign_gpu, parse_args
+from tsml_eval.utils.functions import pair_list_to_dict
 
 
 def run_experiment(args):
@@ -55,7 +56,7 @@ def run_experiment(args):
         # this is also checked in load_and_run, but doing a quick check here so can
         # print a message and make sure data is not loaded
         if not args.overwrite and _results_present(
-            args.results_dir,
+            args.results_path,
             args.estimator_name,
             args.dataset_name,
             resample_id=args.resample_id,
@@ -64,18 +65,19 @@ def run_experiment(args):
             print("Ignoring, results already present")
         else:
             load_and_run_classification_experiment(
-                args.data_dir,
-                args.results_dir,
+                args.data_path,
+                args.results_path,
                 args.dataset_name,
                 set_classifier(
                     args.estimator_name,
                     random_state=args.resample_id
                     if args.random_seed is None
                     else args.random_seed,
+                    n_jobs=1,
                     build_train_file=args.train_fold,
                     fit_contract=args.fit_contract,
                     checkpoint=args.checkpoint,
-                    kwargs=args.kwargs,
+                    **pair_list_to_dict(args.kwargs),
                 ),
                 resample_id=args.resample_id,
                 classifier_name=args.estimator_name,
@@ -98,15 +100,16 @@ def run_experiment(args):
         train_fold = False
         fit_contract = None
         checkpoint = None
-        kwargs = None
+        kwargs = {}
 
         classifier = set_classifier(
             estimator_name,
             random_state=resample_id,
+            n_jobs=1,
             build_train_file=train_fold,
             fit_contract=fit_contract,
             checkpoint=checkpoint,
-            kwargs=kwargs,
+            **kwargs,
         )
         print(f"Local Run of {estimator_name} ({classifier.__class__.__name__}).")
 

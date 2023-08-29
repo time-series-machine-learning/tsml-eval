@@ -931,7 +931,67 @@ def assign_gpu():
 def parse_args(args):
     """Parse the command line arguments for tsml_eval.
 
-    todo: -h output
+    The following is the --help output for tsml_eval:
+
+    usage: tsml_eval [-h] [-ow] [-pr] [-rs RANDOM_SEED] [-nj N_JOBS] [-tr] [-te]
+                 [-fc FIT_CONTRACT] [-ch] [-rn] [-nc N_CLUSTERS]
+                 [-kw KEY VALUE] [--version]
+                 data_path results_path estimator_name dataset_name
+                 resample_id
+
+    positional arguments:
+      data_path             The path to the directory storing dataset files.
+      results_path          The path to the directory where results files are
+                            written to.
+      estimator_name        The name of the estimator to run. See the
+                            set_{task}.py file for each task learning task for
+                            available options.
+      dataset_name          The name of the dataset to load.
+                            {data_dir}/{dataset_name}/{dataset_name}_TRAIN.ts and
+                            {data_dir}/{dataset_name}/{dataset_name}_TEST.ts will
+                            be loaded.
+      resample_id           The resample ID to use when randomly resampling the
+                            data, as a random seed for estimators and the suffix
+                            when writing results files. An ID of 0 will use the
+                            default TRAIN/TEST split.
+
+    options:
+      -h, --help            show this help message and exit
+      -ow, --overwrite      Overwrite existing results files. If False, existing
+                            results files will be skipped (default: False).
+      -pr, --predefined_resample
+                            Load a dataset file with a predefined resample. The
+                            dataset file must follow the naming format
+                            '{dataset_name}_{resample_id}.ts' (default: False).
+      -rs RANDOM_SEED, --random_seed RANDOM_SEED
+                            Use a different random seed than the resample ID. If
+                            None use the {resample_id} (default: None).
+      -nj N_JOBS, --n_jobs N_JOBS
+                            The number of jobs to run in parallel. Only used if
+                            the experiments file and selected estimator allows
+                            threading (default: 1).
+      -tr, --train_fold     Write a results file for the training data in the
+                            classification and regression task (default: False).
+      -te, --test_fold      Write a results file for the test data in the
+                            clustering task (default: False).
+      -fc FIT_CONTRACT, --fit_contract FIT_CONTRACT
+                            A time limit for estimator fit in minutes. Only used
+                            if the estimator can contract fit (default: None).
+      -ch, --checkpoint     Save the estimator fit to file periodically while
+                            building. Only used if the estimator can checkpoint
+                            (default: False).
+      -rn, --row_normalise  Normalise the data rows prior to fitting and
+                            predicting. (default: False).
+      -nc N_CLUSTERS, --n_clusters N_CLUSTERS
+                            The number of clusters to find for clusterers which
+                            have an {n_clusters} parameter. If {-1}, use the
+                            number of classes in the dataset (default: None).
+      -kw KEY VALUE, --kwargs KEY VALUE, --kwarg KEY VALUE
+                            Additional keyword arguments to pass to the estimator.
+                            i.e. {--kwargs n_estimators 200} to change the size of
+                            an ensemble. Can be used multiple times (default:
+                            None).
+      --version             show program's version number and exit
 
     Parameters
     ----------
@@ -940,7 +1000,7 @@ def parse_args(args):
 
     Returns
     -------
-    same_resample : todo
+    same_resample : argparse.Namespace
         The parsed command line arguments.
     """
     parser = argparse.ArgumentParser(prog="tsml_eval")
@@ -972,14 +1032,14 @@ def parse_args(args):
     parser.add_argument(
         "-ow",
         "--overwrite",
-        action="store_false",
+        action="store_true",
         help="Overwrite existing results files. If False, existing results files "
         "will be skipped (default: %(default)s).",
     )
     parser.add_argument(
         "-pr",
         "--predefined_resample",
-        action="store_false",
+        action="store_true",
         help="Load a dataset file with a predefined resample. The dataset file must "
         "follow the naming format '{dataset_name}_{resample_id}.ts' "
         "(default: %(default)s).",
@@ -1002,14 +1062,14 @@ def parse_args(args):
     parser.add_argument(
         "-tr",
         "--train_fold",
-        action="store_false",
+        action="store_true",
         help="Write a results file for the training data in the classification and "
         "regression task (default: %(default)s).",
     )
     parser.add_argument(
         "-te",
         "--test_fold",
-        action="store_false",
+        action="store_true",
         help="Write a results file for the test data in the clustering task "
         "(default: %(default)s).",
     )
@@ -1023,14 +1083,14 @@ def parse_args(args):
     parser.add_argument(
         "-ch",
         "--checkpoint",
-        action="store_false",
+        action="store_true",
         help="Save the estimator fit to file periodically while building. Only used if "
         "the estimator can checkpoint (default: %(default)s).",
     )
     parser.add_argument(
         "-rn",
         "--row_normalise",
-        action="store_false",
+        action="store_true",
         help="Normalise the data rows prior to fitting and predicting. "
         "(default: %(default)s).",
     )

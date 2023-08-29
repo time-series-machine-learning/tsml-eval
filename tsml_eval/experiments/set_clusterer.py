@@ -6,25 +6,25 @@ from tsml_eval.utils.functions import str_in_nested_list
 
 distance_based_clusterers = [
     ["TimeSeriesKMeans", "kmeans-dtw", "k-means-dtw"],
+    ["kmeans-ddtw", "k-means-ddtw"],
     ["kmeans-ed", "k-means-ed"],
     ["kmeans-edr", "k-means-edr"],
     ["kmeans-erp", "k-means-erp"],
     ["kmeans-lcss", "k-means-lcss"],
     ["kmeans-msm", "k-means-msm"],
     ["kmeans-twe", "k-means-twe"],
-    ["kmeans-wddtw", "k-means-wddtw"],
     ["kmeans-wdtw", "k-means-wdtw"],
-    ["kmeans-ddtw", "k-means-ddtw"],
+    ["kmeans-wddtw", "k-means-wddtw"],
     ["TimeSeriesKMedoids", "kmedoids-dtw", "k-medoids-dtw"],
+    ["kmedoids-ddtw", "k-medoids-ddtw"],
     ["kmedoids-ed", "k-medoids-ed"],
     ["kmedoids-edr", "k-medoids-edr"],
     ["kmedoids-erp", "k-medoids-erp"],
     ["kmedoids-lcss", "k-medoids-lcss"],
     ["kmedoids-msm", "k-medoids-msm"],
     ["kmedoids-twe", "k-medoids-twe"],
-    ["kmedoids-wddtw", "k-medoids-wddtw"],
     ["kmedoids-wdtw", "k-medoids-wdtw"],
-    ["kmedoids-ddtw", "k-medoids-ddtw"],
+    ["kmedoids-wddtw", "k-medoids-wddtw"],
 ]
 other_clusterers = [
     ["DummyClusterer", "dummy", "dummyclusterer-tsml"],
@@ -89,6 +89,15 @@ def set_clusterer(
 def _set_clusterer_distance_based(
     c, random_state, n_jobs, fit_contract, checkpoint, kwargs
 ):
+    ["kmeans-ed", "k-means-ed"],
+    ["kmeans-edr", "k-means-edr"],
+    ["kmeans-erp", "k-means-erp"],
+    ["kmeans-lcss", "k-means-lcss"],
+    ["kmeans-msm", "k-means-msm"],
+    ["kmeans-twe", "k-means-twe"],
+    ["kmeans-wddtw", "k-means-wddtw"],
+    ["kmeans-wdtw", "k-means-wdtw"],
+    ["kmeans-ddtw", "k-means-ddtw"],
     if c == "timeserieskmeans" or c == "kmeans-dtw" or c == "k-means-dtw":
         from aeon.clustering.k_means import TimeSeriesKMeans
 
@@ -121,6 +130,10 @@ def _set_clusterer_distance_based(
         from aeon.clustering.k_means import TimeSeriesKMeans
 
         return TimeSeriesKMeans(metric="twe", random_state=random_state, **kwargs)
+    elif c == "kmeans-wdtw" or c == "k-means-wdtw":
+        from aeon.clustering.k_means import TimeSeriesKMeans
+
+        return TimeSeriesKMeans(metric="wdtw", random_state=random_state, **kwargs)
     elif c == "kmeans-wddtw" or c == "k-means-wddtw":
         from aeon.clustering.k_means import TimeSeriesKMeans
 
@@ -159,6 +172,10 @@ def _set_clusterer_distance_based(
         from aeon.clustering.k_medoids import TimeSeriesKMedoids
 
         return TimeSeriesKMedoids(metric="twe", random_state=random_state, **kwargs)
+    elif c == "kmedoids-wdtw" or c == "k-medoids-wdtw":
+        from aeon.clustering.k_medoids import TimeSeriesKMedoids
+
+        return TimeSeriesKMedoids(metric="wdtw", random_state=random_state, **kwargs)
     elif c == "kmedoids-wddtw" or c == "k-medoids-wddtw":
         from aeon.clustering.k_medoids import TimeSeriesKMedoids
 
