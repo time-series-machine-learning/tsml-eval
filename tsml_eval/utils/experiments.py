@@ -976,7 +976,7 @@ def parse_args(args):
                             clustering task (default: False).
       -fc FIT_CONTRACT, --fit_contract FIT_CONTRACT
                             A time limit for estimator fit in minutes. Only used
-                            if the estimator can contract fit (default: None).
+                            if the estimator can contract fit (default: 0).
       -ch, --checkpoint     Save the estimator fit to file periodically while
                             building. Only used if the estimator can checkpoint
                             (default: False).
@@ -1077,6 +1077,7 @@ def parse_args(args):
         "-fc",
         "--fit_contract",
         type=int,
+        default=0,
         help="A time limit for estimator fit in minutes. Only used if the estimator "
         "can contract fit (default: %(default)s).",
     )

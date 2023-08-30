@@ -60,7 +60,7 @@ def run_experiment(args):
             args.estimator_name,
             args.dataset_name,
             resample_id=args.resample_id,
-            split="BOTH" if args.train_fold else "TEST",
+            split="BOTH" if args.test_fold else "TRAIN",
         ):
             print("Ignoring, results already present")
         else:
