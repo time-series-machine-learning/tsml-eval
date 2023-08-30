@@ -58,7 +58,7 @@ class TimeSeriesScaler(BaseCollectionTransformer):
 
     Examples
     --------
-    >>> from aeon.transformations.collection import TimeSeriesScaler
+    >>> from tsml_eval.estimators.transformations.scaler import TimeSeriesScaler
     >>> series = np.array([[[0, 0, 0], [0, 0, 0]], [[1, 1, 1], [1, 1, 1]]])
     >>> scaler = TimeSeriesScaler()
     >>> print(scaler.fit(series))
