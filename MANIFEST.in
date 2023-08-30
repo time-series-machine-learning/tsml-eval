@@ -1,6 +1,24 @@
+recursive-include docs *
+recursive-include examples *
+recursive-include results *
 recursive-include tsml_eval *.py
 recursive-include tsml_eval/datasets *.ts
+recursive-exclude tsml_eval/publications *.csv *.txt *.ipynb
+recursive-exclude tsml_eval/utils *.csv
+include .coveragerc
 include LICENSE
+include MANIFEST.in
+include pyproject.toml
+include README.md
+
+recursive-exclude .github *
+recursive-exclude _build_tools *
+recursive-exclude _uea_experiments *
+exclude .codecov.yml
+exclude .gitattributes
+exclude .gitignore
+exclude .pre-commit-config.yaml
+exclude .readthedocs.yml
 
 # these are in _wip currently, may want to remove in the future
-recursive-include tsml_eval *.csv *.ipynb *.sh *.txt
+recursive-include tsml_eval/_wip *.csv *.ipynb *.sh *.txt
