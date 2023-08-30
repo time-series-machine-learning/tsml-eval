@@ -20,7 +20,7 @@ class kMeansCondenser(BaseCollectionTransformer):
 
     _tags = {
         "univariate-only": True,
-        "fit_is_empty": False,
+        "fit_is_empty": True,
         "X_inner_mtype": ["np-list", "numpy3D"],
         "requires_y": True,
         "y_inner_mtype": ["numpy1D"],
@@ -41,15 +41,11 @@ class kMeansCondenser(BaseCollectionTransformer):
 
         self.num_instances_per_class = num_instances_per_class
 
-        self.selected_series = []
+        self.selected_series = np.array([])
         self.y_selected_series = []
 
         self.random_state = random_state
 
-        super(kMeansCondenser, self).__init__()
-
-    def _fit(self, X, y):
-        self.num_instances_per_class = self.num_instances_per_class * len(np.unique(y))
         self.clusterer = TimeSeriesKMeans(
             n_clusters=self.num_instances_per_class,
             metric=self.distance,
@@ -59,21 +55,24 @@ class kMeansCondenser(BaseCollectionTransformer):
             random_state=self.random_state,
         )
 
+        super(kMeansCondenser, self).__init__()
+
     def _transform(self, X, y):
+        self.selected_series = self.selected_series.reshape(0, *X.shape[1:])
+
         for i in np.unique(y):
             idxs_class = np.where(y == i)
 
             self.clusterer.fit(X[idxs_class])
             averaged_series_class_i = self.clusterer.cluster_centers_
 
-            if len(averaged_series_class_i.shape) == 3:
-                averaged_series_class_i = np.squeeze(averaged_series_class_i, axis=1)
+            self.selected_series = np.concatenate(
+                (self.selected_series, averaged_series_class_i), axis=0
+            )
 
-            self.selected_series.append(averaged_series_class_i)
-            self.y_selected_series.append(i)
+            self.y_selected_series.extend([i] * self.num_instances_per_class)
 
         return np.array(self.selected_series), np.array(self.y_selected_series)
 
     def _fit_transform(self, X, y):
-        self._fit(X, y)
         return self._transform(X, y)

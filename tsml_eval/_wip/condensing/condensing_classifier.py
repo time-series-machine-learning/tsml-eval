@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from aeon.classification.base import BaseClassifier
 
 
@@ -30,6 +29,7 @@ class CondenserClassifier(BaseClassifier):
         distance_params=None,
         classifier=None,
         num_instances=1,
+        random_state=None,
     ):
         self.distance = distance
 
@@ -39,6 +39,8 @@ class CondenserClassifier(BaseClassifier):
 
         self.num_instances = num_instances
 
+        self.random_state = random_state
+
         self.condenser = condenser
         if self.condenser is None:
             from tsml_eval._wip.condensing.kMeans import kMeansCondenser
@@ -47,6 +49,7 @@ class CondenserClassifier(BaseClassifier):
                 distance=self.distance,
                 distance_params=self.distance_params,
                 num_instances=self.num_instances,
+                random_state=self.random_state,
             )
 
         self.classifier = classifier
