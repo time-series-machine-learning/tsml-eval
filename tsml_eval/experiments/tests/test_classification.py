@@ -40,6 +40,7 @@ def test_run_classification_experiment(classifier, dataset):
         dataset,
         "0",
         "-tr",
+        "-ow",
     ]
 
     # aeon estimators don't support unequal length series lists currently

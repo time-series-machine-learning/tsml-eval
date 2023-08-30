@@ -1005,27 +1005,30 @@ def parse_args(args):
     """
     parser = argparse.ArgumentParser(prog="tsml_eval")
     parser.add_argument(
-        "data_path", help="The path to the directory storing dataset files."
+        "--version", action="version", version=f"%(prog)s {tsml_eval.__version__}"
+    )
+    parser.add_argument(
+        "data_path", help="the path to the directory storing dataset files."
     )
     parser.add_argument(
         "results_path",
-        help="The path to the directory where results files are written to.",
+        help="the path to the directory where results files are written to.",
     )
     parser.add_argument(
         "estimator_name",
-        help="The name of the estimator to run. See the set_{task}.py file for each "
+        help="the name of the estimator to run. See the set_{task}.py file for each "
         "task learning task for available options.",
     )
     parser.add_argument(
         "dataset_name",
-        help="The name of the dataset to load. "
+        help="the name of the dataset to load. "
         "{data_dir}/{dataset_name}/{dataset_name}_TRAIN.ts and "
         "{data_dir}/{dataset_name}/{dataset_name}_TEST.ts will be loaded.",
     )
     parser.add_argument(
         "resample_id",
         type=int,
-        help="The resample ID to use when randomly resampling the data, as a random "
+        help="the resample ID to use when randomly resampling the data, as a random "
         "seed for estimators and the suffix when writing results files. An ID of "
         "0 will use the default TRAIN/TEST split.",
     )
@@ -1033,14 +1036,14 @@ def parse_args(args):
         "-ow",
         "--overwrite",
         action="store_true",
-        help="Overwrite existing results files. If False, existing results files "
+        help="overwrite existing results files. If False, existing results files "
         "will be skipped (default: %(default)s).",
     )
     parser.add_argument(
         "-pr",
         "--predefined_resample",
         action="store_true",
-        help="Load a dataset file with a predefined resample. The dataset file must "
+        help="load a dataset file with a predefined resample. The dataset file must "
         "follow the naming format '{dataset_name}_{resample_id}.ts' "
         "(default: %(default)s).",
     )
@@ -1048,7 +1051,7 @@ def parse_args(args):
         "-rs",
         "--random_seed",
         type=int,
-        help="Use a different random seed than the resample ID. If None use the "
+        help="use a different random seed than the resample ID. If None use the "
         "{resample_id} (default: %(default)s).",
     )
     parser.add_argument(
@@ -1056,21 +1059,21 @@ def parse_args(args):
         "--n_jobs",
         type=int,
         default=1,
-        help="The number of jobs to run in parallel. Only used if the experiments file "
+        help="the number of jobs to run in parallel. Only used if the experiments file "
         "and selected estimator allows threading (default: %(default)s).",
     )
     parser.add_argument(
         "-tr",
         "--train_fold",
         action="store_true",
-        help="Write a results file for the training data in the classification and "
+        help="write a results file for the training data in the classification and "
         "regression task (default: %(default)s).",
     )
     parser.add_argument(
         "-te",
         "--test_fold",
         action="store_true",
-        help="Write a results file for the test data in the clustering task "
+        help="write a results file for the test data in the clustering task "
         "(default: %(default)s).",
     )
     parser.add_argument(
@@ -1078,28 +1081,28 @@ def parse_args(args):
         "--fit_contract",
         type=int,
         default=0,
-        help="A time limit for estimator fit in minutes. Only used if the estimator "
+        help="a time limit for estimator fit in minutes. Only used if the estimator "
         "can contract fit (default: %(default)s).",
     )
     parser.add_argument(
         "-ch",
         "--checkpoint",
         action="store_true",
-        help="Save the estimator fit to file periodically while building. Only used if "
+        help="save the estimator fit to file periodically while building. Only used if "
         "the estimator can checkpoint (default: %(default)s).",
     )
     parser.add_argument(
         "-rn",
         "--row_normalise",
         action="store_true",
-        help="Normalise the data rows prior to fitting and predicting. "
+        help="normalise the data rows prior to fitting and predicting. "
         "(default: %(default)s).",
     )
     parser.add_argument(
         "-nc",
         "--n_clusters",
         type=int,
-        help="The number of clusters to find for clusterers which have an {n_clusters} "
+        help="the number of clusters to find for clusterers which have an {n_clusters} "
         "parameter. If {-1}, use the number of classes in the dataset "
         "(default: %(default)s).",
     )
@@ -1108,13 +1111,27 @@ def parse_args(args):
         "--kwargs",
         "--kwarg",
         action="append",
-        nargs=2,
-        metavar=("KEY", "VALUE"),
-        help="Additional keyword arguments to pass to the estimator. i.e. "
-        "{--kwargs n_estimators 200} to change the size of an ensemble. Can be "
-        "used multiple times (default: %(default)s).",
+        nargs=3,
+        metavar=("KEY", "VALUE", "TYPE"),
+        help="additional keyword arguments to pass to the estimator. Should contain "
+        "the parameter to set, the parameter value, and the type of the value i.e. "
+        "{--kwargs n_estimators 200 int} to change the size of an ensemble. Valid "
+        "types are {int, float, bool, str}. Any other type will be passed as a str."
+        "Can be used multiple times (default: %(default)s).",
     )
-    parser.add_argument(
-        "--version", action="version", version=f"%(prog)s {tsml_eval.__version__}"
-    )
-    return parser.parse_args(args=args)
+    args = parser.parse_args(args=args)
+
+    kwargs = {}
+    if args.kwargs is not None:
+        for kwarg in args.kwargs:
+            if kwarg[2] == "int":
+                kwargs[kwarg[0]] = int(kwarg[1])
+            elif kwarg[2] == "float":
+                kwargs[kwarg[0]] = float(kwarg[1])
+            elif kwarg[2] == "bool":
+                kwargs[kwarg[0]] = kwarg[1].lower() == "true" or kwarg[1] == "1"
+            else:
+                kwargs[kwarg[0]] = kwarg[1]
+    args.kwargs = kwargs
+
+    return args

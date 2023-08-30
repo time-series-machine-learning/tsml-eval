@@ -20,7 +20,6 @@ from aeon.utils.validation._dependencies import _check_soft_dependencies
 from tsml_eval.experiments import load_and_run_classification_experiment
 from tsml_eval.experiments.set_classifier import set_classifier
 from tsml_eval.utils.experiments import _results_present, assign_gpu, parse_args
-from tsml_eval.utils.functions import pair_list_to_dict
 
 
 def run_experiment(args):
@@ -77,7 +76,7 @@ def run_experiment(args):
                     build_train_file=args.train_fold,
                     fit_contract=args.fit_contract,
                     checkpoint=args.checkpoint,
-                    **pair_list_to_dict(args.kwargs),
+                    **args.kwargs,
                 ),
                 resample_id=args.resample_id,
                 classifier_name=args.estimator_name,

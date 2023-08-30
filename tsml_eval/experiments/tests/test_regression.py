@@ -40,6 +40,7 @@ def test_run_regression_experiment(regressor, dataset):
         dataset,
         "0",
         "-tr",
+        "-ow",
     ]
 
     # aeon estimators don't support unequal length series lists currently

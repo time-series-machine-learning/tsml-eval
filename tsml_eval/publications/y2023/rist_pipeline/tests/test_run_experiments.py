@@ -29,15 +29,23 @@ def test_run_rist_pipeline_classification_experiment():
     resample = 0
 
     args = [
-        None,
         data_path,
         result_path,
         classifier,
         dataset,
         resample,
+        "-kw",
+        "n_intervals",
+        "5",
+        "int",
+        "-kw",
+        "n_shapelets",
+        "20",
+        "int",
+        "-ow",
     ]
 
-    _run_classification_experiment(args, overwrite=True)
+    _run_classification_experiment(args)
 
     test_file = f"{result_path}{classifier}/Predictions/{dataset}/testResample0.csv"
     assert os.path.exists(test_file)
@@ -63,15 +71,23 @@ def test_run_rist_pipeline_regression_experiment():
     resample = 0
 
     args = [
-        None,
         data_path,
         result_path,
         regressor,
         dataset,
         resample,
+        "-kw",
+        "n_intervals",
+        "5",
+        "int",
+        "-kw",
+        "n_shapelets",
+        "20",
+        "int",
+        "-ow",
     ]
 
-    _run_regression_experiment(args, overwrite=True)
+    _run_regression_experiment(args)
 
     test_file = f"{result_path}{regressor}/Predictions/{dataset}/testResample0.csv"
     assert os.path.exists(test_file)

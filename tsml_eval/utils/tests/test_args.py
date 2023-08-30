@@ -22,7 +22,7 @@ def test_positional_args():
     assert args.random_seed is None
     assert args.n_jobs == 1
     assert args.train_fold is False
-    assert args.kwargs is None
+    assert args.kwargs == {}
 
 
 @pytest.mark.parametrize(
@@ -56,9 +56,11 @@ def test_kw_args():
         "--kwargs",
         "key1",
         "value1",
+        "str",
         "-kw",
         "key2",
         "value2",
+        "str",
     ]
     args = parse_args(args)
 
@@ -70,10 +72,8 @@ def test_kw_args():
     assert args.random_seed == 10
     assert args.n_jobs == 4
     assert args.train_fold is True
-    assert args.kwargs[0][0] == "key1"
-    assert args.kwargs[0][1] == "value1"
-    assert args.kwargs[1][0] == "key2"
-    assert args.kwargs[1][1] == "value2"
+    assert args.kwargs["key1"] == "value1"
+    assert args.kwargs["key2"] == "value2"
 
 
 @pytest.mark.parametrize(
@@ -82,7 +82,8 @@ def test_kw_args():
         ["D:/data/", "D:/results/", "Est", "Dataset", "1", "-rs"],
         ["D:/data/", "D:/results/", "Est", "Dataset", "1", "-rs", "zero"],
         ["D:/data/", "D:/results/", "Est", "Dataset", "1", "-tr", "True"],
-        ["D:/data/", "D:/results/", "Est", "Dataset", "1", "-kw", "key value"],
+        ["D:/data/", "D:/results/", "Est", "Dataset", "1", "-kw", "key value str"],
+        ["D:/data/", "D:/results/", "Est", "Dataset", "1", "-kw", "key", "value"],
     ],
 )
 @suppress_output()

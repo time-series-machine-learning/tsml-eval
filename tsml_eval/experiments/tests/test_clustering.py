@@ -43,6 +43,7 @@ def test_run_clustering_experiment(clusterer, dataset):
         dataset,
         "0",
         "-te",
+        "-ow",
     ]
 
     # aeon estimators don't support unequal length series lists currently
