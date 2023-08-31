@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tests for clustering experiments."""
 
 __author__ = ["MatthewMiddlehurst"]
@@ -38,17 +37,18 @@ def test_run_clustering_experiment(clusterer, dataset):
     )
 
     args = [
-        None,
         data_path,
         result_path,
         clusterer,
         dataset,
         "0",
+        "-te",
+        "-ow",
     ]
 
     # aeon estimators don't support unequal length series lists currently
     try:
-        run_experiment(args, overwrite=True)
+        run_experiment(args)
     except ValueError as e:
         if "not support unequal length series" in str(e):
             return
