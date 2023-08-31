@@ -37,7 +37,7 @@ def run_experiment(args):
 
         torch.set_num_threads(1)
 
-    # if multiple GPUs are available, assign the one with lease usage to the process
+    # if multiple GPUs are available, assign the one with the least usage to the process
     if os.environ.get("CUDA_VISIBLE_DEVICES") is None:
         try:
             gpu = assign_gpu()
@@ -48,7 +48,7 @@ def run_experiment(args):
             print("Unable to assign GPU to process.")
 
     # cluster run (with args), this is fragile
-    if args is not None and args.__len__() > 1:
+    if args is not None and args.__len__() > 0:
         print("Input args = ", args)
         args = parse_args(args)
 
@@ -78,10 +78,11 @@ def run_experiment(args):
                     checkpoint=args.checkpoint,
                     **args.kwargs,
                 ),
-                resample_id=args.resample_id,
+                row_normalise=args.row_normalise,
                 regressor_name=args.estimator_name,
-                overwrite=args.overwrite,
+                resample_id=args.resample_id,
                 build_train_file=args.train_fold,
+                overwrite=args.overwrite,
                 predefined_resample=args.predefined_resample,
             )
     # local run (no args)
@@ -93,11 +94,12 @@ def run_experiment(args):
         results_path = "../"
         estimator_name = "LR"
         dataset_name = "Covid3Month"
+        row_normalise = False
         resample_id = 0
+        train_fold = False
         overwrite = False
         predefined_resample = False
-        train_fold = False
-        fit_contract = None
+        fit_contract = 0
         checkpoint = None
         kwargs = {}
 
@@ -117,10 +119,11 @@ def run_experiment(args):
             results_path,
             dataset_name,
             regressor,
-            resample_id=resample_id,
+            row_normalise=row_normalise,
             regressor_name=estimator_name,
-            overwrite=overwrite,
+            resample_id=resample_id,
             build_train_file=train_fold,
+            overwrite=overwrite,
             predefined_resample=predefined_resample,
         )
 
@@ -129,4 +132,5 @@ if __name__ == "__main__":
     """
     Example simple usage, with arguments input via script or hard coded for testing.
     """
-    run_experiment(sys.argv)
+    print("Running regression_experiments.py main")
+    run_experiment(sys.argv[1:])

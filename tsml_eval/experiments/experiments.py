@@ -125,8 +125,8 @@ def run_classification_experiment(
 
     if row_normalise:
         scaler = TimeSeriesScaler()
-        X_train = scaler.transform(X_train)
-        X_test = scaler.transform(X_test)
+        X_train = scaler.fit_transform(X_train)
+        X_test = scaler.fit_transform(X_test)
 
     le = preprocessing.LabelEncoder()
     y_train = le.fit_transform(y_train)
@@ -395,8 +395,8 @@ def run_regression_experiment(
 
     if row_normalise:
         scaler = TimeSeriesScaler()
-        X_train = scaler.transform(X_train)
-        X_test = scaler.transform(X_test)
+        X_train = scaler.fit_transform(X_train)
+        X_test = scaler.fit_transform(X_test)
 
     regressor_train_preds = build_train_file and callable(
         getattr(regressor, "_get_train_preds", None)
@@ -608,6 +608,8 @@ def run_clustering_experiment(
         Number of clusters to use if the clusterer has an `n_clusters` parameter.
         If None, the clusterers default is used. If -1, the number of classes in the
         dataset is used.
+
+        This may not work as intended for pipelines currently.
     clusterer_name : str or None, default=None
         Name of clusterer used in writing results. If None, the name is taken from
         the clusterer.
@@ -659,9 +661,9 @@ def run_clustering_experiment(
 
     if row_normalise:
         scaler = TimeSeriesScaler()
-        X_train = scaler.transform(X_train)
+        X_train = scaler.fit_transform(X_train)
         if build_test_file:
-            X_test = scaler.transform(X_test)
+            X_test = scaler.fit_transform(X_test)
 
     le = preprocessing.LabelEncoder()
     y_train = le.fit_transform(y_train)
@@ -676,7 +678,10 @@ def run_clustering_experiment(
             if n_clusters == -1:
                 n_clusters = n_classes
 
-            clusterer.set_params(n_clusters=n_clusters)
+            if isinstance(clusterer, SklearnToTsmlClusterer):
+                clusterer.set_params(clusterer__n_clusters=n_clusters)
+            else:
+                clusterer.set_params(n_clusters=n_clusters)
         except ValueError:
             warnings.warn(
                 f"{clusterer_name} does not have a n_clusters parameter, "
