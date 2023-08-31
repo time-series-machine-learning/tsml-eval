@@ -31,7 +31,7 @@ classifiers = [
 
 
 def _run_classification_experiment(args):
-    if args is None or args.__len__() <= 1:
+    if args is None or args.__len__() < 1:
         data_path = "../"
         results_path = "../"
         classifier_name = "RIST"
@@ -74,8 +74,8 @@ def _run_classification_experiment(args):
                 n_jobs=n_jobs,
                 **kwargs,
             ),
-            resample_id=resample_id,
             classifier_name=classifier_name,
+            resample_id=resample_id,
             overwrite=overwrite,
         )
 
@@ -84,4 +84,5 @@ if __name__ == "__main__":
     """
     Example simple usage, with arguments input via script or hard coded for testing.
     """
-    _run_classification_experiment(sys.argv)
+    print("Running run_classification_experiments.py main")
+    _run_classification_experiment(sys.argv[1:])

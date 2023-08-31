@@ -28,7 +28,7 @@ regressors = [
 
 
 def _run_regression_experiment(args):
-    if args is None or args.__len__() <= 1:
+    if args is None or args.__len__() < 1:
         data_path = "../"
         results_path = "../"
         regressor_name = "RIST"
@@ -71,8 +71,8 @@ def _run_regression_experiment(args):
                 n_jobs=n_jobs,
                 **kwargs,
             ),
-            resample_id=resample_id,
             regressor_name=regressor_name,
+            resample_id=resample_id,
             overwrite=overwrite,
         )
 
@@ -81,4 +81,5 @@ if __name__ == "__main__":
     """
     Example simple usage, with arguments input via script or hard coded for testing.
     """
-    _run_regression_experiment(sys.argv)
+    print("Running run_regression_experiments.py main")
+    _run_regression_experiment(sys.argv[1:])
