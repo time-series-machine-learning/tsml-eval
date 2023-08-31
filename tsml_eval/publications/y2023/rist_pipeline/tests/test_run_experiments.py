@@ -24,7 +24,7 @@ def test_run_rist_pipeline_classification_experiment():
         if os.getcwd().split("\\")[-1] != "tests"
         else "../../../../../test_output/rist_pipeline/"
     )
-    classifier = "RIST"
+    classifier = "ROCKET"
     dataset = "MinimalChinatown"
     resample = 0
 
@@ -34,14 +34,6 @@ def test_run_rist_pipeline_classification_experiment():
         classifier,
         dataset,
         resample,
-        "-kw",
-        "n_intervals",
-        "5",
-        "int",
-        "-kw",
-        "n_shapelets",
-        "20",
-        "int",
         "-ow",
     ]
 
@@ -66,7 +58,7 @@ def test_run_rist_pipeline_regression_experiment():
         if os.getcwd().split("\\")[-1] != "tests"
         else "../../../../../test_output/rist_pipeline/"
     )
-    regressor = "RIST"
+    regressor = "ROCKET"
     dataset = "MinimalGasPrices"
     resample = 0
 
@@ -76,14 +68,6 @@ def test_run_rist_pipeline_regression_experiment():
         regressor,
         dataset,
         resample,
-        "-kw",
-        "n_intervals",
-        "5",
-        "int",
-        "-kw",
-        "n_shapelets",
-        "20",
-        "int",
         "-ow",
     ]
 
