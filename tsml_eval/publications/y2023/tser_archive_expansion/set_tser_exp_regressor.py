@@ -18,8 +18,8 @@ expansion_regressors = [
     [
         "inception",
         "singleinception",
-        "individualinception",
-        "IndividualInceptionTimeRegressor",
+        "IndividualInceptionRegressor",
+        "individualinceptiontime",
     ],
     ["inceptione", "inception-e", "inceptiontime", "InceptionTimeRegressor"],
     ["rf", "randf", "randomforest", "RandomForestRegressor"],
@@ -31,7 +31,7 @@ expansion_regressors = [
     ["RidgeCV", "ridge"],
     ["RotationForestRegressor", "rotf", "rotationforest"],
     ["tsf", "timeseriesforestregressor"],
-    ["DrCIF", "drcifregressor"],
+    ["drcif", "DrCIFRegressor"],
     ["fresh-prince", "freshprince", "FreshPRINCERegressor"],
 ]
 

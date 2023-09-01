@@ -65,15 +65,15 @@ interval_based_classifiers = [
     "rstsf-500",
     ["RSTSFClassifier", "rstsf", "r-stsf"],
     "rise-500",
-    ["RandomIntervalSpectralEnsemble", "rise"],
+    ["RandomIntervalSpectralEnsembleClassifier", "rise"],
     "tsf-500",
     ["TimeSeriesForestClassifier", "tsf"],
     "cif-500",
-    ["CanonicalIntervalForest", "cif"],
+    ["CanonicalIntervalForestClassifier", "cif"],
     "stsf-500",
     ["SupervisedTimeSeriesForest", "stsf"],
     "drcif-500",
-    "DrCIF",
+    ["drcif", "DrCIFClassifier"],
     "summary-intervals",
     ["randomintervals-rf", "catch22-intervals-rf"],
     ["RandomIntervalClassifier", "randomintervals", "catch22-intervals"],
@@ -86,8 +86,7 @@ other_classifiers = [
 shapelet_based_classifiers = [
     "stc-2hour",
     ["ShapeletTransformClassifier", "stc"],
-    "RDST",
-    ["RDSTEnsemble", "rdst-ensemble"],
+    ["RDSTClassifier", "rdst"],
     ["RandomShapeletForestClassifier", "randomshapeletforest", "rsf"],
     ["MrSQMClassifier", "mrsqm"],
 ]
@@ -518,7 +517,7 @@ def _set_classifier_interval_based(
         return RandomIntervalSpectralEnsembleClassifier(
             n_estimators=500, random_state=random_state, n_jobs=n_jobs, **kwargs
         )
-    elif c == "randomintervalspectralensemble" or c == "rise":
+    elif c == "randomintervalspectralensembleclassifier" or c == "rise":
         from aeon.classification.interval_based import (
             RandomIntervalSpectralEnsembleClassifier,
         )
@@ -544,7 +543,7 @@ def _set_classifier_interval_based(
         return CanonicalIntervalForestClassifier(
             n_estimators=500, random_state=random_state, n_jobs=n_jobs, **kwargs
         )
-    elif c == "canonicalintervalforest" or c == "cif":
+    elif c == "canonicalintervalforestclassifier" or c == "cif":
         from aeon.classification.interval_based import CanonicalIntervalForestClassifier
 
         return CanonicalIntervalForestClassifier(
@@ -573,7 +572,7 @@ def _set_classifier_interval_based(
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
-    elif c == "drcif":
+    elif c == "drcif" or c == "drcifclassifier":
         from aeon.classification.interval_based import DrCIFClassifier
 
         return DrCIFClassifier(
@@ -660,7 +659,7 @@ def _set_classifier_shapelet_based(
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
-    elif c == "rdst":
+    elif c == "rdstclassifier" or c == "rdst":
         from aeon.classification.shapelet_based import RDSTClassifier
 
         return RDSTClassifier(random_state=random_state, **kwargs)

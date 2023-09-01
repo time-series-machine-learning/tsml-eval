@@ -9,7 +9,7 @@ from tsml_eval.utils.functions import str_in_nested_list
 rist_regressors = [
     ["inceptione", "inception-e", "inceptiontime", "InceptionTimeRegressor"],
     ["rocket", "RocketRegressor"],
-    ["DrCIF", "drcifregressor"],
+    ["drcif", "DrCIFRegressor"],
     ["fresh-prince", "freshprince", "FreshPRINCERegressor"],
     ["RDSTRegressor", "rdst"],
     ["RISTRegressor", "rist", "rist-extrat"],

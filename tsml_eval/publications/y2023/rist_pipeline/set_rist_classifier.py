@@ -11,7 +11,7 @@ rist_classifiers = [
     ["ShapeletTransformClassifier", "stc", "stc-2hour"],
     ["RDSTClassifier", "rdst"],
     ["RSTSFClassifier", "rstsf", "r-stsf"],
-    "DrCIF",
+    ["drcif", "DrCIFClassifier"],
     ["RocketClassifier", "rocket"],
     ["HIVECOTEV2", "hc2"],
     ["RISTClassifier", "rist", "rist-extrat"],

@@ -15,16 +15,16 @@ bakeoff_classifiers = [
     ["SignatureClassifier", "signatures"],
     # shapelet based
     ["ShapeletTransformClassifier", "stc", "stc-2hour"],
-    "RDST",
+    ["RDSTClassiifer", "rdst"],
     ["RandomShapeletForestClassifier", "randomshapeletforest", "rsf"],
     ["MrSQMClassifier", "mrsqm"],
     # interval based
     ["RSTSFClassifier", "rstsf", "r-stsf"],
-    ["RandomIntervalSpectralEnsemble", "rise"],
+    ["RandomIntervalSpectralEnsembleClassifier", "rise"],
     ["TimeSeriesForestClassifier", "tsf"],
-    ["CanonicalIntervalForest", "cif"],
+    ["CanonicalIntervalForestClassifier", "cif"],
     ["SupervisedTimeSeriesForest", "stsf"],
-    "DrCIF",
+    ["drcif", "DrCIFClassifier"],
     # dictionary based
     ["BOSSEnsemble", "boss"],
     ["ContractableBOSS", "cboss"],
@@ -95,7 +95,7 @@ def _set_bakeoff_classifier(
             random_state=random_state,
             n_jobs=n_jobs,
         )
-    elif c == "rdst":
+    elif c == "rdstclassifier" or c == "rdst":
         from aeon.classification.shapelet_based import RDSTClassifier
 
         return RDSTClassifier(random_state=random_state)
@@ -117,7 +117,7 @@ def _set_bakeoff_classifier(
         return RSTSFClassifier(
             n_estimators=500, random_state=random_state, n_jobs=n_jobs
         )
-    elif c == "randomintervalspectralensemble" or c == "rise":
+    elif c == "randomintervalspectralensembleclassifier" or c == "rise":
         from aeon.classification.interval_based import (
             RandomIntervalSpectralEnsembleClassifier,
         )
@@ -131,7 +131,7 @@ def _set_bakeoff_classifier(
         return TimeSeriesForestClassifier(
             n_estimators=500, random_state=random_state, n_jobs=n_jobs
         )
-    elif c == "canonicalintervalforest" or c == "cif":
+    elif c == "canonicalintervalforestclassifier" or c == "cif":
         from aeon.classification.interval_based import CanonicalIntervalForestClassifier
 
         return CanonicalIntervalForestClassifier(
@@ -143,10 +143,10 @@ def _set_bakeoff_classifier(
         return SupervisedTimeSeriesForest(
             n_estimators=500, random_state=random_state, n_jobs=n_jobs
         )
-    elif c == "drcif":
-        from aeon.classification.interval_based import DrCIF
+    elif c == "drcif" or c == "drcifclassifier":
+        from aeon.classification.interval_based import DrCIFClassifier
 
-        return DrCIF(
+        return DrCIFClassifier(
             n_estimators=500,
             random_state=random_state,
             n_jobs=n_jobs,
