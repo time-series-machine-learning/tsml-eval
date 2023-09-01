@@ -34,7 +34,7 @@ def _set_rist_regressor(
         or r == "inceptiontime"
         or r == "inceptiontimeregressor"
     ):
-        from tsml_eval.estimators.regression.deep_learning import InceptionTimeRegressor
+        from aeon.regression.deep_learning import InceptionTimeRegressor
 
         return InceptionTimeRegressor(random_state=random_state)
     elif r == "rocket" or r == "rocketregressor":
@@ -45,9 +45,9 @@ def _set_rist_regressor(
             n_jobs=n_jobs,
         )
     elif r == "drcif" or r == "drcifregressor":
-        from tsml_eval.estimators.regression.interval_based import DrCIF
+        from aeon.regression.interval_based import DrCIFRegressor
 
-        return DrCIF(
+        return DrCIFRegressor(
             n_estimators=500,
             random_state=random_state,
             n_jobs=n_jobs,

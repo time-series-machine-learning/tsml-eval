@@ -511,15 +511,19 @@ def _set_classifier_interval_based(
 
         return RSTSFClassifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "rise-500":
-        from aeon.classification.interval_based import RandomIntervalSpectralEnsemble
+        from aeon.classification.interval_based import (
+            RandomIntervalSpectralEnsembleClassifier,
+        )
 
-        return RandomIntervalSpectralEnsemble(
+        return RandomIntervalSpectralEnsembleClassifier(
             n_estimators=500, random_state=random_state, n_jobs=n_jobs, **kwargs
         )
     elif c == "randomintervalspectralensemble" or c == "rise":
-        from aeon.classification.interval_based import RandomIntervalSpectralEnsemble
+        from aeon.classification.interval_based import (
+            RandomIntervalSpectralEnsembleClassifier,
+        )
 
-        return RandomIntervalSpectralEnsemble(
+        return RandomIntervalSpectralEnsembleClassifier(
             random_state=random_state, n_jobs=n_jobs, **kwargs
         )
     elif c == "tsf-500":
@@ -535,15 +539,15 @@ def _set_classifier_interval_based(
             random_state=random_state, n_jobs=n_jobs, **kwargs
         )
     elif c == "cif-500":
-        from aeon.classification.interval_based import CanonicalIntervalForest
+        from aeon.classification.interval_based import CanonicalIntervalForestClassifier
 
-        return CanonicalIntervalForest(
+        return CanonicalIntervalForestClassifier(
             n_estimators=500, random_state=random_state, n_jobs=n_jobs, **kwargs
         )
     elif c == "canonicalintervalforest" or c == "cif":
-        from aeon.classification.interval_based import CanonicalIntervalForest
+        from aeon.classification.interval_based import CanonicalIntervalForestClassifier
 
-        return CanonicalIntervalForest(
+        return CanonicalIntervalForestClassifier(
             random_state=random_state, n_jobs=n_jobs, **kwargs
         )
     elif c == "stsf-500":
@@ -559,9 +563,9 @@ def _set_classifier_interval_based(
             random_state=random_state, n_jobs=n_jobs, **kwargs
         )
     elif c == "drcif-500":
-        from aeon.classification.interval_based import DrCIF
+        from aeon.classification.interval_based import DrCIFClassifier
 
-        return DrCIF(
+        return DrCIFClassifier(
             n_estimators=500,
             random_state=random_state,
             save_transformed_data=build_train_file,
@@ -570,9 +574,9 @@ def _set_classifier_interval_based(
             **kwargs,
         )
     elif c == "drcif":
-        from aeon.classification.interval_based import DrCIF
+        from aeon.classification.interval_based import DrCIFClassifier
 
-        return DrCIF(
+        return DrCIFClassifier(
             random_state=random_state,
             save_transformed_data=build_train_file,
             n_jobs=n_jobs,
@@ -585,7 +589,7 @@ def _set_classifier_interval_based(
         from sklearn.ensemble import RandomForestClassifier
 
         return RandomIntervalClassifier(
-            interval_transformers=SummaryTransformer(
+            features=SummaryTransformer(
                 summary_function=("mean", "std", "min", "max"),
                 quantiles=(0.25, 0.5, 0.75),
             ),
@@ -657,13 +661,9 @@ def _set_classifier_shapelet_based(
             **kwargs,
         )
     elif c == "rdst":
-        from tsml_eval.estimators.classification.shapelet_based.rdst import RDST
+        from aeon.classification.shapelet_based import RDSTClassifier
 
-        return RDST(random_state=random_state, **kwargs)
-    elif c == "rdstensemble" or c == "rdst-ensemble":
-        from tsml_eval.estimators.classification.shapelet_based.rdst import RDSTEnsemble
-
-        return RDSTEnsemble(random_state=random_state, **kwargs)
+        return RDSTClassifier(random_state=random_state, **kwargs)
     elif (
         c == "randomshapeletforestclassifier"
         or c == "randomshapeletforest"

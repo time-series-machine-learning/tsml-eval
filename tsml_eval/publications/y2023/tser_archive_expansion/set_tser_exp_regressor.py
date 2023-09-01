@@ -77,7 +77,7 @@ def _set_tser_exp_regressor(
             n_neighbors=5,
         )
     elif r == "fcnn" or r == "fcn" or r == "fcnnregressor" or r == "fcnregressor":
-        from tsml_eval.estimators.regression.deep_learning import FCNRegressor
+        from aeon.regression.deep_learning import FCNRegressor
 
         return FCNRegressor(random_state=random_state)
     elif r == "fpcaregressor" or r == "fpcregressor" or r == "fpcr":
@@ -109,18 +109,16 @@ def _set_tser_exp_regressor(
         or r == "individualinception"
         or r == "individualinceptiontimeregressor"
     ):
-        from tsml_eval.estimators.regression.deep_learning import (
-            IndividualInceptionTimeRegressor,
-        )
+        from aeon.regression.deep_learning import IndividualInceptionRegressor
 
-        return IndividualInceptionTimeRegressor(random_state=random_state)
+        return IndividualInceptionRegressor(random_state=random_state)
     elif (
         r == "inceptione"
         or r == "inception-e"
         or r == "inceptiontime"
         or r == "inceptiontimeregressor"
     ):
-        from tsml_eval.estimators.regression.deep_learning import InceptionTimeRegressor
+        from aeon.regression.deep_learning import InceptionTimeRegressor
 
         return InceptionTimeRegressor(random_state=random_state)
     elif (
@@ -134,7 +132,7 @@ def _set_tser_exp_regressor(
             random_state=random_state,
         )
     elif r == "resnet" or r == "resnetregressor":
-        from tsml_eval.estimators.regression.deep_learning import ResNetRegressor
+        from aeon.regression.deep_learning import ResNetRegressor
 
         return ResNetRegressor(random_state=random_state)
     elif r == "rocket" or r == "rocketregressor":
@@ -162,7 +160,7 @@ def _set_tser_exp_regressor(
             random_state=random_state,
         )
     elif r == "cnn" or r == "cnnregressor":
-        from tsml_eval.estimators.regression.deep_learning import CNNRegressor
+        from aeon.regression.deep_learning import CNNRegressor
 
         return CNNRegressor(random_state=random_state)
     elif r == "ridgecv" or r == "ridge":
@@ -197,9 +195,9 @@ def _set_tser_exp_regressor(
         ]
         return ColumnEnsembleRegressor(estimators)
     elif r == "drcif" or r == "drcifregressor":
-        from tsml_eval.estimators.regression.interval_based import DrCIF
+        from aeon.regression.interval_based import DrCIFRegressor
 
-        return DrCIF(
+        return DrCIFRegressor(
             n_estimators=500,
             random_state=random_state,
             n_jobs=n_jobs,

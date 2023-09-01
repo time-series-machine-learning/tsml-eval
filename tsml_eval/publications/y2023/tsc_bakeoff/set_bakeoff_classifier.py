@@ -76,9 +76,7 @@ def _set_bakeoff_classifier(
             n_jobs=n_jobs,
         )
     elif c == "freshprinceclassifier" or c == "freshprince":
-        from tsml_eval.estimators.classification.feature_based import (
-            FreshPRINCEClassifier,
-        )
+        from aeon.classification.feature_based import FreshPRINCEClassifier
 
         return FreshPRINCEClassifier(random_state=random_state, n_jobs=n_jobs)
     elif c == "tsfreshclassifier" or c == "tsfresh":
@@ -90,9 +88,7 @@ def _set_bakeoff_classifier(
 
         return SignatureClassifier(random_state=random_state)
     elif c == "shapelettransformclassifier" or c == "stc" or c == "stc-2hour":
-        from tsml_eval.estimators.classification.shapelet_based import (
-            ShapeletTransformClassifier,
-        )
+        from aeon.classification.shapelet_based import ShapeletTransformClassifier
 
         return ShapeletTransformClassifier(
             transform_limit_in_minutes=120,
@@ -100,9 +96,9 @@ def _set_bakeoff_classifier(
             n_jobs=n_jobs,
         )
     elif c == "rdst":
-        from tsml_eval.estimators.classification.shapelet_based.rdst import RDST
+        from aeon.classification.shapelet_based import RDSTClassifier
 
-        return RDST(random_state=random_state)
+        return RDSTClassifier(random_state=random_state)
     elif (
         c == "randomshapeletforestclassifier"
         or c == "randomshapeletforest"
@@ -122,9 +118,11 @@ def _set_bakeoff_classifier(
             n_estimators=500, random_state=random_state, n_jobs=n_jobs
         )
     elif c == "randomintervalspectralensemble" or c == "rise":
-        from aeon.classification.interval_based import RandomIntervalSpectralEnsemble
+        from aeon.classification.interval_based import (
+            RandomIntervalSpectralEnsembleClassifier,
+        )
 
-        return RandomIntervalSpectralEnsemble(
+        return RandomIntervalSpectralEnsembleClassifier(
             n_estimators=500, random_state=random_state, n_jobs=n_jobs
         )
     elif c == "timeseriesforestclassifier" or c == "tsf":
@@ -134,9 +132,11 @@ def _set_bakeoff_classifier(
             n_estimators=500, random_state=random_state, n_jobs=n_jobs
         )
     elif c == "canonicalintervalforest" or c == "cif":
-        from aeon.classification.interval_based import CanonicalIntervalForest
+        from aeon.classification.interval_based import CanonicalIntervalForestClassifier
 
-        return CanonicalIntervalForest(random_state=random_state, n_jobs=n_jobs)
+        return CanonicalIntervalForestClassifier(
+            random_state=random_state, n_jobs=n_jobs
+        )
     elif c == "supervisedtimeseriesforest" or c == "stsf":
         from aeon.classification.interval_based import SupervisedTimeSeriesForest
 
@@ -227,23 +227,21 @@ def _set_bakeoff_classifier(
 
         return HydraMultiRocket(random_state=random_state, n_jobs=n_jobs)
     elif c == "cnnclassifier" or c == "cnn":
-        from tsml_eval.estimators.classification.deep_learning import CNNClassifier
+        from aeon.classification.deep_learning import CNNClassifier
 
         return CNNClassifier(random_state=random_state)
     elif c == "resnetclassifier" or c == "resnet":
-        from tsml_eval.estimators.classification.deep_learning.resnet import (
-            ResNetClassifier,
-        )
+        from aeon.classification.deep_learning.resnet import ResNetClassifier
 
         return ResNetClassifier(random_state=random_state)
     elif c == "inceptiontimeclassifier" or c == "inceptiontime":
-        from tsml_eval.estimators.classification.deep_learning.inception_time import (
+        from aeon.classification.deep_learning.inception_time import (
             InceptionTimeClassifier,
         )
 
         return InceptionTimeClassifier(random_state=random_state)
     elif c == "hivecotev1" or c == "hc1":
-        from tsml_eval.estimators.classification.hybrid import HIVECOTEV1
+        from aeon.classification.hybrid import HIVECOTEV1
 
         return HIVECOTEV1(random_state=random_state, n_jobs=n_jobs)
     elif c == "hivecotev2" or c == "hc2":
