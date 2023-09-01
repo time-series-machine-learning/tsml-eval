@@ -22,15 +22,15 @@ def test_run_expansion_regression_experiment():
     resample = 0
 
     args = [
-        None,
         data_path,
         result_path,
         regressor,
         dataset,
         resample,
+        "-ow",
     ]
 
-    _run_experiment(args, overwrite=True)
+    _run_experiment(args)
 
     test_file = f"{result_path}{regressor}/Predictions/{dataset}/testResample0.csv"
     assert os.path.exists(test_file)
