@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Set classifier function."""
 
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
@@ -80,7 +79,7 @@ def _set_clusterer_distance_based(
     elif c == "timeserieskmedoids" or c == "kmedoids-dtw" or c == "k-medoids-dtw":
         from aeon.clustering.k_medoids import TimeSeriesKMedoids
 
-        return TimeSeriesKMedoids(metric="dtw", random_state=random_state, **kwargs)
+        return TimeSeriesKMedoids(distance="dtw", random_state=random_state, **kwargs)
 
 
 def _set_clusterer_other(

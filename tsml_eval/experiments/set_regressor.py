@@ -44,7 +44,7 @@ interval_based_regressors = [
     ["TimeSeriesForestRegressor", "tsf"],
     "tsf-i",
     "tsf-500",
-    "DrCIF",
+    ["drcif", "DrCIFRegressor"],
     "drcif-500",
 ]
 other_regressors = [
@@ -367,7 +367,7 @@ def _set_regressor_interval_based(
         return TimeSeriesForestRegressor(
             n_estimators=500, random_state=random_state, n_jobs=n_jobs, **kwargs
         )
-    elif r == "drcif":
+    elif r == "drcif" or r == "drcifregressor":
         from aeon.regression.interval_based import DrCIFRegressor
 
         return DrCIFRegressor(

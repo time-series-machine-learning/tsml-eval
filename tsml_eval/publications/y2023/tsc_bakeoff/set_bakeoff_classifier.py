@@ -15,7 +15,7 @@ bakeoff_classifiers = [
     ["SignatureClassifier", "signatures"],
     # shapelet based
     ["ShapeletTransformClassifier", "stc", "stc-2hour"],
-    ["RDSTClassiifer", "rdst"],
+    ["RDSTClassifier", "rdst"],
     ["RandomShapeletForestClassifier", "randomshapeletforest", "rsf"],
     ["MrSQMClassifier", "mrsqm"],
     # interval based

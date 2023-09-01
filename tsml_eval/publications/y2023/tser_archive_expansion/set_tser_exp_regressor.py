@@ -106,8 +106,8 @@ def _set_tser_exp_regressor(
     elif (
         r == "inception"
         or r == "singleinception"
-        or r == "individualinception"
-        or r == "individualinceptiontimeregressor"
+        or r == "individualinceptionregressor"
+        or r == "individualinceptiontime"
     ):
         from aeon.regression.deep_learning import IndividualInceptionRegressor
 

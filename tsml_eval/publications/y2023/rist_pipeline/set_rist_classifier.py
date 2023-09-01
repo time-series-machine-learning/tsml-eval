@@ -53,10 +53,10 @@ def _set_rist_classifier(
         return RSTSFClassifier(
             n_estimators=500, random_state=random_state, n_jobs=n_jobs
         )
-    elif c == "drcif":
-        from aeon.classification.interval_based import DrCIF
+    elif c == "drcif" or c == "drcifclassifier":
+        from aeon.classification.interval_based import DrCIFClassifier
 
-        return DrCIF(
+        return DrCIFClassifier(
             n_estimators=500,
             random_state=random_state,
             n_jobs=n_jobs,
