@@ -43,13 +43,18 @@ class CondenserClassifier(BaseClassifier):
 
         self.condenser = condenser
         if self.condenser is None:
-            from tsml_eval._wip.condensing.kMeans import kMeansCondenser
+            from tsml_eval._wip.condensing.clustering_condenser import (
+                ClusteringCondenser,
+            )
 
-            self.condenser = kMeansCondenser(
-                distance=self.distance,
-                distance_params=self.distance_params,
-                num_instances=self.num_instances,
-                random_state=self.random_state,
+            self.condenser = (
+                ClusteringCondenser(
+                    clustering_approach="kmeans",
+                    distance=self.distance,
+                    distance_params=self.distance_params,
+                    num_instances_per_class=self.num_instances,
+                    random_state=self.random_state,
+                ),
             )
 
         self.classifier = classifier
