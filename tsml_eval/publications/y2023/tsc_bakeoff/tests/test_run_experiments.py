@@ -22,15 +22,15 @@ def test_run_tsc_bakeoff_experiment():
     resample = 0
 
     args = [
-        None,
         data_path,
         result_path,
         classifier,
         dataset,
         resample,
+        "-ow",
     ]
 
-    _run_experiment(args, overwrite=True, predefined_resample=False)
+    _run_experiment(args, predefined_resample=False)
 
     test_file = f"{result_path}{classifier}/Predictions/{dataset}/testResample0.csv"
     assert os.path.exists(test_file)

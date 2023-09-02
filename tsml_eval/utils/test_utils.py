@@ -1,4 +1,6 @@
-# -*- coding: utf-8 -*-
+import sys
+from contextlib import contextmanager
+from os import devnull
 
 EXEMPT_ESTIMATOR_NAMES = ["ColumnEnsembleRegressor", "GridSearchCV"]
 
@@ -29,3 +31,22 @@ def _check_set_method(
                 estimator_dict[c_name] = True
             elif c_name not in estimator_dict:
                 estimator_dict[c_name] = False
+
+
+@contextmanager
+def suppress_output(suppress_stdout=True, suppress_stderr=True):
+    """Redirects stdout and/or stderr to devnull."""
+    with open(devnull, "w") as null:
+        stdout = sys.stdout
+        stderr = sys.stderr
+        try:
+            if suppress_stdout:
+                sys.stdout = null
+            if suppress_stderr:
+                sys.stderr = null
+            yield
+        finally:
+            if suppress_stdout:
+                sys.stdout = stdout
+            if suppress_stderr:
+                sys.stderr = stderr

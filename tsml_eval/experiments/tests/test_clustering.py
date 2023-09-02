@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tests for clustering experiments."""
 
 __author__ = ["MatthewMiddlehurst"]
@@ -38,17 +37,18 @@ def test_run_clustering_experiment(clusterer, dataset):
     )
 
     args = [
-        None,
         data_path,
         result_path,
         clusterer,
         dataset,
         "0",
+        "-te",
+        "-ow",
     ]
 
     # aeon estimators don't support unequal length series lists currently
     try:
-        run_experiment(args, overwrite=True)
+        run_experiment(args)
     except ValueError as e:
         if "not support unequal length series" in str(e):
             return
@@ -98,3 +98,55 @@ def test_set_clusterer():
             "class name (usually with default parameters). Clusterers with missing "
             f"entries: {missing_keys}."
         )
+
+
+@pytest.mark.parametrize("n_clusters", ["4", "-1"])
+@pytest.mark.parametrize(
+    "clusterer",
+    ["DummyClusterer-aeon", "DummyClusterer-sklearn"],
+)
+def test_n_clusters(n_clusters, clusterer):
+    """Test n_clusters parameter."""
+    dataset = "MinimalChinatown"
+
+    data_path = (
+        "./tsml_eval/datasets/"
+        if os.getcwd().split("\\")[-1] != "tests"
+        else "../../datasets/"
+    )
+    result_path = (
+        f"./test_output/n_clusters/{n_clusters}/"
+        if os.getcwd().split("\\")[-1] != "tests"
+        else f"../../../test_output/n_clusters/{n_clusters}/"
+    )
+
+    args = [
+        data_path,
+        result_path,
+        clusterer,
+        dataset,
+        "0",
+        "--n_clusters",
+        n_clusters,
+        "-ow",
+    ]
+
+    run_experiment(args)
+
+    train_file = f"{result_path}{clusterer}/Predictions/{dataset}/trainResample0.csv"
+
+    assert os.path.exists(train_file)
+
+    _check_clustering_file_n_clusters(
+        train_file, "2" if n_clusters == "-1" else n_clusters
+    )
+
+    os.remove(train_file)
+
+
+def _check_clustering_file_n_clusters(file_path, expected):
+    with open(file_path, "r") as f:
+        lines = f.readlines()
+
+    line = lines[2].split(",")
+    assert line[6].strip() == expected
