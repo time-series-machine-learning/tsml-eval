@@ -54,6 +54,15 @@ generate_test_files="true"
 # If set for true, looks for <problem><fold>_TRAIN.ts file. This is useful for running tsml resamples
 predefined_folds="false"
 
+# You can add extra arguments here. See tsml_eval/utils/experiments.py parse_args
+# You will have to add any variable to the python call close to the bottom of the script
+
+# generate a results file for the test data as well as train, set to empty string to stop
+generate_test_files="-te"
+
+# If set to -pr, looks for <problem><resample>_TRAIN.ts files. This is useful for running tsml-java resamples
+predefined_folds=""
+
 # List valid clusterers e.g KMeans KMedoids
 # See set_clusterer for aliases
 count=0
@@ -63,20 +72,18 @@ do
 
 # Dont change anything after here for regular runs
 
-# This is the loop to keep from dumping everything in the queue which is maintained around max_num_submitted jobs
-num_pending=$(squeue -u ${username} --format="%10i %15P %20j %10u %10t %10M %10D %20R" -r | awk '{print $5, $2}' | grep "PD ${queue}" | wc -l)
-num_running=$(squeue -u ${username} --format="%10i %15P %20j %10u %10t %10M %10D %20R" -r | awk '{print $5, $2}' | grep "R ${queue}" | wc -l)
-while [ "$((num_pending+num_running))" -ge "${max_num_submitted}" ]
-do
-    echo Waiting 90s, $((num_pending+num_running)) currently submitted on ${queue}, user-defined max is ${max_num_submitted}
-	sleep 90
-	num_pending=$(squeue -u ${username} --format="%10i %15P %20j %10u %10t %10M %10D %20R" -r | awk '{print $5, $2}' | grep "PD ${queue}" | wc -l)
-	num_running=$(squeue -u ${username} --format="%10i %15P %20j %10u %10t %10M %10D %20R" -r | awk '{print $5, $2}' | grep "R ${queue}" | wc -l)
-done
-
 # Skip to the script start point
 ((count++))
 if ((count>=start_point)); then
+
+# This is the loop to keep from dumping everything in the queue which is maintained around max_num_submitted jobs
+num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue}" -e "PD ${queue}" | wc -l)
+while [ "${num_jobs}" -ge "${max_num_submitted}" ]
+do
+    echo Waiting 60s, ${num_jobs} currently submitted on ${queue}, user-defined max is ${max_num_submitted}
+    sleep 60
+    num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue}" -e "PD ${queue}" | wc -l)
+done
 
 mkdir -p ${out_dir}${clusterer}/${dataset}/
 
@@ -97,7 +104,6 @@ if [ "${array_jobs}" != "" ]; then
 
 # This creates the scrip to run the job based on the info above
 echo "#!/bin/bash
-#SBATCH --qos=ht
 #SBATCH --mail-type=${mail}
 #SBATCH --mail-user=${mailto}
 #SBATCH -p ${queue}

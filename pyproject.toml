@@ -1,21 +1,24 @@
 [build-system]
-requires = ["setuptools>=61", "wheel"]
+requires = ["setuptools>=61", "wheel", "toml", "build"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "tsml-eval"
-version = "0.0.2"
+version = "0.1.0"
 description = "A package for benchmarking time series machine learning tools."
 authors = [
     {name = "Matthew Middlehurst", email = "m.middlehurst@uea.ac.uk"},
     {name = "Tony Bagnall", email = "ajb@uea.ac.uk"},
 ]
 readme = "README.md"
-requires-python = ">=3.8,<3.11"
+requires-python = ">=3.8,<3.12"
 keywords = [
     "data-science",
     "machine-learning",
     "time-series",
+    "time-series-classification",
+    "time-series-regression",
+    "time-series-clustering",
     "evaluation",
     "benchmarking",
 ]
@@ -31,20 +34,32 @@ classifiers = [
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
 ]
 dependencies = [
-    "sktime>=0.15.0,<=0.16.0",
-    "scikit-learn",
-    "convst",
-    "wildboar",
-    "stumpy",
-    "xgboost",
-    "networkx",
-    "requests",
+    "aeon>=0.3.0,<0.4.0",
+    "scikit-learn>=1.0.2,<=1.2.2",
+    "tsml>=0.2.0,<0.3.0",
     "gpustat",
+    "psutil",
 ]
 
 [project.optional-dependencies]
+all_extras = [
+    "aeon[all_extras,dl]",
+    "tsml[extras]",
+    "xgboost<=1.7.5",
+    "convst>=0.3.0,<=0.4.0; python_version < '3.11'",
+    "torch>=1.13.1",
+]
+unstable_extras = [
+    "aeon[unstable_extras]",
+    "tsml[unstable_extras]",
+]
+deep_learning = [
+    "aeon[dl]",
+    "torch>=1.13.1",
+]
 dev = [
     "pre-commit",
     "pytest",
@@ -53,19 +68,20 @@ dev = [
     "pytest-xdist",
     "pytest-cov",
 ]
+binder = [
+    "notebook",
+    "jupyterlab",
+]
 docs = [
     "sphinx",
     "sphinx-design",
-    "sphinx-gallery",
     "nbsphinx",
     "numpydoc",
     "jupyter",
     "furo",
-]
-deep_learning = [
-    "tensorflow",
-    "tensorflow-probability",
-    "torch>=1.13.1",
+    "sphinx_issues",
+    "myst-parser",
+    "sphinx-copybutton",
 ]
 
 [project.urls]
@@ -80,22 +96,24 @@ include = ["tsml_eval"]
 
 [tool.check-manifest]
 ignore = [
-    "_uea_experiments/**",
-    "examples/**",
-    "results/**",
-    "docs/**",
-    "requirements.txt",
-    "*.yaml",
-    "*.yml",
-    ".coveragerc",
+    # Ignore virtual environments in local builds
+    "venv/**",
+    # Ignore local files
+    "local/**",
+    # Ignore the publications symlinks and its contents
+    "tsml_eval/publications/2023",
+    "tsml_eval/publications/2023/**",
+    # Ignore the docs symlinks and its contents
+    "docs/examples",
+    "docs/examples/**",
+    "docs/publications",
+    "docs/publications/**",
 ]
 
 [tool.flake8]
-max-line-length = 88
-extend-ignore = ["E203"]
 exclude = [
     "tsml_eval/_wip/*",
-    "examples/_wip/*"
+    "examples/_wip/*",
 ]
 per-file-ignores = [
     "tsml_eval/experiments/classification_experiments.py:E402,T201",
@@ -105,23 +123,23 @@ per-file-ignores = [
     "tsml_eval/experiments/clustering_experiments.py:E402,T201",
     "tsml_eval/experiments/threaded_clustering_experiments.py:T201",
     "tsml_eval/experiments/forecasting_experiments.py:E402,T201",
-    "tsml_eval/experiments/distance_clustering_experiments.py:E402,T201",
-    "tsml_eval/publications/forecasting23/run_m4.py:E402,T201",
+    "tsml_eval/experiments/threaded_forecasting_experiments.py:T201",
+    "tsml_eval/publications/*:E402,T201",
 ]
 
 [tool.nbqa.exclude]
-black = "^docs/examples/|^examples/_wip/"
-flake8 = "^docs/examples/|^examples/_wip/"
-isort = "^docs/examples/|^examples/_wip/"
+black = "examples/_wip/"
+flake8 = "examples/_wip/"
+isort = "examples/_wip/"
 
 [tool.pytest.ini_options]
+testpaths = "tsml_eval"
 addopts = '''
     --ignore tsml_eval/_wip
-    --durations 10
+    --ignore tsml_eval/publications/2023
+    --durations 20
     --timeout 600
     --showlocals
     --doctest-modules
     --numprocesses auto
-    --cov tsml_eval
-    --cov-report xml
 '''

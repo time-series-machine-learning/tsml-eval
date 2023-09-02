@@ -1,2 +1,1 @@
-# -*- coding: utf-8 -*-
-"""Code for publications."""
+"""Publications using tsml-eval."""

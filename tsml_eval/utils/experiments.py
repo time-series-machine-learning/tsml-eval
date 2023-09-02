@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Utility functions for experiments."""
 
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
@@ -15,32 +14,35 @@ __all__ = [
     "fix_broken_second_line",
     "compare_result_file_resample",
     "assign_gpu",
+    "parse_args",
 ]
 
+import argparse
 import os
 
 import gpustat
 import numpy as np
-import pandas as pd
 from sklearn.utils import check_random_state
+
+import tsml_eval
 
 
 def resample_data(X_train, y_train, X_test, y_test, random_state=None):
     """Resample data without replacement using a random state.
 
-    Reproducable resampling. Combines train and test, randomly resamples, then returns
+    Reproducible resampling. Combines train and test, randomly resamples, then returns
     new train and test.
 
     Parameters
     ----------
-    X_train : pd.DataFrame
-        Train data attributes in sktime pandas format.
-    y_train : np.array
-        Train data class labels.
-    X_test : pd.DataFrame
-        Test data attributes in sktime pandas format.
-    y_test : np.array
-        Test data class labels.
+    X_train : np.ndarray or list of np.ndarray
+        Train data in a 2d or 3d ndarray or list of arrays.
+    y_train : np.ndarray
+        Train data labels.
+    X_test : np.ndarray or list of np.ndarray
+        Test data in a 2d or 3d ndarray or list of arrays.
+    y_test : np.ndarray
+        Test data labels.
     random_state : int, RandomState instance or None, default=None
         If `int`, random_state is the seed used by the random number generator;
         If `RandomState` instance, random_state is the random number generator;
@@ -49,51 +51,66 @@ def resample_data(X_train, y_train, X_test, y_test, random_state=None):
 
     Returns
     -------
-    (train_X, train_y, test_X, test_y) : tuple of pd.DataFrames
-        New train and test data and class label splits.
+    train_X : np.ndarray or list of np.ndarray
+        New train data.
+    train_y : np.ndarray
+        New train labels.
+    test_X : np.ndarray or list of np.ndarray
+        New test data.
+    test_y : np.ndarray
+        New test labels.
     """
-    all_targets = np.concatenate((y_train, y_test), axis=None)
-    all_data = pd.concat([X_train, X_test])
+    if isinstance(X_train, np.ndarray):
+        is_array = True
+    elif isinstance(X_train, list):
+        is_array = False
+    else:
+        raise ValueError(
+            "X_train must be a np.ndarray array or list of np.ndarray arrays"
+        )
 
-    # add the target labeleds to the dataset
-    all_data["target"] = all_targets
+    # add both train and test to a single dataset
+    all_labels = np.concatenate((y_train, y_test), axis=None)
+    all_data = (
+        np.concatenate([X_train, X_test], axis=0) if is_array else X_train + X_test
+    )
 
-    # randomly shuffle all instances
-    shuffled = all_data.sample(frac=1, random_state=random_state)
+    # shuffle data indices
+    rng = check_random_state(random_state)
+    indices = np.arange(len(all_data), dtype=int)
+    rng.shuffle(indices)
 
-    # extract and remove the target column
-    all_targets = shuffled["target"].to_numpy()
-    shuffled = shuffled.drop("target", axis=1)
+    train_cases = y_train.size
+    train_indices = indices[:train_cases]
+    test_indices = indices[train_cases:]
 
     # split the shuffled data into train and test
-    train_cases = y_train.size
-    X_train = shuffled.iloc[:train_cases]
-    X_test = shuffled.iloc[train_cases:]
-    y_train = all_targets[:train_cases]
-    y_test = all_targets[train_cases:]
+    X_train = (
+        all_data[train_indices] if is_array else [all_data[i] for i in train_indices]
+    )
+    y_train = all_labels[train_indices]
+    X_test = all_data[test_indices] if is_array else [all_data[i] for i in test_indices]
+    y_test = all_labels[test_indices]
 
-    # reset indices and return
-    X_train = X_train.reset_index(drop=True)
-    X_test = X_test.reset_index(drop=True)
     return X_train, y_train, X_test, y_test
 
 
 def stratified_resample_data(X_train, y_train, X_test, y_test, random_state=None):
     """Stratified resample data without replacement using a random state.
 
-    Reproducable resampling. Combines train and test, resamples to get the same class
+    Reproducible resampling. Combines train and test, resamples to get the same class
     distribution, then returns new train and test.
 
     Parameters
     ----------
-    X_train : pd.DataFrame
-        Train data attributes in sktime pandas format.
-    y_train : np.array
-        Train data class labels.
-    X_test : pd.DataFrame
-        Test data attributes in sktime pandas format.
-    y_test : np.array
-        Test data class labels.
+    X_train : np.ndarray or list of np.ndarray
+        Train data in a 2d or 3d ndarray or list of arrays.
+    y_train : np.ndarray
+        Train data labels.
+    X_test : np.ndarray or list of np.ndarray
+        Test data in a 2d or 3d ndarray or list of arrays.
+    y_test : np.ndarray
+        Test data labels.
     random_state : int, RandomState instance or None, default=None
         If `int`, random_state is the seed used by the random number generator;
         If `RandomState` instance, random_state is the random number generator;
@@ -102,13 +119,32 @@ def stratified_resample_data(X_train, y_train, X_test, y_test, random_state=None
 
     Returns
     -------
-    (train_X, train_y, test_X, test_y) : tuple of pd.DataFrames
-        New train and test data and class label splits.
+    train_X : np.ndarray or list of np.ndarray
+        New train data.
+    train_y : np.ndarray
+        New train labels.
+    test_X : np.ndarray or list of np.ndarray
+        New test data.
+    test_y : np.ndarray
+        New test labels.
     """
-    all_labels = np.concatenate((y_train, y_test), axis=None)
-    all_data = pd.concat([X_train, X_test])
+    if isinstance(X_train, np.ndarray):
+        is_array = True
+    elif isinstance(X_train, list):
+        is_array = False
+    else:
+        raise ValueError(
+            "X_train must be a np.ndarray array or list of np.ndarray arrays"
+        )
 
-    random_state = check_random_state(random_state)
+    # add both train and test to a single dataset
+    all_labels = np.concatenate((y_train, y_test), axis=None)
+    all_data = (
+        np.concatenate([X_train, X_test], axis=0) if is_array else X_train + X_test
+    )
+
+    # shuffle data indices
+    rng = check_random_state(random_state)
 
     # count class occurrences
     unique_train, counts_train = np.unique(y_train, return_counts=True)
@@ -117,40 +153,52 @@ def stratified_resample_data(X_train, y_train, X_test, y_test, random_state=None
     # ensure same classes exist in both train and test
     assert list(unique_train) == list(unique_test)
 
-    X_train = pd.DataFrame()
-    y_train = np.array([])
-    X_test = pd.DataFrame()
-    y_test = np.array([])
+    if is_array:
+        shape = list(X_train.shape)
+        shape[0] = 0
+
+    X_train = np.zeros(shape) if is_array else []
+    y_train = np.zeros(0)
+    X_test = np.zeros(shape) if is_array else []
+    y_test = np.zeros(0)
 
     # for each class
-    for label_index in range(0, len(unique_train)):
-        # get the indices of all instances with this class label
+    for label_index in range(len(unique_train)):
+        # get the indices of all instances with this class label and shuffle them
         label = unique_train[label_index]
         indices = np.where(all_labels == label)[0]
+        rng.shuffle(indices)
 
-        # shuffle them
-        random_state.shuffle(indices)
-
-        # take the first lot of instances for train, remainder for test
-        num_instances = counts_train[label_index]
-        train_indices = indices[0:num_instances]
-        test_indices = indices[num_instances:]
+        train_cases = counts_train[label_index]
+        train_indices = indices[:train_cases]
+        test_indices = indices[train_cases:]
 
         # extract data from corresponding indices
-        train_instances = all_data.iloc[train_indices, :]
-        test_instances = all_data.iloc[test_indices, :]
+        train_cases = (
+            all_data[train_indices]
+            if is_array
+            else [all_data[i] for i in train_indices]
+        )
         train_labels = all_labels[train_indices]
+        test_cases = (
+            all_data[test_indices] if is_array else [all_data[i] for i in test_indices]
+        )
         test_labels = all_labels[test_indices]
 
         # concat onto current data from previous loop iterations
-        X_train = pd.concat([X_train, train_instances])
-        X_test = pd.concat([X_test, test_instances])
+        X_train = (
+            np.concatenate([X_train, train_cases], axis=0)
+            if is_array
+            else X_train + train_cases
+        )
         y_train = np.concatenate([y_train, train_labels], axis=None)
+        X_test = (
+            np.concatenate([X_test, test_cases], axis=0)
+            if is_array
+            else X_test + test_cases
+        )
         y_test = np.concatenate([y_test, test_labels], axis=None)
 
-    # reset indices and return
-    X_train = X_train.reset_index(drop=True)
-    X_test = X_test.reset_index(drop=True)
     return X_train, y_train, X_test, y_test
 
 
@@ -415,8 +463,8 @@ def write_clustering_results(
     cluster_predictions : np.array
         The predicted values to write to file. Must be the same length as labels.
     cluster_probabilities : np.ndarray
-        Estimated class probabilities. If passed, these are written after the
-        predicted values for each case.
+        Estimated cluster probabilities. These are written after the predicted values
+        for each case.
     class_labels : np.array
         The actual class values written to file with the predicted values. If no label
         is available for a case, a NaN value should be substituted.
@@ -886,7 +934,7 @@ def _check_line_length_and_floats(line, length, floats):
     return True
 
 
-def _check_results_line(line, probabilities=True):
+def _check_results_line(line, probabilities=True, n_probas=1):
     line = line.split(",")
 
     if len(line) < 2:
@@ -899,12 +947,12 @@ def _check_results_line(line, probabilities=True):
         return False
 
     if probabilities:
-        if len(line) < 5 or line[2] != "":
+        if len(line) < 3 + n_probas or line[2] != "":
             return False
 
         try:
-            float(line[3])
-            float(line[4])
+            for i in range(n_probas):
+                float(line[3 + i])
         except ValueError:
             return False
     else:
@@ -967,3 +1015,215 @@ def assign_gpu():
         for gpu in stats
     ]
     return min(pairs, key=lambda x: x[1])[0]
+
+
+def parse_args(args):
+    """Parse the command line arguments for tsml_eval.
+
+    The following is the --help output for tsml_eval:
+
+    usage: tsml_eval [-h] [--version] [-ow] [-pr] [-rs RANDOM_SEED] [-nj N_JOBS]
+                     [-tr] [-te] [-fc FIT_CONTRACT] [-ch] [-rn] [-nc N_CLUSTERS]
+                     [-kw KEY VALUE TYPE]
+                     data_path results_path estimator_name dataset_name
+                     resample_id
+
+    positional arguments:
+      data_path             the path to the directory storing dataset files.
+      results_path          the path to the directory where results files are
+                            written to.
+      estimator_name        the name of the estimator to run. See the
+                            set_{task}.py file for each task learning task for
+                            available options.
+      dataset_name          the name of the dataset to load.
+                            {data_dir}/{dataset_name}/{dataset_name}_TRAIN.ts and
+                            {data_dir}/{dataset_name}/{dataset_name}_TEST.ts will
+                            be loaded.
+      resample_id           the resample ID to use when randomly resampling the
+                            data, as a random seed for estimators and the suffix
+                            when writing results files. An ID of 0 will use the
+                            default TRAIN/TEST split.
+
+    options:
+      -h, --help            show this help message and exit
+      --version             show program's version number and exit
+      -ow, --overwrite      overwrite existing results files. If False, existing
+                            results files will be skipped (default: False).
+      -pr, --predefined_resample
+                            load a dataset file with a predefined resample. The
+                            dataset file must follow the naming format
+                            '{dataset_name}_{resample_id}.ts' (default: False).
+      -rs RANDOM_SEED, --random_seed RANDOM_SEED
+                            use a different random seed than the resample ID. If
+                            None use the {resample_id} (default: None).
+      -nj N_JOBS, --n_jobs N_JOBS
+                            the number of jobs to run in parallel. Only used if
+                            the experiments file and selected estimator allows
+                            threading (default: 1).
+      -tr, --train_fold     write a results file for the training data in the
+                            classification and regression task (default: False).
+      -te, --test_fold      write a results file for the test data in the
+                            clustering task (default: False).
+      -fc FIT_CONTRACT, --fit_contract FIT_CONTRACT
+                            a time limit for estimator fit in minutes. Only used
+                            if the estimator can contract fit (default: 0).
+      -ch, --checkpoint     save the estimator fit to file periodically while
+                            building. Only used if the estimator can checkpoint
+                            (default: False).
+      -rn, --row_normalise  normalise the data rows prior to fitting and
+                            predicting. (default: False).
+      -nc N_CLUSTERS, --n_clusters N_CLUSTERS
+                            the number of clusters to find for clusterers which
+                            have an {n_clusters} parameter. If {-1}, use the
+                            number of classes in the dataset (default: None).
+      -kw KEY VALUE TYPE, --kwargs KEY VALUE TYPE, --kwarg KEY VALUE TYPE
+                            additional keyword arguments to pass to the estimator.
+                            Should contain the parameter to set, the parameter
+                            value, and the type of the value i.e. {--kwargs
+                            n_estimators 200 int} to change the size of an
+                            ensemble. Valid types are {int, float, bool, str}. Any
+                            other type will be passed as a str. Can be used
+                            multiple times (default: None).
+
+    Parameters
+    ----------
+    args : list
+        List of command line arguments to parse.
+
+    Returns
+    -------
+    same_resample : argparse.Namespace
+        The parsed command line arguments.
+    """
+    parser = argparse.ArgumentParser(prog="tsml_eval")
+    parser.add_argument(
+        "--version", action="version", version=f"%(prog)s {tsml_eval.__version__}"
+    )
+    parser.add_argument(
+        "data_path", help="the path to the directory storing dataset files."
+    )
+    parser.add_argument(
+        "results_path",
+        help="the path to the directory where results files are written to.",
+    )
+    parser.add_argument(
+        "estimator_name",
+        help="the name of the estimator to run. See the set_{task}.py file for each "
+        "task learning task for available options.",
+    )
+    parser.add_argument(
+        "dataset_name",
+        help="the name of the dataset to load. "
+        "{data_dir}/{dataset_name}/{dataset_name}_TRAIN.ts and "
+        "{data_dir}/{dataset_name}/{dataset_name}_TEST.ts will be loaded.",
+    )
+    parser.add_argument(
+        "resample_id",
+        type=int,
+        help="the resample ID to use when randomly resampling the data, as a random "
+        "seed for estimators and the suffix when writing results files. An ID of "
+        "0 will use the default TRAIN/TEST split.",
+    )
+    parser.add_argument(
+        "-ow",
+        "--overwrite",
+        action="store_true",
+        help="overwrite existing results files. If False, existing results files "
+        "will be skipped (default: %(default)s).",
+    )
+    parser.add_argument(
+        "-pr",
+        "--predefined_resample",
+        action="store_true",
+        help="load a dataset file with a predefined resample. The dataset file must "
+        "follow the naming format '{dataset_name}{resample_id}.ts' "
+        "(default: %(default)s).",
+    )
+    parser.add_argument(
+        "-rs",
+        "--random_seed",
+        type=int,
+        help="use a different random seed than the resample ID. If None use the "
+        "{resample_id} (default: %(default)s).",
+    )
+    parser.add_argument(
+        "-nj",
+        "--n_jobs",
+        type=int,
+        default=1,
+        help="the number of jobs to run in parallel. Only used if the experiments file "
+        "and selected estimator allows threading (default: %(default)s).",
+    )
+    parser.add_argument(
+        "-tr",
+        "--train_fold",
+        action="store_true",
+        help="write a results file for the training data in the classification and "
+        "regression task (default: %(default)s).",
+    )
+    parser.add_argument(
+        "-te",
+        "--test_fold",
+        action="store_true",
+        help="write a results file for the test data in the clustering task "
+        "(default: %(default)s).",
+    )
+    parser.add_argument(
+        "-fc",
+        "--fit_contract",
+        type=int,
+        default=0,
+        help="a time limit for estimator fit in minutes. Only used if the estimator "
+        "can contract fit (default: %(default)s).",
+    )
+    parser.add_argument(
+        "-ch",
+        "--checkpoint",
+        action="store_true",
+        help="save the estimator fit to file periodically while building. Only used if "
+        "the estimator can checkpoint (default: %(default)s).",
+    )
+    parser.add_argument(
+        "-rn",
+        "--row_normalise",
+        action="store_true",
+        help="normalise the data rows prior to fitting and predicting. "
+        "(default: %(default)s).",
+    )
+    parser.add_argument(
+        "-nc",
+        "--n_clusters",
+        type=int,
+        help="the number of clusters to find for clusterers which have an {n_clusters} "
+        "parameter. If {-1}, use the number of classes in the dataset "
+        "(default: %(default)s).",
+    )
+    parser.add_argument(
+        "-kw",
+        "--kwargs",
+        "--kwarg",
+        action="append",
+        nargs=3,
+        metavar=("KEY", "VALUE", "TYPE"),
+        help="additional keyword arguments to pass to the estimator. Should contain "
+        "the parameter to set, the parameter value, and the type of the value i.e. "
+        "{--kwargs n_estimators 200 int} to change the size of an ensemble. Valid "
+        "types are {int, float, bool, str}. Any other type will be passed as a str. "
+        "Can be used multiple times (default: %(default)s).",
+    )
+    args = parser.parse_args(args=args)
+
+    kwargs = {}
+    if args.kwargs is not None:
+        for kwarg in args.kwargs:
+            if kwarg[2] == "int":
+                kwargs[kwarg[0]] = int(kwarg[1])
+            elif kwarg[2] == "float":
+                kwargs[kwarg[0]] = float(kwarg[1])
+            elif kwarg[2] == "bool":
+                kwargs[kwarg[0]] = kwarg[1].lower() == "true" or kwarg[1] == "1"
+            else:
+                kwargs[kwarg[0]] = kwarg[1]
+    args.kwargs = kwargs
+
+    return args

@@ -16,10 +16,15 @@ coverage:
 # post comment on PR
 comment: false
 
+# enable codecov to report to GitHub status checks
+github_checks:
+  annotations: false
+
 # ignore files
 ignore:
   - ".github/"
-  - "ada_uea_experiments/"
+  - "_build_tools/"
+  - "_uea_experiments/"
   - "docs/"
   - "examples/"
   - "results/"

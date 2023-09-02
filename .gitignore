@@ -127,6 +127,9 @@ dmypy.json
 # Test output
 test_output/
 
+# Test datasts
+test_datasets/
+
 # HTcondor files
 */condor_output/*
 task_params.txt
@@ -136,5 +139,7 @@ regression_experiments_condor.py
 
 # local code and debug files
 local/
+local.py
+local_code/
 local_code.py
 debug.py
