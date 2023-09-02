@@ -37,7 +37,7 @@ def run_experiment(args):
 
         torch.set_num_threads(1)
 
-    # if multiple GPUs are available, assign the one with lease usage to the process
+    # if multiple GPUs are available, assign the one with the least usage to the process
     if os.environ.get("CUDA_VISIBLE_DEVICES") is None:
         try:
             gpu = assign_gpu()
@@ -48,7 +48,7 @@ def run_experiment(args):
             print("Unable to assign GPU to process.")
 
     # cluster run (with args), this is fragile
-    if args is not None and args.__len__() > 1:
+    if args is not None and args.__len__() > 0:
         print("Input args = ", args)
         args = parse_args(args)
 
@@ -77,10 +77,12 @@ def run_experiment(args):
                     checkpoint=args.checkpoint,
                     **args.kwargs,
                 ),
-                resample_id=args.resample_id,
+                row_normalise=args.row_normalise,
+                n_clusters=args.n_clusters,
                 clusterer_name=args.estimator_name,
-                overwrite=args.overwrite,
+                resample_id=args.resample_id,
                 build_test_file=args.test_fold,
+                overwrite=args.overwrite,
                 predefined_resample=args.predefined_resample,
             )
     # local run (no args)
@@ -92,11 +94,13 @@ def run_experiment(args):
         results_path = "../"
         estimator_name = "KMeans-DTW"
         dataset_name = "ArrowHead"
+        row_normalise = False
+        n_clusters = -1
         resample_id = 0
+        test_fold = False
         overwrite = False
         predefined_resample = False
-        test_fold = False
-        fit_contract = None
+        fit_contract = 0
         checkpoint = None
         kwargs = {}
 
@@ -115,10 +119,12 @@ def run_experiment(args):
             results_path,
             dataset_name,
             clusterer,
-            resample_id=resample_id,
+            row_normalise=row_normalise,
+            n_clusters=n_clusters,
             clusterer_name=estimator_name,
-            overwrite=overwrite,
+            resample_id=resample_id,
             build_test_file=test_fold,
+            overwrite=overwrite,
             predefined_resample=predefined_resample,
         )
 
@@ -127,4 +133,5 @@ if __name__ == "__main__":
     """
     Example simple usage, with arguments input via script or hard coded for testing.
     """
-    run_experiment(sys.argv)
+    print("Running clustering_experiments.py main")
+    run_experiment(sys.argv[1:])

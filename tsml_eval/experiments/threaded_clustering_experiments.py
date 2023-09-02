@@ -15,7 +15,7 @@ from tsml_eval.experiments.set_clusterer import set_clusterer
 from tsml_eval.utils.experiments import parse_args
 
 
-def run_experiment(args, overwrite=False):
+def run_experiment(args):
     """Mechanism for testing clusterers on the UCR data format.
 
     This mirrors the mechanism used in the Java based tsml. Results generated using the
@@ -23,9 +23,9 @@ def run_experiment(args, overwrite=False):
     generated in Java.
     """
     # cluster run (with args), this is fragile
-    # don't run threaded jobs on ADA unless you have reserved the whole node and know
-    # what you are doing
-    if args is not None and args.__len__() > 1:
+    # don't run threaded jobs on the cluster unless you have reserved the whole node
+    # and know what you are doing
+    if args is not None and args.__len__() > 0:
         print("Input args = ", args)
         args = parse_args(args)
 
@@ -54,10 +54,12 @@ def run_experiment(args, overwrite=False):
                     checkpoint=args.checkpoint,
                     **args.kwargs,
                 ),
-                resample_id=args.resample_id,
+                row_normalise=args.row_normalise,
+                n_clusters=args.n_clusters,
                 clusterer_name=args.estimator_name,
-                overwrite=args.overwrite,
+                resample_id=args.resample_id,
                 build_test_file=args.test_fold,
+                overwrite=args.overwrite,
                 predefined_resample=args.predefined_resample,
             )
     # local run (no args)
@@ -68,12 +70,14 @@ def run_experiment(args, overwrite=False):
         results_path = "../"
         estimator_name = "KMeans-DTW"
         dataset_name = "ArrowHead"
+        row_normalise = False
+        n_clusters = -1
         resample_id = 0
         n_jobs = 1
+        test_fold = False
         overwrite = False
         predefined_resample = False
-        test_fold = False
-        fit_contract = None
+        fit_contract = 0
         checkpoint = None
         kwargs = {}
 
@@ -92,10 +96,12 @@ def run_experiment(args, overwrite=False):
             results_path,
             dataset_name,
             clusterer,
-            resample_id=resample_id,
+            row_normalise=row_normalise,
+            n_clusters=n_clusters,
             clusterer_name=estimator_name,
-            overwrite=overwrite,
+            resample_id=resample_id,
             build_test_file=test_fold,
+            overwrite=overwrite,
             predefined_resample=predefined_resample,
         )
 
@@ -104,4 +110,5 @@ if __name__ == "__main__":
     """
     Example simple usage, with arguments input via script or hard coded for testing.
     """
-    run_experiment(sys.argv)
+    print("Running threaded_clustering_experiments.py main")
+    run_experiment(sys.argv[1:])

@@ -933,65 +933,68 @@ def parse_args(args):
 
     The following is the --help output for tsml_eval:
 
-    usage: tsml_eval [-h] [-ow] [-pr] [-rs RANDOM_SEED] [-nj N_JOBS] [-tr] [-te]
-                 [-fc FIT_CONTRACT] [-ch] [-rn] [-nc N_CLUSTERS]
-                 [-kw KEY VALUE] [--version]
-                 data_path results_path estimator_name dataset_name
-                 resample_id
+    usage: tsml_eval [-h] [--version] [-ow] [-pr] [-rs RANDOM_SEED] [-nj N_JOBS]
+                     [-tr] [-te] [-fc FIT_CONTRACT] [-ch] [-rn] [-nc N_CLUSTERS]
+                     [-kw KEY VALUE TYPE]
+                     data_path results_path estimator_name dataset_name
+                     resample_id
 
     positional arguments:
-      data_path             The path to the directory storing dataset files.
-      results_path          The path to the directory where results files are
+      data_path             the path to the directory storing dataset files.
+      results_path          the path to the directory where results files are
                             written to.
-      estimator_name        The name of the estimator to run. See the
+      estimator_name        the name of the estimator to run. See the
                             set_{task}.py file for each task learning task for
                             available options.
-      dataset_name          The name of the dataset to load.
+      dataset_name          the name of the dataset to load.
                             {data_dir}/{dataset_name}/{dataset_name}_TRAIN.ts and
                             {data_dir}/{dataset_name}/{dataset_name}_TEST.ts will
                             be loaded.
-      resample_id           The resample ID to use when randomly resampling the
+      resample_id           the resample ID to use when randomly resampling the
                             data, as a random seed for estimators and the suffix
                             when writing results files. An ID of 0 will use the
                             default TRAIN/TEST split.
 
     options:
       -h, --help            show this help message and exit
-      -ow, --overwrite      Overwrite existing results files. If False, existing
+      --version             show program's version number and exit
+      -ow, --overwrite      overwrite existing results files. If False, existing
                             results files will be skipped (default: False).
       -pr, --predefined_resample
-                            Load a dataset file with a predefined resample. The
+                            load a dataset file with a predefined resample. The
                             dataset file must follow the naming format
                             '{dataset_name}_{resample_id}.ts' (default: False).
       -rs RANDOM_SEED, --random_seed RANDOM_SEED
-                            Use a different random seed than the resample ID. If
+                            use a different random seed than the resample ID. If
                             None use the {resample_id} (default: None).
       -nj N_JOBS, --n_jobs N_JOBS
-                            The number of jobs to run in parallel. Only used if
+                            the number of jobs to run in parallel. Only used if
                             the experiments file and selected estimator allows
                             threading (default: 1).
-      -tr, --train_fold     Write a results file for the training data in the
+      -tr, --train_fold     write a results file for the training data in the
                             classification and regression task (default: False).
-      -te, --test_fold      Write a results file for the test data in the
+      -te, --test_fold      write a results file for the test data in the
                             clustering task (default: False).
       -fc FIT_CONTRACT, --fit_contract FIT_CONTRACT
-                            A time limit for estimator fit in minutes. Only used
+                            a time limit for estimator fit in minutes. Only used
                             if the estimator can contract fit (default: 0).
-      -ch, --checkpoint     Save the estimator fit to file periodically while
+      -ch, --checkpoint     save the estimator fit to file periodically while
                             building. Only used if the estimator can checkpoint
                             (default: False).
-      -rn, --row_normalise  Normalise the data rows prior to fitting and
+      -rn, --row_normalise  normalise the data rows prior to fitting and
                             predicting. (default: False).
       -nc N_CLUSTERS, --n_clusters N_CLUSTERS
-                            The number of clusters to find for clusterers which
+                            the number of clusters to find for clusterers which
                             have an {n_clusters} parameter. If {-1}, use the
                             number of classes in the dataset (default: None).
-      -kw KEY VALUE, --kwargs KEY VALUE, --kwarg KEY VALUE
-                            Additional keyword arguments to pass to the estimator.
-                            i.e. {--kwargs n_estimators 200} to change the size of
-                            an ensemble. Can be used multiple times (default:
-                            None).
-      --version             show program's version number and exit
+      -kw KEY VALUE TYPE, --kwargs KEY VALUE TYPE, --kwarg KEY VALUE TYPE
+                            additional keyword arguments to pass to the estimator.
+                            Should contain the parameter to set, the parameter
+                            value, and the type of the value i.e. {--kwargs
+                            n_estimators 200 int} to change the size of an
+                            ensemble. Valid types are {int, float, bool, str}. Any
+                            other type will be passed as a str. Can be used
+                            multiple times (default: None).
 
     Parameters
     ----------
@@ -1044,7 +1047,7 @@ def parse_args(args):
         "--predefined_resample",
         action="store_true",
         help="load a dataset file with a predefined resample. The dataset file must "
-        "follow the naming format '{dataset_name}_{resample_id}.ts' "
+        "follow the naming format '{dataset_name}{resample_id}.ts' "
         "(default: %(default)s).",
     )
     parser.add_argument(
@@ -1116,7 +1119,7 @@ def parse_args(args):
         help="additional keyword arguments to pass to the estimator. Should contain "
         "the parameter to set, the parameter value, and the type of the value i.e. "
         "{--kwargs n_estimators 200 int} to change the size of an ensemble. Valid "
-        "types are {int, float, bool, str}. Any other type will be passed as a str."
+        "types are {int, float, bool, str}. Any other type will be passed as a str. "
         "Can be used multiple times (default: %(default)s).",
     )
     args = parser.parse_args(args=args)

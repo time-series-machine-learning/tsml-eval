@@ -52,17 +52,20 @@ script_file_path=$local_path"Code/tsml-eval/tsml_eval/experiments/clustering_exp
 # Separate environments for GPU (Python 3.8) and CPU (Python 3.10) are recommended
 env_name="tsml-eval-gpu"
 
-# generate a results file for the test data as well as train
-generate_test_files="true"
+# You can add extra arguments here. See tsml_eval/utils/experiments.py parse_args
+# You will have to add any variable to the python call close to the bottom of the script
 
-# If set for true, looks for <problem><fold>_TRAIN.ts file. This is useful for running tsml resamples
-predefined_folds="false"
+# generate a results file for the test data as well as train, set to empty string to stop
+generate_test_files="-te"
 
-# List valid clusterers e.g ???
+# If set to -pr, looks for <problem><resample>_TRAIN.ts files. This is useful for running tsml-java resamples
+predefined_folds=""
+
+# List valid clusterers e.g KMeans KMedoids
 # See set_clusterer for aliases
 count=0
 while read dataset; do
-for clusterer in ???
+for clusterer in KMeans KMedoids
 do
 
 # Dont change anything after here for regular runs

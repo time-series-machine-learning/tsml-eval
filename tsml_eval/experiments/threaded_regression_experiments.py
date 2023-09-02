@@ -14,7 +14,7 @@ from tsml_eval.experiments.set_regressor import set_regressor
 from tsml_eval.utils.experiments import _results_present, parse_args
 
 
-def run_experiment(args, overwrite=False):
+def run_experiment(args):
     """Mechanism for testing regressors on the UCR data format.
 
     This mirrors the mechanism used in the Java based tsml. Results generated using the
@@ -22,9 +22,9 @@ def run_experiment(args, overwrite=False):
     generated in Java.
     """
     # cluster run (with args), this is fragile
-    # don't run threaded jobs on ADA unless you have reserved the whole node and know
-    # what you are doing
-    if args is not None and args.__len__() > 1:  # cluster run, this is fragile
+    # don't run threaded jobs on the cluster unless you have reserved the whole node
+    # and know what you are doing
+    if args is not None and args.__len__() > 0:
         print("Input args = ", args)
         args = parse_args(args)
 
@@ -54,10 +54,11 @@ def run_experiment(args, overwrite=False):
                     checkpoint=args.checkpoint,
                     **args.kwargs,
                 ),
-                resample_id=args.resample_id,
+                row_normalise=args.row_normalise,
                 regressor_name=args.estimator_name,
-                overwrite=args.overwrite,
+                resample_id=args.resample_id,
                 build_train_file=args.train_fold,
+                overwrite=args.overwrite,
                 predefined_resample=args.predefined_resample,
             )
     # local run (no args)
@@ -68,12 +69,13 @@ def run_experiment(args, overwrite=False):
         results_path = "../"
         estimator_name = "LR"
         dataset_name = "Covid3Month"
+        row_normalise = False
         resample_id = 0
         n_jobs = 1
+        train_fold = False
         overwrite = False
         predefined_resample = False
-        train_fold = False
-        fit_contract = None
+        fit_contract = 0
         checkpoint = None
         kwargs = {}
 
@@ -93,10 +95,11 @@ def run_experiment(args, overwrite=False):
             results_path,
             dataset_name,
             regressor,
-            resample_id=resample_id,
+            row_normalise=row_normalise,
             regressor_name=estimator_name,
-            overwrite=overwrite,
+            resample_id=resample_id,
             build_train_file=train_fold,
+            overwrite=overwrite,
             predefined_resample=predefined_resample,
         )
 
@@ -105,4 +108,5 @@ if __name__ == "__main__":
     """
     Example simple usage, with arguments input via script or hard coded for testing.
     """
-    run_experiment(sys.argv)
+    print("Running threaded_regression_experiments.py main")
+    run_experiment(sys.argv[1:])
