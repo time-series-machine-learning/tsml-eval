@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tests for regression experiments."""
 
 __author__ = ["MatthewMiddlehurst"]
@@ -35,20 +34,18 @@ def test_run_regression_experiment(regressor, dataset):
     )
 
     args = [
-        None,
         data_path,
         result_path,
         regressor,
         dataset,
         "0",
-        "True",
-        "False",
-        None,
+        "-tr",
+        "-ow",
     ]
 
     # aeon estimators don't support unequal length series lists currently
     try:
-        run_experiment(args, overwrite=True)
+        run_experiment(args)
     except ValueError as e:
         if "not support unequal length series" in str(e):
             return

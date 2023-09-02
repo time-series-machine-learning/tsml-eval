@@ -24,20 +24,20 @@ def test_run_rist_pipeline_classification_experiment():
         if os.getcwd().split("\\")[-1] != "tests"
         else "../../../../../test_output/rist_pipeline/"
     )
-    classifier = "RIST"
+    classifier = "ROCKET"
     dataset = "MinimalChinatown"
     resample = 0
 
     args = [
-        None,
         data_path,
         result_path,
         classifier,
         dataset,
         resample,
+        "-ow",
     ]
 
-    _run_classification_experiment(args, overwrite=True)
+    _run_classification_experiment(args)
 
     test_file = f"{result_path}{classifier}/Predictions/{dataset}/testResample0.csv"
     assert os.path.exists(test_file)
@@ -58,20 +58,20 @@ def test_run_rist_pipeline_regression_experiment():
         if os.getcwd().split("\\")[-1] != "tests"
         else "../../../../../test_output/rist_pipeline/"
     )
-    regressor = "RIST"
+    regressor = "ROCKET"
     dataset = "MinimalGasPrices"
     resample = 0
 
     args = [
-        None,
         data_path,
         result_path,
         regressor,
         dataset,
         resample,
+        "-ow",
     ]
 
-    _run_regression_experiment(args, overwrite=True)
+    _run_regression_experiment(args)
 
     test_file = f"{result_path}{regressor}/Predictions/{dataset}/testResample0.csv"
     assert os.path.exists(test_file)
