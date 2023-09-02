@@ -10,7 +10,7 @@ from tsml.base import BaseTimeSeriesEstimator, _clone_estimator
 
 
 class SklearnToTsmlClusterer(ClusterMixin, BaseTimeSeriesEstimator):
-    """Wrapper for sklearn estimators."""
+    """Wrapper for sklearn estimators to use the tsml base class."""
 
     def __init__(
         self,
@@ -27,6 +27,7 @@ class SklearnToTsmlClusterer(ClusterMixin, BaseTimeSeriesEstimator):
         super(SklearnToTsmlClusterer, self).__init__()
 
     def fit(self, X, y=None):
+        """Wrap fit."""
         if self.clusterer is None:
             raise ValueError("Clusterer not set")
 
@@ -45,6 +46,7 @@ class SklearnToTsmlClusterer(ClusterMixin, BaseTimeSeriesEstimator):
         return self
 
     def predict(self, X) -> np.ndarray:
+        """Wrap predict."""
         check_is_fitted(self)
 
         X = self._validate_data(X=X, reset=False)
