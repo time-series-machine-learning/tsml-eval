@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """A tsml wrapper for sklearn regressors."""
 
 __author__ = ["DGuijoRubio", "MatthewMiddlehurst"]
@@ -11,7 +10,7 @@ from tsml.base import BaseTimeSeriesEstimator, _clone_estimator
 
 
 class SklearnToTsmlRegressor(RegressorMixin, BaseTimeSeriesEstimator):
-    """Wrapper for sklearn estimators."""
+    """Wrapper for sklearn estimators to use the tsml base class."""
 
     def __init__(
         self,
@@ -28,6 +27,7 @@ class SklearnToTsmlRegressor(RegressorMixin, BaseTimeSeriesEstimator):
         super(SklearnToTsmlRegressor, self).__init__()
 
     def fit(self, X, y):
+        """Wrap fit."""
         if self.regressor is None:
             raise ValueError("Regressor not set")
 
@@ -44,6 +44,7 @@ class SklearnToTsmlRegressor(RegressorMixin, BaseTimeSeriesEstimator):
         return self
 
     def predict(self, X) -> np.ndarray:
+        """Wrap predict."""
         check_is_fitted(self)
 
         X = self._validate_data(X=X, reset=False)

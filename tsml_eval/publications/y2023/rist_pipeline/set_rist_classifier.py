@@ -11,7 +11,7 @@ rist_classifiers = [
     ["ShapeletTransformClassifier", "stc", "stc-2hour"],
     ["RDSTClassifier", "rdst"],
     ["RSTSFClassifier", "rstsf", "r-stsf"],
-    "DrCIF",
+    ["drcif", "DrCIFClassifier"],
     ["RocketClassifier", "rocket"],
     ["HIVECOTEV2", "hc2"],
     ["RISTClassifier", "rist", "rist-extrat"],
@@ -33,15 +33,11 @@ def _set_rist_classifier(
         raise Exception("UNKNOWN CLASSIFIER ", c, " in set_rist_classifier")
 
     if c == "freshprinceclassifier" or c == "freshprince":
-        from tsml_eval.estimators.classification.feature_based import (
-            FreshPRINCEClassifier,
-        )
+        from aeon.classification.feature_based import FreshPRINCEClassifier
 
         return FreshPRINCEClassifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "shapelettransformclassifier" or c == "stc" or c == "stc-2hour":
-        from tsml_eval.estimators.classification.shapelet_based import (
-            ShapeletTransformClassifier,
-        )
+        from aeon.classification.shapelet_based import ShapeletTransformClassifier
 
         return ShapeletTransformClassifier(
             transform_limit_in_minutes=120,
@@ -59,10 +55,10 @@ def _set_rist_classifier(
         return RSTSFClassifier(
             n_estimators=500, random_state=random_state, n_jobs=n_jobs, **kwargs
         )
-    elif c == "drcif":
-        from aeon.classification.interval_based import DrCIF
+    elif c == "drcif" or c == "drcifclassifier":
+        from aeon.classification.interval_based import DrCIFClassifier
 
-        return DrCIF(
+        return DrCIFClassifier(
             n_estimators=500,
             random_state=random_state,
             n_jobs=n_jobs,
