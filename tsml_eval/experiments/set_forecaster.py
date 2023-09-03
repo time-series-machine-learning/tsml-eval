@@ -1,18 +1,38 @@
-# -*- coding: utf-8 -*-
 """Set forecaster function."""
 
 __author__ = ["MatthewMiddlehurst"]
 
+from aeon.forecasting.naive import NaiveForecaster
 
-def set_forecaster(forecaster_name, random_state=None, n_jobs=1):
+from tsml_eval.utils.functions import str_in_nested_list
+
+ml_forecasters = [
+    ["lr", "linearregression"],
+    "1nn",
+    ["rf", "randomforest"],
+    "xgboost",
+    "inceptiontime",
+    "rocket",
+    "freshprince",
+    "drcif",
+    ["rotf", "rotationforest"],
+]
+other_forecasters = [
+    ["NaiveForecaster", "naive"],
+]
+
+
+def set_forecaster(forecaster_name, random_state=None, n_jobs=1, **kwargs):
     """Return a forecaster matching a given input name.
 
     Basic way of creating a forecaster to build using the default or alternative
     settings. This set up is to help with batch jobs for multiple problems and to
-    facilitate easy reproducibility for use with run_classification_experiment.
+    facilitate easy reproducibility for use with run_forecasting_experiment.
 
-    Generally, inputting a forecasters class name will return said classifier with
+    Generally, inputting a forecasters class name will return said forecaster with
     default settings.
+
+    todo
 
     Parameters
     ----------
@@ -31,57 +51,70 @@ def set_forecaster(forecaster_name, random_state=None, n_jobs=1):
     """
     f = forecaster_name.lower()
 
+    if str_in_nested_list(ml_forecasters, f):
+        return _set_forecaster_ml(f, random_state, n_jobs, kwargs)
+    elif str_in_nested_list(other_forecasters, f):
+        return _set_forecaster_other(f, random_state, n_jobs, kwargs)
+    else:
+        raise ValueError(f"UNKNOWN FORECASTER {f} in set_forecaster")
+
+
+def _set_forecaster_ml(f, random_state, n_jobs, kwargs):
     if f == "lr" or f == "linearregression":
+        from aeon.forecasting.compose import make_reduction
+        from aeon.forecasting.trend import PolynomialTrendForecaster
+        from aeon.pipeline import make_pipeline
+        from aeon.transformations.series.detrend import Detrender
         from sklearn.linear_model import LinearRegression
         from sklearn.preprocessing import StandardScaler
-        from sktime.forecasting.compose import make_reduction
-        from sktime.forecasting.trend import PolynomialTrendForecaster
-        from sktime.pipeline import make_pipeline
-        from sktime.transformations.series.detrend import Detrender
 
-        regressor = LinearRegression(n_jobs=n_jobs)
+        regressor = LinearRegression(n_jobs=n_jobs, **kwargs)
         return make_pipeline(
             Detrender(PolynomialTrendForecaster(degree=1, with_intercept=True)),
             StandardScaler(),
             make_reduction(regressor, window_length=15, strategy="recursive"),
         )
     elif f == "1nn":
+        from aeon.forecasting.compose import make_reduction
+        from aeon.forecasting.trend import PolynomialTrendForecaster
+        from aeon.pipeline import make_pipeline
+        from aeon.transformations.series.detrend import Detrender
         from sklearn.neighbors import KNeighborsRegressor
         from sklearn.preprocessing import StandardScaler
-        from sktime.forecasting.compose import make_reduction
-        from sktime.forecasting.trend import PolynomialTrendForecaster
-        from sktime.pipeline import make_pipeline
-        from sktime.transformations.series.detrend import Detrender
 
-        regressor = KNeighborsRegressor(n_neighbors=1, n_jobs=n_jobs)
+        regressor = KNeighborsRegressor(n_neighbors=1, n_jobs=n_jobs, **kwargs)
         return make_pipeline(
             Detrender(PolynomialTrendForecaster(degree=1, with_intercept=True)),
             StandardScaler(),
             make_reduction(regressor, window_length=15, strategy="recursive"),
         )
     elif f == "rf" or f == "randomforest":
+        from aeon.forecasting.compose import make_reduction
+        from aeon.forecasting.trend import PolynomialTrendForecaster
+        from aeon.pipeline import make_pipeline
+        from aeon.transformations.series.detrend import Detrender
         from sklearn.ensemble import RandomForestRegressor
         from sklearn.preprocessing import StandardScaler
-        from sktime.forecasting.compose import make_reduction
-        from sktime.forecasting.trend import PolynomialTrendForecaster
-        from sktime.pipeline import make_pipeline
-        from sktime.transformations.series.detrend import Detrender
 
-        regressor = RandomForestRegressor(n_estimators=200, n_jobs=n_jobs)
+        regressor = RandomForestRegressor(
+            n_estimators=200, random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
         return make_pipeline(
             Detrender(PolynomialTrendForecaster(degree=1, with_intercept=True)),
             StandardScaler(),
             make_reduction(regressor, window_length=15, strategy="recursive"),
         )
     elif f == "xgboost":
+        from aeon.forecasting.compose import make_reduction
+        from aeon.forecasting.trend import PolynomialTrendForecaster
+        from aeon.pipeline import make_pipeline
+        from aeon.transformations.series.detrend import Detrender
         from sklearn.preprocessing import StandardScaler
-        from sktime.forecasting.compose import make_reduction
-        from sktime.forecasting.trend import PolynomialTrendForecaster
-        from sktime.pipeline import make_pipeline
-        from sktime.transformations.series.detrend import Detrender
         from xgboost import XGBRegressor
 
-        regressor = XGBRegressor(n_estimators=200, n_jobs=n_jobs)
+        regressor = XGBRegressor(
+            n_estimators=200, random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
         return make_pipeline(
             Detrender(PolynomialTrendForecaster(degree=1, with_intercept=True)),
             StandardScaler(),
@@ -89,84 +122,83 @@ def set_forecaster(forecaster_name, random_state=None, n_jobs=1):
         )
 
     elif f == "inceptiontime":
+        from aeon.forecasting.compose import make_reduction
+        from aeon.forecasting.trend import PolynomialTrendForecaster
+        from aeon.pipeline import make_pipeline
+        from aeon.regression.deep_learning import InceptionTimeRegressor
+        from aeon.transformations.series.detrend import Detrender
         from sklearn.preprocessing import StandardScaler
-        from sktime.forecasting.compose import make_reduction
-        from sktime.forecasting.trend import PolynomialTrendForecaster
-        from sktime.pipeline import make_pipeline
-        from sktime.transformations.series.detrend import Detrender
 
-        from tsml_eval.sktime_estimators.regression.deep_learning import (
-            InceptionTimeRegressor,
-        )
-
-        regressor = InceptionTimeRegressor(random_state=random_state)
+        regressor = InceptionTimeRegressor(random_state=random_state, **kwargs)
         return make_pipeline(
             Detrender(PolynomialTrendForecaster(degree=1, with_intercept=True)),
             StandardScaler(),
             make_reduction(regressor, window_length=15, strategy="recursive"),
         )
     elif f == "rocket":
+        from aeon.forecasting.compose import make_reduction
+        from aeon.forecasting.trend import PolynomialTrendForecaster
+        from aeon.pipeline import make_pipeline
+        from aeon.regression.convolution_based import RocketRegressor
+        from aeon.transformations.series.detrend import Detrender
         from sklearn.preprocessing import StandardScaler
-        from sktime.forecasting.compose import make_reduction
-        from sktime.forecasting.trend import PolynomialTrendForecaster
-        from sktime.pipeline import make_pipeline
-        from sktime.regression.kernel_based import RocketRegressor
-        from sktime.transformations.series.detrend import Detrender
 
-        regressor = RocketRegressor(random_state=random_state, n_jobs=n_jobs)
+        regressor = RocketRegressor(random_state=random_state, n_jobs=n_jobs, **kwargs)
         return make_pipeline(
             Detrender(PolynomialTrendForecaster(degree=1, with_intercept=True)),
             StandardScaler(),
             make_reduction(regressor, window_length=15, strategy="recursive"),
         )
     elif f == "freshprince":
+        from aeon.forecasting.compose import make_reduction
+        from aeon.forecasting.trend import PolynomialTrendForecaster
+        from aeon.pipeline import make_pipeline
+        from aeon.regression.feature_based import FreshPRINCERegressor
+        from aeon.transformations.series.detrend import Detrender
         from sklearn.preprocessing import StandardScaler
-        from sktime.forecasting.compose import make_reduction
-        from sktime.forecasting.trend import PolynomialTrendForecaster
-        from sktime.pipeline import make_pipeline
-        from sktime.transformations.series.detrend import Detrender
 
-        from tsml_eval.sktime_estimators.regression.featured_based import (
-            FreshPRINCERegressor,
+        regressor = FreshPRINCERegressor(
+            random_state=random_state, n_jobs=n_jobs, **kwargs
         )
-
-        regressor = FreshPRINCERegressor(random_state=random_state, n_jobs=n_jobs)
         return make_pipeline(
             Detrender(PolynomialTrendForecaster(degree=1, with_intercept=True)),
             StandardScaler(),
             make_reduction(regressor, window_length=15, strategy="recursive"),
         )
     elif f == "drcif":
+        from aeon.forecasting.compose import make_reduction
+        from aeon.forecasting.trend import PolynomialTrendForecaster
+        from aeon.pipeline import make_pipeline
+        from aeon.regression.interval_based import DrCIFRegressor
+        from aeon.transformations.series.detrend import Detrender
         from sklearn.preprocessing import StandardScaler
-        from sktime.forecasting.compose import make_reduction
-        from sktime.forecasting.trend import PolynomialTrendForecaster
-        from sktime.pipeline import make_pipeline
-        from sktime.transformations.series.detrend import Detrender
 
-        from tsml_eval.sktime_estimators.regression.interval_based import DrCIF
-
-        regressor = DrCIF(n_estimators=500, random_state=random_state, n_jobs=n_jobs)
+        regressor = DrCIFRegressor(
+            n_estimators=500, random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
         return make_pipeline(
             Detrender(PolynomialTrendForecaster(degree=1, with_intercept=True)),
             StandardScaler(),
             make_reduction(regressor, window_length=15, strategy="recursive"),
         )
     elif f == "rotf" or f == "rotationforest":
+        from aeon.forecasting.compose import make_reduction
+        from aeon.forecasting.trend import PolynomialTrendForecaster
+        from aeon.pipeline import make_pipeline
+        from aeon.regression.sklearn import RotationForestRegressor
+        from aeon.transformations.series.detrend import Detrender
         from sklearn.preprocessing import StandardScaler
-        from sktime.forecasting.compose import make_reduction
-        from sktime.forecasting.trend import PolynomialTrendForecaster
-        from sktime.pipeline import make_pipeline
-        from sktime.transformations.series.detrend import Detrender
 
-        from tsml_eval.sktime_estimators.regression.sklearn import RotationForest
-
-        regressor = RotationForest(random_state=random_state, n_jobs=n_jobs)
+        regressor = RotationForestRegressor(
+            random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
         return make_pipeline(
             Detrender(PolynomialTrendForecaster(degree=1, with_intercept=True)),
             StandardScaler(),
             make_reduction(regressor, window_length=15, strategy="recursive"),
         )
 
-    # invalid regressor
-    else:
-        raise Exception("UNKNOWN REGRESSOR ", f, " in set_regressor")
+
+def _set_forecaster_other(f, random_state, n_jobs, kwargs):
+    if f == "naiveforecaster" or f == "naive":
+        return NaiveForecaster(**kwargs)

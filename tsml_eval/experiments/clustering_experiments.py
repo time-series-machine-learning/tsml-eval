@@ -7,12 +7,12 @@ single debugging runs. Results are written in a standard tsml format.
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 import os
+import sys
 
 os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
 
-import sys
 
 import numba
 from aeon.utils.validation._dependencies import _check_soft_dependencies

@@ -557,7 +557,6 @@ def write_forecasting_results(
     output_path,
     full_path=True,
     split=None,
-    resample_id=None,
     timing_type="N/A",
     first_line_comment=None,
     parameter_info="No Parameter Info",
@@ -579,20 +578,17 @@ def write_forecasting_results(
         Name of the forecaster that made the predictions. Written to file and can
         determine file structure if full_path is False.
     dataset_name : str
-        Name of the problem the regressor was built on.
+        Name of the problem the forecaster was built on.
     output_path : str
         Path to write the results file to or the directory to build the default file
         structure if full_path is False.
     full_path : boolean, default=True
         If True, results are written directly to the directory passed in output_path.
-        If False, then a standard file structure using the regressor and dataset names
+        If False, then a standard file structure using the forecaster and dataset names
         is created and used to write the results file.
     split : str or None, default=None
         Either None, 'TRAIN' or 'TEST'. Influences the result file name and first line
         of the file.
-    resample_id : int or None, default=None
-        Indicates what random seed was used to resample the data or used as a
-        random_state for the regressor.
     timing_type : str, default="N/A"
         The format used for timings in the file, i.e. 'Seconds', 'Milliseconds',
         'Nanoseconds'
@@ -605,20 +601,20 @@ def write_forecasting_results(
     mape: float, default=-1
         The mean absolute percentage error of the predictions.
     fit_time : int, default=-1
-        The time taken to fit the regressor.
+        The time taken to fit the forecaster.
     predict_time : int, default=-1
-        The time taken to predict the regression labels.
+        The time taken to predict the forecasting labels.
     benchmark_time : int, default=-1
         A benchmark time for the hardware used to scale other timings.
     memory_usage : int, default=-1
-        The memory usage of the regressor.
+        The memory usage of the forecaster.
     """
     third_line = (
         f"{mape},"
         f"{fit_time},"
         f"{predict_time},"
         f"{benchmark_time},"
-        f"{memory_usage},"
+        f"{memory_usage}"
     )
 
     write_results_to_tsml_format(
@@ -629,7 +625,6 @@ def write_forecasting_results(
         output_path,
         full_path=full_path,
         split=split,
-        resample_id=resample_id,
         timing_type=timing_type,
         first_line_comment=first_line_comment,
         second_line=parameter_info,
@@ -919,6 +914,12 @@ def _check_clustering_third_line(line):
     line = line.split(",")
     floats = [0, 1, 2, 3, 4, 5, 6]
     return _check_line_length_and_floats(line, 7, floats)
+
+
+def _check_forecasting_third_line(line):
+    line = line.split(",")
+    floats = [0, 1, 2, 3, 4]
+    return _check_line_length_and_floats(line, 5, floats)
 
 
 def _check_line_length_and_floats(line, length, floats):

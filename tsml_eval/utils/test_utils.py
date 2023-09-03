@@ -2,7 +2,11 @@ import sys
 from contextlib import contextmanager
 from os import devnull
 
-EXEMPT_ESTIMATOR_NAMES = ["ColumnEnsembleRegressor", "GridSearchCV"]
+EXEMPT_ESTIMATOR_NAMES = [
+    "ColumnEnsembleRegressor",
+    "GridSearchCV",
+    "TransformedTargetForecaster",
+]
 
 
 def _check_set_method(

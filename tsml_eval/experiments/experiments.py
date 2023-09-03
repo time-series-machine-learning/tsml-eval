@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 from aeon.classification import BaseClassifier
 from aeon.clustering import BaseClusterer
+from aeon.forecasting.base import BaseForecaster
 from aeon.regression.base import BaseRegressor
 from sklearn import preprocessing
 from sklearn.base import BaseEstimator, is_classifier, is_regressor
@@ -62,7 +63,7 @@ def run_classification_experiment(
     """Run a classification experiment and save the results to file.
 
     Function to run a basic classification experiment for a
-    <dataset>/<classifier/<resample> combination and write the results to csv file(s)
+    <dataset>/<classifier>/<resample> combination and write the results to csv file(s)
     at a given location.
 
     Parameters
@@ -241,7 +242,7 @@ def load_and_run_classification_experiment(
     """Load a dataset and run a classification experiment.
 
     Function to load a dataset, run a basic classification experiment for a
-    <dataset>/<classifier/<resample> combination, and write the results to csv file(s)
+    <dataset>/<classifier>/<resample> combination, and write the results to csv file(s)
     at a given location.
 
     Parameters
@@ -332,7 +333,7 @@ def run_regression_experiment(
     """Run a regression experiment and save the results to file.
 
     Function to run a basic regression experiment for a
-    <dataset>/<regressor/<resample> combination and write the results to csv file(s)
+    <dataset>/<regressor>/<resample> combination and write the results to csv file(s)
     at a given location.
 
     Parameters
@@ -494,7 +495,7 @@ def load_and_run_regression_experiment(
     """Load a dataset and run a regression experiment.
 
     Function to load a dataset, run a basic regression experiment for a
-    <dataset>/<regressor/<resample> combination, and write the results to csv file(s)
+    <dataset>/<regressor>/<resample> combination, and write the results to csv file(s)
     at a given location.
 
     Parameters
@@ -590,7 +591,7 @@ def run_clustering_experiment(
     """Run a clustering experiment and save the results to file.
 
     Function to run a basic clustering experiment for a
-    <dataset>/<clusterer/<resample> combination and write the results to csv file(s)
+    <dataset>/<clusterer>/<resample> combination and write the results to csv file(s)
     at a given location.
 
     Parameters
@@ -796,7 +797,7 @@ def load_and_run_clustering_experiment(
     """Load a dataset and run a clustering experiment.
 
     Function to load a dataset, run a basic clustering experiment for a
-    <dataset>/<clusterer/<resample> combination, and write the results to csv file(s)
+    <dataset>/<clusterer>/<resample> combination, and write the results to csv file(s)
     at a given location.
 
     Parameters
@@ -880,45 +881,33 @@ def run_forecasting_experiment(
     forecaster,
     results_path,
     forecaster_name=None,
-    dataset_name="",
-    resample_id=None,
+    dataset_name="N/A",
 ):
-    """Run a regression experiment and save the results to file.
+    """Run a forecasting experiment and save the results to file.
 
-    Function to run a basic regression experiment for a
-    <dataset>/<regressor/<resample> combination and write the results to csv file(s)
+    Function to run a basic forecasting experiment for a
+    <dataset>/<forecaster>/<resample> combination and write the results to csv file(s)
     at a given location.
 
     Parameters
     ----------
-    X_train : pd.DataFrame or np.array
-        The data to train the regressor.
-    y_train : np.array
-        Training data labels.
-    X_test : pd.DataFrame or np.array
-        The data used to test the trained regressor.
-    y_test : np.array
-        Testing data labels.
-    regressor : BaseRegressor
+    train : pd.DataFrame or np.array
+        The series used to train the forecaster.
+    test : pd.DataFrame or np.array
+        The series used to test the trained forecaster.
+    forecaster : BaseForecaster
         Regressor to be used in the experiment.
     results_path : str
         Location of where to write results. Any required directories will be created.
-    regressor_name : str or None, default=None
-        Name of regressor used in writing results. If None, the name is taken from
-        the regressor.
+    forecaster_name : str or None, default=None
+        Name of forecaster used in writing results. If None, the name is taken from
+        the forecaster.
     dataset_name : str, default="N/A"
         Name of dataset.
-    resample_id : int or None, default=None
-        Seed for resampling. If set to 0, the default train/test split from file is
-        used. Also used in output file name.
-    build_test_file : bool, default=True:
-        Whether to generate test files or not. If the regressor can generate its own
-        train predictions, the classifier will be built but no file will be output.
-    build_train_file : bool, default=False
-        Whether to generate train files or not. If true, it performs a 10-fold
-        cross-validation on the train data and saves. If the regressor can produce its
-        own estimates, those are used instead.
     """
+    if not isinstance(forecaster, BaseForecaster):
+        raise TypeError("forecaster must be an aeon forecaster.")
+
     if forecaster_name is None:
         forecaster_name = type(forecaster).__name__
 
@@ -948,7 +937,6 @@ def run_forecasting_experiment(
         results_path,
         full_path=False,
         split="TEST",
-        resample_id=resample_id,
         timing_type="MILLISECONDS",
         first_line_comment=first_comment,
         parameter_info=second,
@@ -963,7 +951,6 @@ def load_and_run_forecasting_experiment(
     results_path,
     dataset,
     forecaster,
-    resample_id=0,
     forecaster_name=None,
     overwrite=False,
 ):
@@ -980,16 +967,13 @@ def load_and_run_forecasting_experiment(
     results_path : str
         Location of where to write results. Any required directories will be created.
     dataset : str
-        Name of problem. Files must be <problem_path>/<dataset>/<dataset>+"_TRAIN.ts",
-        same for "_TEST.ts".
-    regressor : BaseRegressor
+        Name of problem. Files must be <problem_path>/<dataset>/<dataset>+"_TRAIN.csv",
+        same for "_TEST.csv".
+    forecaster : BaseForecaster
         Regressor to be used in the experiment.
-    regressor_name : str or None, default=None
-        Name of regressor used in writing results. If None, the name is taken from
-        the regressor.
-    resample_id : int, default=0
-        Seed for resampling. If set to 0, the default train/test split from file is
-        used. Also used in output file name.
+    forecaster_name : str or None, default=None
+        Name of forecaster used in writing results. If None, the name is taken from
+        the forecaster.
     overwrite : bool, default=False
         If set to False, this will only build results if there is not a result file
         already present. If True, it will overwrite anything already there.
@@ -998,7 +982,7 @@ def load_and_run_forecasting_experiment(
         results_path,
         forecaster_name,
         dataset,
-        resample_id,
+        None,
         overwrite,
         True,
         False,
@@ -1024,7 +1008,6 @@ def load_and_run_forecasting_experiment(
         results_path,
         forecaster_name=forecaster_name,
         dataset_name=dataset,
-        resample_id=resample_id,
     )
 
 

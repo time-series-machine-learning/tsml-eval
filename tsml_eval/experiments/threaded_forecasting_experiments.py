@@ -4,46 +4,20 @@ This file is configured for runs of the main method with command line arguments,
 single debugging runs. Results are written in a standard tsml format.
 """
 
-__author__ = ["TonyBagnall", "MatthewMiddlehurst"]
+__author__ = ["MatthewMiddlehurst"]
 
-import os
 import sys
-
-os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
-os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
-os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
-
-
-import numba
-from aeon.utils.validation._dependencies import _check_soft_dependencies
 
 from tsml_eval.experiments import load_and_run_forecasting_experiment
 from tsml_eval.experiments.set_forecaster import set_forecaster
-from tsml_eval.utils.experiments import _results_present, assign_gpu, parse_args
+from tsml_eval.utils.experiments import _results_present, parse_args
 
 
 def run_experiment(args, overwrite=False):
-    """Mechanism for testing forecasters using a csv data format.
-
-    Attempts to avoid the use of threading as much as possible.
-    """
-    numba.set_num_threads(1)
-    if _check_soft_dependencies("torch", severity="none"):
-        import torch
-
-        torch.set_num_threads(1)
-
-    # if multiple GPUs are available, assign the one with the least usage to the process
-    if os.environ.get("CUDA_VISIBLE_DEVICES") is None:
-        try:
-            gpu = assign_gpu()
-            os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-            os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
-            print(f"Assigned GPU {gpu} to process.")
-        except Exception:
-            print("Unable to assign GPU to process.")
-
+    """Mechanism for testing forecasters using a csv data format."""
     # cluster run (with args), this is fragile
+    # don't run threaded jobs on the cluster unless you have reserved the whole node
+    # and know what you are doing
     if args is not None and args.__len__() > 0:
         print("Input args = ", args)
         args = parse_args(args)
@@ -67,7 +41,7 @@ def run_experiment(args, overwrite=False):
                     random_state=args.resample_id
                     if args.random_seed is None
                     else args.random_seed,
-                    n_jobs=1,
+                    n_jobs=args.n_jobs,
                     **args.kwargs,
                 ),
                 forecaster_name=args.estimator_name,
@@ -83,13 +57,14 @@ def run_experiment(args, overwrite=False):
         estimator_name = "LR"
         dataset_name = "ShampooSales"
         random_seed = 0
+        n_jobs = 1
         overwrite = False
         kwargs = {}
 
         forecaster = set_forecaster(
             estimator_name,
             random_state=random_seed,
-            n_jobs=1,
+            n_jobs=n_jobs,
             **kwargs,
         )
         print(f"Local Run of {estimator_name} ({forecaster.__class__.__name__}).")
