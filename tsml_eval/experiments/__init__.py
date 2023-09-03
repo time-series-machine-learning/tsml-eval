@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Experiment functions."""
 
 __all__ = [
