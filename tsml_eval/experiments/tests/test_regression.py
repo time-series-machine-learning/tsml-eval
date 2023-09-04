@@ -8,7 +8,7 @@ import pytest
 
 from tsml_eval.experiments import set_regressor
 from tsml_eval.experiments.regression_experiments import run_experiment
-from tsml_eval.utils.test_utils import EXEMPT_ESTIMATOR_NAMES, _check_set_method
+from tsml_eval.utils.test_utils import _check_set_method, _check_set_method_results
 from tsml_eval.utils.tests.test_results_writing import _check_regression_file_format
 
 
@@ -90,15 +90,6 @@ def test_set_regressor():
             all_regressor_names,
         )
 
-    for estimator in EXEMPT_ESTIMATOR_NAMES:
-        if estimator in regressor_dict:
-            regressor_dict.pop(estimator)
-
-    if not all(regressor_dict.values()):
-        missing_keys = [key for key, value in regressor_dict.items() if not value]
-
-        raise ValueError(
-            "All regressors seen in set_regressor must have an entry for the full "
-            "class name (usually with default parameters). regressors with missing "
-            f"entries: {missing_keys}."
-        )
+    _check_set_method_results(
+        regressor_dict, estimator_name="Regressors", method_name="set_regressor"
+    )
