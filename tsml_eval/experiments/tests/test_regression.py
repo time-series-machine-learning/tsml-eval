@@ -43,14 +43,7 @@ def test_run_regression_experiment(regressor, dataset):
         "-ow",
     ]
 
-    # aeon estimators don't support unequal length series lists currently
-    try:
-        run_experiment(args)
-    except ValueError as e:
-        if "not support unequal length series" in str(e):
-            return
-        else:
-            raise e
+    run_experiment(args)
 
     test_file = f"{result_path}{regressor}/Predictions/{dataset}/testResample0.csv"
     train_file = f"{result_path}{regressor}/Predictions/{dataset}/trainResample0.csv"

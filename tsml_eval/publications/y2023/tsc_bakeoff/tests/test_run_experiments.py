@@ -1,5 +1,6 @@
 """Test file checking that the TSC bakeoff experiments run correctly."""
 import os
+import runpy
 
 from tsml_eval.publications.y2023.tsc_bakeoff import _run_experiment
 from tsml_eval.utils.tests.test_results_writing import _check_classification_file_format
@@ -35,5 +36,8 @@ def test_run_tsc_bakeoff_experiment():
     test_file = f"{result_path}{classifier}/Predictions/{dataset}/testResample0.csv"
     assert os.path.exists(test_file)
     _check_classification_file_format(test_file)
+
+    # this covers both the main method and present result file checking
+    runpy.run_path("../run_experiments.py")
 
     os.remove(test_file)
