@@ -36,11 +36,11 @@ def _run_classification_experiment(args):
     if args is None or args.__len__() < 1:
         data_path = _TEST_DATA_PATH
         results_path = _RIST_TEST_RESULTS_PATH
-        classifier_name = "RIST"
-        dataset_name = "ItalyPowerDemand"
+        classifier_name = "ROCKET"
+        dataset_name = "MinimalChinatown"
         resample_id = 0
         n_jobs = 1
-        kwargs = None
+        kwargs = {}
         overwrite = False
     else:
         print("Input args = ", args)

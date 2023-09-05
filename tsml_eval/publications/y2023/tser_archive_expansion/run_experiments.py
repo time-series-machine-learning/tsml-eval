@@ -43,11 +43,11 @@ def _run_experiment(args):
     if args is None or args.__len__() < 1:
         data_path = _TEST_DATA_PATH
         results_path = _TSER_ARCHIVE_TEST_RESULTS_PATH
-        regressor_name = "LR"
-        dataset_name = "Covid3Month"
+        regressor_name = "ROCKET"
+        dataset_name = "MinimalGasPrices"
         resample_id = 0
         n_jobs = 1
-        kwargs = None
+        kwargs = {}
         overwrite = False
     else:
         print("Input args = ", args)

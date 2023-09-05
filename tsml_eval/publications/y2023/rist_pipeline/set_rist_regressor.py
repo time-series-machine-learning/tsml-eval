@@ -27,7 +27,7 @@ def _set_rist_regressor(
     r = regressor_name.lower()
 
     if not str_in_nested_list(rist_regressors, r):
-        raise Exception("UNKNOWN CLASSIFIER ", r, " in set_rist_regressor")
+        raise ValueError(f"UNKNOWN REGRESSOR: {r} in _set_rist_regressor")
 
     if (
         r == "inceptione"

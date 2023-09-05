@@ -13,7 +13,7 @@ from tsml_eval.utils.tests.test_results_writing import _check_regression_file_fo
 
 def test_run_expansion_regression_experiment():
     """Test paper regression experiments with test data and regressor."""
-    regressor = "RandomForest"
+    regressor = "ROCKET"
     dataset = "MinimalGasPrices"
     resample = 0
 

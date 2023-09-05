@@ -1,4 +1,5 @@
 """Tests for publication experiments estimator selection."""
+import pytest
 
 from tsml_eval.publications.y2023.tser_archive_expansion import (
     _set_tser_exp_regressor,
@@ -8,7 +9,7 @@ from tsml_eval.utils.test_utils import _check_set_method, _check_set_method_resu
 
 
 def test_set_expansion_regressor():
-    """Test set_expansion_regressor method."""
+    """Test set_tser_exp_regressor method."""
     regressor_dict = {}
     all_regressor_names = []
 
@@ -24,3 +25,9 @@ def test_set_expansion_regressor():
         estimator_name="Regressors",
         method_name="_set_tser_exp_regressor",
     )
+
+
+def test_set_expansion_regressor_invalid():
+    """Test set_tser_exp_regressor method with invalid estimator."""
+    with pytest.raises(ValueError, match="UNKNOWN REGRESSOR"):
+        _set_tser_exp_regressor("invalid")

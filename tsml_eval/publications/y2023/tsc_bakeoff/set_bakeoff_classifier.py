@@ -57,7 +57,7 @@ def _set_bakeoff_classifier(
     c = classifier_name.lower()
 
     if not str_in_nested_list(bakeoff_classifiers, c):
-        raise Exception("UNKNOWN CLASSIFIER ", c, " in set_bakeoff_classifier")
+        raise ValueError(f"UNKNOWN CLASSIFIER: {c} in _set_bakeoff_classifier")
 
     if c == "kneighborstimeseriesclassifier" or c == "dtw" or c == "1nn-dtw":
         from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier

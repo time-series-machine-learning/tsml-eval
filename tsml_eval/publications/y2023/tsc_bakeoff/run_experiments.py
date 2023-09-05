@@ -53,7 +53,7 @@ def _run_experiment(args, predefined_resample):
         dataset_name = "MinimalChinatown"
         resample_id = 0
         n_jobs = 1
-        kwargs = None
+        kwargs = {}
         overwrite = False
     else:
         print("Input args = ", args)

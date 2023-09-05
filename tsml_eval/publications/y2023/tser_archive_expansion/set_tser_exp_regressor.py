@@ -45,7 +45,7 @@ def _set_tser_exp_regressor(
     r = regressor_name.lower()
 
     if not str_in_nested_list(expansion_regressors, r):
-        raise Exception("UNKNOWN REGRESSOR ", r, " in set_expansion_regressor")
+        raise ValueError(f"UNKNOWN REGRESSOR: {r} in _set_tser_exp_regressor")
 
     if r == "1nn-dtw" or r == "kneighborstimeseriesregressor":
         from aeon.regression.distance_based import KNeighborsTimeSeriesRegressor

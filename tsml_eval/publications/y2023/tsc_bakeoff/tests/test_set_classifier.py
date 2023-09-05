@@ -1,4 +1,5 @@
 """Tests for publication experiments estimator selection."""
+import pytest
 
 from tsml_eval.publications.y2023.tsc_bakeoff import (
     _set_bakeoff_classifier,
@@ -7,7 +8,7 @@ from tsml_eval.publications.y2023.tsc_bakeoff import (
 from tsml_eval.utils.test_utils import _check_set_method, _check_set_method_results
 
 
-def test_set_bakeoff_classifiers():
+def test_set_bakeoff_classifier():
     """Test set_bakeoff_classifier method."""
     classifier_dict = {}
     all_classifier_names = []
@@ -24,3 +25,9 @@ def test_set_bakeoff_classifiers():
         estimator_name="Classifiers",
         method_name="_set_bakeoff_classifier",
     )
+
+
+def test_set_bakeoff_classifier_invalid():
+    """Test set_bakeoff_classifier method with invalid estimator."""
+    with pytest.raises(ValueError, match="UNKNOWN CLASSIFIER"):
+        _set_bakeoff_classifier("invalid")
