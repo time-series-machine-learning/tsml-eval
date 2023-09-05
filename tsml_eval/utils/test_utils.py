@@ -1,6 +1,13 @@
+import os
 import sys
 from contextlib import contextmanager
 from os import devnull
+
+_TEST_DATA_PATH = (
+    "./tsml_eval/datasets/"
+    if os.getcwd().split("\\")[-1] != "tests"
+    else "../../../../datasets/"
+)
 
 
 def _check_set_method(

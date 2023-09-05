@@ -13,7 +13,11 @@ from tsml_eval.experiments import load_and_run_regression_experiment
 from tsml_eval.publications.y2023.tser_archive_expansion.set_tser_exp_regressor import (
     _set_tser_exp_regressor,
 )
+from tsml_eval.publications.y2023.tser_archive_expansion.tests import (
+    _TSER_ARCHIVE_TEST_RESULTS_PATH,
+)
 from tsml_eval.utils.experiments import _results_present, parse_args
+from tsml_eval.utils.test_utils import _TEST_DATA_PATH
 
 # all regressors ran without duplicates
 regressors_5A2 = [
@@ -37,8 +41,8 @@ regressors_5C = ["DrCIF", "FreshPRINCE"]
 
 def _run_experiment(args):
     if args is None or args.__len__() < 1:
-        data_path = "../"
-        results_path = "../"
+        data_path = _TEST_DATA_PATH
+        results_path = _TSER_ARCHIVE_TEST_RESULTS_PATH
         regressor_name = "LR"
         dataset_name = "Covid3Month"
         resample_id = 0

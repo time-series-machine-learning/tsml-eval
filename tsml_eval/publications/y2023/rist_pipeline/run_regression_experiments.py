@@ -13,7 +13,9 @@ from tsml_eval.experiments import load_and_run_regression_experiment
 from tsml_eval.publications.y2023.rist_pipeline.set_rist_regressor import (
     _set_rist_regressor,
 )
+from tsml_eval.publications.y2023.rist_pipeline.tests import _RIST_TEST_RESULTS_PATH
 from tsml_eval.utils.experiments import _results_present, parse_args
+from tsml_eval.utils.test_utils import _TEST_DATA_PATH
 
 regressors = [
     "InceptionTime",
@@ -29,8 +31,8 @@ regressors = [
 
 def _run_regression_experiment(args):
     if args is None or args.__len__() < 1:
-        data_path = "../"
-        results_path = "../"
+        data_path = _TEST_DATA_PATH
+        results_path = _RIST_TEST_RESULTS_PATH
         regressor_name = "RIST"
         dataset_name = "Covid3Month"
         resample_id = 0
