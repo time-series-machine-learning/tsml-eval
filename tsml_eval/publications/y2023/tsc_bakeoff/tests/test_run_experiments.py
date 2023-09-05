@@ -38,6 +38,10 @@ def test_run_tsc_bakeoff_experiment():
     _check_classification_file_format(test_file)
 
     # this covers both the main method and present result file checking
-    runpy.run_path("../run_experiments.py")
+    runpy.run_path(
+        "./tsml_eval/publications/y2023/tsc_bakeoff/run_experiments.py"
+        if os.getcwd().split("\\")[-1] != "tests"
+        else "../run_experiments.py"
+    )
 
     os.remove(test_file)

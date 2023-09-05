@@ -18,7 +18,7 @@ from tsml_eval.utils.tests.test_results_writing import _check_regression_file_fo
 )
 @pytest.mark.parametrize(
     "dataset",
-    ["MinimalGasPrices", "UnequalMinimalGasPrices"],
+    ["MinimalGasPrices", "UnequalMinimalGasPrices", "MinimalCardanoSentiment"],
 )
 def test_run_regression_experiment(regressor, dataset):
     """Test regression experiments with test data and regressor."""
@@ -32,6 +32,9 @@ def test_run_regression_experiment(regressor, dataset):
         if os.getcwd().split("\\")[-1] != "tests"
         else "../../../test_output/regression/"
     )
+
+    if regressor == "DummyRegressor-aeon" and dataset == "UnequalMinimalGasPrices":
+        return  # todo remove when aeon dummy supports unequal
 
     args = [
         data_path,

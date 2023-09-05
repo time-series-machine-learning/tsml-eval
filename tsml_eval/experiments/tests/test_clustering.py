@@ -18,13 +18,10 @@ from tsml_eval.utils.tests.test_results_writing import _check_clustering_file_fo
 )
 @pytest.mark.parametrize(
     "dataset",
-    ["MinimalChinatown", "UnequalMinimalChinatown", "MinimalJapaneseVowels"],
+    ["MinimalChinatown", "UnequalMinimalChinatown", "MinimalEqualJapaneseVowels"],
 )
 def test_run_clustering_experiment(clusterer, dataset):
     """Test clustering experiments with test data and clusterer."""
-    if clusterer == "DummyClusterer-sklearn" and dataset == "MinimalJapaneseVowels":
-        return
-
     data_path = (
         "./tsml_eval/datasets/"
         if os.getcwd().split("\\")[-1] != "tests"
@@ -35,6 +32,9 @@ def test_run_clustering_experiment(clusterer, dataset):
         if os.getcwd().split("\\")[-1] != "tests"
         else "../../../test_output/clustering/"
     )
+
+    if clusterer == "DummyClusterer-aeon" and dataset == "UnequalMinimalChinatown":
+        return  # todo remove when aeon kmeans supports unequal
 
     args = [
         data_path,
