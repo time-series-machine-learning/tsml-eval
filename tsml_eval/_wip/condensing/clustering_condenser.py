@@ -19,7 +19,7 @@ class ClusteringCondenser(BaseCollectionTransformer):
 
     _tags = {
         "univariate-only": True,
-        "fit_is_empty": False,
+        "fit_is_empty": True,
         "X_inner_mtype": ["np-list", "numpy3D"],
         "requires_y": True,
         "y_inner_mtype": ["numpy1D"],
@@ -47,13 +47,6 @@ class ClusteringCondenser(BaseCollectionTransformer):
         self.random_state = random_state
 
         self.clustering_approach = clustering_approach
-        self.clusterer = None
-
-        super(ClusteringCondenser, self).__init__()
-
-    def _fit(self, X, y):
-        self.num_instances_per_class = len(np.unique(y)) * self.num_instances_per_class
-
         if self.clustering_approach == "pam":
             from aeon.clustering.k_medoids import TimeSeriesKMedoids
 
@@ -83,14 +76,44 @@ class ClusteringCondenser(BaseCollectionTransformer):
                 random_state=self.random_state,
             )
 
+        super(ClusteringCondenser, self).__init__()
+
     def _transform(self, X, y):
         self.selected_series = self.selected_series.reshape(0, *X.shape[1:])
 
         for i in np.unique(y):
             idxs_class = np.where(y == i)
+            X_i = X[idxs_class]
 
-            self.clusterer.fit(X[idxs_class])
-            averaged_series_class_i = self.clusterer.cluster_centers_
+            # in case of self.num_instances_per_class == 1, does not make sense to run
+            # the approaches.
+            if self.num_instances_per_class == 1:
+                if self.clustering_approach == "pam":
+                    from aeon.clustering.metrics.medoids import medoids
+
+                    averaged_series_class_i = [
+                        medoids(
+                            X_i,
+                            distance=self.distance,
+                            **self.distance_params,
+                        )
+                    ]
+                elif self.clustering_approach == "kmeans":
+                    from aeon.clustering.metrics.averaging import (
+                        elastic_barycenter_average,
+                    )
+
+                    averaged_series_class_i = [
+                        elastic_barycenter_average(
+                            X_i,
+                            metric=self.distance,
+                            **self.distance_params,
+                        )
+                    ]
+            # for self.num_instances_per_class > 1.
+            else:
+                self.clusterer.fit(X_i)
+                averaged_series_class_i = self.clusterer.cluster_centers_
 
             self.selected_series = np.concatenate(
                 (self.selected_series, averaged_series_class_i), axis=0
@@ -101,5 +124,4 @@ class ClusteringCondenser(BaseCollectionTransformer):
         return np.array(self.selected_series), np.array(self.y_selected_series)
 
     def _fit_transform(self, X, y):
-        self._fit(X, y)
         return self._transform(X, y)
