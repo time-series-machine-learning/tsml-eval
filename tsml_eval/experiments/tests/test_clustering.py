@@ -18,7 +18,7 @@ from tsml_eval.utils.tests.test_results_writing import _check_clustering_file_fo
 )
 @pytest.mark.parametrize(
     "dataset",
-    ["MinimalChinatown", "UnequalMinimalChinatown", "MinimalEqualJapaneseVowels"],
+    ["MinimalChinatown", "UnequalMinimalChinatown", "EqualMinimalJapaneseVowels"],
 )
 def test_run_clustering_experiment(clusterer, dataset):
     """Test clustering experiments with test data and clusterer."""
