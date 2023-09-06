@@ -121,6 +121,8 @@ per-file-ignores = [
     "tsml_eval/experiments/threaded_regression_experiments.py:T201",
     "tsml_eval/experiments/clustering_experiments.py:E402,T201",
     "tsml_eval/experiments/threaded_clustering_experiments.py:T201",
+    "tsml_eval/experiments/forecasting_experiments.py:E402,T201",
+    "tsml_eval/experiments/threaded_forecasting_experiments.py:T201",
     "tsml_eval/publications/*:E402,T201",
 ]
 

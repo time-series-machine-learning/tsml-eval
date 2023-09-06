@@ -3,9 +3,8 @@
 __all__ = ["_TSER_ARCHIVE_TEST_RESULTS_PATH"]
 
 import os
+from pathlib import Path
 
 _TSER_ARCHIVE_TEST_RESULTS_PATH = (
-    "./test_output/expansion_regression/"
-    if os.getcwd().split("\\")[-1] != "tests"
-    else "../../../../../test_output/expansion_regression/"
+    os.path.dirname(Path(__file__).parent.parent) + "/test_output/expansion_regression/"
 )

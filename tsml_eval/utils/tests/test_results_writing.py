@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tests for results writing functions."""
 
 __author__ = ["MatthewMiddlehurst"]
@@ -12,6 +11,7 @@ from tsml_eval.utils.experiments import (
     _check_classification_third_line,
     _check_clustering_third_line,
     _check_first_line,
+    _check_forecasting_third_line,
     _check_regression_third_line,
     _check_results_line,
     _check_second_line,
@@ -95,6 +95,18 @@ def _check_regression_file_format(file_path):
     assert _check_first_line(lines[0])
     assert _check_second_line(lines[1])
     assert _check_regression_third_line(lines[2])
+
+    for i in range(3, 6):
+        assert _check_results_line(lines[i], probabilities=False)
+
+
+def _check_forecasting_file_format(file_path):
+    with open(file_path, "r") as f:
+        lines = f.readlines()
+
+    assert _check_first_line(lines[0])
+    assert _check_second_line(lines[1])
+    assert _check_forecasting_third_line(lines[2])
 
     for i in range(3, 6):
         assert _check_results_line(lines[i], probabilities=False)

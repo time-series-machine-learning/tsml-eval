@@ -12,12 +12,18 @@ import warnings
 from datetime import datetime
 
 import numpy as np
+import pandas as pd
 from aeon.classification import BaseClassifier
 from aeon.clustering import BaseClusterer
+from aeon.forecasting.base import BaseForecaster
 from aeon.regression.base import BaseRegressor
 from sklearn import preprocessing
 from sklearn.base import BaseEstimator, is_classifier, is_regressor
-from sklearn.metrics import accuracy_score, mean_squared_error
+from sklearn.metrics import (
+    accuracy_score,
+    mean_absolute_percentage_error,
+    mean_squared_error,
+)
 from sklearn.model_selection import cross_val_predict
 from tsml.base import BaseTimeSeriesEstimator
 from tsml.datasets import load_from_ts_file
@@ -35,6 +41,7 @@ from tsml_eval.utils.experiments import (
     stratified_resample_data,
     write_classification_results,
     write_clustering_results,
+    write_forecasting_results,
     write_regression_results,
 )
 
@@ -56,7 +63,7 @@ def run_classification_experiment(
     """Run a classification experiment and save the results to file.
 
     Function to run a basic classification experiment for a
-    <dataset>/<classifier/<resample> combination and write the results to csv file(s)
+    <dataset>/<classifier>/<resample> combination and write the results to csv file(s)
     at a given location.
 
     Parameters
@@ -229,7 +236,7 @@ def load_and_run_classification_experiment(
     """Load a dataset and run a classification experiment.
 
     Function to load a dataset, run a basic classification experiment for a
-    <dataset>/<classifier/<resample> combination, and write the results to csv file(s)
+    <dataset>/<classifier>/<resample> combination, and write the results to csv file(s)
     at a given location.
 
     Parameters
@@ -320,7 +327,7 @@ def run_regression_experiment(
     """Run a regression experiment and save the results to file.
 
     Function to run a basic regression experiment for a
-    <dataset>/<regressor/<resample> combination and write the results to csv file(s)
+    <dataset>/<regressor>/<resample> combination and write the results to csv file(s)
     at a given location.
 
     Parameters
@@ -476,7 +483,7 @@ def load_and_run_regression_experiment(
     """Load a dataset and run a regression experiment.
 
     Function to load a dataset, run a basic regression experiment for a
-    <dataset>/<regressor/<resample> combination, and write the results to csv file(s)
+    <dataset>/<regressor>/<resample> combination, and write the results to csv file(s)
     at a given location.
 
     Parameters
@@ -572,7 +579,7 @@ def run_clustering_experiment(
     """Run a clustering experiment and save the results to file.
 
     Function to run a basic clustering experiment for a
-    <dataset>/<clusterer/<resample> combination and write the results to csv file(s)
+    <dataset>/<clusterer>/<resample> combination and write the results to csv file(s)
     at a given location.
 
     Parameters
@@ -772,7 +779,7 @@ def load_and_run_clustering_experiment(
     """Load a dataset and run a clustering experiment.
 
     Function to load a dataset, run a basic clustering experiment for a
-    <dataset>/<clusterer/<resample> combination, and write the results to csv file(s)
+    <dataset>/<clusterer>/<resample> combination, and write the results to csv file(s)
     at a given location.
 
     Parameters
@@ -847,6 +854,151 @@ def load_and_run_clustering_experiment(
         resample_id=resample_id,
         build_train_file=build_train_file,
         build_test_file=build_test_file,
+    )
+
+
+def run_forecasting_experiment(
+    train,
+    test,
+    forecaster,
+    results_path,
+    forecaster_name=None,
+    dataset_name="N/A",
+    random_seed=None,
+):
+    """Run a forecasting experiment and save the results to file.
+
+    Function to run a basic forecasting experiment for a
+    <dataset>/<forecaster>/<resample> combination and write the results to csv file(s)
+    at a given location.
+
+    Parameters
+    ----------
+    train : pd.DataFrame or np.array
+        The series used to train the forecaster.
+    test : pd.DataFrame or np.array
+        The series used to test the trained forecaster.
+    forecaster : BaseForecaster
+        Regressor to be used in the experiment.
+    results_path : str
+        Location of where to write results. Any required directories will be created.
+    forecaster_name : str or None, default=None
+        Name of forecaster used in writing results. If None, the name is taken from
+        the forecaster.
+    dataset_name : str, default="N/A"
+        Name of dataset.
+    random_seed : int or None, default=None
+        Indicates what random seed was used as a random_state for the forecaster. Only
+        used for the results file name.
+    """
+    if not isinstance(forecaster, BaseForecaster):
+        raise TypeError("forecaster must be an aeon forecaster.")
+
+    if forecaster_name is None:
+        forecaster_name = type(forecaster).__name__
+
+    first_comment = (
+        "Generated by run_forecasting_experiment on "
+        f"{datetime.now().strftime('%m/%d/%Y, %H:%M:%S')}"
+    )
+
+    second = str(forecaster.get_params()).replace("\n", " ").replace("\r", " ")
+
+    start = int(round(time.time() * 1000))
+    forecaster.fit(train)
+    fit_time = int(round(time.time() * 1000)) - start
+
+    start = int(round(time.time() * 1000))
+    test_preds = forecaster.predict(np.arange(1, len(test) + 1))
+    test_time = int(round(time.time() * 1000)) - start
+    test_preds = test_preds.flatten()
+
+    test_mape = mean_absolute_percentage_error(test, test_preds)
+
+    write_forecasting_results(
+        test_preds,
+        test,
+        forecaster_name,
+        dataset_name,
+        results_path,
+        full_path=False,
+        split="TEST",
+        timing_type="MILLISECONDS",
+        first_line_comment=first_comment,
+        parameter_info=second,
+        mape=test_mape,
+        fit_time=fit_time,
+        predict_time=test_time,
+    )
+
+
+def load_and_run_forecasting_experiment(
+    problem_path,
+    results_path,
+    dataset,
+    forecaster,
+    forecaster_name=None,
+    random_seed=None,
+    overwrite=False,
+):
+    """Load a dataset and run a regression experiment.
+
+    Function to load a dataset, run a basic regression experiment for a
+    <dataset>/<regressor/<resample> combination, and write the results to csv file(s)
+    at a given location.
+
+    Parameters
+    ----------
+    problem_path : str
+        Location of problem files, full path.
+    results_path : str
+        Location of where to write results. Any required directories will be created.
+    dataset : str
+        Name of problem. Files must be <problem_path>/<dataset>/<dataset>+"_TRAIN.csv",
+        same for "_TEST.csv".
+    forecaster : BaseForecaster
+        Regressor to be used in the experiment.
+    forecaster_name : str or None, default=None
+        Name of forecaster used in writing results. If None, the name is taken from
+        the forecaster.
+    random_seed : int or None, default=None
+        Indicates what random seed was used as a random_state for the forecaster. Only
+        used for the results file name.
+    overwrite : bool, default=False
+        If set to False, this will only build results if there is not a result file
+        already present. If True, it will overwrite anything already there.
+    """
+    build_test_file, _ = _check_existing_results(
+        results_path,
+        forecaster_name,
+        dataset,
+        random_seed,
+        overwrite,
+        True,
+        False,
+    )
+
+    if not build_test_file:
+        warnings.warn("All files exist and not overwriting, skipping.", stacklevel=1)
+        return
+
+    train = pd.read_csv(
+        f"{problem_path}/{dataset}/{dataset}_TRAIN.csv", index_col=0
+    ).squeeze("columns")
+    train = train.astype(float).to_numpy()
+    test = pd.read_csv(
+        f"{problem_path}/{dataset}/{dataset}_TEST.csv", index_col=0
+    ).squeeze("columns")
+    test = test.astype(float).to_numpy()
+
+    run_forecasting_experiment(
+        train,
+        test,
+        forecaster,
+        results_path,
+        forecaster_name=forecaster_name,
+        dataset_name=dataset,
+        random_seed=random_seed,
     )
 
 
