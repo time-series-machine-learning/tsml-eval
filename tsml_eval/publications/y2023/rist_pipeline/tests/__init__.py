@@ -3,9 +3,8 @@
 __all__ = ["_RIST_TEST_RESULTS_PATH"]
 
 import os
+from pathlib import Path
 
 _RIST_TEST_RESULTS_PATH = (
-    "./test_output/tsc_bakeoff/"
-    if os.getcwd().split("\\")[-1] != "tests"
-    else "../../../../../test_output/rist_pipeline/"
+    os.path.dirname(Path(__file__).parent.parent) + "/test_output/rist_pipeline/"
 )

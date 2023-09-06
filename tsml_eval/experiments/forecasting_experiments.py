@@ -19,7 +19,9 @@ from aeon.utils.validation._dependencies import _check_soft_dependencies
 
 from tsml_eval.experiments import load_and_run_forecasting_experiment
 from tsml_eval.experiments.set_forecaster import set_forecaster
+from tsml_eval.experiments.tests import _FORECASTER_RESULTS_PATH
 from tsml_eval.utils.experiments import _results_present, assign_gpu, parse_args
+from tsml_eval.utils.test_utils import _TEST_DATA_PATH
 
 
 def run_experiment(args, overwrite=False):
@@ -71,6 +73,9 @@ def run_experiment(args, overwrite=False):
                     **args.kwargs,
                 ),
                 forecaster_name=args.estimator_name,
+                random_seed=args.resample_id
+                if args.random_seed is None
+                else args.random_seed,
                 overwrite=args.overwrite,
             )
     # local run (no args)
@@ -78,9 +83,9 @@ def run_experiment(args, overwrite=False):
         # These are example parameters, change as required for local runs
         # Do not include paths to your local directories here in PRs
         # If threading is required, see the threaded version of this file
-        data_path = "../"
-        results_path = "../"
-        estimator_name = "LR"
+        data_path = _TEST_DATA_PATH
+        results_path = _FORECASTER_RESULTS_PATH
+        estimator_name = "NaiveForecaster"
         dataset_name = "ShampooSales"
         random_seed = 0
         overwrite = False
@@ -100,6 +105,7 @@ def run_experiment(args, overwrite=False):
             dataset_name,
             forecaster,
             forecaster_name=estimator_name,
+            random_seed=random_seed,
             overwrite=overwrite,
         )
 

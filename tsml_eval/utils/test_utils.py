@@ -2,12 +2,9 @@ import os
 import sys
 from contextlib import contextmanager
 from os import devnull
+from pathlib import Path
 
-_TEST_DATA_PATH = (
-    "./tsml_eval/datasets/"
-    if os.getcwd().split("\\")[-1] != "tests"
-    else "../../../../datasets/"
-)
+_TEST_DATA_PATH = os.path.dirname(Path(__file__).parent.parent) + "/tsml_eval/datasets/"
 
 
 def _check_set_method(

@@ -864,6 +864,7 @@ def run_forecasting_experiment(
     results_path,
     forecaster_name=None,
     dataset_name="N/A",
+    random_seed=None,
 ):
     """Run a forecasting experiment and save the results to file.
 
@@ -886,6 +887,9 @@ def run_forecasting_experiment(
         the forecaster.
     dataset_name : str, default="N/A"
         Name of dataset.
+    random_seed : int or None, default=None
+        Indicates what random seed was used as a random_state for the forecaster. Only
+        used for the results file name.
     """
     if not isinstance(forecaster, BaseForecaster):
         raise TypeError("forecaster must be an aeon forecaster.")
@@ -934,6 +938,7 @@ def load_and_run_forecasting_experiment(
     dataset,
     forecaster,
     forecaster_name=None,
+    random_seed=None,
     overwrite=False,
 ):
     """Load a dataset and run a regression experiment.
@@ -956,6 +961,9 @@ def load_and_run_forecasting_experiment(
     forecaster_name : str or None, default=None
         Name of forecaster used in writing results. If None, the name is taken from
         the forecaster.
+    random_seed : int or None, default=None
+        Indicates what random seed was used as a random_state for the forecaster. Only
+        used for the results file name.
     overwrite : bool, default=False
         If set to False, this will only build results if there is not a result file
         already present. If True, it will overwrite anything already there.
@@ -964,7 +972,7 @@ def load_and_run_forecasting_experiment(
         results_path,
         forecaster_name,
         dataset,
-        None,
+        random_seed,
         overwrite,
         True,
         False,
@@ -990,6 +998,7 @@ def load_and_run_forecasting_experiment(
         results_path,
         forecaster_name=forecaster_name,
         dataset_name=dataset,
+        random_seed=random_seed,
     )
 
 

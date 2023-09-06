@@ -557,6 +557,7 @@ def write_forecasting_results(
     output_path,
     full_path=True,
     split=None,
+    random_seed=None,
     timing_type="N/A",
     first_line_comment=None,
     parameter_info="No Parameter Info",
@@ -589,6 +590,8 @@ def write_forecasting_results(
     split : str or None, default=None
         Either None, 'TRAIN' or 'TEST'. Influences the result file name and first line
         of the file.
+    random_seed : int or None, default=None
+        Indicates what random seed was used as a random_state for the forecaster.
     timing_type : str, default="N/A"
         The format used for timings in the file, i.e. 'Seconds', 'Milliseconds',
         'Nanoseconds'
@@ -625,6 +628,7 @@ def write_forecasting_results(
         output_path,
         full_path=full_path,
         split=split,
+        resample_id=random_seed,
         timing_type=timing_type,
         first_line_comment=first_line_comment,
         second_line=parameter_info,

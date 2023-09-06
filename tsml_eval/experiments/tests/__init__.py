@@ -3,25 +3,25 @@
 __all__ = [
     "_CLASSIFIER_RESULTS_PATH",
     "_CLUSTERER_RESULTS_PATH",
+    "_FORECASTER_RESULTS_PATH",
     "_REGRESSOR_RESULTS_PATH",
 ]
 
 import os
+from pathlib import Path
 
 _CLASSIFIER_RESULTS_PATH = (
-    "./test_output/classification/"
-    if os.getcwd().split("\\")[-1] != "tests"
-    else "../../../test_output/classification/"
+    os.path.dirname(Path(__file__).parent.parent) + "/test_output/classification/"
 )
 
 _CLUSTERER_RESULTS_PATH = (
-    "./test_output/clustering/"
-    if os.getcwd().split("\\")[-1] != "tests"
-    else "../../../test_output/clustering/"
+    os.path.dirname(Path(__file__).parent.parent) + "/test_output/clustering/"
+)
+
+_FORECASTER_RESULTS_PATH = (
+    os.path.dirname(Path(__file__).parent.parent) + "/test_output/forecasting/"
 )
 
 _REGRESSOR_RESULTS_PATH = (
-    "./test_output/regression/"
-    if os.getcwd().split("\\")[-1] != "tests"
-    else "../../../test_output/regression/"
+    os.path.dirname(Path(__file__).parent.parent) + "/test_output/regression/"
 )
