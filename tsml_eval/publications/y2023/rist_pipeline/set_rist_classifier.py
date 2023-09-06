@@ -30,7 +30,7 @@ def _set_rist_classifier(
     c = classifier_name.lower()
 
     if not str_in_nested_list(rist_classifiers, c):
-        raise Exception("UNKNOWN CLASSIFIER ", c, " in set_rist_classifier")
+        raise ValueError(f"UNKNOWN CLASSIFIER: {c} in _set_rist_classifier")
 
     if c == "freshprinceclassifier" or c == "freshprince":
         from aeon.classification.feature_based import FreshPRINCEClassifier

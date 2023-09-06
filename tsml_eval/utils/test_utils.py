@@ -1,8 +1,13 @@
+import os
 import sys
 from contextlib import contextmanager
 from os import devnull
 
-EXEMPT_ESTIMATOR_NAMES = ["ColumnEnsembleRegressor", "GridSearchCV"]
+_TEST_DATA_PATH = (
+    "./tsml_eval/datasets/"
+    if os.getcwd().split("\\")[-1] != "tests"
+    else "../../../../datasets/"
+)
 
 
 def _check_set_method(
@@ -31,6 +36,26 @@ def _check_set_method(
                 estimator_dict[c_name] = True
             elif c_name not in estimator_dict:
                 estimator_dict[c_name] = False
+
+
+EXEMPT_ESTIMATOR_NAMES = ["ColumnEnsembleRegressor", "GridSearchCV"]
+
+
+def _check_set_method_results(
+    estimator_dict, estimator_name="Estimators", method_name="the method"
+):
+    for estimator in EXEMPT_ESTIMATOR_NAMES:
+        if estimator in estimator_dict:
+            estimator_dict.pop(estimator)
+
+    if not all(estimator_dict.values()):
+        missing_keys = [key for key, value in estimator_dict.items() if not value]
+
+        raise ValueError(
+            f"All {estimator_name.lower()} seen in {method_name} must have an entry "
+            "for the full class name (usually with default parameters). "
+            f"{estimator_name} with missing entries: {missing_keys}."
+        )
 
 
 @contextmanager

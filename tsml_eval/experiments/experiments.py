@@ -98,12 +98,6 @@ def run_classification_experiment(
             "At least one must be written."
         )
 
-    if isinstance(classifier, BaseClassifier) and isinstance(X_train, list):
-        raise ValueError(
-            "aeon estimators currently do not support unequal length series. "
-            "Returning without running experiment."
-        )
-
     if isinstance(classifier, BaseClassifier) or (
         isinstance(classifier, BaseTimeSeriesEstimator) and is_classifier(classifier)
     ):
@@ -368,12 +362,6 @@ def run_regression_experiment(
             "At least one must be written."
         )
 
-    if isinstance(regressor, BaseRegressor) and isinstance(X_train, list):
-        raise ValueError(
-            "aeon estimators currently do not support unequal length series. "
-            "Returning without running experiment."
-        )
-
     if isinstance(regressor, BaseRegressor) or (
         isinstance(regressor, BaseTimeSeriesEstimator) and is_regressor(regressor)
     ):
@@ -629,12 +617,6 @@ def run_clustering_experiment(
         raise Exception(
             "Both test_file and train_file are set to False. "
             "At least one must be written."
-        )
-
-    if isinstance(clusterer, BaseClusterer) and isinstance(X_train, list):
-        raise ValueError(
-            "aeon estimators currently do not support unequal length series. "
-            "Returning without running experiment."
         )
 
     if isinstance(clusterer, BaseClusterer) or (
