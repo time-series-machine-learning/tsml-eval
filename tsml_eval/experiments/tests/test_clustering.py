@@ -41,7 +41,6 @@ def test_run_clustering_experiment(clusterer, dataset):
         dataset,
         "0",
         "-te",
-        "-ow",
     ]
 
     clustering_experiments.run_experiment(args)
@@ -107,7 +106,10 @@ def test_run_threaded_clustering_experiment():
     assert os.path.exists(train_file)
     _check_clustering_file_format(train_file)
 
-    # this covers both the main method and present result file checking
+    # test present results checking
+    clustering_experiments.run_experiment(args)
+
+    # this covers the main method and experiment function result file checking
     runpy.run_path(
         "./tsml_eval/experiments/threaded_clustering_experiments.py"
         if os.getcwd().split("\\")[-1] != "tests"

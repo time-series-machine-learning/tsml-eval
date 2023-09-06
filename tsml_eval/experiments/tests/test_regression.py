@@ -106,7 +106,10 @@ def test_run_threaded_regression_experiment():
     assert os.path.exists(test_file)
     _check_regression_file_format(test_file)
 
-    # this covers both the main method and present result file checking
+    # test present results checking
+    regression_experiments.run_experiment(args)
+
+    # this covers the main method and experiment function result file checking
     runpy.run_path(
         "./tsml_eval/experiments/threaded_regression_experiments.py"
         if os.getcwd().split("\\")[-1] != "tests"

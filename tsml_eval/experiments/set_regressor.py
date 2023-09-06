@@ -30,6 +30,8 @@ distance_based_regressors = [
     "5nn-ed",
     ["KNeighborsTimeSeriesRegressor", "1nn-dtw"],
     "5nn-dtw",
+    "1nn-msm",
+    "5nn-msm",
 ]
 feature_based_regressors = [
     ["FreshPRINCERegressor", "fresh-prince", "freshprince"],
