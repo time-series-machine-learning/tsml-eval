@@ -153,7 +153,7 @@ def set_regressor(
             r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
         )
     else:
-        raise ValueError(f"UNKNOWN REGRESSOR {r} in set_regressor")
+        raise ValueError(f"UNKNOWN REGRESSOR: {r} in set_regressor")
 
 
 def _set_regressor_convolution_based(

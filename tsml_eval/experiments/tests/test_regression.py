@@ -3,12 +3,21 @@
 __author__ = ["MatthewMiddlehurst"]
 
 import os
+import runpy
 
 import pytest
 
-from tsml_eval.experiments import set_regressor
-from tsml_eval.experiments.regression_experiments import run_experiment
-from tsml_eval.utils.test_utils import _check_set_method, _check_set_method_results
+from tsml_eval.experiments import (
+    regression_experiments,
+    set_regressor,
+    threaded_regression_experiments,
+)
+from tsml_eval.experiments.tests import _REGRESSOR_RESULTS_PATH
+from tsml_eval.utils.test_utils import (
+    _TEST_DATA_PATH,
+    _check_set_method,
+    _check_set_method_results,
+)
 from tsml_eval.utils.tests.test_results_writing import _check_regression_file_format
 
 
@@ -22,42 +31,90 @@ from tsml_eval.utils.tests.test_results_writing import _check_regression_file_fo
 )
 def test_run_regression_experiment(regressor, dataset):
     """Test regression experiments with test data and regressor."""
-    data_path = (
-        "./tsml_eval/datasets/"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else "../../datasets/"
-    )
-    result_path = (
-        "./test_output/regression/"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else "../../../test_output/regression/"
-    )
-
     if regressor == "DummyRegressor-aeon" and dataset == "UnequalMinimalGasPrices":
         return  # todo remove when aeon dummy supports unequal
 
     args = [
-        data_path,
-        result_path,
+        _TEST_DATA_PATH,
+        _REGRESSOR_RESULTS_PATH,
         regressor,
         dataset,
         "0",
         "-tr",
-        "-ow",
     ]
 
-    run_experiment(args)
+    regression_experiments.run_experiment(args)
 
-    test_file = f"{result_path}{regressor}/Predictions/{dataset}/testResample0.csv"
-    train_file = f"{result_path}{regressor}/Predictions/{dataset}/trainResample0.csv"
+    test_file = (
+        f"{_REGRESSOR_RESULTS_PATH}{regressor}/Predictions/{dataset}/testResample0.csv"
+    )
+    train_file = (
+        f"{_REGRESSOR_RESULTS_PATH}{regressor}/Predictions/{dataset}/trainResample0.csv"
+    )
 
     assert os.path.exists(test_file) and os.path.exists(train_file)
 
     _check_regression_file_format(test_file)
     _check_regression_file_format(train_file)
 
+    # test present results checking
+    regression_experiments.run_experiment(args)
+
     os.remove(test_file)
     os.remove(train_file)
+
+
+def test_run_regression_experiment_main():
+    """Test regression experiments main with test data and regressor."""
+    regressor = "ROCKET"
+    dataset = "MinimalGasPrices"
+
+    # run twice to test results present check
+    for _ in range(2):
+        runpy.run_path(
+            "./tsml_eval/experiments/regression_experiments.py"
+            if os.getcwd().split("\\")[-1] != "tests"
+            else "../regression_experiments.py",
+            run_name="__main__",
+        )
+
+    os.remove(
+        f"{_REGRESSOR_RESULTS_PATH}{regressor}/Predictions/{dataset}/testResample0.csv"
+    )
+
+
+def test_run_threaded_regression_experiment():
+    """Test threaded regression experiments with test data and regressor."""
+    regressor = "ROCKET"
+    dataset = "MinimalGasPrices"
+
+    args = [
+        _TEST_DATA_PATH,
+        _REGRESSOR_RESULTS_PATH,
+        regressor,
+        dataset,
+        "1",
+        "-nj",
+        "1",
+    ]
+
+    threaded_regression_experiments.run_experiment(args)
+
+    test_file = (
+        f"{_REGRESSOR_RESULTS_PATH}{regressor}/Predictions/{dataset}/testResample1.csv"
+    )
+    assert os.path.exists(test_file)
+    _check_regression_file_format(test_file)
+
+    # this covers both the main method and present result file checking
+    runpy.run_path(
+        "./tsml_eval/experiments/threaded_regression_experiments.py"
+        if os.getcwd().split("\\")[-1] != "tests"
+        else "../threaded_regression_experiments.py",
+        run_name="__main__",
+    )
+
+    os.remove(test_file)
 
 
 def test_set_regressor():
@@ -89,3 +146,9 @@ def test_set_regressor():
     _check_set_method_results(
         regressor_dict, estimator_name="Regressors", method_name="set_regressor"
     )
+
+
+def test_set_regressor_invalid():
+    """Test set_regressor method with invalid estimator."""
+    with pytest.raises(ValueError, match="UNKNOWN REGRESSOR"):
+        set_regressor.set_regressor("invalid")

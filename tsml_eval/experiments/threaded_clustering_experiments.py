@@ -12,7 +12,9 @@ import sys
 from tsml_eval.experiments import load_and_run_clustering_experiment
 from tsml_eval.experiments.classification_experiments import _results_present
 from tsml_eval.experiments.set_clusterer import set_clusterer
+from tsml_eval.experiments.tests import _CLUSTERER_RESULTS_PATH
 from tsml_eval.utils.experiments import parse_args
+from tsml_eval.utils.test_utils import _TEST_DATA_PATH
 
 
 def run_experiment(args):
@@ -66,10 +68,10 @@ def run_experiment(args):
     else:
         # These are example parameters, change as required for local runs
         # Do not include paths to your local directories here in PRs
-        data_path = "../"
-        results_path = "../"
-        estimator_name = "KMeans-DTW"
-        dataset_name = "ArrowHead"
+        data_path = _TEST_DATA_PATH
+        results_path = _CLUSTERER_RESULTS_PATH
+        estimator_name = "KMeans"
+        dataset_name = "MinimalChinatown"
         row_normalise = False
         n_clusters = -1
         resample_id = 0

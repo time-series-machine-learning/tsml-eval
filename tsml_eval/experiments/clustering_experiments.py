@@ -7,19 +7,20 @@ single debugging runs. Results are written in a standard tsml format.
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 import os
+import sys
 
 os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
-
-import sys
 
 import numba
 from aeon.utils.validation._dependencies import _check_soft_dependencies
 
 from tsml_eval.experiments import load_and_run_clustering_experiment
 from tsml_eval.experiments.set_clusterer import set_clusterer
+from tsml_eval.experiments.tests import _CLUSTERER_RESULTS_PATH
 from tsml_eval.utils.experiments import _results_present, assign_gpu, parse_args
+from tsml_eval.utils.test_utils import _TEST_DATA_PATH
 
 
 def run_experiment(args):
@@ -90,10 +91,10 @@ def run_experiment(args):
         # These are example parameters, change as required for local runs
         # Do not include paths to your local directories here in PRs
         # If threading is required, see the threaded version of this file
-        data_path = "../"
-        results_path = "../"
-        estimator_name = "KMeans-DTW"
-        dataset_name = "ArrowHead"
+        data_path = _TEST_DATA_PATH
+        results_path = _CLUSTERER_RESULTS_PATH
+        estimator_name = "KMeans"
+        dataset_name = "MinimalChinatown"
         row_normalise = False
         n_clusters = -1
         resample_id = 0

@@ -3,12 +3,21 @@
 __author__ = ["MatthewMiddlehurst"]
 
 import os
+import runpy
 
 import pytest
 
-from tsml_eval.experiments import set_clusterer
-from tsml_eval.experiments.clustering_experiments import run_experiment
-from tsml_eval.utils.test_utils import _check_set_method, _check_set_method_results
+from tsml_eval.experiments import (
+    clustering_experiments,
+    set_clusterer,
+    threaded_clustering_experiments,
+)
+from tsml_eval.experiments.tests import _CLUSTERER_RESULTS_PATH
+from tsml_eval.utils.test_utils import (
+    _TEST_DATA_PATH,
+    _check_set_method,
+    _check_set_method_results,
+)
 from tsml_eval.utils.tests.test_results_writing import _check_clustering_file_format
 
 
@@ -22,23 +31,12 @@ from tsml_eval.utils.tests.test_results_writing import _check_clustering_file_fo
 )
 def test_run_clustering_experiment(clusterer, dataset):
     """Test clustering experiments with test data and clusterer."""
-    data_path = (
-        "./tsml_eval/datasets/"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else "../../datasets/"
-    )
-    result_path = (
-        "./test_output/clustering/"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else "../../../test_output/clustering/"
-    )
-
     if clusterer == "DummyClusterer-aeon" and dataset == "UnequalMinimalChinatown":
         return  # todo remove when aeon kmeans supports unequal
 
     args = [
-        data_path,
-        result_path,
+        _TEST_DATA_PATH,
+        _CLUSTERER_RESULTS_PATH,
         clusterer,
         dataset,
         "0",
@@ -46,17 +44,77 @@ def test_run_clustering_experiment(clusterer, dataset):
         "-ow",
     ]
 
-    run_experiment(args)
+    clustering_experiments.run_experiment(args)
 
-    test_file = f"{result_path}{clusterer}/Predictions/{dataset}/testResample0.csv"
-    train_file = f"{result_path}{clusterer}/Predictions/{dataset}/trainResample0.csv"
+    test_file = (
+        f"{_CLUSTERER_RESULTS_PATH}{clusterer}/Predictions/{dataset}/testResample0.csv"
+    )
+    train_file = (
+        f"{_CLUSTERER_RESULTS_PATH}{clusterer}/Predictions/{dataset}/trainResample0.csv"
+    )
 
     assert os.path.exists(test_file) and os.path.exists(train_file)
 
     _check_clustering_file_format(test_file)
     _check_clustering_file_format(train_file)
 
+    # test present results checking
+    clustering_experiments.run_experiment(args)
+
     os.remove(test_file)
+    os.remove(train_file)
+
+
+def test_run_clustering_experiment_main():
+    """Test clustering experiments main with test data and clusterer."""
+    clusterer = "KMeans"
+    dataset = "MinimalChinatown"
+
+    # run twice to test results present check
+    for _ in range(2):
+        runpy.run_path(
+            "./tsml_eval/experiments/clustering_experiments.py"
+            if os.getcwd().split("\\")[-1] != "tests"
+            else "../clustering_experiments.py",
+            run_name="__main__",
+        )
+
+    os.remove(
+        f"{_CLUSTERER_RESULTS_PATH}{clusterer}/Predictions/{dataset}/trainResample0.csv"
+    )
+
+
+def test_run_threaded_clustering_experiment():
+    """Test threaded clustering experiments with test data and clusterer."""
+    clusterer = "KMeans"
+    dataset = "MinimalChinatown"
+
+    args = [
+        _TEST_DATA_PATH,
+        _CLUSTERER_RESULTS_PATH,
+        clusterer,
+        dataset,
+        "1",
+        "-nj",
+        "1",
+    ]
+
+    threaded_clustering_experiments.run_experiment(args)
+
+    train_file = (
+        f"{_CLUSTERER_RESULTS_PATH}{clusterer}/Predictions/{dataset}/trainResample1.csv"
+    )
+    assert os.path.exists(train_file)
+    _check_clustering_file_format(train_file)
+
+    # this covers both the main method and present result file checking
+    runpy.run_path(
+        "./tsml_eval/experiments/threaded_clustering_experiments.py"
+        if os.getcwd().split("\\")[-1] != "tests"
+        else "../threaded_clustering_experiments.py",
+        run_name="__main__",
+    )
+
     os.remove(train_file)
 
 
@@ -84,6 +142,12 @@ def test_set_clusterer():
     )
 
 
+def test_set_clusterer_invalid():
+    """Test set_clusterer method with invalid estimator."""
+    with pytest.raises(ValueError, match="UNKNOWN CLUSTERER"):
+        set_clusterer.set_clusterer("invalid")
+
+
 @pytest.mark.parametrize("n_clusters", ["4", "-1"])
 @pytest.mark.parametrize(
     "clusterer",
@@ -93,31 +157,22 @@ def test_n_clusters(n_clusters, clusterer):
     """Test n_clusters parameter."""
     dataset = "MinimalChinatown"
 
-    data_path = (
-        "./tsml_eval/datasets/"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else "../../datasets/"
-    )
-    result_path = (
-        f"./test_output/n_clusters/{n_clusters}/"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else f"../../../test_output/n_clusters/{n_clusters}/"
-    )
-
     args = [
-        data_path,
-        result_path,
+        _TEST_DATA_PATH,
+        _CLUSTERER_RESULTS_PATH,
         clusterer,
         dataset,
-        "0",
+        "1",
         "--n_clusters",
         n_clusters,
         "-ow",
     ]
 
-    run_experiment(args)
+    clustering_experiments.run_experiment(args)
 
-    train_file = f"{result_path}{clusterer}/Predictions/{dataset}/trainResample0.csv"
+    train_file = (
+        f"{_CLUSTERER_RESULTS_PATH}{clusterer}/Predictions/{dataset}/trainResample1.csv"
+    )
 
     assert os.path.exists(train_file)
 
