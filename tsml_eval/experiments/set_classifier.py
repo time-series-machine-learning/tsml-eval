@@ -176,7 +176,7 @@ def set_classifier(
             c, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
         )
     else:
-        raise ValueError(f"UNKNOWN CLASSIFIER {c} in set_classifier")
+        raise ValueError(f"UNKNOWN CLASSIFIER: {c} in set_classifier")
 
 
 def _set_classifier_convolution_based(

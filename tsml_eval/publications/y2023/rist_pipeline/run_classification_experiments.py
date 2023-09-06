@@ -13,7 +13,9 @@ from tsml_eval.experiments import load_and_run_classification_experiment
 from tsml_eval.publications.y2023.rist_pipeline.set_rist_classifier import (
     _set_rist_classifier,
 )
+from tsml_eval.publications.y2023.rist_pipeline.tests import _RIST_TEST_RESULTS_PATH
 from tsml_eval.utils.experiments import _results_present, parse_args
+from tsml_eval.utils.test_utils import _TEST_DATA_PATH
 
 classifiers = [
     "FreshPRINCE",
@@ -32,13 +34,13 @@ classifiers = [
 
 def _run_classification_experiment(args):
     if args is None or args.__len__() < 1:
-        data_path = "../"
-        results_path = "../"
-        classifier_name = "RIST"
-        dataset_name = "ItalyPowerDemand"
+        data_path = _TEST_DATA_PATH
+        results_path = _RIST_TEST_RESULTS_PATH
+        classifier_name = "ROCKET"
+        dataset_name = "MinimalChinatown"
         resample_id = 0
         n_jobs = 1
-        kwargs = None
+        kwargs = {}
         overwrite = False
     else:
         print("Input args = ", args)

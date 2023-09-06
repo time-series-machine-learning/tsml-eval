@@ -83,7 +83,7 @@ def set_clusterer(
             c, random_state, n_jobs, fit_contract, checkpoint, kwargs
         )
     else:
-        raise ValueError(f"UNKNOWN CLUSTERER {c} in set_clusterer")
+        raise ValueError(f"UNKNOWN CLUSTERER: {c} in set_clusterer")
 
 
 def _set_clusterer_distance_based(

@@ -13,13 +13,14 @@ os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
 
-
 import numba
 from aeon.utils.validation._dependencies import _check_soft_dependencies
 
 from tsml_eval.experiments import load_and_run_classification_experiment
 from tsml_eval.experiments.set_classifier import set_classifier
+from tsml_eval.experiments.tests import _CLASSIFIER_RESULTS_PATH
 from tsml_eval.utils.experiments import _results_present, assign_gpu, parse_args
+from tsml_eval.utils.test_utils import _TEST_DATA_PATH
 
 
 def run_experiment(args):
@@ -90,10 +91,10 @@ def run_experiment(args):
         # These are example parameters, change as required for local runs
         # Do not include paths to your local directories here in PRs
         # If threading is required, see the threaded version of this file
-        data_path = "../"
-        results_path = "../"
-        estimator_name = "DrCIF"
-        dataset_name = "ItalyPowerDemand"
+        data_path = _TEST_DATA_PATH
+        results_path = _CLASSIFIER_RESULTS_PATH
+        estimator_name = "ROCKET"
+        dataset_name = "MinimalChinatown"
         row_normalise = False
         resample_id = 0
         train_fold = False
