@@ -1,6 +1,14 @@
 import os
 
-from tsml_eval.experiments import classification_experiments
+from tsml.dummy import DummyClassifier
+
+from tsml_eval.experiments import (
+    classification_experiments,
+    load_and_run_classification_experiment,
+)
+from tsml_eval.experiments.tests import _CLASSIFIER_RESULTS_PATH
+from tsml_eval.utils.test_utils import _TEST_DATA_PATH
+from tsml_eval.utils.tests.test_results_writing import _check_classification_file_format
 
 
 def test_kwargs():
@@ -37,4 +45,27 @@ def test_kwargs():
     test_file = f"{result_path}{classifier}/Predictions/{dataset}/testResample0.csv"
 
     assert os.path.exists(test_file)
+    os.remove(test_file)
+
+
+def test_experiments_predefined_resample_data_loading():
+    """Test experiments with data loading."""
+    dataset = "PredefinedChinatown"
+
+    load_and_run_classification_experiment(
+        _TEST_DATA_PATH + "_test_data/",
+        _CLASSIFIER_RESULTS_PATH,
+        dataset,
+        DummyClassifier(),
+        resample_id=5,
+        predefined_resample=True,
+    )
+
+    test_file = (
+        f"{_CLASSIFIER_RESULTS_PATH}/DummyClassifier/Predictions/{dataset}/"
+        "testResample5.csv"
+    )
+    assert os.path.exists(test_file)
+    _check_classification_file_format(test_file)
+
     os.remove(test_file)

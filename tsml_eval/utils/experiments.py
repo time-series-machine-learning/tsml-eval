@@ -1001,10 +1001,16 @@ def compare_result_file_resample(file_path1, file_path2):
     return True
 
 
-def assign_gpu():
+def assign_gpu(set_environ=False):
     """Assign a GPU to the current process.
 
     Looks at the available Nvidia GPUs and assigns the GPU with the lowest used memory.
+
+    Parameters
+    ----------
+    set_environ : bool
+        Set the CUDA_DEVICE_ORDER environment variable to "PCI_BUS_ID" anf the
+        CUDA_VISIBLE_DEVICES environment variable to the assigned GPU.
 
     Returns
     -------
@@ -1019,7 +1025,14 @@ def assign_gpu():
         ]
         for gpu in stats
     ]
-    return min(pairs, key=lambda x: x[1])[0]
+
+    gpu = min(pairs, key=lambda x: x[1])[0]
+
+    if set_environ:
+        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+        os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
+
+    return gpu
 
 
 def parse_args(args):

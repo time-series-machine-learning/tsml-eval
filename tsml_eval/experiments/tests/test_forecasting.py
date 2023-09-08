@@ -87,6 +87,7 @@ def test_run_threaded_forecasting_experiment():
         "1",
         "-nj",
         "1",
+        # also test normalisation here
         "--row_normalise",
     ]
 
@@ -100,7 +101,7 @@ def test_run_threaded_forecasting_experiment():
     _check_forecasting_file_format(test_file)
 
     # test present results checking
-    forecasting_experiments.run_experiment(args)
+    threaded_forecasting_experiments.run_experiment(args)
 
     # this covers the main method and experiment function result file checking
     runpy.run_path(

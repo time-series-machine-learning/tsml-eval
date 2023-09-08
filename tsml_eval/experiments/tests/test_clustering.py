@@ -6,7 +6,7 @@ import os
 import runpy
 
 import pytest
-from tsml.dummy import DummyClassifier
+from tsml.dummy import DummyClassifier, DummyClusterer
 
 from tsml_eval.experiments import (
     clustering_experiments,
@@ -104,7 +104,9 @@ def test_run_threaded_clustering_experiment():
         "1",
         "-nj",
         "1",
+        # also test normalisation here
         "--row_normalise",
+        "-te",
     ]
 
     threaded_clustering_experiments.run_experiment(args)
@@ -116,7 +118,7 @@ def test_run_threaded_clustering_experiment():
     _check_clustering_file_format(train_file)
 
     # test present results checking
-    clustering_experiments.run_experiment(args)
+    threaded_clustering_experiments.run_experiment(args)
 
     # this covers the main method and experiment function result file checking
     runpy.run_path(
@@ -224,3 +226,14 @@ def _check_clustering_file_n_clusters(file_path, expected):
 
     line = lines[2].split(",")
     assert line[6].strip() == expected
+
+
+def test_invalid_n_clusters():
+    with pytest.raises(ValueError, match="n_clusters must be a"):
+        run_clustering_experiment(
+            [],
+            [],
+            DummyClusterer(),
+            "",
+            n_clusters="invalid",
+        )
