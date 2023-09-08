@@ -646,7 +646,7 @@ def run_clustering_experiment(
         clusterer_name = type(clusterer).__name__
 
     if build_test_file and (X_test is None or y_test is None):
-        raise Exception("Test data and labels not provided, cannot build test file.")
+        raise ValueError("Test data and labels not provided, cannot build test file.")
 
     if row_normalise:
         scaler = TimeSeriesScaler()

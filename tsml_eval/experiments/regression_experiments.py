@@ -42,7 +42,7 @@ def run_experiment(args):
     if os.environ.get("CUDA_VISIBLE_DEVICES") is None:
         try:
             gpu = assign_gpu(set_environ=True)
-            print(f"Assigned GPU {gpu} to process.")
+            print(f"Assigned GPU {gpu} to process.")  # pragma: no cover
         except Exception:
             print("Unable to assign GPU to process.")
 

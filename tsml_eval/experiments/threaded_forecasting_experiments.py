@@ -30,6 +30,7 @@ def run_experiment(args, overwrite=False):
             args.results_path,
             args.estimator_name,
             args.dataset_name,
+            resample_id=args.resample_id,
             split="TEST",
         ):
             print("Ignoring, results already present")

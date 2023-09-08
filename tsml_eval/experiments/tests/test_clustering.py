@@ -188,7 +188,7 @@ def test_set_clusterer_invalid():
 @pytest.mark.parametrize("n_clusters", ["4", "-1"])
 @pytest.mark.parametrize(
     "clusterer",
-    ["DummyClusterer-tsml", "DummyClusterer-aeon", "DummyClusterer-sklearn"],
+    ["DBSCAN", "DummyClusterer-aeon", "DummyClusterer-sklearn"],
 )
 def test_n_clusters(n_clusters, clusterer):
     """Test n_clusters parameter."""
@@ -196,7 +196,7 @@ def test_n_clusters(n_clusters, clusterer):
 
     args = [
         _TEST_DATA_PATH,
-        _CLUSTERER_RESULTS_PATH,
+        _CLUSTERER_RESULTS_PATH + f"{n_clusters}/",
         clusterer,
         dataset,
         "1",
@@ -208,14 +208,16 @@ def test_n_clusters(n_clusters, clusterer):
     clustering_experiments.run_experiment(args)
 
     train_file = (
-        f"{_CLUSTERER_RESULTS_PATH}{clusterer}/Predictions/{dataset}/trainResample1.csv"
+        f"{_CLUSTERER_RESULTS_PATH}{n_clusters}/{clusterer}/Predictions/{dataset}/"
+        "trainResample1.csv"
     )
 
     assert os.path.exists(train_file)
 
-    _check_clustering_file_n_clusters(
-        train_file, "2" if n_clusters == "-1" else n_clusters
-    )
+    if clusterer != "DBSCAN":
+        _check_clustering_file_n_clusters(
+            train_file, "2" if n_clusters == "-1" else n_clusters
+        )
 
     os.remove(train_file)
 
@@ -236,4 +238,15 @@ def test_invalid_n_clusters():
             DummyClusterer(),
             "",
             n_clusters="invalid",
+        )
+
+
+def test_invalid_test_settings():
+    with pytest.raises(ValueError, match="Test data and labels not provided"):
+        run_clustering_experiment(
+            [],
+            [],
+            DummyClusterer(),
+            "",
+            build_test_file=True,
         )
