@@ -6,9 +6,11 @@ import os
 import runpy
 
 import pytest
+from tsml.dummy import DummyRegressor
 
 from tsml_eval.experiments import (
     classification_experiments,
+    run_classification_experiment,
     set_classifier,
     threaded_classification_experiments,
 )
@@ -77,6 +79,13 @@ def test_run_classification_experiment_main():
             run_name="__main__",
         )
 
+    test_file = (
+        f"{_CLASSIFIER_RESULTS_PATH}{classifier}/Predictions/{dataset}/"
+        "testResample0.csv"
+    )
+    assert os.path.exists(test_file)
+    _check_classification_file_format(test_file)
+
     os.remove(
         f"{_CLASSIFIER_RESULTS_PATH}{classifier}/Predictions/{dataset}/"
         "testResample0.csv"
@@ -96,6 +105,7 @@ def test_run_threaded_classification_experiment():
         "1",
         "-nj",
         "1",
+        "--row_normalise",
     ]
 
     threaded_classification_experiments.run_experiment(args)
@@ -119,6 +129,34 @@ def test_run_threaded_classification_experiment():
     )
 
     os.remove(test_file)
+
+
+def test_run_classification_experiment_invalid_build_settings():
+    """Test run_classification_experiment method with invalid build settings."""
+    with pytest.raises(ValueError, match="Both test_file and train_file"):
+        run_classification_experiment(
+            [],
+            [],
+            [],
+            [],
+            None,
+            "",
+            build_test_file=False,
+            build_train_file=False,
+        )
+
+
+def test_run_classification_experiment_invalid_estimator():
+    """Test run_classification_experiment method with invalid estimator."""
+    with pytest.raises(TypeError, match="classifier must be a"):
+        run_classification_experiment(
+            [],
+            [],
+            [],
+            [],
+            DummyRegressor(),
+            "",
+        )
 
 
 def test_set_classifier():

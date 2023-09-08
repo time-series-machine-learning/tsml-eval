@@ -100,7 +100,7 @@ def run_classification_experiment(
         own estimates, those are used instead.
     """
     if not build_test_file and not build_train_file:
-        raise Exception(
+        raise ValueError(
             "Both test_file and train_file are set to False. "
             "At least one must be written."
         )
@@ -364,7 +364,7 @@ def run_regression_experiment(
         own estimates, those are used instead.
     """
     if not build_test_file and not build_train_file:
-        raise Exception(
+        raise ValueError(
             "Both test_file and train_file are set to False. "
             "At least one must be written."
         )
@@ -621,7 +621,7 @@ def run_clustering_experiment(
         regardless of input.
     """
     if not build_test_file and not build_train_file:
-        raise Exception(
+        raise ValueError(
             "Both test_file and train_file are set to False. "
             "At least one must be written."
         )
@@ -923,6 +923,7 @@ def run_forecasting_experiment(
         results_path,
         full_path=False,
         split="TEST",
+        random_seed=random_seed,
         timing_type="MILLISECONDS",
         first_line_comment=first_comment,
         parameter_info=second,

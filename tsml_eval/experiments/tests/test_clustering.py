@@ -6,9 +6,11 @@ import os
 import runpy
 
 import pytest
+from tsml.dummy import DummyClassifier
 
 from tsml_eval.experiments import (
     clustering_experiments,
+    run_clustering_experiment,
     set_clusterer,
     threaded_clustering_experiments,
 )
@@ -78,6 +80,12 @@ def test_run_clustering_experiment_main():
             run_name="__main__",
         )
 
+    train_file = (
+        f"{_CLUSTERER_RESULTS_PATH}{clusterer}/Predictions/{dataset}/trainResample0.csv"
+    )
+    assert os.path.exists(train_file)
+    _check_clustering_file_format(train_file)
+
     os.remove(
         f"{_CLUSTERER_RESULTS_PATH}{clusterer}/Predictions/{dataset}/trainResample0.csv"
     )
@@ -96,6 +104,7 @@ def test_run_threaded_clustering_experiment():
         "1",
         "-nj",
         "1",
+        "--row_normalise",
     ]
 
     threaded_clustering_experiments.run_experiment(args)
@@ -118,6 +127,30 @@ def test_run_threaded_clustering_experiment():
     )
 
     os.remove(train_file)
+
+
+def test_run_clustering_experiment_invalid_build_settings():
+    """Test run_clustering_experiment method with invalid build settings."""
+    with pytest.raises(ValueError, match="Both test_file and train_file"):
+        run_clustering_experiment(
+            [],
+            [],
+            None,
+            "",
+            build_train_file=False,
+            build_test_file=False,
+        )
+
+
+def test_run_clustering_experiment_invalid_estimator():
+    """Test run_clustering_experiment method with invalid estimator."""
+    with pytest.raises(TypeError, match="clusterer must be a"):
+        run_clustering_experiment(
+            [],
+            [],
+            DummyClassifier(),
+            "",
+        )
 
 
 def test_set_clusterer():
@@ -153,7 +186,7 @@ def test_set_clusterer_invalid():
 @pytest.mark.parametrize("n_clusters", ["4", "-1"])
 @pytest.mark.parametrize(
     "clusterer",
-    ["DummyClusterer-aeon", "DummyClusterer-sklearn"],
+    ["DummyClusterer-tsml", "DummyClusterer-aeon", "DummyClusterer-sklearn"],
 )
 def test_n_clusters(n_clusters, clusterer):
     """Test n_clusters parameter."""
