@@ -103,7 +103,7 @@ def test_run_threaded_regression_experiment():
         dataset,
         "1",
         "-nj",
-        "1",
+        "2",
         # also test normalisation here
         "--row_normalise",
     ]

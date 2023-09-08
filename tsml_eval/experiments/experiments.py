@@ -692,21 +692,21 @@ def run_clustering_experiment(
 
     second = str(clusterer.get_params()).replace("\n", " ").replace("\r", " ")
 
-    if build_train_file:
-        start = int(round(time.time() * 1000))
-        if callable(getattr(clusterer, "predict_proba", None)):
-            train_probs = clusterer.predict_proba(X_train)
-            train_preds = np.argmax(train_probs, axis=1)
-        else:
-            train_preds = (
-                clusterer.labels_
-                if hasattr(clusterer, "labels_")
-                else clusterer.predict(X_train)
-            )
-            train_probs = np.zeros((len(train_preds), len(np.unique(train_preds))))
-            train_probs[:, train_preds] = 1
-        train_time = int(round(time.time() * 1000)) - start
+    start = int(round(time.time() * 1000))
+    if callable(getattr(clusterer, "predict_proba", None)):
+        train_probs = clusterer.predict_proba(X_train)
+        train_preds = np.argmax(train_probs, axis=1)
+    else:
+        train_preds = (
+            clusterer.labels_
+            if hasattr(clusterer, "labels_")
+            else clusterer.predict(X_train)
+        )
+        train_probs = np.zeros((len(train_preds), len(np.unique(train_preds))))
+        train_probs[:, train_preds] = 1
+    train_time = int(round(time.time() * 1000)) - start
 
+    if build_train_file:
         train_acc = clustering_accuracy(y_train, train_preds)
 
         write_clustering_results(
@@ -736,7 +736,7 @@ def run_clustering_experiment(
             test_preds = np.argmax(test_probs, axis=1)
         else:
             test_preds = clusterer.predict(X_test)
-            test_probs = np.zeros((len(test_preds), len(np.unique(test_preds))))
+            test_probs = np.zeros((len(test_preds), len(np.unique(train_preds))))
             test_probs[:, test_preds] = 1
         test_time = int(round(time.time() * 1000)) - start
 
