@@ -92,6 +92,8 @@ shapelet_based_classifiers = [
 ]
 vector_classifiers = [
     ["RotationForestClassifier", "rotationforest", "rotf"],
+    ["RidgeClassifierCV", "ridgecv"],
+    ["LogisticRegression", "logistic"],
 ]
 
 
@@ -692,3 +694,11 @@ def _set_classifier_vector(
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
+    elif c == "ridgeclassifiercv" or c == "ridgecv":
+        from sklearn.linear_model import RidgeClassifierCV
+
+        return RidgeClassifierCV(**kwargs)
+    elif c == "logisticregression" or c == "logistic":
+        from sklearn.linear_model import LogisticRegression
+
+        return LogisticRegression(random_state=random_state, n_jobs=n_jobs, **kwargs)

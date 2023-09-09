@@ -14,7 +14,7 @@ from tsml_eval.utils.tests.test_results_writing import _check_classification_fil
 def test_kwargs():
     """Test experiments with kwargs input."""
     dataset = "MinimalChinatown"
-    classifier = "ROCKET"
+    classifier = "LogisticRegression"
 
     data_path = (
         "./tsml_eval/datasets/"
@@ -34,8 +34,16 @@ def test_kwargs():
         dataset,
         "0",
         "--kwargs",
-        "num_kernels",
-        "50",
+        "fit_intercept",
+        "False",
+        "bool",
+        "--kwargs",
+        "C",
+        "0.8",
+        "float",
+        "--kwargs",
+        "max_iter",
+        "10",
         "int",
         "-ow",
     ]
