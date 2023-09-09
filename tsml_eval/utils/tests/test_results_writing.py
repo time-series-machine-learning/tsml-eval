@@ -231,7 +231,7 @@ def _generate_labels_and_predictions():
 
 def test_write_results_to_tsml_format_invalid():
     """Test writing of results files with invalid input."""
-    with pytest.raises(ValueError, match="The number of predicted values"):
+    with pytest.raises(IndexError, match="The number of predicted values"):
         write_results_to_tsml_format(
             np.zeros(10),
             np.zeros(11),
