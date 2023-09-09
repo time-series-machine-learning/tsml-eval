@@ -229,7 +229,7 @@ def _generate_labels_and_predictions():
     return labels, predictions, probabilities
 
 
-def write_results_to_tsml_format_invalid():
+def test_write_results_to_tsml_format_invalid():
     """Test writing of results files with invalid input."""
     with pytest.raises(ValueError, match="The number of predicted values"):
         write_results_to_tsml_format(
