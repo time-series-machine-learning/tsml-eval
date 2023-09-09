@@ -21,6 +21,7 @@ from tsml_eval.utils.experiments import (
     write_clustering_results,
     write_regression_results,
 )
+from tsml_eval.utils.test_utils import _TEST_DATA_PATH
 
 
 def test_write_classification_results():
@@ -210,14 +211,14 @@ def test_validate_broken_results_file(path):
 )
 def test_fix_broken_second_line(path):
     """Test that the second line of a broken results file is fixed."""
-    if os.getcwd().split("\\")[-1] != "tests":
-        path[0] = f"tsml_eval/utils/tests/{path[0]}"
-        output_path = "./test_output/"
-    else:
-        output_path = "../../../test_output/"
+    path[0] = (
+        f"tsml_eval/utils/tests/{path[0]}"
+        if os.getcwd().split("\\")[-1] != "tests"
+        else path[0]
+    )
 
-    fix_broken_second_line(path[0], f"{output_path}/secondLineTest{path[1]}.csv")
+    fix_broken_second_line(path[0], f"{_TEST_DATA_PATH}/secondLineTest{path[1]}.csv")
 
-    assert validate_results_file(f"{output_path}/secondLineTest{path[1]}.csv")
+    assert validate_results_file(f"{_TEST_DATA_PATH}/secondLineTest{path[1]}.csv")
 
-    os.remove(f"{output_path}/secondLineTest{path[1]}.csv")
+    os.remove(f"{_TEST_DATA_PATH}/secondLineTest{path[1]}.csv")

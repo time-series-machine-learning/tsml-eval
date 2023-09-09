@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Utilities for validating estimators."""
 
 from aeon.base import BaseEstimator as AeonBaseEstimator
@@ -28,5 +27,5 @@ def is_sklearn_regressor(regressor):
 
 
 def is_sklearn_clusterer(clusterer):
-    """Check if estimator is a scikit-learn classifier."""
+    """Check if estimator is a scikit-learn clusterer."""
     return is_sklearn_estimator(clusterer) and is_clusterer(clusterer)

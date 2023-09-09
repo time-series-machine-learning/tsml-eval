@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tests for dataset resampling functions."""
 
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
@@ -6,6 +5,7 @@ __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 import os
 
 import numpy as np
+import pandas as pd
 import pytest
 from tsml.datasets import (
     load_equal_minimal_japanese_vowels,
@@ -61,6 +61,15 @@ def test_resample_data_unequal():
 
     assert len(X_train) == train_size
     assert len(X_test) == test_size
+
+
+def test_resample_data_invalid():
+    """Test resampling raises an error with invalid input."""
+    X = pd.DataFrame(np.random.random((10, 10)))
+    y = pd.Series(np.zeros(10))
+
+    with pytest.raises(ValueError, match="X_train must be a"):
+        resample_data(X, y, X, y)
 
 
 @pytest.mark.parametrize(
@@ -124,6 +133,15 @@ def test_stratified_resample_data_unequal():
 
     assert list(counts_train_new) == list(counts_train)
     assert list(counts_test_new) == list(counts_test)
+
+
+def test_stratified_resample_data_invalid():
+    """Test stratified resampling raises an error with invalid input."""
+    X = pd.DataFrame(np.random.random((10, 10)))
+    y = pd.Series(np.zeros(10))
+
+    with pytest.raises(ValueError, match="X_train must be a"):
+        stratified_resample_data(X, y, X, y)
 
 
 @pytest.mark.parametrize(
