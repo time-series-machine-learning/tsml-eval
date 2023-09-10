@@ -863,7 +863,7 @@ def fix_broken_second_line(file_path, save_path=None):
         and not _check_regression_third_line(lines[line_count])
         and not _check_clustering_third_line(lines[line_count])
     ):
-        if line_count == len(lines):
+        if line_count == len(lines) - 1:
             raise ValueError("No valid third line found in input results file.")
         line_count += 1
 

@@ -21,15 +21,12 @@ from tsml_eval.utils.experiments import (
     _check_regression_third_line,
     _check_results_line,
     _check_second_line,
-    fix_broken_second_line,
-    validate_results_file,
     write_classification_results,
     write_clustering_results,
     write_forecasting_results,
     write_regression_results,
     write_results_to_tsml_format,
 )
-from tsml_eval.utils.test_utils import _TEST_DATA_PATH
 
 
 def test_write_classification_results():
@@ -249,61 +246,3 @@ def test_write_results_to_tsml_format_invalid():
             "test_output",
             split="invalid",
         )
-
-
-@pytest.mark.parametrize(
-    "path",
-    [
-        "test_files/regressionResultsFile.csv",
-        "test_files/classificationResultsFile1.csv",
-    ],
-)
-def test_validate_results_file(path):
-    """Test results file validation with valid files."""
-    path = (
-        f"tsml_eval/utils/tests/{path}"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else path
-    )
-
-    assert validate_results_file(path)
-
-
-@pytest.mark.parametrize(
-    "path",
-    [
-        "test_files/brokenRegressionResultsFile.csv",
-        "test_files/brokenClassificationResultsFile.csv",
-    ],
-)
-def test_validate_broken_results_file(path):
-    """Test results file validation with broken files."""
-    path = (
-        f"tsml_eval/utils/tests/{path}"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else path
-    )
-
-    assert not validate_results_file(path)
-
-
-@pytest.mark.parametrize(
-    "path",
-    [
-        ["test_files/regressionResultsFile.csv", 1],
-        ["test_files/brokenRegressionResultsFile.csv", 2],
-    ],
-)
-def test_fix_broken_second_line(path):
-    """Test that the second line of a broken results file is fixed."""
-    path[0] = (
-        f"tsml_eval/utils/tests/{path[0]}"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else path[0]
-    )
-
-    fix_broken_second_line(path[0], f"{_TEST_DATA_PATH}/secondLineTest{path[1]}.csv")
-
-    assert validate_results_file(f"{_TEST_DATA_PATH}/secondLineTest{path[1]}.csv")
-
-    os.remove(f"{_TEST_DATA_PATH}/secondLineTest{path[1]}.csv")

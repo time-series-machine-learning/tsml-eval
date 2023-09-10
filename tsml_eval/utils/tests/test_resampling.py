@@ -166,3 +166,12 @@ def test_compare_result_file_resample(paths):
         paths[1] = f"tsml_eval/utils/tests/{paths[1]}"
 
     assert compare_result_file_resample(paths[0], paths[1]) == paths[2]
+
+
+def test_compare_result_file_resample_invalid():
+    """Test compare result file resample function with invalid input."""
+    with pytest.raises(ValueError, match="Input results file have different"):
+        compare_result_file_resample(
+            "test_files/classificationResultsFile1.csv",
+            "test_files/classificationResultsFile3.csv",
+        )
