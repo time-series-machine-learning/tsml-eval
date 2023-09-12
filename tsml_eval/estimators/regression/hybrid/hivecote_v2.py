@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Hierarchical Vote Collective of Transformation-based Ensembles (HIVE-COTE) V2.
 
 Upgraded hybrid ensemble of classifiers from 4 separate time series classification
@@ -12,11 +11,11 @@ from datetime import datetime
 
 import numpy as np
 from aeon.regression.base import BaseRegressor
+from aeon.regression.interval_based import DrCIFRegressor
 from sklearn.metrics import mean_squared_error
 
 from tsml_eval.estimators.regression.convolution_based import Arsenal
 from tsml_eval.estimators.regression.dictionary_based import TemporalDictionaryEnsemble
-from tsml_eval.estimators.regression.interval_based import DrCIF
 from tsml_eval.estimators.regression.shapelet_based import ShapeletTransformRegressor
 
 
@@ -200,7 +199,7 @@ class HIVECOTEV2(BaseRegressor):
             print("STC weight = " + str(self.stc_weight_))  # noqa
 
         # Build DrCIF
-        self._drcif = DrCIF(
+        self._drcif = DrCIFRegressor(
             **self._drcif_params,
             save_transformed_data=True,
             random_state=self.random_state,

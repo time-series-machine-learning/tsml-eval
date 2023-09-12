@@ -7,19 +7,20 @@ single debugging runs. Results are written in a standard tsml format.
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 import os
+import sys
 
 os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
-
-import sys
 
 import numba
 from aeon.utils.validation._dependencies import _check_soft_dependencies
 
 from tsml_eval.experiments import load_and_run_regression_experiment
 from tsml_eval.experiments.set_regressor import set_regressor
+from tsml_eval.experiments.tests import _REGRESSOR_RESULTS_PATH
 from tsml_eval.utils.experiments import _results_present, assign_gpu, parse_args
+from tsml_eval.utils.test_utils import _TEST_DATA_PATH
 
 
 def run_experiment(args):
@@ -40,10 +41,8 @@ def run_experiment(args):
     # if multiple GPUs are available, assign the one with the least usage to the process
     if os.environ.get("CUDA_VISIBLE_DEVICES") is None:
         try:
-            gpu = assign_gpu()
-            os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-            os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
-            print(f"Assigned GPU {gpu} to process.")
+            gpu = assign_gpu(set_environ=True)
+            print(f"Assigned GPU {gpu} to process.")  # pragma: no cover
         except Exception:
             print("Unable to assign GPU to process.")
 
@@ -90,10 +89,10 @@ def run_experiment(args):
         # These are example parameters, change as required for local runs
         # Do not include paths to your local directories here in PRs
         # If threading is required, see the threaded version of this file
-        data_path = "../"
-        results_path = "../"
-        estimator_name = "LR"
-        dataset_name = "Covid3Month"
+        data_path = _TEST_DATA_PATH
+        results_path = _REGRESSOR_RESULTS_PATH
+        estimator_name = "ROCKET"
+        dataset_name = "MinimalGasPrices"
         row_normalise = False
         resample_id = 0
         train_fold = False

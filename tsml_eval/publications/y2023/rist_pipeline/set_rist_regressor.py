@@ -9,7 +9,7 @@ from tsml_eval.utils.functions import str_in_nested_list
 rist_regressors = [
     ["inceptione", "inception-e", "inceptiontime", "InceptionTimeRegressor"],
     ["rocket", "RocketRegressor"],
-    ["DrCIF", "drcifregressor"],
+    ["drcif", "DrCIFRegressor"],
     ["fresh-prince", "freshprince", "FreshPRINCERegressor"],
     ["RDSTRegressor", "rdst"],
     ["RISTRegressor", "rist", "rist-extrat"],
@@ -27,7 +27,7 @@ def _set_rist_regressor(
     r = regressor_name.lower()
 
     if not str_in_nested_list(rist_regressors, r):
-        raise Exception("UNKNOWN CLASSIFIER ", r, " in set_rist_regressor")
+        raise ValueError(f"UNKNOWN REGRESSOR: {r} in _set_rist_regressor")
 
     if (
         r == "inceptione"
@@ -35,7 +35,7 @@ def _set_rist_regressor(
         or r == "inceptiontime"
         or r == "inceptiontimeregressor"
     ):
-        from tsml_eval.estimators.regression.deep_learning import InceptionTimeRegressor
+        from aeon.regression.deep_learning import InceptionTimeRegressor
 
         return InceptionTimeRegressor(random_state=random_state, **kwargs)
     elif r == "rocket" or r == "rocketregressor":
@@ -43,9 +43,9 @@ def _set_rist_regressor(
 
         return RocketRegressor(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif r == "drcif" or r == "drcifregressor":
-        from tsml_eval.estimators.regression.interval_based import DrCIF
+        from aeon.regression.interval_based import DrCIFRegressor
 
-        return DrCIF(
+        return DrCIFRegressor(
             n_estimators=500, random_state=random_state, n_jobs=n_jobs, **kwargs
         )
     elif r == "fresh-prince" or r == "freshprince" or r == "freshprinceregressor":

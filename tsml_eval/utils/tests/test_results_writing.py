@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tests for results writing functions."""
 
 __author__ = ["MatthewMiddlehurst"]
@@ -8,18 +7,25 @@ import os
 import numpy as np
 import pytest
 
+from tsml_eval.experiments.tests import (
+    _CLASSIFIER_RESULTS_PATH,
+    _CLUSTERER_RESULTS_PATH,
+    _FORECASTER_RESULTS_PATH,
+    _REGRESSOR_RESULTS_PATH,
+)
 from tsml_eval.utils.experiments import (
     _check_classification_third_line,
     _check_clustering_third_line,
     _check_first_line,
+    _check_forecasting_third_line,
     _check_regression_third_line,
     _check_results_line,
     _check_second_line,
-    fix_broken_second_line,
-    validate_results_file,
     write_classification_results,
     write_clustering_results,
+    write_forecasting_results,
     write_regression_results,
+    write_results_to_tsml_format,
 )
 
 
@@ -27,28 +33,22 @@ def test_write_classification_results():
     """Test writing of classification results files."""
     class_labels, predictions, probabilities = _generate_labels_and_predictions()
 
-    output_path = (
-        "./test_output/classification/"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else "../../../test_output/classification/"
-    )
-
     write_classification_results(
         predictions,
         probabilities,
         class_labels,
         "Test",
         "Test",
-        output_path,
+        _CLASSIFIER_RESULTS_PATH,
         full_path=False,
         first_line_comment="test_write_classification_results",
     )
 
     _check_classification_file_format(
-        f"{output_path}/Test/Predictions/Test/results.csv"
+        f"{_CLASSIFIER_RESULTS_PATH}/Test/Predictions/Test/results.csv"
     )
 
-    os.remove(f"{output_path}/Test/Predictions/Test/results.csv")
+    os.remove(f"{_CLASSIFIER_RESULTS_PATH}/Test/Predictions/Test/results.csv")
 
 
 def _check_classification_file_format(file_path):
@@ -63,29 +63,49 @@ def _check_classification_file_format(file_path):
         assert _check_results_line(lines[i])
 
 
+def test_write_classification_results_invalid():
+    """Test writing of classification results files with invalid input."""
+    with pytest.raises(IndexError, match="The number of predicted values"):
+        write_classification_results(
+            np.zeros(10),
+            np.zeros((11, 2)),
+            np.zeros(12),
+            "Test",
+            "Test",
+            "test_output",
+        )
+
+    with pytest.raises(IndexError, match="The number of classes is not"):
+        write_classification_results(
+            np.zeros(10),
+            np.zeros((10, 3)),
+            np.zeros(10),
+            "Test",
+            "Test",
+            "test_output",
+            n_classes=2,
+        )
+
+
 def test_write_regression_results():
     """Test writing of regression results files."""
     labels, predictions, _ = _generate_labels_and_predictions()
-
-    output_path = (
-        "./test_output/regression/"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else "../../../test_output/regression/"
-    )
 
     write_regression_results(
         predictions,
         labels,
         "Test",
         "Test",
-        output_path,
+        _REGRESSOR_RESULTS_PATH,
         full_path=False,
         first_line_comment="test_write_regression_results",
     )
 
-    _check_regression_file_format(f"{output_path}/Test/Predictions/Test/results.csv")
+    _check_regression_file_format(
+        f"{_REGRESSOR_RESULTS_PATH}/Test/Predictions/Test/results.csv"
+    )
 
-    os.remove(f"{output_path}/Test/Predictions/Test/results.csv")
+    os.remove(f"{_REGRESSOR_RESULTS_PATH}/Test/Predictions/Test/results.csv")
 
 
 def _check_regression_file_format(file_path):
@@ -100,6 +120,39 @@ def _check_regression_file_format(file_path):
         assert _check_results_line(lines[i], probabilities=False)
 
 
+def test_write_forecasting_results():
+    """Test writing of forecasting results files."""
+    labels, predictions, _ = _generate_labels_and_predictions()
+
+    write_forecasting_results(
+        predictions,
+        labels,
+        "Test",
+        "Test",
+        _FORECASTER_RESULTS_PATH,
+        full_path=False,
+        first_line_comment="test_write_forecasting_results",
+    )
+
+    _check_forecasting_file_format(
+        f"{_FORECASTER_RESULTS_PATH}/Test/Predictions/Test/results.csv"
+    )
+
+    os.remove(f"{_FORECASTER_RESULTS_PATH}/Test/Predictions/Test/results.csv")
+
+
+def _check_forecasting_file_format(file_path):
+    with open(file_path, "r") as f:
+        lines = f.readlines()
+
+    assert _check_first_line(lines[0])
+    assert _check_second_line(lines[1])
+    assert _check_forecasting_third_line(lines[2])
+
+    for i in range(3, 6):
+        assert _check_results_line(lines[i], probabilities=False)
+
+
 def test_write_clustering_results():
     """Test writing of clustering results files."""
     (
@@ -108,26 +161,22 @@ def test_write_clustering_results():
         cluster_probabilities,
     ) = _generate_labels_and_predictions()
 
-    output_path = (
-        "./test_output/clustering/"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else "../../../test_output/clustering/"
-    )
-
     write_clustering_results(
         cluster_predictions,
         cluster_probabilities,
         class_labels,
         "Test",
         "Test",
-        output_path,
+        _CLUSTERER_RESULTS_PATH,
         full_path=False,
         first_line_comment="test_write_clustering_results",
     )
 
-    _check_clustering_file_format(f"{output_path}/Test/Predictions/Test/results.csv")
+    _check_clustering_file_format(
+        f"{_CLUSTERER_RESULTS_PATH}/Test/Predictions/Test/results.csv"
+    )
 
-    os.remove(f"{output_path}/Test/Predictions/Test/results.csv")
+    os.remove(f"{_CLUSTERER_RESULTS_PATH}/Test/Predictions/Test/results.csv")
 
 
 def _check_clustering_file_format(file_path):
@@ -142,6 +191,30 @@ def _check_clustering_file_format(file_path):
         assert _check_results_line(lines[i])
 
 
+def test_write_clustering_results_invalid():
+    """Test writing of clustering results files with invalid input."""
+    with pytest.raises(IndexError, match="The number of predicted values"):
+        write_clustering_results(
+            np.zeros(10),
+            np.zeros((11, 2)),
+            np.zeros(12),
+            "Test",
+            "Test",
+            "test_output",
+        )
+
+    with pytest.raises(IndexError, match="The number of clusters is not"):
+        write_clustering_results(
+            np.zeros(10),
+            np.zeros((10, 3)),
+            np.zeros(10),
+            "Test",
+            "Test",
+            "test_output",
+            n_clusters=2,
+        )
+
+
 def _generate_labels_and_predictions():
     labels = np.random.randint(0, 2, 10)
     predictions = np.random.randint(0, 2, 10)
@@ -153,59 +226,23 @@ def _generate_labels_and_predictions():
     return labels, predictions, probabilities
 
 
-@pytest.mark.parametrize(
-    "path",
-    [
-        "test_files/regressionResultsFile.csv",
-        "test_files/classificationResultsFile1.csv",
-    ],
-)
-def test_validate_results_file(path):
-    """Test results file validation with valid files."""
-    path = (
-        f"tsml_eval/utils/tests/{path}"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else path
-    )
+def test_write_results_to_tsml_format_invalid():
+    """Test writing of results files with invalid input."""
+    with pytest.raises(IndexError, match="The number of predicted values"):
+        write_results_to_tsml_format(
+            np.zeros(10),
+            np.zeros(11),
+            "Test",
+            "Test",
+            "test_output",
+        )
 
-    assert validate_results_file(path)
-
-
-@pytest.mark.parametrize(
-    "path",
-    [
-        "test_files/brokenRegressionResultsFile.csv",
-        "test_files/brokenClassificationResultsFile.csv",
-    ],
-)
-def test_validate_broken_results_file(path):
-    """Test results file validation with broken files."""
-    path = (
-        f"tsml_eval/utils/tests/{path}"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else path
-    )
-
-    assert not validate_results_file(path)
-
-
-@pytest.mark.parametrize(
-    "path",
-    [
-        ["test_files/regressionResultsFile.csv", 1],
-        ["test_files/brokenRegressionResultsFile.csv", 2],
-    ],
-)
-def test_fix_broken_second_line(path):
-    """Test that the second line of a broken results file is fixed."""
-    if os.getcwd().split("\\")[-1] != "tests":
-        path[0] = f"tsml_eval/utils/tests/{path[0]}"
-        output_path = "./test_output/"
-    else:
-        output_path = "../../../test_output/"
-
-    fix_broken_second_line(path[0], f"{output_path}/secondLineTest{path[1]}.csv")
-
-    assert validate_results_file(f"{output_path}/secondLineTest{path[1]}.csv")
-
-    os.remove(f"{output_path}/secondLineTest{path[1]}.csv")
+    with pytest.raises(ValueError, match="Unknown 'split' value"):
+        write_results_to_tsml_format(
+            np.zeros(10),
+            np.zeros(10),
+            "Test",
+            "Test",
+            "test_output",
+            split="invalid",
+        )

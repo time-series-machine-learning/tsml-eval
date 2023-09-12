@@ -3,12 +3,23 @@
 __author__ = ["MatthewMiddlehurst"]
 
 import os
+import runpy
 
 import pytest
+from tsml.dummy import DummyClassifier
 
-from tsml_eval.experiments import set_regressor
-from tsml_eval.experiments.regression_experiments import run_experiment
-from tsml_eval.utils.test_utils import EXEMPT_ESTIMATOR_NAMES, _check_set_method
+from tsml_eval.experiments import (
+    regression_experiments,
+    run_regression_experiment,
+    set_regressor,
+    threaded_regression_experiments,
+)
+from tsml_eval.experiments.tests import _REGRESSOR_RESULTS_PATH
+from tsml_eval.utils.test_utils import (
+    _TEST_DATA_PATH,
+    _check_set_method,
+    _check_set_method_results,
+)
 from tsml_eval.utils.tests.test_results_writing import _check_regression_file_format
 
 
@@ -18,50 +29,133 @@ from tsml_eval.utils.tests.test_results_writing import _check_regression_file_fo
 )
 @pytest.mark.parametrize(
     "dataset",
-    ["MinimalGasPrices", "UnequalMinimalGasPrices"],
+    ["MinimalGasPrices", "UnequalMinimalGasPrices", "MinimalCardanoSentiment"],
 )
 def test_run_regression_experiment(regressor, dataset):
     """Test regression experiments with test data and regressor."""
-    data_path = (
-        "./tsml_eval/datasets/"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else "../../datasets/"
-    )
-    result_path = (
-        "./test_output/regression/"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else "../../../test_output/regression/"
-    )
+    if regressor == "DummyRegressor-aeon" and dataset == "UnequalMinimalGasPrices":
+        return  # todo remove when aeon dummy supports unequal
 
     args = [
-        data_path,
-        result_path,
+        _TEST_DATA_PATH,
+        _REGRESSOR_RESULTS_PATH,
         regressor,
         dataset,
         "0",
         "-tr",
-        "-ow",
     ]
 
-    # aeon estimators don't support unequal length series lists currently
-    try:
-        run_experiment(args)
-    except ValueError as e:
-        if "not support unequal length series" in str(e):
-            return
-        else:
-            raise e
+    regression_experiments.run_experiment(args)
 
-    test_file = f"{result_path}{regressor}/Predictions/{dataset}/testResample0.csv"
-    train_file = f"{result_path}{regressor}/Predictions/{dataset}/trainResample0.csv"
+    test_file = (
+        f"{_REGRESSOR_RESULTS_PATH}{regressor}/Predictions/{dataset}/testResample0.csv"
+    )
+    train_file = (
+        f"{_REGRESSOR_RESULTS_PATH}{regressor}/Predictions/{dataset}/trainResample0.csv"
+    )
 
     assert os.path.exists(test_file) and os.path.exists(train_file)
 
     _check_regression_file_format(test_file)
     _check_regression_file_format(train_file)
 
+    # test present results checking
+    regression_experiments.run_experiment(args)
+
     os.remove(test_file)
     os.remove(train_file)
+
+
+def test_run_regression_experiment_main():
+    """Test regression experiments main with test data and regressor."""
+    regressor = "ROCKET"
+    dataset = "MinimalGasPrices"
+
+    # run twice to test results present check
+    for _ in range(2):
+        runpy.run_path(
+            "./tsml_eval/experiments/regression_experiments.py"
+            if os.getcwd().split("\\")[-1] != "tests"
+            else "../regression_experiments.py",
+            run_name="__main__",
+        )
+
+    test_file = (
+        f"{_REGRESSOR_RESULTS_PATH}{regressor}/Predictions/{dataset}/testResample0.csv"
+    )
+    assert os.path.exists(test_file)
+    _check_regression_file_format(test_file)
+
+    os.remove(
+        f"{_REGRESSOR_RESULTS_PATH}{regressor}/Predictions/{dataset}/testResample0.csv"
+    )
+
+
+def test_run_threaded_regression_experiment():
+    """Test threaded regression experiments with test data and regressor."""
+    regressor = "ROCKET"
+    dataset = "MinimalGasPrices"
+
+    args = [
+        _TEST_DATA_PATH,
+        _REGRESSOR_RESULTS_PATH,
+        regressor,
+        dataset,
+        "1",
+        "-nj",
+        "2",
+        # also test normalisation here
+        "--row_normalise",
+    ]
+
+    threaded_regression_experiments.run_experiment(args)
+
+    test_file = (
+        f"{_REGRESSOR_RESULTS_PATH}{regressor}/Predictions/{dataset}/testResample1.csv"
+    )
+    assert os.path.exists(test_file)
+    _check_regression_file_format(test_file)
+
+    # test present results checking
+    threaded_regression_experiments.run_experiment(args)
+
+    # this covers the main method and experiment function result file checking
+    runpy.run_path(
+        "./tsml_eval/experiments/threaded_regression_experiments.py"
+        if os.getcwd().split("\\")[-1] != "tests"
+        else "../threaded_regression_experiments.py",
+        run_name="__main__",
+    )
+
+    os.remove(test_file)
+
+
+def test_run_regression_experiment_invalid_build_settings():
+    """Test run_regression_experiment method with invalid build settings."""
+    with pytest.raises(ValueError, match="Both test_file and train_file"):
+        run_regression_experiment(
+            [],
+            [],
+            [],
+            [],
+            None,
+            "",
+            build_test_file=False,
+            build_train_file=False,
+        )
+
+
+def test_run_regression_experiment_invalid_estimator():
+    """Test run_regression_experiment method with invalid estimator."""
+    with pytest.raises(TypeError, match="regressor must be a"):
+        run_regression_experiment(
+            [],
+            [],
+            [],
+            [],
+            DummyClassifier(),
+            "",
+        )
 
 
 def test_set_regressor():
@@ -90,15 +184,12 @@ def test_set_regressor():
             all_regressor_names,
         )
 
-    for estimator in EXEMPT_ESTIMATOR_NAMES:
-        if estimator in regressor_dict:
-            regressor_dict.pop(estimator)
+    _check_set_method_results(
+        regressor_dict, estimator_name="Regressors", method_name="set_regressor"
+    )
 
-    if not all(regressor_dict.values()):
-        missing_keys = [key for key, value in regressor_dict.items() if not value]
 
-        raise ValueError(
-            "All regressors seen in set_regressor must have an entry for the full "
-            "class name (usually with default parameters). regressors with missing "
-            f"entries: {missing_keys}."
-        )
+def test_set_regressor_invalid():
+    """Test set_regressor method with invalid estimator."""
+    with pytest.raises(ValueError, match="UNKNOWN REGRESSOR"):
+        set_regressor.set_regressor("invalid")

@@ -8,6 +8,7 @@ __all__ = [
     "write_classification_results",
     "write_regression_results",
     "write_clustering_results",
+    "write_forecasting_results",
     "write_results_to_tsml_format",
     "validate_results_file",
     "fix_broken_second_line",
@@ -287,7 +288,7 @@ def write_classification_results(
         included in the train_estimate_time value. In this case fit_time +
         train_estimate_time would time fitting the model twice.
     """
-    if len(predictions) != len(probabilities) != len(class_labels):
+    if len(predictions) != probabilities.shape[0] != len(class_labels):
         raise IndexError(
             "The number of predicted values is not the same as the number of actual "
             "class values."
@@ -548,6 +549,93 @@ def write_clustering_results(
     )
 
 
+def write_forecasting_results(
+    predictions,
+    labels,
+    forecaster_name,
+    dataset_name,
+    output_path,
+    full_path=True,
+    split=None,
+    random_seed=None,
+    timing_type="N/A",
+    first_line_comment=None,
+    parameter_info="No Parameter Info",
+    mape=-1,
+    fit_time=-1,
+    predict_time=-1,
+    benchmark_time=-1,
+    memory_usage=-1,
+):
+    """Write the predictions for a forecasting experiment in the format used by tsml.
+
+    Parameters
+    ----------
+    predictions : np.array
+        The predicted values to write to file. Must be the same length as labels.
+    labels : np.array
+        The actual label values written to file with the predicted values.
+    forecaster_name : str
+        Name of the forecaster that made the predictions. Written to file and can
+        determine file structure if full_path is False.
+    dataset_name : str
+        Name of the problem the forecaster was built on.
+    output_path : str
+        Path to write the results file to or the directory to build the default file
+        structure if full_path is False.
+    full_path : boolean, default=True
+        If True, results are written directly to the directory passed in output_path.
+        If False, then a standard file structure using the forecaster and dataset names
+        is created and used to write the results file.
+    split : str or None, default=None
+        Either None, 'TRAIN' or 'TEST'. Influences the result file name and first line
+        of the file.
+    random_seed : int or None, default=None
+        Indicates what random seed was used as a random_state for the forecaster.
+    timing_type : str, default="N/A"
+        The format used for timings in the file, i.e. 'Seconds', 'Milliseconds',
+        'Nanoseconds'
+    first_line_comment : str or None, default=None
+        Optional comment appended to the end of the first line, i.e. the file used to
+        generate the results.
+    parameter_info : str, default="No Parameter Info"
+        Unstructured estimator dependant information, i.e. estimator parameters or
+        values from the model build.
+    mape: float, default=-1
+        The mean absolute percentage error of the predictions.
+    fit_time : int, default=-1
+        The time taken to fit the forecaster.
+    predict_time : int, default=-1
+        The time taken to predict the forecasting labels.
+    benchmark_time : int, default=-1
+        A benchmark time for the hardware used to scale other timings.
+    memory_usage : int, default=-1
+        The memory usage of the forecaster.
+    """
+    third_line = (
+        f"{mape},"
+        f"{fit_time},"
+        f"{predict_time},"
+        f"{benchmark_time},"
+        f"{memory_usage}"
+    )
+
+    write_results_to_tsml_format(
+        predictions,
+        labels,
+        forecaster_name,
+        dataset_name,
+        output_path,
+        full_path=full_path,
+        split=split,
+        resample_id=random_seed,
+        timing_type=timing_type,
+        first_line_comment=first_line_comment,
+        second_line=parameter_info,
+        third_line=third_line,
+    )
+
+
 def write_results_to_tsml_format(
     predictions,
     labels,
@@ -711,11 +799,6 @@ def _results_present(path, estimator, dataset, resample_id=None, split="TEST"):
     return False
 
 
-def _results_present_full_path(path, dataset, resample_id=None, split="TEST"):
-    """Duplicate: check if results are present already without an estimator input."""
-    return _results_present(path, "", dataset, resample_id, split)
-
-
 def validate_results_file(file_path):
     """Validate that a results file is in the correct format.
 
@@ -780,7 +863,7 @@ def fix_broken_second_line(file_path, save_path=None):
         and not _check_regression_third_line(lines[line_count])
         and not _check_clustering_third_line(lines[line_count])
     ):
-        if line_count == len(lines):
+        if line_count == len(lines) - 1:
             raise ValueError("No valid third line found in input results file.")
         line_count += 1
 
@@ -830,6 +913,12 @@ def _check_clustering_third_line(line):
     line = line.split(",")
     floats = [0, 1, 2, 3, 4, 5, 6]
     return _check_line_length_and_floats(line, 7, floats)
+
+
+def _check_forecasting_third_line(line):
+    line = line.split(",")
+    floats = [0, 1, 2, 3, 4]
+    return _check_line_length_and_floats(line, 5, floats)
 
 
 def _check_line_length_and_floats(line, length, floats):
@@ -907,10 +996,16 @@ def compare_result_file_resample(file_path1, file_path2):
     return True
 
 
-def assign_gpu():
+def assign_gpu(set_environ=False):  # pragma: no cover
     """Assign a GPU to the current process.
 
     Looks at the available Nvidia GPUs and assigns the GPU with the lowest used memory.
+
+    Parameters
+    ----------
+    set_environ : bool
+        Set the CUDA_DEVICE_ORDER environment variable to "PCI_BUS_ID" anf the
+        CUDA_VISIBLE_DEVICES environment variable to the assigned GPU.
 
     Returns
     -------
@@ -925,7 +1020,14 @@ def assign_gpu():
         ]
         for gpu in stats
     ]
-    return min(pairs, key=lambda x: x[1])[0]
+
+    gpu = min(pairs, key=lambda x: x[1])[0]
+
+    if set_environ:
+        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+        os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
+
+    return gpu
 
 
 def parse_args(args):

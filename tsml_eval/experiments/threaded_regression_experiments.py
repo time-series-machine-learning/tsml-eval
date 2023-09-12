@@ -11,7 +11,9 @@ import sys
 
 from tsml_eval.experiments import load_and_run_regression_experiment
 from tsml_eval.experiments.set_regressor import set_regressor
+from tsml_eval.experiments.tests import _REGRESSOR_RESULTS_PATH
 from tsml_eval.utils.experiments import _results_present, parse_args
+from tsml_eval.utils.test_utils import _TEST_DATA_PATH
 
 
 def run_experiment(args):
@@ -65,10 +67,10 @@ def run_experiment(args):
     else:
         # These are example parameters, change as required for local runs
         # Do not include paths to your local directories here in PRs
-        data_path = "../"
-        results_path = "../"
-        estimator_name = "LR"
-        dataset_name = "Covid3Month"
+        data_path = _TEST_DATA_PATH
+        results_path = _REGRESSOR_RESULTS_PATH
+        estimator_name = "ROCKET"
+        dataset_name = "MinimalGasPrices"
         row_normalise = False
         resample_id = 0
         n_jobs = 1

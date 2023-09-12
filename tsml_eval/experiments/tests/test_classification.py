@@ -3,12 +3,23 @@
 __author__ = ["MatthewMiddlehurst"]
 
 import os
+import runpy
 
 import pytest
+from tsml.dummy import DummyRegressor
 
-from tsml_eval.experiments import set_classifier
-from tsml_eval.experiments.classification_experiments import run_experiment
-from tsml_eval.utils.test_utils import EXEMPT_ESTIMATOR_NAMES, _check_set_method
+from tsml_eval.experiments import (
+    classification_experiments,
+    run_classification_experiment,
+    set_classifier,
+    threaded_classification_experiments,
+)
+from tsml_eval.experiments.tests import _CLASSIFIER_RESULTS_PATH
+from tsml_eval.utils.test_utils import (
+    _TEST_DATA_PATH,
+    _check_set_method,
+    _check_set_method_results,
+)
 from tsml_eval.utils.tests.test_results_writing import _check_classification_file_format
 
 
@@ -22,46 +33,131 @@ from tsml_eval.utils.tests.test_results_writing import _check_classification_fil
 )
 def test_run_classification_experiment(classifier, dataset):
     """Test classification experiments with test data and classifier."""
-    data_path = (
-        "./tsml_eval/datasets/"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else "../../datasets/"
-    )
-    result_path = (
-        "./test_output/classification/"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else "../../../test_output/classification/"
-    )
-
     args = [
-        data_path,
-        result_path,
+        _TEST_DATA_PATH,
+        _CLASSIFIER_RESULTS_PATH,
         classifier,
         dataset,
         "0",
         "-tr",
-        "-ow",
     ]
 
-    # aeon estimators don't support unequal length series lists currently
-    try:
-        run_experiment(args)
-    except ValueError as e:
-        if "not support unequal length series" in str(e):
-            return
-        else:
-            raise e
+    classification_experiments.run_experiment(args)
 
-    test_file = f"{result_path}{classifier}/Predictions/{dataset}/testResample0.csv"
-    train_file = f"{result_path}{classifier}/Predictions/{dataset}/trainResample0.csv"
+    test_file = (
+        f"{_CLASSIFIER_RESULTS_PATH}{classifier}/Predictions/{dataset}/"
+        "testResample0.csv"
+    )
+    train_file = (
+        f"{_CLASSIFIER_RESULTS_PATH}{classifier}/Predictions/{dataset}/"
+        "trainResample0.csv"
+    )
 
     assert os.path.exists(test_file) and os.path.exists(train_file)
 
     _check_classification_file_format(test_file)
     _check_classification_file_format(train_file)
 
+    # test present results checking
+    classification_experiments.run_experiment(args)
+
     os.remove(test_file)
     os.remove(train_file)
+
+
+def test_run_classification_experiment_main():
+    """Test classification experiments main with test data and classifier."""
+    classifier = "ROCKET"
+    dataset = "MinimalChinatown"
+
+    # run twice to test results present check
+    for _ in range(2):
+        runpy.run_path(
+            "./tsml_eval/experiments/classification_experiments.py"
+            if os.getcwd().split("\\")[-1] != "tests"
+            else "../classification_experiments.py",
+            run_name="__main__",
+        )
+
+    test_file = (
+        f"{_CLASSIFIER_RESULTS_PATH}{classifier}/Predictions/{dataset}/"
+        "testResample0.csv"
+    )
+    assert os.path.exists(test_file)
+    _check_classification_file_format(test_file)
+
+    os.remove(
+        f"{_CLASSIFIER_RESULTS_PATH}{classifier}/Predictions/{dataset}/"
+        "testResample0.csv"
+    )
+
+
+def test_run_threaded_classification_experiment():
+    """Test threaded classification experiments with test data and classifier."""
+    classifier = "ROCKET"
+    dataset = "MinimalChinatown"
+
+    args = [
+        _TEST_DATA_PATH,
+        _CLASSIFIER_RESULTS_PATH,
+        classifier,
+        dataset,
+        "1",
+        "-nj",
+        "2",
+        # also test normalisation here
+        "--row_normalise",
+    ]
+
+    threaded_classification_experiments.run_experiment(args)
+
+    test_file = (
+        f"{_CLASSIFIER_RESULTS_PATH}{classifier}/Predictions/{dataset}/"
+        "testResample1.csv"
+    )
+    assert os.path.exists(test_file)
+    _check_classification_file_format(test_file)
+
+    # test present results checking
+    threaded_classification_experiments.run_experiment(args)
+
+    # this covers the main method and experiment function result file checking
+    runpy.run_path(
+        "./tsml_eval/experiments/threaded_classification_experiments.py"
+        if os.getcwd().split("\\")[-1] != "tests"
+        else "../threaded_classification_experiments.py",
+        run_name="__main__",
+    )
+
+    os.remove(test_file)
+
+
+def test_run_classification_experiment_invalid_build_settings():
+    """Test run_classification_experiment method with invalid build settings."""
+    with pytest.raises(ValueError, match="Both test_file and train_file"):
+        run_classification_experiment(
+            [],
+            [],
+            [],
+            [],
+            None,
+            "",
+            build_test_file=False,
+            build_train_file=False,
+        )
+
+
+def test_run_classification_experiment_invalid_estimator():
+    """Test run_classification_experiment method with invalid estimator."""
+    with pytest.raises(TypeError, match="classifier must be a"):
+        run_classification_experiment(
+            [],
+            [],
+            [],
+            [],
+            DummyRegressor(),
+            "",
+        )
 
 
 def test_set_classifier():
@@ -90,15 +186,12 @@ def test_set_classifier():
             all_classifier_names,
         )
 
-    for estimator in EXEMPT_ESTIMATOR_NAMES:
-        if estimator in classifier_dict:
-            classifier_dict.pop(estimator)
+    _check_set_method_results(
+        classifier_dict, estimator_name="Classifiers", method_name="set_classifier"
+    )
 
-    if not all(classifier_dict.values()):
-        missing_keys = [key for key, value in classifier_dict.items() if not value]
 
-        raise ValueError(
-            "All classifiers seen in set_classifier must have an entry for the full "
-            "class name (usually with default parameters). Classifiers with missing "
-            f"entries: {missing_keys}."
-        )
+def test_set_classifier_invalid():
+    """Test set_classifier method with invalid estimator."""
+    with pytest.raises(ValueError, match="UNKNOWN CLASSIFIER"):
+        set_classifier.set_classifier("invalid")

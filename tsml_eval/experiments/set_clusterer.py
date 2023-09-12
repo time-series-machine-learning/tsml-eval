@@ -33,6 +33,7 @@ other_clusterers = [
 ]
 vector_clusterers = [
     ["KMeans", "kmeans-sklearn"],
+    "DBSCAN",
 ]
 
 
@@ -83,21 +84,12 @@ def set_clusterer(
             c, random_state, n_jobs, fit_contract, checkpoint, kwargs
         )
     else:
-        raise ValueError(f"UNKNOWN CLUSTERER {c} in set_clusterer")
+        raise ValueError(f"UNKNOWN CLUSTERER: {c} in set_clusterer")
 
 
 def _set_clusterer_distance_based(
     c, random_state, n_jobs, fit_contract, checkpoint, kwargs
 ):
-    ["kmeans-ed", "k-means-ed"],
-    ["kmeans-edr", "k-means-edr"],
-    ["kmeans-erp", "k-means-erp"],
-    ["kmeans-lcss", "k-means-lcss"],
-    ["kmeans-msm", "k-means-msm"],
-    ["kmeans-twe", "k-means-twe"],
-    ["kmeans-wddtw", "k-means-wddtw"],
-    ["kmeans-wdtw", "k-means-wdtw"],
-    ["kmeans-ddtw", "k-means-ddtw"],
     if c == "timeserieskmeans" or c == "kmeans-dtw" or c == "k-means-dtw":
         from aeon.clustering.k_means import TimeSeriesKMeans
 
@@ -141,45 +133,45 @@ def _set_clusterer_distance_based(
     elif c == "timeserieskmedoids" or c == "kmedoids-dtw" or c == "k-medoids-dtw":
         from aeon.clustering.k_medoids import TimeSeriesKMedoids
 
-        return TimeSeriesKMedoids(metric="dtw", random_state=random_state, **kwargs)
+        return TimeSeriesKMedoids(distance="dtw", random_state=random_state, **kwargs)
     elif c == "kmedoids-ddtw" or c == "k-medoids-ddtw":
         from aeon.clustering.k_medoids import TimeSeriesKMedoids
 
-        return TimeSeriesKMedoids(metric="ddtw", random_state=random_state, **kwargs)
+        return TimeSeriesKMedoids(distance="ddtw", random_state=random_state, **kwargs)
     elif c == "kmedoids-ed" or c == "k-medoids-ed":
         from aeon.clustering.k_medoids import TimeSeriesKMedoids
 
         return TimeSeriesKMedoids(
-            metric="euclidean", random_state=random_state, **kwargs
+            distance="euclidean", random_state=random_state, **kwargs
         )
     elif c == "kmedoids-edr" or c == "k-medoids-edr":
         from aeon.clustering.k_medoids import TimeSeriesKMedoids
 
-        return TimeSeriesKMedoids(metric="edr", random_state=random_state, **kwargs)
+        return TimeSeriesKMedoids(distance="edr", random_state=random_state, **kwargs)
     elif c == "kmedoids-erp" or c == "k-medoids-erp":
         from aeon.clustering.k_medoids import TimeSeriesKMedoids
 
-        return TimeSeriesKMedoids(metric="erp", random_state=random_state, **kwargs)
+        return TimeSeriesKMedoids(distance="erp", random_state=random_state, **kwargs)
     elif c == "kmedoids-lcss" or c == "k-medoids-lcss":
         from aeon.clustering.k_medoids import TimeSeriesKMedoids
 
-        return TimeSeriesKMedoids(metric="lcss", random_state=random_state, **kwargs)
+        return TimeSeriesKMedoids(distance="lcss", random_state=random_state, **kwargs)
     elif c == "kmedoids-msm" or c == "k-medoids-msm":
         from aeon.clustering.k_medoids import TimeSeriesKMedoids
 
-        return TimeSeriesKMedoids(metric="msm", random_state=random_state, **kwargs)
+        return TimeSeriesKMedoids(distance="msm", random_state=random_state, **kwargs)
     elif c == "kmedoids-twe" or c == "k-medoids-twe":
         from aeon.clustering.k_medoids import TimeSeriesKMedoids
 
-        return TimeSeriesKMedoids(metric="twe", random_state=random_state, **kwargs)
+        return TimeSeriesKMedoids(distance="twe", random_state=random_state, **kwargs)
     elif c == "kmedoids-wdtw" or c == "k-medoids-wdtw":
         from aeon.clustering.k_medoids import TimeSeriesKMedoids
 
-        return TimeSeriesKMedoids(metric="wdtw", random_state=random_state, **kwargs)
+        return TimeSeriesKMedoids(distance="wdtw", random_state=random_state, **kwargs)
     elif c == "kmedoids-wddtw" or c == "k-medoids-wddtw":
         from aeon.clustering.k_medoids import TimeSeriesKMedoids
 
-        return TimeSeriesKMedoids(metric="wddtw", random_state=random_state, **kwargs)
+        return TimeSeriesKMedoids(distance="wddtw", random_state=random_state, **kwargs)
 
 
 def _set_clusterer_other(c, random_state, n_jobs, fit_contract, checkpoint, kwargs):
@@ -219,3 +211,7 @@ def _set_clusterer_vector(c, random_state, n_jobs, fit_contract, checkpoint, kwa
         from sklearn.cluster import KMeans
 
         return KMeans(random_state=random_state, **kwargs)
+    elif c == "dbscan":
+        from sklearn.cluster import DBSCAN
+
+        return DBSCAN(n_jobs=n_jobs, **kwargs)

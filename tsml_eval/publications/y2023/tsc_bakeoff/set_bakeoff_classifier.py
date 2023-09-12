@@ -15,16 +15,16 @@ bakeoff_classifiers = [
     ["SignatureClassifier", "signatures"],
     # shapelet based
     ["ShapeletTransformClassifier", "stc", "stc-2hour"],
-    "RDST",
+    ["RDSTClassifier", "rdst"],
     ["RandomShapeletForestClassifier", "randomshapeletforest", "rsf"],
     ["MrSQMClassifier", "mrsqm"],
     # interval based
     ["RSTSFClassifier", "rstsf", "r-stsf"],
-    ["RandomIntervalSpectralEnsemble", "rise"],
+    ["RandomIntervalSpectralEnsembleClassifier", "rise"],
     ["TimeSeriesForestClassifier", "tsf"],
-    ["CanonicalIntervalForest", "cif"],
+    ["CanonicalIntervalForestClassifier", "cif"],
     ["SupervisedTimeSeriesForest", "stsf"],
-    "DrCIF",
+    ["drcif", "DrCIFClassifier"],
     # dictionary based
     ["BOSSEnsemble", "boss"],
     ["ContractableBOSS", "cboss"],
@@ -57,7 +57,7 @@ def _set_bakeoff_classifier(
     c = classifier_name.lower()
 
     if not str_in_nested_list(bakeoff_classifiers, c):
-        raise Exception("UNKNOWN CLASSIFIER ", c, " in set_bakeoff_classifier")
+        raise ValueError(f"UNKNOWN CLASSIFIER: {c} in _set_bakeoff_classifier")
 
     if c == "kneighborstimeseriesclassifier" or c == "dtw" or c == "1nn-dtw":
         from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
@@ -80,9 +80,7 @@ def _set_bakeoff_classifier(
             **kwargs,
         )
     elif c == "freshprinceclassifier" or c == "freshprince":
-        from tsml_eval.estimators.classification.feature_based import (
-            FreshPRINCEClassifier,
-        )
+        from aeon.classification.feature_based import FreshPRINCEClassifier
 
         return FreshPRINCEClassifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "tsfreshclassifier" or c == "tsfresh":
@@ -97,9 +95,7 @@ def _set_bakeoff_classifier(
             **kwargs,
         )
     elif c == "shapelettransformclassifier" or c == "stc" or c == "stc-2hour":
-        from tsml_eval.estimators.classification.shapelet_based import (
-            ShapeletTransformClassifier,
-        )
+        from aeon.classification.shapelet_based import ShapeletTransformClassifier
 
         return ShapeletTransformClassifier(
             transform_limit_in_minutes=120,
@@ -107,10 +103,10 @@ def _set_bakeoff_classifier(
             n_jobs=n_jobs,
             **kwargs,
         )
-    elif c == "rdst":
-        from tsml_eval.estimators.classification.shapelet_based.rdst import RDST
+    elif c == "rdstclassifier" or c == "rdst":
+        from aeon.classification.shapelet_based import RDSTClassifier
 
-        return RDST(
+        return RDSTClassifier(
             random_state=random_state,
             **kwargs,
         )
@@ -142,10 +138,12 @@ def _set_bakeoff_classifier(
             n_jobs=n_jobs,
             **kwargs,
         )
-    elif c == "randomintervalspectralensemble" or c == "rise":
-        from aeon.classification.interval_based import RandomIntervalSpectralEnsemble
+    elif c == "randomintervalspectralensembleclassifier" or c == "rise":
+        from aeon.classification.interval_based import (
+            RandomIntervalSpectralEnsembleClassifier,
+        )
 
-        return RandomIntervalSpectralEnsemble(
+        return RandomIntervalSpectralEnsembleClassifier(
             n_estimators=500,
             random_state=random_state,
             n_jobs=n_jobs,
@@ -160,10 +158,10 @@ def _set_bakeoff_classifier(
             n_jobs=n_jobs,
             **kwargs,
         )
-    elif c == "canonicalintervalforest" or c == "cif":
-        from aeon.classification.interval_based import CanonicalIntervalForest
+    elif c == "canonicalintervalforestclassifier" or c == "cif":
+        from aeon.classification.interval_based import CanonicalIntervalForestClassifier
 
-        return CanonicalIntervalForest(
+        return CanonicalIntervalForestClassifier(
             random_state=random_state,
             n_jobs=n_jobs,
             **kwargs,
@@ -177,10 +175,10 @@ def _set_bakeoff_classifier(
             n_jobs=n_jobs,
             **kwargs,
         )
-    elif c == "drcif":
-        from aeon.classification.interval_based import DrCIF
+    elif c == "drcif" or c == "drcifclassifier":
+        from aeon.classification.interval_based import DrCIFClassifier
 
-        return DrCIF(
+        return DrCIFClassifier(
             n_estimators=500,
             random_state=random_state,
             n_jobs=n_jobs,
@@ -285,23 +283,21 @@ def _set_bakeoff_classifier(
             **kwargs,
         )
     elif c == "cnnclassifier" or c == "cnn":
-        from tsml_eval.estimators.classification.deep_learning import CNNClassifier
+        from aeon.classification.deep_learning import CNNClassifier
 
         return CNNClassifier(
             random_state=random_state,
             **kwargs,
         )
     elif c == "resnetclassifier" or c == "resnet":
-        from tsml_eval.estimators.classification.deep_learning.resnet import (
-            ResNetClassifier,
-        )
+        from aeon.classification.deep_learning.resnet import ResNetClassifier
 
         return ResNetClassifier(
             random_state=random_state,
             **kwargs,
         )
     elif c == "inceptiontimeclassifier" or c == "inceptiontime":
-        from tsml_eval.estimators.classification.deep_learning.inception_time import (
+        from aeon.classification.deep_learning.inception_time import (
             InceptionTimeClassifier,
         )
 
@@ -310,7 +306,7 @@ def _set_bakeoff_classifier(
             **kwargs,
         )
     elif c == "hivecotev1" or c == "hc1":
-        from tsml_eval.estimators.classification.hybrid import HIVECOTEV1
+        from aeon.classification.hybrid import HIVECOTEV1
 
         return HIVECOTEV1(
             random_state=random_state,

@@ -30,6 +30,8 @@ distance_based_regressors = [
     "5nn-ed",
     ["KNeighborsTimeSeriesRegressor", "1nn-dtw"],
     "5nn-dtw",
+    "1nn-msm",
+    "5nn-msm",
 ]
 feature_based_regressors = [
     ["FreshPRINCERegressor", "fresh-prince", "freshprince"],
@@ -44,15 +46,14 @@ interval_based_regressors = [
     ["TimeSeriesForestRegressor", "tsf"],
     "tsf-i",
     "tsf-500",
-    "DrCIF",
+    ["drcif", "DrCIFRegressor"],
     "drcif-500",
 ]
 other_regressors = [
     ["DummyRegressor", "dummy", "dummyregressor-tsml"],
     "dummyregressor-aeon",
-    "dummyregressor-sklearn",
-    ["MeanPredictorRegressor", "dummymeanpred"],
-    ["MedianPredictorRegressor", "dummymedianpred"],
+    ["dummyregressor-sklearn", "meanpredictorregressor", "dummymeanpred"],
+    ["medianpredictorregressor", "dummymedianpred"],
 ]
 shapelet_based_regressors = [
     "str-2hour",
@@ -154,7 +155,7 @@ def set_regressor(
             r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
         )
     else:
-        raise ValueError(f"UNKNOWN REGRESSOR {r} in set_regressor")
+        raise ValueError(f"UNKNOWN REGRESSOR: {r} in set_regressor")
 
 
 def _set_regressor_convolution_based(
@@ -210,7 +211,7 @@ def _set_regressor_deep_learning(
 
         return TapNetRegressor(random_state=random_state, **kwargs)
     elif r == "resnetregressor" or r == "resnet":
-        from tsml_eval.estimators.regression.deep_learning import ResNetRegressor
+        from aeon.regression.deep_learning import ResNetRegressor
 
         return ResNetRegressor(random_state=random_state, **kwargs)
     elif r == "inceptiontimeregressor" or r == "inception" or r == "inceptiontime":
@@ -228,7 +229,7 @@ def _set_regressor_deep_learning(
 
         return IndividualInceptionRegressor(random_state=random_state, **kwargs)
     elif r == "fcnregressor" or r == "fcnn" or r == "fcn":
-        from tsml_eval.estimators.regression.deep_learning import FCNRegressor
+        from aeon.regression.deep_learning import FCNRegressor
 
         return FCNRegressor(random_state=random_state, **kwargs)
 
@@ -368,10 +369,10 @@ def _set_regressor_interval_based(
         return TimeSeriesForestRegressor(
             n_estimators=500, random_state=random_state, n_jobs=n_jobs, **kwargs
         )
-    elif r == "drcif":
-        from tsml_eval.estimators.regression.interval_based import DrCIF
+    elif r == "drcif" or r == "drcifregressor":
+        from aeon.regression.interval_based import DrCIFRegressor
 
-        return DrCIF(
+        return DrCIFRegressor(
             random_state=random_state,
             n_jobs=n_jobs,
             save_transformed_data=build_train_file,
@@ -379,9 +380,9 @@ def _set_regressor_interval_based(
             **kwargs,
         )
     elif r == "drcif-500":
-        from tsml_eval.estimators.regression.interval_based import DrCIF
+        from aeon.regression.interval_based import DrCIFRegressor
 
-        return DrCIF(
+        return DrCIFRegressor(
             n_estimators=500,
             random_state=random_state,
             n_jobs=n_jobs,
@@ -399,23 +400,21 @@ def _set_regressor_other(
 
         return DummyRegressor(**kwargs)
     elif r == "dummyregressor-aeon":
-        from aeon.regression.dummy import DummyRegressor
+        from aeon.regression import DummyRegressor
 
         return DummyRegressor(**kwargs)
-    elif r == "dummyregressor-sklearn":
+    elif (
+        r == "dummyregressor-sklearn"
+        or r == "meanpredictorregressor"
+        or r == "dummymeanpred"
+    ):
         from sklearn.dummy import DummyRegressor
 
         return DummyRegressor(**kwargs)
-    elif r == "meanpredictorregressor" or r == "dummymeanpred":
-        # the dummy regressor is to predict the mean value of the output.
-        from tsml_eval.estimators.regression.dummy import MeanPredictorRegressor
-
-        return MeanPredictorRegressor(**kwargs)
     elif r == "medianpredictorregressor" or r == "dummymedianpred":
-        # the dummy regressor is to predict the mean value of the output.
-        from tsml_eval.estimators.regression.dummy import MedianPredictorRegressor
+        from sklearn.dummy import DummyRegressor
 
-        return MedianPredictorRegressor(**kwargs)
+        return DummyRegressor(strategy="median", **kwargs)
 
 
 def _set_regressor_shapelet_based(

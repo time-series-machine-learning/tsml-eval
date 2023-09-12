@@ -18,8 +18,8 @@ expansion_regressors = [
     [
         "inception",
         "singleinception",
-        "individualinception",
-        "IndividualInceptionTimeRegressor",
+        "IndividualInceptionRegressor",
+        "individualinceptiontime",
     ],
     ["inceptione", "inception-e", "inceptiontime", "InceptionTimeRegressor"],
     ["rf", "randf", "randomforest", "RandomForestRegressor"],
@@ -31,7 +31,7 @@ expansion_regressors = [
     ["RidgeCV", "ridge"],
     ["RotationForestRegressor", "rotf", "rotationforest"],
     ["tsf", "timeseriesforestregressor"],
-    ["DrCIF", "drcifregressor"],
+    ["drcif", "DrCIFRegressor"],
     ["fresh-prince", "freshprince", "FreshPRINCERegressor"],
 ]
 
@@ -45,7 +45,7 @@ def _set_tser_exp_regressor(
     r = regressor_name.lower()
 
     if not str_in_nested_list(expansion_regressors, r):
-        raise Exception("UNKNOWN REGRESSOR ", r, " in set_expansion_regressor")
+        raise ValueError(f"UNKNOWN REGRESSOR: {r} in _set_tser_exp_regressor")
 
     if r == "1nn-dtw" or r == "kneighborstimeseriesregressor":
         from aeon.regression.distance_based import KNeighborsTimeSeriesRegressor
@@ -82,7 +82,7 @@ def _set_tser_exp_regressor(
             **kwargs,
         )
     elif r == "fcnn" or r == "fcn" or r == "fcnnregressor" or r == "fcnregressor":
-        from tsml_eval.estimators.regression.deep_learning import FCNRegressor
+        from aeon.regression.deep_learning import FCNRegressor
 
         return FCNRegressor(
             random_state=random_state,
@@ -129,14 +129,12 @@ def _set_tser_exp_regressor(
     elif (
         r == "inception"
         or r == "singleinception"
-        or r == "individualinception"
-        or r == "individualinceptiontimeregressor"
+        or r == "individualinceptionregressor"
+        or r == "individualinceptiontime"
     ):
-        from tsml_eval.estimators.regression.deep_learning import (
-            IndividualInceptionTimeRegressor,
-        )
+        from aeon.regression.deep_learning import IndividualInceptionRegressor
 
-        return IndividualInceptionTimeRegressor(
+        return IndividualInceptionRegressor(
             random_state=random_state,
             **kwargs,
         )
@@ -146,7 +144,7 @@ def _set_tser_exp_regressor(
         or r == "inceptiontime"
         or r == "inceptiontimeregressor"
     ):
-        from tsml_eval.estimators.regression.deep_learning import InceptionTimeRegressor
+        from aeon.regression.deep_learning import InceptionTimeRegressor
 
         return InceptionTimeRegressor(
             random_state=random_state,
@@ -164,7 +162,7 @@ def _set_tser_exp_regressor(
             **kwargs,
         )
     elif r == "resnet" or r == "resnetregressor":
-        from tsml_eval.estimators.regression.deep_learning import ResNetRegressor
+        from aeon.regression.deep_learning import ResNetRegressor
 
         return ResNetRegressor(
             random_state=random_state,
@@ -198,7 +196,7 @@ def _set_tser_exp_regressor(
             **kwargs,
         )
     elif r == "cnn" or r == "cnnregressor":
-        from tsml_eval.estimators.regression.deep_learning import CNNRegressor
+        from aeon.regression.deep_learning import CNNRegressor
 
         return CNNRegressor(
             random_state=random_state,
@@ -241,9 +239,9 @@ def _set_tser_exp_regressor(
         ]
         return ColumnEnsembleRegressor(estimators)
     elif r == "drcif" or r == "drcifregressor":
-        from tsml_eval.estimators.regression.interval_based import DrCIF
+        from aeon.regression.interval_based import DrCIFRegressor
 
-        return DrCIF(
+        return DrCIFRegressor(
             n_estimators=500,
             random_state=random_state,
             n_jobs=n_jobs,
