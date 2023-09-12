@@ -170,8 +170,16 @@ def test_compare_result_file_resample(paths):
 
 def test_compare_result_file_resample_invalid():
     """Test compare result file resample function with invalid input."""
+    p1 = (
+        "tsml_eval/utils/tests/test_files/classificationResultsFile1.csv"
+        if os.getcwd().split("\\")[-1] != "tests"
+        else "test_files/classificationResultsFile1.csv"
+    )
+    p3 = (
+        "tsml_eval/utils/tests/test_files/classificationResultsFile3.csv"
+        if os.getcwd().split("\\")[-1] != "tests"
+        else "test_files/classificationResultsFile3.csv"
+    )
+
     with pytest.raises(ValueError, match="Input results file have different"):
-        compare_result_file_resample(
-            "test_files/classificationResultsFile1.csv",
-            "test_files/classificationResultsFile3.csv",
-        )
+        compare_result_file_resample(p1, p3)
