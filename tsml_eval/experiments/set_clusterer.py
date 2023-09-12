@@ -33,6 +33,7 @@ other_clusterers = [
 ]
 vector_clusterers = [
     ["KMeans", "kmeans-sklearn"],
+    "DBSCAN",
 ]
 
 
@@ -210,3 +211,7 @@ def _set_clusterer_vector(c, random_state, n_jobs, fit_contract, checkpoint, kwa
         from sklearn.cluster import KMeans
 
         return KMeans(random_state=random_state, **kwargs)
+    elif c == "dbscan":
+        from sklearn.cluster import DBSCAN
+
+        return DBSCAN(n_jobs=n_jobs, **kwargs)

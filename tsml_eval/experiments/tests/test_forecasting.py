@@ -2,9 +2,11 @@ import os
 import runpy
 
 import pytest
+from tsml.dummy import DummyClassifier
 
 from tsml_eval.experiments import (
     forecasting_experiments,
+    run_forecasting_experiment,
     set_forecaster,
     threaded_forecasting_experiments,
 )
@@ -33,7 +35,8 @@ def test_run_forecasting_experiment():
     forecasting_experiments.run_experiment(args)
 
     test_file = (
-        f"{_FORECASTER_RESULTS_PATH}{forecaster}/Predictions/{dataset}/testResults.csv"
+        f"{_FORECASTER_RESULTS_PATH}{forecaster}/Predictions/{dataset}/"
+        "testResample2.csv"
     )
     assert os.path.exists(test_file)
     _check_forecasting_file_format(test_file)
@@ -58,8 +61,16 @@ def test_run_forecasting_experiment_main():
             run_name="__main__",
         )
 
+    test_file = (
+        f"{_FORECASTER_RESULTS_PATH}{forecaster}/Predictions/{dataset}/"
+        "testResample0.csv"
+    )
+    assert os.path.exists(test_file)
+    _check_forecasting_file_format(test_file)
+
     os.remove(
-        f"{_FORECASTER_RESULTS_PATH}{forecaster}/Predictions/{dataset}/testResults.csv"
+        f"{_FORECASTER_RESULTS_PATH}{forecaster}/Predictions/{dataset}/"
+        "testResample0.csv"
     )
 
 
@@ -75,19 +86,22 @@ def test_run_threaded_forecasting_experiment():
         dataset,
         "1",
         "-nj",
-        "1",
+        "2",
+        # also test normalisation here
+        "--row_normalise",
     ]
 
     threaded_forecasting_experiments.run_experiment(args)
 
     test_file = (
-        f"{_FORECASTER_RESULTS_PATH}{forecaster}/Predictions/{dataset}/testResults.csv"
+        f"{_FORECASTER_RESULTS_PATH}{forecaster}/Predictions/{dataset}/"
+        "testResample1.csv"
     )
     assert os.path.exists(test_file)
     _check_forecasting_file_format(test_file)
 
     # test present results checking
-    forecasting_experiments.run_experiment(args)
+    threaded_forecasting_experiments.run_experiment(args)
 
     # this covers the main method and experiment function result file checking
     runpy.run_path(
@@ -98,6 +112,17 @@ def test_run_threaded_forecasting_experiment():
     )
 
     os.remove(test_file)
+
+
+def test_run_forecasting_experiment_invalid_estimator():
+    """Test run_forecasting_experiment method with invalid estimator."""
+    with pytest.raises(TypeError, match="forecaster must be a"):
+        run_forecasting_experiment(
+            [],
+            [],
+            DummyClassifier(),
+            [],
+        )
 
 
 def test_set_forecasters():

@@ -100,7 +100,7 @@ def run_classification_experiment(
         own estimates, those are used instead.
     """
     if not build_test_file and not build_train_file:
-        raise Exception(
+        raise ValueError(
             "Both test_file and train_file are set to False. "
             "At least one must be written."
         )
@@ -364,7 +364,7 @@ def run_regression_experiment(
         own estimates, those are used instead.
     """
     if not build_test_file and not build_train_file:
-        raise Exception(
+        raise ValueError(
             "Both test_file and train_file are set to False. "
             "At least one must be written."
         )
@@ -621,7 +621,7 @@ def run_clustering_experiment(
         regardless of input.
     """
     if not build_test_file and not build_train_file:
-        raise Exception(
+        raise ValueError(
             "Both test_file and train_file are set to False. "
             "At least one must be written."
         )
@@ -646,7 +646,7 @@ def run_clustering_experiment(
         clusterer_name = type(clusterer).__name__
 
     if build_test_file and (X_test is None or y_test is None):
-        raise Exception("Test data and labels not provided, cannot build test file.")
+        raise ValueError("Test data and labels not provided, cannot build test file.")
 
     if row_normalise:
         scaler = TimeSeriesScaler()
@@ -692,21 +692,21 @@ def run_clustering_experiment(
 
     second = str(clusterer.get_params()).replace("\n", " ").replace("\r", " ")
 
-    if build_train_file:
-        start = int(round(time.time() * 1000))
-        if callable(getattr(clusterer, "predict_proba", None)):
-            train_probs = clusterer.predict_proba(X_train)
-            train_preds = np.argmax(train_probs, axis=1)
-        else:
-            train_preds = (
-                clusterer.labels_
-                if hasattr(clusterer, "labels_")
-                else clusterer.predict(X_train)
-            )
-            train_probs = np.zeros((len(train_preds), len(np.unique(train_preds))))
-            train_probs[:, train_preds] = 1
-        train_time = int(round(time.time() * 1000)) - start
+    start = int(round(time.time() * 1000))
+    if callable(getattr(clusterer, "predict_proba", None)):
+        train_probs = clusterer.predict_proba(X_train)
+        train_preds = np.argmax(train_probs, axis=1)
+    else:
+        train_preds = (
+            clusterer.labels_
+            if hasattr(clusterer, "labels_")
+            else clusterer.predict(X_train)
+        )
+        train_probs = np.zeros((len(train_preds), len(np.unique(train_preds))))
+        train_probs[:, train_preds] = 1
+    train_time = int(round(time.time() * 1000)) - start
 
+    if build_train_file:
         train_acc = clustering_accuracy(y_train, train_preds)
 
         write_clustering_results(
@@ -736,7 +736,7 @@ def run_clustering_experiment(
             test_preds = np.argmax(test_probs, axis=1)
         else:
             test_preds = clusterer.predict(X_test)
-            test_probs = np.zeros((len(test_preds), len(np.unique(test_preds))))
+            test_probs = np.zeros((len(test_preds), len(np.unique(train_preds))))
             test_probs[:, test_preds] = 1
         test_time = int(round(time.time() * 1000)) - start
 
@@ -923,6 +923,7 @@ def run_forecasting_experiment(
         results_path,
         full_path=False,
         split="TEST",
+        random_seed=random_seed,
         timing_type="MILLISECONDS",
         first_line_comment=first_comment,
         parameter_info=second,

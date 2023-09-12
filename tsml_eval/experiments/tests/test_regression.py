@@ -6,9 +6,11 @@ import os
 import runpy
 
 import pytest
+from tsml.dummy import DummyClassifier
 
 from tsml_eval.experiments import (
     regression_experiments,
+    run_regression_experiment,
     set_regressor,
     threaded_regression_experiments,
 )
@@ -78,6 +80,12 @@ def test_run_regression_experiment_main():
             run_name="__main__",
         )
 
+    test_file = (
+        f"{_REGRESSOR_RESULTS_PATH}{regressor}/Predictions/{dataset}/testResample0.csv"
+    )
+    assert os.path.exists(test_file)
+    _check_regression_file_format(test_file)
+
     os.remove(
         f"{_REGRESSOR_RESULTS_PATH}{regressor}/Predictions/{dataset}/testResample0.csv"
     )
@@ -95,7 +103,9 @@ def test_run_threaded_regression_experiment():
         dataset,
         "1",
         "-nj",
-        "1",
+        "2",
+        # also test normalisation here
+        "--row_normalise",
     ]
 
     threaded_regression_experiments.run_experiment(args)
@@ -107,7 +117,7 @@ def test_run_threaded_regression_experiment():
     _check_regression_file_format(test_file)
 
     # test present results checking
-    regression_experiments.run_experiment(args)
+    threaded_regression_experiments.run_experiment(args)
 
     # this covers the main method and experiment function result file checking
     runpy.run_path(
@@ -118,6 +128,34 @@ def test_run_threaded_regression_experiment():
     )
 
     os.remove(test_file)
+
+
+def test_run_regression_experiment_invalid_build_settings():
+    """Test run_regression_experiment method with invalid build settings."""
+    with pytest.raises(ValueError, match="Both test_file and train_file"):
+        run_regression_experiment(
+            [],
+            [],
+            [],
+            [],
+            None,
+            "",
+            build_test_file=False,
+            build_train_file=False,
+        )
+
+
+def test_run_regression_experiment_invalid_estimator():
+    """Test run_regression_experiment method with invalid estimator."""
+    with pytest.raises(TypeError, match="regressor must be a"):
+        run_regression_experiment(
+            [],
+            [],
+            [],
+            [],
+            DummyClassifier(),
+            "",
+        )
 
 
 def test_set_regressor():

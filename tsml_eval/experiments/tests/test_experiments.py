@@ -1,46 +1,20 @@
 import os
 
-from tsml_eval.experiments import classification_experiments, regression_experiments
+from tsml.dummy import DummyClassifier
 
-
-def test_normalise():
-    """Test experiments with normalise parameter enabled."""
-    dataset = "MinimalGasPrices"
-    regressor = "DummyRegressor-aeon"
-
-    data_path = (
-        "./tsml_eval/datasets/"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else "../../datasets/"
-    )
-    result_path = (
-        "./test_output/normalise/"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else "../../../test_output/normalise/"
-    )
-
-    args = [
-        data_path,
-        result_path,
-        regressor,
-        dataset,
-        "0",
-        "--row_normalise",
-        "-ow",
-    ]
-
-    regression_experiments.run_experiment(args)
-
-    test_file = f"{result_path}{regressor}/Predictions/{dataset}/testResample0.csv"
-
-    assert os.path.exists(test_file)
-    os.remove(test_file)
+from tsml_eval.experiments import (
+    classification_experiments,
+    load_and_run_classification_experiment,
+)
+from tsml_eval.experiments.tests import _CLASSIFIER_RESULTS_PATH
+from tsml_eval.utils.test_utils import _TEST_DATA_PATH
+from tsml_eval.utils.tests.test_results_writing import _check_classification_file_format
 
 
 def test_kwargs():
     """Test experiments with kwargs input."""
     dataset = "MinimalChinatown"
-    classifier = "ROCKET"
+    classifier = "LogisticRegression"
 
     data_path = (
         "./tsml_eval/datasets/"
@@ -60,8 +34,16 @@ def test_kwargs():
         dataset,
         "0",
         "--kwargs",
-        "num_kernels",
-        "50",
+        "fit_intercept",
+        "False",
+        "bool",
+        "--kwargs",
+        "C",
+        "0.8",
+        "float",
+        "--kwargs",
+        "max_iter",
+        "10",
         "int",
         "-ow",
     ]
@@ -71,4 +53,27 @@ def test_kwargs():
     test_file = f"{result_path}{classifier}/Predictions/{dataset}/testResample0.csv"
 
     assert os.path.exists(test_file)
+    os.remove(test_file)
+
+
+def test_experiments_predefined_resample_data_loading():
+    """Test experiments with data loading."""
+    dataset = "PredefinedChinatown"
+
+    load_and_run_classification_experiment(
+        _TEST_DATA_PATH + "_test_data/",
+        _CLASSIFIER_RESULTS_PATH,
+        dataset,
+        DummyClassifier(),
+        resample_id=5,
+        predefined_resample=True,
+    )
+
+    test_file = (
+        f"{_CLASSIFIER_RESULTS_PATH}/DummyClassifier/Predictions/{dataset}/"
+        "testResample5.csv"
+    )
+    assert os.path.exists(test_file)
+    _check_classification_file_format(test_file)
+
     os.remove(test_file)

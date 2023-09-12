@@ -1,7 +1,7 @@
 % This is a cut down version of the problem CardanoSentiment, useful for code examples and unit tests
 % The train set is reduced from 74 cases to 20 cases and the test set is reduced from 33 to 20
 %
-@problemName CardanoSentiment
+@problemName MinimalCardanoSentiment
 @timestamps false
 @univariate false
 @equalLength true

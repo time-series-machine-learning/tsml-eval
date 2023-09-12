@@ -288,7 +288,7 @@ def write_classification_results(
         included in the train_estimate_time value. In this case fit_time +
         train_estimate_time would time fitting the model twice.
     """
-    if len(predictions) != len(probabilities) != len(class_labels):
+    if len(predictions) != probabilities.shape[0] != len(class_labels):
         raise IndexError(
             "The number of predicted values is not the same as the number of actual "
             "class values."
@@ -799,11 +799,6 @@ def _results_present(path, estimator, dataset, resample_id=None, split="TEST"):
     return False
 
 
-def _results_present_full_path(path, dataset, resample_id=None, split="TEST"):
-    """Duplicate: check if results are present already without an estimator input."""
-    return _results_present(path, "", dataset, resample_id, split)
-
-
 def validate_results_file(file_path):
     """Validate that a results file is in the correct format.
 
@@ -868,7 +863,7 @@ def fix_broken_second_line(file_path, save_path=None):
         and not _check_regression_third_line(lines[line_count])
         and not _check_clustering_third_line(lines[line_count])
     ):
-        if line_count == len(lines):
+        if line_count == len(lines) - 1:
             raise ValueError("No valid third line found in input results file.")
         line_count += 1
 
@@ -1001,10 +996,16 @@ def compare_result_file_resample(file_path1, file_path2):
     return True
 
 
-def assign_gpu():
+def assign_gpu(set_environ=False):  # pragma: no cover
     """Assign a GPU to the current process.
 
     Looks at the available Nvidia GPUs and assigns the GPU with the lowest used memory.
+
+    Parameters
+    ----------
+    set_environ : bool
+        Set the CUDA_DEVICE_ORDER environment variable to "PCI_BUS_ID" anf the
+        CUDA_VISIBLE_DEVICES environment variable to the assigned GPU.
 
     Returns
     -------
@@ -1019,7 +1020,14 @@ def assign_gpu():
         ]
         for gpu in stats
     ]
-    return min(pairs, key=lambda x: x[1])[0]
+
+    gpu = min(pairs, key=lambda x: x[1])[0]
+
+    if set_environ:
+        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+        os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
+
+    return gpu
 
 
 def parse_args(args):

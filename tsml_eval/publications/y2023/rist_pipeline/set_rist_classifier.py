@@ -131,7 +131,9 @@ def _set_rist_classifier(
         )
 
         def sqrt_times_15_plus_5_mv(X):
-            return int(np.sqrt(X.shape[2]) * np.sqrt(X.shape[1]) * 15 + 5)
+            return int(
+                np.sqrt(X.shape[2]) * np.sqrt(X.shape[1]) * 15 + 5
+            )  # pragma: no cover
 
         interval_features = [
             Catch22Transformer(outlier_norm=True, replace_nans=True),

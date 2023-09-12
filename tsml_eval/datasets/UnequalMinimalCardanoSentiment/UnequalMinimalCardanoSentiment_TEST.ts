@@ -2,11 +2,10 @@
 % The train set is reduced from 74 cases to 20 cases and the test set is reduced from 33 to 20
 % To make the series unequal length, values have arbitratily been removed from the beginning and end of series
 %
-@problemName CardanoSentiment
+@problemName UnequalMinimalCardanoSentiment
 @timestamps false
 @univariate false
-@equalLength true
-@seriesLength 24
+@equalLength false
 @targetlabel true
 @data
 0.5271,0.5271,0.53274,0.539,0.54262,0.54065,0.5455,0.54216,0.54395,0.54662,0.54089,0.54309,0.53953,0.53553,0.53128,0.53307,0.53288,0.53288,0.53886,0.53521,0.53521,0.53521:50000.0,56.1789234,439.91244494,0.0,1435.64188905,12654.18715291,12994.01944456,10000.0,22188.72215054,3983.37108399,3217.2572733,9501.16501917,2882.8742118,14357.64233668,4797.94743502,1051.35592684,12989.1481268,100934.80858048,101946.4179015,0.0,5187.45260547,260065.944223,0.0,0.0:0.0795

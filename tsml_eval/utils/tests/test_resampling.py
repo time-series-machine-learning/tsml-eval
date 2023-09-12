@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tests for dataset resampling functions."""
 
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
@@ -6,6 +5,7 @@ __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 import os
 
 import numpy as np
+import pandas as pd
 import pytest
 from tsml.datasets import (
     load_equal_minimal_japanese_vowels,
@@ -61,6 +61,15 @@ def test_resample_data_unequal():
 
     assert len(X_train) == train_size
     assert len(X_test) == test_size
+
+
+def test_resample_data_invalid():
+    """Test resampling raises an error with invalid input."""
+    X = pd.DataFrame(np.random.random((10, 10)))
+    y = pd.Series(np.zeros(10))
+
+    with pytest.raises(ValueError, match="X_train must be a"):
+        resample_data(X, y, X, y)
 
 
 @pytest.mark.parametrize(
@@ -126,6 +135,15 @@ def test_stratified_resample_data_unequal():
     assert list(counts_test_new) == list(counts_test)
 
 
+def test_stratified_resample_data_invalid():
+    """Test stratified resampling raises an error with invalid input."""
+    X = pd.DataFrame(np.random.random((10, 10)))
+    y = pd.Series(np.zeros(10))
+
+    with pytest.raises(ValueError, match="X_train must be a"):
+        stratified_resample_data(X, y, X, y)
+
+
 @pytest.mark.parametrize(
     "paths",
     [
@@ -148,3 +166,20 @@ def test_compare_result_file_resample(paths):
         paths[1] = f"tsml_eval/utils/tests/{paths[1]}"
 
     assert compare_result_file_resample(paths[0], paths[1]) == paths[2]
+
+
+def test_compare_result_file_resample_invalid():
+    """Test compare result file resample function with invalid input."""
+    p1 = (
+        "tsml_eval/utils/tests/test_files/classificationResultsFile1.csv"
+        if os.getcwd().split("\\")[-1] != "tests"
+        else "test_files/classificationResultsFile1.csv"
+    )
+    p3 = (
+        "tsml_eval/utils/tests/test_files/classificationResultsFile3.csv"
+        if os.getcwd().split("\\")[-1] != "tests"
+        else "test_files/classificationResultsFile3.csv"
+    )
+
+    with pytest.raises(ValueError, match="Input results file have different"):
+        compare_result_file_resample(p1, p3)

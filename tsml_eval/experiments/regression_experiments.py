@@ -41,10 +41,8 @@ def run_experiment(args):
     # if multiple GPUs are available, assign the one with the least usage to the process
     if os.environ.get("CUDA_VISIBLE_DEVICES") is None:
         try:
-            gpu = assign_gpu()
-            os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-            os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
-            print(f"Assigned GPU {gpu} to process.")
+            gpu = assign_gpu(set_environ=True)
+            print(f"Assigned GPU {gpu} to process.")  # pragma: no cover
         except Exception:
             print("Unable to assign GPU to process.")
 
