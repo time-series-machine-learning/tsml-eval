@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import csv
 import os
 
@@ -48,7 +47,7 @@ valid_multi_classifiers = [
     "TDE",
     "TSF",
 ]
-"""26 equal length multivariate time series classification problems [4]"""
+# 26 equal length multivariate time series classification problems [4]
 multivariate_equal_length = [
     "ArticularyWordRecognition",
     "AtrialFibrillation",

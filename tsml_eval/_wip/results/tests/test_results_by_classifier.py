@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from ..results_by_classifier import (
     get_single_classifier_results,
     get_single_classifier_results_from_web,

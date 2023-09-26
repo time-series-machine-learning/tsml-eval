@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import numpy as np
 from sklearn.utils.validation import check_random_state
 from aeon.classification.base import BaseClassifier

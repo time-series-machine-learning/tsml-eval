@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Evaluation module for aeon estimators."""
 __all__ = [
     "evaluate_raw_results",

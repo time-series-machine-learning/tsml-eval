@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from math import floor
 
 import numpy as np

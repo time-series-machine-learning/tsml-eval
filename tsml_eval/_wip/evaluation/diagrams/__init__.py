@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Critical difference diagram."""
 __all__ = ["critical_difference_diagram", "scatter_diagram"]
 

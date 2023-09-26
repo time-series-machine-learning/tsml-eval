@@ -1,0 +1,23 @@
+gha_enabled: True
+branch: "main"
+blocked_dirs: [".github/", "resutls/"]
+draft: False
+description: "time-series-machine-learning/tsml-eval is a Python project for experiments for time series machine learning algorithms and evaluating the results. Write code that adheres to PEP8 and is formatted to the Black code style."
+
+docs:
+  scikit-learn: ["https://scikit-learn.org/stable/", "Estimator algorithms from scikit-learn are one of the options available in our experiment functions."]
+  sklearn: ["https://scikit-learn.org/stable/", "Estimator algorithms from scikit-learn are one of the options available in our experiment functions."]
+  aeon: ["https://www.aeon-toolkit.org/en/stable/", "Estimator algorithms from aeon are one of the options available in our experiment functions."]
+  numpy: ["https://numpy.org/doc/stable/", "We use numpy as a data container and for mathematical operations."]
+  numba: ["https://numba.readthedocs.io/en/stable/", "We use numba to speed up functions where possible."]
+
+sandbox:
+  install:
+  - pre-commit install
+  check:
+  - pre-commit run --all-files
+
+rules:
+  - "There should not be large chunks of code that are just commented out. Docstrings and explanations in code are okay though."
+  - "Update the relevant API page in docs/api.md when new public functions and classes are added."
+  - "Make sure all error logs use traceback during exceptions."

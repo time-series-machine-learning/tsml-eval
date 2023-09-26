@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tests for building HIVE-COTE from file."""
 
 __author__ = ["ander-hg"]

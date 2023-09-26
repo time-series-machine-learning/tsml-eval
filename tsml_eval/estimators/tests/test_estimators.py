@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Test estimators implemented in tsml-eval."""
 
 from sklearn.cluster import KMeans

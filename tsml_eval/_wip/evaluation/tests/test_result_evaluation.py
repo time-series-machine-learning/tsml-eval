@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import platform
 
 from tsml_eval.evaluation._result_evaluation import (

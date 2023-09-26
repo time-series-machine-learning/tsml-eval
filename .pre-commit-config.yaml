@@ -2,9 +2,9 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
+    - id: check-ast
     - id: check-added-large-files
       args: ["--maxkb=10000"]
-    - id: check-ast
     - id: check-case-conflict
     - id: check-docstring-first
     - id: check-merge-conflict
@@ -13,6 +13,7 @@ repos:
     - id: check-yaml
     - id: debug-statements
     - id: end-of-file-fixer
+      exclude: "docs/examples|docs/publications|tsml_eval/publications/2023"
     - id: fix-byte-order-marker
     - id: fix-encoding-pragma
       args: ["--remove"]
@@ -27,14 +28,14 @@ repos:
       - id: isort
         name: isort (python)
         args: [ "--profile=black", "--multi-line=3" ]
-        exclude: ^tsml_eval/_wip/
+        exclude: "tsml_eval/_wip/|tsml_eval/estimators/"
 
   - repo: https://github.com/psf/black
     rev: 23.1.0
     hooks:
       - id: black
         language_version: python3
-        exclude: ^tsml_eval/_wip/
+        exclude: "tsml_eval/_wip/|tsml_eval/estimators/"
 
   - repo: https://github.com/pycqa/flake8
     rev: 6.0.0
@@ -62,7 +63,7 @@ repos:
       - id: pydocstyle
         args: ["--convention=numpy"]
         additional_dependencies: [ toml, tomli ]
-        exclude: ^tsml_eval/_wip/
+        exclude: "^tsml_eval/_wip/|tsml_eval/estimators/"
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.0.1
