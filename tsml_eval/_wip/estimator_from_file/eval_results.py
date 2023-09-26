@@ -70,11 +70,8 @@ def eval_mean_acc(caminho, datasets_names):
         accuracies_array.append(folder_acc)
 
     # print(np.mean(accuracies_array, axis=1))
-    #print({file_paths[i]: accuracies_array[i] for i in range(len(file_paths))})
     # np.concatenate((a, b.T), axis=1)
-
-
-
+    
     components = [
         "Arsenal",
         "DrCIF-500",
@@ -98,10 +95,8 @@ def eval_mean_acc(caminho, datasets_names):
         ranks_per_components.append(ranklist(dataset_acc))
         acc_per_components.append(dataset_acc)
     print(acc_per_components)
-    #variance = []
     min_div_max = []  # min/max acc
     for i, temp in enumerate(acc_per_components):
-        #variance.append(np.var(temp))
         min_div_max.append(np.min(temp)/np.max(temp))
         temp2 = np.min(temp)
     temp = (np.array(accuracies_array[0]) - np.array(accuracies_array[1])) > 0.01
@@ -111,11 +106,9 @@ def eval_mean_acc(caminho, datasets_names):
     dict_acc = dict(zip(keys, zip(*vals)))
     for x in dict_acc:
         print(x, dict_acc[x])
-    #print ("mean variance: ")
-    #print(np.mean(np.array(variance)[temp]))
     print("mean min/max acc: ")
     print(np.mean(np.array(min_div_max)[temp]))
-
+    
     temp = (np.array(accuracies_array[0]) - np.array(accuracies_array[1])) < -0.01
     print("Accuracy better by > 1% on remove_worst:")
     keys = np.array(datasets_names)[temp]
@@ -124,12 +117,9 @@ def eval_mean_acc(caminho, datasets_names):
     dict_acc = dict(zip(keys, zip(*vals)))
     for x in dict_acc:
         print(x, dict_acc[x])
-    #print("mean variance: ")
-    #print(np.mean(np.array(variance)[temp]))
     print("mean min/max acc: ")
     print(np.mean(np.array(min_div_max)[temp]))
-
-
+    
     print("All:")
     keys = np.array(datasets_names)
     vals = [np.array(acc_per_components), np.array(min_div_max),
@@ -137,10 +127,6 @@ def eval_mean_acc(caminho, datasets_names):
             np.array(accuracies_array[1]),
             ]
     dict_acc = dict(zip(keys, zip(*vals)))
-    '''
-    for x in dict_acc:
-        print(x, dict_acc[x])
-    '''
     print("min_div_max < 0.7:")
     print(np.array(datasets_names)[np.array(min_div_max)<0.7])
     print("array(Arsenal, DrCIF, STC, TDE), min_div_max, acc_original, acc_RemoveWorst")
