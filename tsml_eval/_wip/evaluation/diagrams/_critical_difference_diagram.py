@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Generate critical difference diagrams."""
 import math
 import warnings

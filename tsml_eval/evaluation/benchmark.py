@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Runtime and memory usage benchmarking."""
 
 from dataclasses import dataclass

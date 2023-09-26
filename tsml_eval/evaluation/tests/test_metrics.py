@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tests for performance metric functions."""
 
 __author__ = ["MatthewMiddlehurst"]

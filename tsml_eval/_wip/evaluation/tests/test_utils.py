@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from tsml_eval.evaluation import (
     fetch_classifier_metric,
     from_metric_summary_to_dataset_format,

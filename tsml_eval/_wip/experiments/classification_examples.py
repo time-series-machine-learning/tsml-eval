@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Simple usages for building classifiers
 
 import numpy as np

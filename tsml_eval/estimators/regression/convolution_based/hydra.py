@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Angus Dempster, Daniel F. Schmidt, Geoffrey I. Webb
 
 # HYDRA: Competing convolutional kernels for fast and accurate time series classification

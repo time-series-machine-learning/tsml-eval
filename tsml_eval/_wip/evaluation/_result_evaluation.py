@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 import platform
 from typing import Callable, Dict, List, Tuple, Union
