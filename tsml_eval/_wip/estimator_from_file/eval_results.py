@@ -71,7 +71,7 @@ def eval_mean_acc(caminho, datasets_names):
 
     # print(np.mean(accuracies_array, axis=1))
     # np.concatenate((a, b.T), axis=1)
-    
+
     components = [
         "Arsenal",
         "DrCIF-500",
@@ -108,7 +108,7 @@ def eval_mean_acc(caminho, datasets_names):
         print(x, dict_acc[x])
     print("mean min/max acc: ")
     print(np.mean(np.array(min_div_max)[temp]))
-    
+
     temp = (np.array(accuracies_array[0]) - np.array(accuracies_array[1])) < -0.01
     print("Accuracy better by > 1% on remove_worst:")
     keys = np.array(datasets_names)[temp]
@@ -119,7 +119,7 @@ def eval_mean_acc(caminho, datasets_names):
         print(x, dict_acc[x])
     print("mean min/max acc: ")
     print(np.mean(np.array(min_div_max)[temp]))
-    
+
     print("All:")
     keys = np.array(datasets_names)
     vals = [np.array(acc_per_components), np.array(min_div_max),
