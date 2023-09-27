@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import platform
 from typing import List, Union
 

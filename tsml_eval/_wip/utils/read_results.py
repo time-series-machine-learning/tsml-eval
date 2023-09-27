@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from csv import reader
 from typing import Dict, List
 

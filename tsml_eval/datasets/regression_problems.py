@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 List of datasets available from the http://tseregression.org/ archive, described in [1].
 
@@ -8,7 +7,7 @@ Data Min Knowl Disc 35, 1032–1060 (2021). https://doi.org/10.1007/s10618-021-0
 
 __author__ = ["Tony Bagnall"]
 
-""" 14 Regression equal length no missing problems [1]"""
+# 14 Regression equal length no missing problems [1]
 monash_regression = [
     "AppliancesEnergy",
     "AustraliaRainfall",
@@ -26,7 +25,7 @@ monash_regression = [
     "PPGDalia",
 ]
 
-""" 19 Regression problems from [1] with interpolated missing and truncated unequal"""
+# 19 Regression problems from [1] with interpolated missing and truncated unequal
 monash_regression_nm_eq = [
     "AppliancesEnergy",
     "AustraliaRainfall",

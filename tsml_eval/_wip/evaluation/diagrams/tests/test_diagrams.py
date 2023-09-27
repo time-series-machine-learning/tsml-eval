@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import platform
 
 from tsml_eval.evaluation import evaluate_metric_results

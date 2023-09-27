@@ -113,6 +113,7 @@ ignore = [
 exclude = [
     "tsml_eval/_wip/*",
     "examples/_wip/*",
+    "tsml_eval/estimators/*"
 ]
 per-file-ignores = [
     "tsml_eval/experiments/classification_experiments.py:E402,T201",

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Dictionary-based classification algorithms."""
 
 __all__ = ["MUSEDilation"]

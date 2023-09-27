@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """HYDRA classifier.
 
 HYDRA: Competing convolutional kernels for fast and accurate time series classification
