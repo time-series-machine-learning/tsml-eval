@@ -34,6 +34,7 @@ Functions for running experiments.
     experiments.run_clustering_experiment
     experiments.load_and_run_clustering_experiment
     experiments.forecasting_experiments.run_experiment
+    <<<< COMMENT: Recursively search through `tsml_eval/` for public files to add to the API page. If possible, use the import from the package `__init__.py` file. <<<<
 ```
 
 ## Utilities: [tsml_eval.utils](https://github.com/time-series-machine-learning/tsml-eval/tree/main/tsml_eval/utils)
@@ -57,3 +58,6 @@ Public utility functions used elsewhere in the package.
     utils.experiments.fix_broken_second_line
     utils.experiments.compare_result_file_resample
     utils.experiments.assign_gpu
+    utils.experiments.assign_gpu
+</old_file>
+\n
