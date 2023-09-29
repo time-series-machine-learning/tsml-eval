@@ -56,4 +56,3 @@ Public utility functions used elsewhere in the package.
     utils.experiments.fix_broken_second_line
     utils.experiments.compare_result_file_resample
     utils.experiments.assign_gpu
-```
