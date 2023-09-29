@@ -35,6 +35,21 @@ Functions for running experiments.
     experiments.load_and_run_clustering_experiment
 ```
 
+## Estimators: [tsml_eval.estimators](https://github.com/time-series-machine-learning/tsml-eval/tree/main/tsml_eval/estimators)
+
+Classes for wrapping sklearn estimators.
+
+```{eval-rst}
+.. currentmodule:: tsml_eval
+.. autosummary::
+    :toctree: auto_generated/
+    :template: class.rst
+
+    estimators.SklearnToTsmlClassifier
+    estimators.SklearnToTsmlClusterer
+    estimators.SklearnToTsmlRegressor
+```
+
 ## Utilities: [tsml_eval.utils](https://github.com/time-series-machine-learning/tsml-eval/tree/main/tsml_eval/utils)
 
 Public utility functions used elsewhere in the package.
@@ -56,4 +71,3 @@ Public utility functions used elsewhere in the package.
     utils.experiments.fix_broken_second_line
     utils.experiments.compare_result_file_resample
     utils.experiments.assign_gpu
-```
