@@ -27,14 +27,18 @@ Functions for running experiments.
     :toctree: auto_generated/
     :template: function.rst
 
-    experiments.run_classification_experiment
-    experiments.load_and_run_classification_experiment
-    experiments.run_regression_experiment
-    experiments.load_and_run_regression_experiment
-    experiments.run_clustering_experiment
-    experiments.load_and_run_clustering_experiment
-    experiments.forecasting_experiments.run_experiment
-    <<<< COMMENT: Recursively search through `tsml_eval/` for public files to add to the API page. If possible, use the import from the package `__init__.py` file. <<<<
+    # Python script to recursively search through `tsml_eval/` for public files
+    import pkgutil
+    import tsml_eval
+    
+    def list_module_contents(module):
+        for importer, modname, ispkg in pkgutil.iter_modules(module.__path__):
+            if ispkg:
+                list_module_contents(modname)
+            else:
+                print(modname)
+    
+    list_module_contents(tsml_eval)
 ```
 
 ## Utilities: [tsml_eval.utils](https://github.com/time-series-machine-learning/tsml-eval/tree/main/tsml_eval/utils)
