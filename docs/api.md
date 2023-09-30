@@ -33,6 +33,7 @@ Functions for running experiments.
     experiments.load_and_run_regression_experiment
     experiments.run_clustering_experiment
     experiments.load_and_run_clustering_experiment
+    utils.experiments.write_classification_results
 ```
 
 ## Utilities: [tsml_eval.utils](https://github.com/time-series-machine-learning/tsml-eval/tree/main/tsml_eval/utils)
