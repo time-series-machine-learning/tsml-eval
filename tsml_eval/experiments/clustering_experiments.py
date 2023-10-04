@@ -68,6 +68,10 @@ def run_experiment(args):
                 args.dataset_name,
                 set_clusterer(
                     args.estimator_name,
+                    args.data_path,
+                    args.dataset_name,
+                    args.resample_id,
+                    args.predefined_resample,
                     random_state=args.resample_id
                     if args.random_seed is None
                     else args.random_seed,
@@ -105,6 +109,10 @@ def run_experiment(args):
 
         clusterer = set_clusterer(
             estimator_name,
+            data_path,
+            dataset_name,
+            resample_id,
+            predefined_resample,
             random_state=resample_id,
             n_jobs=1,
             fit_contract=fit_contract,
@@ -132,5 +140,9 @@ if __name__ == "__main__":
     """
     Example simple usage, with arguments input via script or hard coded for testing.
     """
+    LOCAL_DATA_PATH = "/home/chris/Documents/Phd-data/Datasets/Univariate_ts"
+    RESULTS_PATH = "/home/chris/Documents/Phd-data/Results"
+    CLUSTERER = "pam-msm"
+    DATASET = "Chinatown"
     print("Running clustering_experiments.py main")
-    run_experiment(sys.argv[1:])
+    run_experiment([LOCAL_DATA_PATH, RESULTS_PATH, CLUSTERER, DATASET, "0", "-te"])
