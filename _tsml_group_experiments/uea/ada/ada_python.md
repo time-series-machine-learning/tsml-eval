@@ -83,7 +83,7 @@ After installation, the installed packages can be viewed with:
 
 Move to the package directory and run:
 
->pip install --editable .
+>pip install .
 
 For release specific dependency versions you can also run:
 

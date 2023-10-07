@@ -61,7 +61,7 @@ predefined_folds="false"
 generate_test_files="-te"
 
 # Combine test train split into one dataset, set to empty string to stop
-combine_test_train="-utts"
+combine_test_train=""
 
 # If combine_test_train is not "", set start_fold to 1 and max_folds to 1
 if [ "${combine_test_train}" != "" ]; then
@@ -85,8 +85,7 @@ predefined_folds=""
 # See set_clusterer for aliases
 count=0
 while read dataset; do
-for clusterer in kmeans-euclidean kmedoids-euclidean pam-euclidean clarans-euclidean clarans-euclidean clara-euclidean;
-do
+for clusterer in kmeans-euclidean kmedoids-euclidean; do
 
 # Dont change anything after here for regular runs
 
