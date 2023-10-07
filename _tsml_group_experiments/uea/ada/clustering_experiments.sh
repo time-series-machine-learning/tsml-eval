@@ -7,7 +7,7 @@
 # While reading is fine, please dont write anything to the default directories in this script
 
 # Start and end for resamples
-max_folds=1
+max_folds=10
 start_fold=1
 
 # To avoid dumping 1000s of jobs in the queue we have a higher level queue
@@ -17,7 +17,7 @@ max_num_submitted=100
 queue="compute-64-512"
 
 # Enter your username and email here
-username="eej17ucu"
+username="ajb"
 mail="NONE"
 mailto=$username"@uea.ac.uk"
 
@@ -37,16 +37,16 @@ datasets="/gpfs/home/ajb/DataSetLists/TSC_112_2019.txt"
 # Put your home directory here
 local_path="/gpfs/home/$username/"
 
-# Path to the virtual environment activation script (just change the code/tsml-eval/
-# part probably don't need to touch /venv/bin/activate if you named the venv, venv).
-venv_path=$local_path"Code/tsml-eval/venv/bin/activate"
-
 # Results and output file write location. Change these to reflect your own file structure
 results_dir=$local_path"clustering-results/results/"
 out_dir=$local_path"clustering-results/output/"
 
 # The python script we are running
 script_file_path=$local_path"Code/tsml-eval/tsml_eval/experiments/clustering_experiments.py"
+
+# Environment name, change accordingly, for set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
+# Separate environments for GPU (Python 3.8) and CPU (Python 3.10) are recommended
+env_name="tsml-eval"
 
 # generate a results file for the test data as well as train
 generate_test_files="true"
@@ -85,7 +85,7 @@ predefined_folds=""
 # See set_clusterer for aliases
 count=0
 while read dataset; do
-for clusterer in kmeans-euclidean kmedoids-euclidean pam-euclidean clarans-euclidean clara-euclidean;
+for clusterer in kmeans-euclidean kmedoids-euclidean pam-euclidean clarans-euclidean clarans-euclidean clara-euclidean;
 do
 
 # Dont change anything after here for regular runs
@@ -134,7 +134,8 @@ echo "#!/bin/bash
 
 . /etc/profile
 
-source ${venv_path}
+module add python/anaconda/2019.10/3.7
+source activate $env_name
 
 # Input args to the default clustering_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/clustering_experiments.py

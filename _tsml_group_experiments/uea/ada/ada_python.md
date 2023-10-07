@@ -37,28 +37,37 @@ e.g. https://github.com/time-series-machine-learning/tsml-eval
 
 Python is activated by default, but it is good practice to manually select the version used. The ADA module should be added before creating and editing an environment.
 
->module add python/3.10
+>module add python/anaconda/2019.10/3.7
 
-If you are submitting a gpu job use python 3.8 instead.
+You may also need to activate the shell script like this to use some conda commands:
 
->module add python/3.8
+>source /gpfs/software/ada/python/anaconda/2019.10/3.7/etc/profile.d/conda.sh
 
-Check the python version with:
+You can check the current version using:
+
+>conda --version
 
 >python --version
 
-### 4. Create a venv 
+### 4. Create a conda environment
 
-Navigate to the location you want to store your venv (normally just inside the root
-of the project folder) and create a venv with:
+Create a new environment with a name of your choice. Replace PYTHON_VERSION with 3.10 for CPU jobs and 3.8 for GPU jobs.
 
->python -m venv venv
+>conda create -n ENV_NAME python=PYTHON_VERSION
 
-Once created, activate the venv with:
+Activate the new environment.
 
->source venv/bin/activate
+>conda activate ENV_NAME
 
-You should see at the start of your terminal command line a (venv) tag.
+Your environment should be listed now when you use the following command:
+
+>conda info --envs
+
+__Tip__: instead of running the module, source, and conda activate commands every time, if the following line is added to the .bashrc file everything is done in one step (command ALIAS_NAME):
+
+>alias ALIAS_NAME="module add python/anaconda/2019.10/3.7; source /gpfs/software/ada/python/anaconda/2019.10/3.7/etc/profile.d/conda.sh; conda activate ENV_NAME;"
+
+Note that this ALIAS_NAME has to be run after the interactive.
 
 ### 5. Install package and dependencies
 
@@ -67,6 +76,8 @@ Install the package and required dependencies. The following are examples for a 
 After installation, the installed packages can be viewed with:
 
 >pip list
+
+>conda list
 
 #### 5.1. tsml-eval CPU
 

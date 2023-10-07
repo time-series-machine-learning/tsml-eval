@@ -44,9 +44,9 @@ out_dir=$local_path"ClassificationResults/output/"
 # The python script we are running
 script_file_path=$local_path"Code/tsml-eval/tsml_eval/experiments/classification_experiments.py"
 
-# Path to the virtual environment activation script (just change the code/tsml-eval/
-# part probably don't need to touch /venv/bin/activate if you named the venv, venv).
-venv_path=$local_path"Code/tsml-eval/venv/bin/activate"
+# Environment name, change accordingly, for set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
+# Separate environments for GPU (Python 3.8) and CPU (Python 3.10) are recommended
+env_name="tsml-eval"
 
 # You can add extra arguments here. See tsml_eval/utils/experiments.py parse_args
 # You will have to add any variable to the python call close to the bottom of the script
@@ -112,7 +112,8 @@ echo "#!/bin/bash
 
 . /etc/profile
 
-source ${venv_path}
+module add python/anaconda/2019.10/3.7
+source activate $env_name
 
 # Input args to the default classification_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/classification_experiments.py
