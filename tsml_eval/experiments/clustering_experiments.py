@@ -87,6 +87,7 @@ def run_experiment(args):
                 build_test_file=args.test_fold,
                 overwrite=args.overwrite,
                 predefined_resample=args.predefined_resample,
+                use_test_train_split=args.use_test_train_split,
             )
     # local run (no args)
     else:
@@ -105,6 +106,7 @@ def run_experiment(args):
         predefined_resample = False
         fit_contract = 0
         checkpoint = None
+        use_test_train_split = True
         kwargs = {}
 
         clusterer = set_clusterer(
@@ -133,16 +135,24 @@ def run_experiment(args):
             build_test_file=test_fold,
             overwrite=overwrite,
             predefined_resample=predefined_resample,
+            use_test_train_split=use_test_train_split,
         )
-
+# if __name__ == "__main__":
+#     """
+#     Example simple usage, with arguments input via script or hard coded for testing.
+#     """
+#     LOCAL_DATA_PATH = "/Users/chris/Documents/Phd-data/Datasets/Univariate_ts"
+#     TEST_TRAIN_RESULTS_PATH = "/Users/chris/Documents/Phd-data/Results/test-train/"
+#     COMBINED_RESULTS_PATH = "/Users/chris/Documents/Phd-data/Results/combined/"
+#     CLUSTERER = "pam-msm"
+#     DATASET = "Chinatown"
+#     print("Running clustering_experiments.py main")
+#     run_experiment([LOCAL_DATA_PATH, TEST_TRAIN_RESULTS_PATH, CLUSTERER, DATASET, "0", "-te"])
+#     run_experiment([LOCAL_DATA_PATH, COMBINED_RESULTS_PATH, CLUSTERER, DATASET, "0", "-te", "-utts"])
 
 if __name__ == "__main__":
     """
     Example simple usage, with arguments input via script or hard coded for testing.
     """
-    LOCAL_DATA_PATH = "/home/chris/Documents/Phd-data/Datasets/Univariate_ts"
-    RESULTS_PATH = "/home/chris/Documents/Phd-data/Results"
-    CLUSTERER = "pam-msm"
-    DATASET = "Chinatown"
     print("Running clustering_experiments.py main")
-    run_experiment([LOCAL_DATA_PATH, RESULTS_PATH, CLUSTERER, DATASET, "0", "-te"])
+    run_experiment(sys.argv[1:])
