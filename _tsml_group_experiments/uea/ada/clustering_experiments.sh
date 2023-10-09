@@ -42,7 +42,7 @@ results_dir=$local_path"clustering-results/results/"
 out_dir=$local_path"clustering-results/output/"
 
 # The python script we are running
-script_file_path=$local_path"Code/tsml-eval/tsml_eval/experiments/clustering_experiments.py"
+script_file_path=$local_path"projects/tsml-eval/tsml_eval/experiments/clustering_experiments.py"
 
 # Environment name, change accordingly, for set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
 # Separate environments for GPU (Python 3.8) and CPU (Python 3.10) are recommended
