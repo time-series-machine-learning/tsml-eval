@@ -17,7 +17,7 @@ max_num_submitted=100
 queue="compute-64-512"
 
 # Enter your username and email here
-username="ajb"
+username="eej17ucu"
 mail="NONE"
 mailto=$username"@uea.ac.uk"
 
