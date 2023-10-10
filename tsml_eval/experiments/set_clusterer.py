@@ -12,8 +12,8 @@ from aeon.clustering import (
 from aeon.distances._distance import DISTANCES_DICT
 from sklearn.cluster import KMeans
 from tsml.datasets import load_from_ts_file
-from tsml_eval.estimators.transformations.scaler import TimeSeriesScaler
 
+from tsml_eval.estimators.transformations.scaler import TimeSeriesScaler
 from tsml_eval.utils.functions import str_in_nested_list
 
 
@@ -125,15 +125,14 @@ def set_clusterer(
     """
     c = clusterer_name.lower()
 
-    X_train, y_train, _, _, _ = _load_data(
-        data_path, dataset_name, resample_id, predefined_resample
-    )
-
-    if row_normalise:
-        scaler = TimeSeriesScaler()
-        X_train = scaler.fit_transform(X_train)
-
     if str_in_nested_list(DISTANCE_BASED_CLUSTERERS, c):
+        X_train, y_train, _, _, _ = _load_data(
+            data_path, dataset_name, resample_id, predefined_resample
+        )
+
+        if row_normalise:
+            scaler = TimeSeriesScaler()
+            X_train = scaler.fit_transform(X_train)
         return _set_clusterer_distance_based(
             c, random_state, n_jobs, fit_contract, checkpoint, X_train, y_train, kwargs
         )
