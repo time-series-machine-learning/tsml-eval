@@ -54,11 +54,11 @@ def run_experiment(args):
         # this is also checked in load_and_run, but doing a quick check here so can
         # print a message and make sure data is not loaded
         if not args.overwrite and _results_present(
-            args.results_path,
-            args.estimator_name,
-            args.dataset_name,
-            resample_id=args.resample_id,
-            split="BOTH" if args.test_fold else "TRAIN",
+                args.results_path,
+                args.estimator_name,
+                args.dataset_name,
+                resample_id=args.resample_id,
+                split="BOTH" if args.test_fold else "TRAIN",
         ):
             print("Ignoring, results already present")
         else:
@@ -137,18 +137,7 @@ def run_experiment(args):
             predefined_resample=predefined_resample,
             use_test_train_split=use_test_train_split,
         )
-# if __name__ == "__main__":
-#     """
-#     Example simple usage, with arguments input via script or hard coded for testing.
-#     """
-#     LOCAL_DATA_PATH = "/Users/chris/Documents/Phd-data/Datasets/Univariate_ts"
-#     TEST_TRAIN_RESULTS_PATH = "/Users/chris/Documents/Phd-data/Results/test-train/"
-#     COMBINED_RESULTS_PATH = "/Users/chris/Documents/Phd-data/Results/combined/"
-#     CLUSTERER = "pam-msm"
-#     DATASET = "Chinatown"
-#     print("Running clustering_experiments.py main")
-#     run_experiment([LOCAL_DATA_PATH, TEST_TRAIN_RESULTS_PATH, CLUSTERER, DATASET, "0", "-te"])
-#     run_experiment([LOCAL_DATA_PATH, COMBINED_RESULTS_PATH, CLUSTERER, DATASET, "0", "-te", "-utts"])
+
 
 if __name__ == "__main__":
     """
