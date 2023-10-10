@@ -88,8 +88,7 @@ fi
 
 count=0
 while read dataset; do
-for clusterer in $clusters_to_run; do
-
+for clusterer in $clusterers_to_run; do
 # Skip to the script start point
 ((count++))
 if ((count>=start_point)); then
