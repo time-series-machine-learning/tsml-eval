@@ -38,7 +38,7 @@ datasets="/gpfs/home/ajb/DataSetLists/TSC_112_2019.txt"
 local_path="/gpfs/home/$username/"
 
 # Results and output file write location. Change these to reflect your own file structure
-results_dir=$local_path"clustering-results/results/"
+results_dir=$local_path"clustering-results/"
 out_dir=$local_path"clustering-results/output/"
 
 # The python script we are running
