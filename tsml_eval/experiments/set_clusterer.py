@@ -246,7 +246,7 @@ def _set_clusterer_other(c, random_state, n_jobs, fit_contract, checkpoint, kwar
             n_clusters=1,
             n_init=1,
             init_algorithm="random",
-            metric="euclidean",
+            distance="euclidean",
             max_iter=1,
             random_state=random_state,
             **kwargs,

@@ -158,7 +158,7 @@ def test_run_clustering_experiment_invalid_estimator():
 def test_set_clusterer():
     """Test set_clusterer method."""
     clusterer_lists = [
-        set_clusterer.distance_based_clusterers,
+        set_clusterer.DISTANCE_BASED_CLUSTERERS,
         set_clusterer.other_clusterers,
         set_clusterer.vector_clusterers,
     ]
