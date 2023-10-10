@@ -3,13 +3,18 @@
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 import numpy as np
-from tsml_eval.utils.functions import str_in_nested_list
 from aeon.clustering import (
-    TimeSeriesKMedoids, TimeSeriesKMeans, TimeSeriesCLARA, TimeSeriesCLARANS
+    TimeSeriesCLARA,
+    TimeSeriesCLARANS,
+    TimeSeriesKMeans,
+    TimeSeriesKMedoids,
 )
+from aeon.distances._distance import DISTANCES_DICT
 from sklearn.cluster import KMeans
 from tsml.datasets import load_from_ts_file
-from aeon.distances._distance import DISTANCES_DICT
+
+from tsml_eval.utils.functions import str_in_nested_list
+
 
 def _load_data(problem_path, dataset, resample_id, predefined_resample):
     if resample_id is not None and predefined_resample:
@@ -34,6 +39,7 @@ def _load_data(problem_path, dataset, resample_id, predefined_resample):
         resample_data = True if resample_id != 0 else False
 
     return X_train, y_train, X_test, y_test, resample_data
+
 
 _valid_distance_names = list(DISTANCES_DICT.keys())
 _valid_clusterer_names = ["kmeans", "kmedoids", "clarans", "clara", "pam"]
@@ -61,15 +67,15 @@ def _get_distance_default_params(train_data: np.ndarray, dist_name: str) -> dict
     if dist_name == "dtw" or dist_name == "ddtw":
         return {"window": 0.2}
     if dist_name == "lcss":
-        return {"epsilon": 1.}
+        return {"epsilon": 1.0}
     if dist_name == "erp":
         return {"g": train_data.std(axis=0).sum()}
     if dist_name == "msm":
-        return {"c": 1., "independent": True}
+        return {"c": 1.0, "independent": True}
     if dist_name == "edr":
         return {"epsilon": None}
     if dist_name == "twe":
-        return {"nu": 0.001, "lmbda": 1.}
+        return {"nu": 0.001, "lmbda": 1.0}
     if dist_name == "psi_dtw":
         return {"r": 0.5}
     if dist_name == "adtw":
@@ -78,17 +84,18 @@ def _get_distance_default_params(train_data: np.ndarray, dist_name: str) -> dict
         return {"descriptor": "identity", "reach": 30}
     return {}
 
+
 def set_clusterer(
-        clusterer_name,
-        data_path: str,
-        dataset_name: str,
-        resample_id: int,
-        predefined_resample: bool,
-        random_state=None,
-        n_jobs=1,
-        fit_contract=0,
-        checkpoint=None,
-        **kwargs,
+    clusterer_name,
+    data_path: str,
+    dataset_name: str,
+    resample_id: int,
+    predefined_resample: bool,
+    random_state=None,
+    n_jobs=1,
+    fit_contract=0,
+    checkpoint=None,
+    **kwargs,
 ):
     """Return a clusterer matching a given input name.
 
@@ -137,7 +144,7 @@ def set_clusterer(
 
 
 def _set_clusterer_distance_based(
-        c, random_state, n_jobs, fit_contract, checkpoint, X_train, y_train, kwargs
+    c, random_state, n_jobs, fit_contract, checkpoint, X_train, y_train, kwargs
 ):
     c = c.lower()
 
@@ -165,10 +172,7 @@ def _set_clusterer_distance_based(
         if "average_params" in kwargs:
             average_params = kwargs["average_params"]
         else:
-            average_params = {
-                "distance": distance,
-                **distance_params.copy()
-            }
+            average_params = {"distance": distance, **distance_params.copy()}
         if "ba" in c:
             return TimeSeriesKMeans(
                 n_clusters=n_clusters,
@@ -229,6 +233,7 @@ def _set_clusterer_distance_based(
         )
     return None
 
+
 def _set_clusterer_other(c, random_state, n_jobs, fit_contract, checkpoint, kwargs):
     if c == "dummyclusterer" or c == "dummy" or c == "dummyclusterer-tsml":
         from tsml.dummy import DummyClusterer
@@ -237,7 +242,6 @@ def _set_clusterer_other(c, random_state, n_jobs, fit_contract, checkpoint, kwar
             strategy="random", n_clusters=1, random_state=random_state, **kwargs
         )
     elif c == "dummyclusterer-aeon":
-
         return TimeSeriesKMeans(
             n_clusters=1,
             n_init=1,
@@ -248,7 +252,6 @@ def _set_clusterer_other(c, random_state, n_jobs, fit_contract, checkpoint, kwar
             **kwargs,
         )
     elif c == "dummyclusterer-sklearn":
-
         return KMeans(
             n_clusters=1,
             n_init=1,

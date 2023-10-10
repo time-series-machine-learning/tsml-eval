@@ -54,11 +54,11 @@ def run_experiment(args):
         # this is also checked in load_and_run, but doing a quick check here so can
         # print a message and make sure data is not loaded
         if not args.overwrite and _results_present(
-                args.results_path,
-                args.estimator_name,
-                args.dataset_name,
-                resample_id=args.resample_id,
-                split="BOTH" if args.test_fold else "TRAIN",
+            args.results_path,
+            args.estimator_name,
+            args.dataset_name,
+            resample_id=args.resample_id,
+            split="BOTH" if args.test_fold else "TRAIN",
         ):
             print("Ignoring, results already present")
         else:

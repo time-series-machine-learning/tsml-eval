@@ -1223,7 +1223,7 @@ def parse_args(args):
         action="store_false",
         help="whether to use a test train split or not. If False, the test and train "
         "are combined and only 'fit' is performed with results read from that. If True"
-        "the test/train split is observed"
+        "the test/train split is observed",
     )
     parser.add_argument(
         "-kw",
