@@ -1,9 +1,4 @@
 #!/bin/bash
-# CHECK:
-#   datasets (list of problems)
-#   results_dir (where to check/write results),
-#   for clusterer in (the clusterers we are running)
-
 # While reading is fine, please dont write anything to the default directories in this script
 
 # Start and end for resamples
@@ -54,40 +49,46 @@ generate_test_files="true"
 # If set for true, looks for <problem><fold>_TRAIN.ts file. This is useful for running tsml resamples
 predefined_folds="false"
 
-# You can add extra arguments here. See tsml_eval/utils/experiments.py parse_args
-# You will have to add any variable to the python call close to the bottom of the script
-
-# generate a results file for the test data as well as train, set to empty string to stop
-generate_test_files="-te"
-
 # Combine test train split into one dataset, set to empty string to stop
-combine_test_train=""
+combine_test_train_split="false"
 
-# If combine_test_train is not "", set start_fold to 1 and max_folds to 1
-if [ "${combine_test_train}" != "" ]; then
-    start_fold=1
-    max_folds=1
+# Clusterers to loop over. Must be seperated by a space
+clusterers_to_run="kmedoids-squared kmedoids-euclidean"
+
+
+# ==================================================================================================
+# ==================================================================================================
+# Dont change anything under here (unless you want to change how the experiment is working)
+# ==================================================================================================
+# ==================================================================================================
+
+if [ "${generate_test_files}" == "true" ]; then
+    generate_test_files="-te"
+else
+    generate_test_files=""
 fi
 
-# Add test/train to result path if not combining and combine to result path if you are
-if [ "${combine_test_train}" == "-utts" ]; then
+if [ "${predefined_folds}" == "true" ]; then
+    predefined_folds="-pr"
+else
+    predefined_folds=""
+fi
+
+if [ "${combine_test_train}" == "true" ]; then
+    start_fold=1
+    max_folds=1
+    combine_test_train = "-utts"
     results_dir="${results_dir}combine-test-train-split/"
     out_dir="${out_dir}combine-test-train-split/"
 else
+    combine_test_train = ""
     results_dir="${results_dir}test-train-split/"
     out_dir="${out_dir}test-train-split/"
 fi
 
-# If set to -pr, looks for <problem><resample>_TRAIN.ts files. This is useful for running tsml-java resamples
-predefined_folds=""
-
-# List valid clusterers e.g KMeans KMedoids
-# See set_clusterer for aliases
 count=0
 while read dataset; do
-for clusterer in kmeans-euclidean kmedoids-euclidean; do
-
-# Dont change anything after here for regular runs
+for clusterer in $clusters_to_run; do
 
 # Skip to the script start point
 ((count++))
