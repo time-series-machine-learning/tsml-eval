@@ -76,7 +76,7 @@ def _get_distance_default_params(train_data: np.ndarray, dist_name: str) -> dict
         return {"warp_penalty": 1.0}
     if dist_name == "shape-dtw":
         return {"descriptor": "identity", "reach": 30}
-
+    return {}
 
 def set_clusterer(
         clusterer_name,
