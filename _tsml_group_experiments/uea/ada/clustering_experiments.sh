@@ -77,11 +77,11 @@ fi
 if [ "${combine_test_train}" == "true" ]; then
     start_fold=1
     max_folds=1
-    combine_test_train = "-utts"
+    combine_test_train="-utts"
     results_dir="${results_dir}combine-test-train-split/"
     out_dir="${out_dir}combine-test-train-split/"
 else
-    combine_test_train = ""
+    combine_test_train=""
     results_dir="${results_dir}test-train-split/"
     out_dir="${out_dir}test-train-split/"
 fi
