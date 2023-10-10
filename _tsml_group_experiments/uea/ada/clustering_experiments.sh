@@ -73,14 +73,14 @@ else
     predefined_folds=""
 fi
 
-if [ "${combine_test_train}" == "true" ]; then
+if [ "${combine_test_train_split}" == "true" ]; then
     start_fold=1
     max_folds=1
-    combine_test_train="-utts"
+    combine_test_train_split="-utts"
     results_dir="${results_dir}combine-test-train-split/"
     out_dir="${out_dir}combine-test-train-split/"
 else
-    combine_test_train=""
+    combine_test_train_split=""
     results_dir="${results_dir}test-train-split/"
     out_dir="${out_dir}test-train-split/"
 fi
@@ -137,7 +137,7 @@ source activate $env_name
 
 # Input args to the default clustering_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/clustering_experiments.py
-python -u ${script_file_path} ${data_dir} ${results_dir} ${clusterer} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_test_files} ${predefined_folds} ${combine_test_train}"  > generatedFile.sub
+python -u ${script_file_path} ${data_dir} ${results_dir} ${clusterer} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_test_files} ${predefined_folds} ${combine_test_train_split}"  > generatedFile.sub
 
 echo ${count} ${clusterer}/${dataset}
 
