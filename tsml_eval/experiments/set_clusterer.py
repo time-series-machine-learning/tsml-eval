@@ -12,6 +12,7 @@ from aeon.clustering import (
 from aeon.distances._distance import DISTANCES_DICT
 from sklearn.cluster import KMeans
 from tsml.datasets import load_from_ts_file
+from tsml_eval.estimators.transformations.scaler import TimeSeriesScaler
 
 from tsml_eval.utils.functions import str_in_nested_list
 
@@ -80,7 +81,7 @@ def _get_distance_default_params(train_data: np.ndarray, dist_name: str) -> dict
         return {"r": 0.5}
     if dist_name == "adtw":
         return {"warp_penalty": 1.0}
-    if dist_name == "shape-dtw":
+    if dist_name == "shape_dtw":
         return {"descriptor": "identity", "reach": 30}
     return {}
 
@@ -95,6 +96,7 @@ def set_clusterer(
     n_jobs=1,
     fit_contract=0,
     checkpoint=None,
+    row_normalise=False,
     **kwargs,
 ):
     """Return a clusterer matching a given input name.
@@ -126,6 +128,10 @@ def set_clusterer(
     X_train, y_train, _, _, _ = _load_data(
         data_path, dataset_name, resample_id, predefined_resample
     )
+
+    if row_normalise:
+        scaler = TimeSeriesScaler()
+        X_train = scaler.fit_transform(X_train)
 
     if str_in_nested_list(DISTANCE_BASED_CLUSTERERS, c):
         return _set_clusterer_distance_based(

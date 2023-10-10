@@ -54,11 +54,11 @@ def run_experiment(args):
         # this is also checked in load_and_run, but doing a quick check here so can
         # print a message and make sure data is not loaded
         if not args.overwrite and _results_present(
-            args.results_path,
-            args.estimator_name,
-            args.dataset_name,
-            resample_id=args.resample_id,
-            split="BOTH" if args.test_fold else "TRAIN",
+                args.results_path,
+                args.estimator_name,
+                args.dataset_name,
+                resample_id=args.resample_id,
+                split="BOTH" if args.test_fold else "TRAIN",
         ):
             print("Ignoring, results already present")
         else:
@@ -78,6 +78,7 @@ def run_experiment(args):
                     n_jobs=1,
                     fit_contract=args.fit_contract,
                     checkpoint=args.checkpoint,
+                    row_normalise=args.row_normalise,
                     **args.kwargs,
                 ),
                 row_normalise=args.row_normalise,
@@ -107,6 +108,7 @@ def run_experiment(args):
         fit_contract = 0
         checkpoint = None
         use_test_train_split = True
+        row_normalise = True
         kwargs = {}
 
         clusterer = set_clusterer(
@@ -119,6 +121,7 @@ def run_experiment(args):
             n_jobs=1,
             fit_contract=fit_contract,
             checkpoint=checkpoint,
+            row_normalise=row_normalise,
             **kwargs,
         )
         print(f"Local Run of {estimator_name} ({clusterer.__class__.__name__}).")
