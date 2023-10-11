@@ -53,6 +53,8 @@ for clusterer in _valid_clusterer_names:
 for distance in _valid_distance_names:
     DISTANCE_BASED_CLUSTERERS.append(f"kmeans-ba-{distance}")
 
+DISTANCE_BASED_CLUSTERERS = DISTANCE_BASED_CLUSTERERS + ["TimeSeriesKMeans", "TimeSeriesKMedoids", "TimeSeriesCLARANS", "TimeSeriesCLARA"]
+
 other_clusterers = [
     ["DummyClusterer", "dummy", "dummyclusterer-tsml"],
     "dummyclusterer-aeon",
@@ -70,7 +72,8 @@ def _get_distance_default_params(train_data: np.ndarray, dist_name: str) -> dict
     if dist_name == "lcss":
         return {"epsilon": 1.0}
     if dist_name == "erp":
-        return {"g": train_data.std(axis=0).sum()}
+        if len(train_data) > 0:
+            return {"g": train_data.std(axis=0).sum()}
     if dist_name == "msm":
         return {"c": 1.0, "independent": True}
     if dist_name == "edr":
@@ -88,10 +91,10 @@ def _get_distance_default_params(train_data: np.ndarray, dist_name: str) -> dict
 
 def set_clusterer(
     clusterer_name,
-    data_path: str,
-    dataset_name: str,
-    resample_id: int,
-    predefined_resample: bool,
+    data_path: str = None,
+    dataset_name: str = None,
+    resample_id: int = 0,
+    predefined_resample: bool = False,
     random_state=None,
     n_jobs=1,
     fit_contract=0,
@@ -126,9 +129,12 @@ def set_clusterer(
     c = clusterer_name.lower()
 
     if str_in_nested_list(DISTANCE_BASED_CLUSTERERS, c):
-        X_train, y_train, _, _, _ = _load_data(
-            data_path, dataset_name, resample_id, predefined_resample
-        )
+        X_train = np.empty(0)
+        y_train = np.empty(0)
+        if data_path is not None:
+            X_train, y_train, _, _, _ = _load_data(
+                data_path, dataset_name, resample_id, predefined_resample
+            )
 
         if row_normalise:
             scaler = TimeSeriesScaler()
@@ -168,12 +174,13 @@ def _set_clusterer_distance_based(
     else:
         distance_params = _get_distance_default_params(X_train, distance)
 
+
     if "n_clusters" in kwargs:
         n_clusters = kwargs["n_clusters"]
     else:
         n_clusters = len(np.unique(y_train))
 
-    if "kmeans" in c:
+    if "kmeans" in c or "timeserieskmeans" in c:
         if "average_params" in kwargs:
             average_params = kwargs["average_params"]
         else:
@@ -198,7 +205,7 @@ def _set_clusterer_distance_based(
                 random_state=random_state,
                 **kwargs,
             )
-    elif "kmedoids" in c:
+    elif "kmedoids" in c or "timeserieskmedoids" in c:
         return TimeSeriesKMedoids(
             n_clusters=n_clusters,
             init_algorithm=init_algorithm,
@@ -208,7 +215,7 @@ def _set_clusterer_distance_based(
             method="alternate",
             **kwargs,
         )
-    elif "pam" in c:
+    elif "pam" in c or "timeseriespam" in c:
         return TimeSeriesKMedoids(
             n_clusters=n_clusters,
             init_algorithm=init_algorithm,
@@ -218,7 +225,7 @@ def _set_clusterer_distance_based(
             method="pam",
             **kwargs,
         )
-    elif "clarans" in c:
+    elif "clarans" in c or "timeseriesclarans" in c:
         return TimeSeriesCLARANS(
             n_clusters=n_clusters,
             init_algorithm=init_algorithm,
@@ -227,7 +234,7 @@ def _set_clusterer_distance_based(
             random_state=random_state,
             **kwargs,
         )
-    elif "clara" in c:
+    elif "clara" in c or "timeseriesclara" in c:
         return TimeSeriesCLARA(
             n_clusters=n_clusters,
             init_algorithm=init_algorithm,
