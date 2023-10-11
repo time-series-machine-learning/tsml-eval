@@ -6,5 +6,6 @@ import os
 from pathlib import Path
 
 _DISTANCE_TEST_RESULTS_PATH = (
-    os.path.dirname(Path(__file__).parent.parent) + "/test_output/distance_clustering/"
+    os.path.dirname(Path(__file__).parent.parent.parent.parent.parent)
+    + "/test_output/distance_clustering/"
 )

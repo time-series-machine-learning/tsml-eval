@@ -50,7 +50,7 @@ def _run_experiment(args):
         clusterer_name = "KMeans-dtw"
         dataset_name = "MinimalChinatown"
         resample_id = 0
-        normalise = True
+        normalise = False
         kwargs = {}
         overwrite = False
     else:

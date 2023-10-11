@@ -8,7 +8,7 @@ from sklearn.metrics import davies_bouldin_score
 
 
 # used for dtw and wdtw primarily
-def _tune_window(metric, train_X, n_clusters):
+def _tune_window(metric, train_X, n_clusters):  # pragma: no cover
     best_w = 0
     best_score = sys.float_info.max
     for w in np.arange(0.0, 0.2, 0.01):
@@ -30,7 +30,7 @@ def _tune_window(metric, train_X, n_clusters):
     return best_w
 
 
-def _tune_msm(train_X, n_clusters):
+def _tune_msm(train_X, n_clusters):  # pragma: no cover
     best_c = 0
     best_score = sys.float_info.max
     for c in np.arange(0.0, 5.0, 0.25):
@@ -52,7 +52,7 @@ def _tune_msm(train_X, n_clusters):
     return best_c
 
 
-def _tune_wdtw(train_X, n_clusters):
+def _tune_wdtw(train_X, n_clusters):  # pragma: no cover
     best_g = 0
     best_score = sys.float_info.max
     for g in np.arange(0.0, 1.0, 0.05):
@@ -74,7 +74,7 @@ def _tune_wdtw(train_X, n_clusters):
     return best_g
 
 
-def _tune_twe(train_X, n_clusters):
+def _tune_twe(train_X, n_clusters):  # pragma: no cover
     best_nu = 0
     best_lambda = 0
     best_score = sys.float_info.max
@@ -105,7 +105,7 @@ def _tune_twe(train_X, n_clusters):
     return best_nu, best_lambda
 
 
-def _tune_erp(train_X, n_clusters):
+def _tune_erp(train_X, n_clusters):  # pragma: no cover
     best_g = 0
     best_score = sys.float_info.max
     for g in np.arange(0.0, 2.0, 0.2):
@@ -127,7 +127,7 @@ def _tune_erp(train_X, n_clusters):
     return best_g
 
 
-def _tune_edr(train_X, n_clusters):
+def _tune_edr(train_X, n_clusters):  # pragma: no cover
     best_e = 0
     best_score = sys.float_info.max
     for e in np.arange(0.0, 0.2, 0.01):
@@ -151,7 +151,7 @@ def _tune_edr(train_X, n_clusters):
     return best_e
 
 
-def _tune_lcss(train_X, n_clusters):
+def _tune_lcss(train_X, n_clusters):  # pragma: no cover
     best_e = 0
     best_score = sys.float_info.max
     for e in np.arange(0.0, 0.2, 0.01):

@@ -6,5 +6,6 @@ import os
 from pathlib import Path
 
 _TSER_ARCHIVE_TEST_RESULTS_PATH = (
-    os.path.dirname(Path(__file__).parent.parent) + "/test_output/expansion_regression/"
+    os.path.dirname(Path(__file__).parent.parent.parent.parent.parent)
+    + "/test_output/expansion_regression/"
 )
