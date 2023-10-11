@@ -53,7 +53,12 @@ for clusterer in _valid_clusterer_names:
 for distance in _valid_distance_names:
     DISTANCE_BASED_CLUSTERERS.append(f"kmeans-ba-{distance}")
 
-DISTANCE_BASED_CLUSTERERS = DISTANCE_BASED_CLUSTERERS + ["TimeSeriesKMeans", "TimeSeriesKMedoids", "TimeSeriesCLARANS", "TimeSeriesCLARA"]
+DISTANCE_BASED_CLUSTERERS = DISTANCE_BASED_CLUSTERERS + [
+    "TimeSeriesKMeans",
+    "TimeSeriesKMedoids",
+    "TimeSeriesCLARANS",
+    "TimeSeriesCLARA",
+]
 
 other_clusterers = [
     ["DummyClusterer", "dummy", "dummyclusterer-tsml"],
@@ -173,7 +178,6 @@ def _set_clusterer_distance_based(
         distance_params = kwargs["distance_params"]
     else:
         distance_params = _get_distance_default_params(X_train, distance)
-
 
     if "n_clusters" in kwargs:
         n_clusters = kwargs["n_clusters"]
