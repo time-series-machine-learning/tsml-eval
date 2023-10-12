@@ -1,6 +1,7 @@
 """Alignment path plotting utilities."""
 
 import numpy as np
+from aeon.distances import cost_matrix as compute_cost_matrix
 from aeon.distances._distance import alignment_path, pairwise_distance
 from aeon.utils.validation._dependencies import _check_soft_dependencies
 
@@ -53,14 +54,13 @@ def _plot_path(  # pragma: no cover
 ):
     _check_soft_dependencies("matplotlib")
 
-    import matplotlib as plt
+    import matplotlib.pyplot as plt
 
     if dist_kwargs is None:
         dist_kwargs = {}
     try:
-        path, dist, cost_matrix = alignment_path(
-            x, y, metric=metric, return_cost_matrix=True, **dist_kwargs
-        )
+        path, dist = alignment_path(x, y, metric=metric, **dist_kwargs)
+        cost_matrix = compute_cost_matrix(x, y, metric=metric, **dist_kwargs)
 
         if metric == "lcss":
             _path = []
@@ -121,14 +121,12 @@ def _plot_alignment(  # pragma: no cover
 ):
     _check_soft_dependencies("matplotlib")
 
-    import matplotlib as plt
+    import matplotlib.pyplot as plt
 
     if dist_kwargs is None:
         dist_kwargs = {}
     try:
-        path, dist, cost_matrix = alignment_path(
-            x, y, metric=metric, return_cost_matrix=True, **dist_kwargs
-        )
+        path, dist = alignment_path(x, y, metric=metric, **dist_kwargs)
     except NotImplementedError:
         path, dist, cost_matrix = _pairwise_path(x, y, metric)
 

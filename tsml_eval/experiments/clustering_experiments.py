@@ -68,12 +68,17 @@ def run_experiment(args):
                 args.dataset_name,
                 set_clusterer(
                     args.estimator_name,
+                    args.data_path,
+                    args.dataset_name,
+                    args.resample_id,
+                    args.predefined_resample,
                     random_state=args.resample_id
                     if args.random_seed is None
                     else args.random_seed,
                     n_jobs=1,
                     fit_contract=args.fit_contract,
                     checkpoint=args.checkpoint,
+                    row_normalise=args.row_normalise,
                     **args.kwargs,
                 ),
                 row_normalise=args.row_normalise,
@@ -83,6 +88,7 @@ def run_experiment(args):
                 build_test_file=args.test_fold,
                 overwrite=args.overwrite,
                 predefined_resample=args.predefined_resample,
+                use_test_train_split=args.use_test_train_split,
             )
     # local run (no args)
     else:
@@ -101,14 +107,21 @@ def run_experiment(args):
         predefined_resample = False
         fit_contract = 0
         checkpoint = None
+        use_test_train_split = True
+        row_normalise = True
         kwargs = {}
 
         clusterer = set_clusterer(
             estimator_name,
+            data_path,
+            dataset_name,
+            resample_id,
+            predefined_resample,
             random_state=resample_id,
             n_jobs=1,
             fit_contract=fit_contract,
             checkpoint=checkpoint,
+            row_normalise=row_normalise,
             **kwargs,
         )
         print(f"Local Run of {estimator_name} ({clusterer.__class__.__name__}).")
@@ -125,6 +138,7 @@ def run_experiment(args):
             build_test_file=test_fold,
             overwrite=overwrite,
             predefined_resample=predefined_resample,
+            use_test_train_split=use_test_train_split,
         )
 
 
