@@ -51,6 +51,7 @@ def _check_set_method_results(
 
     if not all(estimator_dict.values()):
         missing_keys = [key for key, value in estimator_dict.items() if not value]
+
         raise ValueError(
             f"All {estimator_name.lower()} seen in {method_name} must have an entry "
             "for the full class name (usually with default parameters). "
