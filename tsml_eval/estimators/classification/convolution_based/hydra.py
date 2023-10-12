@@ -10,7 +10,7 @@ __all__ = ["HYDRA", "HydraMultiRocket"]
 
 import numpy as np
 from aeon.classification.base import BaseClassifier
-from aeon.transformations.collection.convolution_based import MultiRocket
+from aeon.transformations.collection.rocket import MultiRocket
 from aeon.utils.validation import check_n_jobs
 from aeon.utils.validation._dependencies import _check_soft_dependencies
 from sklearn.linear_model import RidgeClassifierCV

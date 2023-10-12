@@ -158,7 +158,7 @@ def test_run_clustering_experiment_invalid_estimator():
 def test_set_clusterer():
     """Test set_clusterer method."""
     clusterer_lists = [
-        set_clusterer.DISTANCE_BASED_CLUSTERERS,
+        set_clusterer.distance_based_clusterers,
         set_clusterer.other_clusterers,
         set_clusterer.vector_clusterers,
     ]
@@ -182,7 +182,7 @@ def test_set_clusterer():
 def test_set_clusterer_invalid():
     """Test set_clusterer method with invalid estimator."""
     with pytest.raises(ValueError, match="UNKNOWN CLUSTERER"):
-        set_clusterer.set_clusterer("invalid", "", "", 0, False)
+        set_clusterer.set_clusterer("invalid")
 
 
 @pytest.mark.parametrize("n_clusters", ["4", "-1"])
