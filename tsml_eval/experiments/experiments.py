@@ -775,6 +775,7 @@ def load_and_run_clustering_experiment(
     build_test_file=False,
     overwrite=False,
     predefined_resample=False,
+    use_test_train_split=True,
 ):
     """Load a dataset and run a clustering experiment.
 
@@ -816,7 +817,15 @@ def load_and_run_clustering_experiment(
         Read a predefined resample from file instead of performing a resample. If True
         the file format must include the resample_id at the end of the dataset name i.e.
         <problem_path>/<dataset>/<dataset>+<resample_id>+"_TRAIN.ts".
+    use_test_train_split: bool, default=True
+        Boolean that defines if the test train split should be used. If True then the
+        test/train split is used. If False then the test and train data are combined
+        and the clusterer is fit on the combined data. Therefore no predict stage
+        happens when combined and results are read from fit.
     """
+    if not use_test_train_split:
+        build_test_file = False
+
     build_test_file, build_train_file = _check_existing_results(
         results_path,
         clusterer_name,
@@ -831,11 +840,28 @@ def load_and_run_clustering_experiment(
         warnings.warn("All files exist and not overwriting, skipping.", stacklevel=1)
         return
 
-    X_train, y_train, X_test, y_test, resample = _load_data(
-        problem_path, dataset, resample_id, predefined_resample
-    )
+    if use_test_train_split:
+        X_train, y_train, X_test, y_test, resample = _load_data(
+            problem_path, dataset, resample_id, predefined_resample
+        )
+    else:
+        X_train, y_train, X_test, y_test, resample = _load_data(
+            problem_path, dataset, None, False
+        )
+        if isinstance(X_train, np.ndarray):
+            is_array = True
+        elif isinstance(X_train, list):
+            is_array = False
+        else:
+            raise ValueError(
+                "X_train must be a np.ndarray array or list of np.ndarray arrays"
+            )
+        y_train = np.concatenate((y_train, y_test), axis=None)
+        X_train = (
+            np.concatenate([X_train, X_test], axis=0) if is_array else X_train + X_test
+        )
 
-    if resample:
+    if use_test_train_split and resample:
         X_train, y_train, X_test, y_test = stratified_resample_data(
             X_train, y_train, X_test, y_test, random_state=resample_id
         )

@@ -1037,7 +1037,7 @@ def parse_args(args):
 
     usage: tsml_eval [-h] [--version] [-ow] [-pr] [-rs RANDOM_SEED] [-nj N_JOBS]
                      [-tr] [-te] [-fc FIT_CONTRACT] [-ch] [-rn] [-nc N_CLUSTERS]
-                     [-kw KEY VALUE TYPE]
+                     [-utts] [-kw KEY VALUE TYPE]
                      data_path results_path estimator_name dataset_name
                      resample_id
 
@@ -1089,6 +1089,12 @@ def parse_args(args):
                             the number of clusters to find for clusterers which
                             have an {n_clusters} parameter. If {-1}, use the
                             number of classes in the dataset (default: None).
+      -utts, --use_test_train_split
+                            When true (default) the test/train split will be used.
+                            When false the test train split will be combined and the
+                            model will only be fitted (no predict called) and results
+                            for the training data will be written to file
+                            (default: true).
       -kw KEY VALUE TYPE, --kwargs KEY VALUE TYPE, --kwarg KEY VALUE TYPE
                             additional keyword arguments to pass to the estimator.
                             Should contain the parameter to set, the parameter
@@ -1212,6 +1218,14 @@ def parse_args(args):
         "(default: %(default)s).",
     )
     parser.add_argument(
+        "-utts",
+        "--use_test_train_split",
+        action="store_false",
+        help="whether to use a test train split or not. If False, the test and train "
+        "are combined and only 'fit' is performed with results read from that. If True"
+        "the test/train split is observed",
+    )
+    parser.add_argument(
         "-kw",
         "--kwargs",
         "--kwarg",
@@ -1224,6 +1238,7 @@ def parse_args(args):
         "types are {int, float, bool, str}. Any other type will be passed as a str. "
         "Can be used multiple times (default: %(default)s).",
     )
+
     args = parser.parse_args(args=args)
 
     kwargs = {}
