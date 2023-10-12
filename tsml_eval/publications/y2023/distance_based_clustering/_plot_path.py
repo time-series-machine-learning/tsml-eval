@@ -126,9 +126,7 @@ def _plot_alignment(  # pragma: no cover
     if dist_kwargs is None:
         dist_kwargs = {}
     try:
-        path, dist = alignment_path(
-            x, y, metric=metric, **dist_kwargs
-        )
+        path, dist = alignment_path(x, y, metric=metric, **dist_kwargs)
     except NotImplementedError:
         path, dist, cost_matrix = _pairwise_path(x, y, metric)
 
