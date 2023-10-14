@@ -79,6 +79,7 @@ def run_experiment(args):
                     fit_contract=args.fit_contract,
                     checkpoint=args.checkpoint,
                     row_normalise=args.row_normalise,
+                    combine_test_train_split=args.combine_test_train_split,
                     **args.kwargs,
                 ),
                 row_normalise=args.row_normalise,
@@ -88,7 +89,7 @@ def run_experiment(args):
                 build_test_file=args.test_fold,
                 overwrite=args.overwrite,
                 predefined_resample=args.predefined_resample,
-                use_test_train_split=args.use_test_train_split,
+                combine_test_train_split=args.combine_test_train_split,
             )
     # local run (no args)
     else:
@@ -99,7 +100,6 @@ def run_experiment(args):
         results_path = _CLUSTERER_RESULTS_PATH
         estimator_name = "KMeans"
         dataset_name = "MinimalChinatown"
-        row_normalise = False
         n_clusters = -1
         resample_id = 0
         test_fold = False
@@ -107,7 +107,7 @@ def run_experiment(args):
         predefined_resample = False
         fit_contract = 0
         checkpoint = None
-        use_test_train_split = True
+        combine_test_train_split = True
         row_normalise = True
         kwargs = {}
 
@@ -138,7 +138,7 @@ def run_experiment(args):
             build_test_file=test_fold,
             overwrite=overwrite,
             predefined_resample=predefined_resample,
-            use_test_train_split=use_test_train_split,
+            combine_test_train_split=combine_test_train_split,
         )
 
 

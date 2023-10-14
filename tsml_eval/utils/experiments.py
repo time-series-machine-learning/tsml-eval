@@ -19,10 +19,12 @@ __all__ = [
 
 import argparse
 import os
+from typing import Union
 
 import gpustat
 import numpy as np
 from sklearn.utils import check_random_state
+from tsml.datasets import load_from_ts_file
 
 import tsml_eval
 
@@ -93,6 +95,125 @@ def resample_data(X_train, y_train, X_test, y_test, random_state=None):
     y_test = all_labels[test_indices]
 
     return X_train, y_train, X_test, y_test
+
+
+def load_clustering_experiment_data(
+    problem_path: str,
+    dataset: str,
+    resample_id: Union[int, None],
+    predefined_resample: bool,
+    combine_test_train_split: bool,
+):
+    """Load clustering data for experiments.
+
+    Parameters
+    ----------
+    problem_path : str
+        Path to the problem folder.
+    dataset : str
+        Name of the dataset.
+    resample_id : int or None
+        Id of the resample to use.
+    predefined_resample : boolean
+        If True, use the predefined resample.
+    combine_test_train_split : boolean
+        If True, combine the train and test data.
+
+    Returns
+    -------
+    X_train : np.ndarray or list of np.ndarray
+        Train data in a 2d or 3d ndarray or list of arrays.
+    y_train : np.ndarray
+        Train data labels.
+    X_test : np.ndarray or list of np.ndarray
+        Test data in a 2d or 3d ndarray or list of arrays.
+    y_test : np.ndarray
+        Test data labels.
+    resample : boolean
+        If True, the data was resampled.
+    """
+    if combine_test_train_split:
+        X_train, y_train, X_test, y_test, resample = load_experiment_data(
+            problem_path, dataset, resample_id, predefined_resample
+        )
+    else:
+        X_train, y_train, X_test, y_test, resample = load_experiment_data(
+            problem_path, dataset, None, False
+        )
+        if isinstance(X_train, np.ndarray):
+            is_array = True
+        elif isinstance(X_train, list):
+            is_array = False
+        else:
+            raise ValueError(
+                "X_train must be a np.ndarray array or list of np.ndarray arrays"
+            )
+        y_train = np.concatenate((y_train, y_test), axis=None)
+        X_train = (
+            np.concatenate([X_train, X_test], axis=0) if is_array else X_train + X_test
+        )
+
+    if combine_test_train_split and resample:
+        X_train, y_train, X_test, y_test = stratified_resample_data(
+            X_train, y_train, X_test, y_test, random_state=resample_id
+        )
+    return X_train, y_train, X_test, y_test, resample
+
+
+def load_experiment_data(
+    problem_path: str,
+    dataset: str,
+    resample_id: Union[int, None],
+    predefined_resample: bool,
+):
+    """Load data for experiments.
+
+    Parameters
+    ----------
+    problem_path : str
+        Path to the problem folder.
+    dataset : str
+        Name of the dataset.
+    resample_id : int or None
+        Id of the resample to use.
+    predefined_resample : boolean
+        If True, use the predefined resample.
+
+    Returns
+    -------
+    X_train : np.ndarray or list of np.ndarray
+        Train data in a 2d or 3d ndarray or list of arrays.
+    y_train : np.ndarray
+        Train data labels.
+    X_test : np.ndarray or list of np.ndarray
+        Test data in a 2d or 3d ndarray or list of arrays.
+    y_test : np.ndarray
+        Test data labels.
+    resample : boolean
+        If True, the data was resampled.
+    """
+    if resample_id is not None and predefined_resample:
+        resample_str = "" if resample_id is None else str(resample_id)
+
+        X_train, y_train = load_from_ts_file(
+            f"{problem_path}/{dataset}/{dataset}{resample_str}_TRAIN.ts"
+        )
+        X_test, y_test = load_from_ts_file(
+            f"{problem_path}/{dataset}/{dataset}{resample_str}_TEST.ts"
+        )
+
+        resample_data = False
+    else:
+        X_train, y_train = load_from_ts_file(
+            f"{problem_path}/{dataset}/{dataset}_TRAIN.ts"
+        )
+        X_test, y_test = load_from_ts_file(
+            f"{problem_path}/{dataset}/{dataset}_TEST.ts"
+        )
+
+        resample_data = True if resample_id != 0 else False
+
+    return X_train, y_train, X_test, y_test, resample_data
 
 
 def stratified_resample_data(X_train, y_train, X_test, y_test, random_state=None):
@@ -1037,7 +1158,7 @@ def parse_args(args):
 
     usage: tsml_eval [-h] [--version] [-ow] [-pr] [-rs RANDOM_SEED] [-nj N_JOBS]
                      [-tr] [-te] [-fc FIT_CONTRACT] [-ch] [-rn] [-nc N_CLUSTERS]
-                     [-utts] [-kw KEY VALUE TYPE]
+                     [-ctts] [-kw KEY VALUE TYPE]
                      data_path results_path estimator_name dataset_name
                      resample_id
 
@@ -1089,12 +1210,12 @@ def parse_args(args):
                             the number of clusters to find for clusterers which
                             have an {n_clusters} parameter. If {-1}, use the
                             number of classes in the dataset (default: None).
-      -utts, --use_test_train_split
-                            When true (default) the test/train split will be used.
-                            When false the test train split will be combined and the
-                            model will only be fitted (no predict called) and results
-                            for the training data will be written to file
-                            (default: true).
+      -ctts, --combine_test_train_split
+                            When true the test/train split will be combined. When this
+                            is done only fit will be called and results for the
+                            fit will be written (no predict step).
+                            When false the test train split will be used (default) as
+                            normal (default: False).
       -kw KEY VALUE TYPE, --kwargs KEY VALUE TYPE, --kwarg KEY VALUE TYPE
                             additional keyword arguments to pass to the estimator.
                             Should contain the parameter to set, the parameter
@@ -1218,11 +1339,11 @@ def parse_args(args):
         "(default: %(default)s).",
     )
     parser.add_argument(
-        "-utts",
-        "--use_test_train_split",
-        action="store_false",
-        help="whether to use a test train split or not. If False, the test and train "
-        "are combined and only 'fit' is performed with results read from that. If True"
+        "-ctts",
+        "--combine_test_train_split",
+        action="store_true",
+        help="whether to use a test train split or not. If True, the test and train "
+        "are combined and only 'fit' is performed with results read from that. If False"
         "the test/train split is observed",
     )
     parser.add_argument(

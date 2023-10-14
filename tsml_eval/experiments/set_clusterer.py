@@ -2,6 +2,8 @@
 
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
+from typing import Union
+
 import numpy as np
 from aeon.clustering import (
     TimeSeriesCLARA,
@@ -14,6 +16,7 @@ from sklearn.cluster import KMeans
 from tsml.datasets import load_from_ts_file
 
 from tsml_eval.estimators.transformations.scaler import TimeSeriesScaler
+from tsml_eval.utils.experiments import load_clustering_experiment_data
 from tsml_eval.utils.functions import str_in_nested_list
 
 
@@ -96,8 +99,8 @@ def _get_distance_default_params(train_data: np.ndarray, dist_name: str) -> dict
 
 def set_clusterer(
     clusterer_name,
-    data_path: str = None,
-    dataset_name: str = None,
+    data_path: str = Union[str, None],
+    dataset_name: str = Union[str, None],
     resample_id: int = 0,
     predefined_resample: bool = False,
     random_state=None,
@@ -105,6 +108,7 @@ def set_clusterer(
     fit_contract=0,
     checkpoint=None,
     row_normalise=False,
+    combine_test_train_split=False,
     **kwargs,
 ):
     """Return a clusterer matching a given input name.
@@ -120,11 +124,27 @@ def set_clusterer(
     ----------
     clusterer_name : str
         String indicating which clusterer to be returned.
+    data_path : str, default=None
+        Path to the data directory.
+    dataset_name : str, default=None
+        Name of the dataset to be loaded.
+    resample_id : int, default=0
+        Resample id to be used in the clusterer if available.
+    predefined_resample : bool, default=False
+        Whether the resample id is predefined.
     random_state : int, RandomState instance or None, default=None
         Random seed or RandomState object to be used in the clusterer if available.
     n_jobs: int, default=1
         The number of jobs to run in parallel for both clusterer ``fit`` and
         ``predict`` if available. `-1` means using all processors.
+    fit_contract: int, default=0
+        The number of data points to use in the clusterer ``fit`` if available.
+    checkpoint: str, default=None
+        Checkpoint to save model
+    row_normalise: bool, default=False
+        Whether to row normalise the data before fitting.
+    combine_test_train_split: bool, default=False
+        Whether to combine the train and test splits before fitting.
 
     Return
     ------
@@ -137,13 +157,16 @@ def set_clusterer(
         X_train = np.empty(0)
         y_train = np.empty(0)
         if data_path is not None:
-            X_train, y_train, _, _, _ = _load_data(
-                data_path, dataset_name, resample_id, predefined_resample
+            X_train, y_train, _, _, _ = load_clustering_experiment_data(
+                data_path,
+                dataset_name,
+                resample_id,
+                predefined_resample,
+                combine_test_train_split,
             )
-
-        if row_normalise:
-            scaler = TimeSeriesScaler()
-            X_train = scaler.fit_transform(X_train)
+            if row_normalise:
+                scaler = TimeSeriesScaler()
+                X_train = scaler.fit_transform(X_train)
         return _set_clusterer_distance_based(
             c, random_state, n_jobs, fit_contract, checkpoint, X_train, y_train, kwargs
         )

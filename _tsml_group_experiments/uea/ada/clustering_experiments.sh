@@ -1,8 +1,21 @@
 #!/bin/bash
+# CHECK:
+#   username (your username)
+#   results_dir (where to check/write results),
+#   out_dir (where to write output logs),
+#   datasets (list of problems)
+#   results_dir (where to check/write results),
+#   clusterers_to_run (list of clusterers to run)
+#   script_file_path (path to clustering_experiments.py)
+#   env_name (name of conda environment)
+#   max_folds (number of folds to run)
+#   start_fold (fold to start from)
+#   normalise_data (true/false)
+#   combine_test_train_split (true/false)
 # While reading is fine, please dont write anything to the default directories in this script
 
 # Start and end for resamples
-max_folds=10
+max_folds=30
 start_fold=1
 
 # To avoid dumping 1000s of jobs in the queue we have a higher level queue
@@ -33,11 +46,11 @@ datasets="/gpfs/home/ajb/DataSetLists/TSC_112_2019.txt"
 local_path="/gpfs/home/$username/"
 
 # Results and output file write location. Change these to reflect your own file structure
-results_dir=$local_path"clustering-results/"
-out_dir=$local_path"clustering-results/output/"
+results_dir=$local_path"ClusteringResults/"
+out_dir=$local_path"ClusteringResults/output/"
 
 # The python script we are running
-script_file_path=$local_path"projects/tsml-eval/tsml_eval/experiments/clustering_experiments.py"
+script_file_path=$local_path"Code/tsml-eval/tsml_eval/experiments/clustering_experiments.py"
 
 # Environment name, change accordingly, for set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
 # Separate environments for GPU (Python 3.8) and CPU (Python 3.10) are recommended
@@ -49,14 +62,18 @@ generate_test_files="true"
 # If set for true, looks for <problem><fold>_TRAIN.ts file. This is useful for running tsml resamples
 predefined_folds="false"
 
-# Combine test train split into one dataset, set to empty string to stop
+# Boolean on if to combine the test/train split
 combine_test_train_split="false"
 
 # Clusterers to loop over. Must be seperated by a space
+# See list of potential clusterers in set_clusterer
 clusterers_to_run="kmedoids-squared kmedoids-euclidean"
 
 # Normalise data before clustering
 normalise_data="true"
+
+# You can add extra arguments here. See tsml_eval/utils/experiments.py parse_args
+# You will have to add any variable to the python call close to the bottom of the script
 
 # ======================================================================================
 # ======================================================================================
@@ -65,35 +82,23 @@ normalise_data="true"
 # ======================================================================================
 # ======================================================================================
 
-if [ "${generate_test_files}" == "true" ]; then
-    generate_test_files="-te"
-else
-    generate_test_files=""
-fi
+# Set to -te to generate test files
+generate_test_files=$([ "${generate_test_files,,}" == "true" ] && echo "-te" || echo "")
 
-if [ "${predefined_folds}" == "true" ]; then
-    predefined_folds="-pr"
-else
-    predefined_folds=""
-fi
+# Set to -pr to use predefined folds
+predefined_folds=$([ "${predefined_folds,,}" == "true" ] && echo "-pr" || echo "")
 
-if [ "${combine_test_train_split}" == "true" ]; then
-    start_fold=1
-    max_folds=1
-    combine_test_train_split="-utts"
-    results_dir="${results_dir}combine-test-train-split/"
-    out_dir="${out_dir}combine-test-train-split/"
-else
-    combine_test_train_split=""
-    results_dir="${results_dir}test-train-split/"
-    out_dir="${out_dir}test-train-split/"
-fi
+# Set to -utts to combine test train split
+combine_test_train_split=$([ "${combine_test_train_split,,}" == "true" ] && echo "-ctts" || echo "")
 
-if ["${normalise_data}" == "true" ]; then
-    normalise_data="-rn"
-else
-    normalise_data=""
-fi
+# Update result path to split combined test train split and test train split
+results_dir="${results_dir}$([ "${combine_test_train_split,,}" == "true" ] && echo "combine-test-train-split/" || echo "test-train-split/")"
+
+# Update out path to split combined test train split and test train split
+out_dir="${out_dir}$([ "${combine_test_train_split,,}" == "true" ] && echo "combine-test-train-split/" || echo "test-train-split/")"
+
+# Set to -rn to normalise data
+normalise_data=$([ "${normalise_data,,}" == "true" ] && echo "-rn" || echo "")
 
 count=0
 while read dataset; do
