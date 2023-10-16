@@ -54,6 +54,8 @@ all_extras = [
 unstable_extras = [
     "aeon[unstable_extras]",
     "tsml[unstable_extras]",
+    # temp
+    "pycatch22<=0.4.3",
 ]
 deep_learning = [
     "aeon[dl]",
