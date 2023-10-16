@@ -266,10 +266,7 @@ def _set_clusterer_distance_based(
     else:
         distance_params = _get_distance_default_params(X_train, distance)
 
-    if "n_clusters" in kwargs:
-        n_clusters = kwargs["n_clusters"]
-    else:
-        n_clusters = len(np.unique(y_train))
+    n_clusters = kwargs["n_clusters"]
 
     if "kmeans" in c or "timeserieskmeans" in c:
         if "average_params" in kwargs:
