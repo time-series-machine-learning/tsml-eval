@@ -6,5 +6,6 @@ import os
 from pathlib import Path
 
 _BAKEOFF_TEST_RESULTS_PATH = (
-    os.path.dirname(Path(__file__).parent.parent) + "/test_output/tsc_bakeoff/"
+    os.path.dirname(Path(__file__).parent.parent.parent.parent.parent)
+    + "/test_output/tsc_bakeoff/"
 )
