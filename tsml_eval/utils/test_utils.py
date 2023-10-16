@@ -28,8 +28,8 @@ def _check_set_method(
 
             assert e is not None, f"Estimator {estimator_alias} not found"
 
-            c_name = e.__class__.__name__
-            if c_name == estimator_alias:
+            c_name = e.__class__.__name__.lower()
+            if c_name == estimator_alias.lower():
                 estimator_dict[c_name] = True
             elif c_name not in estimator_dict:
                 estimator_dict[c_name] = False
