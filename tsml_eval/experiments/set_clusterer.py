@@ -146,7 +146,7 @@ def _get_distance_default_params(train_data: np.ndarray, dist_name: str) -> dict
     if dist_name == "lcss":
         return {"epsilon": 1.0}
     if dist_name == "erp":
-        if len(train_data) > 0:
+        if train_data is not None and len(train_data) > 0:
             return {"g": train_data.std(axis=0).sum()}
     if dist_name == "msm":
         return {"c": 1.0, "independent": True}
