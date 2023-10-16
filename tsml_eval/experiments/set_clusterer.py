@@ -165,7 +165,7 @@ def _get_distance_default_params(train_data: np.ndarray, dist_name: str) -> dict
 
 def set_clusterer(
     clusterer_name,
-    n_clusters: int,
+    n_clusters: int = -1,
     data_path: Union[str, None] = None,
     dataset_name: Union[str, None] = None,
     resample_id: int = 0,
@@ -235,7 +235,15 @@ def set_clusterer(
                 scaler = TimeSeriesScaler()
                 X_train = scaler.fit_transform(X_train)
         return _set_clusterer_distance_based(
-            c, random_state, n_jobs, fit_contract, checkpoint, X_train, y_train, kwargs
+            c,
+            random_state,
+            n_jobs,
+            fit_contract,
+            checkpoint,
+            X_train,
+            y_train,
+            n_clusters,
+            kwargs,
         )
     elif str_in_nested_list(other_clusterers, c):
         return _set_clusterer_other(
@@ -250,7 +258,15 @@ def set_clusterer(
 
 
 def _set_clusterer_distance_based(
-    c, random_state, n_jobs, fit_contract, checkpoint, X_train, y_train, kwargs
+    c,
+    random_state,
+    n_jobs,
+    fit_contract,
+    checkpoint,
+    X_train,
+    y_train,
+    n_clusters,
+    kwargs,
 ):
     if "init_algorithm" in kwargs:
         init_algorithm = kwargs["init_algorithm"]
@@ -267,7 +283,8 @@ def _set_clusterer_distance_based(
     else:
         distance_params = _get_distance_default_params(X_train, distance)
 
-    n_clusters = kwargs["n_clusters"]
+    if n_clusters == -1:
+        n_clusters = len(np.unique(y_train))
 
     if "kmeans" in c or "timeserieskmeans" in c:
         if "average_params" in kwargs:

@@ -101,7 +101,7 @@ def run_experiment(args):
         results_path = _CLUSTERER_RESULTS_PATH
         estimator_name = "KMeans"
         dataset_name = "MinimalChinatown"
-        n_clusters = 2
+        n_clusters = -1
         resample_id = 0
         test_fold = False
         overwrite = False
