@@ -165,8 +165,8 @@ def _get_distance_default_params(train_data: np.ndarray, dist_name: str) -> dict
 
 def set_clusterer(
     clusterer_name,
-    data_path: str = Union[str, None],
-    dataset_name: str = Union[str, None],
+    data_path: Union[str, None] = None,
+    dataset_name: Union[str, None] = None,
     resample_id: int = 0,
     predefined_resample: bool = False,
     random_state=None,
@@ -217,11 +217,9 @@ def set_clusterer(
     clusterer: A BaseClusterer.
         The clusterer matching the input clusterer name.
     """
-    c = clusterer_name.lower()
+    c = clusterer_name
 
     if str_in_nested_list(distance_based_clusterers, c):
-        X_train = np.empty(0)
-        y_train = np.empty(0)
         if data_path is not None:
             X_train, y_train, _, _, _ = load_clustering_experiment_data(
                 data_path,

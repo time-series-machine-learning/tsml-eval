@@ -99,7 +99,7 @@ def resample_data(X_train, y_train, X_test, y_test, random_state=None):
 
 def load_clustering_experiment_data(
     problem_path: str,
-    dataset: str,
+    dataset: Union[str, None],
     resample_id: Union[int, None],
     predefined_resample: bool,
     combine_test_train_split: bool,
@@ -163,7 +163,7 @@ def load_clustering_experiment_data(
 def load_experiment_data(
     problem_path: str,
     dataset: str,
-    resample_id: Union[int, None],
+    resample_id: int,
     predefined_resample: bool,
 ):
     """Load data for experiments.
