@@ -139,9 +139,10 @@ testpaths = "tsml_eval"
 addopts = '''
     --ignore tsml_eval/_wip
     --ignore tsml_eval/publications/2023
+    --durations 20
+    --timeout 600
+    --showlocals
+    --doctest-modules
+    --numprocesses auto
 '''
-#--durations 20
-#--timeout 600
-#--showlocals
-#--doctest-modules
-#--numprocesses auto
+
