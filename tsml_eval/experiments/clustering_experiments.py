@@ -68,6 +68,7 @@ def run_experiment(args):
                 args.dataset_name,
                 set_clusterer(
                     args.estimator_name,
+                    args.n_clusters,
                     args.data_path,
                     args.dataset_name,
                     args.resample_id,
@@ -100,7 +101,7 @@ def run_experiment(args):
         results_path = _CLUSTERER_RESULTS_PATH
         estimator_name = "KMeans"
         dataset_name = "MinimalChinatown"
-        n_clusters = -1
+        n_clusters = 2
         resample_id = 0
         test_fold = False
         overwrite = False
@@ -113,6 +114,7 @@ def run_experiment(args):
 
         clusterer = set_clusterer(
             estimator_name,
+            n_clusters,
             data_path,
             dataset_name,
             resample_id,

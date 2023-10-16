@@ -165,6 +165,7 @@ def _get_distance_default_params(train_data: np.ndarray, dist_name: str) -> dict
 
 def set_clusterer(
     clusterer_name,
+    n_clusters: int,
     data_path: Union[str, None] = None,
     dataset_name: Union[str, None] = None,
     resample_id: int = 0,
