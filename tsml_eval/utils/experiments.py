@@ -132,31 +132,31 @@ def load_clustering_experiment_data(
     resample : boolean
         If True, the data was resampled.
     """
-    if combine_test_train_split:
-        X_train, y_train, X_test, y_test, resample = load_experiment_data(
-            problem_path, dataset, resample_id, predefined_resample
-        )
+    X_train, y_train, X_test, y_test, resample = load_experiment_data(
+        problem_path, dataset, resample_id, predefined_resample
+    )
+    if isinstance(X_train, np.ndarray):
+        is_array = True
+    elif isinstance(X_train, list):
+        is_array = False
     else:
-        X_train, y_train, X_test, y_test, resample = load_experiment_data(
-            problem_path, dataset, None, False
+        raise ValueError(
+            "X_train must be a np.ndarray array or list of np.ndarray arrays"
         )
-        if isinstance(X_train, np.ndarray):
-            is_array = True
-        elif isinstance(X_train, list):
-            is_array = False
-        else:
-            raise ValueError(
-                "X_train must be a np.ndarray array or list of np.ndarray arrays"
-            )
+
+    if resample:
+        X_train, y_train, X_test, y_test = stratified_resample_data(
+            X_train, y_train, X_test, y_test, random_state=resample_id
+        )
+
+    if combine_test_train_split:
         y_train = np.concatenate((y_train, y_test), axis=None)
         X_train = (
             np.concatenate([X_train, X_test], axis=0) if is_array else X_train + X_test
         )
+        X_test = np.array([])
+        y_test = np.array([])
 
-    if combine_test_train_split and resample:
-        X_train, y_train, X_test, y_test = stratified_resample_data(
-            X_train, y_train, X_test, y_test, random_state=resample_id
-        )
     return X_train, y_train, X_test, y_test, resample
 
 

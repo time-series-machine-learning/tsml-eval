@@ -15,6 +15,7 @@ from tsml_eval.experiments import (
     threaded_clustering_experiments,
 )
 from tsml_eval.experiments.tests import _CLUSTERER_RESULTS_PATH
+from tsml_eval.utils.experiments import load_clustering_experiment_data
 from tsml_eval.utils.test_utils import (
     _TEST_DATA_PATH,
     _check_set_method,
@@ -31,7 +32,11 @@ from tsml_eval.utils.tests.test_results_writing import _check_clustering_file_fo
     "dataset",
     ["MinimalChinatown", "UnequalMinimalChinatown", "EqualMinimalJapaneseVowels"],
 )
-def test_run_clustering_experiment(clusterer, dataset):
+@pytest.mark.parametrize(
+    "combine_test_train_split",
+    [True, False],
+)
+def test_run_clustering_experiment(clusterer, dataset, combine_test_train_split):
     """Test clustering experiments with test data and clusterer."""
     if clusterer == "DummyClusterer-aeon" and dataset == "UnequalMinimalChinatown":
         return  # todo remove when aeon kmeans supports unequal
@@ -45,6 +50,9 @@ def test_run_clustering_experiment(clusterer, dataset):
         "-te",
     ]
 
+    if combine_test_train_split:
+        args.append("-ctts")
+
     clustering_experiments.run_experiment(args)
 
     test_file = (
@@ -54,15 +62,27 @@ def test_run_clustering_experiment(clusterer, dataset):
         f"{_CLUSTERER_RESULTS_PATH}{clusterer}/Predictions/{dataset}/trainResample0.csv"
     )
 
-    assert os.path.exists(test_file) and os.path.exists(train_file)
+    X_train, _, X_test, _, _ = load_clustering_experiment_data(
+        _TEST_DATA_PATH,
+        dataset,
+        0,
+        False,
+        combine_test_train_split,
+    )
 
-    _check_clustering_file_format(test_file)
-    _check_clustering_file_format(train_file)
+    if combine_test_train_split:
+        assert not os.path.exists(test_file) and os.path.exists(train_file)
+    else:
+        assert os.path.exists(test_file) and os.path.exists(train_file)
+        _check_clustering_file_format(test_file, len(X_test))
+
+    _check_clustering_file_format(train_file, len(X_train))
 
     # test present results checking
     clustering_experiments.run_experiment(args)
 
-    os.remove(test_file)
+    if not combine_test_train_split:
+        os.remove(test_file)
     os.remove(train_file)
 
 

@@ -823,7 +823,7 @@ def load_and_run_clustering_experiment(
         the test/train split is combined. If False then the test/train split is used as
         normal.
     """
-    if not combine_test_train_split:
+    if combine_test_train_split:
         build_test_file = False
 
     build_test_file, build_train_file = _check_existing_results(
