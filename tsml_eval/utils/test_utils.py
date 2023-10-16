@@ -36,9 +36,9 @@ def _check_set_method(
 
 
 EXEMPT_ESTIMATOR_NAMES = [
-    "ColumnEnsembleRegressor",
-    "GridSearchCV",
-    "TransformedTargetForecaster",
+    "columnensembleregressor",
+    "gridsearchcv",
+    "transformedtargetforecaster",
 ]
 
 
