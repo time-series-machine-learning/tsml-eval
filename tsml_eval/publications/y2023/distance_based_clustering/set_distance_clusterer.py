@@ -49,7 +49,9 @@ def _set_distance_clusterer(
     elif c == "kmeans-ed" or c == "k-means-ed":
         from aeon.clustering.k_means import TimeSeriesKMeans
 
-        return TimeSeriesKMeans(distance="euclidean", random_state=random_state, **kwargs)
+        return TimeSeriesKMeans(
+            distance="euclidean", random_state=random_state, **kwargs
+        )
     elif c == "kmeans-edr" or c == "k-means-edr":
         from aeon.clustering.k_means import TimeSeriesKMeans
 
