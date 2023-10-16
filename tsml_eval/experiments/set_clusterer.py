@@ -123,20 +123,20 @@ distance_based_clusterers = [
     "kmeans-ba-msm",
     "kmeans-ba-adtw",
     "kmeans-ba-shape_dtw",
-    "TimeSeriesKMeans",
-    "TimeSeriesKMedoids",
-    "TimeSeriesCLARANS",
-    "TimeSeriesCLARA",
+    "timeserieskmeans",
+    "timeserieskmedoids",
+    "timeseriesclarans",
+    "timeseriesclara",
 ]
 
 other_clusterers = [
-    ["DummyClusterer", "dummy", "dummyclusterer-tsml"],
+    ["dummyclusterer", "dummy", "dummyclusterer-tsml"],
     "dummyclusterer-aeon",
     "dummyclusterer-sklearn",
 ]
 vector_clusterers = [
-    ["KMeans", "kmeans-sklearn"],
-    "DBSCAN",
+    ["kmeans", "kmeans-sklearn"],
+    "dbscan",
 ]
 
 
@@ -217,7 +217,7 @@ def set_clusterer(
     clusterer: A BaseClusterer.
         The clusterer matching the input clusterer name.
     """
-    c = clusterer_name
+    c = clusterer_name.lower()
 
     if str_in_nested_list(distance_based_clusterers, c):
         if data_path is not None:
