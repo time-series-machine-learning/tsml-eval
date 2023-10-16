@@ -220,6 +220,8 @@ def set_clusterer(
     c = clusterer_name.lower()
 
     if str_in_nested_list(distance_based_clusterers, c):
+        X_train = None
+        y_train = None
         if data_path is not None:
             X_train, y_train, _, _, _ = load_clustering_experiment_data(
                 data_path,
