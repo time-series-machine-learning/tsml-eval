@@ -55,11 +55,11 @@ def test_run_clustering_experiment(clusterer, dataset, combine_test_train_split)
 
     clustering_experiments.run_experiment(args)
 
-    test_file = os.path.join(
-        _CLUSTERER_RESULTS_PATH, clusterer, "Predictions", dataset, "testResample0.csv"
+    test_file = (
+        f"{_CLUSTERER_RESULTS_PATH}{clusterer}/Predictions/{dataset}/testResample0.csv"
     )
-    train_file = os.path.join(
-        _CLUSTERER_RESULTS_PATH, clusterer, "Predictions", dataset, "trainResample0.csv"
+    train_file = (
+        f"{_CLUSTERER_RESULTS_PATH}{clusterer}/Predictions/{dataset}/trainResample0.csv"
     )
 
     X_train, _, X_test, _, _ = load_clustering_experiment_data(
@@ -131,8 +131,8 @@ def test_run_threaded_clustering_experiment():
 
     threaded_clustering_experiments.run_experiment(args)
 
-    train_file = os.path.join(
-        _CLUSTERER_RESULTS_PATH, clusterer, "Predictions", dataset, "trainResample0.csv"
+    train_file = (
+        f"{_CLUSTERER_RESULTS_PATH}{clusterer}/Predictions/{dataset}/trainResample1.csv"
     )
     assert os.path.exists(train_file)
     _check_clustering_file_format(train_file)
@@ -227,8 +227,9 @@ def test_n_clusters(n_clusters, clusterer):
 
     clustering_experiments.run_experiment(args)
 
-    train_file = os.path.join(
-        _CLUSTERER_RESULTS_PATH, clusterer, "Predictions", dataset, "trainResample0.csv"
+    train_file = (
+        f"{_CLUSTERER_RESULTS_PATH}{n_clusters}/{clusterer}/Predictions/{dataset}/"
+        "trainResample1.csv"
     )
 
     assert os.path.exists(train_file)
