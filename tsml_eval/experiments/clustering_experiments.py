@@ -92,6 +92,7 @@ def run_experiment(args):
                 predefined_resample=args.predefined_resample,
                 combine_test_train_split=args.combine_test_train_split,
             )
+            print(f"Finished running {args.estimator_name}.")
     # local run (no args)
     else:
         # These are example parameters, change as required for local runs
