@@ -1209,7 +1209,7 @@ def parse_args(args):
       -nc N_CLUSTERS, --n_clusters N_CLUSTERS
                             the number of clusters to find for clusterers which
                             have an {n_clusters} parameter. If {-1}, use the
-                            number of classes in the dataset (default: None).
+                            number of classes in the dataset (default: -1).
       -ctts, --combine_test_train_split
                             When true the test/train split will be combined. When this
                             is done only fit will be called and results for the
@@ -1334,6 +1334,7 @@ def parse_args(args):
         "-nc",
         "--n_clusters",
         type=int,
+        default=-1,
         help="the number of clusters to find for clusterers which have an {n_clusters} "
         "parameter. If {-1}, use the number of classes in the dataset "
         "(default: %(default)s).",

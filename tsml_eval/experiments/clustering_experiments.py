@@ -102,7 +102,7 @@ def run_experiment(args):
         results_path = _CLUSTERER_RESULTS_PATH
         estimator_name = "KMeans"
         dataset_name = "MinimalChinatown"
-        n_clusters = -1
+        n_clusters = None
         resample_id = 0
         test_fold = False
         overwrite = False
@@ -149,5 +149,13 @@ if __name__ == "__main__":
     """
     Example simple usage, with arguments input via script or hard coded for testing.
     """
+    # print("Running clustering_experiments.py main")
+    # run_experiment(sys.argv[1:])
+
+    LOCAL_DATA_PATH = "/Users/chris/Documents/Phd-data/Datasets/Univariate_ts"
+    TEST_TRAIN_RESULTS_PATH = "/Users/chris/Documents/Phd-data/Results/test-train/"
+    COMBINED_RESULTS_PATH = "/Users/chris/Documents/Phd-data/Results/combined/"
+    CLUSTERER = "pam-msm"
+    DATASET = "Chinatown"
     print("Running clustering_experiments.py main")
-    run_experiment(sys.argv[1:])
+    run_experiment([LOCAL_DATA_PATH, TEST_TRAIN_RESULTS_PATH, CLUSTERER, DATASET, "0", "-te"])
