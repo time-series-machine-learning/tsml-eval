@@ -11,7 +11,6 @@ from aeon.clustering import (
     TimeSeriesKMeans,
     TimeSeriesKMedoids,
 )
-from aeon.distances._distance import DISTANCES_DICT
 from sklearn.cluster import KMeans
 from tsml.datasets import load_from_ts_file
 
@@ -45,32 +44,99 @@ def _load_data(problem_path, dataset, resample_id, predefined_resample):
     return X_train, y_train, X_test, y_test, resample_data
 
 
-_valid_distance_names = list(DISTANCES_DICT.keys())
-_valid_clusterer_names = ["kmeans", "kmedoids", "clarans", "clara", "pam"]
-
-DISTANCE_BASED_CLUSTERERS = []
-for clusterer in _valid_clusterer_names:
-    for distance in _valid_distance_names:
-        combination = clusterer + "-" + distance
-        DISTANCE_BASED_CLUSTERERS.append(combination)
-for distance in _valid_distance_names:
-    DISTANCE_BASED_CLUSTERERS.append(f"kmeans-ba-{distance}")
-
-DISTANCE_BASED_CLUSTERERS = DISTANCE_BASED_CLUSTERERS + [
-    "TimeSeriesKMeans",
-    "TimeSeriesKMedoids",
-    "TimeSeriesCLARANS",
-    "TimeSeriesCLARA",
+distance_based_clusterers = [
+    "kmeans-euclidean",
+    "kmeans-squared",
+    "kmeans-dtw",
+    "kmeans-ddtw",
+    "kmeans-wdtw",
+    "kmeans-wddtw",
+    "kmeans-lcss",
+    "kmeans-erp",
+    "kmeans-edr",
+    "kmeans-twe",
+    "kmeans-msm",
+    "kmeans-adtw",
+    "kmeans-shape_dtw",
+    "kmedoids-euclidean",
+    "kmedoids-squared",
+    "kmedoids-dtw",
+    "kmedoids-ddtw",
+    "kmedoids-wdtw",
+    "kmedoids-wddtw",
+    "kmedoids-lcss",
+    "kmedoids-erp",
+    "kmedoids-edr",
+    "kmedoids-twe",
+    "kmedoids-msm",
+    "kmedoids-adtw",
+    "kmedoids-shape_dtw",
+    "clarans-euclidean",
+    "clarans-squared",
+    "clarans-dtw",
+    "clarans-ddtw",
+    "clarans-wdtw",
+    "clarans-wddtw",
+    "clarans-lcss",
+    "clarans-erp",
+    "clarans-edr",
+    "clarans-twe",
+    "clarans-msm",
+    "clarans-adtw",
+    "clarans-shape_dtw",
+    "clara-euclidean",
+    "clara-squared",
+    "clara-dtw",
+    "clara-ddtw",
+    "clara-wdtw",
+    "clara-wddtw",
+    "clara-lcss",
+    "clara-erp",
+    "clara-edr",
+    "clara-twe",
+    "clara-msm",
+    "clara-adtw",
+    "clara-shape_dtw",
+    "pam-euclidean",
+    "pam-squared",
+    "pam-dtw",
+    "pam-ddtw",
+    "pam-wdtw",
+    "pam-wddtw",
+    "pam-lcss",
+    "pam-erp",
+    "pam-edr",
+    "pam-twe",
+    "pam-msm",
+    "pam-adtw",
+    "pam-shape_dtw",
+    "kmeans-ba-euclidean",
+    "kmeans-ba-squared",
+    "kmeans-ba-dtw",
+    "kmeans-ba-ddtw",
+    "kmeans-ba-wdtw",
+    "kmeans-ba-wddtw",
+    "kmeans-ba-lcss",
+    "kmeans-ba-erp",
+    "kmeans-ba-edr",
+    "kmeans-ba-twe",
+    "kmeans-ba-msm",
+    "kmeans-ba-adtw",
+    "kmeans-ba-shape_dtw",
+    "timeserieskmeans",
+    "timeserieskmedoids",
+    "timeseriesclarans",
+    "timeseriesclara",
 ]
 
 other_clusterers = [
-    ["DummyClusterer", "dummy", "dummyclusterer-tsml"],
+    ["dummyclusterer", "dummy", "dummyclusterer-tsml"],
     "dummyclusterer-aeon",
     "dummyclusterer-sklearn",
 ]
 vector_clusterers = [
-    ["KMeans", "kmeans-sklearn"],
-    "DBSCAN",
+    ["kmeans", "kmeans-sklearn"],
+    "dbscan",
 ]
 
 
@@ -80,7 +146,7 @@ def _get_distance_default_params(train_data: np.ndarray, dist_name: str) -> dict
     if dist_name == "lcss":
         return {"epsilon": 1.0}
     if dist_name == "erp":
-        if len(train_data) > 0:
+        if train_data is not None and len(train_data) > 0:
             return {"g": train_data.std(axis=0).sum()}
     if dist_name == "msm":
         return {"c": 1.0, "independent": True}
@@ -99,8 +165,9 @@ def _get_distance_default_params(train_data: np.ndarray, dist_name: str) -> dict
 
 def set_clusterer(
     clusterer_name,
-    data_path: str = Union[str, None],
-    dataset_name: str = Union[str, None],
+    n_clusters: int = -1,
+    data_path: Union[str, None] = None,
+    dataset_name: Union[str, None] = None,
     resample_id: int = 0,
     predefined_resample: bool = False,
     random_state=None,
@@ -153,9 +220,9 @@ def set_clusterer(
     """
     c = clusterer_name.lower()
 
-    if str_in_nested_list(DISTANCE_BASED_CLUSTERERS, c):
-        X_train = np.empty(0)
-        y_train = np.empty(0)
+    if str_in_nested_list(distance_based_clusterers, c):
+        X_train = None
+        y_train = None
         if data_path is not None:
             X_train, y_train, _, _, _ = load_clustering_experiment_data(
                 data_path,
@@ -168,7 +235,15 @@ def set_clusterer(
                 scaler = TimeSeriesScaler()
                 X_train = scaler.fit_transform(X_train)
         return _set_clusterer_distance_based(
-            c, random_state, n_jobs, fit_contract, checkpoint, X_train, y_train, kwargs
+            c,
+            random_state,
+            n_jobs,
+            fit_contract,
+            checkpoint,
+            X_train,
+            y_train,
+            n_clusters,
+            kwargs,
         )
     elif str_in_nested_list(other_clusterers, c):
         return _set_clusterer_other(
@@ -183,10 +258,16 @@ def set_clusterer(
 
 
 def _set_clusterer_distance_based(
-    c, random_state, n_jobs, fit_contract, checkpoint, X_train, y_train, kwargs
+    c,
+    random_state,
+    n_jobs,
+    fit_contract,
+    checkpoint,
+    X_train,
+    y_train,
+    n_clusters,
+    kwargs,
 ):
-    c = c.lower()
-
     if "init_algorithm" in kwargs:
         init_algorithm = kwargs["init_algorithm"]
     else:
@@ -202,9 +283,7 @@ def _set_clusterer_distance_based(
     else:
         distance_params = _get_distance_default_params(X_train, distance)
 
-    if "n_clusters" in kwargs:
-        n_clusters = kwargs["n_clusters"]
-    else:
+    if n_clusters == -1:
         n_clusters = len(np.unique(y_train))
 
     if "kmeans" in c or "timeserieskmeans" in c:

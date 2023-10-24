@@ -68,6 +68,7 @@ def run_experiment(args):
                 args.dataset_name,
                 set_clusterer(
                     args.estimator_name,
+                    args.n_clusters,
                     args.data_path,
                     args.dataset_name,
                     args.resample_id,
@@ -91,6 +92,7 @@ def run_experiment(args):
                 predefined_resample=args.predefined_resample,
                 combine_test_train_split=args.combine_test_train_split,
             )
+            print(f"Finished running {args.estimator_name}.")
     # local run (no args)
     else:
         # These are example parameters, change as required for local runs
@@ -100,7 +102,7 @@ def run_experiment(args):
         results_path = _CLUSTERER_RESULTS_PATH
         estimator_name = "KMeans"
         dataset_name = "MinimalChinatown"
-        n_clusters = -1
+        n_clusters = None
         resample_id = 0
         test_fold = False
         overwrite = False
@@ -113,6 +115,7 @@ def run_experiment(args):
 
         clusterer = set_clusterer(
             estimator_name,
+            n_clusters,
             data_path,
             dataset_name,
             resample_id,
@@ -148,3 +151,11 @@ if __name__ == "__main__":
     """
     print("Running clustering_experiments.py main")
     run_experiment(sys.argv[1:])
+
+    # LOCAL_DATA_PATH = "/Users/chris/Documents/Phd-data/Datasets/Univariate_ts"
+    # TEST_TRAIN_RESULTS_PATH = "/Users/chris/Documents/Phd-data/Results/test-train/"
+    # COMBINED_RESULTS_PATH = "/Users/chris/Documents/Phd-data/Results/combined/"
+    # CLUSTERER = "pam-msm"
+    # DATASET = "Chinatown"
+    # print("Running clustering_experiments.py main")
+    # run_experiment([LOCAL_DATA_PATH, TEST_TRAIN_RESULTS_PATH, CLUSTERER, DATASET, "0", "-te"])

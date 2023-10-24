@@ -8,67 +8,67 @@ from sklearn.pipeline import make_pipeline
 from tsml_eval.utils.functions import str_in_nested_list
 
 convolution_based_regressors = [
-    ["RocketRegressor", "rocket"],
+    ["rocketregressor", "rocket"],
     ["minirocket", "minirocketregressor"],
     ["multirocket", "multirocketregressor"],
-    ["HydraRegressor", "hydra"],
-    ["Arsenal", "arsenalregressor"],
+    ["hydraregressor", "hydra"],
+    ["arsenal", "arsenalregressor"],
 ]
 deep_learning_regressors = [
-    ["CNNRegressor", "cnn"],
-    ["TapNetRegressor", "tapnet"],
-    ["ResNetRegressor", "resnet"],
-    ["InceptionTimeRegressor", "inception", "inceptiontime"],
-    ["IndividualInceptionRegressor", "singleinception", "individualinception"],
-    ["FCNRegressor", "fcnn", "fcn"],
+    ["cnnregressor", "cnn"],
+    ["tapnetregressor", "tapnet"],
+    ["resnetregressor", "resnet"],
+    ["inceptiontimeregressor", "inception", "inceptiontime"],
+    ["individualinceptionregressor", "singleinception", "individualinception"],
+    ["fcnregressor", "fcnn", "fcn"],
 ]
 dictionary_based_regressors = [
-    ["TemporalDictionaryEnsemble", "tde"],
+    ["temporaldictionaryensemble", "tde"],
 ]
 distance_based_regressors = [
     "1nn-ed",
     "5nn-ed",
-    ["KNeighborsTimeSeriesRegressor", "1nn-dtw"],
+    ["kneighborstimeseriesregressor", "1nn-dtw"],
     "5nn-dtw",
     "1nn-msm",
     "5nn-msm",
 ]
 feature_based_regressors = [
-    ["FreshPRINCERegressor", "fresh-prince", "freshprince"],
+    ["freshprinceregressor", "fresh-prince", "freshprince"],
     "freshprince-500",
-    ["FPCARegressor", "fpcregressor", "fpcr"],
+    ["fpcaregressor", "fpcregressor", "fpcr"],
     ["fpcar-b-spline", "fpcr-b-spline", "fpcr-bs"],
 ]
 hybrid_regressors = [
-    ["HIVECOTEV2", "hc2"],
+    ["hivecotev2", "hc2"],
 ]
 interval_based_regressors = [
-    ["TimeSeriesForestRegressor", "tsf"],
+    ["timeseriesforestregressor", "tsf"],
     "tsf-i",
     "tsf-500",
-    ["drcif", "DrCIFRegressor"],
+    ["drcif", "drcifregressor"],
     "drcif-500",
 ]
 other_regressors = [
-    ["DummyRegressor", "dummy", "dummyregressor-tsml"],
+    ["dummyregressor", "dummy", "dummyregressor-tsml"],
     "dummyregressor-aeon",
     ["dummyregressor-sklearn", "meanpredictorregressor", "dummymeanpred"],
     ["medianpredictorregressor", "dummymedianpred"],
 ]
 shapelet_based_regressors = [
     "str-2hour",
-    ["ShapeletTransformRegressor", "str", "stc"],
+    ["shapelettransformregressor", "str", "stc"],
     "str-2hour-ridge",
 ]
 vector_regressors = [
-    ["RotationForestRegressor", "rotf", "rotationforest"],
-    ["LinearRegression", "lr"],
-    ["RidgeCV", "ridge"],
-    ["SVR", "svm", "supportvectorregressor"],
+    ["rotationforestregressor", "rotf", "rotationforest"],
+    ["linearregression", "lr"],
+    ["ridgecv", "ridge"],
+    ["svr", "svm", "supportvectorregressor"],
     ["grid-svr", "grid-svm", "grid-supportvectorregressor"],
-    ["RandomForestRegressor", "rf", "randomforest"],
+    ["randomforestregressor", "rf", "randomforest"],
     ["randomforest-500", "rf-500"],
-    ["XGBRegressor", "xgboost"],
+    ["xgbregressor", "xgboost"],
     ["xgb-100", "xgboost-100"],
     ["xgb-500", "xgboost-500"],
 ]

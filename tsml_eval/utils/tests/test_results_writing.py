@@ -179,7 +179,7 @@ def test_write_clustering_results():
     os.remove(f"{_CLUSTERER_RESULTS_PATH}/Test/Predictions/Test/results.csv")
 
 
-def _check_clustering_file_format(file_path, expected_num_instances):
+def _check_clustering_file_format(file_path, expected_num_instances=None):
     with open(file_path, "r") as f:
         lines = f.readlines()
 
@@ -187,10 +187,14 @@ def _check_clustering_file_format(file_path, expected_num_instances):
     assert _check_second_line(lines[1])
     assert _check_clustering_third_line(lines[2])
 
-    assert len(lines) - 3 == expected_num_instances
+    if expected_num_instances is not None:
+        assert len(lines) - 3 == expected_num_instances
 
-    for i in range(3, expected_num_instances):
-        assert _check_results_line(lines[i])
+        for i in range(3, expected_num_instances):
+            assert _check_results_line(lines[i])
+    else:
+        for i in range(3, 6):
+            assert _check_results_line(lines[i])
 
 
 def test_write_clustering_results_invalid():
