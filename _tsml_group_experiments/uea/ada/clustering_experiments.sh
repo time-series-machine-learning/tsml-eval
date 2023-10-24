@@ -88,14 +88,14 @@ generate_test_files=$([ "${generate_test_files,,}" == "true" ] && echo "-te" || 
 # Set to -pr to use predefined folds
 predefined_folds=$([ "${predefined_folds,,}" == "true" ] && echo "-pr" || echo "")
 
-# Set to -utts to combine test train split
-combine_test_train_split=$([ "${combine_test_train_split,,}" == "true" ] && echo "-ctts" || echo "")
-
 # Update result path to split combined test train split and test train split
 results_dir="${results_dir}$([ "${combine_test_train_split,,}" == "true" ] && echo "combine-test-train-split/" || echo "test-train-split/")"
 
 # Update out path to split combined test train split and test train split
 out_dir="${out_dir}$([ "${combine_test_train_split,,}" == "true" ] && echo "combine-test-train-split/" || echo "test-train-split/")"
+
+# Set to -utts to combine test train split
+combine_test_train_split=$([ "${combine_test_train_split,,}" == "true" ] && echo "-ctts" || echo "")
 
 # Set to -rn to normalise data
 normalise_data=$([ "${normalise_data,,}" == "true" ] && echo "-rn" || echo "")
