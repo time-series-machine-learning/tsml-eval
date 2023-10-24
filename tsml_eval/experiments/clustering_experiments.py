@@ -151,11 +151,3 @@ if __name__ == "__main__":
     """
     print("Running clustering_experiments.py main")
     run_experiment(sys.argv[1:])
-
-    # LOCAL_DATA_PATH = "/Users/chris/Documents/Phd-data/Datasets/Univariate_ts"
-    # TEST_TRAIN_RESULTS_PATH = "/Users/chris/Documents/Phd-data/Results/test-train/"
-    # COMBINED_RESULTS_PATH = "/Users/chris/Documents/Phd-data/Results/combined/"
-    # CLUSTERER = "pam-msm"
-    # DATASET = "Chinatown"
-    # print("Running clustering_experiments.py main")
-    # run_experiment([LOCAL_DATA_PATH, TEST_TRAIN_RESULTS_PATH, CLUSTERER, DATASET, "0", "-te"])
