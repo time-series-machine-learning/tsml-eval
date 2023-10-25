@@ -48,17 +48,18 @@ def run_experiment(args):
                 args.dataset_name,
                 set_clusterer(
                     args.estimator_name,
-                    args.data_path,
-                    args.dataset_name,
-                    args.resample_id,
-                    args.predefined_resample,
                     random_state=args.resample_id
                     if args.random_seed is None
                     else args.random_seed,
                     n_jobs=args.n_jobs,
                     fit_contract=args.fit_contract,
                     checkpoint=args.checkpoint,
-                    row_normalise=args.row_normalise,
+                    data_vars=[
+                        args.data_path,
+                        args.dataset_name,
+                        args.resample_id,
+                        args.predefined_resample,
+                    ],
                     **args.kwargs,
                 ),
                 row_normalise=args.row_normalise,
@@ -90,15 +91,11 @@ def run_experiment(args):
 
         clusterer = set_clusterer(
             estimator_name,
-            data_path,
-            dataset_name,
-            resample_id,
-            predefined_resample,
             random_state=resample_id,
             n_jobs=n_jobs,
             fit_contract=fit_contract,
             checkpoint=checkpoint,
-            row_normalise=row_normalise,
+            data_vars=[data_path, dataset_name, resample_id, predefined_resample],
             **kwargs,
         )
         print(f"Local Run of {estimator_name} ({clusterer.__class__.__name__}).")

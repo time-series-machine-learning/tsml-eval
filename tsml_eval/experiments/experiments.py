@@ -36,7 +36,6 @@ from tsml_eval.estimators import (
 from tsml_eval.estimators.transformations.scaler import TimeSeriesScaler
 from tsml_eval.evaluation.metrics import clustering_accuracy
 from tsml_eval.utils.experiments import (
-    load_clustering_experiment_data,
     load_experiment_data,
     resample_data,
     stratified_resample_data,
@@ -776,7 +775,7 @@ def load_and_run_clustering_experiment(
     build_test_file=False,
     overwrite=False,
     predefined_resample=False,
-    combine_test_train_split=False,
+    combine_train_test_split=False,
 ):
     """Load a dataset and run a clustering experiment.
 
@@ -818,12 +817,12 @@ def load_and_run_clustering_experiment(
         Read a predefined resample from file instead of performing a resample. If True
         the file format must include the resample_id at the end of the dataset name i.e.
         <problem_path>/<dataset>/<dataset>+<resample_id>+"_TRAIN.ts".
-    combine_test_train_split: bool, default=False
-        Boolean that defines if the test train split should be combined. If True then
-        the test/train split is combined. If False then the test/train split is used as
-        normal.
+    combine_train_test_split: bool, default=False
+        Whether the train/test split should be combined. If True then
+        the train/test split is combined into a single train set. If False then the
+        train/test split is used as normal.
     """
-    if combine_test_train_split:
+    if combine_train_test_split:
         build_test_file = False
 
     build_test_file, build_train_file = _check_existing_results(
@@ -840,13 +839,24 @@ def load_and_run_clustering_experiment(
         warnings.warn("All files exist and not overwriting, skipping.", stacklevel=1)
         return
 
-    X_train, y_train, X_test, y_test, resample = load_clustering_experiment_data(
-        problem_path,
-        dataset,
-        resample_id,
-        predefined_resample,
-        combine_test_train_split,
+    X_train, y_train, X_test, y_test, resample = load_experiment_data(
+        problem_path, dataset, resample_id, predefined_resample
     )
+
+    if resample:
+        X_train, y_train, X_test, y_test = stratified_resample_data(
+            X_train, y_train, X_test, y_test, random_state=resample_id
+        )
+
+    if combine_train_test_split:
+        y_train = np.concatenate((y_train, y_test), axis=None)
+        X_train = (
+            np.concatenate([X_train, X_test], axis=0)
+            if isinstance(X_train, np.ndarray)
+            else X_train + X_test
+        )
+        X_test = None
+        y_test = None
 
     run_clustering_experiment(
         X_train,

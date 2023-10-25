@@ -2,8 +2,6 @@
 
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
-from typing import Union
-
 import numpy as np
 from aeon.clustering import (
     TimeSeriesCLARA,
@@ -12,37 +10,9 @@ from aeon.clustering import (
     TimeSeriesKMedoids,
 )
 from sklearn.cluster import KMeans
-from tsml.datasets import load_from_ts_file
 
-from tsml_eval.estimators.transformations.scaler import TimeSeriesScaler
-from tsml_eval.utils.experiments import load_clustering_experiment_data
+from tsml_eval.utils.experiments import load_experiment_data
 from tsml_eval.utils.functions import str_in_nested_list
-
-
-def _load_data(problem_path, dataset, resample_id, predefined_resample):
-    if resample_id is not None and predefined_resample:
-        resample_str = "" if resample_id is None else str(resample_id)
-
-        X_train, y_train = load_from_ts_file(
-            f"{problem_path}/{dataset}/{dataset}{resample_str}_TRAIN.ts"
-        )
-        X_test, y_test = load_from_ts_file(
-            f"{problem_path}/{dataset}/{dataset}{resample_str}_TEST.ts"
-        )
-
-        resample_data = False
-    else:
-        X_train, y_train = load_from_ts_file(
-            f"{problem_path}/{dataset}/{dataset}_TRAIN.ts"
-        )
-        X_test, y_test = load_from_ts_file(
-            f"{problem_path}/{dataset}/{dataset}_TEST.ts"
-        )
-
-        resample_data = True if resample_id != 0 else False
-
-    return X_train, y_train, X_test, y_test, resample_data
-
 
 distance_based_clusterers = [
     "kmeans-euclidean",
@@ -140,42 +110,13 @@ vector_clusterers = [
 ]
 
 
-def _get_distance_default_params(train_data: np.ndarray, dist_name: str) -> dict:
-    if dist_name == "dtw" or dist_name == "ddtw":
-        return {"window": 0.2}
-    if dist_name == "lcss":
-        return {"epsilon": 1.0}
-    if dist_name == "erp":
-        if train_data is not None and len(train_data) > 0:
-            return {"g": train_data.std(axis=0).sum()}
-    if dist_name == "msm":
-        return {"c": 1.0, "independent": True}
-    if dist_name == "edr":
-        return {"epsilon": None}
-    if dist_name == "twe":
-        return {"nu": 0.001, "lmbda": 1.0}
-    if dist_name == "psi_dtw":
-        return {"r": 0.5}
-    if dist_name == "adtw":
-        return {"warp_penalty": 1.0}
-    if dist_name == "shape_dtw":
-        return {"descriptor": "identity", "reach": 30}
-    return {}
-
-
 def set_clusterer(
     clusterer_name,
-    n_clusters: int = -1,
-    data_path: Union[str, None] = None,
-    dataset_name: Union[str, None] = None,
-    resample_id: int = 0,
-    predefined_resample: bool = False,
     random_state=None,
     n_jobs=1,
     fit_contract=0,
     checkpoint=None,
-    row_normalise=False,
-    combine_test_train_split=False,
+    data_vars=None,
     **kwargs,
 ):
     """Return a clusterer matching a given input name.
@@ -191,14 +132,6 @@ def set_clusterer(
     ----------
     clusterer_name : str
         String indicating which clusterer to be returned.
-    data_path : str, default=None
-        Path to the data directory.
-    dataset_name : str, default=None
-        Name of the dataset to be loaded.
-    resample_id : int, default=0
-        Resample id to be used in the clusterer if available.
-    predefined_resample : bool, default=False
-        Whether the resample id is predefined.
     random_state : int, RandomState instance or None, default=None
         Random seed or RandomState object to be used in the clusterer if available.
     n_jobs: int, default=1
@@ -208,10 +141,9 @@ def set_clusterer(
         The number of data points to use in the clusterer ``fit`` if available.
     checkpoint: str, default=None
         Checkpoint to save model
-    row_normalise: bool, default=False
-        Whether to row normalise the data before fitting.
-    combine_test_train_split: bool, default=False
-        Whether to combine the train and test splits before fitting.
+    data_vars: list, default=None
+        List of arguments to load the dataset using
+        `tsml_eval.utils.experiments import load_experiment_data`
 
     Return
     ------
@@ -221,28 +153,13 @@ def set_clusterer(
     c = clusterer_name.lower()
 
     if str_in_nested_list(distance_based_clusterers, c):
-        X_train = None
-        y_train = None
-        if data_path is not None:
-            X_train, y_train, _, _, _ = load_clustering_experiment_data(
-                data_path,
-                dataset_name,
-                resample_id,
-                predefined_resample,
-                combine_test_train_split,
-            )
-            if row_normalise:
-                scaler = TimeSeriesScaler()
-                X_train = scaler.fit_transform(X_train)
         return _set_clusterer_distance_based(
             c,
             random_state,
             n_jobs,
             fit_contract,
             checkpoint,
-            X_train,
-            y_train,
-            n_clusters,
+            data_vars,
             kwargs,
         )
     elif str_in_nested_list(other_clusterers, c):
@@ -263,9 +180,7 @@ def _set_clusterer_distance_based(
     n_jobs,
     fit_contract,
     checkpoint,
-    X_train,
-    y_train,
-    n_clusters,
+    data_vars,
     kwargs,
 ):
     if "init_algorithm" in kwargs:
@@ -281,10 +196,7 @@ def _set_clusterer_distance_based(
     if "distance_params" in kwargs:
         distance_params = kwargs["distance_params"]
     else:
-        distance_params = _get_distance_default_params(X_train, distance)
-
-    if n_clusters == -1:
-        n_clusters = len(np.unique(y_train))
+        distance_params = _get_distance_default_params(distance, data_vars)
 
     if "kmeans" in c or "timeserieskmeans" in c:
         if "average_params" in kwargs:
@@ -293,7 +205,6 @@ def _set_clusterer_distance_based(
             average_params = {"distance": distance, **distance_params.copy()}
         if "ba" in c:
             return TimeSeriesKMeans(
-                n_clusters=n_clusters,
                 init_algorithm=init_algorithm,
                 distance=distance,
                 distance_params=distance_params,
@@ -304,7 +215,6 @@ def _set_clusterer_distance_based(
             )
         else:
             return TimeSeriesKMeans(
-                n_clusters=n_clusters,
                 init_algorithm=init_algorithm,
                 distance=distance,
                 distance_params=distance_params,
@@ -313,7 +223,6 @@ def _set_clusterer_distance_based(
             )
     elif "kmedoids" in c or "timeserieskmedoids" in c:
         return TimeSeriesKMedoids(
-            n_clusters=n_clusters,
             init_algorithm=init_algorithm,
             distance=distance,
             distance_params=distance_params,
@@ -323,7 +232,6 @@ def _set_clusterer_distance_based(
         )
     elif "pam" in c or "timeseriespam" in c:
         return TimeSeriesKMedoids(
-            n_clusters=n_clusters,
             init_algorithm=init_algorithm,
             distance=distance,
             distance_params=distance_params,
@@ -333,7 +241,6 @@ def _set_clusterer_distance_based(
         )
     elif "clarans" in c or "timeseriesclarans" in c:
         return TimeSeriesCLARANS(
-            n_clusters=n_clusters,
             init_algorithm=init_algorithm,
             distance=distance,
             distance_params=distance_params,
@@ -342,7 +249,6 @@ def _set_clusterer_distance_based(
         )
     elif "clara" in c or "timeseriesclara" in c:
         return TimeSeriesCLARA(
-            n_clusters=n_clusters,
             init_algorithm=init_algorithm,
             distance=distance,
             distance_params=distance_params,
@@ -350,6 +256,35 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     return None
+
+
+def _get_distance_default_params(dist_name: str, data_vars: list) -> dict:
+    if dist_name == "dtw" or dist_name == "ddtw":
+        return {"window": 0.2}
+    if dist_name == "lcss":
+        return {"epsilon": 1.0}
+    if dist_name == "erp":
+        # load dataset to get std if available
+        if data_vars is not None:
+            train_data, _, _, _, _ = load_experiment_data(*data_vars)
+
+            # cant handle unequal length series
+            if isinstance(train_data, np.ndarray):
+                return {"g": train_data.std(axis=0).sum()}
+        return {"g": 0.05}
+    if dist_name == "msm":
+        return {"c": 1.0, "independent": True}
+    if dist_name == "edr":
+        return {"epsilon": None}
+    if dist_name == "twe":
+        return {"nu": 0.001, "lmbda": 1.0}
+    if dist_name == "psi_dtw":
+        return {"r": 0.5}
+    if dist_name == "adtw":
+        return {"warp_penalty": 1.0}
+    if dist_name == "shape_dtw":
+        return {"descriptor": "identity", "reach": 30}
+    return {}
 
 
 def _set_clusterer_other(c, random_state, n_jobs, fit_contract, checkpoint, kwargs):
