@@ -72,7 +72,7 @@ binder = [
     "jupyterlab",
 ]
 docs = [
-    "sphinx",
+    "sphinx<8.0.0",
     "sphinx-design",
     "nbsphinx",
     "numpydoc",
