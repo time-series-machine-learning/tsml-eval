@@ -9,6 +9,7 @@ from aeon.clustering import (
     TimeSeriesKMeans,
     TimeSeriesKMedoids,
 )
+from aeon.transformations.collection import TimeSeriesScaler
 from sklearn.cluster import KMeans
 
 from tsml_eval.utils.experiments import load_experiment_data
@@ -117,6 +118,7 @@ def set_clusterer(
     fit_contract=0,
     checkpoint=None,
     data_vars=None,
+    row_normalise=False,
     **kwargs,
 ):
     """Return a clusterer matching a given input name.
@@ -143,7 +145,9 @@ def set_clusterer(
         Checkpoint to save model
     data_vars: list, default=None
         List of arguments to load the dataset using
-        `tsml_eval.utils.experiments import load_experiment_data`
+        `tsml_eval.utils.experiments import load_experiment_data`.
+    row_normalise: bool, default=False
+        Whether to row normalise the data if it is loaded.
 
     Return
     ------
@@ -160,6 +164,7 @@ def set_clusterer(
             fit_contract,
             checkpoint,
             data_vars,
+            row_normalise,
             kwargs,
         )
     elif str_in_nested_list(other_clusterers, c):
@@ -181,6 +186,7 @@ def _set_clusterer_distance_based(
     fit_contract,
     checkpoint,
     data_vars,
+    row_normalise,
     kwargs,
 ):
     if "init_algorithm" in kwargs:
@@ -196,7 +202,9 @@ def _set_clusterer_distance_based(
     if "distance_params" in kwargs:
         distance_params = kwargs["distance_params"]
     else:
-        distance_params = _get_distance_default_params(distance, data_vars)
+        distance_params = _get_distance_default_params(
+            distance, data_vars, row_normalise
+        )
 
     if "kmeans" in c or "timeserieskmeans" in c:
         if "average_params" in kwargs:
@@ -258,7 +266,9 @@ def _set_clusterer_distance_based(
     return None
 
 
-def _get_distance_default_params(dist_name: str, data_vars: list) -> dict:
+def _get_distance_default_params(
+    dist_name: str, data_vars: list, row_normalise: bool
+) -> dict:
     if dist_name == "dtw" or dist_name == "ddtw":
         return {"window": 0.2}
     if dist_name == "lcss":
@@ -266,11 +276,17 @@ def _get_distance_default_params(dist_name: str, data_vars: list) -> dict:
     if dist_name == "erp":
         # load dataset to get std if available
         if data_vars is not None:
-            train_data, _, _, _, _ = load_experiment_data(*data_vars)
+            X_train, _, _, _, _ = load_experiment_data(*data_vars)
 
             # cant handle unequal length series
-            if isinstance(train_data, np.ndarray):
-                return {"g": train_data.std(axis=0).sum()}
+            if isinstance(X_train, np.ndarray):
+                if row_normalise:
+                    scaler = TimeSeriesScaler()
+                    X_train = scaler.fit_transform(X_train)
+
+                return {"g": X_train.std(axis=0).sum()}
+            elif not isinstance(X_train, list):
+                raise ValueError("Unknown data type in _get_distance_default_params")
         return {"g": 0.05}
     if dist_name == "msm":
         return {"c": 1.0, "independent": True}

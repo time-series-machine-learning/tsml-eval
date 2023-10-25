@@ -17,6 +17,7 @@ from aeon.classification import BaseClassifier
 from aeon.clustering import BaseClusterer
 from aeon.forecasting.base import BaseForecaster
 from aeon.regression.base import BaseRegressor
+from aeon.transformations.collection import TimeSeriesScaler
 from sklearn import preprocessing
 from sklearn.base import BaseEstimator, is_classifier, is_regressor
 from sklearn.metrics import (
@@ -33,7 +34,6 @@ from tsml_eval.estimators import (
     SklearnToTsmlClusterer,
     SklearnToTsmlRegressor,
 )
-from tsml_eval.estimators.transformations.scaler import TimeSeriesScaler
 from tsml_eval.evaluation.metrics import clustering_accuracy
 from tsml_eval.utils.experiments import (
     load_experiment_data,

@@ -80,6 +80,7 @@ def run_experiment(args):
                         args.resample_id,
                         args.predefined_resample,
                     ],
+                    row_normalise=args.row_normalise,
                     **args.kwargs,
                 ),
                 row_normalise=args.row_normalise,
@@ -118,6 +119,7 @@ def run_experiment(args):
             fit_contract=fit_contract,
             checkpoint=checkpoint,
             data_vars=[data_path, dataset_name, resample_id, predefined_resample],
+            row_normalise=row_normalise,
             **kwargs,
         )
         print(f"Local Run of {estimator_name} ({clusterer.__class__.__name__}).")
