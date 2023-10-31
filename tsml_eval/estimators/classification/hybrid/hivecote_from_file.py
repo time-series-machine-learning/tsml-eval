@@ -15,41 +15,6 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import StratifiedKFold
 from sklearn.utils import check_random_state
 
-
-def ranklist(A):
-    """Function to rank elements of list
-
-    Parameters
-    ----------
-    A : list
-        The accuracies.
-
-    Returns
-    -------
-    R : list
-        The ranks.
-
-    Notes
-    -----
-    The minor rank is 1 and it's the worst, higher numbers means higher rank
-    """
-    R = [0 for x in range(len(A))]
-
-    # Counts the number of less than and equal elements of each element in A
-    for i in range(len(A)):
-        (less, equal) = (1, 1)
-        for j in range(len(A)):
-            if j != i and A[j] < A[i]:
-                less += 1
-            if j != i and A[j] == A[i]:
-                equal += 1
-
-        # The rank is the number of less than plus the midpoint of the number of ties
-        R[i] = less + (equal - 1) / 2
-
-    return R
-
-
 class FromFileHIVECOTE(BaseClassifier):
     """Hierarchical Vote Collective of Transformation-based Ensembles (HIVE-COTE) from file.
     An ensemble of the STC, DrCIF, Arsenal and TDE classifiers from different feature
@@ -124,24 +89,6 @@ class FromFileHIVECOTE(BaseClassifier):
         super(FromFileHIVECOTE, self).__init__()
 
     def _fit(self, X, y):
-        """Load HIVE-COTE accuracies from the training file.
-
-        Parameters
-        ----------
-        X : 3D np.array of shape = [n_instances, n_dimensions, series_length]
-            The training data.
-        y : array-like, shape = [n_instances]
-            The class labels.
-
-        Returns
-        -------
-        self :
-            Reference to self.
-
-        Notes
-        -----
-        Updates the attribute _weights with the loaded from file accuracies to the power of alfa.
-        """
         acc_list = []
 
         if self.new_weights:
@@ -169,14 +116,14 @@ class FromFileHIVECOTE(BaseClassifier):
                 line2 = lines[2].split(",")
 
                 # verify file matches data
-                if len(lines) - 3 != n_instances:  # verify n_instances
+                if len(lines) - 3 != n_instances:
                     print(
                         "ERROR n_instances does not match in: ",
                         path + file_name,
                         len(lines) - 3,
                         n_instances,
                     )
-                if len(np.unique(y)) != int(line2[5]):  # verify n_classes
+                if not self.skip_y_check and len(np.unique(y)) != int(line2[5]):
                     print(
                         "ERROR n_classes does not match in: ",
                         path + file_name,
@@ -312,24 +259,6 @@ class FromFileHIVECOTE(BaseClassifier):
         )
 
     def _predict_proba(self, X):
-        """Predicts labels probabilities sequences reading from files.
-
-        Parameters
-        ----------
-        X : 3D np.array of shape = [n_instances, n_dimensions, series_length]
-            The data to make predict probabilities for.
-
-        Returns
-        -------
-        y : array-like, shape = [n_instances, n_classes_]
-            Predicted probabilities using the ordering in classes_.
-
-        Notes
-        ----
-        Predicts labels probabilities for sequences in X loading each ensemble estimated probabilities from file.
-        Loads the probabilities from the test files,
-        applies the weights and returns the estimated probabilities.
-        """
         n_instances, _, _ = X.shape
 
         # for each file path input:
@@ -448,3 +377,37 @@ class FromFileHIVECOTE(BaseClassifier):
             "test_files/Test/Test2/",
         ]
         return {"file_paths": file_paths, "skip_y_check": True, "random_state": 0}
+
+
+def ranklist(A):
+    """Function to rank elements of list
+
+    Parameters
+    ----------
+    A : list
+        The accuracies.
+
+    Returns
+    -------
+    R : list
+        The ranks.
+
+    Notes
+    -----
+    The minor rank is 1 and it's the worst, higher numbers means higher rank
+    """
+    R = [0 for x in range(len(A))]
+
+    # Counts the number of less than and equal elements of each element in A
+    for i in range(len(A)):
+        (less, equal) = (1, 1)
+        for j in range(len(A)):
+            if j != i and A[j] < A[i]:
+                less += 1
+            if j != i and A[j] == A[i]:
+                equal += 1
+
+        # The rank is the number of less than plus the midpoint of the number of ties
+        R[i] = less + (equal - 1) / 2
+
+    return R

@@ -7,7 +7,8 @@ from aeon.datasets import load_arrow_head, load_italy_power_demand
 from aeon.utils._testing.estimator_checks import _assert_array_almost_equal
 from aeon.utils.estimator_checks import check_estimator
 
-from tsml_eval._wip.estimator_from_file.hivecote import FromFileHIVECOTE
+from tsml_eval.estimators.classification.hybrid.hivecote_from_file import \
+    FromFileHIVECOTE
 
 
 def test_hivecote_from_file():
@@ -76,4 +77,4 @@ def test_tuned_hivecote_from_file():
 
 def test_hivecote_from_file_check_estimator():
     """Test HIVE-COTE meets the aeon estimator interface."""
-    check_estimator(FromFileHIVECOTE, return_exceptions=False)
+    check_estimator(FromFileHIVECOTE, raise_exceptions=True)
