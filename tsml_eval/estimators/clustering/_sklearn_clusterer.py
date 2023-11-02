@@ -17,11 +17,13 @@ class SklearnToTsmlClusterer(ClusterMixin, BaseTimeSeriesEstimator):
         clusterer=None,
         pad_unequal=False,
         concatenate_channels=False,
+        clone_estimator=True,
         random_state=None,
     ):
         self.clusterer = clusterer
         self.pad_unequal = pad_unequal
         self.concatenate_channels = concatenate_channels
+        self.clone_estimator = clone_estimator
         self.random_state = random_state
 
         super(SklearnToTsmlClusterer, self).__init__()
@@ -38,7 +40,11 @@ class SklearnToTsmlClusterer(ClusterMixin, BaseTimeSeriesEstimator):
             concatenate_channels=self.concatenate_channels,
         )
 
-        self._clusterer = _clone_estimator(self.clusterer, self.random_state)
+        self._clusterer = (
+            _clone_estimator(self.clusterer, self.random_state)
+            if self.clone_estimator
+            else self.clusterer
+        )
         self._clusterer.fit(X, y)
 
         self.labels_ = self._clusterer.labels_

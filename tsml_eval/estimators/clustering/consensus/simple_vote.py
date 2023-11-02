@@ -1,11 +1,10 @@
 import numpy as np
 import pandas as pd
 from scipy.optimize import linear_sum_assignment
-from sklearn.base import ClusterMixin, BaseEstimator
+from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.cluster import KMeans
 from sklearn.utils import check_random_state
 from tsml.base import _clone_estimator
-
 
 
 class SimpleVote(BaseEstimator, ClusterMixin):
@@ -51,7 +50,7 @@ class SimpleVote(BaseEstimator, ClusterMixin):
             X = np.array(X)
         elif not isinstance(X, np.ndarray) or len(X.shape) > 2:
             raise ValueError(
-                "SimpleVote is not a time series classifier. "
+                "SimpleVote is not a time series clusterer. "
                 "A valid sklearn input such as a 2d numpy array is required."
                 "Sparse input formats are currently not supported."
             )
@@ -60,11 +59,25 @@ class SimpleVote(BaseEstimator, ClusterMixin):
         rng = check_random_state(self.random_state)
 
         if self.clusterers is None:
-            self._clusterers = [KMeans(n_clusters=self.n_clusters, n_init="auto", random_state=rng.randint(np.iinfo(np.int32).max)) for _ in range(5)]
+            self._clusterers = [
+                KMeans(
+                    n_clusters=self.n_clusters,
+                    n_init="auto",
+                    random_state=rng.randint(np.iinfo(np.int32).max),
+                )
+                for _ in range(5)
+            ]
         else:
-            self._clusterers = [_clone_estimator(clusterer, random_state=rng.randint(np.iinfo(np.int32).max)) for clusterer in self.clusterers]
+            self._clusterers = [
+                _clone_estimator(
+                    clusterer, random_state=rng.randint(np.iinfo(np.int32).max)
+                )
+                for clusterer in self.clusterers
+            ]
 
-        cluster_assignments = np.zeros((len(self._clusterers), X.shape[0]), dtype=np.int32)
+        cluster_assignments = np.zeros(
+            (len(self._clusterers), X.shape[0]), dtype=np.int32
+        )
         for i, clusterer in enumerate(self._clusterers):
             clusterer.fit(X)
             cluster_assignments[i] = clusterer.labels_
@@ -73,7 +86,8 @@ class SimpleVote(BaseEstimator, ClusterMixin):
             if uc.shape[0] != self.n_clusters:
                 raise ValueError(
                     "Input clusterers must have the same number of clusters as the "
-                    "SimpleVote n_clusters."
+                    f"SimpleVote n_clusters ({self.n_clusters}). Found "
+                    f"{uc.shape[0]} for clusterer {i}."
                 )
             elif (np.sort(uc) != np.arange(self.n_clusters)).any():
                 raise ValueError(
@@ -103,20 +117,27 @@ class SimpleVote(BaseEstimator, ClusterMixin):
             X = np.array(X)
         elif not isinstance(X, np.ndarray) or len(X.shape) > 2:
             raise ValueError(
-                "SimpleVote is not a time series classifier. "
+                "SimpleVote is not a time series clusterer. "
                 "A valid sklearn input such as a 2d numpy array is required."
                 "Sparse input formats are currently not supported."
             )
         X = self._validate_data(X=X, reset=False)
 
-        cluster_assignments = np.zeros((len(self._clusterers), X.shape[0]), dtype=np.int32)
+        cluster_assignments = np.zeros(
+            (len(self._clusterers), X.shape[0]), dtype=np.int32
+        )
 
         cluster_assignments[0] = self._clusterers[0].predict(X)
         for i in range(1, len(self._clusterers)):
-            cluster_assignments[i] = self._new_labels[i-1][self._clusterers[i].predict(X)]
+            cluster_assignments[i] = self._new_labels[i - 1][
+                self._clusterers[i].predict(X)
+            ]
 
-        votes = np.apply_along_axis(lambda x: np.bincount(x, minlength=self.n_clusters),
-                                    axis=0, arr=cluster_assignments).T
+        votes = np.apply_along_axis(
+            lambda x: np.bincount(x, minlength=self.n_clusters),
+            axis=0,
+            arr=cluster_assignments,
+        ).T
 
         return votes / len(self._clusterers)
 
@@ -124,20 +145,25 @@ class SimpleVote(BaseEstimator, ClusterMixin):
         rng = check_random_state(self.random_state)
 
         self._new_labels = []
-        new_assignments = np.zeros((cluster_assignments.shape[0], cluster_assignments.shape[1]), dtype=np.int32)
+        new_assignments = np.zeros(
+            (cluster_assignments.shape[0], cluster_assignments.shape[1]), dtype=np.int32
+        )
 
         new_assignments[0] = cluster_assignments[0]
         for i in range(1, len(cluster_assignments)):
-            contingency_table = -np.histogram2d(cluster_assignments[0], cluster_assignments[i], bins=self.n_clusters)[0]
-            _, col_indices = linear_sum_assignment(contingency_table)
+            cost_matrix = -np.histogram2d(
+                cluster_assignments[i], cluster_assignments[0], bins=self.n_clusters
+            )[0]
+            _, col_indices = linear_sum_assignment(cost_matrix)
             self._new_labels.append(col_indices)
             new_assignments[i] = col_indices[cluster_assignments[i]]
 
-        votes = np.apply_along_axis(lambda x: np.bincount(x, minlength=self.n_clusters),
-                                    axis=0, arr=new_assignments).T
+        votes = np.apply_along_axis(
+            lambda x: np.bincount(x, minlength=self.n_clusters),
+            axis=0,
+            arr=new_assignments,
+        ).T
 
         self.labels_ = np.array(
-            [
-                rng.choice(np.flatnonzero(v == v.max())) for v in votes
-            ]
+            [rng.choice(np.flatnonzero(v == v.max())) for v in votes]
         )

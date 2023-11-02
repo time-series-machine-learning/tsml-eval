@@ -18,11 +18,13 @@ class SklearnToTsmlClassifier(ClassifierMixin, BaseTimeSeriesEstimator):
         classifier=None,
         pad_unequal=False,
         concatenate_channels=False,
+        clone_estimator=True,
         random_state=None,
     ):
         self.classifier = classifier
         self.pad_unequal = pad_unequal
         self.concatenate_channels = concatenate_channels
+        self.clone_estimator = clone_estimator
         self.random_state = random_state
 
         super(SklearnToTsmlClassifier, self).__init__()
@@ -42,7 +44,11 @@ class SklearnToTsmlClassifier(ClassifierMixin, BaseTimeSeriesEstimator):
         check_classification_targets(y)
         self.classes_ = np.unique(y)
 
-        self._classifier = _clone_estimator(self.classifier, self.random_state)
+        self._classifier = (
+            _clone_estimator(self.classifier, self.random_state)
+            if self.clone_estimator
+            else self.classifier
+        )
         self._classifier.fit(X, y)
 
         return self

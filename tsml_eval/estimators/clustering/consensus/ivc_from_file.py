@@ -27,12 +27,25 @@ class FromFileIterativeVotingClustering(IterativeVotingClustering):
 
     """
 
-    def __init__(self, clusterers=None, n_clusters=8, max_iterations=500,
-                 skip_y_check=False, random_state=None):
+    def __init__(
+        self,
+        clusterers=None,
+        init="plus",
+        n_clusters=8,
+        max_iterations=500,
+        overwrite_y=False,
+        skip_y_check=False,
+        random_state=None,
+    ):
+        self.overwrite_y = overwrite_y
         self.skip_y_check = skip_y_check
 
         super(FromFileIterativeVotingClustering, self).__init__(
-            clusterers=clusterers, n_clusters=n_clusters, max_iterations=max_iterations, random_state=random_state
+            clusterers=clusterers,
+            init=init,
+            n_clusters=n_clusters,
+            max_iterations=max_iterations,
+            random_state=random_state,
         )
 
     def fit(self, X, y=None):
@@ -44,7 +57,7 @@ class FromFileIterativeVotingClustering(IterativeVotingClustering):
             X = np.array(X)
         elif not isinstance(X, np.ndarray) or len(X.shape) > 2:
             raise ValueError(
-                "SimpleVote is not a time series classifier. "
+                "FromFileIterativeVotingClustering is not a time series clusterer. "
                 "A valid sklearn input such as a 2d numpy array is required."
                 "Sparse input formats are currently not supported."
             )
@@ -57,8 +70,9 @@ class FromFileIterativeVotingClustering(IterativeVotingClustering):
         else:
             file_name = "trainResample.csv"
 
-        cluster_assignments = np.zeros((len(self.clusterers), X.shape[0]),
-                                        dtype=np.int32)
+        cluster_assignments = np.zeros(
+            (len(self.clusterers), X.shape[0]), dtype=np.int32
+        )
         for i, path in enumerate(self.clusterers):
             f = open(path + file_name, "r")
             lines = f.readlines()
@@ -70,8 +84,11 @@ class FromFileIterativeVotingClustering(IterativeVotingClustering):
                     f"n_instances of {path + file_name} does not match X, "
                     f"expected {X.shape[0]}, got {len(lines) - 3}"
                 )
-            if y is not None and not self.skip_y_check and len(np.unique(y)) != int(
-                    line2[5]):
+            if (
+                y is not None
+                and not self.skip_y_check
+                and len(np.unique(y)) != int(line2[5])
+            ):
                 raise ValueError(
                     f"n_classes of {path + file_name} does not match X, "
                     f"expected {len(np.unique(y))}, got {line2[6]}"
@@ -80,7 +97,12 @@ class FromFileIterativeVotingClustering(IterativeVotingClustering):
             for j in range(X.shape[0]):
                 line = lines[j + 3].split(",")
 
-                if y is not None and not self.skip_y_check:
+                if self.overwrite_y:
+                    if i == 0:
+                        y[j] = float(line[0])
+                    elif not self.skip_y_check:
+                        assert y[j] == float(line[0])
+                elif y is not None and not self.skip_y_check:
                     if i == 0:
                         le = preprocessing.LabelEncoder()
                         y = le.fit_transform(y)
@@ -89,12 +111,7 @@ class FromFileIterativeVotingClustering(IterativeVotingClustering):
                 cluster_assignments[i][j] = int(line[1])
 
             uc = np.unique(cluster_assignments[i])
-            if uc.shape[0] != self.n_clusters:
-                raise ValueError(
-                    "Input clusterers must have the same number of clusters as the "
-                    "FromFileSimpleVote n_clusters."
-                )
-            elif (np.sort(uc) != np.arange(self.n_clusters)).any():
+            if (np.sort(uc) != np.arange(self.n_clusters)).any():
                 raise ValueError(
                     "Input clusterers must have cluster labels in the range "
                     "0 to  n_clusters - 1."
@@ -113,7 +130,7 @@ class FromFileIterativeVotingClustering(IterativeVotingClustering):
             X = np.array(X)
         elif not isinstance(X, np.ndarray) or len(X.shape) > 2:
             raise ValueError(
-                "SimpleVote is not a time series classifier. "
+                "FromFileIterativeVotingClustering is not a time series clusterer. "
                 "A valid sklearn input such as a 2d numpy array is required."
                 "Sparse input formats are currently not supported."
             )
@@ -126,7 +143,9 @@ class FromFileIterativeVotingClustering(IterativeVotingClustering):
         else:
             file_name = "testResample.csv"
 
-        cluster_assignments = np.zeros((len(self.clusterers), X.shape[0]), dtype=np.int32)
+        cluster_assignments = np.zeros(
+            (len(self.clusterers), X.shape[0]), dtype=np.int32
+        )
         for i, path in enumerate(self.clusterers):
             f = open(path + file_name, "r")
             lines = f.readlines()

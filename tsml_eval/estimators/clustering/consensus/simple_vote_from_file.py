@@ -39,7 +39,15 @@ class FromFileSimpleVote(SimpleVote):
     none
     """
 
-    def __init__(self, clusterers=None, n_clusters=8, skip_y_check=False, random_state=None):
+    def __init__(
+        self,
+        clusterers=None,
+        n_clusters=8,
+        overwrite_y=False,
+        skip_y_check=False,
+        random_state=None,
+    ):
+        self.overwrite_y = overwrite_y
         self.skip_y_check = skip_y_check
 
         super(FromFileSimpleVote, self).__init__(
@@ -55,11 +63,11 @@ class FromFileSimpleVote(SimpleVote):
             X = np.array(X)
         elif not isinstance(X, np.ndarray) or len(X.shape) > 2:
             raise ValueError(
-                "FromFileSimpleVote is not a time series classifier. "
+                "FromFileSimpleVote is not a time series clusterer. "
                 "A valid sklearn input such as a 2d numpy array is required."
                 "Sparse input formats are currently not supported."
             )
-        X, y = self._validate_data(X=X, y=y, ensure_min_samples=self.n_clusters)
+        X = self._validate_data(X=X, ensure_min_samples=self.n_clusters)
 
         # load train file at path (trainResample.csv if random_state is None,
         # trainResample{self.random_state}.csv otherwise)
@@ -68,7 +76,9 @@ class FromFileSimpleVote(SimpleVote):
         else:
             file_name = "trainResample.csv"
 
-        cluster_assignments = np.zeros((len(self.clusterers), X.shape[0]), dtype=np.int32)
+        cluster_assignments = np.zeros(
+            (len(self.clusterers), X.shape[0]), dtype=np.int32
+        )
         for i, path in enumerate(self.clusterers):
             f = open(path + file_name, "r")
             lines = f.readlines()
@@ -80,7 +90,11 @@ class FromFileSimpleVote(SimpleVote):
                     f"n_instances of {path + file_name} does not match X, "
                     f"expected {X.shape[0]}, got {len(lines) - 3}"
                 )
-            if y is not None and not self.skip_y_check and len(np.unique(y)) != int(line2[5]):
+            if (
+                y is not None
+                and not self.skip_y_check
+                and len(np.unique(y)) != int(line2[5])
+            ):
                 raise ValueError(
                     f"n_classes of {path + file_name} does not match X, "
                     f"expected {len(np.unique(y))}, got {line2[6]}"
@@ -89,7 +103,12 @@ class FromFileSimpleVote(SimpleVote):
             for j in range(X.shape[0]):
                 line = lines[j + 3].split(",")
 
-                if y is not None and not self.skip_y_check:
+                if self.overwrite_y:
+                    if i == 0:
+                        y[j] = float(line[0])
+                    elif not self.skip_y_check:
+                        assert y[j] == float(line[0])
+                elif y is not None and not self.skip_y_check:
                     if i == 0:
                         le = preprocessing.LabelEncoder()
                         y = le.fit_transform(y)
@@ -101,7 +120,8 @@ class FromFileSimpleVote(SimpleVote):
             if uc.shape[0] != self.n_clusters:
                 raise ValueError(
                     "Input clusterers must have the same number of clusters as the "
-                    "FromFileSimpleVote n_clusters."
+                    f"FromFileSimpleVote n_clusters ({self.n_clusters}). Found "
+                    f"{uc.shape[0]} for clusterer {i}."
                 )
             elif (np.sort(uc) != np.arange(self.n_clusters)).any():
                 raise ValueError(
@@ -122,7 +142,7 @@ class FromFileSimpleVote(SimpleVote):
             X = np.array(X)
         elif not isinstance(X, np.ndarray) or len(X.shape) > 2:
             raise ValueError(
-                "FromFileSimpleVote is not a time series classifier. "
+                "FromFileSimpleVote is not a time series clusterer. "
                 "A valid sklearn input such as a 2d numpy array is required."
                 "Sparse input formats are currently not supported."
             )
@@ -135,7 +155,9 @@ class FromFileSimpleVote(SimpleVote):
         else:
             file_name = "testResample.csv"
 
-        cluster_assignments = np.zeros((len(self.clusterers), X.shape[0]), dtype=np.int32)
+        cluster_assignments = np.zeros(
+            (len(self.clusterers), X.shape[0]), dtype=np.int32
+        )
         for i, path in enumerate(self.clusterers):
             f = open(path + file_name, "r")
             lines = f.readlines()
@@ -155,9 +177,12 @@ class FromFileSimpleVote(SimpleVote):
             else:
                 for j in range(len(X)):
                     line = lines[j + 3].split(",")
-                    cluster_assignments[i][j] = self._new_labels[i-1][int(line[1])]
+                    cluster_assignments[i][j] = self._new_labels[i - 1][int(line[1])]
 
-        votes = np.apply_along_axis(lambda x: np.bincount(x, minlength=self.n_clusters),
-                                    axis=0, arr=cluster_assignments).transpose()
+        votes = np.apply_along_axis(
+            lambda x: np.bincount(x, minlength=self.n_clusters),
+            axis=0,
+            arr=cluster_assignments,
+        ).transpose()
 
         return votes / len(self.clusterers)

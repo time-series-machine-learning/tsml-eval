@@ -105,6 +105,9 @@ def run_classification_experiment(
             "At least one must be written."
         )
 
+    if classifier_name is None:
+        classifier_name = type(classifier).__name__
+
     if isinstance(classifier, BaseClassifier) or (
         isinstance(classifier, BaseTimeSeriesEstimator) and is_classifier(classifier)
     ):
@@ -114,15 +117,13 @@ def run_classification_experiment(
             classifier=classifier,
             pad_unequal=True,
             concatenate_channels=True,
+            clone_estimator=False,
             random_state=classifier.random_state
             if hasattr(classifier, "random_state")
             else None,
         )
     else:
         raise TypeError("classifier must be a tsml, aeon or sklearn classifier.")
-
-    if classifier_name is None:
-        classifier_name = type(classifier).__name__
 
     if row_normalise:
         scaler = TimeSeriesScaler()
@@ -369,6 +370,9 @@ def run_regression_experiment(
             "At least one must be written."
         )
 
+    if regressor_name is None:
+        regressor_name = type(regressor).__name__
+
     if isinstance(regressor, BaseRegressor) or (
         isinstance(regressor, BaseTimeSeriesEstimator) and is_regressor(regressor)
     ):
@@ -378,15 +382,13 @@ def run_regression_experiment(
             regressor=regressor,
             pad_unequal=True,
             concatenate_channels=True,
+            clone_estimator=False,
             random_state=regressor.random_state
             if hasattr(regressor, "random_state")
             else None,
         )
     else:
         raise TypeError("regressor must be a tsml, aeon or sklearn regressor.")
-
-    if regressor_name is None:
-        regressor_name = type(regressor).__name__
 
     if row_normalise:
         scaler = TimeSeriesScaler()
@@ -626,6 +628,9 @@ def run_clustering_experiment(
             "At least one must be written."
         )
 
+    if clusterer_name is None:
+        clusterer_name = type(clusterer).__name__
+
     if isinstance(clusterer, BaseClusterer) or (
         isinstance(clusterer, BaseTimeSeriesEstimator) and is_clusterer(clusterer)
     ):
@@ -635,15 +640,13 @@ def run_clustering_experiment(
             clusterer=clusterer,
             pad_unequal=True,
             concatenate_channels=True,
+            clone_estimator=False,
             random_state=clusterer.random_state
             if hasattr(clusterer, "random_state")
             else None,
         )
     else:
         raise TypeError("clusterer must be a tsml, aeon or sklearn clusterer.")
-
-    if clusterer_name is None:
-        clusterer_name = type(clusterer).__name__
 
     if build_test_file and (X_test is None or y_test is None):
         raise ValueError("Test data and labels not provided, cannot build test file.")
@@ -677,6 +680,7 @@ def run_clustering_experiment(
                 "so it cannot be set.",
                 stacklevel=1,
             )
+            n_clusters = None
     elif n_clusters is not None:
         raise ValueError("n_clusters must be an int or None.")
 
@@ -702,7 +706,12 @@ def run_clustering_experiment(
             if hasattr(clusterer, "labels_")
             else clusterer.predict(X_train)
         )
-        train_probs = np.zeros((len(train_preds), len(np.unique(train_preds))))
+        train_probs = np.zeros(
+            (
+                len(train_preds),
+                n_clusters if n_clusters is not None else len(np.unique(train_preds)),
+            )
+        )
         train_probs[:, train_preds] = 1
     train_time = int(round(time.time() * 1000)) - start
 
@@ -736,7 +745,14 @@ def run_clustering_experiment(
             test_preds = np.argmax(test_probs, axis=1)
         else:
             test_preds = clusterer.predict(X_test)
-            test_probs = np.zeros((len(test_preds), len(np.unique(train_preds))))
+            test_probs = np.zeros(
+                (
+                    len(test_preds),
+                    n_clusters
+                    if n_clusters is not None
+                    else len(np.unique(train_preds)),
+                )
+            )
             test_probs[:, test_preds] = 1
         test_time = int(round(time.time() * 1000)) - start
 
