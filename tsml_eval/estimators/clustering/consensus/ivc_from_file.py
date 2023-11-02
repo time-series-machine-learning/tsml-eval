@@ -24,7 +24,6 @@ class FromFileIterativeVotingClustering(IterativeVotingClustering):
         Maximum number of iterations for the consensus clustering.
     seed_clusterer : bool, optional (default=False)
         Whether to use a fixed random seed for cluster initialization.
-
     """
 
     def __init__(

@@ -2,6 +2,9 @@
 
 __author__ = ["MatthewMiddlehurst"]
 
+import os
+from pathlib import Path
+
 import numpy as np
 from aeon.datasets import load_arrow_head, load_italy_power_demand
 from aeon.utils._testing.estimator_checks import _assert_array_almost_equal
@@ -10,6 +13,7 @@ from aeon.utils.estimator_checks import check_estimator
 from tsml_eval.estimators.classification.hybrid.hivecote_from_file import \
     FromFileHIVECOTE
 
+_TEST_RESULTS_PATH = os.path.dirname(Path(__file__).parent.parent.parent.parent.parent) + "/tsml_eval/estimators/classification/hybrid/tests/test_files/"
 
 def test_hivecote_from_file():
     """Test HIVE-COTE from file with ItalyPowerDemand results."""
@@ -17,13 +21,13 @@ def test_hivecote_from_file():
     X_test, _ = load_italy_power_demand(split="test")
 
     file_paths = [
-        "test_files/ItalyPowerDemand/Arsenal/",
-        "test_files/ItalyPowerDemand/DrCIF/",
-        "test_files/ItalyPowerDemand/STC/",
-        "test_files/ItalyPowerDemand/TDE/",
+        _TEST_RESULTS_PATH + "/ItalyPowerDemand/Arsenal/",
+        _TEST_RESULTS_PATH + "/ItalyPowerDemand/DrCIF/",
+        _TEST_RESULTS_PATH + "/ItalyPowerDemand/STC/",
+        _TEST_RESULTS_PATH + "/ItalyPowerDemand/TDE/",
     ]
 
-    hc2 = FromFileHIVECOTE(file_paths=file_paths, random_state=0)
+    hc2 = FromFileHIVECOTE(classifiers=file_paths, random_state=0)
     hc2.fit(X_train, y_train)
     probas = hc2.predict_proba(X_test)
 
@@ -61,13 +65,13 @@ def test_tuned_hivecote_from_file():
     X_test, _ = load_arrow_head(split="test")
 
     file_paths = [
-        "test_files/ArrowHead/Arsenal/",
-        "test_files/ArrowHead/DrCIF/",
-        "test_files/ArrowHead/STC/",
-        "test_files/ArrowHead/TDE/",
+        _TEST_RESULTS_PATH + "/ArrowHead/Arsenal/",
+        _TEST_RESULTS_PATH + "/ArrowHead/DrCIF/",
+        _TEST_RESULTS_PATH + "/ArrowHead/STC/",
+        _TEST_RESULTS_PATH + "/ArrowHead/TDE/",
     ]
 
-    hc2 = FromFileHIVECOTE(file_paths=file_paths, tune_alpha=True, random_state=0)
+    hc2 = FromFileHIVECOTE(classifiers=file_paths, tune_alpha=True, random_state=0)
     hc2.fit(X_train, y_train)
     probas = hc2.predict_proba(X_test)
 

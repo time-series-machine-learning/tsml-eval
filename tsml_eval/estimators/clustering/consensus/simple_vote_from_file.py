@@ -27,16 +27,6 @@ class FromFileSimpleVote(SimpleVote):
     ----------
     labels_ : ?
         ?
-
-    Examples
-    --------
-    >>> from tsml_eval.estimators.clustering.consensus.simple_vote import SimpleVote
-    >>> from sklearn.datasets import load_iris
-    >>> iris = load_iris()
-    >>> sv = SimpleVote(n_clusters=3, random_state=0)
-    >>> sv.fit(iris.data)
-    >>> sv.labels_
-    none
     """
 
     def __init__(

@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+
 import numpy as np
 from aeon.datasets import load_arrow_head
 from sklearn.metrics import rand_score
@@ -8,15 +11,18 @@ from tsml_eval.estimators.clustering.consensus.simple_vote_from_file import \
     FromFileSimpleVote
 
 
+_TEST_RESULTS_PATH = os.path.dirname(Path(__file__).parent.parent.parent.parent.parent) + "/tsml_eval/estimators/clustering/consensus/tests/test_files/"
+
+
 def test_from_file_simple_vote():
     """Test SimpleVote from file with ArrowHead results."""
     X_train, y_train = load_arrow_head(split="train")
     X_test, y_test = load_arrow_head(split="test")
 
     file_paths = [
-        "test_files/ArrowHead/PAM-DTW/",
-        "test_files/ArrowHead/PAM-ERP/",
-        "test_files/ArrowHead/PAM-MSM/",
+        _TEST_RESULTS_PATH + "/ArrowHead/PAM-DTW/",
+        _TEST_RESULTS_PATH + "/ArrowHead/PAM-ERP/",
+        _TEST_RESULTS_PATH + "/ArrowHead/PAM-MSM/",
     ]
 
     sv = FromFileSimpleVote(clusterers=file_paths, n_clusters=3, random_state=0)
@@ -37,9 +43,9 @@ def test_from_file_iterative_voting_clustering():
     X_test, y_test = load_arrow_head(split="test")
 
     file_paths = [
-        "test_files/ArrowHead/PAM-DTW/",
-        "test_files/ArrowHead/PAM-ERP/",
-        "test_files/ArrowHead/PAM-MSM/",
+        _TEST_RESULTS_PATH + "/ArrowHead/PAM-DTW/",
+        _TEST_RESULTS_PATH + "/ArrowHead/PAM-ERP/",
+        _TEST_RESULTS_PATH + "/ArrowHead/PAM-MSM/",
     ]
 
     ivc = FromFileIterativeVotingClustering(clusterers=file_paths, n_clusters=3, max_iterations=100, random_state=0)

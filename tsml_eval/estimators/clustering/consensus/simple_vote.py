@@ -32,8 +32,9 @@ class SimpleVote(BaseEstimator, ClusterMixin):
     >>> iris = load_iris()
     >>> sv = SimpleVote(n_clusters=3, random_state=0)
     >>> sv.fit(iris.data)
-    >>> sv.labels_
-    none
+    SimpleVote(...)
+    >>> sv.labels_[:10]
+    array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=int64)
     """
 
     def __init__(self, clusterers=None, n_clusters=8, random_state=None):

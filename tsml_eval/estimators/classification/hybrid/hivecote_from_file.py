@@ -55,7 +55,7 @@ class FromFileHIVECOTE(BaseClassifier):
 
     _tags = {
         "capability:multivariate": True,
-        "classifier_type": "hybrid",
+        "algorithm_type": "hybrid",
     }
 
     def __init__(
@@ -326,8 +326,10 @@ class FromFileHIVECOTE(BaseClassifier):
             `MyClass(**params)` or `MyClass(**params[i])` creates a valid test instance.
             `create_test_instance` uses the first (or only) dictionary in `params`.
         """
+        from tsml_eval.estimators.classification.hybrid.tests.test_hivecote import _TEST_RESULTS_PATH
+
         file_paths = [
-            "test_files/Test/Test1/",
-            "test_files/Test/Test2/",
+            _TEST_RESULTS_PATH + "TestResults/Test1/",
+            _TEST_RESULTS_PATH + "TestResults/Test2/",
         ]
-        return {"file_paths": file_paths, "skip_y_check": True, "random_state": 0}
+        return {"classifiers": file_paths, "skip_y_check": True, "random_state": 0}
