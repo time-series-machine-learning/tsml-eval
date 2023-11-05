@@ -11,10 +11,14 @@ class SimpleVote(BaseEstimator, ClusterMixin):
     """
     SimpleVote clustering ensemble.
 
+    SimpleVote is a clustering ensemble that uses a voting scheme to combine
+    the results of multiple clusterers.
+
     Parameters
     ----------
-    clusterers : ?
-        ?
+    clusterers : list of clusterers, default=None
+        A list of clusterers to use in the ensemble. If None, defaults to 5
+        KMeans clusterers.
     n_clusters : int, default=8
         The number of clusters to form.
     random_state : int, default=None
@@ -22,19 +26,20 @@ class SimpleVote(BaseEstimator, ClusterMixin):
 
     Attributes
     ----------
-    labels_ : ?
-        ?
+    labels_ : ndarray of shape (n_instances,)
+        Labels of each point from the last fit.
 
     Examples
     --------
     >>> from tsml_eval.estimators.clustering.consensus.simple_vote import SimpleVote
     >>> from sklearn.datasets import load_iris
+    >>> from sklearn.metrics import rand_score
     >>> iris = load_iris()
     >>> sv = SimpleVote(n_clusters=3, random_state=0)
     >>> sv.fit(iris.data)
     SimpleVote(...)
-    >>> sv.labels_[:10]
-    array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=int64)
+    >>> rand_score(iris.target, sv.labels_)
+    0.8797315436241611
     """
 
     def __init__(self, clusterers=None, n_clusters=8, random_state=None):

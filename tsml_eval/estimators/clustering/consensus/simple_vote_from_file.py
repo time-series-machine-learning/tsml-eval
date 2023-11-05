@@ -14,24 +14,28 @@ class FromFileSimpleVote(SimpleVote):
 
     Parameters
     ----------
-    clusterers : ?
-        ?
+    clusterers : list of str
+        A list of paths to the clusterer result files to use in the ensemble.
     n_clusters : int, default=8
         The number of clusters to form.
+    overwrite_y : bool, default=False
+        If True, the labels in the loaded files will overwrite the labels
+        passed in the fit method.
     skip_y_check : bool, default=False
-        ?
+        If True, the labels in the loaded files will not be checked against
+        the labels passed in the fit method.
     random_state : int, default=None
         The seed for random number generation.
 
     Attributes
     ----------
-    labels_ : ?
-        ?
+    labels_ : ndarray of shape (n_instances,)
+        Labels of each point from the last fit.
     """
 
     def __init__(
         self,
-        clusterers=None,
+        clusterers,
         n_clusters=8,
         overwrite_y=False,
         skip_y_check=False,

@@ -1,9 +1,7 @@
 """Hierarchical Vote Collective of Transformation-based Ensembles (HIVE-COTE) from file.
 
-Upgraded hybrid ensemble of classifiers from 4 separate time series classification
+Hybrid ensemble of classifiers from separate time series classification
 representations, using the weighted probabilistic CAWPE as an ensemble controller.
-This version loads the ensembles predictions from file and allows to change the alfa
-value.
 """
 
 __author__ = ["MatthewMiddlehurst", "ander-hg"]
@@ -18,32 +16,45 @@ from sklearn.utils import check_random_state
 
 
 class FromFileHIVECOTE(BaseClassifier):
-    """Hierarchical Vote Collective of Transformation-based Ensembles (HIVE-COTE) from file.
-    An ensemble of the STC, DrCIF, Arsenal and TDE classifiers from different feature
-    representations using the CAWPE structure as described in [1].
+    """HIVE-COTE from file.
+
+    Builds the Hierarchical Vote Collective of Transformation-based Ensembles
+    (HIVE-COTE) from results files.
+    For example, HC2 is n ensemble of the STC, DrCIF, Arsenal and TDE classifiers from
+    different feature representations using the CAWPE structure as described in [1].
 
     Parameters
     ----------
-    file_paths : list
-        The paths for Arsenal, DrCIF, STC and TDE files.
+    classifiers : list
+        The paths to results files used. i.e. Arsenal, DrCIF, STC and TDE files
+        for HC2.
     alpha : int, default=4
-        The exponent to extenuate differences in classifiers and weighting with the accuracy estimate.
+        The exponent to extenuate differences in classifiers and weighting with the
+        accuracy estimate.
     tune_alpha : bool, default=False
-        Tests alpha [1..10] and sets the best one
-    new_weights : list, default = None
-        The list of accuracies used to determinate the weights
-    remove_worst : str, default = None
-        Removes the worst component based or on accuracies on training data (="worst") or test data (="oracle")
-    remove_threshold: float, default = None
-        The %age that used to determinate the threshold. Discards any component below its %age of the best
+        Tests alpha [1..10] and uses the best value.
+    new_weights : list, default=None
+        The list of weights to use. Skips finding of weights if not None.
+    acc_filter : (str, float) tuple, default=None
+        Removes the worst component based or on accuracies on
+        training data if first item is "train" or test data if first item is "test".
+        Be warned that using the test data in this way is cheating, and should only be
+        used for exploration.
+        The second item is the threshold for the filter, e.g. 0.5 will remove all
+        components with accuracies less than 50% of the best component.
+        Will always keep the most accurate component.
+    overwrite_y : bool, default=False
+        If True, the labels in the loaded files will overwrite the labels
+        passed in the fit method.
+    skip_y_check : bool, default=False
+        If True, the labels in the loaded files will not be checked against
+        the labels passed in the fit method.
     random_state : int or None, default=None
         Seed for random number generation.
-    dataset_name : str
-        Name of the dataset
 
     Attributes
     ----------
-    _weights : list
+    weights_ : list
         The weight for Arsenal, DrCIF, STC and TDE probabilities.
 
     References
@@ -81,15 +92,13 @@ class FromFileHIVECOTE(BaseClassifier):
         super(FromFileHIVECOTE, self).__init__()
 
     def _fit(self, X, y):
-        acc_list = []
-
-        self.predict_y = []
+        self.weights_ = []
 
         if self.new_weights:
             acc_list = self.new_weights
         else:
             n_instances, _, _ = X.shape
-            self._weights = []
+            acc_list = []
 
             # load train file at path (trainResample.csv if random_state is None,
             # trainResample{self.random_state}.csv otherwise)
@@ -145,7 +154,7 @@ class FromFileHIVECOTE(BaseClassifier):
 
         # add a weight to the weight list based on the files accuracy
         for acc in acc_list:
-            self._weights.append(acc**self._alpha)
+            self.weights_.append(acc ** self._alpha)
 
         self._use_classifier = [True for _ in range(len(self.classifiers))]
         if self.acc_filter is not None:
@@ -184,7 +193,7 @@ class FromFileHIVECOTE(BaseClassifier):
 
             # add a weight to the weight list based on the files accuracy
             for i, acc in enumerate(acc_list):
-                if i != argmax and acc < acc_list[i] * self._acc_filter[1]:
+                if i != argmax and acc < acc_list[argmax] * self._acc_filter[1]:
                     self._use_classifier[i] = False
 
     def _predict(self, X):
@@ -246,7 +255,7 @@ class FromFileHIVECOTE(BaseClassifier):
                     dists[j] = np.add(
                         dists[j],
                         [float(k) for k in (line[3:])]
-                        * (np.ones(self.n_classes_) * self._weights[i]),
+                        * (np.ones(self.n_classes_) * self.weights_[i]),
                     )
 
         # Make each instances probability array sum to 1 and return

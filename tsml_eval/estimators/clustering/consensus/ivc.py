@@ -17,15 +17,39 @@ class IterativeVotingClustering(BaseEstimator, ClusterMixin):
 
     Parameters:
     -----------
-    clusterers : list
-        List of base clusterers to be used for consensus clustering.
-    num_clusters : int, optional (default=2)
-        The number of clusters to generate.
-    max_iterations : int, optional (default=200)
-        Maximum number of iterations for the consensus clustering.
-    seed_clusterer : bool, optional (default=False)
-        Whether to use a fixed random seed for cluster initialization.
+    clusterers : list of clusterers, default=None
+        A list of clusterers to use in the ensemble. If None, defaults to 5
+        KMeans clusterers.
+    init : {'plus', 'random', 'aligned'}, default='plus'
+        The method used to initialize the cluster centers. 'plus' uses the
+        k-means++ initialization method, 'random' uses random selection, and
+        'aligned' uses a method that aligns the cluster assignmeds from the base
+        clusterers.
+    n_clusters : int, default=8
+        The number of clusters to form.
+    max_iterations : int, default=500
+        The maximum number of iterations to perform.
+    random_state : int, default=None
+        The seed for random number generation.
 
+    Attributes
+    ----------
+    labels_ : ndarray of shape (n_instances,)
+        Labels of each point from the last fit.
+
+    Examples
+    --------
+    >>> from tsml_eval.estimators.clustering.consensus.ivc import (
+    ...     IterativeVotingClustering
+    ... )
+    >>> from sklearn.datasets import load_iris
+    >>> from sklearn.metrics import rand_score
+    >>> iris = load_iris()
+    >>> ivc = IterativeVotingClustering(n_clusters=3, random_state=0)
+    >>> ivc.fit(iris.data)
+    IterativeVotingClustering(...)
+    >>> rand_score(iris.target, ivc.labels_)
+    0.8797315436241611
     """
 
     def __init__(
