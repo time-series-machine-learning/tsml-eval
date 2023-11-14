@@ -6,6 +6,13 @@ from pathlib import Path
 
 _TEST_DATA_PATH = os.path.dirname(Path(__file__).parent.parent) + "/tsml_eval/datasets/"
 
+_TEST_RESULTS_PATH = (
+    os.path.dirname(Path(__file__).parent.parent)
+    + "/tsml_eval/testing/_test_result_files/"
+)
+
+_TEST_OUTPUT_PATH = os.path.dirname(Path(__file__).parent.parent) + "/test_output/"
+
 
 def _check_set_method(
     set_method, estimator_sub_list, estimator_dict, all_estimator_names

@@ -2,7 +2,7 @@
 
 import pytest
 
-from tsml_eval.utils.test_utils import _check_set_method_results
+from tsml_eval.testing.test_utils import _check_set_method_results
 
 
 def test_check_set_method_results_fail():

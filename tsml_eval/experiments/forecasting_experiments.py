@@ -12,7 +12,8 @@ import sys
 os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
-
+os.environ["TF_NUM_INTEROP_THREADS"] = "1"
+os.environ["TF_NUM_INTRAOP_THREADS"] = "1"
 
 import numba
 from aeon.utils.validation._dependencies import _check_soft_dependencies
@@ -20,8 +21,9 @@ from aeon.utils.validation._dependencies import _check_soft_dependencies
 from tsml_eval.experiments import load_and_run_forecasting_experiment
 from tsml_eval.experiments.set_forecaster import set_forecaster
 from tsml_eval.experiments.tests import _FORECASTER_RESULTS_PATH
-from tsml_eval.utils.experiments import _results_present, assign_gpu, parse_args
-from tsml_eval.utils.test_utils import _TEST_DATA_PATH
+from tsml_eval.testing.test_utils import _TEST_DATA_PATH
+from tsml_eval.utils.arguments import parse_args
+from tsml_eval.utils.experiments import _results_present, assign_gpu
 
 
 def run_experiment(args, overwrite=False):

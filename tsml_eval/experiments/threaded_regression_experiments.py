@@ -12,8 +12,9 @@ import sys
 from tsml_eval.experiments import load_and_run_regression_experiment
 from tsml_eval.experiments.set_regressor import set_regressor
 from tsml_eval.experiments.tests import _REGRESSOR_RESULTS_PATH
-from tsml_eval.utils.experiments import _results_present, parse_args
-from tsml_eval.utils.test_utils import _TEST_DATA_PATH
+from tsml_eval.testing.test_utils import _TEST_DATA_PATH
+from tsml_eval.utils.arguments import parse_args
+from tsml_eval.utils.experiments import _results_present
 
 
 def run_experiment(args):

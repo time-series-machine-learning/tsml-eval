@@ -8,7 +8,7 @@ from tsml_eval.publications.y2023.rist_pipeline import (
     _run_regression_experiment,
 )
 from tsml_eval.publications.y2023.rist_pipeline.tests import _RIST_TEST_RESULTS_PATH
-from tsml_eval.utils.test_utils import _TEST_DATA_PATH
+from tsml_eval.testing.test_utils import _TEST_DATA_PATH
 from tsml_eval.utils.tests.test_results_writing import (
     _check_classification_file_format,
     _check_regression_file_format,

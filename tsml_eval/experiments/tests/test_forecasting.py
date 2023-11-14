@@ -11,7 +11,7 @@ from tsml_eval.experiments import (
     threaded_forecasting_experiments,
 )
 from tsml_eval.experiments.tests import _FORECASTER_RESULTS_PATH
-from tsml_eval.utils.test_utils import (
+from tsml_eval.testing.test_utils import (
     _TEST_DATA_PATH,
     _check_set_method,
     _check_set_method_results,
@@ -68,10 +68,7 @@ def test_run_forecasting_experiment_main():
     assert os.path.exists(test_file)
     _check_forecasting_file_format(test_file)
 
-    os.remove(
-        f"{_FORECASTER_RESULTS_PATH}{forecaster}/Predictions/{dataset}/"
-        "testResample0.csv"
-    )
+    os.remove(test_file)
 
 
 def test_run_threaded_forecasting_experiment():

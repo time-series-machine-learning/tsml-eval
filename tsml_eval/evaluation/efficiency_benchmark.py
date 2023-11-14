@@ -2,10 +2,8 @@
 
 from dataclasses import dataclass
 from math import floor
-from time import perf_counter
 
 import numpy as np
-import psutil
 from sklearn.base import clone
 from sklearn.model_selection import train_test_split
 from sklearn.utils.validation import check_random_state
@@ -18,16 +16,15 @@ __all__ = [
     "compare_estimators",
 ]
 
+from tsml_eval.utils.memory_recorder import record_max_memory
+
 
 @dataclass
 class BenchmarkResult:
-    """Aggregates runtimes (seconds) and memory usage (bytes)."""
+    """Aggregates runtimes (milliseconds) and memory usage (bytes)."""
 
-    total_runtime: float
     fit_runtime: float
     predict_runtime: float
-
-    total_memory_usage: int
     fit_memory_usage: int
     predict_memory_usage: int
 
@@ -88,20 +85,18 @@ def benchmark_estimator(
             random_state=rng,
         )
 
-    runtime_fit, memory_fit, _ = _benchmark_function_wrapper(
-        estimator.fit, args=[X_train, y_train], kwargs={}
+    memory_fit, runtime_fit = record_max_memory(
+        estimator.fit, args=(X_train, y_train), return_func_time=True
     )
-    runtime_predict, memory_predict, _ = _benchmark_function_wrapper(
-        estimator.predict, args=[X_test], kwargs={}
+    memory_predict, runtime_predict = record_max_memory(
+        estimator.predict, args=(X_test,), return_func_time=True
     )
 
     return BenchmarkResult(
         fit_runtime=runtime_fit,
         predict_runtime=runtime_predict,
-        total_runtime=runtime_fit + runtime_predict,
         fit_memory_usage=memory_fit,
         predict_memory_usage=memory_predict,
-        total_memory_usage=memory_fit + memory_predict,
     )
 
 
@@ -237,15 +232,3 @@ def compare_estimators(
             f"Invalid varying method: {varying}. Allowed values"
             + " are {'total', 'train', 'test'}."
         )
-
-
-def _benchmark_function_wrapper(func, args, kwargs):
-    process = psutil.Process()
-
-    mem_before = process.memory_info().vms
-    clock_start = perf_counter()
-    func_output = func(*args, **kwargs)
-    clock_end = perf_counter()
-    mem_after = process.memory_info().vms
-
-    return clock_end - clock_start, mem_after - mem_before, func_output

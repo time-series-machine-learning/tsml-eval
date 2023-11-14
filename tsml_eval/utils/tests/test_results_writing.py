@@ -14,6 +14,13 @@ from tsml_eval.experiments.tests import (
     _REGRESSOR_RESULTS_PATH,
 )
 from tsml_eval.utils.experiments import (
+    write_classification_results,
+    write_clustering_results,
+    write_forecasting_results,
+    write_regression_results,
+    write_results_to_tsml_format,
+)
+from tsml_eval.utils.validation import (
     _check_classification_third_line,
     _check_clustering_third_line,
     _check_first_line,
@@ -21,11 +28,6 @@ from tsml_eval.utils.experiments import (
     _check_regression_third_line,
     _check_results_line,
     _check_second_line,
-    write_classification_results,
-    write_clustering_results,
-    write_forecasting_results,
-    write_regression_results,
-    write_results_to_tsml_format,
 )
 
 
@@ -42,6 +44,7 @@ def test_write_classification_results():
         _CLASSIFIER_RESULTS_PATH,
         full_path=False,
         first_line_comment="test_write_classification_results",
+        n_classes=3,
     )
 
     _check_classification_file_format(
@@ -58,9 +61,10 @@ def _check_classification_file_format(file_path):
     assert _check_first_line(lines[0])
     assert _check_second_line(lines[1])
     assert _check_classification_third_line(lines[2])
+    n_classes = int(lines[2].split(",")[5])
 
     for i in range(3, 6):
-        assert _check_results_line(lines[i])
+        assert _check_results_line(lines[i], n_probas=n_classes)
 
 
 def test_write_classification_results_invalid():
@@ -170,6 +174,7 @@ def test_write_clustering_results():
         _CLUSTERER_RESULTS_PATH,
         full_path=False,
         first_line_comment="test_write_clustering_results",
+        n_clusters=3,
     )
 
     _check_clustering_file_format(
@@ -186,9 +191,10 @@ def _check_clustering_file_format(file_path):
     assert _check_first_line(lines[0])
     assert _check_second_line(lines[1])
     assert _check_clustering_third_line(lines[2])
+    n_probas = int(lines[2].split(",")[6])
 
     for i in range(3, 6):
-        assert _check_results_line(lines[i])
+        assert _check_results_line(lines[i], n_probas=n_probas)
 
 
 def test_write_clustering_results_invalid():
