@@ -5,33 +5,36 @@ from abc import ABC, abstractmethod
 
 class EstimatorResults(ABC):
     """
-    Abstract base class for storing estimator results.
+    Abstract class for storing and loading results from an experiment.
 
     Parameters
     ----------
-    dataset_name : str, optional
-        Name of the dataset.
-    estimator_name : str, optional
-        Name of the estimator.
-    split : str, optional
-        Dataset split (e.g., 'train' or 'test').
-    resample_id : int, optional
-        Identifier for the data fold.
-    time_unit : str, optional
-        Unit of time measurement, default is "nanoseconds".
-    description : str, optional
-        A human-friendly description of the estimator results.
-    parameters : str, optional
-        Estimator parameters and other related information as a string.
-    fit_time : float, optional
-        Time taken to build the estimator.
-    predict_time : float, optional
-        Time taken to test the estimator.
-    benchmark_time : float, optional
-        Time taken to benchmark the estimator.
-    memory_usage : float, optional
-        Memory usage of the estimator.
-
+    dataset_name : str, default="N/A"
+        Name of the dataset used.
+    estimator_name : str, default="N/A"
+        Name of the estimator used.
+    split : str, default="N/A"
+        Type of data split used, i.e. "train" or "test".
+    resample_id : int or None, default=None
+        Random seed used for the data resample, with 0 usually being the original data.
+    time_unit : str, default="nanoseconds"
+        Time measurement used for other fields.
+    description : str, default=""
+        Additional description of the experiment. Appended to the end
+        of the first line of the results file.
+    parameters : str, default="No parameter info"
+        Information about parameters used in the estimator and other build information.
+        Written to the second line of the results file.
+    fit_time : float, default=-1.0
+        Time taken fitting the model.
+    predict_time : float, default=-1.0
+        Time taken making predictions.
+    benchmark_time : float, default=-1.0
+        Time taken to run a simple benchmark function. In tsml-eval experiments, this
+        is the time spent to sort 1,000 (seeded) random numpy arrays of size 20,000.
+    memory_usage : float, default=-1.0
+        Memory usage during the experiment. In tsml-eval experiments, this is the peak
+        memory usage during the fit method.
     """
 
     def __init__(
@@ -65,43 +68,68 @@ class EstimatorResults(ABC):
         self.benchmark_time = benchmark_time
         self.memory_usage = memory_usage
 
-        self.build_time_milli_ = None
-        self.median_pred_time_milli_ = None
-
-    # var_name: (display_name, higher is better)
+    # var_name: (display_name, higher is better, is timing)
     statistics = {
-        "fit_time": ("FitTime", False),
-        "predict_time": ("PredictTime", False),
-        "memory_usage": ("MemoryUsage", False),
+        "fit_time": ("FitTime", False, True),
+        "predict_time": ("PredictTime", False, True),
+        "memory_usage": ("MemoryUsage", False, False),
     }
 
     @abstractmethod
-    def save_to_file(self, file_path):
-        """Save results to a specified file.
+    def save_to_file(self, file_path, full_path=True):
+        """
+        Write the estimator results into a file format used by tsml.
+
+        Abstract, must be implemented by subclasses.
 
         Parameters
         ----------
         file_path : str
-            The path to the file where the results will be saved.
+            Path to write the results file to or the directory to build the default file
+            structure if full_path is False.
+        full_path : boolean, default=True
+            If True, results are written directly to the directory passed in file_path.
+            If False, then a standard file structure using the estimator and dataset
+            names is created and used to write the results file.
         """
         pass
 
     @abstractmethod
     def load_from_file(self, file_path):
-        """Load results from a specified file.
+        """
+        Load estimator results from a specified file.
+
+        This method reads a file containing estimator results and reconstructs the
+        EstimatorResults object. It calculates performance statistics and
+        verifies values based on the loaded data.
+
+        Abstract, must be implemented by subclasses.
 
         Parameters
         ----------
         file_path : str
-            The path to the file where the results will be loaded from.
+            The path to the file from which estimator results should be loaded. The
+            file should be a tsml formatted estimator results file.
+
+        Returns
+        -------
+        self : EstimatorResults
+            The same EstimatorResults object with loaded results.
         """
         pass
 
     @abstractmethod
     def calculate_statistics(self, overwrite=False):
-        """Calculate statistics from the results.
+        """
+        Calculate various performance statistics based on the estimator results.
 
-        This method should handle any necessary calculations to produce statistics
-        from the results data held within the object.
+        This method computes various performance metrics based on the estimators output.
+
+        Abstract, must be implemented by subclasses.
+
+        Parameters
+        ----------
+        overwrite : bool, default=False
+            If the function should overwrite the current values when they are not None.
         """
         pass

@@ -84,8 +84,9 @@ def test_run_threaded_forecasting_experiment():
         "1",
         "-nj",
         "2",
-        # also test normalisation here
+        # also test normalisation and benchmark time here
         "--row_normalise",
+        "--benchmark_time",
     ]
 
     threaded_forecasting_experiments.run_experiment(args)

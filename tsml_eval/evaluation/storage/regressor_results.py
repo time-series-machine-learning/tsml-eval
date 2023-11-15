@@ -8,12 +8,92 @@ from sklearn.metrics import (
     r2_score,
 )
 
-import tsml_eval.evaluation.storage as storage
 from tsml_eval.evaluation.storage.estimator_results import EstimatorResults
 from tsml_eval.utils.experiments import write_regression_results
 
 
 class RegressorResults(EstimatorResults):
+    """
+    A class for storing and managing results from regression experiments.
+
+    This class provides functionalities for storing regressor results,
+    including predictions, probabilities, and various performance metrics.
+    It extends the `EstimatorResults` class, inheriting its base functionalities.
+
+    Parameters
+    ----------
+    dataset_name : str, default="N/A"
+        Name of the dataset used.
+    regressor_name : str, default="N/A"
+        Name of the regressor used.
+    split : str, default="N/A"
+        Type of data split used, i.e. "train" or "test".
+    resample_id : int or None, default=None
+        Random seed used for the data resample, with 0 usually being the original data.
+    time_unit : str, default="nanoseconds"
+        Time measurement used for other fields.
+    description : str, default=""
+        Additional description of the regression experiment. Appended to the end
+        of the first line of the results file.
+    parameters : str, default="No parameter info"
+        Information about parameters used in the regressor and other build information.
+        Written to the second line of the results file.
+    fit_time : float, default=-1.0
+        Time taken fitting the model.
+    predict_time : float, default=-1.0
+        Time taken making predictions.
+    benchmark_time : float, default=-1.0
+        Time taken to run a simple benchmark function. In tsml-eval experiments, this
+        is the time spent to sort 1,000 (seeded) random numpy arrays of size 20,000.
+    memory_usage : float, default=-1.0
+        Memory usage during the experiment. In tsml-eval experiments, this is the peak
+        memory usage during the fit method.
+    error_estimate_method : str, default="N/A"
+        Method used for train error/accuracy estimation (i.e. 10-fold CV, OOB error).
+    error_estimate_time : float, default=-1.0
+        Time taken for train error/accuracy estimation.
+    build_plus_estimate_time : float, default=-1.0
+        Total time for building the regressor and estimating error/accuracy on the
+        train set. For certain methods this can be different from the sum of fit_time
+        and error_estimate_time.
+    target_labels : array-like or None, default=None
+        Actual target labels.
+    predictions : array-like or None, default=None
+        Predicted class labels.
+    pred_times : array-like or None, default=None
+        Prediction times for each case.
+    pred_descriptions : list of str or None, default=None
+        Descriptions for each prediction.
+
+    Attributes
+    ----------
+    n_cases : int or None
+        Number of cases in the dataset.
+    mean_squared_error : float or None
+        Mean squared error of the predictions.
+    root_mean_squared_error : float or None
+        Root mean squared error of the predictions.
+    mean_absolute_error : float or None
+        Mean absolute error of the predictions.
+    r2_score : float or None
+        R2 score of the predictions.
+    mean_absolute_percentage_error : float or None
+        Mean absolute percentage error of the predictions.
+
+    Examples
+    --------
+    >>> from tsml_eval.evaluation.storage import RegressorResults
+    >>> from tsml_eval.testing.test_utils import _TEST_RESULTS_PATH
+    >>> rr = RegressorResults().load_from_file(
+    ...     _TEST_RESULTS_PATH +
+    ...     "/regression/ROCKET/Predictions/Covid3Month/testResample0.csv"
+    ... )
+    >>> rr.calculate_statistics()
+    >>> rr.mean_squared_error
+    0.0015126663111567206
+
+    """
+
     def __init__(
         self,
         dataset_name="N/A",
@@ -35,6 +115,9 @@ class RegressorResults(EstimatorResults):
         pred_times=None,
         pred_descriptions=None,
     ):
+        # Line 1
+        self.regressor_name = regressor_name
+
         # Line 3
         self.train_estimate_method = error_estimate_method
         self.train_estimate_time = error_estimate_time
@@ -68,28 +151,29 @@ class RegressorResults(EstimatorResults):
             memory_usage=memory_usage,
         )
 
-    # var_name: (display_name, higher is better)
+    # var_name: (display_name, higher is better, is timing)
     statistics = {
-        "mean_squared_error": ("MSE", False),
-        "root_mean_squared_error": ("RMSE", False),
-        "mean_absolute_error": ("MAE", False),
-        "r2_score": ("R2", True),
-        "mean_absolute_percentage_error": ("MAPE", False),
+        "mean_squared_error": ("MSE", False, False),
+        "root_mean_squared_error": ("RMSE", False, False),
+        "mean_absolute_error": ("MAE", False, False),
+        "r2_score": ("R2", True, False),
+        "mean_absolute_percentage_error": ("MAPE", False, False),
         **EstimatorResults.statistics,
     }
 
     def save_to_file(self, file_path, full_path=True):
         """
-        Writes the full results to a file.
+        Write the regressor results into a file format used by tsml.
 
         Parameters
         ----------
         file_path : str
-            The path of the file to write the results to.
+            Path to write the results file to or the directory to build the default file
+            structure if full_path is False.
         full_path : boolean, default=True
-            If True, results are written directly to the directory passed in output_path.
-            If False, then a standard file structure using the classifier and dataset names
-            is created and used to write the results file.
+            If True, results are written directly to the directory passed in file_path.
+            If False, then a standard file structure using the regressor and dataset
+            names is created and used to write the results file.
         """
         self.infer_size()
 
@@ -120,23 +204,40 @@ class RegressorResults(EstimatorResults):
             fit_and_estimate_time=self.fit_and_estimate_time,
         )
 
-    def load_from_file(self, file_path, calculate_stats=True, verify_values=True):
-        """Load results from a specified file.
+    def load_from_file(self, file_path):
+        """
+        Load regressor results from a specified file.
+
+        This method reads a file containing regressor results and reconstructs the
+        RegressorResults object. It calculates performance statistics and
+        verifies values based on the loaded data.
 
         Parameters
         ----------
         file_path : str
-            The path to the file where the results will be loaded from.
+            The path to the file from which regressor results should be loaded. The
+            file should be a tsml formatted regressor results file.
+
+        Returns
+        -------
+        self : RegressorResults
+            The same RegressorResults object with loaded results.
         """
-        rr = storage.load_regressor_results(file_path)
+        rr = load_regressor_results(file_path)
         self.__dict__.update(rr.__dict__)
         return self
 
     def calculate_statistics(self, overwrite=False):
-        """Calculate statistics from the results.
+        """
+        Calculate various performance statistics based on the regressor results.
 
-        This method should handle any necessary calculations to produce statistics
-        from the results data held within the object.
+        This method computes various performance metrics, such as MSE, MAPE,
+        and others, based on the regressors output.
+
+        Parameters
+        ----------
+        overwrite : bool, default=False
+            If the function should overwrite the current values when they are not None.
         """
         self.infer_size(overwrite=overwrite)
 
@@ -160,11 +261,44 @@ class RegressorResults(EstimatorResults):
             )
 
     def infer_size(self, overwrite=False):
+        """
+        Infer and return the size of the dataset used in the results.
+
+        This method estimates the size of the dataset that was used for the estimator,
+        based on the results data.
+
+        Parameters
+        ----------
+        overwrite : bool, default=False
+            If the function should overwrite the current values when they are not None.
+        """
         if self.n_cases is None or overwrite:
             self.n_cases = len(self.target_labels)
 
 
 def load_regressor_results(file_path, calculate_stats=True, verify_values=True):
+    """
+    Load and return regressor results from a specified file.
+
+    This function reads a file containing regressor results and reconstructs the
+    RegressorResults object. It optionally calculates performance statistics and
+    verifies values based on the loaded data.
+
+    Parameters
+    ----------
+    file_path : str
+        The path to the file from which regressor results should be loaded. The file
+        should be a tsml formatted regressor results file.
+    calculate_stats : bool, default=True
+        Whether to calculate performance statistics from the loaded results.
+    verify_values : bool, default=True
+        If the function should perform verification of the loaded values.
+
+    Returns
+    -------
+    rr : RegressorResults
+        A RegressorResults object containing the results loaded from the file.
+    """
     with open(file_path, "r") as file:
         lines = file.readlines()
 

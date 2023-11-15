@@ -77,6 +77,7 @@ def run_experiment(args, overwrite=False):
                 random_seed=args.resample_id
                 if args.random_seed is None
                 else args.random_seed,
+                benchmark_time=args.benchmark_time,
                 overwrite=args.overwrite,
             )
     # local run (no args)

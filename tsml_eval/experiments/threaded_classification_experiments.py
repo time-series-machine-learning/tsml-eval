@@ -60,6 +60,7 @@ def run_experiment(args):
                 classifier_name=args.estimator_name,
                 resample_id=args.resample_id,
                 build_train_file=args.train_fold,
+                benchmark_time=args.benchmark_time,
                 overwrite=args.overwrite,
                 predefined_resample=args.predefined_resample,
             )

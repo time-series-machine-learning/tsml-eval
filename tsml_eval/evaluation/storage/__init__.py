@@ -1,4 +1,4 @@
-"""Storage for estimator results and result i/o"""
+"""Storage for estimator results and result i/o."""
 
 __all__ = [
     "ClassifierResults",

@@ -9,13 +9,92 @@ from sklearn.metrics import (
     rand_score,
 )
 
-import tsml_eval.evaluation.storage as storage
 from tsml_eval.evaluation.metrics import clustering_accuracy_score
 from tsml_eval.evaluation.storage.estimator_results import EstimatorResults
 from tsml_eval.utils.experiments import write_clustering_results
 
 
 class ClustererResults(EstimatorResults):
+    """
+    A class for storing and managing results from clustering experiments.
+
+    This class provides functionalities for storing clustering results,
+    including cluster labels, probabilities, and various performance metrics.
+    It extends the `EstimatorResults` class, inheriting its base functionalities.
+
+    Parameters
+    ----------
+    dataset_name : str, default="N/A"
+        Name of the dataset used.
+    clusterer_name : str, default="N/A"
+        Name of the clusterer used.
+    split : str, default="N/A"
+        Type of data split used, i.e. "train" or "test".
+    resample_id : int or None, default=None
+        Random seed used for the data resample, with 0 usually being the original data.
+    time_unit : str, default="nanoseconds"
+        Time measurement used for other fields.
+    description : str, default=""
+        Additional description of the clustering experiment. Appended to the end
+        of the first line of the results file.
+    parameters : str, default="No parameter info"
+        Information about parameters used in the clusterer and other build information.
+        Written to the second line of the results file.
+    fit_time : float, default=-1.0
+        Time taken fitting the model.
+    predict_time : float, default=-1.0
+        Time taken making predictions.
+    benchmark_time : float, default=-1.0
+        Time taken to run a simple benchmark function. In tsml-eval experiments, this
+        is the time spent to sort 1,000 (seeded) random numpy arrays of size 20,000.
+    memory_usage : float, default=-1.0
+        Memory usage during the experiment. In tsml-eval experiments, this is the peak
+        memory usage during the fit method.
+    n_classes : int or None, default=None
+        Number of classes in the dataset.
+    n_clusters : int or None, default=None
+        Number of clusters generated.
+    class_labels : array-like or None, default=None
+        Actual class labels.
+    predictions : array-like or None, default=None
+        Predicted cluster labels.
+    probabilities : array-like or None, default=None
+        Predicted cluster probabilities.
+    pred_times : array-like or None, default=None
+        Prediction times for each case.
+    pred_descriptions : list of str or None, default=None
+        Descriptions for each prediction.
+
+    Attributes
+    ----------
+    n_cases : int or None
+        Number of cases in the dataset.
+    clustering_accuracy : float or None
+        Clustering accuracy score.
+    rand_index : float or None
+        Rand score.
+    adjusted_rand_index : float or None
+        Adjusted Rand score.
+    mutual_information : float or None
+        Mutual information score.
+    adjusted_mutual_information : float or None
+        Adjusted mutual information score.
+    normalised_mutual_information : float or None
+        Normalised mutual information score.
+
+    Examples
+    --------
+    >>> from tsml_eval.evaluation.storage import ClustererResults
+    >>> from tsml_eval.testing.test_utils import _TEST_RESULTS_PATH
+    >>> cr = ClustererResults().load_from_file(
+    ...     _TEST_RESULTS_PATH +
+    ...     "/clustering/KMeans/Predictions/Trace/trainResample0.csv"
+    ... )
+    >>> cr.calculate_statistics()
+    >>> cr.clustering_accuracy
+    0.57
+    """
+
     def __init__(
         self,
         dataset_name="N/A",
@@ -37,6 +116,9 @@ class ClustererResults(EstimatorResults):
         pred_times=None,
         pred_descriptions=None,
     ):
+        # Line 1
+        self.clusterer_name = clusterer_name
+
         # Line 3
         self.n_classes = n_classes
         self.n_clusters = n_clusters
@@ -71,29 +153,30 @@ class ClustererResults(EstimatorResults):
             memory_usage=memory_usage,
         )
 
-    # var_name: (display_name, higher is better)
+    # var_name: (display_name, higher is better, is timing)
     statistics = {
-        "clustering_accuracy": ("CLAcc", True),
-        "rand_index": ("RI", True),
-        "adjusted_rand_index": ("ARI", True),
-        "mutual_information": ("MI", True),
-        "adjusted_mutual_information": ("AMI", True),
-        "normalised_mutual_information": ("NMI", True),
+        "clustering_accuracy": ("CLAcc", True, False),
+        "rand_index": ("RI", True, False),
+        "adjusted_rand_index": ("ARI", True, False),
+        "mutual_information": ("MI", True, False),
+        "adjusted_mutual_information": ("AMI", True, False),
+        "normalised_mutual_information": ("NMI", True, False),
         **EstimatorResults.statistics,
     }
 
     def save_to_file(self, file_path, full_path=True):
         """
-        Writes the full results to a file.
+        Write the clusterer results into a file format used by tsml.
 
         Parameters
         ----------
         file_path : str
-            The path of the file to write the results to.
+            Path to write the results file to or the directory to build the default file
+            structure if full_path is False.
         full_path : boolean, default=True
-            If True, results are written directly to the directory passed in output_path.
-            If False, then a standard file structure using the classifier and dataset names
-            is created and used to write the results file.
+            If True, results are written directly to the directory passed in file_path.
+            If False, then a standard file structure using the clusterer and dataset
+            names is created and used to write the results file.
         """
         self.infer_size()
 
@@ -125,22 +208,39 @@ class ClustererResults(EstimatorResults):
         )
 
     def load_from_file(self, file_path):
-        """Load results from a specified file.
+        """
+        Load clusterer results from a specified file.
+
+        This method reads a file containing clusterer results and reconstructs the
+        ClustererResults object. It calculates performance statistics and
+        verifies values based on the loaded data.
 
         Parameters
         ----------
         file_path : str
-            The path to the file where the results will be loaded from.
+            The path to the file from which clusterer results should be loaded. The
+            file should be a tsml formatted clusterer results file.
+
+        Returns
+        -------
+        self : ClustererResults
+            The same ClustererResults object with loaded results.
         """
-        cr = storage.load_clusterer_results(file_path)
+        cr = load_clusterer_results(file_path)
         self.__dict__.update(cr.__dict__)
         return self
 
     def calculate_statistics(self, overwrite=False):
-        """Calculate statistics from the results.
+        """
+        Calculate various performance statistics based on the clusterer results.
 
-        This method should handle any necessary calculations to produce statistics
-        from the results data held within the object.
+        This method computes various performance metrics, such as clustering accuracy,
+        Rand score, and others, based on the clusterers output.
+
+        Parameters
+        ----------
+        overwrite : bool, default=False
+            If the function should overwrite the current values when they are not None.
         """
         self.infer_size(overwrite=overwrite)
 
@@ -168,6 +268,19 @@ class ClustererResults(EstimatorResults):
             )
 
     def infer_size(self, overwrite=False):
+        """
+        Infer and return the size of the dataset used in the results.
+
+        This method estimates the size of the dataset that was used for the estimator,
+        based on the results data.
+
+        Also infers the number of clusters generated.
+
+        Parameters
+        ----------
+        overwrite : bool, default=False
+            If the function should overwrite the current values when they are not None.
+        """
         if self.n_cases is None or overwrite:
             self.n_cases = len(self.class_labels)
         if self.n_clusters is None or overwrite:
@@ -175,8 +288,28 @@ class ClustererResults(EstimatorResults):
 
 
 def load_clusterer_results(file_path, calculate_stats=True, verify_values=True):
-    """Load clusterer results from a file."""
+    """
+    Load and return clusterer results from a specified file.
 
+    This function reads a file containing clusterer results and reconstructs the
+    ClustererResults object. It optionally calculates performance statistics and
+    verifies values based on the loaded data.
+
+    Parameters
+    ----------
+    file_path : str
+        The path to the file from which clusterer results should be loaded. The file
+        should be a tsml formatted clusterer results file.
+    calculate_stats : bool, default=True
+        Whether to calculate performance statistics from the loaded results.
+    verify_values : bool, default=True
+        If the function should perform verification of the loaded values.
+
+    Returns
+    -------
+    cr : ClustererResults
+        A ClustererResults object containing the results loaded from the file.
+    """
     with open(file_path, "r") as file:
         lines = file.readlines()
 

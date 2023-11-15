@@ -9,7 +9,6 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
-import tsml_eval.evaluation.storage as storage
 from tsml_eval.evaluation.storage.estimator_results import EstimatorResults
 from tsml_eval.utils.experiments import write_classification_results
 
@@ -24,47 +23,79 @@ class ClassifierResults(EstimatorResults):
 
     Parameters
     ----------
-    dataset_name : str, optional
-        Name of the dataset used, by default "N/A".
-    classifier_name : str, optional
-        Name of the classifier used, by default "N/A".
-    split : str, optional
-        Type of data split used, by default "N/A".
-    resample_id : int or None, optional
-        Identifier for the resampling method, by default None.
-    time_unit : str, optional
-        Unit of time measurement, by default "nanoseconds".
-    description : str, optional
-        Description of the classification experiment, by default "".
-    parameters : str, optional
-        Information about parameters used, by default "No parameter info".
-    fit_time : float, optional
-        Time taken for fitting the model, by default -1.0.
-    predict_time : float, optional
-        Time taken for making predictions, by default -1.0.
-    benchmark_time : float, optional
-        Time taken for benchmarking, by default -1.0.
-    memory_usage : float, optional
-        Memory usage during the experiment, by default -1.0.
-    n_classes : int or None, optional
-        Number of classes in the classification task, by default None.
-    error_estimate_method : str, optional
-        Method used for error estimation, by default "N/A".
-    error_estimate_time : float, optional
-        Time taken for error estimation, by default -1.0.
-    build_plus_estimate_time : float, optional
-        Total time for building and estimating, by default -1.0.
-    class_labels : array-like or None, optional
-        Actual class labels, by default None.
-    predictions : array-like or None, optional
-        Predicted class labels, by default None.
-    probabilities : array-like or None, optional
-        Predicted class probabilities, by default None.
-    pred_times : array-like or None, optional
-        Prediction times for each instance, by default None.
-    pred_descriptions : list of str or None, optional
-        Descriptions for each prediction, by default None.
+    dataset_name : str, default="N/A"
+        Name of the dataset used.
+    classifier_name : str, default="N/A"
+        Name of the classifier used.
+    split : str, default="N/A"
+        Type of data split used, i.e. "train" or "test".
+    resample_id : int or None, default=None
+        Random seed used for the data resample, with 0 usually being the original data.
+    time_unit : str, default="nanoseconds"
+        Time measurement used for other fields.
+    description : str, default=""
+        Additional description of the classification experiment. Appended to the end
+        of the first line of the results file.
+    parameters : str, default="No parameter info"
+        Information about parameters used in the classifier and other build information.
+        Written to the second line of the results file.
+    fit_time : float, default=-1.0
+        Time taken fitting the model.
+    predict_time : float, default=-1.0
+        Time taken making predictions.
+    benchmark_time : float, default=-1.0
+        Time taken to run a simple benchmark function. In tsml-eval experiments, this
+        is the time spent to sort 1,000 (seeded) random numpy arrays of size 20,000.
+    memory_usage : float, default=-1.0
+        Memory usage during the experiment. In tsml-eval experiments, this is the peak
+        memory usage during the fit method.
+    n_classes : int or None, default=None
+        Number of classes in the dataset.
+    error_estimate_method : str, default="N/A"
+        Method used for train error/accuracy estimation (i.e. 10-fold CV, OOB error).
+    error_estimate_time : float, default=-1.0
+        Time taken for train error/accuracy estimation.
+    build_plus_estimate_time : float, default=-1.0
+        Total time for building the classifier and estimating error/accuracy on the
+        train set. For certain methods this can be different from the sum of fit_time
+        and error_estimate_time.
+    class_labels : array-like or None, default=None
+        Actual class labels.
+    predictions : array-like or None, default=None
+        Predicted class labels.
+    probabilities : array-like or None, default=None
+        Predicted class probabilities.
+    pred_times : array-like or None, default=None
+        Prediction times for each case.
+    pred_descriptions : list of str or None, default=None
+        Descriptions for each prediction.
 
+    Attributes
+    ----------
+    n_cases : int or None
+        Number of cases in the dataset.
+    accuracy : float or None
+        Accuracy of the classifier.
+    balanced_accuracy : float or None
+        Balanced accuracy of the classifier.
+    f1_score : float or None
+        F1 score of the classifier.
+    negative_log_likelihood : float or None
+        Negative log likelihood of the classifier.
+    mean_auroc : float or None
+        Mean area under the ROC curve of the classifier.
+
+    Examples
+    --------
+    >>> from tsml_eval.evaluation.storage import ClassifierResults
+    >>> from tsml_eval.testing.test_utils import _TEST_RESULTS_PATH
+    >>> cr = ClassifierResults().load_from_file(
+    ...     _TEST_RESULTS_PATH +
+    ...     "/classification/ROCKET/Predictions/Chinatown/testResample0.csv"
+    ... )
+    >>> cr.calculate_statistics()
+    >>> cr.accuracy
+    0.9795918367346939
     """
 
     def __init__(
@@ -90,6 +121,9 @@ class ClassifierResults(EstimatorResults):
         pred_times=None,
         pred_descriptions=None,
     ):
+        # Line 1
+        self.classifier_name = classifier_name
+
         # Line 3
         self.n_classes = n_classes
         self.train_estimate_method = error_estimate_method
@@ -125,27 +159,29 @@ class ClassifierResults(EstimatorResults):
             memory_usage=memory_usage,
         )
 
-    # var_name: (display_name, higher is better)
+    # var_name: (display_name, higher is better, is timing)
     statistics = {
-        "accuracy": ("Accuracy", True),
-        "balanced_accuracy": ("BalAcc", True),
-        "f1_score": ("F1", True),
-        "negative_log_likelihood": ("NLL", False),
-        "mean_auroc": ("AUROC", True),
+        "accuracy": ("Accuracy", True, False),
+        "balanced_accuracy": ("BalAcc", True, False),
+        "f1_score": ("F1", True, False),
+        "negative_log_likelihood": ("NLL", False, False),
+        "mean_auroc": ("AUROC", True, False),
         **EstimatorResults.statistics,
     }
 
     def save_to_file(self, file_path, full_path=True):
         """
-        Save the classifier results to a specified file.
-
-        This method serializes the results of the classifier and saves them to a file
-        in a chosen format.
+        Write the classifier results into a file format used by tsml.
 
         Parameters
         ----------
         file_path : str
-            The path to the file where the results should be saved.
+            Path to write the results file to or the directory to build the default file
+            structure if full_path is False.
+        full_path : boolean, default=True
+            If True, results are written directly to the directory passed in file_path.
+            If False, then a standard file structure using the classifier and dataset
+            names is created and used to write the results file.
         """
         self.infer_size()
 
@@ -180,35 +216,36 @@ class ClassifierResults(EstimatorResults):
         """
         Load classifier results from a specified file.
 
-        This method deserializes classifier results from a given file, allowing for the
-        analysis and comparison of previously computed results.
+        This method reads a file containing classifier results and reconstructs the
+        ClassifierResults object. It calculates performance statistics and
+        verifies values based on the loaded data.
 
         Parameters
         ----------
         file_path : str
-            The path to the file from which the results should be loaded.
+            The path to the file from which classifier results should be loaded. The
+            file should be a tsml formatted classifier results file.
 
         Returns
         -------
-        self: ClassifierResults
-            The classifier results object loaded from the file.
+        self : ClassifierResults
+            The same ClassifierResults object with loaded results.
         """
-        cr = storage.load_classifier_results(file_path)
+        cr = load_classifier_results(file_path)
         self.__dict__.update(cr.__dict__)
         return self
 
     def calculate_statistics(self, overwrite=False):
         """
-        Calculate and return various statistics based on the classifier results.
+        Calculate various performance statistics based on the classifier results.
 
         This method computes various performance metrics, such as accuracy, F1 score,
-        and others, based on the classifier's output.
+        and others, based on the classifiers output.
 
-        Returns
-        -------
-        dict
-            A dictionary containing the calculated statistics. Keys are the names of the
-            metrics, and values are their computed values.
+        Parameters
+        ----------
+        overwrite : bool, default=False
+            If the function should overwrite the current values when they are not None.
         """
         self.infer_size(overwrite=overwrite)
 
@@ -235,18 +272,15 @@ class ClassifierResults(EstimatorResults):
 
     def infer_size(self, overwrite=False):
         """
-        Infer and return the size of the dataset used in the classifier.
+        Infer and return the size of the dataset used in the results.
 
-        This method estimates the size of the dataset that was used for the classifier, based on the results data.
+        This method estimates the size of the dataset that was used for the estimator,
+        based on the results data.
 
-        Returns
-        -------
-        int
-            The inferred size of the dataset.
-
-        Notes
-        -----
-        The accuracy of the inferred size may vary and should be validated with actual dataset parameters when possible.
+        Parameters
+        ----------
+        overwrite : bool, default=False
+            If the function should overwrite the current values when they are not None.
         """
         if self.n_cases is None or overwrite:
             self.n_cases = len(self.class_labels)
@@ -258,22 +292,23 @@ def load_classifier_results(file_path, calculate_stats=True, verify_values=True)
     """
     Load and return classifier results from a specified file.
 
-    This function reads a file containing serialized classifier results and
-    deserializes it to reconstruct the classifier results object. It optionally
-    calculates statistics and verifies values based on the loaded data.
+    This function reads a file containing classifier results and reconstructs the
+    ClassifierResults object. It optionally calculates performance statistics and
+    verifies values based on the loaded data.
 
     Parameters
     ----------
     file_path : str
-        The path to the file from which classifier results should be loaded. The file should be in a format compatible with the serialization method used.
-    calculate_stats : bool, optional
-        A flag to indicate whether to calculate statistics from the loaded results. Default is True.
-    verify_values : bool, optional
-        A flag to determine if the function should perform verification of the loaded values. Default is True.
+        The path to the file from which classifier results should be loaded. The file
+        should be a tsml formatted classifier results file.
+    calculate_stats : bool, default=True
+        Whether to calculate performance statistics from the loaded results.
+    verify_values : bool, default=True
+        If the function should perform verification of the loaded values.
 
     Returns
     -------
-    ClassifierResults
+    cr : ClassifierResults
         A ClassifierResults object containing the results loaded from the file.
     """
     with open(file_path, "r") as file:

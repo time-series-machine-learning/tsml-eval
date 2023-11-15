@@ -102,8 +102,9 @@ def test_run_threaded_regression_experiment():
         "1",
         "-nj",
         "2",
-        # also test normalisation here
+        # also test normalisation and benchmark time here
         "--row_normalise",
+        "--benchmark_time",
     ]
 
     threaded_regression_experiments.run_experiment(args)

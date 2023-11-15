@@ -13,9 +13,11 @@ __all__ = [
     "fix_broken_second_line",
     "compare_result_file_resample",
     "assign_gpu",
+    "timing_benchmark",
 ]
 
 import os
+import time
 
 import gpustat
 import numpy as np
@@ -246,7 +248,7 @@ def write_classification_results(
         Path to write the results file to or the directory to build the default file
         structure if full_path is False.
     full_path : boolean, default=True
-        If True, results are written directly to the directory passed in output_path.
+        If True, results are written directly to the directory passed in file_path.
         If False, then a standard file structure using the classifier and dataset names
         is created and used to write the results file.
     split : str or None, default=None
@@ -368,7 +370,7 @@ def write_regression_results(
         Path to write the results file to or the directory to build the default file
         structure if full_path is False.
     full_path : boolean, default=True
-        If True, results are written directly to the directory passed in output_path.
+        If True, results are written directly to the directory passed in file_path.
         If False, then a standard file structure using the regressor and dataset names
         is created and used to write the results file.
     split : str or None, default=None
@@ -478,7 +480,7 @@ def write_clustering_results(
         Path to write the results file to or the directory to build the default file
         structure if full_path is False.
     full_path : boolean, default=True
-        If True, results are written directly to the directory passed in output_path.
+        If True, results are written directly to the directory passed in file_path.
         If False, then a standard file structure using the clusterer and dataset names
         is created and used to write the results file.
     split : str or None, default=None
@@ -585,7 +587,7 @@ def write_forecasting_results(
         Path to write the results file to or the directory to build the default file
         structure if full_path is False.
     full_path : boolean, default=True
-        If True, results are written directly to the directory passed in output_path.
+        If True, results are written directly to the directory passed in file_path.
         If False, then a standard file structure using the forecaster and dataset names
         is created and used to write the results file.
     split : str or None, default=None
@@ -673,7 +675,7 @@ def write_results_to_tsml_format(
         Estimated label probabilities. If passed, these are written after the
         predicted values for each case.
     full_path : boolean, default=True
-        If True, results are written directly to the directory passed in output_path.
+        If True, results are written directly to the directory passed in file_path.
         If False, then a standard file structure using the estimator and dataset names
         is created and used to write the results file.
     split : str or None, default=None
@@ -908,3 +910,44 @@ def assign_gpu(set_environ=False):  # pragma: no cover
         os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
 
     return gpu
+
+
+def timing_benchmark(num_arrays=1000, array_size=20000, random_state=None):
+    """
+    Measures the time taken to sort a given number of numpy arrays of a specified size.
+
+    Returns the time taken in milliseconds.
+
+    Parameters
+    ----------
+    num_arrays: int, default=1000
+        Number of arrays to generate and sort.
+    array_size: int, default=20000
+        Size of each numpy array to be sorted.
+    random_state: int, RandomState instance or None, default=None
+        If `int`, random_state is the seed used by the random number generator;
+        If `RandomState` instance, random_state is the random number generator;
+        If `None`, the random number generator is the `RandomState` instance used
+        by `np.random`.
+
+    Returns
+    -------
+    time_taken: int
+        Time taken to sort the arrays in milliseconds.
+    """
+    if random_state is None:
+        random_state = check_random_state(0)
+    elif isinstance(random_state, (int, np.random.RandomState)):
+        random_state = check_random_state(random_state)
+    else:
+        raise ValueError("random_state must be an int, RandomState instance or None")
+
+    total_time = 0
+    for _ in range(num_arrays):
+        array = random_state.rand(array_size)
+        start_time = time.time()
+        np.sort(array)
+        end_time = time.time()
+        total_time += end_time - start_time
+
+    return int(round(total_time * 1000))

@@ -1,3 +1,5 @@
+"""Functions for evaluating multiple estimators on multiple datasets."""
+
 import os
 from datetime import datetime
 
@@ -10,12 +12,30 @@ from tsml_eval.evaluation.storage import (
     ForecasterResults,
     RegressorResults,
 )
-from tsml_eval.utils.functions import rank_array
+from tsml_eval.utils.functions import rank_array, time_to_milliseconds
 
 
 def evaluate_classifiers(
     classifier_results, save_path, error_on_missing=True, eval_name=None
 ):
+    """
+    Evaluate multiple classifiers on multiple datasets.
+
+    Writes multiple csv files and figures to save_path, one for each statistic
+    evaluated. Provides a summary csv file with the average statistic and
+    average rank for each classifier.
+
+    Parameters
+    ----------
+    classifier_results : list of ClassifierResults
+        The results to evaluate.
+    save_path : str
+        The path to save the evaluation results to.
+    error_on_missing : bool, default=True
+        Whether to raise an error if results are missing.
+    eval_name : str, default=None
+        The name of the evaluation, used in save_path.
+    """
     _evaluate_estimators(
         classifier_results,
         ClassifierResults.statistics,
@@ -28,6 +48,24 @@ def evaluate_classifiers(
 def evaluate_classifiers_from_file(
     load_paths, save_path, error_on_missing=True, eval_name=None
 ):
+    """
+    Evaluate multiple classifiers on multiple datasets from file.
+
+    Writes multiple csv files and figures to save_path, one for each statistic
+    evaluated. Provides a summary csv file with the average statistic and
+    average rank for each classifier.
+
+    Parameters
+    ----------
+    load_paths : list of str
+        The paths to the classifier result files to evaluate.
+    save_path : str
+        The path to save the evaluation results to.
+    error_on_missing : bool, default=True
+        Whether to raise an error if results are missing.
+    eval_name : str, default=None
+        The name of the evaluation, used in save_path.
+    """
     classifier_results = []
     for load_path in load_paths:
         classifier_results.append(ClassifierResults().load_from_file(load_path))
@@ -50,6 +88,36 @@ def evaluate_classifiers_by_problem(
     error_on_missing=True,
     eval_name=None,
 ):
+    """
+    Evaluate multiple classifiers on multiple datasets from file using standard paths.
+
+    Finds files using classifier, dataset and resample names. It is expected the
+    common tsml-eval file structure of
+    {classifier}/Predictions/{dataset}/{split}Resample{resample}.csv is followed.
+
+    Writes multiple csv files and figures to save_path, one for each statistic
+    evaluated. Provides a summary csv file with the average statistic and
+    average rank for each classifier.
+
+    Parameters
+    ----------
+    load_path : list of str
+        The path to the collection of classifier result files to evaluate.
+    classifier_names : list of str
+        The names of the classifiers to evaluate.
+    dataset_names : list of str
+        The names of the datasets to evaluate.
+    save_path : str
+        The path to save the evaluation results to.
+    resamples : int or list of int, default=None
+        The resamples to evaluate. If int, evaluates resamples 0 to resamples-1.
+    load_train_results : bool, default=False
+        Whether to load train results as well as test results.
+    error_on_missing : bool, default=True
+        Whether to raise an error if results are missing.
+    eval_name : str, default=None
+        The name of the evaluation, used in save_path.
+    """
     if resamples is None:
         resamples = [""]
     elif isinstance(resamples, int):
@@ -85,6 +153,24 @@ def evaluate_classifiers_by_problem(
 def evaluate_clusterers(
     clusterer_results, save_path, error_on_missing=True, eval_name=None
 ):
+    """
+    Evaluate multiple clusterers on multiple datasets.
+
+    Writes multiple csv files and figures to save_path, one for each statistic
+    evaluated. Provides a summary csv file with the average statistic and
+    average rank for each clusterer.
+
+    Parameters
+    ----------
+    clusterer_results : list of ClustererResults
+        The results to evaluate.
+    save_path : str
+        The path to save the evaluation results to.
+    error_on_missing : bool, default=True
+        Whether to raise an error if results are missing.
+    eval_name : str, default=None
+        The name of the evaluation, used in save_path.
+    """
     _evaluate_estimators(
         clusterer_results,
         ClustererResults.statistics,
@@ -97,11 +183,29 @@ def evaluate_clusterers(
 def evaluate_clusterers_from_file(
     load_paths, save_path, error_on_missing=True, eval_name=None
 ):
+    """
+    Evaluate multiple clusterers on multiple datasets from file.
+
+    Writes multiple csv files and figures to save_path, one for each statistic
+    evaluated. Provides a summary csv file with the average statistic and
+    average rank for each clusterer.
+
+    Parameters
+    ----------
+    load_paths : list of str
+        The paths to the clusterer result files to evaluate.
+    save_path : str
+        The path to save the evaluation results to.
+    error_on_missing : bool, default=True
+        Whether to raise an error if results are missing.
+    eval_name : str, default=None
+        The name of the evaluation, used in save_path.
+    """
     clusterer_results = []
     for load_path in load_paths:
         clusterer_results.append(ClustererResults().load_from_file(load_path))
 
-    evaluate_classifiers(
+    evaluate_clusterers(
         clusterer_results,
         save_path,
         error_on_missing=error_on_missing,
@@ -119,6 +223,36 @@ def evaluate_clusterers_by_problem(
     error_on_missing=True,
     eval_name=None,
 ):
+    """
+    Evaluate multiple clusterers on multiple datasets from file using standard paths.
+
+    Finds files using clusterer, dataset and resample names. It is expected the
+    common tsml-eval file structure of
+    {clusterer}/Predictions/{dataset}/{split}Resample{resample}.csv is followed.
+
+    Writes multiple csv files and figures to save_path, one for each statistic
+    evaluated. Provides a summary csv file with the average statistic and
+    average rank for each clusterer.
+
+    Parameters
+    ----------
+    load_path : list of str
+        The path to the collection of clusterer result files to evaluate.
+    clusterer_names : list of str
+        The names of the clusterers to evaluate.
+    dataset_names : list of str
+        The names of the datasets to evaluate.
+    save_path : str
+        The path to save the evaluation results to.
+    resamples : int or list of int, default=None
+        The resamples to evaluate. If int, evaluates resamples 0 to resamples-1.
+    load_test_results : bool, default=True
+        Whether to load test results as well as train results.
+    error_on_missing : bool, default=True
+        Whether to raise an error if results are missing.
+    eval_name : str, default=None
+        The name of the evaluation, used in save_path.
+    """
     if resamples is None:
         resamples = [""]
     elif isinstance(resamples, int):
@@ -154,6 +288,24 @@ def evaluate_clusterers_by_problem(
 def evaluate_regressors(
     regressor_results, save_path, error_on_missing=True, eval_name=None
 ):
+    """
+    Evaluate multiple regressors on multiple datasets.
+
+    Writes multiple csv files and figures to save_path, one for each statistic
+    evaluated. Provides a summary csv file with the average statistic and
+    average rank for each regressor.
+
+    Parameters
+    ----------
+    regressor_results : list of RegressorResults
+        The results to evaluate.
+    save_path : str
+        The path to save the evaluation results to.
+    error_on_missing : bool, default=True
+        Whether to raise an error if results are missing.
+    eval_name : str, default=None
+        The name of the evaluation, used in save_path.
+    """
     _evaluate_estimators(
         regressor_results,
         RegressorResults.statistics,
@@ -166,11 +318,29 @@ def evaluate_regressors(
 def evaluate_regressors_from_file(
     load_paths, save_path, error_on_missing=True, eval_name=None
 ):
+    """
+    Evaluate multiple regressors on multiple datasets from file.
+
+    Writes multiple csv files and figures to save_path, one for each statistic
+    evaluated. Provides a summary csv file with the average statistic and
+    average rank for each regressor.
+
+    Parameters
+    ----------
+    load_paths : list of str
+        The paths to the regressor result files to evaluate.
+    save_path : str
+        The path to save the evaluation results to.
+    error_on_missing : bool, default=True
+        Whether to raise an error if results are missing.
+    eval_name : str, default=None
+        The name of the evaluation, used in save_path.
+    """
     regressor_results = []
     for load_path in load_paths:
         regressor_results.append(RegressorResults().load_from_file(load_path))
 
-    evaluate_classifiers(
+    evaluate_regressors(
         regressor_results,
         save_path,
         error_on_missing=error_on_missing,
@@ -188,6 +358,36 @@ def evaluate_regressors_by_problem(
     error_on_missing=True,
     eval_name=None,
 ):
+    """
+    Evaluate multiple regressors on multiple datasets from file using standard paths.
+
+    Finds files using regressor, dataset and resample names. It is expected the
+    common tsml-eval file structure of
+    {regressor}/Predictions/{dataset}/{split}Resample{resample}.csv is followed.
+
+    Writes multiple csv files and figures to save_path, one for each statistic
+    evaluated. Provides a summary csv file with the average statistic and
+    average rank for each regressor.
+
+    Parameters
+    ----------
+    load_path : list of str
+        The path to the collection of regressor result files to evaluate.
+    regressor_names : list of str
+        The names of the regressors to evaluate.
+    dataset_names : list of str
+        The names of the datasets to evaluate.
+    save_path : str
+        The path to save the evaluation results to.
+    resamples : int or list of int, default=None
+        The resamples to evaluate. If int, evaluates resamples 0 to resamples-1.
+    load_train_results : bool, default=False
+        Whether to load train results as well as test results.
+    error_on_missing : bool, default=True
+        Whether to raise an error if results are missing.
+    eval_name : str, default=None
+        The name of the evaluation, used in save_path.
+    """
     if resamples is None:
         resamples = [""]
     elif isinstance(resamples, int):
@@ -223,6 +423,24 @@ def evaluate_regressors_by_problem(
 def evaluate_forecasters(
     forecaster_results, save_path, error_on_missing=True, eval_name=None
 ):
+    """
+    Evaluate multiple forecasters on multiple datasets.
+
+    Writes multiple csv files and figures to save_path, one for each statistic
+    evaluated. Provides a summary csv file with the average statistic and
+    average rank for each forecaster.
+
+    Parameters
+    ----------
+    forecaster_results : list of ForecasterResults
+        The results to evaluate.
+    save_path : str
+        The path to save the evaluation results to.
+    error_on_missing : bool, default=True
+        Whether to raise an error if results are missing.
+    eval_name : str, default=None
+        The name of the evaluation, used in save_path.
+    """
     _evaluate_estimators(
         forecaster_results,
         ForecasterResults.statistics,
@@ -235,11 +453,29 @@ def evaluate_forecasters(
 def evaluate_forecasters_from_file(
     load_paths, save_path, error_on_missing=True, eval_name=None
 ):
+    """
+    Evaluate multiple forecasters on multiple datasets from file.
+
+    Writes multiple csv files and figures to save_path, one for each statistic
+    evaluated. Provides a summary csv file with the average statistic and
+    average rank for each forecaster.
+
+    Parameters
+    ----------
+    load_paths : list of str
+        The paths to the forecaster result files to evaluate.
+    save_path : str
+        The path to save the evaluation results to.
+    error_on_missing : bool, default=True
+        Whether to raise an error if results are missing.
+    eval_name : str, default=None
+        The name of the evaluation, used in save_path.
+    """
     forecaster_results = []
     for load_path in load_paths:
         forecaster_results.append(ForecasterResults().load_from_file(load_path))
 
-    evaluate_classifiers(
+    evaluate_forecasters(
         forecaster_results,
         save_path,
         error_on_missing=error_on_missing,
@@ -256,6 +492,34 @@ def evaluate_forecasters_by_problem(
     error_on_missing=True,
     eval_name=None,
 ):
+    """
+    Evaluate multiple forecasters on multiple datasets from file using standard paths.
+
+    Finds files using forecaster, dataset and resample names. It is expected the
+    common tsml-eval file structure of
+    {forecaster}/Predictions/{dataset}/{split}Resample{resample}.csv is followed.
+
+    Writes multiple csv files and figures to save_path, one for each statistic
+    evaluated. Provides a summary csv file with the average statistic and
+    average rank for each forecaster.
+
+    Parameters
+    ----------
+    load_path : list of str
+        The path to the collection of clusterer result files to evaluate.
+    forecaster_names : list of str
+        The names of the clusterers to evaluate.
+    dataset_names : list of str
+        The names of the datasets to evaluate.
+    save_path : str
+        The path to save the evaluation results to.
+    resamples : int or list of int, default=None
+        The resamples to evaluate. If int, evaluates resamples 0 to resamples-1.
+    error_on_missing : bool, default=True
+        Whether to raise an error if results are missing.
+    eval_name : str, default=None
+        The name of the evaluation, used in save_path.
+    """
     if resamples is None:
         resamples = [""]
     elif isinstance(resamples, int):
@@ -270,7 +534,7 @@ def evaluate_forecasters_by_problem(
                 forecaster_results.append(
                     ForecasterResults().load_from_file(
                         f"{load_path}/{forecaster_name}/Predictions/{dataset_name}"
-                        f"/resample{resample}.csv"
+                        f"/testResample{resample}.csv"
                     )
                 )
 
@@ -395,14 +659,14 @@ def _evaluate_estimators(
             print(msg)  # noqa: T201
     else:
         msg += "All results present, continuing evaluation.\n"
-        print(msg)
+        print(msg)  # noqa: T201
 
     print(f"Estimators: {estimators}\n")  # noqa: T201
     print(f"Datasets: {datasets}\n")  # noqa: T201
     print(f"Resamples: {resamples}\n")  # noqa: T201
 
     stats = []
-    for var, (stat, ascending) in statistics.items():
+    for var, (stat, ascending, time) in statistics.items():
         for split in splits:
             average, rank = _create_directory_for_statistic(
                 estimators,
@@ -412,6 +676,7 @@ def _evaluate_estimators(
                 results_dict,
                 stat,
                 ascending,
+                time,
                 var,
                 save_path,
             )
@@ -462,6 +727,7 @@ def _create_directory_for_statistic(
     results_dict,
     statistic_name,
     higher_better,
+    is_timing,
     variable_name,
     save_path,
 ):
@@ -476,7 +742,13 @@ def _create_directory_for_statistic(
             for j, resample in enumerate(resamples):
                 er = results_dict[estimator_name][dataset_name][split][resample]
                 er.calculate_statistics()
-                est_stats[n, j] = er.__dict__[variable_name]
+                est_stats[n, j] = (
+                    er.__dict__[variable_name]
+                    if not is_timing
+                    else (
+                        time_to_milliseconds(er.__dict__[variable_name], er.time_unit)
+                    )
+                )
 
             average_stats[n, i] = np.mean(est_stats[n, :])
 

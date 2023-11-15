@@ -84,6 +84,7 @@ def run_experiment(args):
                 clusterer_name=args.estimator_name,
                 resample_id=args.resample_id,
                 build_test_file=args.test_fold,
+                benchmark_time=args.benchmark_time,
                 overwrite=args.overwrite,
                 predefined_resample=args.predefined_resample,
             )

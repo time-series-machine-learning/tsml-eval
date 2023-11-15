@@ -3,12 +3,73 @@
 import numpy as np
 from sklearn.metrics import mean_absolute_percentage_error
 
-import tsml_eval.evaluation.storage as storage
 from tsml_eval.evaluation.storage.estimator_results import EstimatorResults
 from tsml_eval.utils.experiments import write_forecasting_results
 
 
 class ForecasterResults(EstimatorResults):
+    """
+    A class for storing and managing results from forecasting experiments.
+
+    This class provides functionalities for storing forecaster results,
+    including predictions, probabilities, and various performance metrics.
+    It extends the `EstimatorResults` class, inheriting its base functionalities.
+
+    Parameters
+    ----------
+    dataset_name : str, default="N/A"
+        Name of the dataset used.
+    forecaster_name : str, default="N/A"
+        Name of the forecaster used.
+    split : str, default="N/A"
+        Type of data split used, i.e. "train" or "test".
+    random_seed : int or None, default=None
+        Random seed used.
+    time_unit : str, default="nanoseconds"
+        Time measurement used for other fields.
+    description : str, default=""
+        Additional description of the forecasting experiment. Appended to the end
+        of the first line of the results file.
+    parameters : str, default="No parameter info"
+        Information about parameters used in the forecaster and other build information.
+        Written to the second line of the results file.
+    fit_time : float, default=-1.0
+        Time taken fitting the model.
+    predict_time : float, default=-1.0
+        Time taken making predictions.
+    benchmark_time : float, default=-1.0
+        Time taken to run a simple benchmark function. In tsml-eval experiments, this
+        is the time spent to sort 1,000 (seeded) random numpy arrays of size 20,000.
+    memory_usage : float, default=-1.0
+        Memory usage during the experiment. In tsml-eval experiments, this is the peak
+        memory usage during the fit method.
+    target_labels : array-like or None, default=None
+        Actual target labels.
+    predictions : array-like or None, default=None
+        Predicted target labels.
+    pred_times : array-like or None, default=None
+        Prediction times for each case.
+    pred_descriptions : list of str or None, default=None
+        Descriptions for each prediction.
+
+    Attributes
+    ----------
+    mean_absolute_percentage_error : float or None
+        Mean absolute percentage error of the predictions.
+
+    Examples
+    --------
+    >>> from tsml_eval.evaluation.storage import ForecasterResults
+    >>> from tsml_eval.testing.test_utils import _TEST_RESULTS_PATH
+    >>> fr = ForecasterResults().load_from_file(
+    ...     _TEST_RESULTS_PATH +
+    ...     "/forecasting/NaiveForecaster/Predictions/Airline/testResample0.csv"
+    ... )
+    >>> fr.calculate_statistics()
+    >>> fr.mean_absolute_percentage_error
+    0.19886711926999853
+    """
+
     def __init__(
         self,
         dataset_name="N/A",
@@ -27,6 +88,10 @@ class ForecasterResults(EstimatorResults):
         pred_times=None,
         pred_descriptions=None,
     ):
+        # Line 1
+        self.forecaster_name = forecaster_name
+        self.random_seed = random_seed
+
         # Results
         self.target_labels = target_labels
         self.predictions = predictions
@@ -51,24 +116,25 @@ class ForecasterResults(EstimatorResults):
             memory_usage=memory_usage,
         )
 
-    # var_name: (display_name, higher is better)
+    # var_name: (display_name, higher is better, is timing)
     statistics = {
-        "mean_absolute_percentage_error": ("MAPE", False),
+        "mean_absolute_percentage_error": ("MAPE", False, False),
         **EstimatorResults.statistics,
     }
 
     def save_to_file(self, file_path, full_path=True):
         """
-        Writes the full results to a file.
+        Write the forecaster results into a file format used by tsml.
 
         Parameters
         ----------
         file_path : str
-            The path of the file to write the results to.
+            Path to write the results file to or the directory to build the default file
+            structure if full_path is False.
         full_path : boolean, default=True
-            If True, results are written directly to the directory passed in output_path.
-            If False, then a standard file structure using the classifier and dataset names
-            is created and used to write the results file.
+            If True, results are written directly to the directory passed in file_path.
+            If False, then a standard file structure using the forecaster and dataset
+            names is created and used to write the results file.
         """
         self.infer_size()
 
@@ -97,22 +163,39 @@ class ForecasterResults(EstimatorResults):
         )
 
     def load_from_file(self, file_path):
-        """Load results from a specified file.
+        """
+        Load forecaster results from a specified file.
+
+        This method reads a file containing forecaster results and reconstructs the
+        ForecasterResults object. It calculates performance statistics and
+        verifies values based on the loaded data.
 
         Parameters
         ----------
         file_path : str
-            The path to the file where the results will be loaded from.
+            The path to the file from which forecaster results should be loaded. The
+            file should be a tsml formatted forecaster results file.
+
+        Returns
+        -------
+        self : ForecasterResults
+            The same ForecasterResults object with loaded results.
         """
-        fr = storage.load_forecaster_results(file_path)
+        fr = load_forecaster_results(file_path)
         self.__dict__.update(fr.__dict__)
         return self
 
     def calculate_statistics(self, overwrite=False):
-        """Calculate statistics from the results.
+        """
+        Calculate various performance statistics based on the forecaster results.
 
-        This method should handle any necessary calculations to produce statistics
-        from the results data held within the object.
+        This method computes various performance metrics, such as MAPE based on the
+        forecasters output.
+
+        Parameters
+        ----------
+        overwrite : bool, default=False
+            If the function should overwrite the current values when they are not None.
         """
         self.infer_size(overwrite=overwrite)
 
@@ -122,11 +205,44 @@ class ForecasterResults(EstimatorResults):
             )
 
     def infer_size(self, overwrite=False):
+        """
+        Infer and return the size of the dataset used in the results.
+
+        This method estimates the size of the dataset that was used for the estimator,
+        based on the results data.
+
+        Parameters
+        ----------
+        overwrite : bool, default=False
+            If the function should overwrite the current values when they are not None.
+        """
         if self.forecasting_horizon is None or overwrite:
             self.forecasting_horizon = len(self.target_labels)
 
 
 def load_forecaster_results(file_path, calculate_stats=True, verify_values=True):
+    """
+    Load and return forecaster results from a specified file.
+
+    This function reads a file containing forecaster results and reconstructs the
+    ForecasterResults object. It optionally calculates performance statistics and
+    verifies values based on the loaded data.
+
+    Parameters
+    ----------
+    file_path : str
+        The path to the file from which forecaster results should be loaded. The file
+        should be a tsml formatted forecaster results file.
+    calculate_stats : bool, default=True
+        Whether to calculate performance statistics from the loaded results.
+    verify_values : bool, default=True
+        If the function should perform verification of the loaded values.
+
+    Returns
+    -------
+    fr : ForecasterResults
+        A ForecasterResults object containing the results loaded from the file.
+    """
     with open(file_path, "r") as file:
         lines = file.readlines()
 

@@ -70,6 +70,9 @@ def parse_args(args):
                             the number of clusters to find for clusterers which
                             have an {n_clusters} parameter. If {-1}, use the
                             number of classes in the dataset (default: None).
+      -bt, --benchmark_time
+                            run a benchmark function and save the time spent in the
+                            results file (default: %(default)s).
       -kw KEY VALUE TYPE, --kwargs KEY VALUE TYPE, --kwarg KEY VALUE TYPE
                             additional keyword arguments to pass to the estimator.
                             Should contain the parameter to set, the parameter
@@ -190,6 +193,13 @@ def parse_args(args):
         type=int,
         help="the number of clusters to find for clusterers which have an {n_clusters} "
         "parameter. If {-1}, use the number of classes in the dataset "
+        "(default: %(default)s).",
+    )
+    parser.add_argument(
+        "-bt",
+        "--benchmark_time",
+        action="store_true",
+        help="run a benchmark function and save the time spent in the results file "
         "(default: %(default)s).",
     )
     parser.add_argument(

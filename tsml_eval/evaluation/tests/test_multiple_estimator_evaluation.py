@@ -23,7 +23,7 @@ def test_evaluate_classifiers_by_problem():
 
 
 def test_evaluate_clusterers_by_problem():
-    classifiers = ["ROCKET", "TSF", "1NN-DTW"]
+    classifiers = ["KMeans", "KMeans-dtw", "KMeans-msm"]
     datasets = ["Chinatown", "ItalyPowerDemand", "Trace"]
     resamples = 3
 
@@ -33,13 +33,14 @@ def test_evaluate_clusterers_by_problem():
         datasets,
         _TEST_OUTPUT_PATH + "/eval/clustering/",
         resamples=resamples,
+        load_test_results=False,
         eval_name="test0",
     )
 
 
 def test_evaluate_regressors_by_problem():
     classifiers = ["ROCKET", "TSF", "1NN-DTW"]
-    datasets = ["Chinatown", "ItalyPowerDemand", "Trace"]
+    datasets = ["Covid3Month", "NaturalGasPricesSentiment", "FloodModeling1"]
     resamples = 3
 
     evaluate_regressors_by_problem(
@@ -53,8 +54,8 @@ def test_evaluate_regressors_by_problem():
 
 
 def test_evaluate_forecasters_by_problem():
-    classifiers = ["ROCKET", "TSF"]
-    datasets = ["Chinatown", "ItalyPowerDemand"]
+    classifiers = ["NaiveForecaster", "RandomForest", "LinearRegression"]
+    datasets = ["Airline", "ShampooSales"]
     resamples = 1
 
     evaluate_forecasters_by_problem(
