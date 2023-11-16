@@ -4,7 +4,7 @@
 :gutter: 3
 
 :::{grid-item-card}
-:img-top: examples/images/wip.png
+:img-top: examples/images/database.png
 :text-align: center
 
 tsml-eval Data Format
@@ -21,6 +21,50 @@ Placeholder.
 :expand:
 
 Datasets
+```
+
+:::
+
+:::{grid-item-card}
+:img-top: examples/images/wip.png
+:text-align: center
+
+tsml-eval Results Evaluation
+
+^^^
+
+Placeholder.
+
++++
+
+```{button-ref} /examples/evaluation.ipynb
+:color: primary
+:click-parent:
+:expand:
+
+Evaluation
+```
+
+:::
+
+:::{grid-item-card}
+:img-top: examples/images/wip.png
+:text-align: center
+
+tsml-eval Results Format
+
+^^^
+
+Placeholder.
+
++++
+
+```{button-ref} /examples/results_format.ipynb
+:color: primary
+:click-parent:
+:expand:
+
+Results
 ```
 
 :::
@@ -92,10 +136,10 @@ TSCL
 :::
 
 :::{grid-item-card}
-:img-top: examples/images/wip.png
+:img-top: examples/images/TSCL.png
 :text-align: center
 
-tsml-eval Results Evaluation
+Time Series Clustering
 
 ^^^
 
@@ -103,21 +147,21 @@ Placeholder.
 
 +++
 
-```{button-ref} /examples/evaluation.ipynb
+```{button-ref} /examples/clustering_experiments.ipynb
 :color: primary
 :click-parent:
 :expand:
 
-Evaluation
+TSCL
 ```
 
 :::
 
 :::{grid-item-card}
-:img-top: examples/images/wip.png
+:img-top: examples/images/forecasting.png
 :text-align: center
 
-tsml-eval Results Format
+Time Series Forecasting
 
 ^^^
 
@@ -125,12 +169,12 @@ Placeholder.
 
 +++
 
-```{button-ref} /examples/results_format.ipynb
+```{button-ref} /examples/forecasting_experiments.ipynb
 :color: primary
 :click-parent:
 :expand:
 
-Results
+Forecasting
 ```
 
 :::
