@@ -59,6 +59,8 @@ unstable_extras = [
 deep_learning = [
     "aeon[dl]",
     "torch>=1.13.1",
+    # temp
+    "pycatch22<=0.4.3",
 ]
 dev = [
     "pre-commit",
