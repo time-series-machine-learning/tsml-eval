@@ -265,12 +265,12 @@ class ClassifierResults(EstimatorResults):
             self.mean_auroc = roc_auc_score(
                 self.class_labels,
                 self.predictions if self.n_classes == 2 else self.probabilities,
-                average="micro",
+                average="weighted",
                 multi_class="ovr",
             )
         if self.f1_score is None or overwrite:
             self.f1_score = f1_score(
-                self.class_labels, self.predictions, average="micro"
+                self.class_labels, self.predictions, average="macro"
             )
 
     def infer_size(self, overwrite=False):
