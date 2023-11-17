@@ -82,7 +82,7 @@ class ClassifierResults(EstimatorResults):
         F1 score of the classifier.
     negative_log_likelihood : float or None
         Negative log likelihood of the classifier.
-    mean_auroc : float or None
+    auroc_score : float or None
         Mean area under the ROC curve of the classifier.
 
     Examples
@@ -141,7 +141,7 @@ class ClassifierResults(EstimatorResults):
 
         self.accuracy = None
         self.balanced_accuracy = None
-        self.mean_auroc = None
+        self.auroc_score = None
         self.negative_log_likelihood = None
         self.f1_score = None
 
@@ -163,7 +163,7 @@ class ClassifierResults(EstimatorResults):
     statistics = {
         "accuracy": ("Accuracy", True, False),
         "balanced_accuracy": ("BalAcc", True, False),
-        "mean_auroc": ("AUROC", True, False),
+        "auroc_score": ("AUROC", True, False),
         "negative_log_likelihood": ("NLL", False, False),
         "f1_score": ("F1", True, False),
         **EstimatorResults.statistics,
@@ -259,18 +259,20 @@ class ClassifierResults(EstimatorResults):
             )
         if self.negative_log_likelihood is None or overwrite:
             self.negative_log_likelihood = log_loss(
-                self.class_labels, self.probabilities
-            )
-        if self.mean_auroc is None or overwrite:
-            self.mean_auroc = roc_auc_score(
                 self.class_labels,
-                self.predictions if self.n_classes == 2 else self.probabilities,
+                self.probabilities,
+                eps=0.01,
+            )
+        if self.auroc_score is None or overwrite:
+            self.auroc_score = roc_auc_score(
+                self.class_labels,
+                self.probabilities[:, 1] if self.n_classes == 2 else self.probabilities,
                 average="weighted",
                 multi_class="ovr",
             )
         if self.f1_score is None or overwrite:
             self.f1_score = f1_score(
-                self.class_labels, self.predictions, average="macro"
+                self.class_labels, self.predictions, average="weighted"
             )
 
     def infer_size(self, overwrite=False):
