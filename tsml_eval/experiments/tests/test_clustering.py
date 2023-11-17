@@ -8,6 +8,7 @@ import runpy
 import pytest
 from tsml.dummy import DummyClassifier, DummyClusterer
 
+from tsml_eval.datasets._test_data._data_sizes import DATA_TEST_SIZES, DATA_TRAIN_SIZES
 from tsml_eval.experiments import (
     clustering_experiments,
     run_clustering_experiment,
@@ -15,7 +16,6 @@ from tsml_eval.experiments import (
     threaded_clustering_experiments,
 )
 from tsml_eval.experiments.tests import _CLUSTERER_RESULTS_PATH
-from tsml_eval.utils.experiments import load_clustering_experiment_data
 from tsml_eval.utils.test_utils import (
     _TEST_DATA_PATH,
     _check_set_method,
@@ -32,11 +32,7 @@ from tsml_eval.utils.tests.test_results_writing import _check_clustering_file_fo
     "dataset",
     ["MinimalChinatown", "UnequalMinimalChinatown", "EqualMinimalJapaneseVowels"],
 )
-@pytest.mark.parametrize(
-    "combine_test_train_split",
-    [True, False],
-)
-def test_run_clustering_experiment(clusterer, dataset, combine_test_train_split):
+def test_run_clustering_experiment(clusterer, dataset):
     """Test clustering experiments with test data and clusterer."""
     if clusterer == "DummyClusterer-aeon" and dataset == "UnequalMinimalChinatown":
         return  # todo remove when aeon kmeans supports unequal
@@ -50,9 +46,6 @@ def test_run_clustering_experiment(clusterer, dataset, combine_test_train_split)
         "-te",
     ]
 
-    if combine_test_train_split:
-        args.append("-ctts")
-
     clustering_experiments.run_experiment(args)
 
     test_file = (
@@ -62,27 +55,16 @@ def test_run_clustering_experiment(clusterer, dataset, combine_test_train_split)
         f"{_CLUSTERER_RESULTS_PATH}{clusterer}/Predictions/{dataset}/trainResample0.csv"
     )
 
-    X_train, _, X_test, _, _ = load_clustering_experiment_data(
-        _TEST_DATA_PATH,
-        dataset,
-        0,
-        False,
-        combine_test_train_split,
+    assert os.path.exists(test_file) and os.path.exists(train_file)
+    _check_clustering_file_format(test_file, num_results_lines=DATA_TEST_SIZES[dataset])
+    _check_clustering_file_format(
+        train_file, num_results_lines=DATA_TEST_SIZES[dataset]
     )
-
-    if combine_test_train_split:
-        assert not os.path.exists(test_file) and os.path.exists(train_file)
-    else:
-        assert os.path.exists(test_file) and os.path.exists(train_file)
-        _check_clustering_file_format(test_file, len(X_test))
-
-    _check_clustering_file_format(train_file, len(X_train))
 
     # test present results checking
     clustering_experiments.run_experiment(args)
 
-    if not combine_test_train_split:
-        os.remove(test_file)
+    os.remove(test_file)
     os.remove(train_file)
 
 
@@ -202,7 +184,7 @@ def test_set_clusterer():
 def test_set_clusterer_invalid():
     """Test set_clusterer method with invalid estimator."""
     with pytest.raises(ValueError, match="UNKNOWN CLUSTERER"):
-        set_clusterer.set_clusterer("invalid", "", "", 0, False)
+        set_clusterer.set_clusterer("invalid")
 
 
 @pytest.mark.parametrize("n_clusters", ["4", "-1"])
@@ -238,6 +220,40 @@ def test_n_clusters(n_clusters, clusterer):
         _check_clustering_file_n_clusters(
             train_file, "2" if n_clusters == "-1" else n_clusters
         )
+
+    os.remove(train_file)
+
+
+@pytest.mark.parametrize(
+    "dataset",
+    ["MinimalChinatown", "UnequalMinimalChinatown", "EqualMinimalJapaneseVowels"],
+)
+def test_combined_train_test(dataset):
+    """Test n_clusters parameter."""
+    clusterer = "DummyClusterer-tsml"
+
+    args = [
+        _TEST_DATA_PATH,
+        _CLUSTERER_RESULTS_PATH + "Combined/",
+        clusterer,
+        dataset,
+        "1",
+        "-ow",
+        "-ctts",
+    ]
+
+    clustering_experiments.run_experiment(args)
+
+    train_file = (
+        f"{_CLUSTERER_RESULTS_PATH}Combined/{clusterer}/Predictions/{dataset}/"
+        "trainResample1.csv"
+    )
+
+    assert os.path.exists(train_file)
+    _check_clustering_file_format(
+        train_file,
+        num_results_lines=DATA_TRAIN_SIZES[dataset] + DATA_TEST_SIZES[dataset],
+    )
 
     os.remove(train_file)
 

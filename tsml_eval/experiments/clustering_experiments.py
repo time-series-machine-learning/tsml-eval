@@ -68,19 +68,19 @@ def run_experiment(args):
                 args.dataset_name,
                 set_clusterer(
                     args.estimator_name,
-                    args.n_clusters,
-                    args.data_path,
-                    args.dataset_name,
-                    args.resample_id,
-                    args.predefined_resample,
                     random_state=args.resample_id
                     if args.random_seed is None
                     else args.random_seed,
                     n_jobs=1,
                     fit_contract=args.fit_contract,
                     checkpoint=args.checkpoint,
+                    data_vars=[
+                        args.data_path,
+                        args.dataset_name,
+                        args.resample_id,
+                        args.predefined_resample,
+                    ],
                     row_normalise=args.row_normalise,
-                    combine_test_train_split=args.combine_test_train_split,
                     **args.kwargs,
                 ),
                 row_normalise=args.row_normalise,
@@ -90,9 +90,8 @@ def run_experiment(args):
                 build_test_file=args.test_fold,
                 overwrite=args.overwrite,
                 predefined_resample=args.predefined_resample,
-                combine_test_train_split=args.combine_test_train_split,
+                combine_train_test_split=args.combine_test_train_split,
             )
-            print(f"Finished running {args.estimator_name}.")
     # local run (no args)
     else:
         # These are example parameters, change as required for local runs
@@ -102,7 +101,8 @@ def run_experiment(args):
         results_path = _CLUSTERER_RESULTS_PATH
         estimator_name = "KMeans"
         dataset_name = "MinimalChinatown"
-        n_clusters = None
+        row_normalise = False
+        n_clusters = -1
         resample_id = 0
         test_fold = False
         overwrite = False
@@ -110,20 +110,15 @@ def run_experiment(args):
         fit_contract = 0
         checkpoint = None
         combine_test_train_split = True
-        row_normalise = True
         kwargs = {}
 
         clusterer = set_clusterer(
             estimator_name,
-            n_clusters,
-            data_path,
-            dataset_name,
-            resample_id,
-            predefined_resample,
             random_state=resample_id,
             n_jobs=1,
             fit_contract=fit_contract,
             checkpoint=checkpoint,
+            data_vars=[data_path, dataset_name, resample_id, predefined_resample],
             row_normalise=row_normalise,
             **kwargs,
         )
@@ -141,7 +136,7 @@ def run_experiment(args):
             build_test_file=test_fold,
             overwrite=overwrite,
             predefined_resample=predefined_resample,
-            combine_test_train_split=combine_test_train_split,
+            combine_train_test_split=combine_test_train_split,
         )
 
 

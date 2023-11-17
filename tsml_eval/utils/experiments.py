@@ -19,7 +19,6 @@ __all__ = [
 
 import argparse
 import os
-from typing import Union
 
 import gpustat
 import numpy as np
@@ -97,69 +96,6 @@ def resample_data(X_train, y_train, X_test, y_test, random_state=None):
     return X_train, y_train, X_test, y_test
 
 
-def load_clustering_experiment_data(
-    problem_path: str,
-    dataset: Union[str, None],
-    resample_id: Union[int, None],
-    predefined_resample: bool,
-    combine_test_train_split: bool,
-):
-    """Load clustering data for experiments.
-
-    Parameters
-    ----------
-    problem_path : str
-        Path to the problem folder.
-    dataset : str
-        Name of the dataset.
-    resample_id : int or None
-        Id of the resample to use.
-    predefined_resample : boolean
-        If True, use the predefined resample.
-    combine_test_train_split : boolean
-        If True, combine the train and test data.
-
-    Returns
-    -------
-    X_train : np.ndarray or list of np.ndarray
-        Train data in a 2d or 3d ndarray or list of arrays.
-    y_train : np.ndarray
-        Train data labels.
-    X_test : np.ndarray or list of np.ndarray
-        Test data in a 2d or 3d ndarray or list of arrays.
-    y_test : np.ndarray
-        Test data labels.
-    resample : boolean
-        If True, the data was resampled.
-    """
-    X_train, y_train, X_test, y_test, resample = load_experiment_data(
-        problem_path, dataset, resample_id, predefined_resample
-    )
-    if isinstance(X_train, np.ndarray):
-        is_array = True
-    elif isinstance(X_train, list):
-        is_array = False
-    else:
-        raise ValueError(
-            "X_train must be a np.ndarray array or list of np.ndarray arrays"
-        )
-
-    if resample:
-        X_train, y_train, X_test, y_test = stratified_resample_data(
-            X_train, y_train, X_test, y_test, random_state=resample_id
-        )
-
-    if combine_test_train_split:
-        y_train = np.concatenate((y_train, y_test), axis=None)
-        X_train = (
-            np.concatenate([X_train, X_test], axis=0) if is_array else X_train + X_test
-        )
-        X_test = np.array([])
-        y_test = np.array([])
-
-    return X_train, y_train, X_test, y_test, resample
-
-
 def load_experiment_data(
     problem_path: str,
     dataset: str,
@@ -175,7 +111,7 @@ def load_experiment_data(
     dataset : str
         Name of the dataset.
     resample_id : int or None
-        Id of the resample to use.
+        Id of the data resample to use.
     predefined_resample : boolean
         If True, use the predefined resample.
 
@@ -190,7 +126,7 @@ def load_experiment_data(
     y_test : np.ndarray
         Test data labels.
     resample : boolean
-        If True, the data was resampled.
+        If True, the data is to be resampled.
     """
     if resample_id is not None and predefined_resample:
         resample_str = "" if resample_id is None else str(resample_id)
@@ -1055,6 +991,21 @@ def _check_line_length_and_floats(line, length, floats):
     return True
 
 
+def _check_results_lines(lines, num_results_lines=None, probabilities=True, n_probas=1):
+    if num_results_lines is not None:
+        assert len(lines) - 3 == num_results_lines
+
+        for i in range(3, num_results_lines):
+            assert _check_results_line(
+                lines[i], probabilities=probabilities, n_probas=n_probas
+            )
+    else:
+        for i in range(3, 6):
+            assert _check_results_line(
+                lines[i], probabilities=probabilities, n_probas=n_probas
+            )
+
+
 def _check_results_line(line, probabilities=True, n_probas=1):
     line = line.split(",")
 
@@ -1205,17 +1156,16 @@ def parse_args(args):
                             building. Only used if the estimator can checkpoint
                             (default: False).
       -rn, --row_normalise  normalise the data rows prior to fitting and
-                            predicting. (default: False).
+                            predicting (default: False).
       -nc N_CLUSTERS, --n_clusters N_CLUSTERS
                             the number of clusters to find for clusterers which
                             have an {n_clusters} parameter. If {-1}, use the
                             number of classes in the dataset (default: -1).
       -ctts, --combine_test_train_split
-                            When true the test/train split will be combined. When this
-                            is done only fit will be called and results for the
-                            fit will be written (no predict step).
-                            When false the test train split will be used (default) as
-                            normal (default: False).
+                            whether to use a train/test split or not. If True, the
+                            train and test sets are combined and used the fit the
+                            estimator. Only available for clustering
+                            (default: False).
       -kw KEY VALUE TYPE, --kwargs KEY VALUE TYPE, --kwarg KEY VALUE TYPE
                             additional keyword arguments to pass to the estimator.
                             Should contain the parameter to set, the parameter
@@ -1327,7 +1277,7 @@ def parse_args(args):
         "-rn",
         "--row_normalise",
         action="store_true",
-        help="normalise the data rows prior to fitting and predicting. "
+        help="normalise the data rows prior to fitting and predicting "
         "(default: %(default)s).",
     )
     parser.add_argument(
@@ -1343,9 +1293,9 @@ def parse_args(args):
         "-ctts",
         "--combine_test_train_split",
         action="store_true",
-        help="whether to use a test train split or not. If True, the test and train "
-        "are combined and only 'fit' is performed with results read from that. If False"
-        "the test/train split is observed",
+        help="whether to use a train/test split or not. If True, the train and test "
+        "sets are combined and used the fit the estimator. Only available for "
+        "clustering (default: %(default)s).",
     )
     parser.add_argument(
         "-kw",
