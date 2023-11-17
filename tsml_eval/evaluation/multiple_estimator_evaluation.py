@@ -1,6 +1,7 @@
 """Functions for evaluating multiple estimators on multiple datasets."""
 
 import os
+import pickle
 from datetime import datetime
 
 import numpy as np
@@ -793,7 +794,17 @@ def _figures_for_statistic(
 
     cd = plot_critical_difference(scores, estimators, errors=not higher_better)
     cd.savefig(
-        f"{save_path}/{statistic_name}/figures/{statistic_name}_critical_difference.png"
+        f"{save_path}/{statistic_name}/figures/"
+        f"{statistic_name}_critical_difference.png",
+        bbox_inches="tight",
+    )
+    pickle.dump(
+        cd,
+        open(
+            f"{save_path}/{statistic_name}/figures/"
+            f"{statistic_name}_critical_difference.pickle",
+            "wb",
+        ),
     )
 
 
