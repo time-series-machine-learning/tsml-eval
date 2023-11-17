@@ -204,7 +204,7 @@ class RegressorResults(EstimatorResults):
             fit_and_estimate_time=self.fit_and_estimate_time,
         )
 
-    def load_from_file(self, file_path):
+    def load_from_file(self, file_path, verify_values=True):
         """
         Load regressor results from a specified file.
 
@@ -217,13 +217,15 @@ class RegressorResults(EstimatorResults):
         file_path : str
             The path to the file from which regressor results should be loaded. The
             file should be a tsml formatted regressor results file.
+        verify_values : bool, default=True
+            If the method should perform verification of the loaded values.
 
         Returns
         -------
         self : RegressorResults
             The same RegressorResults object with loaded results.
         """
-        rr = load_regressor_results(file_path)
+        rr = load_regressor_results(file_path, verify_values=verify_values)
         self.__dict__.update(rr.__dict__)
         return self
 

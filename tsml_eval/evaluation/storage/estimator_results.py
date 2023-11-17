@@ -95,7 +95,7 @@ class EstimatorResults(ABC):
         pass
 
     @abstractmethod
-    def load_from_file(self, file_path):
+    def load_from_file(self, file_path, verify_values=True):
         """
         Load estimator results from a specified file.
 
@@ -110,6 +110,9 @@ class EstimatorResults(ABC):
         file_path : str
             The path to the file from which estimator results should be loaded. The
             file should be a tsml formatted estimator results file.
+        verify_values : bool, default=True
+            If the method should perform verification of the loaded values.
+
 
         Returns
         -------

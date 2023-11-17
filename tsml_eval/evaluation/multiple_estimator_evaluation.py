@@ -47,7 +47,11 @@ def evaluate_classifiers(
 
 
 def evaluate_classifiers_from_file(
-    load_paths, save_path, error_on_missing=True, eval_name=None
+    load_paths,
+    save_path,
+    error_on_missing=True,
+    eval_name=None,
+    verify_results=True,
 ):
     """
     Evaluate multiple classifiers on multiple datasets from file.
@@ -66,10 +70,14 @@ def evaluate_classifiers_from_file(
         Whether to raise an error if results are missing.
     eval_name : str, default=None
         The name of the evaluation, used in save_path.
+    verify_results : bool, default=True
+        If the verification should be performed on the loaded results values.
     """
     classifier_results = []
     for load_path in load_paths:
-        classifier_results.append(ClassifierResults().load_from_file(load_path))
+        classifier_results.append(
+            ClassifierResults().load_from_file(load_path, verify_values=verify_results)
+        )
 
     evaluate_classifiers(
         classifier_results,
@@ -88,6 +96,7 @@ def evaluate_classifiers_by_problem(
     load_train_results=False,
     error_on_missing=True,
     eval_name=None,
+    verify_results=True,
 ):
     """
     Evaluate multiple classifiers on multiple datasets from file using standard paths.
@@ -118,6 +127,8 @@ def evaluate_classifiers_by_problem(
         Whether to raise an error if results are missing.
     eval_name : str, default=None
         The name of the evaluation, used in save_path.
+    verify_results : bool, default=True
+        If the verification should be performed on the loaded results values.
     """
     if resamples is None:
         resamples = [""]
@@ -139,7 +150,8 @@ def evaluate_classifiers_by_problem(
                     classifier_results.append(
                         ClassifierResults().load_from_file(
                             f"{load_path}/{classifier_name}/Predictions/{dataset_name}"
-                            f"/{split}Resample{resample}.csv"
+                            f"/{split}Resample{resample}.csv",
+                            verify_values=verify_results,
                         )
                     )
 
@@ -182,7 +194,11 @@ def evaluate_clusterers(
 
 
 def evaluate_clusterers_from_file(
-    load_paths, save_path, error_on_missing=True, eval_name=None
+    load_paths,
+    save_path,
+    error_on_missing=True,
+    eval_name=None,
+    verify_results=True,
 ):
     """
     Evaluate multiple clusterers on multiple datasets from file.
@@ -201,10 +217,14 @@ def evaluate_clusterers_from_file(
         Whether to raise an error if results are missing.
     eval_name : str, default=None
         The name of the evaluation, used in save_path.
+    verify_results : bool, default=True
+        If the verification should be performed on the loaded results values.
     """
     clusterer_results = []
     for load_path in load_paths:
-        clusterer_results.append(ClustererResults().load_from_file(load_path))
+        clusterer_results.append(
+            ClustererResults().load_from_file(load_path, verify_values=verify_results)
+        )
 
     evaluate_clusterers(
         clusterer_results,
@@ -223,6 +243,7 @@ def evaluate_clusterers_by_problem(
     load_test_results=True,
     error_on_missing=True,
     eval_name=None,
+    verify_results=True,
 ):
     """
     Evaluate multiple clusterers on multiple datasets from file using standard paths.
@@ -253,6 +274,8 @@ def evaluate_clusterers_by_problem(
         Whether to raise an error if results are missing.
     eval_name : str, default=None
         The name of the evaluation, used in save_path.
+    verify_results : bool, default=True
+        If the verification should be performed on the loaded results values.
     """
     if resamples is None:
         resamples = [""]
@@ -274,7 +297,8 @@ def evaluate_clusterers_by_problem(
                     clusterer_results.append(
                         ClustererResults().load_from_file(
                             f"{load_path}/{clusterer_name}/Predictions/{dataset_name}"
-                            f"/{split}Resample{resample}.csv"
+                            f"/{split}Resample{resample}.csv",
+                            verify_values=verify_results,
                         )
                     )
 
@@ -317,7 +341,11 @@ def evaluate_regressors(
 
 
 def evaluate_regressors_from_file(
-    load_paths, save_path, error_on_missing=True, eval_name=None
+    load_paths,
+    save_path,
+    error_on_missing=True,
+    eval_name=None,
+    verify_results=True,
 ):
     """
     Evaluate multiple regressors on multiple datasets from file.
@@ -336,10 +364,14 @@ def evaluate_regressors_from_file(
         Whether to raise an error if results are missing.
     eval_name : str, default=None
         The name of the evaluation, used in save_path.
+    verify_results : bool, default=True
+        If the verification should be performed on the loaded results values.
     """
     regressor_results = []
     for load_path in load_paths:
-        regressor_results.append(RegressorResults().load_from_file(load_path))
+        regressor_results.append(
+            RegressorResults().load_from_file(load_path, verify_values=verify_results)
+        )
 
     evaluate_regressors(
         regressor_results,
@@ -358,6 +390,7 @@ def evaluate_regressors_by_problem(
     load_train_results=False,
     error_on_missing=True,
     eval_name=None,
+    verify_results=True,
 ):
     """
     Evaluate multiple regressors on multiple datasets from file using standard paths.
@@ -388,6 +421,8 @@ def evaluate_regressors_by_problem(
         Whether to raise an error if results are missing.
     eval_name : str, default=None
         The name of the evaluation, used in save_path.
+    verify_results : bool, default=True
+        If the verification should be performed on the loaded results values.
     """
     if resamples is None:
         resamples = [""]
@@ -409,7 +444,8 @@ def evaluate_regressors_by_problem(
                     regressor_results.append(
                         RegressorResults().load_from_file(
                             f"{load_path}/{regressor_name}/Predictions/{dataset_name}"
-                            f"/{split}Resample{resample}.csv"
+                            f"/{split}Resample{resample}.csv",
+                            verify_values=verify_results,
                         )
                     )
 
@@ -452,7 +488,11 @@ def evaluate_forecasters(
 
 
 def evaluate_forecasters_from_file(
-    load_paths, save_path, error_on_missing=True, eval_name=None
+    load_paths,
+    save_path,
+    error_on_missing=True,
+    eval_name=None,
+    verify_results=True,
 ):
     """
     Evaluate multiple forecasters on multiple datasets from file.
@@ -471,10 +511,14 @@ def evaluate_forecasters_from_file(
         Whether to raise an error if results are missing.
     eval_name : str, default=None
         The name of the evaluation, used in save_path.
+    verify_results : bool, default=True
+        If the verification should be performed on the loaded results values.
     """
     forecaster_results = []
     for load_path in load_paths:
-        forecaster_results.append(ForecasterResults().load_from_file(load_path))
+        forecaster_results.append(
+            ForecasterResults().load_from_file(load_path, verify_values=verify_results)
+        )
 
     evaluate_forecasters(
         forecaster_results,
@@ -492,6 +536,7 @@ def evaluate_forecasters_by_problem(
     resamples=None,
     error_on_missing=True,
     eval_name=None,
+    verify_results=True,
 ):
     """
     Evaluate multiple forecasters on multiple datasets from file using standard paths.
@@ -520,6 +565,8 @@ def evaluate_forecasters_by_problem(
         Whether to raise an error if results are missing.
     eval_name : str, default=None
         The name of the evaluation, used in save_path.
+    verify_results : bool, default=True
+        If the verification should be performed on the loaded results values.
     """
     if resamples is None:
         resamples = [""]
@@ -535,7 +582,8 @@ def evaluate_forecasters_by_problem(
                 forecaster_results.append(
                     ForecasterResults().load_from_file(
                         f"{load_path}/{forecaster_name}/Predictions/{dataset_name}"
-                        f"/testResample{resample}.csv"
+                        f"/testResample{resample}.csv",
+                        verify_values=verify_results,
                     )
                 )
 
@@ -681,7 +729,7 @@ def _evaluate_estimators(
                 var,
                 save_path,
             )
-            stats.append((average, rank, stat, split))
+            stats.append((average, rank, stat, ascending, split))
 
     _summary_evaluation(stats, estimators, save_path, eval_name)
 
@@ -811,12 +859,28 @@ def _figures_for_statistic(
 def _summary_evaluation(stats, estimators, save_path, eval_name):
     with open(f"{save_path}/{eval_name}_summary.csv", "w") as file:
         for stat in stats:
-            file.write(f"{stat[3]}{stat[2]},{','.join(estimators)}\n")
+            avg_stat = np.mean(stat[0], axis=0)
+            avg_rank = np.mean(stat[1], axis=0)
+            sorted_indices = [
+                i
+                for i in sorted(
+                    range(len(avg_rank)),
+                    key=lambda x: (
+                        avg_rank[x],
+                        -avg_stat[x] if stat[3] else avg_stat[x],
+                    ),
+                )
+            ]
+
             file.write(
-                f"{stat[3]}{stat[2]}Mean,"
-                f"{','.join([str(n) for n in np.mean(stat[0], axis=0)])}\n"
+                f"{stat[4]}{stat[2]},"
+                f"{','.join([estimators[i] for i in sorted_indices])}\n"
             )
             file.write(
-                f"{stat[3]}{stat[2]}AvgRank,"
-                f"{','.join([str(n) for n in np.mean(stat[1], axis=0)])}\n\n"
+                f"{stat[4]}{stat[2]}Mean,"
+                f"{','.join([str(n) for n in avg_stat[sorted_indices]])}\n"
+            )
+            file.write(
+                f"{stat[4]}{stat[2]}AvgRank,"
+                f"{','.join([str(n) for n in avg_rank[sorted_indices]])}\n\n"
             )

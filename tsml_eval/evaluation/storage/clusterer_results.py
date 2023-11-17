@@ -207,7 +207,7 @@ class ClustererResults(EstimatorResults):
             n_clusters=self.n_clusters,
         )
 
-    def load_from_file(self, file_path):
+    def load_from_file(self, file_path, verify_values=True):
         """
         Load clusterer results from a specified file.
 
@@ -220,13 +220,15 @@ class ClustererResults(EstimatorResults):
         file_path : str
             The path to the file from which clusterer results should be loaded. The
             file should be a tsml formatted clusterer results file.
+        verify_values : bool, default=True
+            If the method should perform verification of the loaded values.
 
         Returns
         -------
         self : ClustererResults
             The same ClustererResults object with loaded results.
         """
-        cr = load_clusterer_results(file_path)
+        cr = load_clusterer_results(file_path, verify_values=verify_values)
         self.__dict__.update(cr.__dict__)
         return self
 

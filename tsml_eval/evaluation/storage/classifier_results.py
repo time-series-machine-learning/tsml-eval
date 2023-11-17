@@ -141,9 +141,9 @@ class ClassifierResults(EstimatorResults):
 
         self.accuracy = None
         self.balanced_accuracy = None
-        self.f1_score = None
-        self.negative_log_likelihood = None
         self.mean_auroc = None
+        self.negative_log_likelihood = None
+        self.f1_score = None
 
         super(ClassifierResults, self).__init__(
             dataset_name=dataset_name,
@@ -163,9 +163,9 @@ class ClassifierResults(EstimatorResults):
     statistics = {
         "accuracy": ("Accuracy", True, False),
         "balanced_accuracy": ("BalAcc", True, False),
-        "f1_score": ("F1", True, False),
-        "negative_log_likelihood": ("NLL", False, False),
         "mean_auroc": ("AUROC", True, False),
+        "negative_log_likelihood": ("NLL", False, False),
+        "f1_score": ("F1", True, False),
         **EstimatorResults.statistics,
     }
 
@@ -212,7 +212,7 @@ class ClassifierResults(EstimatorResults):
             fit_and_estimate_time=self.fit_and_estimate_time,
         )
 
-    def load_from_file(self, file_path):
+    def load_from_file(self, file_path, verify_values=True):
         """
         Load classifier results from a specified file.
 
@@ -225,13 +225,15 @@ class ClassifierResults(EstimatorResults):
         file_path : str
             The path to the file from which classifier results should be loaded. The
             file should be a tsml formatted classifier results file.
+        verify_values : bool, default=True
+            If the method should perform verification of the loaded values.
 
         Returns
         -------
         self : ClassifierResults
             The same ClassifierResults object with loaded results.
         """
-        cr = load_classifier_results(file_path)
+        cr = load_classifier_results(file_path, verify_values=verify_values)
         self.__dict__.update(cr.__dict__)
         return self
 
@@ -255,10 +257,6 @@ class ClassifierResults(EstimatorResults):
             self.balanced_accuracy = balanced_accuracy_score(
                 self.class_labels, self.predictions
             )
-        if self.f1_score is None or overwrite:
-            self.f1_score = f1_score(
-                self.class_labels, self.predictions, average="macro"
-            )
         if self.negative_log_likelihood is None or overwrite:
             self.negative_log_likelihood = log_loss(
                 self.class_labels, self.probabilities
@@ -267,7 +265,12 @@ class ClassifierResults(EstimatorResults):
             self.mean_auroc = roc_auc_score(
                 self.class_labels,
                 self.predictions if self.n_classes == 2 else self.probabilities,
+                average="micro",
                 multi_class="ovr",
+            )
+        if self.f1_score is None or overwrite:
+            self.f1_score = f1_score(
+                self.class_labels, self.predictions, average="micro"
             )
 
     def infer_size(self, overwrite=False):

@@ -162,7 +162,7 @@ class ForecasterResults(EstimatorResults):
             memory_usage=self.memory_usage,
         )
 
-    def load_from_file(self, file_path):
+    def load_from_file(self, file_path, verify_values=True):
         """
         Load forecaster results from a specified file.
 
@@ -175,13 +175,15 @@ class ForecasterResults(EstimatorResults):
         file_path : str
             The path to the file from which forecaster results should be loaded. The
             file should be a tsml formatted forecaster results file.
+        verify_values : bool, default=True
+            If the method should perform verification of the loaded values.
 
         Returns
         -------
         self : ForecasterResults
             The same ForecasterResults object with loaded results.
         """
-        fr = load_forecaster_results(file_path)
+        fr = load_forecaster_results(file_path, verify_values=verify_values)
         self.__dict__.update(fr.__dict__)
         return self
 
