@@ -77,6 +77,6 @@ class _FunctionThread(Thread):
         """Overloads the threading.Thread.run."""
         start = int(round(time.time() * 1000))
         self.function(*self.args, **self.kwargs)
-        end = int(round(time.time() * 1000)) - start
+        end = int(round(time.time() * 1000))
         self.function_time = end - start
         self.has_shutdown = True

@@ -732,7 +732,7 @@ def _create_directory_for_statistic(
     variable_name,
     save_path,
 ):
-    os.makedirs(f"{save_path}/{statistic_name}/all_folds/", exist_ok=True)
+    os.makedirs(f"{save_path}/{statistic_name}/all_resamples/", exist_ok=True)
 
     average_stats = np.zeros((len(datasets), len(estimators)))
 
@@ -754,7 +754,7 @@ def _create_directory_for_statistic(
             average_stats[n, i] = np.mean(est_stats[n, :])
 
         with open(
-            f"{save_path}/{statistic_name}/all_folds/{estimator_name}_"
+            f"{save_path}/{statistic_name}/all_resamples/{estimator_name}_"
             f"{statistic_name}.csv",
             "w",
         ) as file:
