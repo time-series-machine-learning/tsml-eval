@@ -17,7 +17,11 @@ from tsml_eval.utils.functions import rank_array, time_to_milliseconds
 
 
 def evaluate_classifiers(
-    classifier_results, save_path, error_on_missing=True, eval_name=None
+    classifier_results,
+    save_path,
+    error_on_missing=True,
+    eval_name=None,
+    estimator_names=None,
 ):
     """
     Evaluate multiple classifiers on multiple datasets.
@@ -36,6 +40,9 @@ def evaluate_classifiers(
         Whether to raise an error if results are missing.
     eval_name : str, default=None
         The name of the evaluation, used in save_path.
+    estimator_names : list of str, default=None
+        The names of the estimator for each classifier result. If None, uses
+        the estimator_name attribute of each classifier result.
     """
     _evaluate_estimators(
         classifier_results,
@@ -43,6 +50,7 @@ def evaluate_classifiers(
         save_path,
         error_on_missing,
         eval_name,
+        estimator_names,
     )
 
 
@@ -52,6 +60,7 @@ def evaluate_classifiers_from_file(
     error_on_missing=True,
     eval_name=None,
     verify_results=True,
+    estimator_names=None,
 ):
     """
     Evaluate multiple classifiers on multiple datasets from file.
@@ -72,6 +81,9 @@ def evaluate_classifiers_from_file(
         The name of the evaluation, used in save_path.
     verify_results : bool, default=True
         If the verification should be performed on the loaded results values.
+    estimator_names : list of str, default=None
+        The names of the estimator for each classifier result. If None, uses
+        the estimator_name attribute of each classifier result.
     """
     classifier_results = []
     for load_path in load_paths:
@@ -84,6 +96,7 @@ def evaluate_classifiers_from_file(
         save_path,
         error_on_missing=error_on_missing,
         eval_name=eval_name,
+        estimator_names=estimator_names,
     )
 
 
@@ -143,6 +156,7 @@ def evaluate_classifiers_by_problem(
         splits = ["test"]
 
     classifier_results = []
+    names = []
     for classifier_name in classifier_names:
         for dataset_name in dataset_names:
             for resample in resamples:
@@ -154,17 +168,23 @@ def evaluate_classifiers_by_problem(
                             verify_values=verify_results,
                         )
                     )
+                    names.append(classifier_name)
 
     evaluate_classifiers(
         classifier_results,
         save_path,
         error_on_missing=error_on_missing,
         eval_name=eval_name,
+        estimator_names=names,
     )
 
 
 def evaluate_clusterers(
-    clusterer_results, save_path, error_on_missing=True, eval_name=None
+    clusterer_results,
+    save_path,
+    error_on_missing=True,
+    eval_name=None,
+    estimator_names=None,
 ):
     """
     Evaluate multiple clusterers on multiple datasets.
@@ -183,6 +203,9 @@ def evaluate_clusterers(
         Whether to raise an error if results are missing.
     eval_name : str, default=None
         The name of the evaluation, used in save_path.
+    estimator_names : list of str, default=None
+        The names of the estimator for each clusterer result. If None, uses
+        the estimator_name attribute of each clusterer result.
     """
     _evaluate_estimators(
         clusterer_results,
@@ -190,6 +213,7 @@ def evaluate_clusterers(
         save_path,
         error_on_missing,
         eval_name,
+        estimator_names,
     )
 
 
@@ -199,6 +223,7 @@ def evaluate_clusterers_from_file(
     error_on_missing=True,
     eval_name=None,
     verify_results=True,
+    estimator_names=None,
 ):
     """
     Evaluate multiple clusterers on multiple datasets from file.
@@ -219,6 +244,9 @@ def evaluate_clusterers_from_file(
         The name of the evaluation, used in save_path.
     verify_results : bool, default=True
         If the verification should be performed on the loaded results values.
+    estimator_names : list of str, default=None
+        The names of the estimator for each clusterer result. If None, uses
+        the estimator_name attribute of each clusterer result.
     """
     clusterer_results = []
     for load_path in load_paths:
@@ -231,6 +259,7 @@ def evaluate_clusterers_from_file(
         save_path,
         error_on_missing=error_on_missing,
         eval_name=eval_name,
+        estimator_names=estimator_names,
     )
 
 
@@ -290,6 +319,7 @@ def evaluate_clusterers_by_problem(
         splits = ["train"]
 
     clusterer_results = []
+    names = []
     for clusterer_name in clusterer_names:
         for dataset_name in dataset_names:
             for resample in resamples:
@@ -301,17 +331,23 @@ def evaluate_clusterers_by_problem(
                             verify_values=verify_results,
                         )
                     )
+                    names.append(clusterer_name)
 
     evaluate_clusterers(
         clusterer_results,
         save_path,
         error_on_missing=error_on_missing,
         eval_name=eval_name,
+        estimator_names=names,
     )
 
 
 def evaluate_regressors(
-    regressor_results, save_path, error_on_missing=True, eval_name=None
+    regressor_results,
+    save_path,
+    error_on_missing=True,
+    eval_name=None,
+    estimator_names=None,
 ):
     """
     Evaluate multiple regressors on multiple datasets.
@@ -330,6 +366,9 @@ def evaluate_regressors(
         Whether to raise an error if results are missing.
     eval_name : str, default=None
         The name of the evaluation, used in save_path.
+    estimator_names : list of str, default=None
+        The names of the estimator for each regressor result. If None, uses
+        the estimator_name attribute of each regressor result.
     """
     _evaluate_estimators(
         regressor_results,
@@ -337,6 +376,7 @@ def evaluate_regressors(
         save_path,
         error_on_missing,
         eval_name,
+        estimator_names,
     )
 
 
@@ -346,6 +386,7 @@ def evaluate_regressors_from_file(
     error_on_missing=True,
     eval_name=None,
     verify_results=True,
+    estimator_names=None,
 ):
     """
     Evaluate multiple regressors on multiple datasets from file.
@@ -366,6 +407,9 @@ def evaluate_regressors_from_file(
         The name of the evaluation, used in save_path.
     verify_results : bool, default=True
         If the verification should be performed on the loaded results values.
+    estimator_names : list of str, default=None
+        The names of the estimator for each regressor result. If None, uses
+        the estimator_name attribute of each regressor result.
     """
     regressor_results = []
     for load_path in load_paths:
@@ -378,6 +422,7 @@ def evaluate_regressors_from_file(
         save_path,
         error_on_missing=error_on_missing,
         eval_name=eval_name,
+        estimator_names=estimator_names,
     )
 
 
@@ -437,6 +482,7 @@ def evaluate_regressors_by_problem(
         splits = ["test"]
 
     regressor_results = []
+    names = []
     for regressor_name in regressor_names:
         for dataset_name in dataset_names:
             for resample in resamples:
@@ -448,17 +494,23 @@ def evaluate_regressors_by_problem(
                             verify_values=verify_results,
                         )
                     )
+                    names.append(regressor_name)
 
     evaluate_regressors(
         regressor_results,
         save_path,
         error_on_missing=error_on_missing,
         eval_name=eval_name,
+        estimator_names=names,
     )
 
 
 def evaluate_forecasters(
-    forecaster_results, save_path, error_on_missing=True, eval_name=None
+    forecaster_results,
+    save_path,
+    error_on_missing=True,
+    eval_name=None,
+    estimator_names=None,
 ):
     """
     Evaluate multiple forecasters on multiple datasets.
@@ -477,6 +529,9 @@ def evaluate_forecasters(
         Whether to raise an error if results are missing.
     eval_name : str, default=None
         The name of the evaluation, used in save_path.
+    estimator_names : list of str, default=None
+        The names of the estimator for each forecaster result. If None, uses
+        the estimator_name attribute of each forecaster result.
     """
     _evaluate_estimators(
         forecaster_results,
@@ -484,6 +539,7 @@ def evaluate_forecasters(
         save_path,
         error_on_missing,
         eval_name,
+        estimator_names,
     )
 
 
@@ -493,6 +549,7 @@ def evaluate_forecasters_from_file(
     error_on_missing=True,
     eval_name=None,
     verify_results=True,
+    estimator_names=None,
 ):
     """
     Evaluate multiple forecasters on multiple datasets from file.
@@ -513,6 +570,9 @@ def evaluate_forecasters_from_file(
         The name of the evaluation, used in save_path.
     verify_results : bool, default=True
         If the verification should be performed on the loaded results values.
+    estimator_names : list of str, default=None
+        The names of the estimator for each forecaster result. If None, uses
+        the estimator_name attribute of each forecaster result.
     """
     forecaster_results = []
     for load_path in load_paths:
@@ -525,6 +585,7 @@ def evaluate_forecasters_from_file(
         save_path,
         error_on_missing=error_on_missing,
         eval_name=eval_name,
+        estimator_names=estimator_names,
     )
 
 
@@ -576,6 +637,7 @@ def evaluate_forecasters_by_problem(
         resamples = [str(resample) for resample in resamples]
 
     forecaster_results = []
+    names = []
     for forecaster_name in forecaster_names:
         for dataset_name in dataset_names:
             for resample in resamples:
@@ -586,17 +648,24 @@ def evaluate_forecasters_by_problem(
                         verify_values=verify_results,
                     )
                 )
+                names.append(forecaster_name)
 
     evaluate_forecasters(
         forecaster_results,
         save_path,
         error_on_missing=error_on_missing,
         eval_name=eval_name,
+        estimator_names=names,
     )
 
 
 def _evaluate_estimators(
-    estimator_results, statistics, save_path, error_on_missing, eval_name
+    estimator_results,
+    statistics,
+    save_path,
+    error_on_missing,
+    eval_name,
+    estimator_names,
 ):
     save_path = save_path + "/" + eval_name + "/"
 
@@ -606,7 +675,7 @@ def _evaluate_estimators(
     has_test = False
     has_train = False
 
-    results_dict = _create_results_dictionary(estimator_results)
+    results_dict = _create_results_dictionary(estimator_results, estimator_names)
 
     if eval_name is None:
         dt = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -695,14 +764,24 @@ def _evaluate_estimators(
             raise ValueError("Missing results, exiting evaluation.")
         else:
             if has_test and has_train:
-                datasets = datasets[
-                    has_dataset_train.any(axis=(0, 2))
-                    & has_dataset_test.any(axis=(0, 2))
-                ]
+                has_both = has_dataset_train.any(axis=(0, 2)) & has_dataset_test.any(
+                    axis=(0, 2)
+                )
+                datasets = [dataset for dataset, has in zip(datasets, has_both) if has]
             elif has_test:
-                datasets = datasets[has_dataset_test.any(axis=(0, 2))]
+                datasets = [
+                    dataset
+                    for dataset, has in zip(datasets, has_dataset_test.any(axis=(0, 2)))
+                    if has
+                ]
             else:
-                datasets = datasets[has_dataset_train.any(axis=(0, 2))]
+                datasets = [
+                    dataset
+                    for dataset, has in zip(
+                        datasets, has_dataset_train.any(axis=(0, 2))
+                    )
+                    if has
+                ]
 
             msg += "\nMissing results, continuing evaluation with available datasets.\n"
             print(msg)  # noqa: T201
@@ -710,9 +789,9 @@ def _evaluate_estimators(
         msg += "All results present, continuing evaluation.\n"
         print(msg)  # noqa: T201
 
-    print(f"Estimators: {estimators}\n")  # noqa: T201
-    print(f"Datasets: {datasets}\n")  # noqa: T201
-    print(f"Resamples: {resamples}\n")  # noqa: T201
+    print(f"Estimators ({len(estimators)}): {estimators}\n")  # noqa: T201
+    print(f"Datasets ({len(datasets)}): {datasets}\n")  # noqa: T201
+    print(f"Resamples ({len(resamples)}): {resamples}\n")  # noqa: T201
 
     stats = []
     for var, (stat, ascending, time) in statistics.items():
@@ -734,34 +813,33 @@ def _evaluate_estimators(
     _summary_evaluation(stats, estimators, save_path, eval_name)
 
 
-def _create_results_dictionary(estimator_results):
+def _create_results_dictionary(estimator_results, estimator_names):
     results_dict = {}
 
-    for estimator_result in estimator_results:
-        if results_dict.get(estimator_result.estimator_name) is None:
-            results_dict[estimator_result.estimator_name] = {}
+    for i, estimator_result in enumerate(estimator_results):
+        name = (
+            estimator_result.estimator_name
+            if estimator_names is None
+            else estimator_names[i]
+        )
+
+        if results_dict.get(name) is None:
+            results_dict[name] = {}
+
+        if results_dict[name].get(estimator_result.dataset_name) is None:
+            results_dict[name][estimator_result.dataset_name] = {}
 
         if (
-            results_dict[estimator_result.estimator_name].get(
-                estimator_result.dataset_name
+            results_dict[name][estimator_result.dataset_name].get(
+                estimator_result.split.lower()
             )
             is None
         ):
-            results_dict[estimator_result.estimator_name][
-                estimator_result.dataset_name
+            results_dict[name][estimator_result.dataset_name][
+                estimator_result.split.lower()
             ] = {}
 
-        if (
-            results_dict[estimator_result.estimator_name][
-                estimator_result.dataset_name
-            ].get(estimator_result.split.lower())
-            is None
-        ):
-            results_dict[estimator_result.estimator_name][
-                estimator_result.dataset_name
-            ][estimator_result.split.lower()] = {}
-
-        results_dict[estimator_result.estimator_name][estimator_result.dataset_name][
+        results_dict[name][estimator_result.dataset_name][
             estimator_result.split.lower()
         ][estimator_result.resample_id] = estimator_result
 
@@ -843,7 +921,7 @@ def _figures_for_statistic(
     cd = plot_critical_difference(scores, estimators, errors=not higher_better)
     cd.savefig(
         f"{save_path}/{statistic_name}/figures/"
-        f"{statistic_name}_critical_difference.png",
+        f"{statistic_name}_critical_difference.pdf",
         bbox_inches="tight",
     )
     pickle.dump(
