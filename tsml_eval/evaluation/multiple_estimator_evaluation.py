@@ -6,7 +6,7 @@ from datetime import datetime
 
 import numpy as np
 from aeon.benchmarking import plot_critical_difference
-from aeon.benchmarking.results_plotting import plot_boxplot_median, plot_scatter
+from aeon.benchmarking.results_plotting import plot_scatter
 
 from tsml_eval.evaluation.storage import (
     ClassifierResults,
@@ -917,7 +917,7 @@ def _create_directory_for_statistic(
 def _figures_for_statistic(
     scores, estimators, statistic_name, higher_better, save_path
 ):
-    os.makedirs(f"{save_path}/{statistic_name}/figures/scatters/", exist_ok=True)
+    os.makedirs(f"{save_path}/{statistic_name}/figures/", exist_ok=True)
 
     cd = plot_critical_difference(scores, estimators, errors=not higher_better)
     cd.savefig(
@@ -934,36 +934,42 @@ def _figures_for_statistic(
         ),
     )
 
-    box = plot_boxplot_median(scores, estimators)
-    box.savefig(
-        f"{save_path}/{statistic_name}/figures/" f"{statistic_name}_boxplot.pdf",
-        bbox_inches="tight",
-    )
-    pickle.dump(
-        box,
-        open(
-            f"{save_path}/{statistic_name}/figures/" f"{statistic_name}_boxplot.pickle",
-            "wb",
-        ),
-    )
+    # crashes when scores are the same?
+
+    # box = plot_boxplot_median(scores.transpose(), estimators)
+    # box.savefig(
+    #     f"{save_path}/{statistic_name}/figures/" f"{statistic_name}_boxplot.pdf",
+    #     bbox_inches="tight",
+    # )
+    # pickle.dump(
+    #     box,
+    #     open(
+    #         f"{save_path}/{statistic_name}/figures/"
+    #         f"{statistic_name}_boxplot.pickle",
+    #         "wb",
+    #     ),
+    # )
 
     for i, est1 in enumerate(estimators):
         for n, est2 in enumerate(estimators):
-            if i < n:
-                scatter = plot_scatter(scores[:, i], scores[:, n], est1, est2)
-                scatter.savefig(
-                    f"{save_path}/{statistic_name}/figures/scatters/"
-                    f"{statistic_name}_scatter_{est1}_{est2}.pdf",
-                    bbox_inches="tight",
-                )
-                pickle.dump(
-                    scatter,
-                    open(
-                        f"{save_path}/{statistic_name}/figures/scatters/"
-                        f"{statistic_name}_scatter_{est1}_{est2}.pickle",
-                        "wb",
-                    ),
-                )
+            os.makedirs(
+                f"{save_path}/{statistic_name}/figures/scatters/{est1}/", exist_ok=True
+            )
+
+            scatter = plot_scatter(scores[:, (i, n)], est1, est2)
+            scatter.savefig(
+                f"{save_path}/{statistic_name}/figures/scatters/{est1}/"
+                f"{statistic_name}_scatter_{est1}_{est2}.pdf",
+                bbox_inches="tight",
+            )
+            pickle.dump(
+                scatter,
+                open(
+                    f"{save_path}/{statistic_name}/figures/scatters/{est1}/"
+                    f"{statistic_name}_scatter_{est1}_{est2}.pickle",
+                    "wb",
+                ),
+            )
 
 
 def _summary_evaluation(stats, estimators, save_path, eval_name):
