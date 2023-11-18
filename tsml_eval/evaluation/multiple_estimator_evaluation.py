@@ -938,14 +938,13 @@ def _figures_for_statistic(
 
     # box = plot_boxplot_median(scores.transpose(), estimators)
     # box.savefig(
-    #     f"{save_path}/{statistic_name}/figures/" f"{statistic_name}_boxplot.pdf",
+    #     f"{save_path}/{statistic_name}/figures/{statistic_name}_boxplot.pdf",
     #     bbox_inches="tight",
     # )
     # pickle.dump(
     #     box,
     #     open(
-    #         f"{save_path}/{statistic_name}/figures/"
-    #         f"{statistic_name}_boxplot.pickle",
+    #         f"{save_path}/{statistic_name}/figures/{statistic_name}_boxplot.pickle",
     #         "wb",
     #     ),
     # )
