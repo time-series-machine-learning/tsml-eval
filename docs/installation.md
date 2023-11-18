@@ -71,6 +71,13 @@ using `pip`:
 pip install git+https://github.com/time-series-machine-learning/tsml-eval.git@main
 ```
 
+The latest development version of dependencies can be installed this way, i.e. for
+`aeon`
+
+```console
+pip install git+https://github.com/aeon-toolkit/aeon.git@main
+```
+
 ## Install for developers with write access
 
 To install `tsml-eval` for development, first clone the GitHub repository:
