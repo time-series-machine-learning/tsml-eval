@@ -7,6 +7,7 @@ from datetime import datetime
 import numpy as np
 from aeon.benchmarking import plot_critical_difference
 from aeon.benchmarking.results_plotting import plot_scatter
+from matplotlib import pyplot as plt
 
 from tsml_eval.evaluation.storage import (
     ClassifierResults,
@@ -88,9 +89,15 @@ def evaluate_classifiers_from_file(
     """
     classifier_results = []
     for load_path in load_paths:
-        classifier_results.append(
-            ClassifierResults().load_from_file(load_path, verify_values=verify_results)
-        )
+        try:
+            classifier_results.append(
+                ClassifierResults().load_from_file(
+                    load_path, verify_values=verify_results
+                )
+            )
+        except FileNotFoundError:
+            if error_on_missing:
+                raise FileNotFoundError(f"Results for {load_path} not found.")
 
     evaluate_classifiers(
         classifier_results,
@@ -157,19 +164,43 @@ def evaluate_classifiers_by_problem(
         splits = ["test"]
 
     classifier_results = []
+    found_datasets = np.zeros(len(dataset_names), dtype=bool)
     names = []
     for classifier_name in classifier_names:
-        for dataset_name in dataset_names:
+        found_estimator = False
+        for i, dataset_name in enumerate(dataset_names):
             for resample in resamples:
                 for split in splits:
-                    classifier_results.append(
-                        ClassifierResults().load_from_file(
-                            f"{load_path}/{classifier_name}/Predictions/{dataset_name}"
-                            f"/{split}Resample{resample}.csv",
-                            verify_values=verify_results,
+                    try:
+                        classifier_results.append(
+                            ClassifierResults().load_from_file(
+                                f"{load_path}/{classifier_name}/Predictions/"
+                                f"{dataset_name}/{split}Resample{resample}.csv",
+                                verify_values=verify_results,
+                            )
                         )
-                    )
-                    names.append(classifier_name)
+                        names.append(classifier_name)
+                        found_estimator = True
+                        found_datasets[i] = True
+                    except FileNotFoundError:
+                        if error_on_missing:
+                            raise FileNotFoundError(
+                                f"Results for {classifier_name} on {dataset_name} "
+                                f"{split} resample {resample} not found."
+                            )
+
+        if not found_estimator:
+            print(f"Classifier {classifier_names} not found.")  # noqa: T201
+
+    missing_datasets = [
+        dataset for dataset, found in zip(dataset_names, found_datasets) if not found
+    ]
+    if missing_datasets:
+        msg = f"Files for datasets {missing_datasets} not found."
+        if error_on_missing:
+            raise FileNotFoundError(msg)
+        else:
+            print("\n\n" + msg)  # noqa: T201
 
     evaluate_classifiers(
         classifier_results,
@@ -251,9 +282,15 @@ def evaluate_clusterers_from_file(
     """
     clusterer_results = []
     for load_path in load_paths:
-        clusterer_results.append(
-            ClustererResults().load_from_file(load_path, verify_values=verify_results)
-        )
+        try:
+            clusterer_results.append(
+                ClustererResults().load_from_file(
+                    load_path, verify_values=verify_results
+                )
+            )
+        except FileNotFoundError:
+            if error_on_missing:
+                raise FileNotFoundError(f"Results for {load_path} not found.")
 
     evaluate_clusterers(
         clusterer_results,
@@ -320,19 +357,43 @@ def evaluate_clusterers_by_problem(
         splits = ["train"]
 
     clusterer_results = []
+    found_datasets = np.zeros(len(dataset_names), dtype=bool)
     names = []
     for clusterer_name in clusterer_names:
-        for dataset_name in dataset_names:
+        found_estimator = False
+        for i, dataset_name in enumerate(dataset_names):
             for resample in resamples:
                 for split in splits:
-                    clusterer_results.append(
-                        ClustererResults().load_from_file(
-                            f"{load_path}/{clusterer_name}/Predictions/{dataset_name}"
-                            f"/{split}Resample{resample}.csv",
-                            verify_values=verify_results,
+                    try:
+                        clusterer_results.append(
+                            ClustererResults().load_from_file(
+                                f"{load_path}/{clusterer_name}/Predictions/"
+                                f"{dataset_name}/{split}Resample{resample}.csv",
+                                verify_values=verify_results,
+                            )
                         )
-                    )
-                    names.append(clusterer_name)
+                        names.append(clusterer_name)
+                        found_estimator = True
+                        found_datasets[i] = True
+                    except FileNotFoundError:
+                        if error_on_missing:
+                            raise FileNotFoundError(
+                                f"Results for {clusterer_results} on {dataset_name} "
+                                f"{split} resample {resample} not found."
+                            )
+
+        if not found_estimator:
+            print(f"Clusterer {clusterer_name} not found.")  # noqa: T201
+
+    missing_datasets = [
+        dataset for dataset, found in zip(dataset_names, found_datasets) if not found
+    ]
+    if missing_datasets:
+        msg = f"Files for datasets {missing_datasets} not found."
+        if error_on_missing:
+            raise FileNotFoundError(msg)
+        else:
+            print("\n\n" + msg)  # noqa: T201
 
     evaluate_clusterers(
         clusterer_results,
@@ -414,9 +475,15 @@ def evaluate_regressors_from_file(
     """
     regressor_results = []
     for load_path in load_paths:
-        regressor_results.append(
-            RegressorResults().load_from_file(load_path, verify_values=verify_results)
-        )
+        try:
+            regressor_results.append(
+                RegressorResults().load_from_file(
+                    load_path, verify_values=verify_results
+                )
+            )
+        except FileNotFoundError:
+            if error_on_missing:
+                raise FileNotFoundError(f"Results for {load_path} not found.")
 
     evaluate_regressors(
         regressor_results,
@@ -483,19 +550,43 @@ def evaluate_regressors_by_problem(
         splits = ["test"]
 
     regressor_results = []
+    found_datasets = np.zeros(len(dataset_names), dtype=bool)
     names = []
     for regressor_name in regressor_names:
-        for dataset_name in dataset_names:
+        found_estimator = False
+        for i, dataset_name in enumerate(dataset_names):
             for resample in resamples:
                 for split in splits:
-                    regressor_results.append(
-                        RegressorResults().load_from_file(
-                            f"{load_path}/{regressor_name}/Predictions/{dataset_name}"
-                            f"/{split}Resample{resample}.csv",
-                            verify_values=verify_results,
+                    try:
+                        regressor_results.append(
+                            RegressorResults().load_from_file(
+                                f"{load_path}/{regressor_name}/Predictions/"
+                                f"{dataset_name}/{split}Resample{resample}.csv",
+                                verify_values=verify_results,
+                            )
                         )
-                    )
-                    names.append(regressor_name)
+                        names.append(regressor_name)
+                        found_estimator = True
+                        found_datasets[i] = True
+                    except FileNotFoundError:
+                        if error_on_missing:
+                            raise FileNotFoundError(
+                                f"Results for {regressor_results} on {dataset_name} "
+                                f"{split} resample {resample} not found."
+                            )
+
+        if not found_estimator:
+            print(f"Regressor {regressor_name} not found.")  # noqa: T201
+
+    missing_datasets = [
+        dataset for dataset, found in zip(dataset_names, found_datasets) if not found
+    ]
+    if missing_datasets:
+        msg = f"Files for datasets {missing_datasets} not found."
+        if error_on_missing:
+            raise FileNotFoundError(msg)
+        else:
+            print("\n\n" + msg)  # noqa: T201
 
     evaluate_regressors(
         regressor_results,
@@ -577,9 +668,15 @@ def evaluate_forecasters_from_file(
     """
     forecaster_results = []
     for load_path in load_paths:
-        forecaster_results.append(
-            ForecasterResults().load_from_file(load_path, verify_values=verify_results)
-        )
+        try:
+            forecaster_results.append(
+                ForecasterResults().load_from_file(
+                    load_path, verify_values=verify_results
+                )
+            )
+        except FileNotFoundError:
+            if error_on_missing:
+                raise FileNotFoundError(f"Results for {load_path} not found.")
 
     evaluate_forecasters(
         forecaster_results,
@@ -638,18 +735,42 @@ def evaluate_forecasters_by_problem(
         resamples = [str(resample) for resample in resamples]
 
     forecaster_results = []
+    found_datasets = np.zeros(len(dataset_names), dtype=bool)
     names = []
     for forecaster_name in forecaster_names:
-        for dataset_name in dataset_names:
+        found_estimator = False
+        for i, dataset_name in enumerate(dataset_names):
             for resample in resamples:
-                forecaster_results.append(
-                    ForecasterResults().load_from_file(
-                        f"{load_path}/{forecaster_name}/Predictions/{dataset_name}"
-                        f"/testResample{resample}.csv",
-                        verify_values=verify_results,
+                try:
+                    forecaster_results.append(
+                        ForecasterResults().load_from_file(
+                            f"{load_path}/{forecaster_name}/Predictions/"
+                            f"{dataset_name}/testResample{resample}.csv",
+                            verify_values=verify_results,
+                        )
                     )
-                )
-                names.append(forecaster_name)
+                    names.append(forecaster_name)
+                    found_estimator = True
+                    found_datasets[i] = True
+                except FileNotFoundError:
+                    if error_on_missing:
+                        raise FileNotFoundError(
+                            f"Results for {forecaster_name} on {dataset_name} "
+                            f"resample {resample} not found."
+                        )
+
+        if not found_estimator:
+            print(f"Forecaster {forecaster_name} not found.")  # noqa: T201
+
+    missing_datasets = [
+        dataset for dataset, found in zip(dataset_names, found_datasets) if not found
+    ]
+    if missing_datasets:
+        msg = f"Files for datasets {missing_datasets} not found."
+        if error_on_missing:
+            raise FileNotFoundError(msg)
+        else:
+            print("\n\n" + msg)  # noqa: T201
 
     evaluate_forecasters(
         forecaster_results,
@@ -765,21 +886,21 @@ def _evaluate_estimators(
             raise ValueError("Missing results, exiting evaluation.")
         else:
             if has_test and has_train:
-                has_both = has_dataset_train.any(axis=(0, 2)) & has_dataset_test.any(
+                has_both = has_dataset_train.all(axis=(0, 2)) & has_dataset_test.all(
                     axis=(0, 2)
                 )
                 datasets = [dataset for dataset, has in zip(datasets, has_both) if has]
             elif has_test:
                 datasets = [
                     dataset
-                    for dataset, has in zip(datasets, has_dataset_test.any(axis=(0, 2)))
+                    for dataset, has in zip(datasets, has_dataset_test.all(axis=(0, 2)))
                     if has
                 ]
             else:
                 datasets = [
                     dataset
                     for dataset, has in zip(
-                        datasets, has_dataset_train.any(axis=(0, 2))
+                        datasets, has_dataset_train.all(axis=(0, 2))
                     )
                     if has
                 ]
@@ -933,6 +1054,7 @@ def _figures_for_statistic(
             "wb",
         ),
     )
+    plt.close()
 
     # crashes when scores are the same?
 
@@ -948,6 +1070,7 @@ def _figures_for_statistic(
     #         "wb",
     #     ),
     # )
+    # plt.close()
 
     for i, est1 in enumerate(estimators):
         for n, est2 in enumerate(estimators):
@@ -969,6 +1092,7 @@ def _figures_for_statistic(
                     "wb",
                 ),
             )
+            plt.close()
 
 
 def _summary_evaluation(stats, estimators, save_path, eval_name):
