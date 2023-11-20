@@ -213,6 +213,8 @@ def _set_clusterer_distance_based(
             average_params = {"distance": distance, **distance_params.copy()}
         if "ba" in c:
             return TimeSeriesKMeans(
+                max_iter=50,
+                n_init=10,
                 init_algorithm=init_algorithm,
                 distance=distance,
                 distance_params=distance_params,
@@ -223,14 +225,19 @@ def _set_clusterer_distance_based(
             )
         else:
             return TimeSeriesKMeans(
+                max_iter=50,
+                n_init=10,
                 init_algorithm=init_algorithm,
                 distance=distance,
                 distance_params=distance_params,
                 random_state=random_state,
+                averaging_method="mean",
                 **kwargs,
             )
     elif "kmedoids" in c or "timeserieskmedoids" in c:
         return TimeSeriesKMedoids(
+            max_iter=50,
+            n_init=10,
             init_algorithm=init_algorithm,
             distance=distance,
             distance_params=distance_params,
@@ -240,6 +247,8 @@ def _set_clusterer_distance_based(
         )
     elif "pam" in c or "timeseriespam" in c:
         return TimeSeriesKMedoids(
+            max_iter=50,
+            n_init=10,
             init_algorithm=init_algorithm,
             distance=distance,
             distance_params=distance_params,
@@ -249,6 +258,7 @@ def _set_clusterer_distance_based(
         )
     elif "clarans" in c or "timeseriesclarans" in c:
         return TimeSeriesCLARANS(
+            n_init=10,
             init_algorithm=init_algorithm,
             distance=distance,
             distance_params=distance_params,
@@ -257,6 +267,7 @@ def _set_clusterer_distance_based(
         )
     elif "clara" in c or "timeseriesclara" in c:
         return TimeSeriesCLARA(
+            max_iter=50,
             init_algorithm=init_algorithm,
             distance=distance,
             distance_params=distance_params,
