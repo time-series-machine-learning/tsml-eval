@@ -7,12 +7,12 @@ name = "tsml-eval"
 version = "0.1.1"
 description = "A package for benchmarking time series machine learning tools."
 authors = [
-    {name = "Matthew Middlehurst", email = "m.middlehurst@uea.ac.uk"},
-    {name = "Tony Bagnall", email = "ajb@uea.ac.uk"},
+    {name = "Matthew Middlehurst", email = "m.b.middlehurst@soton.ac.uk"},
+    {name = "Tony Bagnall", email = "a.j.bagnall@soton.ac.uk"},
 ]
 maintainers = [
-    {name = "Matthew Middlehurst", email = "m.middlehurst@uea.ac.uk"},
-    {name = "Tony Bagnall", email = "ajb@uea.ac.uk"},
+    {name = "Matthew Middlehurst", email = "m.b.middlehurst@soton.ac.uk"},
+    {name = "Tony Bagnall", email = "a.j.bagnall@soton.ac.uk"},
 ]
 readme = "README.md"
 keywords = [
