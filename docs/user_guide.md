@@ -4,7 +4,7 @@
 :gutter: 3
 
 :::{grid-item-card}
-:img-top: examples/images/database.png
+:img-top: examples/images/data.png
 :text-align: center
 
 tsml-eval Data Format
@@ -26,7 +26,7 @@ Datasets
 :::
 
 :::{grid-item-card}
-:img-top: examples/images/wip.png
+:img-top: examples/images/cd_diagram.png
 :text-align: center
 
 tsml-eval Results Evaluation
@@ -48,7 +48,7 @@ Evaluation
 :::
 
 :::{grid-item-card}
-:img-top: examples/images/wip.png
+:img-top: examples/images/results.png
 :text-align: center
 
 tsml-eval Results Format
