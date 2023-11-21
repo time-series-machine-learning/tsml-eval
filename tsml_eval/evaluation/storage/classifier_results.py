@@ -142,7 +142,7 @@ class ClassifierResults(EstimatorResults):
         self.accuracy = None
         self.balanced_accuracy = None
         self.auroc_score = None
-        self.negative_log_likelihood = None
+        self.log_loss = None
         self.f1_score = None
 
         super(ClassifierResults, self).__init__(
@@ -164,7 +164,7 @@ class ClassifierResults(EstimatorResults):
         "accuracy": ("Accuracy", True, False),
         "balanced_accuracy": ("BalAcc", True, False),
         "auroc_score": ("AUROC", True, False),
-        "negative_log_likelihood": ("NLL", False, False),
+        "log_loss": ("LogLoss", False, False),
         "f1_score": ("F1", True, False),
         **EstimatorResults.statistics,
     }
@@ -257,8 +257,8 @@ class ClassifierResults(EstimatorResults):
             self.balanced_accuracy = balanced_accuracy_score(
                 self.class_labels, self.predictions
             )
-        if self.negative_log_likelihood is None or overwrite:
-            self.negative_log_likelihood = log_loss(
+        if self.log_loss is None or overwrite:
+            self.log_loss = log_loss(
                 self.class_labels,
                 self.probabilities,
                 eps=0.01,

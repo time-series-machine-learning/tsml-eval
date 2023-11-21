@@ -132,12 +132,22 @@ def evaluate_classifiers_by_problem(
 
     Parameters
     ----------
-    load_path : list of str
+    load_path : str or list of str
         The path to the collection of classifier result files to evaluate.
-    classifier_names : list of str
+        If load_path is a list, it will load results from each path in the list. It
+        is expected that classifier_names and dataset_names are lists of lists with
+        the same length as load_path.
+    classifier_names : list of str, list of tuple or list of list
         The names of the classifiers to evaluate.
-    dataset_names : list of str
+        A length 2 tuple containing strings can be used to specify a classifier name to
+        load from in the first item and a classifier name to use in the evaluation
+        results in the second.
+        If load_path is a list, classifier_names must be a list of lists with the same
+        length as load_path.
+    dataset_names : list of str or list of list
         The names of the datasets to evaluate.
+        If load_path is a list, dataset_names must be a list of lists with the same
+        length as load_path.
     save_path : str
         The path to save the evaluation results to.
     resamples : int or list of int, default=None
@@ -151,12 +161,13 @@ def evaluate_classifiers_by_problem(
     verify_results : bool, default=True
         If the verification should be performed on the loaded results values.
     """
-    if resamples is None:
-        resamples = [""]
-    elif isinstance(resamples, int):
-        resamples = [str(i) for i in range(resamples)]
-    else:
-        resamples = [str(resample) for resample in resamples]
+    load_path, classifier_names, dataset_names, resamples = _evaluate_by_problem_init(
+        "classifier",
+        load_path,
+        classifier_names,
+        dataset_names,
+        resamples,
+    )
 
     if load_train_results:
         splits = ["test", "train"]
@@ -164,43 +175,63 @@ def evaluate_classifiers_by_problem(
         splits = ["test"]
 
     classifier_results = []
-    found_datasets = np.zeros(len(dataset_names), dtype=bool)
+    estimator_eval_names = []
     names = []
-    for classifier_name in classifier_names:
-        found_estimator = False
-        for i, dataset_name in enumerate(dataset_names):
-            for resample in resamples:
-                for split in splits:
-                    try:
-                        classifier_results.append(
-                            ClassifierResults().load_from_file(
-                                f"{load_path}/{classifier_name}/Predictions/"
-                                f"{dataset_name}/{split}Resample{resample}.csv",
-                                verify_values=verify_results,
-                            )
-                        )
-                        names.append(classifier_name)
-                        found_estimator = True
-                        found_datasets[i] = True
-                    except FileNotFoundError:
-                        if error_on_missing:
-                            raise FileNotFoundError(
-                                f"Results for {classifier_name} on {dataset_name} "
-                                f"{split} resample {resample} not found."
-                            )
+    for i, path in enumerate(load_path):
+        found_datasets = np.zeros(len(dataset_names[i]), dtype=bool)
 
-        if not found_estimator:
-            print(f"Classifier {classifier_names} not found.")  # noqa: T201
+        for classifier_name in classifier_names[i]:
+            found_estimator = False
 
-    missing_datasets = [
-        dataset for dataset, found in zip(dataset_names, found_datasets) if not found
-    ]
-    if missing_datasets:
-        msg = f"Files for datasets {missing_datasets} not found."
-        if error_on_missing:
-            raise FileNotFoundError(msg)
-        else:
-            print("\n\n" + msg)  # noqa: T201
+            if isinstance(classifier_name, tuple):
+                classifier_eval_name = classifier_name[1]
+                classifier_name = classifier_name[0]
+            else:
+                classifier_eval_name = classifier_name
+
+            if classifier_eval_name not in estimator_eval_names:
+                estimator_eval_names.append(classifier_eval_name)
+            else:
+                raise ValueError(
+                    f"Duplicate evaluation name {classifier_eval_name} found."
+                )
+
+            for n, dataset_name in enumerate(dataset_names[i]):
+                for resample in resamples:
+                    for split in splits:
+                        try:
+                            classifier_results.append(
+                                ClassifierResults().load_from_file(
+                                    f"{path}/{classifier_name}/Predictions/"
+                                    f"{dataset_name}/{split}Resample{resample}.csv",
+                                    verify_values=verify_results,
+                                )
+                            )
+                            names.append(classifier_eval_name)
+                            found_estimator = True
+                            found_datasets[n] = True
+                        except FileNotFoundError:
+                            if error_on_missing:
+                                raise FileNotFoundError(
+                                    f"Results for {classifier_eval_name} on "
+                                    f"{dataset_name} {split} resample {resample} not "
+                                    "found."
+                                )
+
+            if not found_estimator:
+                print(f"Classifier {classifier_eval_name} not found.")  # noqa: T201
+
+        missing_datasets = [
+            dataset
+            for dataset, found in zip(dataset_names[i], found_datasets)
+            if not found
+        ]
+        if missing_datasets:
+            msg = f"Files for datasets {missing_datasets} not found."
+            if error_on_missing:
+                raise FileNotFoundError(msg)
+            else:
+                print("\n\n" + msg)  # noqa: T201
 
     evaluate_classifiers(
         classifier_results,
@@ -325,12 +356,22 @@ def evaluate_clusterers_by_problem(
 
     Parameters
     ----------
-    load_path : list of str
+    load_path : str or list of str
         The path to the collection of clusterer result files to evaluate.
-    clusterer_names : list of str
+        If load_path is a list, it will load results from each path in the list. It
+        is expected that clusterer_names and dataset_names are lists of lists with
+        the same length as load_path.
+    clusterer_names : list of str, list of tuple or list of list
         The names of the clusterers to evaluate.
-    dataset_names : list of str
+        A length 2 tuple containing strings can be used to specify a clusterer name to
+        load from in the first item and a clusterer name to use in the evaluation
+        results in the second.
+        If load_path is a list, clusterer_names must be a list of lists with the same
+        length as load_path.
+    dataset_names : list of str or list of list
         The names of the datasets to evaluate.
+        If load_path is a list, dataset_names must be a list of lists with the same
+        length as load_path.
     save_path : str
         The path to save the evaluation results to.
     resamples : int or list of int, default=None
@@ -344,12 +385,13 @@ def evaluate_clusterers_by_problem(
     verify_results : bool, default=True
         If the verification should be performed on the loaded results values.
     """
-    if resamples is None:
-        resamples = [""]
-    elif isinstance(resamples, int):
-        resamples = [str(i) for i in range(resamples)]
-    else:
-        resamples = [str(resample) for resample in resamples]
+    load_path, clusterer_names, dataset_names, resamples = _evaluate_by_problem_init(
+        "clusterer",
+        load_path,
+        clusterer_names,
+        dataset_names,
+        resamples,
+    )
 
     if load_test_results:
         splits = ["test", "train"]
@@ -357,43 +399,63 @@ def evaluate_clusterers_by_problem(
         splits = ["train"]
 
     clusterer_results = []
-    found_datasets = np.zeros(len(dataset_names), dtype=bool)
+    estimator_eval_names = []
     names = []
-    for clusterer_name in clusterer_names:
-        found_estimator = False
-        for i, dataset_name in enumerate(dataset_names):
-            for resample in resamples:
-                for split in splits:
-                    try:
-                        clusterer_results.append(
-                            ClustererResults().load_from_file(
-                                f"{load_path}/{clusterer_name}/Predictions/"
-                                f"{dataset_name}/{split}Resample{resample}.csv",
-                                verify_values=verify_results,
-                            )
-                        )
-                        names.append(clusterer_name)
-                        found_estimator = True
-                        found_datasets[i] = True
-                    except FileNotFoundError:
-                        if error_on_missing:
-                            raise FileNotFoundError(
-                                f"Results for {clusterer_results} on {dataset_name} "
-                                f"{split} resample {resample} not found."
-                            )
+    for i, path in enumerate(load_path):
+        found_datasets = np.zeros(len(dataset_names[i]), dtype=bool)
 
-        if not found_estimator:
-            print(f"Clusterer {clusterer_name} not found.")  # noqa: T201
+        for clusterer_name in clusterer_names[i]:
+            found_estimator = False
 
-    missing_datasets = [
-        dataset for dataset, found in zip(dataset_names, found_datasets) if not found
-    ]
-    if missing_datasets:
-        msg = f"Files for datasets {missing_datasets} not found."
-        if error_on_missing:
-            raise FileNotFoundError(msg)
-        else:
-            print("\n\n" + msg)  # noqa: T201
+            if isinstance(clusterer_name, tuple):
+                clusterer_eval_name = clusterer_name[1]
+                clusterer_name = clusterer_name[0]
+            else:
+                clusterer_eval_name = clusterer_name
+
+            if clusterer_eval_name not in estimator_eval_names:
+                estimator_eval_names.append(clusterer_eval_name)
+            else:
+                raise ValueError(
+                    f"Duplicate evaluation name {clusterer_eval_name} found."
+                )
+
+            for n, dataset_name in enumerate(dataset_names[i]):
+                for resample in resamples:
+                    for split in splits:
+                        try:
+                            clusterer_results.append(
+                                ClustererResults().load_from_file(
+                                    f"{path}/{clusterer_name}/Predictions/"
+                                    f"{dataset_name}/{split}Resample{resample}.csv",
+                                    verify_values=verify_results,
+                                )
+                            )
+                            names.append(clusterer_eval_name)
+                            found_estimator = True
+                            found_datasets[n] = True
+                        except FileNotFoundError:
+                            if error_on_missing:
+                                raise FileNotFoundError(
+                                    f"Results for {clusterer_eval_name} on "
+                                    f"{dataset_name} {split} resample {resample} not "
+                                    "found."
+                                )
+
+            if not found_estimator:
+                print(f"Clusterer {clusterer_eval_name} not found.")  # noqa: T201
+
+        missing_datasets = [
+            dataset
+            for dataset, found in zip(dataset_names[i], found_datasets)
+            if not found
+        ]
+        if missing_datasets:
+            msg = f"Files for datasets {missing_datasets} not found."
+            if error_on_missing:
+                raise FileNotFoundError(msg)
+            else:
+                print("\n\n" + msg)  # noqa: T201
 
     evaluate_clusterers(
         clusterer_results,
@@ -518,12 +580,22 @@ def evaluate_regressors_by_problem(
 
     Parameters
     ----------
-    load_path : list of str
+    load_path : str or list of str
         The path to the collection of regressor result files to evaluate.
-    regressor_names : list of str
+        If load_path is a list, it will load results from each path in the list. It
+        is expected that regressor_names and dataset_names are lists of lists with
+        the same length as load_path.
+    regressor_names : list of str, list of tuple or list of list
         The names of the regressors to evaluate.
-    dataset_names : list of str
+        A length 2 tuple containing strings can be used to specify a regressor name to
+        load from in the first item and a regressor name to use in the evaluation
+        results in the second.
+        If load_path is a list, regressor_names must be a list of lists with the same
+        length as load_path.
+    dataset_names : list of str or list of list
         The names of the datasets to evaluate.
+        If load_path is a list, dataset_names must be a list of lists with the same
+        length as load_path.
     save_path : str
         The path to save the evaluation results to.
     resamples : int or list of int, default=None
@@ -537,12 +609,13 @@ def evaluate_regressors_by_problem(
     verify_results : bool, default=True
         If the verification should be performed on the loaded results values.
     """
-    if resamples is None:
-        resamples = [""]
-    elif isinstance(resamples, int):
-        resamples = [str(i) for i in range(resamples)]
-    else:
-        resamples = [str(resample) for resample in resamples]
+    load_path, regressor_names, dataset_names, resamples = _evaluate_by_problem_init(
+        "regressor",
+        load_path,
+        regressor_names,
+        dataset_names,
+        resamples,
+    )
 
     if load_train_results:
         splits = ["test", "train"]
@@ -550,43 +623,63 @@ def evaluate_regressors_by_problem(
         splits = ["test"]
 
     regressor_results = []
-    found_datasets = np.zeros(len(dataset_names), dtype=bool)
+    estimator_eval_names = []
     names = []
-    for regressor_name in regressor_names:
-        found_estimator = False
-        for i, dataset_name in enumerate(dataset_names):
-            for resample in resamples:
-                for split in splits:
-                    try:
-                        regressor_results.append(
-                            RegressorResults().load_from_file(
-                                f"{load_path}/{regressor_name}/Predictions/"
-                                f"{dataset_name}/{split}Resample{resample}.csv",
-                                verify_values=verify_results,
-                            )
-                        )
-                        names.append(regressor_name)
-                        found_estimator = True
-                        found_datasets[i] = True
-                    except FileNotFoundError:
-                        if error_on_missing:
-                            raise FileNotFoundError(
-                                f"Results for {regressor_results} on {dataset_name} "
-                                f"{split} resample {resample} not found."
-                            )
+    for i, path in enumerate(load_path):
+        found_datasets = np.zeros(len(dataset_names[i]), dtype=bool)
 
-        if not found_estimator:
-            print(f"Regressor {regressor_name} not found.")  # noqa: T201
+        for regressor_name in regressor_names[i]:
+            found_estimator = False
 
-    missing_datasets = [
-        dataset for dataset, found in zip(dataset_names, found_datasets) if not found
-    ]
-    if missing_datasets:
-        msg = f"Files for datasets {missing_datasets} not found."
-        if error_on_missing:
-            raise FileNotFoundError(msg)
-        else:
-            print("\n\n" + msg)  # noqa: T201
+            if isinstance(regressor_name, tuple):
+                regressor_eval_name = regressor_name[1]
+                regressor_name = regressor_name[0]
+            else:
+                regressor_eval_name = regressor_name
+
+            if regressor_eval_name not in estimator_eval_names:
+                estimator_eval_names.append(regressor_eval_name)
+            else:
+                raise ValueError(
+                    f"Duplicate evaluation name {regressor_eval_name} found."
+                )
+
+            for n, dataset_name in enumerate(dataset_names[i]):
+                for resample in resamples:
+                    for split in splits:
+                        try:
+                            regressor_results.append(
+                                RegressorResults().load_from_file(
+                                    f"{path}/{regressor_name}/Predictions/"
+                                    f"{dataset_name}/{split}Resample{resample}.csv",
+                                    verify_values=verify_results,
+                                )
+                            )
+                            names.append(regressor_eval_name)
+                            found_estimator = True
+                            found_datasets[n] = True
+                        except FileNotFoundError:
+                            if error_on_missing:
+                                raise FileNotFoundError(
+                                    f"Results for {regressor_eval_name} on "
+                                    f"{dataset_name} {split} resample {resample} not "
+                                    f"found."
+                                )
+
+            if not found_estimator:
+                print(f"Regressor {regressor_eval_name} not found.")  # noqa: T201
+
+        missing_datasets = [
+            dataset
+            for dataset, found in zip(dataset_names[i], found_datasets)
+            if not found
+        ]
+        if missing_datasets:
+            msg = f"Files for datasets {missing_datasets} not found."
+            if error_on_missing:
+                raise FileNotFoundError(msg)
+            else:
+                print("\n\n" + msg)  # noqa: T201
 
     evaluate_regressors(
         regressor_results,
@@ -710,12 +803,22 @@ def evaluate_forecasters_by_problem(
 
     Parameters
     ----------
-    load_path : list of str
-        The path to the collection of clusterer result files to evaluate.
-    forecaster_names : list of str
-        The names of the clusterers to evaluate.
-    dataset_names : list of str
+    load_path : str or list of str
+        The path to the collection of forecaster result files to evaluate.
+        If load_path is a list, it will load results from each path in the list. It
+        is expected that forecaster_names and dataset_names are lists of lists with
+        the same length as load_path.
+    forecaster_names : list of str, list of tuple or list of list
+        The names of the forecasters to evaluate.
+        A length 2 tuple containing strings can be used to specify a forecaster name to
+        load from in the first item and a forecaster name to use in the evaluation
+        results in the second.
+        If load_path is a list, regressor_names must be a list of lists with the same
+        length as load_path.
+    dataset_names : list of str or list of list
         The names of the datasets to evaluate.
+        If load_path is a list, dataset_names must be a list of lists with the same
+        length as load_path..
     save_path : str
         The path to save the evaluation results to.
     resamples : int or list of int, default=None
@@ -727,50 +830,70 @@ def evaluate_forecasters_by_problem(
     verify_results : bool, default=True
         If the verification should be performed on the loaded results values.
     """
-    if resamples is None:
-        resamples = [""]
-    elif isinstance(resamples, int):
-        resamples = [str(i) for i in range(resamples)]
-    else:
-        resamples = [str(resample) for resample in resamples]
+    load_path, forecaster_names, dataset_names, resamples = _evaluate_by_problem_init(
+        "forecaster",
+        load_path,
+        forecaster_names,
+        dataset_names,
+        resamples,
+    )
 
     forecaster_results = []
-    found_datasets = np.zeros(len(dataset_names), dtype=bool)
+    estimator_eval_names = []
     names = []
-    for forecaster_name in forecaster_names:
-        found_estimator = False
-        for i, dataset_name in enumerate(dataset_names):
-            for resample in resamples:
-                try:
-                    forecaster_results.append(
-                        ForecasterResults().load_from_file(
-                            f"{load_path}/{forecaster_name}/Predictions/"
-                            f"{dataset_name}/testResample{resample}.csv",
-                            verify_values=verify_results,
-                        )
-                    )
-                    names.append(forecaster_name)
-                    found_estimator = True
-                    found_datasets[i] = True
-                except FileNotFoundError:
-                    if error_on_missing:
-                        raise FileNotFoundError(
-                            f"Results for {forecaster_name} on {dataset_name} "
-                            f"resample {resample} not found."
-                        )
+    for i, path in enumerate(load_path):
+        found_datasets = np.zeros(len(dataset_names[i]), dtype=bool)
 
-        if not found_estimator:
-            print(f"Forecaster {forecaster_name} not found.")  # noqa: T201
+        for forecaster_name in forecaster_names[i]:
+            found_estimator = False
 
-    missing_datasets = [
-        dataset for dataset, found in zip(dataset_names, found_datasets) if not found
-    ]
-    if missing_datasets:
-        msg = f"Files for datasets {missing_datasets} not found."
-        if error_on_missing:
-            raise FileNotFoundError(msg)
-        else:
-            print("\n\n" + msg)  # noqa: T201
+            if isinstance(forecaster_name, tuple):
+                forecaster_eval_name = forecaster_name[1]
+                forecaster_name = forecaster_name[0]
+            else:
+                forecaster_eval_name = forecaster_name
+
+            if forecaster_eval_name not in estimator_eval_names:
+                estimator_eval_names.append(forecaster_eval_name)
+            else:
+                raise ValueError(
+                    f"Duplicate evaluation name {forecaster_eval_name} found."
+                )
+
+            for n, dataset_name in enumerate(dataset_names[i]):
+                for resample in resamples:
+                    try:
+                        forecaster_results.append(
+                            ForecasterResults().load_from_file(
+                                f"{path}/{forecaster_name}/Predictions/"
+                                f"{dataset_name}/testResample{resample}.csv",
+                                verify_values=verify_results,
+                            )
+                        )
+                        names.append(forecaster_eval_name)
+                        found_estimator = True
+                        found_datasets[n] = True
+                    except FileNotFoundError:
+                        if error_on_missing:
+                            raise FileNotFoundError(
+                                f"Results for {forecaster_eval_name} on {dataset_name} "
+                                f"resample {resample} not found."
+                            )
+
+            if not found_estimator:
+                print(f"Forecaster {forecaster_eval_name} not found.")  # noqa: T201
+
+        missing_datasets = [
+            dataset
+            for dataset, found in zip(dataset_names[i], found_datasets)
+            if not found
+        ]
+        if missing_datasets:
+            msg = f"Files for datasets {missing_datasets} not found."
+            if error_on_missing:
+                raise FileNotFoundError(msg)
+            else:
+                print("\n\n" + msg)  # noqa: T201
 
     evaluate_forecasters(
         forecaster_results,
@@ -779,6 +902,39 @@ def evaluate_forecasters_by_problem(
         eval_name=eval_name,
         estimator_names=names,
     )
+
+
+def _evaluate_by_problem_init(
+    type, load_path, estimator_names, dataset_names, resamples
+):
+    if isinstance(load_path, str):
+        load_path = [load_path]
+    elif not isinstance(load_path, list):
+        raise TypeError("load_path must be a str or list of str.")
+
+    if isinstance(estimator_names[0], (str, tuple)):
+        estimator_names = [estimator_names]
+    elif not isinstance(estimator_names[0], list):
+        raise TypeError(f"{type}_names must be a str, tuple or list of str or tuple.")
+
+    if isinstance(dataset_names[0], str):
+        dataset_names = [dataset_names]
+    elif not isinstance(dataset_names[0], list):
+        raise TypeError("dataset_names must be a str or list of str.")
+
+    if len(load_path) != len(estimator_names) or len(load_path) != len(dataset_names):
+        raise ValueError(
+            f"load_path, {type}_names and dataset_names must be the same length."
+        )
+
+    if resamples is None:
+        resamples = [""]
+    elif isinstance(resamples, int):
+        resamples = [str(i) for i in range(resamples)]
+    else:
+        resamples = [str(resample) for resample in resamples]
+
+    return load_path, estimator_names, dataset_names, resamples
 
 
 def _evaluate_estimators(

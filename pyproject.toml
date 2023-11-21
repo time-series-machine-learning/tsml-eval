@@ -53,7 +53,7 @@ dependencies = [
 all_extras = [
     "aeon[all_extras,dl]",
     "tsml[extras]",
-    "xgboost<=1.7.5",
+    "xgboost",
     "torch>=1.13.1",
 ]
 unstable_extras = [
