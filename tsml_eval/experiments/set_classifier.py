@@ -517,7 +517,11 @@ def _set_classifier_interval_based(
         )
 
         return RandomIntervalSpectralEnsembleClassifier(
-            n_estimators=500, random_state=random_state, n_jobs=n_jobs, **kwargs
+            n_estimators=500,
+            random_state=random_state,
+            save_transformed_data=build_train_file,
+            n_jobs=n_jobs,
+            **kwargs,
         )
     elif c == "randomintervalspectralensembleclassifier" or c == "rise":
         from aeon.classification.interval_based import (
@@ -525,43 +529,67 @@ def _set_classifier_interval_based(
         )
 
         return RandomIntervalSpectralEnsembleClassifier(
-            random_state=random_state, n_jobs=n_jobs, **kwargs
+            random_state=random_state,
+            save_transformed_data=build_train_file,
+            n_jobs=n_jobs,
+            **kwargs,
         )
     elif c == "tsf-500":
         from aeon.classification.interval_based import TimeSeriesForestClassifier
 
         return TimeSeriesForestClassifier(
-            n_estimators=500, random_state=random_state, n_jobs=n_jobs, **kwargs
+            n_estimators=500,
+            random_state=random_state,
+            save_transformed_data=build_train_file,
+            n_jobs=n_jobs,
+            **kwargs,
         )
     elif c == "timeseriesforestclassifier" or c == "tsf":
         from aeon.classification.interval_based import TimeSeriesForestClassifier
 
         return TimeSeriesForestClassifier(
-            random_state=random_state, n_jobs=n_jobs, **kwargs
+            random_state=random_state,
+            save_transformed_data=build_train_file,
+            n_jobs=n_jobs,
+            **kwargs,
         )
     elif c == "cif-500":
         from aeon.classification.interval_based import CanonicalIntervalForestClassifier
 
         return CanonicalIntervalForestClassifier(
-            n_estimators=500, random_state=random_state, n_jobs=n_jobs, **kwargs
+            n_estimators=500,
+            random_state=random_state,
+            save_transformed_data=build_train_file,
+            n_jobs=n_jobs,
+            **kwargs,
         )
     elif c == "canonicalintervalforestclassifier" or c == "cif":
         from aeon.classification.interval_based import CanonicalIntervalForestClassifier
 
         return CanonicalIntervalForestClassifier(
-            random_state=random_state, n_jobs=n_jobs, **kwargs
+            random_state=random_state,
+            save_transformed_data=build_train_file,
+            n_jobs=n_jobs,
+            **kwargs,
         )
     elif c == "stsf-500":
         from aeon.classification.interval_based import SupervisedTimeSeriesForest
 
         return SupervisedTimeSeriesForest(
-            n_estimators=500, random_state=random_state, n_jobs=n_jobs, **kwargs
+            n_estimators=500,
+            random_state=random_state,
+            save_transformed_data=build_train_file,
+            n_jobs=n_jobs,
+            **kwargs,
         )
     elif c == "supervisedtimeseriesforest" or c == "stsf":
         from aeon.classification.interval_based import SupervisedTimeSeriesForest
 
         return SupervisedTimeSeriesForest(
-            random_state=random_state, n_jobs=n_jobs, **kwargs
+            random_state=random_state,
+            save_transformed_data=build_train_file,
+            n_jobs=n_jobs,
+            **kwargs,
         )
     elif c == "drcif-500":
         from aeon.classification.interval_based import DrCIFClassifier

@@ -7,12 +7,12 @@ name = "tsml-eval"
 version = "0.1.1"
 description = "A package for benchmarking time series machine learning tools."
 authors = [
-    {name = "Matthew Middlehurst", email = "m.middlehurst@uea.ac.uk"},
-    {name = "Tony Bagnall", email = "ajb@uea.ac.uk"},
+    {name = "Matthew Middlehurst", email = "m.b.middlehurst@soton.ac.uk"},
+    {name = "Tony Bagnall", email = "a.j.bagnall@soton.ac.uk"},
 ]
 maintainers = [
-    {name = "Matthew Middlehurst", email = "m.middlehurst@uea.ac.uk"},
-    {name = "Tony Bagnall", email = "ajb@uea.ac.uk"},
+    {name = "Matthew Middlehurst", email = "m.b.middlehurst@soton.ac.uk"},
+    {name = "Tony Bagnall", email = "a.j.bagnall@soton.ac.uk"},
 ]
 readme = "README.md"
 keywords = [
@@ -43,7 +43,8 @@ requires-python = ">=3.8,<3.12"
 dependencies = [
     "aeon>=0.5.0,<0.6.0",
     "scikit-learn>=1.0.2,<=1.3.2",
-    "tsml>=0.2.0,<0.3.0",
+    "tsml>=0.2.1,<0.3.0",
+    "matplotlib",
     "gpustat",
     "psutil",
 ]
@@ -52,7 +53,7 @@ dependencies = [
 all_extras = [
     "aeon[all_extras,dl]",
     "tsml[extras]",
-    "xgboost<=2.0.2",
+    "xgboost",
     "torch>=1.13.1",
 ]
 unstable_extras = [
@@ -150,4 +151,5 @@ addopts = '''
     --showlocals
     --doctest-modules
     --numprocesses auto
+    --meminterval 0.1
 '''

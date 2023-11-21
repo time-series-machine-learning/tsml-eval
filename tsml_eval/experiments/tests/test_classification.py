@@ -16,7 +16,7 @@ from tsml_eval.experiments import (
     threaded_classification_experiments,
 )
 from tsml_eval.experiments.tests import _CLASSIFIER_RESULTS_PATH
-from tsml_eval.utils.test_utils import (
+from tsml_eval.testing.test_utils import (
     _TEST_DATA_PATH,
     _check_set_method,
     _check_set_method_results,
@@ -91,10 +91,7 @@ def test_run_classification_experiment_main():
     assert os.path.exists(test_file)
     _check_classification_file_format(test_file)
 
-    os.remove(
-        f"{_CLASSIFIER_RESULTS_PATH}{classifier}/Predictions/{dataset}/"
-        "testResample0.csv"
-    )
+    os.remove(test_file)
 
 
 def test_run_threaded_classification_experiment():
@@ -110,8 +107,9 @@ def test_run_threaded_classification_experiment():
         "1",
         "-nj",
         "2",
-        # also test normalisation here
+        # also test normalisation and benchmark time here
         "--row_normalise",
+        "--benchmark_time",
     ]
 
     threaded_classification_experiments.run_experiment(args)

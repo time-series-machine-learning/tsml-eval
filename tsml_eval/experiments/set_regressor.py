@@ -345,7 +345,10 @@ def _set_regressor_interval_based(
         from aeon.regression.interval_based import TimeSeriesForestRegressor
 
         return TimeSeriesForestRegressor(
-            random_state=random_state, n_jobs=n_jobs, **kwargs
+            random_state=random_state,
+            n_jobs=n_jobs,
+            save_transformed_data=build_train_file,
+            **kwargs,
         )
     elif r == "tsf-i":
         from aeon.regression.interval_based import TimeSeriesForestRegressor
@@ -357,7 +360,11 @@ def _set_regressor_interval_based(
         estimators = [
             (
                 "tsf",
-                TimeSeriesForestRegressor(random_state=random_state, n_jobs=n_jobs),
+                TimeSeriesForestRegressor(
+                    random_state=random_state,
+                    n_jobs=n_jobs,
+                    save_transformed_data=build_train_file,
+                ),
                 None,
             )
         ]
@@ -367,7 +374,11 @@ def _set_regressor_interval_based(
         from aeon.regression.interval_based import TimeSeriesForestRegressor
 
         return TimeSeriesForestRegressor(
-            n_estimators=500, random_state=random_state, n_jobs=n_jobs, **kwargs
+            n_estimators=500,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            save_transformed_data=build_train_file,
+            **kwargs,
         )
     elif r == "drcif" or r == "drcifregressor":
         from aeon.regression.interval_based import DrCIFRegressor

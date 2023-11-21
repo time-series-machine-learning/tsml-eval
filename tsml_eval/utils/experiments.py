@@ -10,22 +10,25 @@ __all__ = [
     "write_clustering_results",
     "write_forecasting_results",
     "write_results_to_tsml_format",
-    "validate_results_file",
     "fix_broken_second_line",
     "compare_result_file_resample",
     "assign_gpu",
-    "parse_args",
+    "timing_benchmark",
 ]
 
-import argparse
 import os
+import time
 
 import gpustat
 import numpy as np
 from sklearn.utils import check_random_state
 from tsml.datasets import load_from_ts_file
 
-import tsml_eval
+from tsml_eval.utils.validation import (
+    _check_classification_third_line,
+    _check_clustering_third_line,
+    _check_regression_third_line,
+)
 
 
 def resample_data(X_train, y_train, X_test, y_test, random_state=None):
@@ -265,11 +268,11 @@ def write_classification_results(
     class_labels,
     classifier_name,
     dataset_name,
-    output_path,
+    file_path,
     full_path=True,
     split=None,
     resample_id=None,
-    timing_type="N/A",
+    time_unit="N/A",
     first_line_comment=None,
     parameter_info="No Parameter Info",
     accuracy=-1,
@@ -298,11 +301,11 @@ def write_classification_results(
         determine file structure if full_path is False.
     dataset_name : str
         Name of the problem the classifier was built on.
-    output_path : str
+    file_path : str
         Path to write the results file to or the directory to build the default file
         structure if full_path is False.
     full_path : boolean, default=True
-        If True, results are written directly to the directory passed in output_path.
+        If True, results are written directly to the directory passed in file_path.
         If False, then a standard file structure using the classifier and dataset names
         is created and used to write the results file.
     split : str or None, default=None
@@ -311,7 +314,7 @@ def write_classification_results(
     resample_id : int or None, default=None
         Indicates what random seed was used to resample the data or used as a
         random_state for the classifier.
-    timing_type : str, default="N/A"
+    time_unit : str, default="N/A"
         The format used for timings in the file, i.e. 'Seconds', 'Milliseconds',
         'Nanoseconds'
     first_line_comment : str or None, default=None
@@ -374,12 +377,12 @@ def write_classification_results(
         class_labels,
         classifier_name,
         dataset_name,
-        output_path,
+        file_path,
         predicted_probabilities=probabilities,
         full_path=full_path,
         split=split,
         resample_id=resample_id,
-        timing_type=timing_type,
+        time_unit=time_unit,
         first_line_comment=first_line_comment,
         second_line=parameter_info,
         third_line=third_line,
@@ -391,11 +394,11 @@ def write_regression_results(
     labels,
     regressor_name,
     dataset_name,
-    output_path,
+    file_path,
     full_path=True,
     split=None,
     resample_id=None,
-    timing_type="N/A",
+    time_unit="N/A",
     first_line_comment=None,
     parameter_info="No Parameter Info",
     mse=-1,
@@ -420,11 +423,11 @@ def write_regression_results(
         determine file structure if full_path is False.
     dataset_name : str
         Name of the problem the regressor was built on.
-    output_path : str
+    file_path : str
         Path to write the results file to or the directory to build the default file
         structure if full_path is False.
     full_path : boolean, default=True
-        If True, results are written directly to the directory passed in output_path.
+        If True, results are written directly to the directory passed in file_path.
         If False, then a standard file structure using the regressor and dataset names
         is created and used to write the results file.
     split : str or None, default=None
@@ -433,7 +436,7 @@ def write_regression_results(
     resample_id : int or None, default=None
         Indicates what random seed was used to resample the data or used as a
         random_state for the regressor.
-    timing_type : str, default="N/A"
+    time_unit : str, default="N/A"
         The format used for timings in the file, i.e. 'Seconds', 'Milliseconds',
         'Nanoseconds'
     first_line_comment : str or None, default=None
@@ -481,11 +484,11 @@ def write_regression_results(
         labels,
         regressor_name,
         dataset_name,
-        output_path,
+        file_path,
         full_path=full_path,
         split=split,
         resample_id=resample_id,
-        timing_type=timing_type,
+        time_unit=time_unit,
         first_line_comment=first_line_comment,
         second_line=parameter_info,
         third_line=third_line,
@@ -498,11 +501,11 @@ def write_clustering_results(
     class_labels,
     clusterer_name,
     dataset_name,
-    output_path,
+    file_path,
     full_path=True,
     split=None,
     resample_id=None,
-    timing_type="N/A",
+    time_unit="N/A",
     first_line_comment=None,
     parameter_info="No Parameter Info",
     clustering_accuracy=-1,
@@ -530,11 +533,11 @@ def write_clustering_results(
         determine file structure if full_path is False.
     dataset_name : str
         Name of the problem the clusterer was built on.
-    output_path : str
+    file_path : str
         Path to write the results file to or the directory to build the default file
         structure if full_path is False.
     full_path : boolean, default=True
-        If True, results are written directly to the directory passed in output_path.
+        If True, results are written directly to the directory passed in file_path.
         If False, then a standard file structure using the clusterer and dataset names
         is created and used to write the results file.
     split : str or None, default=None
@@ -543,7 +546,7 @@ def write_clustering_results(
     resample_id : int or None, default=None
         Indicates what random seed was used to resample the data or used as a
         random_state for the clusterer.
-    timing_type : str, default="N/A"
+    time_unit : str, default="N/A"
         The format used for timings in the file, i.e. 'Seconds', 'Milliseconds',
         'Nanoseconds'
     first_line_comment : str or None, default=None
@@ -594,12 +597,12 @@ def write_clustering_results(
         class_labels,
         clusterer_name,
         dataset_name,
-        output_path,
+        file_path,
         predicted_probabilities=cluster_probabilities,
         full_path=full_path,
         split=split,
         resample_id=resample_id,
-        timing_type=timing_type,
+        time_unit=time_unit,
         first_line_comment=first_line_comment,
         second_line=parameter_info,
         third_line=third_line,
@@ -611,11 +614,11 @@ def write_forecasting_results(
     labels,
     forecaster_name,
     dataset_name,
-    output_path,
+    file_path,
     full_path=True,
     split=None,
     random_seed=None,
-    timing_type="N/A",
+    time_unit="N/A",
     first_line_comment=None,
     parameter_info="No Parameter Info",
     mape=-1,
@@ -637,11 +640,11 @@ def write_forecasting_results(
         determine file structure if full_path is False.
     dataset_name : str
         Name of the problem the forecaster was built on.
-    output_path : str
+    file_path : str
         Path to write the results file to or the directory to build the default file
         structure if full_path is False.
     full_path : boolean, default=True
-        If True, results are written directly to the directory passed in output_path.
+        If True, results are written directly to the directory passed in file_path.
         If False, then a standard file structure using the forecaster and dataset names
         is created and used to write the results file.
     split : str or None, default=None
@@ -649,7 +652,7 @@ def write_forecasting_results(
         of the file.
     random_seed : int or None, default=None
         Indicates what random seed was used as a random_state for the forecaster.
-    timing_type : str, default="N/A"
+    time_unit : str, default="N/A"
         The format used for timings in the file, i.e. 'Seconds', 'Milliseconds',
         'Nanoseconds'
     first_line_comment : str or None, default=None
@@ -682,11 +685,11 @@ def write_forecasting_results(
         labels,
         forecaster_name,
         dataset_name,
-        output_path,
+        file_path,
         full_path=full_path,
         split=split,
         resample_id=random_seed,
-        timing_type=timing_type,
+        time_unit=time_unit,
         first_line_comment=first_line_comment,
         second_line=parameter_info,
         third_line=third_line,
@@ -698,12 +701,12 @@ def write_results_to_tsml_format(
     labels,
     estimator_name,
     dataset_name,
-    output_path,
+    file_path,
     predicted_probabilities=None,
     full_path=True,
     split=None,
     resample_id=None,
-    timing_type="N/A",
+    time_unit="N/A",
     first_line_comment=None,
     second_line="No Parameter Info",
     third_line="N/A",
@@ -722,14 +725,14 @@ def write_results_to_tsml_format(
         determine file structure if full_path is False.
     dataset_name : str
         Name of the problem the estimator was built on.
-    output_path : str
+    file_path : str
         Path to write the results file to or the directory to build the default file
         structure if full_path is False.
     predicted_probabilities : np.ndarray, default=None
         Estimated label probabilities. If passed, these are written after the
         predicted values for each case.
     full_path : boolean, default=True
-        If True, results are written directly to the directory passed in output_path.
+        If True, results are written directly to the directory passed in file_path.
         If False, then a standard file structure using the estimator and dataset names
         is created and used to write the results file.
     split : str or None, default=None
@@ -738,7 +741,7 @@ def write_results_to_tsml_format(
     resample_id : int or None, default=None
         Indicates what random seed was used to resample the data or used as a
         random_state for the estimator.
-    timing_type : str, default="N/A"
+    time_unit : str, default="N/A"
         The format used for timings in the file, i.e. 'Seconds', 'Milliseconds',
         'Nanoseconds'
     first_line_comment : str or None, default=None
@@ -758,20 +761,16 @@ def write_results_to_tsml_format(
 
     # If the full directory path is not passed, make the standard structure
     if not full_path:
-        output_path = f"{output_path}/{estimator_name}/Predictions/{dataset_name}/"
+        file_path = f"{file_path}/{estimator_name}/Predictions/{dataset_name}/"
 
     try:
-        os.makedirs(output_path)
+        os.makedirs(file_path)
     except os.error:
         pass  # raises os.error if path already exists, so just ignore this
 
     if split is None:
         split = ""
-    elif split.lower() == "train":
-        split = "TRAIN"
-    elif split.lower() == "test":
-        split = "TEST"
-    else:
+    elif split.lower() != "train" and split.lower() != "test":
         raise ValueError("Unknown 'split' value - should be 'TRAIN', 'TEST' or None")
 
     fname = (
@@ -781,52 +780,51 @@ def write_results_to_tsml_format(
     )
     fname = fname.lower() if split == "" else fname
 
-    file = open(f"{output_path}/{fname}.csv", "w")
+    with open(f"{file_path}/{fname}.csv", "w") as file:
+        # the first line of the output file is in the form of:
+        first_line = (
+            f"{dataset_name},"
+            f"{estimator_name},"
+            f"{'No split' if split == '' else split.upper()},"
+            f"{'None' if resample_id is None else resample_id},"
+            f"{time_unit.upper()},"
+            f"{'' if first_line_comment is None else first_line_comment}"
+        )
+        file.write(first_line + "\n")
 
-    # the first line of the output file is in the form of:
-    first_line = (
-        f"{dataset_name},"
-        f"{estimator_name},"
-        f"{'No split' if split == '' else split},"
-        f"{'None' if resample_id is None else resample_id},"
-        f"{timing_type},"
-        f"{'' if first_line_comment is None else first_line_comment}"
-    )
-    file.write(first_line + "\n")
+        # the second line of the output is free form and estimator-specific; usually
+        # this will record info such as paramater options used, any constituent model
+        # names for ensembles, etc.
+        file.write(str(second_line) + "\n")
 
-    # the second line of the output is free form and estimator-specific; usually this
-    # will record info such as paramater options used, any constituent model
-    # names for ensembles, etc.
-    file.write(str(second_line) + "\n")
+        # the third line of the file depends on the task i.e. classification or
+        # regression
+        file.write(str(third_line) + "\n")
 
-    # the third line of the file depends on the task i.e. classification or regression
-    file.write(str(third_line) + "\n")
+        # from line 4 onwards each line should include the actual and predicted class
+        # labels (comma-separated). If present, for each case, the probabilities of
+        # predicting every class value for this case should also be appended to the
+        # line (a space is also included between the predicted value and the
+        # predict_proba). E.g.:
+        #
+        # if predict_proba data IS provided for case i:
+        #   labels[i], preds[i],,prob_class_0[i],
+        #   prob_class_1[i],...,prob_class_c[i]
+        #
+        # if predict_proba data IS NOT provided for case i:
+        #   labels[i], preds[i]
+        #
+        # If labels[i] is NaN (if clustering), labels[i] is replaced with ? to indicate
+        # missing
+        for i in range(0, len(predictions)):
+            label = "?" if np.isnan(labels[i]) else labels[i]
+            file.write(f"{label},{predictions[i]}")
 
-    # from line 4 onwards each line should include the actual and predicted class
-    # labels (comma-separated). If present, for each case, the probabilities of
-    # predicting every class value for this case should also be appended to the line (
-    # a space is also included between the predicted value and the predict_proba). E.g.:
-    #
-    # if predict_proba data IS provided for case i:
-    #   labels[i], preds[i],,prob_class_0[i],
-    #   prob_class_1[i],...,prob_class_c[i]
-    #
-    # if predict_proba data IS NOT provided for case i:
-    #   labels[i], predd[i]
-    #
-    # If labels[i] is NaN (if clustering), labels[i] is replaced with ? to indicate
-    # missing
-    for i in range(0, len(predictions)):
-        label = "?" if np.isnan(labels[i]) else labels[i]
-        file.write(f"{label},{predictions[i]}")
-
-        if predicted_probabilities is not None:
-            file.write(",")
-            for j in predicted_probabilities[i]:
-                file.write(f",{j}")
-        file.write("\n")
-
-    file.close()
+            if predicted_probabilities is not None:
+                file.write(",")
+                for j in predicted_probabilities[i]:
+                    file.write(f",{j}")
+            file.write("\n")
 
 
 def _results_present(path, estimator, dataset, resample_id=None, split="TEST"):
@@ -854,47 +852,6 @@ def _results_present(path, estimator, dataset, resample_id=None, split="TEST"):
             return True
 
     return False
-
-
-def validate_results_file(file_path):
-    """Validate that a results file is in the correct format.
-
-    Validates that the first, second, third and results lines follow the expected
-    format. This does not verify that the actual contents of the results file make
-    sense.
-
-    Works for classification, regression and clustering results files.
-
-    Parameters
-    ----------
-    file_path : str
-        Path to the results file to be validated, including the file itself.
-
-    Returns
-    -------
-    valid_file : bool
-        True if the results file is valid, False otherwise.
-    """
-    with open(file_path, "r") as f:
-        lines = f.readlines()
-
-    if not _check_first_line(lines[0]) or not _check_second_line(lines[1]):
-        return False
-
-    if _check_classification_third_line(lines[2]) or _check_clustering_third_line(
-        lines[2]
-    ):
-        probabilities = True
-    elif _check_regression_third_line(lines[2]):
-        probabilities = False
-    else:
-        return False
-
-    for i in range(3, len(lines)):
-        if not _check_results_line(lines[i], probabilities=probabilities):
-            return False
-
-    return True
 
 
 def fix_broken_second_line(file_path, save_path=None):
@@ -942,96 +899,6 @@ def fix_broken_second_line(file_path, save_path=None):
 
         with open(save_path, "w") as f:
             f.writelines(lines)
-
-
-def _check_first_line(line):
-    line = line.split(",")
-    return len(line) >= 5
-
-
-def _check_second_line(line):
-    line = line.split(",")
-    return len(line) >= 1
-
-
-def _check_classification_third_line(line):
-    line = line.split(",")
-    floats = [0, 1, 2, 3, 4, 5, 7, 8]
-    return _check_line_length_and_floats(line, 9, floats)
-
-
-def _check_regression_third_line(line):
-    line = line.split(",")
-    floats = [0, 1, 2, 3, 4, 6, 7]
-    return _check_line_length_and_floats(line, 8, floats)
-
-
-def _check_clustering_third_line(line):
-    line = line.split(",")
-    floats = [0, 1, 2, 3, 4, 5, 6]
-    return _check_line_length_and_floats(line, 7, floats)
-
-
-def _check_forecasting_third_line(line):
-    line = line.split(",")
-    floats = [0, 1, 2, 3, 4]
-    return _check_line_length_and_floats(line, 5, floats)
-
-
-def _check_line_length_and_floats(line, length, floats):
-    if len(line) != length:
-        return False
-
-    for i in floats:
-        try:
-            float(line[i])
-        except ValueError:
-            return False
-
-    return True
-
-
-def _check_results_lines(lines, num_results_lines=None, probabilities=True, n_probas=1):
-    if num_results_lines is not None:
-        assert len(lines) - 3 == num_results_lines
-
-        for i in range(3, num_results_lines):
-            assert _check_results_line(
-                lines[i], probabilities=probabilities, n_probas=n_probas
-            )
-    else:
-        for i in range(3, 6):
-            assert _check_results_line(
-                lines[i], probabilities=probabilities, n_probas=n_probas
-            )
-
-
-def _check_results_line(line, probabilities=True, n_probas=1):
-    line = line.split(",")
-
-    if len(line) < 2:
-        return False
-
-    try:
-        float(line[0])
-        float(line[1])
-    except ValueError:
-        return False
-
-    if probabilities:
-        if len(line) < 3 + n_probas or line[2] != "":
-            return False
-
-        try:
-            for i in range(n_probas):
-                float(line[3 + i])
-        except ValueError:
-            return False
-    else:
-        if len(line) != 2:
-            return False
-
-    return True
 
 
 def compare_result_file_resample(file_path1, file_path2):
@@ -1102,228 +969,42 @@ def assign_gpu(set_environ=False):  # pragma: no cover
     return gpu
 
 
-def parse_args(args):
-    """Parse the command line arguments for tsml_eval.
+def timing_benchmark(num_arrays=1000, array_size=20000, random_state=None):
+    """
+    Measures the time taken to sort a given number of numpy arrays of a specified size.
 
-    The following is the --help output for tsml_eval:
-
-    usage: tsml_eval [-h] [--version] [-ow] [-pr] [-rs RANDOM_SEED] [-nj N_JOBS]
-                     [-tr] [-te] [-fc FIT_CONTRACT] [-ch] [-rn] [-nc N_CLUSTERS]
-                     [-ctts] [-kw KEY VALUE TYPE]
-                     data_path results_path estimator_name dataset_name
-                     resample_id
-
-    positional arguments:
-      data_path             the path to the directory storing dataset files.
-      results_path          the path to the directory where results files are
-                            written to.
-      estimator_name        the name of the estimator to run. See the
-                            set_{task}.py file for each task learning task for
-                            available options.
-      dataset_name          the name of the dataset to load.
-                            {data_dir}/{dataset_name}/{dataset_name}_TRAIN.ts and
-                            {data_dir}/{dataset_name}/{dataset_name}_TEST.ts will
-                            be loaded.
-      resample_id           the resample ID to use when randomly resampling the
-                            data, as a random seed for estimators and the suffix
-                            when writing results files. An ID of 0 will use the
-                            default TRAIN/TEST split.
-
-    options:
-      -h, --help            show this help message and exit
-      --version             show program's version number and exit
-      -ow, --overwrite      overwrite existing results files. If False, existing
-                            results files will be skipped (default: False).
-      -pr, --predefined_resample
-                            load a dataset file with a predefined resample. The
-                            dataset file must follow the naming format
-                            '{dataset_name}_{resample_id}.ts' (default: False).
-      -rs RANDOM_SEED, --random_seed RANDOM_SEED
-                            use a different random seed than the resample ID. If
-                            None use the {resample_id} (default: None).
-      -nj N_JOBS, --n_jobs N_JOBS
-                            the number of jobs to run in parallel. Only used if
-                            the experiments file and selected estimator allows
-                            threading (default: 1).
-      -tr, --train_fold     write a results file for the training data in the
-                            classification and regression task (default: False).
-      -te, --test_fold      write a results file for the test data in the
-                            clustering task (default: False).
-      -fc FIT_CONTRACT, --fit_contract FIT_CONTRACT
-                            a time limit for estimator fit in minutes. Only used
-                            if the estimator can contract fit (default: 0).
-      -ch, --checkpoint     save the estimator fit to file periodically while
-                            building. Only used if the estimator can checkpoint
-                            (default: False).
-      -rn, --row_normalise  normalise the data rows prior to fitting and
-                            predicting (default: False).
-      -nc N_CLUSTERS, --n_clusters N_CLUSTERS
-                            the number of clusters to find for clusterers which
-                            have an {n_clusters} parameter. If {-1}, use the
-                            number of classes in the dataset (default: -1).
-      -ctts, --combine_test_train_split
-                            whether to use a train/test split or not. If True, the
-                            train and test sets are combined and used the fit the
-                            estimator. Only available for clustering
-                            (default: False).
-      -kw KEY VALUE TYPE, --kwargs KEY VALUE TYPE, --kwarg KEY VALUE TYPE
-                            additional keyword arguments to pass to the estimator.
-                            Should contain the parameter to set, the parameter
-                            value, and the type of the value i.e. {--kwargs
-                            n_estimators 200 int} to change the size of an
-                            ensemble. Valid types are {int, float, bool, str}. Any
-                            other type will be passed as a str. Can be used
-                            multiple times (default: None).
+    Returns the time taken in milliseconds.
 
     Parameters
     ----------
-    args : list
-        List of command line arguments to parse.
+    num_arrays: int, default=1000
+        Number of arrays to generate and sort.
+    array_size: int, default=20000
+        Size of each numpy array to be sorted.
+    random_state: int, RandomState instance or None, default=None
+        If `int`, random_state is the seed used by the random number generator;
+        If `RandomState` instance, random_state is the random number generator;
+        If `None`, the random number generator is the `RandomState` instance used
+        by `np.random`.
 
     Returns
     -------
-    same_resample : argparse.Namespace
-        The parsed command line arguments.
+    time_taken: int
+        Time taken to sort the arrays in milliseconds.
     """
-    parser = argparse.ArgumentParser(prog="tsml_eval")
-    parser.add_argument(
-        "--version", action="version", version=f"%(prog)s {tsml_eval.__version__}"
-    )
-    parser.add_argument(
-        "data_path", help="the path to the directory storing dataset files."
-    )
-    parser.add_argument(
-        "results_path",
-        help="the path to the directory where results files are written to.",
-    )
-    parser.add_argument(
-        "estimator_name",
-        help="the name of the estimator to run. See the set_{task}.py file for each "
-        "task learning task for available options.",
-    )
-    parser.add_argument(
-        "dataset_name",
-        help="the name of the dataset to load. "
-        "{data_dir}/{dataset_name}/{dataset_name}_TRAIN.ts and "
-        "{data_dir}/{dataset_name}/{dataset_name}_TEST.ts will be loaded.",
-    )
-    parser.add_argument(
-        "resample_id",
-        type=int,
-        help="the resample ID to use when randomly resampling the data, as a random "
-        "seed for estimators and the suffix when writing results files. An ID of "
-        "0 will use the default TRAIN/TEST split.",
-    )
-    parser.add_argument(
-        "-ow",
-        "--overwrite",
-        action="store_true",
-        help="overwrite existing results files. If False, existing results files "
-        "will be skipped (default: %(default)s).",
-    )
-    parser.add_argument(
-        "-pr",
-        "--predefined_resample",
-        action="store_true",
-        help="load a dataset file with a predefined resample. The dataset file must "
-        "follow the naming format '{dataset_name}{resample_id}.ts' "
-        "(default: %(default)s).",
-    )
-    parser.add_argument(
-        "-rs",
-        "--random_seed",
-        type=int,
-        help="use a different random seed than the resample ID. If None use the "
-        "{resample_id} (default: %(default)s).",
-    )
-    parser.add_argument(
-        "-nj",
-        "--n_jobs",
-        type=int,
-        default=1,
-        help="the number of jobs to run in parallel. Only used if the experiments file "
-        "and selected estimator allows threading (default: %(default)s).",
-    )
-    parser.add_argument(
-        "-tr",
-        "--train_fold",
-        action="store_true",
-        help="write a results file for the training data in the classification and "
-        "regression task (default: %(default)s).",
-    )
-    parser.add_argument(
-        "-te",
-        "--test_fold",
-        action="store_true",
-        help="write a results file for the test data in the clustering task "
-        "(default: %(default)s).",
-    )
-    parser.add_argument(
-        "-fc",
-        "--fit_contract",
-        type=int,
-        default=0,
-        help="a time limit for estimator fit in minutes. Only used if the estimator "
-        "can contract fit (default: %(default)s).",
-    )
-    parser.add_argument(
-        "-ch",
-        "--checkpoint",
-        action="store_true",
-        help="save the estimator fit to file periodically while building. Only used if "
-        "the estimator can checkpoint (default: %(default)s).",
-    )
-    parser.add_argument(
-        "-rn",
-        "--row_normalise",
-        action="store_true",
-        help="normalise the data rows prior to fitting and predicting "
-        "(default: %(default)s).",
-    )
-    parser.add_argument(
-        "-nc",
-        "--n_clusters",
-        type=int,
-        default=-1,
-        help="the number of clusters to find for clusterers which have an {n_clusters} "
-        "parameter. If {-1}, use the number of classes in the dataset "
-        "(default: %(default)s).",
-    )
-    parser.add_argument(
-        "-ctts",
-        "--combine_test_train_split",
-        action="store_true",
-        help="whether to use a train/test split or not. If True, the train and test "
-        "sets are combined and used the fit the estimator. Only available for "
-        "clustering (default: %(default)s).",
-    )
-    parser.add_argument(
-        "-kw",
-        "--kwargs",
-        "--kwarg",
-        action="append",
-        nargs=3,
-        metavar=("KEY", "VALUE", "TYPE"),
-        help="additional keyword arguments to pass to the estimator. Should contain "
-        "the parameter to set, the parameter value, and the type of the value i.e. "
-        "{--kwargs n_estimators 200 int} to change the size of an ensemble. Valid "
-        "types are {int, float, bool, str}. Any other type will be passed as a str. "
-        "Can be used multiple times (default: %(default)s).",
-    )
+    if random_state is None:
+        random_state = check_random_state(0)
+    elif isinstance(random_state, (int, np.random.RandomState)):
+        random_state = check_random_state(random_state)
+    else:
+        raise ValueError("random_state must be an int, RandomState instance or None")
 
-    args = parser.parse_args(args=args)
+    total_time = 0
+    for _ in range(num_arrays):
+        array = random_state.rand(array_size)
+        start_time = time.time()
+        np.sort(array)
+        end_time = time.time()
+        total_time += end_time - start_time
 
-    kwargs = {}
-    if args.kwargs is not None:
-        for kwarg in args.kwargs:
-            if kwarg[2] == "int":
-                kwargs[kwarg[0]] = int(kwarg[1])
-            elif kwarg[2] == "float":
-                kwargs[kwarg[0]] = float(kwarg[1])
-            elif kwarg[2] == "bool":
-                kwargs[kwarg[0]] = kwarg[1].lower() == "true" or kwarg[1] == "1"
-            else:
-                kwargs[kwarg[0]] = kwarg[1]
-    args.kwargs = kwargs
-
-    return args
+    return int(round(total_time * 1000))

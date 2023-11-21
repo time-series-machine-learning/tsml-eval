@@ -16,7 +16,7 @@ from tsml_eval.experiments import (
     threaded_clustering_experiments,
 )
 from tsml_eval.experiments.tests import _CLUSTERER_RESULTS_PATH
-from tsml_eval.utils.test_utils import (
+from tsml_eval.testing.test_utils import (
     _TEST_DATA_PATH,
     _check_set_method,
     _check_set_method_results,
@@ -88,9 +88,7 @@ def test_run_clustering_experiment_main():
     assert os.path.exists(train_file)
     _check_clustering_file_format(train_file)
 
-    os.remove(
-        f"{_CLUSTERER_RESULTS_PATH}{clusterer}/Predictions/{dataset}/trainResample0.csv"
-    )
+    os.remove(train_file)
 
 
 def test_run_threaded_clustering_experiment():
@@ -106,8 +104,9 @@ def test_run_threaded_clustering_experiment():
         "1",
         "-nj",
         "2",
-        # also test normalisation here
+        # also test normalisation and benchmark time here
         "--row_normalise",
+        "--benchmark_time",
         "-te",
     ]
 
@@ -116,8 +115,14 @@ def test_run_threaded_clustering_experiment():
     train_file = (
         f"{_CLUSTERER_RESULTS_PATH}{clusterer}/Predictions/{dataset}/trainResample1.csv"
     )
-    assert os.path.exists(train_file)
+    test_file = (
+        f"{_CLUSTERER_RESULTS_PATH}{clusterer}/Predictions/{dataset}/testResample1.csv"
+    )
+
+    assert os.path.exists(train_file) and os.path.exists(test_file)
+
     _check_clustering_file_format(train_file)
+    _check_clustering_file_format(test_file)
 
     # test present results checking
     threaded_clustering_experiments.run_experiment(args)
@@ -131,6 +136,7 @@ def test_run_threaded_clustering_experiment():
     )
 
     os.remove(train_file)
+    os.remove(test_file)
 
 
 def test_run_clustering_experiment_invalid_build_settings():
