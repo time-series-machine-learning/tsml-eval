@@ -8,6 +8,7 @@ import runpy
 import pytest
 from tsml.dummy import DummyRegressor
 
+from tsml_eval.datasets._test_data._data_sizes import DATA_TEST_SIZES
 from tsml_eval.experiments import (
     classification_experiments,
     run_classification_experiment,
@@ -55,8 +56,12 @@ def test_run_classification_experiment(classifier, dataset):
 
     assert os.path.exists(test_file) and os.path.exists(train_file)
 
-    _check_classification_file_format(test_file)
-    _check_classification_file_format(train_file)
+    _check_classification_file_format(
+        test_file, num_results_lines=DATA_TEST_SIZES[dataset]
+    )
+    _check_classification_file_format(
+        train_file, num_results_lines=DATA_TEST_SIZES[dataset]
+    )
 
     # test present results checking
     classification_experiments.run_experiment(args)

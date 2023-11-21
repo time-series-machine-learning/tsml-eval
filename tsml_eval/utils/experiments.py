@@ -23,6 +23,7 @@ import os
 import gpustat
 import numpy as np
 from sklearn.utils import check_random_state
+from tsml.datasets import load_from_ts_file
 
 import tsml_eval
 
@@ -93,6 +94,62 @@ def resample_data(X_train, y_train, X_test, y_test, random_state=None):
     y_test = all_labels[test_indices]
 
     return X_train, y_train, X_test, y_test
+
+
+def load_experiment_data(
+    problem_path: str,
+    dataset: str,
+    resample_id: int,
+    predefined_resample: bool,
+):
+    """Load data for experiments.
+
+    Parameters
+    ----------
+    problem_path : str
+        Path to the problem folder.
+    dataset : str
+        Name of the dataset.
+    resample_id : int or None
+        Id of the data resample to use.
+    predefined_resample : boolean
+        If True, use the predefined resample.
+
+    Returns
+    -------
+    X_train : np.ndarray or list of np.ndarray
+        Train data in a 2d or 3d ndarray or list of arrays.
+    y_train : np.ndarray
+        Train data labels.
+    X_test : np.ndarray or list of np.ndarray
+        Test data in a 2d or 3d ndarray or list of arrays.
+    y_test : np.ndarray
+        Test data labels.
+    resample : boolean
+        If True, the data is to be resampled.
+    """
+    if resample_id is not None and predefined_resample:
+        resample_str = "" if resample_id is None else str(resample_id)
+
+        X_train, y_train = load_from_ts_file(
+            f"{problem_path}/{dataset}/{dataset}{resample_str}_TRAIN.ts"
+        )
+        X_test, y_test = load_from_ts_file(
+            f"{problem_path}/{dataset}/{dataset}{resample_str}_TEST.ts"
+        )
+
+        resample_data = False
+    else:
+        X_train, y_train = load_from_ts_file(
+            f"{problem_path}/{dataset}/{dataset}_TRAIN.ts"
+        )
+        X_test, y_test = load_from_ts_file(
+            f"{problem_path}/{dataset}/{dataset}_TEST.ts"
+        )
+
+        resample_data = True if resample_id != 0 else False
+
+    return X_train, y_train, X_test, y_test, resample_data
 
 
 def stratified_resample_data(X_train, y_train, X_test, y_test, random_state=None):
@@ -934,6 +991,21 @@ def _check_line_length_and_floats(line, length, floats):
     return True
 
 
+def _check_results_lines(lines, num_results_lines=None, probabilities=True, n_probas=1):
+    if num_results_lines is not None:
+        assert len(lines) - 3 == num_results_lines
+
+        for i in range(3, num_results_lines):
+            assert _check_results_line(
+                lines[i], probabilities=probabilities, n_probas=n_probas
+            )
+    else:
+        for i in range(3, 6):
+            assert _check_results_line(
+                lines[i], probabilities=probabilities, n_probas=n_probas
+            )
+
+
 def _check_results_line(line, probabilities=True, n_probas=1):
     line = line.split(",")
 
@@ -1037,7 +1109,7 @@ def parse_args(args):
 
     usage: tsml_eval [-h] [--version] [-ow] [-pr] [-rs RANDOM_SEED] [-nj N_JOBS]
                      [-tr] [-te] [-fc FIT_CONTRACT] [-ch] [-rn] [-nc N_CLUSTERS]
-                     [-kw KEY VALUE TYPE]
+                     [-ctts] [-kw KEY VALUE TYPE]
                      data_path results_path estimator_name dataset_name
                      resample_id
 
@@ -1084,11 +1156,16 @@ def parse_args(args):
                             building. Only used if the estimator can checkpoint
                             (default: False).
       -rn, --row_normalise  normalise the data rows prior to fitting and
-                            predicting. (default: False).
+                            predicting (default: False).
       -nc N_CLUSTERS, --n_clusters N_CLUSTERS
                             the number of clusters to find for clusterers which
                             have an {n_clusters} parameter. If {-1}, use the
-                            number of classes in the dataset (default: None).
+                            number of classes in the dataset (default: -1).
+      -ctts, --combine_test_train_split
+                            whether to use a train/test split or not. If True, the
+                            train and test sets are combined and used the fit the
+                            estimator. Only available for clustering
+                            (default: False).
       -kw KEY VALUE TYPE, --kwargs KEY VALUE TYPE, --kwarg KEY VALUE TYPE
                             additional keyword arguments to pass to the estimator.
                             Should contain the parameter to set, the parameter
@@ -1200,16 +1277,25 @@ def parse_args(args):
         "-rn",
         "--row_normalise",
         action="store_true",
-        help="normalise the data rows prior to fitting and predicting. "
+        help="normalise the data rows prior to fitting and predicting "
         "(default: %(default)s).",
     )
     parser.add_argument(
         "-nc",
         "--n_clusters",
         type=int,
+        default=-1,
         help="the number of clusters to find for clusterers which have an {n_clusters} "
         "parameter. If {-1}, use the number of classes in the dataset "
         "(default: %(default)s).",
+    )
+    parser.add_argument(
+        "-ctts",
+        "--combine_test_train_split",
+        action="store_true",
+        help="whether to use a train/test split or not. If True, the train and test "
+        "sets are combined and used the fit the estimator. Only available for "
+        "clustering (default: %(default)s).",
     )
     parser.add_argument(
         "-kw",
@@ -1224,6 +1310,7 @@ def parse_args(args):
         "types are {int, float, bool, str}. Any other type will be passed as a str. "
         "Can be used multiple times (default: %(default)s).",
     )
+
     args = parser.parse_args(args=args)
 
     kwargs = {}

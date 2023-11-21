@@ -17,6 +17,7 @@ from aeon.classification import BaseClassifier
 from aeon.clustering import BaseClusterer
 from aeon.forecasting.base import BaseForecaster
 from aeon.regression.base import BaseRegressor
+from aeon.transformations.collection import TimeSeriesScaler
 from sklearn import preprocessing
 from sklearn.base import BaseEstimator, is_classifier, is_regressor
 from sklearn.metrics import (
@@ -26,7 +27,6 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import cross_val_predict
 from tsml.base import BaseTimeSeriesEstimator
-from tsml.datasets import load_from_ts_file
 from tsml.utils.validation import is_clusterer
 
 from tsml_eval.estimators import (
@@ -34,9 +34,9 @@ from tsml_eval.estimators import (
     SklearnToTsmlClusterer,
     SklearnToTsmlRegressor,
 )
-from tsml_eval.estimators.transformations.scaler import TimeSeriesScaler
 from tsml_eval.evaluation.metrics import clustering_accuracy
 from tsml_eval.utils.experiments import (
+    load_experiment_data,
     resample_data,
     stratified_resample_data,
     write_classification_results,
@@ -105,6 +105,9 @@ def run_classification_experiment(
             "At least one must be written."
         )
 
+    if classifier_name is None:
+        classifier_name = type(classifier).__name__
+
     if isinstance(classifier, BaseClassifier) or (
         isinstance(classifier, BaseTimeSeriesEstimator) and is_classifier(classifier)
     ):
@@ -114,15 +117,13 @@ def run_classification_experiment(
             classifier=classifier,
             pad_unequal=True,
             concatenate_channels=True,
+            clone_estimator=False,
             random_state=classifier.random_state
             if hasattr(classifier, "random_state")
             else None,
         )
     else:
         raise TypeError("classifier must be a tsml, aeon or sklearn classifier.")
-
-    if classifier_name is None:
-        classifier_name = type(classifier).__name__
 
     if row_normalise:
         scaler = TimeSeriesScaler()
@@ -285,7 +286,7 @@ def load_and_run_classification_experiment(
         warnings.warn("All files exist and not overwriting, skipping.", stacklevel=1)
         return
 
-    X_train, y_train, X_test, y_test, resample = _load_data(
+    X_train, y_train, X_test, y_test, resample = load_experiment_data(
         problem_path, dataset, resample_id, predefined_resample
     )
 
@@ -369,6 +370,9 @@ def run_regression_experiment(
             "At least one must be written."
         )
 
+    if regressor_name is None:
+        regressor_name = type(regressor).__name__
+
     if isinstance(regressor, BaseRegressor) or (
         isinstance(regressor, BaseTimeSeriesEstimator) and is_regressor(regressor)
     ):
@@ -378,15 +382,13 @@ def run_regression_experiment(
             regressor=regressor,
             pad_unequal=True,
             concatenate_channels=True,
+            clone_estimator=False,
             random_state=regressor.random_state
             if hasattr(regressor, "random_state")
             else None,
         )
     else:
         raise TypeError("regressor must be a tsml, aeon or sklearn regressor.")
-
-    if regressor_name is None:
-        regressor_name = type(regressor).__name__
 
     if row_normalise:
         scaler = TimeSeriesScaler()
@@ -532,7 +534,7 @@ def load_and_run_regression_experiment(
         warnings.warn("All files exist and not overwriting, skipping.", stacklevel=1)
         return
 
-    X_train, y_train, X_test, y_test, resample = _load_data(
+    X_train, y_train, X_test, y_test, resample = load_experiment_data(
         problem_path, dataset, resample_id, predefined_resample
     )
 
@@ -626,6 +628,9 @@ def run_clustering_experiment(
             "At least one must be written."
         )
 
+    if clusterer_name is None:
+        clusterer_name = type(clusterer).__name__
+
     if isinstance(clusterer, BaseClusterer) or (
         isinstance(clusterer, BaseTimeSeriesEstimator) and is_clusterer(clusterer)
     ):
@@ -635,15 +640,13 @@ def run_clustering_experiment(
             clusterer=clusterer,
             pad_unequal=True,
             concatenate_channels=True,
+            clone_estimator=False,
             random_state=clusterer.random_state
             if hasattr(clusterer, "random_state")
             else None,
         )
     else:
         raise TypeError("clusterer must be a tsml, aeon or sklearn clusterer.")
-
-    if clusterer_name is None:
-        clusterer_name = type(clusterer).__name__
 
     if build_test_file and (X_test is None or y_test is None):
         raise ValueError("Test data and labels not provided, cannot build test file.")
@@ -677,6 +680,7 @@ def run_clustering_experiment(
                 "so it cannot be set.",
                 stacklevel=1,
             )
+            n_clusters = None
     elif n_clusters is not None:
         raise ValueError("n_clusters must be an int or None.")
 
@@ -702,7 +706,12 @@ def run_clustering_experiment(
             if hasattr(clusterer, "labels_")
             else clusterer.predict(X_train)
         )
-        train_probs = np.zeros((len(train_preds), len(np.unique(train_preds))))
+        train_probs = np.zeros(
+            (
+                len(train_preds),
+                n_clusters if n_clusters is not None else len(np.unique(train_preds)),
+            )
+        )
         train_probs[:, train_preds] = 1
     train_time = int(round(time.time() * 1000)) - start
 
@@ -736,7 +745,14 @@ def run_clustering_experiment(
             test_preds = np.argmax(test_probs, axis=1)
         else:
             test_preds = clusterer.predict(X_test)
-            test_probs = np.zeros((len(test_preds), len(np.unique(train_preds))))
+            test_probs = np.zeros(
+                (
+                    len(test_preds),
+                    n_clusters
+                    if n_clusters is not None
+                    else len(np.unique(train_preds)),
+                )
+            )
             test_probs[:, test_preds] = 1
         test_time = int(round(time.time() * 1000)) - start
 
@@ -775,6 +791,7 @@ def load_and_run_clustering_experiment(
     build_test_file=False,
     overwrite=False,
     predefined_resample=False,
+    combine_train_test_split=False,
 ):
     """Load a dataset and run a clustering experiment.
 
@@ -816,7 +833,14 @@ def load_and_run_clustering_experiment(
         Read a predefined resample from file instead of performing a resample. If True
         the file format must include the resample_id at the end of the dataset name i.e.
         <problem_path>/<dataset>/<dataset>+<resample_id>+"_TRAIN.ts".
+    combine_train_test_split: bool, default=False
+        Whether the train/test split should be combined. If True then
+        the train/test split is combined into a single train set. If False then the
+        train/test split is used as normal.
     """
+    if combine_train_test_split:
+        build_test_file = False
+
     build_test_file, build_train_file = _check_existing_results(
         results_path,
         clusterer_name,
@@ -831,7 +855,7 @@ def load_and_run_clustering_experiment(
         warnings.warn("All files exist and not overwriting, skipping.", stacklevel=1)
         return
 
-    X_train, y_train, X_test, y_test, resample = _load_data(
+    X_train, y_train, X_test, y_test, resample = load_experiment_data(
         problem_path, dataset, resample_id, predefined_resample
     )
 
@@ -839,6 +863,16 @@ def load_and_run_clustering_experiment(
         X_train, y_train, X_test, y_test = stratified_resample_data(
             X_train, y_train, X_test, y_test, random_state=resample_id
         )
+
+    if combine_train_test_split:
+        y_train = np.concatenate((y_train, y_test), axis=None)
+        X_train = (
+            np.concatenate([X_train, X_test], axis=0)
+            if isinstance(X_train, np.ndarray)
+            else X_train + X_test
+        )
+        X_test = None
+        y_test = None
 
     run_clustering_experiment(
         X_train,
@@ -1034,28 +1068,3 @@ def _check_existing_results(
                 build_train_file = False
 
     return build_test_file, build_train_file
-
-
-def _load_data(problem_path, dataset, resample_id, predefined_resample):
-    if resample_id is not None and predefined_resample:
-        resample_str = "" if resample_id is None else str(resample_id)
-
-        X_train, y_train = load_from_ts_file(
-            f"{problem_path}/{dataset}/{dataset}{resample_str}_TRAIN.ts"
-        )
-        X_test, y_test = load_from_ts_file(
-            f"{problem_path}/{dataset}/{dataset}{resample_str}_TEST.ts"
-        )
-
-        resample_data = False
-    else:
-        X_train, y_train = load_from_ts_file(
-            f"{problem_path}/{dataset}/{dataset}_TRAIN.ts"
-        )
-        X_test, y_test = load_from_ts_file(
-            f"{problem_path}/{dataset}/{dataset}_TEST.ts"
-        )
-
-        resample_data = True if resample_id != 0 else False
-
-    return X_train, y_train, X_test, y_test, resample_data

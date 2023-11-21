@@ -41,7 +41,7 @@ classifiers = [
 ]
 requires-python = ">=3.8,<3.12"
 dependencies = [
-    "aeon>=0.4.0,<0.5.0",
+    "aeon>=0.5.0,<0.6.0",
     "scikit-learn>=1.0.2,<=1.2.2",
     "tsml>=0.2.0,<0.3.0",
     "gpustat",
@@ -58,6 +58,8 @@ all_extras = [
 unstable_extras = [
     "aeon[unstable_extras]",
     "tsml[unstable_extras]",
+    # temp
+    "pycatch22<=0.4.3",
 ]
 deep_learning = [
     "aeon[dl]",
