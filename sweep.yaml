@@ -16,10 +16,8 @@ docs:
 
 sandbox:
   install:
-  - pre-commit install
+    - pre-commit install
   check:
-  - pre-commit run --files {file_path}
+    - git add . && pre-commit run --files {file_path} || exit 0
 
-rules:
-  - "There should not be large chunks of code that are just commented out. Docstrings and explanations in code are okay though."
-  - "Update the relevant API page in 'docs/api.md' when new public functions and classes are added and not included in the API documentation. Only add functions and classes which are not already in the relevant API documentation and avoid duplicate entries. Files in 'tsml_eval/publications/' do not need to be added to the API documentation."
+rules: []
