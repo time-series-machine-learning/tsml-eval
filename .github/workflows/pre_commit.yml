@@ -21,13 +21,13 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v4
         with:
           python-version: "3.10"
 
-      - uses: tj-actions/changed-files@v35.9.0
+      - uses: tj-actions/changed-files@v40.1.1
         id: changed-files
 
       - if: ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'full pre-commit') }}
