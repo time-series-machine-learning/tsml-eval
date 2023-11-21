@@ -6,7 +6,7 @@ from tsml_eval.publications.y2023.distance_based_clustering import (
     _set_distance_clusterer,
     distance_based_clusterers,
 )
-from tsml_eval.utils.test_utils import _check_set_method, _check_set_method_results
+from tsml_eval.testing.test_utils import _check_set_method, _check_set_method_results
 
 
 def test_set_distance_clusterer():

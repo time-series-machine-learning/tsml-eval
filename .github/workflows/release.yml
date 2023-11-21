@@ -4,13 +4,14 @@ on:
   release:
     types:
       - published
+  workflow_dispatch:
 
 jobs:
   check_manifest:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v4
         with:
@@ -22,10 +23,10 @@ jobs:
 
   build_project:
     needs: check_manifest
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v4
         with:
@@ -41,6 +42,7 @@ jobs:
         with:
           name: dist
           path: dist/*
+          retention-days: 5
 
   test_wheels:
     needs: build_project
@@ -49,11 +51,11 @@ jobs:
 
     strategy:
       matrix:
-        os: [ ubuntu-latest, macOS-latest, windows-latest ]
+        os: [ ubuntu-22.04, macOS-12, windows-2022 ]
         python-version: [ "3.8", "3.9", "3.10", "3.11" ]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v4
         with:

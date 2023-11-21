@@ -10,11 +10,11 @@ __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 import sys
 
 from tsml_eval.experiments import load_and_run_clustering_experiment
-from tsml_eval.experiments.classification_experiments import _results_present
 from tsml_eval.experiments.set_clusterer import set_clusterer
 from tsml_eval.experiments.tests import _CLUSTERER_RESULTS_PATH
-from tsml_eval.utils.experiments import parse_args
-from tsml_eval.utils.test_utils import _TEST_DATA_PATH
+from tsml_eval.testing.test_utils import _TEST_DATA_PATH
+from tsml_eval.utils.arguments import parse_args
+from tsml_eval.utils.experiments import _results_present
 
 
 def run_experiment(args):
@@ -54,6 +54,13 @@ def run_experiment(args):
                     n_jobs=args.n_jobs,
                     fit_contract=args.fit_contract,
                     checkpoint=args.checkpoint,
+                    data_vars=[
+                        args.data_path,
+                        args.dataset_name,
+                        args.resample_id,
+                        args.predefined_resample,
+                    ],
+                    row_normalise=args.row_normalise,
                     **args.kwargs,
                 ),
                 row_normalise=args.row_normalise,
@@ -61,6 +68,7 @@ def run_experiment(args):
                 clusterer_name=args.estimator_name,
                 resample_id=args.resample_id,
                 build_test_file=args.test_fold,
+                benchmark_time=args.benchmark_time,
                 overwrite=args.overwrite,
                 predefined_resample=args.predefined_resample,
             )
@@ -89,6 +97,8 @@ def run_experiment(args):
             n_jobs=n_jobs,
             fit_contract=fit_contract,
             checkpoint=checkpoint,
+            data_vars=[data_path, dataset_name, resample_id, predefined_resample],
+            row_normalise=row_normalise,
             **kwargs,
         )
         print(f"Local Run of {estimator_name} ({clusterer.__class__.__name__}).")

@@ -11,8 +11,9 @@ import sys
 from tsml_eval.experiments import load_and_run_classification_experiment
 from tsml_eval.experiments.set_classifier import set_classifier
 from tsml_eval.experiments.tests import _CLASSIFIER_RESULTS_PATH
-from tsml_eval.utils.experiments import _results_present, parse_args
-from tsml_eval.utils.test_utils import _TEST_DATA_PATH
+from tsml_eval.testing.test_utils import _TEST_DATA_PATH
+from tsml_eval.utils.arguments import parse_args
+from tsml_eval.utils.experiments import _results_present
 
 
 def run_experiment(args):
@@ -59,6 +60,7 @@ def run_experiment(args):
                 classifier_name=args.estimator_name,
                 resample_id=args.resample_id,
                 build_train_file=args.train_fold,
+                benchmark_time=args.benchmark_time,
                 overwrite=args.overwrite,
                 predefined_resample=args.predefined_resample,
             )
