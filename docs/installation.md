@@ -78,6 +78,9 @@ The latest development version of dependencies can be installed this way, i.e. f
 pip install git+https://github.com/aeon-toolkit/aeon.git@main
 ```
 
+If you have a different version of `tsml-eval` or a dependency installed, you must
+uninstall it first before installing the development version.
+
 ## Install for developers with write access
 
 To install `tsml-eval` for development, first clone the GitHub repository:

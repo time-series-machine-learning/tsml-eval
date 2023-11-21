@@ -12,7 +12,7 @@ tsml-eval Data Format
 
 ^^^
 
-Placeholder.
+An overview of the datatypes used for `tsml-eval` experiments.
 
 +++
 
