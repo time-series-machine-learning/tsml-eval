@@ -1,6 +1,6 @@
 gha_enabled: True
 branch: "main"
-blocked_dirs: [".github/", "_tsml_group_experiments", "results/", "tsml_eval/publications/"]
+blocked_dirs: [".github/", "results/"]
 draft: False
 description: "time-series-machine-learning/tsml-eval is a Python project for running experiments on time series machine learning algorithms and evaluating the results. Write code that adheres to PEP8 and is formatted to the Black code style. The projects documentation is built using Sphinx and MyST, and unit testing is done using pytest."
 
@@ -20,4 +20,5 @@ sandbox:
   check:
     - git add . && pre-commit run --files {file_path} || exit 0
 
-rules: []
+rules:
+  - ""
