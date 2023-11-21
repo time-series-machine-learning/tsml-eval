@@ -143,3 +143,6 @@ local.py
 local_code/
 local_code.py
 debug.py
+
+# MacOs files
+.DS_Store

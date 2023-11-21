@@ -18,7 +18,7 @@ ml_forecasters = [
     ["rotf", "rotationforest"],
 ]
 other_forecasters = [
-    ["NaiveForecaster", "naive"],
+    ["naiveforecaster", "naive"],
 ]
 
 

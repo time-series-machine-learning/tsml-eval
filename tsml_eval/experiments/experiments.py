@@ -17,6 +17,7 @@ from aeon.classification import BaseClassifier
 from aeon.clustering import BaseClusterer
 from aeon.forecasting.base import BaseForecaster
 from aeon.regression.base import BaseRegressor
+from aeon.transformations.collection import TimeSeriesScaler
 from sklearn import preprocessing
 from sklearn.base import BaseEstimator, is_classifier, is_regressor
 from sklearn.metrics import (
@@ -26,7 +27,6 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import cross_val_predict
 from tsml.base import BaseTimeSeriesEstimator
-from tsml.datasets import load_from_ts_file
 from tsml.utils.validation import is_clusterer
 
 from tsml_eval.estimators import (
@@ -34,9 +34,9 @@ from tsml_eval.estimators import (
     SklearnToTsmlClusterer,
     SklearnToTsmlRegressor,
 )
-from tsml_eval.estimators.transformations.scaler import TimeSeriesScaler
 from tsml_eval.evaluation.metrics import clustering_accuracy
 from tsml_eval.utils.experiments import (
+    load_experiment_data,
     resample_data,
     stratified_resample_data,
     write_classification_results,
@@ -285,7 +285,7 @@ def load_and_run_classification_experiment(
         warnings.warn("All files exist and not overwriting, skipping.", stacklevel=1)
         return
 
-    X_train, y_train, X_test, y_test, resample = _load_data(
+    X_train, y_train, X_test, y_test, resample = load_experiment_data(
         problem_path, dataset, resample_id, predefined_resample
     )
 
@@ -532,7 +532,7 @@ def load_and_run_regression_experiment(
         warnings.warn("All files exist and not overwriting, skipping.", stacklevel=1)
         return
 
-    X_train, y_train, X_test, y_test, resample = _load_data(
+    X_train, y_train, X_test, y_test, resample = load_experiment_data(
         problem_path, dataset, resample_id, predefined_resample
     )
 
@@ -775,6 +775,7 @@ def load_and_run_clustering_experiment(
     build_test_file=False,
     overwrite=False,
     predefined_resample=False,
+    combine_train_test_split=False,
 ):
     """Load a dataset and run a clustering experiment.
 
@@ -816,7 +817,14 @@ def load_and_run_clustering_experiment(
         Read a predefined resample from file instead of performing a resample. If True
         the file format must include the resample_id at the end of the dataset name i.e.
         <problem_path>/<dataset>/<dataset>+<resample_id>+"_TRAIN.ts".
+    combine_train_test_split: bool, default=False
+        Whether the train/test split should be combined. If True then
+        the train/test split is combined into a single train set. If False then the
+        train/test split is used as normal.
     """
+    if combine_train_test_split:
+        build_test_file = False
+
     build_test_file, build_train_file = _check_existing_results(
         results_path,
         clusterer_name,
@@ -831,7 +839,7 @@ def load_and_run_clustering_experiment(
         warnings.warn("All files exist and not overwriting, skipping.", stacklevel=1)
         return
 
-    X_train, y_train, X_test, y_test, resample = _load_data(
+    X_train, y_train, X_test, y_test, resample = load_experiment_data(
         problem_path, dataset, resample_id, predefined_resample
     )
 
@@ -839,6 +847,16 @@ def load_and_run_clustering_experiment(
         X_train, y_train, X_test, y_test = stratified_resample_data(
             X_train, y_train, X_test, y_test, random_state=resample_id
         )
+
+    if combine_train_test_split:
+        y_train = np.concatenate((y_train, y_test), axis=None)
+        X_train = (
+            np.concatenate([X_train, X_test], axis=0)
+            if isinstance(X_train, np.ndarray)
+            else X_train + X_test
+        )
+        X_test = None
+        y_test = None
 
     run_clustering_experiment(
         X_train,
@@ -1034,28 +1052,3 @@ def _check_existing_results(
                 build_train_file = False
 
     return build_test_file, build_train_file
-
-
-def _load_data(problem_path, dataset, resample_id, predefined_resample):
-    if resample_id is not None and predefined_resample:
-        resample_str = "" if resample_id is None else str(resample_id)
-
-        X_train, y_train = load_from_ts_file(
-            f"{problem_path}/{dataset}/{dataset}{resample_str}_TRAIN.ts"
-        )
-        X_test, y_test = load_from_ts_file(
-            f"{problem_path}/{dataset}/{dataset}{resample_str}_TEST.ts"
-        )
-
-        resample_data = False
-    else:
-        X_train, y_train = load_from_ts_file(
-            f"{problem_path}/{dataset}/{dataset}_TRAIN.ts"
-        )
-        X_test, y_test = load_from_ts_file(
-            f"{problem_path}/{dataset}/{dataset}_TEST.ts"
-        )
-
-        resample_data = True if resample_id != 0 else False
-
-    return X_train, y_train, X_test, y_test, resample_data
