@@ -69,7 +69,12 @@ def parse_args(args):
       -nc N_CLUSTERS, --n_clusters N_CLUSTERS
                             the number of clusters to find for clusterers which
                             have an {n_clusters} parameter. If {-1}, use the
-                            number of classes in the dataset (default: None).
+                            number of classes in the dataset (default: -1).
+      -ctts, --combine_test_train_split
+                            whether to use a train/test split or not. If True, the
+                            train and test sets are combined and used the fit the
+                            estimator. Only available for clustering
+                            (default: False).
       -bt, --benchmark_time
                             run a benchmark function and save the time spent in the
                             results file (default: %(default)s).
@@ -191,9 +196,18 @@ def parse_args(args):
         "-nc",
         "--n_clusters",
         type=int,
+        default=-1,
         help="the number of clusters to find for clusterers which have an {n_clusters} "
         "parameter. If {-1}, use the number of classes in the dataset "
         "(default: %(default)s).",
+    )
+    parser.add_argument(
+        "-ctts",
+        "--combine_test_train_split",
+        action="store_true",
+        help="whether to use a train/test split or not. If True, the train and test "
+        "sets are combined and used the fit the estimator. Only available for "
+        "clustering (default: %(default)s).",
     )
     parser.add_argument(
         "-bt",

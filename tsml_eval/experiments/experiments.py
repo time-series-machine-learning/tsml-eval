@@ -775,7 +775,7 @@ def run_clustering_experiment(
                 n_clusters if n_clusters is not None else len(np.unique(train_preds)),
             )
         )
-        train_probs[:, train_preds] = 1
+        train_probs[np.arange(len(train_preds)), train_preds] = 1
     train_time = int(round(time.time() * 1000)) - start
 
     if build_train_file:
@@ -818,7 +818,7 @@ def run_clustering_experiment(
                     else len(np.unique(train_preds)),
                 )
             )
-            test_probs[:, test_preds] = 1
+            test_probs[np.arange(len(test_preds)), test_preds] = 1
         test_time = (
             int(round(time.time() * 1000))
             - start

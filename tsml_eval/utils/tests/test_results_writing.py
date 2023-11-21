@@ -63,7 +63,7 @@ def _check_classification_file_format(file_path, num_results_lines=None):
     assert _check_classification_third_line(lines[2])
     n_classes = int(lines[2].split(",")[5])
 
-    _check_results_lines(lines, n_probas=n_classes, num_results_lines=num_results_lines)
+    _check_results_lines(lines, num_results_lines=num_results_lines, n_probas=n_classes)
 
 
 def test_write_classification_results_invalid():
@@ -194,7 +194,7 @@ def _check_clustering_file_format(file_path, num_results_lines=None):
     assert _check_clustering_third_line(lines[2])
     n_probas = int(lines[2].split(",")[6])
 
-    _check_results_lines(lines, n_probas=n_probas, num_results_lines=num_results_lines)
+    _check_results_lines(lines, num_results_lines=num_results_lines, n_probas=n_probas)
 
 
 def test_write_clustering_results_invalid():

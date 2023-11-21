@@ -134,6 +134,21 @@ def _check_line_length_and_floats(line, length, floats):
     return True
 
 
+def _check_results_lines(lines, num_results_lines=None, probabilities=True, n_probas=2):
+    if num_results_lines is not None:
+        assert len(lines) - 3 == num_results_lines
+
+        for i in range(3, num_results_lines):
+            assert _check_results_line(
+                lines[i], probabilities=probabilities, n_probas=n_probas
+            )
+    else:
+        for i in range(3, 6):
+            assert _check_results_line(
+                lines[i], probabilities=probabilities, n_probas=n_probas
+            )
+
+
 def _check_results_line(line, probabilities=True, n_probas=2):
     line = line.split(",")
 
