@@ -4,6 +4,7 @@ import runpy
 import pytest
 from tsml.dummy import DummyClassifier
 
+from tsml_eval.datasets._test_data._data_sizes import DATA_TEST_SIZES
 from tsml_eval.experiments import (
     forecasting_experiments,
     run_forecasting_experiment,
@@ -39,7 +40,9 @@ def test_run_forecasting_experiment():
         "testResample2.csv"
     )
     assert os.path.exists(test_file)
-    _check_forecasting_file_format(test_file)
+    _check_forecasting_file_format(
+        test_file, num_results_lines=DATA_TEST_SIZES[dataset]
+    )
 
     # test present results checking
     forecasting_experiments.run_experiment(args)

@@ -26,7 +26,7 @@ from tsml_eval.utils.validation import (
     _check_first_line,
     _check_forecasting_third_line,
     _check_regression_third_line,
-    _check_results_line,
+    _check_results_lines,
     _check_second_line,
 )
 
@@ -54,7 +54,7 @@ def test_write_classification_results():
     os.remove(f"{_CLASSIFIER_RESULTS_PATH}/Test/Predictions/Test/results.csv")
 
 
-def _check_classification_file_format(file_path):
+def _check_classification_file_format(file_path, num_results_lines=None):
     with open(file_path, "r") as f:
         lines = f.readlines()
 
@@ -63,8 +63,7 @@ def _check_classification_file_format(file_path):
     assert _check_classification_third_line(lines[2])
     n_classes = int(lines[2].split(",")[5])
 
-    for i in range(3, 6):
-        assert _check_results_line(lines[i], n_probas=n_classes)
+    _check_results_lines(lines, n_probas=n_classes, num_results_lines=num_results_lines)
 
 
 def test_write_classification_results_invalid():
@@ -112,7 +111,7 @@ def test_write_regression_results():
     os.remove(f"{_REGRESSOR_RESULTS_PATH}/Test/Predictions/Test/results.csv")
 
 
-def _check_regression_file_format(file_path):
+def _check_regression_file_format(file_path, num_results_lines=None):
     with open(file_path, "r") as f:
         lines = f.readlines()
 
@@ -120,8 +119,9 @@ def _check_regression_file_format(file_path):
     assert _check_second_line(lines[1])
     assert _check_regression_third_line(lines[2])
 
-    for i in range(3, 6):
-        assert _check_results_line(lines[i], probabilities=False)
+    _check_results_lines(
+        lines, num_results_lines=num_results_lines, probabilities=False
+    )
 
 
 def test_write_forecasting_results():
@@ -145,7 +145,7 @@ def test_write_forecasting_results():
     os.remove(f"{_FORECASTER_RESULTS_PATH}/Test/Predictions/Test/results.csv")
 
 
-def _check_forecasting_file_format(file_path):
+def _check_forecasting_file_format(file_path, num_results_lines=None):
     with open(file_path, "r") as f:
         lines = f.readlines()
 
@@ -153,8 +153,9 @@ def _check_forecasting_file_format(file_path):
     assert _check_second_line(lines[1])
     assert _check_forecasting_third_line(lines[2])
 
-    for i in range(3, 6):
-        assert _check_results_line(lines[i], probabilities=False)
+    _check_results_lines(
+        lines, num_results_lines=num_results_lines, probabilities=False
+    )
 
 
 def test_write_clustering_results():
@@ -184,7 +185,7 @@ def test_write_clustering_results():
     os.remove(f"{_CLUSTERER_RESULTS_PATH}/Test/Predictions/Test/results.csv")
 
 
-def _check_clustering_file_format(file_path):
+def _check_clustering_file_format(file_path, num_results_lines=None):
     with open(file_path, "r") as f:
         lines = f.readlines()
 
@@ -193,8 +194,7 @@ def _check_clustering_file_format(file_path):
     assert _check_clustering_third_line(lines[2])
     n_probas = int(lines[2].split(",")[6])
 
-    for i in range(3, 6):
-        assert _check_results_line(lines[i], n_probas=n_probas)
+    _check_results_lines(lines, n_probas=n_probas, num_results_lines=num_results_lines)
 
 
 def test_write_clustering_results_invalid():

@@ -8,6 +8,7 @@ import runpy
 import pytest
 from tsml.dummy import DummyClassifier, DummyClusterer
 
+from tsml_eval.datasets._test_data._data_sizes import DATA_TEST_SIZES, DATA_TRAIN_SIZES
 from tsml_eval.experiments import (
     clustering_experiments,
     run_clustering_experiment,
@@ -55,9 +56,10 @@ def test_run_clustering_experiment(clusterer, dataset):
     )
 
     assert os.path.exists(test_file) and os.path.exists(train_file)
-
-    _check_clustering_file_format(test_file)
-    _check_clustering_file_format(train_file)
+    _check_clustering_file_format(test_file, num_results_lines=DATA_TEST_SIZES[dataset])
+    _check_clustering_file_format(
+        train_file, num_results_lines=DATA_TEST_SIZES[dataset]
+    )
 
     # test present results checking
     clustering_experiments.run_experiment(args)
@@ -224,6 +226,40 @@ def test_n_clusters(n_clusters, clusterer):
         _check_clustering_file_n_clusters(
             train_file, "2" if n_clusters == "-1" else n_clusters
         )
+
+    os.remove(train_file)
+
+
+@pytest.mark.parametrize(
+    "dataset",
+    ["MinimalChinatown", "UnequalMinimalChinatown", "EqualMinimalJapaneseVowels"],
+)
+def test_combined_train_test(dataset):
+    """Test n_clusters parameter."""
+    clusterer = "DummyClusterer-tsml"
+
+    args = [
+        _TEST_DATA_PATH,
+        _CLUSTERER_RESULTS_PATH + "Combined/",
+        clusterer,
+        dataset,
+        "1",
+        "-ow",
+        "-ctts",
+    ]
+
+    clustering_experiments.run_experiment(args)
+
+    train_file = (
+        f"{_CLUSTERER_RESULTS_PATH}Combined/{clusterer}/Predictions/{dataset}/"
+        "trainResample1.csv"
+    )
+
+    assert os.path.exists(train_file)
+    _check_clustering_file_format(
+        train_file,
+        num_results_lines=DATA_TRAIN_SIZES[dataset] + DATA_TEST_SIZES[dataset],
+    )
 
     os.remove(train_file)
 

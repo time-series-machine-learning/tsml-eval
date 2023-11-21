@@ -35,17 +35,17 @@ def _check_set_method(
 
             assert e is not None, f"Estimator {estimator_alias} not found"
 
-            c_name = e.__class__.__name__
-            if c_name == estimator_alias:
+            c_name = e.__class__.__name__.lower()
+            if c_name == estimator_alias.lower():
                 estimator_dict[c_name] = True
             elif c_name not in estimator_dict:
                 estimator_dict[c_name] = False
 
 
 EXEMPT_ESTIMATOR_NAMES = [
-    "ColumnEnsembleRegressor",
-    "GridSearchCV",
-    "TransformedTargetForecaster",
+    "columnensembleregressor",
+    "gridsearchcv",
+    "transformedtargetforecaster",
 ]
 
 
@@ -58,7 +58,6 @@ def _check_set_method_results(
 
     if not all(estimator_dict.values()):
         missing_keys = [key for key, value in estimator_dict.items() if not value]
-
         raise ValueError(
             f"All {estimator_name.lower()} seen in {method_name} must have an entry "
             "for the full class name (usually with default parameters). "

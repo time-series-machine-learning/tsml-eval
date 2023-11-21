@@ -10,8 +10,11 @@ authors = [
     {name = "Matthew Middlehurst", email = "m.middlehurst@uea.ac.uk"},
     {name = "Tony Bagnall", email = "ajb@uea.ac.uk"},
 ]
+maintainers = [
+    {name = "Matthew Middlehurst", email = "m.middlehurst@uea.ac.uk"},
+    {name = "Tony Bagnall", email = "ajb@uea.ac.uk"},
+]
 readme = "README.md"
-requires-python = ">=3.8,<3.12"
 keywords = [
     "data-science",
     "machine-learning",
@@ -36,6 +39,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
 ]
+requires-python = ">=3.8,<3.12"
 dependencies = [
     "aeon>=0.5.0,<0.6.0",
     "scikit-learn>=1.0.2,<=1.2.2",
@@ -61,6 +65,8 @@ unstable_extras = [
 deep_learning = [
     "aeon[dl]",
     "torch>=1.13.1",
+    # temp
+    "pycatch22<=0.4.3",
 ]
 dev = [
     "pre-commit",
@@ -75,7 +81,7 @@ binder = [
     "jupyterlab",
 ]
 docs = [
-    "sphinx",
+    "sphinx<8.0.0",
     "sphinx-design",
     "nbsphinx",
     "numpydoc",
