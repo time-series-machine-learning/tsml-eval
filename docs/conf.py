@@ -99,6 +99,11 @@ issues_github_path = "time-series-machine-learning/tsml-eval"
 
 copybutton_exclude = ".linenos, .gp, .go"
 
+# sphinx-remove-toctrees configuration
+# see https://github.com/pradyunsg/furo/pull/674
+
+remove_from_toctrees = ["auto_generated/*"]
+
 # nbsphinx
 
 nbsphinx_execute = "never"
