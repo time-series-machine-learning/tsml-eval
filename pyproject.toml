@@ -76,13 +76,16 @@ binder = [
 docs = [
     "sphinx<8.0.0",
     "sphinx-design",
+    "sphinx-version-warning",
+    "sphinx_issues",
+    "sphinx-copybutton",
+    "sphinx-remove-toctrees",
+    "sphinxext-opengraph",
     "nbsphinx",
     "numpydoc",
+    "myst-parser",
     "jupyter",
     "furo",
-    "sphinx_issues",
-    "myst-parser",
-    "sphinx-copybutton",
 ]
 
 [project.urls]
