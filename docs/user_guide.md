@@ -5,6 +5,7 @@
 
 :::{grid-item-card}
 :img-top: examples/images/data.png
+:class-img-top: tsml-card-image
 :text-align: center
 
 tsml-eval Data Format
@@ -27,6 +28,7 @@ Datasets
 
 :::{grid-item-card}
 :img-top: examples/images/cd_diagram.png
+:class-img-top: tsml-card-image
 :text-align: center
 
 tsml-eval Results Evaluation
@@ -49,6 +51,7 @@ Evaluation
 
 :::{grid-item-card}
 :img-top: examples/images/results.png
+:class-img-top: tsml-card-image
 :text-align: center
 
 tsml-eval Results Format
@@ -71,6 +74,7 @@ Results
 
 :::{grid-item-card}
 :img-top: examples/images/TSC.png
+:class-img-top: tsml-card-image
 :text-align: center
 
 Time Series Classification
@@ -93,6 +97,7 @@ TSC
 
 :::{grid-item-card}
 :img-top: examples/images/TSR.png
+:class-img-top: tsml-card-image
 :text-align: center
 
 Time Series Extrinsic Regression
@@ -115,6 +120,7 @@ TSER
 
 :::{grid-item-card}
 :img-top: examples/images/TSCL.png
+:class-img-top: tsml-card-image
 :text-align: center
 
 Time Series Clustering
@@ -137,6 +143,7 @@ TSCL
 
 :::{grid-item-card}
 :img-top: examples/images/TSCL.png
+:class-img-top: tsml-card-image
 :text-align: center
 
 Time Series Clustering
@@ -159,6 +166,7 @@ TSCL
 
 :::{grid-item-card}
 :img-top: examples/images/forecasting.png
+:class-img-top: tsml-card-image
 :text-align: center
 
 Time Series Forecasting
@@ -185,9 +193,10 @@ Forecasting
 :hidden:
 
 ./examples/datasets.ipynb
+./examples/evaluation.ipynb
+./examples/results_format.ipynb
 ./examples/classification_experiments.ipynb
 ./examples/regression_experiments.ipynb
 ./examples/clustering_experiments.ipynb
-./examples/evaluation.ipynb
-./examples/results_format.ipynb
+./examples/forecasting_experiments.ipynb
 ```
