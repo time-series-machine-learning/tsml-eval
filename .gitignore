@@ -126,6 +126,7 @@ dmypy.json
 
 # Test output
 test_output/
+examples/generated_results/
 
 # Test datasts
 test_datasets/
