@@ -35,7 +35,7 @@ tsml-eval Results Evaluation
 
 ^^^
 
-Placeholder.
+Use the `tsml-eval` package to evaluate your results.
 
 +++
 
@@ -58,7 +58,7 @@ tsml-eval Results Format
 
 ^^^
 
-Placeholder.
+An overview of the results format output by `tsml-eval` experiments.
 
 +++
 
@@ -114,29 +114,6 @@ Placeholder.
 :expand:
 
 TSER
-```
-
-:::
-
-:::{grid-item-card}
-:img-top: examples/images/TSCL.png
-:class-img-top: tsml-card-image
-:text-align: center
-
-Time Series Clustering
-
-^^^
-
-Placeholder.
-
-+++
-
-```{button-ref} /examples/clustering_experiments.ipynb
-:color: primary
-:click-parent:
-:expand:
-
-TSCL
 ```
 
 :::
