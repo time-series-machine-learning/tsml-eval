@@ -8,14 +8,17 @@ import sys
 os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
+os.environ["TF_NUM_INTEROP_THREADS"] = "1"
+os.environ["TF_NUM_INTRAOP_THREADS"] = "1"
 
 from tsml_eval.experiments import load_and_run_classification_experiment
 from tsml_eval.publications.y2023.tsc_bakeoff.set_bakeoff_classifier import (
     _set_bakeoff_classifier,
 )
 from tsml_eval.publications.y2023.tsc_bakeoff.tests import _BAKEOFF_TEST_RESULTS_PATH
-from tsml_eval.utils.experiments import _results_present, parse_args
-from tsml_eval.utils.test_utils import _TEST_DATA_PATH
+from tsml_eval.testing.test_utils import _TEST_DATA_PATH
+from tsml_eval.utils.arguments import parse_args
+from tsml_eval.utils.experiments import _results_present
 
 # all classifiers ran without duplicates
 distance_based = ["1NN-DTW", "ShapeDTW"]

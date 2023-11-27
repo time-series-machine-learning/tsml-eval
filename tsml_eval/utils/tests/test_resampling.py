@@ -2,7 +2,6 @@
 
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
-import os
 
 import numpy as np
 import pandas as pd
@@ -13,6 +12,7 @@ from tsml.datasets import (
     load_unequal_minimal_chinatown,
 )
 
+from tsml_eval.testing.test_utils import _TEST_RESULTS_PATH
 from tsml_eval.utils.experiments import (
     compare_result_file_resample,
     resample_data,
@@ -148,38 +148,26 @@ def test_stratified_resample_data_invalid():
     "paths",
     [
         [
-            "test_files/classificationResultsFile1.csv",
-            "test_files/classificationResultsFile1.csv",
+            _TEST_RESULTS_PATH + "/classification/classificationResultsFile1.csv",
+            _TEST_RESULTS_PATH + "/classification/classificationResultsFile1.csv",
             True,
         ],
         [
-            "test_files/classificationResultsFile1.csv",
-            "test_files/classificationResultsFile2.csv",
+            _TEST_RESULTS_PATH + "/classification/classificationResultsFile1.csv",
+            _TEST_RESULTS_PATH + "/classification/classificationResultsFile2.csv",
             False,
         ],
     ],
 )
 def test_compare_result_file_resample(paths):
     """Test compare result file resample function."""
-    if os.getcwd().split("\\")[-1] != "tests":
-        paths[0] = f"tsml_eval/utils/tests/{paths[0]}"
-        paths[1] = f"tsml_eval/utils/tests/{paths[1]}"
-
     assert compare_result_file_resample(paths[0], paths[1]) == paths[2]
 
 
 def test_compare_result_file_resample_invalid():
     """Test compare result file resample function with invalid input."""
-    p1 = (
-        "tsml_eval/utils/tests/test_files/classificationResultsFile1.csv"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else "test_files/classificationResultsFile1.csv"
-    )
-    p3 = (
-        "tsml_eval/utils/tests/test_files/classificationResultsFile3.csv"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else "test_files/classificationResultsFile3.csv"
-    )
+    p1 = _TEST_RESULTS_PATH + "/classification/classificationResultsFile1.csv"
+    p3 = _TEST_RESULTS_PATH + "/classification/classificationResultsFile3.csv"
 
     with pytest.raises(ValueError, match="Input results file have different"):
         compare_result_file_resample(p1, p3)

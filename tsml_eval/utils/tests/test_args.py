@@ -1,7 +1,7 @@
 import pytest
 
-from tsml_eval.utils.experiments import parse_args
-from tsml_eval.utils.test_utils import suppress_output
+from tsml_eval.testing.test_utils import suppress_output
+from tsml_eval.utils.arguments import parse_args
 
 
 def test_positional_args():

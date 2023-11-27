@@ -7,7 +7,7 @@ from tsml_eval.experiments import (
     load_and_run_classification_experiment,
 )
 from tsml_eval.experiments.tests import _CLASSIFIER_RESULTS_PATH
-from tsml_eval.utils.test_utils import _TEST_DATA_PATH
+from tsml_eval.testing.test_utils import _TEST_DATA_PATH, _TEST_OUTPUT_PATH
 from tsml_eval.utils.tests.test_results_writing import _check_classification_file_format
 
 
@@ -16,19 +16,10 @@ def test_kwargs():
     dataset = "MinimalChinatown"
     classifier = "LogisticRegression"
 
-    data_path = (
-        "./tsml_eval/datasets/"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else "../../datasets/"
-    )
-    result_path = (
-        "./test_output/kwargs/"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else "../../../test_output/kwargs/"
-    )
+    result_path = _TEST_OUTPUT_PATH + "/kwargs/"
 
     args = [
-        data_path,
+        _TEST_DATA_PATH,
         result_path,
         classifier,
         dataset,

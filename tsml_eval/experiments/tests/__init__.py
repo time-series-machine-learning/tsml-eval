@@ -7,22 +7,12 @@ __all__ = [
     "_REGRESSOR_RESULTS_PATH",
 ]
 
-import os
-from pathlib import Path
+from tsml_eval.testing.test_utils import _TEST_OUTPUT_PATH
 
-_CLASSIFIER_RESULTS_PATH = (
-    os.path.dirname(Path(__file__).parent.parent.parent)
-    + "/test_output/classification/"
-)
+_CLASSIFIER_RESULTS_PATH = _TEST_OUTPUT_PATH + "/classification/"
 
-_CLUSTERER_RESULTS_PATH = (
-    os.path.dirname(Path(__file__).parent.parent.parent) + "/test_output/clustering/"
-)
+_CLUSTERER_RESULTS_PATH = _TEST_OUTPUT_PATH + "/clustering/"
 
-_FORECASTER_RESULTS_PATH = (
-    os.path.dirname(Path(__file__).parent.parent.parent) + "/test_output/forecasting/"
-)
+_FORECASTER_RESULTS_PATH = _TEST_OUTPUT_PATH + "/forecasting/"
 
-_REGRESSOR_RESULTS_PATH = (
-    os.path.dirname(Path(__file__).parent.parent.parent) + "/test_output/regression/"
-)
+_REGRESSOR_RESULTS_PATH = _TEST_OUTPUT_PATH + "/regression/"
