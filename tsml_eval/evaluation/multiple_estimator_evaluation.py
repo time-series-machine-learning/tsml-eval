@@ -17,6 +17,21 @@ from tsml_eval.evaluation.storage import (
 )
 from tsml_eval.utils.functions import rank_array, time_to_milliseconds
 
+__all__ = [
+    "evaluate_classifiers",
+    "evaluate_classifiers_from_file",
+    "evaluate_classifiers_by_problem",
+    "evaluate_clusterers",
+    "evaluate_clusterers_from_file",
+    "evaluate_clusterers_by_problem",
+    "evaluate_regressors",
+    "evaluate_regressors_from_file",
+    "evaluate_regressors_by_problem",
+    "evaluate_forecasters",
+    "evaluate_forecasters_from_file",
+    "evaluate_forecasters_by_problem",
+]
+
 
 def evaluate_classifiers(
     classifier_results,

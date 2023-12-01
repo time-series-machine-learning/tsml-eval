@@ -83,13 +83,16 @@ binder = [
 docs = [
     "sphinx<8.0.0",
     "sphinx-design",
+    "sphinx-version-warning",
+    "sphinx_issues",
+    "sphinx-copybutton",
+    "sphinx-remove-toctrees",
+    "sphinxext-opengraph",
     "nbsphinx",
     "numpydoc",
+    "myst-parser",
     "jupyter",
     "furo",
-    "sphinx_issues",
-    "myst-parser",
-    "sphinx-copybutton",
 ]
 
 [project.urls]
@@ -121,7 +124,6 @@ ignore = [
 [tool.flake8]
 exclude = [
     "tsml_eval/_wip/*",
-    "examples/_wip/*",
     "tsml_eval/estimators/*"
 ]
 per-file-ignores = [
@@ -135,11 +137,6 @@ per-file-ignores = [
     "tsml_eval/experiments/threaded_forecasting_experiments.py:T201",
     "tsml_eval/publications/*:E402,T201",
 ]
-
-[tool.nbqa.exclude]
-black = "examples/_wip/"
-flake8 = "examples/_wip/"
-isort = "examples/_wip/"
 
 [tool.pytest.ini_options]
 testpaths = "tsml_eval"
