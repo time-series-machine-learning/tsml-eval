@@ -81,7 +81,7 @@ Time Series Classification
 
 ^^^
 
-Placeholder.
+TODO Placeholder.
 
 +++
 
@@ -104,7 +104,7 @@ Time Series Extrinsic Regression
 
 ^^^
 
-Placeholder.
+TODO Placeholder.
 
 +++
 
@@ -127,7 +127,7 @@ Time Series Clustering
 
 ^^^
 
-Placeholder.
+TODO Placeholder.
 
 +++
 
@@ -150,7 +150,7 @@ Time Series Forecasting
 
 ^^^
 
-Placeholder.
+TODO Placeholder.
 
 +++
 

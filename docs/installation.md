@@ -25,6 +25,13 @@ required, or install all of them using the `all_extras` extra dependency set:
 pip install tsml-eval[all_extras]
 ```
 
+```{note}
+    If this results in a "no matches found" error, it may be due to how your shell
+    handles special characters. Try surrounding the dependency portion with quotes i.e.
+
+    pip install tsml-eval"[all_extras]"
+```
+
 All extra dependency sets can be found in the [pyproject.toml](https://github.com/time-series-machine-learning/tsml-eval/blob/main/pyproject.toml)
 file `[project.optional-dependencies]` options.
 
