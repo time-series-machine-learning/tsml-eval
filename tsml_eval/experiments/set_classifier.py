@@ -367,9 +367,7 @@ def _set_classifier_dictionary_based(
 
         return WEASEL_V2(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "musedilation" or c == "muse-dilation" or c == "muse-d":
-        from tsml_eval.estimators.classification.dictionary_based.muse import (
-            MUSEDilation,
-        )
+        from tsml_eval._wip.dilation_muse.muse import MUSEDilation
 
         return MUSEDilation(random_state=random_state, n_jobs=n_jobs, **kwargs)
 
