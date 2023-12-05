@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          sparse-checkout: _build_tools
+          sparse-checkout: build_tools
 
       - uses: actions/setup-python@v4
         with:
@@ -33,11 +33,11 @@ jobs:
 
       - name: Label pull request
         id: label-pr
-        run: python _build_tools/pr_labeler.py ${{ steps.app-token.outputs.token }}
+        run: python build_tools/pr_labeler.py ${{ steps.app-token.outputs.token }}
         env:
           CONTEXT_GITHUB: ${{ toJson(github) }}
 
       - name: Write pull request comment
-        run: python _build_tools/pr_open_commenter.py ${{ steps.app-token.outputs.token }} ${{ steps.label-pr.outputs.title-labels }} ${{ steps.label-pr.outputs.title-labels-new }} ${{ steps.label-pr.outputs.content-labels }} ${{ steps.label-pr.outputs.content-labels-status }}
+        run: python build_tools/pr_open_commenter.py ${{ steps.app-token.outputs.token }} ${{ steps.label-pr.outputs.title-labels }} ${{ steps.label-pr.outputs.title-labels-new }} ${{ steps.label-pr.outputs.content-labels }} ${{ steps.label-pr.outputs.content-labels-status }}
         env:
           CONTEXT_GITHUB: ${{ toJson(github) }}

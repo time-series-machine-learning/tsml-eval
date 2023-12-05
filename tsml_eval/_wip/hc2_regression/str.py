@@ -15,7 +15,7 @@ from aeon.utils.validation.panel import check_X_y
 from sklearn.model_selection import cross_val_predict
 from sklearn.utils.multiclass import type_of_target
 
-from tsml_eval.estimators.regression.transformations.shapelet_transform import (
+from tsml_eval._wip.hc2_regression.shapelet_transform import (
     RandomShapeletTransform,
 )
 
