@@ -188,7 +188,7 @@ def _set_regressor_convolution_based(
 
         return HydraRegressor(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif r == "arsenal" or r == "arsenalregressor":
-        from tsml_eval.estimators.regression.convolution_based import Arsenal
+        from tsml_eval._wip.hc2_regression.arsenal import Arsenal
 
         return Arsenal(
             random_state=random_state,
