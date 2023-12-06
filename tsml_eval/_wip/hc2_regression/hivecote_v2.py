@@ -14,9 +14,9 @@ from aeon.regression.base import BaseRegressor
 from aeon.regression.interval_based import DrCIFRegressor
 from sklearn.metrics import mean_squared_error
 
-from tsml_eval.estimators.regression.convolution_based import Arsenal
-from tsml_eval.estimators.regression.dictionary_based import TemporalDictionaryEnsemble
-from tsml_eval.estimators.regression.shapelet_based import ShapeletTransformRegressor
+from tsml_eval._wip.hc2_regression.arsenal import Arsenal
+from tsml_eval._wip.hc2_regression.str import ShapeletTransformRegressor
+from tsml_eval._wip.hc2_regression.tde import TemporalDictionaryEnsemble
 
 
 class HIVECOTEV2(BaseRegressor):
