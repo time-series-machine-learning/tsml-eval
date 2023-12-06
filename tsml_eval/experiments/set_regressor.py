@@ -427,9 +427,7 @@ def _set_regressor_shapelet_based(
     r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
     if r == "str-2hour":
-        from tsml_eval._wip.hc2_regression.shapelet_transform import (
-            ShapeletTransformRegressor,
-        )
+        from tsml_eval._wip.hc2_regression.str import ShapeletTransformRegressor
 
         return ShapeletTransformRegressor(
             transform_limit_in_minutes=120,
@@ -440,9 +438,7 @@ def _set_regressor_shapelet_based(
             **kwargs,
         )
     elif r == "shapelettransformregressor" or r == "str" or r == "stc":
-        from tsml_eval._wip.hc2_regression.shapelet_transform import (
-            ShapeletTransformRegressor,
-        )
+        from tsml_eval._wip.hc2_regression.str import ShapeletTransformRegressor
 
         return ShapeletTransformRegressor(
             random_state=random_state,
@@ -455,9 +451,7 @@ def _set_regressor_shapelet_based(
         from sklearn.linear_model import RidgeCV
         from sklearn.preprocessing import StandardScaler
 
-        from tsml_eval._wip.hc2_regression.shapelet_transform import (
-            ShapeletTransformRegressor,
-        )
+        from tsml_eval._wip.hc2_regression.str import ShapeletTransformRegressor
 
         return ShapeletTransformRegressor(
             estimator=make_pipeline(
