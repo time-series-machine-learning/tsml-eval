@@ -12,7 +12,7 @@ convolution_based_classifiers = [
     ["miniarsenal", "mini-arsenal"],
     ["multiarsenal", "multi-arsenal"],
     "hydra",
-    ["hydramultirocket", "hydra-multirocket"],
+    ["multirockethydra", "multirocket-hydra"],
 ]
 deep_learning_classifiers = [
     ["cnnclassifier", "cnn"],
