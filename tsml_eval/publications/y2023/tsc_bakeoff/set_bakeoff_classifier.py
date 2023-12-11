@@ -37,7 +37,7 @@ bakeoff_classifiers = [
     ["multirocket", "multi-rocket"],
     ["arsenalclassifier", "Arsenal"],
     "HYDRA",
-    ["MultiRocketHydra", "hydra-multirocket"],
+    ["MultiRocketHydra", "multirocket-hydra"],
     # deep learning
     ["CNNClassifier", "cnn"],
     ["ResNetClassifier", "resnet"],
@@ -272,7 +272,7 @@ def _set_bakeoff_classifier(
             n_jobs=n_jobs,
             **kwargs,
         )
-    elif c == "hydramultirocket" or c == "hydra-multirocket":
+    elif c == "multirockethydra" or c == "multirocket-hydra":
         from tsml_eval.estimators.classification.convolution_based.hydra import (
             MultiRocketHydra,
         )
