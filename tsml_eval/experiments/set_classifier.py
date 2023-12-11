@@ -23,7 +23,7 @@ deep_learning_classifiers = [
     ["individualinceptionclassifier", "singleinception"],
     ["inceptiontimeclassifier", "inceptiontime"],
     ["h-inceptiontimeclassifier", "h-inceptiontime"],
-    ["litetimeclassifier", "litetime"],
+    #    ["litetimeclassifier", "litetime"],
 ]
 dictionary_based_classifiers = [
     ["bossensemble", "boss"],
@@ -295,10 +295,11 @@ def _set_classifier_deep_learning(
         return InceptionTimeClassifier(
             use_custom_filters=True, random_state=random_state, **kwargs
         )
-    elif c == "litetimeclassifier" or c == "litetime":
-        from aeon.classification.deep_learning.inception_time import LiteTimeClassifier
-
-        return LiteTimeClassifier(random_state=random_state, **kwargs)
+    # Add in once 0.6 released
+    # elif c == "litetimeclassifier" or c == "litetime":
+    #    from aeon.classification.deep_learning.inception_time import LiteTimeClassifier
+    #
+    #    return LiteTimeClassifier(random_state=random_state, **kwargs)
 
 
 def _set_classifier_dictionary_based(
