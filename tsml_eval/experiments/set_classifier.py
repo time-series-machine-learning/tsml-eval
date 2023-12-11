@@ -12,7 +12,7 @@ convolution_based_classifiers = [
     ["miniarsenal", "mini-arsenal"],
     ["multiarsenal", "multi-arsenal"],
     "hydra",
-    ["hydramultirocket", "hydra-multirocket"],
+    ["multirockethydra", "multirocket-hydra"],
 ]
 deep_learning_classifiers = [
     ["cnnclassifier", "cnn"],
@@ -22,6 +22,8 @@ deep_learning_classifiers = [
     ["resnetclassifier", "resnet"],
     ["individualinceptionclassifier", "singleinception"],
     ["inceptiontimeclassifier", "inceptiontime"],
+    ["h-inceptiontimeclassifier", "h-inceptiontime"],
+    #    ["litetimeclassifier", "litetime"],
 ]
 dictionary_based_classifiers = [
     ["bossensemble", "boss"],
@@ -242,12 +244,12 @@ def _set_classifier_convolution_based(
         from tsml_eval.estimators.classification.convolution_based.hydra import HYDRA
 
         return HYDRA(random_state=random_state, n_jobs=n_jobs, **kwargs)
-    elif c == "hydramultirocket" or c == "hydra-multirocket":
+    elif c == "multirockethydra" or c == "multirocket-hydra":
         from tsml_eval.estimators.classification.convolution_based.hydra import (
-            HydraMultiRocket,
+            MultiRocketHydra,
         )
 
-        return HydraMultiRocket(random_state=random_state, n_jobs=n_jobs, **kwargs)
+        return MultiRocketHydra(random_state=random_state, n_jobs=n_jobs, **kwargs)
 
 
 def _set_classifier_deep_learning(
@@ -285,6 +287,19 @@ def _set_classifier_deep_learning(
         )
 
         return InceptionTimeClassifier(random_state=random_state, **kwargs)
+    elif c == "h-inceptiontimeclassifier" or c == "h-inceptiontime":
+        from aeon.classification.deep_learning.inception_time import (
+            InceptionTimeClassifier,
+        )
+
+        return InceptionTimeClassifier(
+            use_custom_filters=True, random_state=random_state, **kwargs
+        )
+    # Add in once 0.6 released
+    # elif c == "litetimeclassifier" or c == "litetime":
+    #    from aeon.classification.deep_learning.inception_time import LiteTimeClassifier
+    #
+    #    return LiteTimeClassifier(random_state=random_state, **kwargs)
 
 
 def _set_classifier_dictionary_based(
