@@ -6,7 +6,7 @@ https://arxiv.org/abs/2203.13652
 """
 
 __author__ = ["patrickzib", "Arik Ermshaus"]
-__all__ = ["HYDRA", "HydraMultiRocket"]
+__all__ = ["HYDRA", "MultiRocketHydra"]
 
 import numpy as np
 from aeon.classification.base import BaseClassifier
@@ -61,8 +61,8 @@ class HYDRA(BaseClassifier):
         return self.clf.predict(X_test_transform)
 
 
-class HydraMultiRocket(BaseClassifier):
-    """aeon-HydraMultiRocket classifier-adaptor."""
+class MultiRocketHydra(BaseClassifier):
+    """aeon-MultiRocketHydra classifier-adaptor."""
 
     _tags = {
         "capability:multithreading": False,
@@ -81,7 +81,7 @@ class HydraMultiRocket(BaseClassifier):
         n_jobs = check_n_jobs(n_jobs)
         torch.set_num_threads(n_jobs)
 
-        super(HydraMultiRocket, self).__init__()
+        super(MultiRocketHydra, self).__init__()
 
     def _fit(self, X, y):
         self.transform_hydra = HydraInternal(X.shape[-1])
