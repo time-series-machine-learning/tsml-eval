@@ -1,17 +1,12 @@
 #!/bin/bash
-# CHECK:
-#   datasets (list of problems)
-#   results_dir (where to check/write results),
-#   for clusterer in (the clusterers we are running)
-
 # While reading is fine, please dont write anything to the default directories in this script
 
 # Start and end for resamples
-max_folds=1
+max_folds=30
 start_fold=1
 
 # To avoid dumping 1000s of jobs in the queue we have a higher level queue
-max_num_submitted=100
+max_num_submitted=500
 
 # Queue options are https://my.uea.ac.uk/divisions/it-and-computing-services/service-catalogue/research-it-services/hpc/ada-cluster/using-ada
 queue="batch"
@@ -24,22 +19,24 @@ mailto=$username"@soton.ac.uk"
 # MB for jobs, increase incrementally and try not to use more than you need. If you need hundreds of GB consider the huge memory queue.
 max_memory=8000
 
-# Max allowable is 7 days - 168 hours
-max_time="168:00:00"
+# Max allowable is 60 hours
+max_time="60:00:00"
 
 # Start point for the script i.e. 3 datasets, 3 clusterers = 9 jobs to submit, start_point=5 will skip to job 5
 start_point=1
 
-# Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
-data_dir="/gpfs/home/ajb/Data/"
-datasets="/gpfs/home/ajb/DataSetLists/TSC_112_2019.txt"
 
 # Put your home directory here
-local_path="/gpfs/home/$username/"
+local_path="/mainfs/home/$username/"
+
+# Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
+data_dir="$local_path/Data/"
+datasets="$local_path/DataSetLists/temp.txt"
+datasets="$local_path/DataSetLists/TSC_112_2019.txt"
 
 # Results and output file write location. Change these to reflect your own file structure
-results_dir=$local_path"ClusteringResults/results/"
-out_dir=$local_path"ClusteringResults/output/"
+results_dir=$local_path"ResultsWorkingArea/ClusteringResults/"
+out_dir=$local_path"ResultsWorkingArea/ClusteringResults/output/"
 
 # The python script we are running
 script_file_path=$local_path"Code/tsml-eval/tsml_eval/experiments/clustering_experiments.py"
@@ -54,24 +51,56 @@ generate_test_files="true"
 # If set for true, looks for <problem><fold>_TRAIN.ts file. This is useful for running tsml resamples
 predefined_folds="false"
 
-# You can add extra arguments here. See tsml_eval/utils/experiments.py parse_args
-# You will have to add any variable to the python call close to the bottom of the script
+# Combine test train split into one dataset, set to empty string to stop
+combine_test_train_split="false"
 
-# generate a results file for the test data as well as train, set to empty string to stop
-generate_test_files="-te"
+# Clusterers to loop over. Must be separated by a space
+#  clusterers_to_run="kmeans-ba-edr kmeans-ba-erp pam-edr pam-erp kmedoids-edr kmedoids-erp kmeans-edr kmeans-erp"
+clusterers_to_run="pam-erp"
 
-# If set to -pr, looks for <problem><resample>_TRAIN.ts files. This is useful for running tsml-java resamples
-predefined_folds=""
+# Normalise data before clustering
+normalise_data="true"
 
-# List valid clusterers e.g KMeans KMedoids
-# See set_clusterer for aliases
+# ======================================================================================
+# ======================================================================================
+# Dont change anything under here (unless you want to change how the experiment
+# is working)
+# ======================================================================================
+# ======================================================================================
+
+if [ "${generate_test_files}" == "true" ]; then
+    generate_test_files="-te"
+else
+    generate_test_files=""
+fi
+
+if [ "${predefined_folds}" == "true" ]; then
+    predefined_folds="-pr"
+else
+    predefined_folds=""
+fi
+
+if [ "${combine_test_train_split}" == "true" ]; then
+    start_fold=1
+    max_folds=1
+    combine_test_train_split="-utts"
+    results_dir="${results_dir}combine-test-train-split/"
+    out_dir="${out_dir}combine-test-train-split/"
+else
+    combine_test_train_split=""
+    results_dir="${results_dir}test-train-split/"
+    out_dir="${out_dir}test-train-split/"
+fi
+
+if [ "${normalise_data}" == "true" ]; then
+    normalise_data="-rn"
+else
+    normalise_data=""
+fi
+
 count=0
 while read dataset; do
-for clusterer in KMeans KMedoids
-do
-
-# Dont change anything after here for regular runs
-
+for clusterer in $clusterers_to_run; do
 # Skip to the script start point
 ((count++))
 if ((count>=start_point)); then
@@ -113,15 +142,16 @@ echo "#!/bin/bash
 #SBATCH --mem=${max_memory}M
 #SBATCH -o ${out_dir}${clusterer}/${dataset}/%A-%a.out
 #SBATCH -e ${out_dir}${clusterer}/${dataset}/%A-%a.err
+#SBATCH --nodes=1
 
 . /etc/profile
 
-module add python/anaconda/2019.10/3.7
+module add conda
 source activate $env_name
 
 # Input args to the default clustering_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/clustering_experiments.py
-python -u ${script_file_path} ${data_dir} ${results_dir} ${clusterer} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_test_files} ${predefined_folds}"  > generatedFile.sub
+python -u ${script_file_path} ${data_dir} ${results_dir} ${clusterer} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_test_files} ${predefined_folds} ${combine_test_train_split} ${normalise_data}"  > generatedFile.sub
 
 echo ${count} ${clusterer}/${dataset}
 

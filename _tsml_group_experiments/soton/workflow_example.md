@@ -46,4 +46,9 @@ and max run time is 60 hours.
 Queue names:
 https://sotonac.sharepoint.com/teams/HPCCommunityWiki/SitePages/Iridis%205%20Job-submission-and-Limits-Quotas.aspx
 
-Note the queuing doesnt seem to work, and you run into this
+Note the queuing doesnt seem to work, and you run into this message
+
+>sbatch: error: Batch job submission failed: Job violates accounting/QOS policy (job
+submit limit, user's size and/or time limits)
+
+need to fix this
