@@ -23,7 +23,7 @@ deep_learning_classifiers = [
     ["individualinceptionclassifier", "singleinception"],
     ["inceptiontimeclassifier", "inceptiontime"],
     ["h-inceptiontimeclassifier", "h-inceptiontime"],
-    ["litetimeclassifier", "littime"],
+    ["litetimeclassifier", "litetime"],
 ]
 dictionary_based_classifiers = [
     ["bossensemble", "boss"],
