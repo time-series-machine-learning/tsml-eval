@@ -260,44 +260,38 @@ def _set_classifier_deep_learning(
 
         return CNNClassifier(random_state=random_state, **kwargs)
     elif c == "fcnclassifier" or c == "fcnn":
-        from aeon.classification.deep_learning.fcn import FCNClassifier
+        from aeon.classification.deep_learning import FCNClassifier
 
         return FCNClassifier(random_state=random_state, **kwargs)
     elif c == "mlpclassifier" or c == "mlp":
-        from aeon.classification.deep_learning.mlp import MLPClassifier
+        from aeon.classification.deep_learning import MLPClassifier
 
         return MLPClassifier(random_state=random_state, **kwargs)
     elif c == "tapnetclassifier" or c == "tapnet":
-        from aeon.classification.deep_learning.tapnet import TapNetClassifier
+        from aeon.classification.deep_learning import TapNetClassifier
 
         return TapNetClassifier(random_state=random_state, **kwargs)
     elif c == "resnetclassifier" or c == "resnet":
-        from aeon.classification.deep_learning.resnet import ResNetClassifier
+        from aeon.classification.deep_learning import ResNetClassifier
 
         return ResNetClassifier(random_state=random_state, **kwargs)
     elif c == "individualinceptionclassifier" or c == "singleinception":
-        from aeon.classification.deep_learning.inception_time import (
-            IndividualInceptionClassifier,
-        )
+        from aeon.classification.deep_learning import IndividualInceptionClassifier
 
         return IndividualInceptionClassifier(random_state=random_state, **kwargs)
     elif c == "inceptiontimeclassifier" or c == "inceptiontime":
-        from aeon.classification.deep_learning.inception_time import (
-            InceptionTimeClassifier,
-        )
+        from aeon.classification.deep_learning import InceptionTimeClassifier
 
         return InceptionTimeClassifier(random_state=random_state, **kwargs)
     elif c == "h-inceptiontimeclassifier" or c == "h-inceptiontime":
-        from aeon.classification.deep_learning.inception_time import (
-            InceptionTimeClassifier,
-        )
+        from aeon.classification.deep_learning import InceptionTimeClassifier
 
         return InceptionTimeClassifier(
             use_custom_filters=True, random_state=random_state, **kwargs
         )
     # Add in once 0.6 released
     # elif c == "litetimeclassifier" or c == "litetime":
-    #    from aeon.classification.deep_learning.inception_time import LiteTimeClassifier
+    #    from aeon.classification.deep_learning import LiteTimeClassifier
     #
     #    return LiteTimeClassifier(random_state=random_state, **kwargs)
 
