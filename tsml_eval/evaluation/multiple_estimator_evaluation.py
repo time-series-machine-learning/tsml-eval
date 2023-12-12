@@ -1211,7 +1211,7 @@ def _figures_for_statistic(
 ):
     os.makedirs(f"{save_path}/{statistic_name}/figures/", exist_ok=True)
 
-    cd = plot_critical_difference(scores, estimators, errors=not higher_better)
+    cd = plot_critical_difference(scores, estimators, lower_better=not higher_better)
     cd.savefig(
         f"{save_path}/{statistic_name}/figures/"
         f"{statistic_name}_critical_difference.pdf",
