@@ -141,7 +141,7 @@ class HydraRegressor(BaseRegressor):
     >>> from tsml.datasets import load_minimal_gas_prices
     >>> X, y = load_minimal_gas_prices()
     >>> regressor = HydraRegressor()
-    >>> regressor.fit(X, y)
+    >>> regressor = regressor.fit(X, y)
     >>> y_pred = regressor.predict(X)
     """
     _tags = {

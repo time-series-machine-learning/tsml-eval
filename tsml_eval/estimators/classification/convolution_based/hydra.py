@@ -34,7 +34,7 @@ class HYDRA(BaseClassifier):
     >>> from tsml.datasets import load_minimal_chinatown
     >>> X, y = load_minimal_chinatown()
     >>> classifier = HYDRA()
-    >>> classifier.fit(X, y)
+    >>> classifier = classifier.fit(X, y)
     >>> y_pred = classifier.predict(X)
     """
 
@@ -82,7 +82,7 @@ class MultiRocketHydra(BaseClassifier):
     >>> from tsml.datasets import load_minimal_chinatown
     >>> X, y = load_minimal_chinatown()
     >>> classifier = MultiRocketHydra()
-    >>> classifier.fit(X, y)
+    >>> classifier = classifier.fit(X, y)
     >>> y_pred = classifier.predict(X)
     """
 
