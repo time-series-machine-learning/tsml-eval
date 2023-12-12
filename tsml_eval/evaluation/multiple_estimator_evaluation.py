@@ -6,7 +6,7 @@ from datetime import datetime
 
 import numpy as np
 from aeon.benchmarking import plot_critical_difference
-from aeon.benchmarking.results_plotting import plot_scatter
+from aeon.benchmarking.results_plotting import plot_boxplot_median, plot_scatter
 from matplotlib import pyplot as plt
 
 from tsml_eval.evaluation.storage import (
@@ -1227,24 +1227,25 @@ def _figures_for_statistic(
     )
     plt.close()
 
-    # crashes when scores are the same?
-
-    # box = plot_boxplot_median(scores.transpose(), estimators)
-    # box.savefig(
-    #     f"{save_path}/{statistic_name}/figures/{statistic_name}_boxplot.pdf",
-    #     bbox_inches="tight",
-    # )
-    # pickle.dump(
-    #     box,
-    #     open(
-    #         f"{save_path}/{statistic_name}/figures/{statistic_name}_boxplot.pickle",
-    #         "wb",
-    #     ),
-    # )
-    # plt.close()
+    box = plot_boxplot_median(scores.transpose(), estimators)
+    box.savefig(
+        f"{save_path}/{statistic_name}/figures/{statistic_name}_boxplot.pdf",
+        bbox_inches="tight",
+    )
+    pickle.dump(
+        box,
+        open(
+            f"{save_path}/{statistic_name}/figures/{statistic_name}_boxplot.pickle",
+            "wb",
+        ),
+    )
+    plt.close()
 
     for i, est1 in enumerate(estimators):
         for n, est2 in enumerate(estimators):
+            if i == n:
+                continue
+
             os.makedirs(
                 f"{save_path}/{statistic_name}/figures/scatters/{est1}/", exist_ok=True
             )
