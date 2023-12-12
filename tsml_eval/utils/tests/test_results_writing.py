@@ -14,18 +14,20 @@ from tsml_eval.experiments.tests import (
     _REGRESSOR_RESULTS_PATH,
 )
 from tsml_eval.utils.experiments import (
-    _check_classification_third_line,
-    _check_clustering_third_line,
-    _check_first_line,
-    _check_forecasting_third_line,
-    _check_regression_third_line,
-    _check_results_line,
-    _check_second_line,
     write_classification_results,
     write_clustering_results,
     write_forecasting_results,
     write_regression_results,
     write_results_to_tsml_format,
+)
+from tsml_eval.utils.validation import (
+    _check_classification_third_line,
+    _check_clustering_third_line,
+    _check_first_line,
+    _check_forecasting_third_line,
+    _check_regression_third_line,
+    _check_results_lines,
+    _check_second_line,
 )
 
 
@@ -42,6 +44,7 @@ def test_write_classification_results():
         _CLASSIFIER_RESULTS_PATH,
         full_path=False,
         first_line_comment="test_write_classification_results",
+        n_classes=3,
     )
 
     _check_classification_file_format(
@@ -51,16 +54,16 @@ def test_write_classification_results():
     os.remove(f"{_CLASSIFIER_RESULTS_PATH}/Test/Predictions/Test/results.csv")
 
 
-def _check_classification_file_format(file_path):
+def _check_classification_file_format(file_path, num_results_lines=None):
     with open(file_path, "r") as f:
         lines = f.readlines()
 
     assert _check_first_line(lines[0])
     assert _check_second_line(lines[1])
     assert _check_classification_third_line(lines[2])
+    n_classes = int(lines[2].split(",")[5])
 
-    for i in range(3, 6):
-        assert _check_results_line(lines[i])
+    _check_results_lines(lines, num_results_lines=num_results_lines, n_probas=n_classes)
 
 
 def test_write_classification_results_invalid():
@@ -108,7 +111,7 @@ def test_write_regression_results():
     os.remove(f"{_REGRESSOR_RESULTS_PATH}/Test/Predictions/Test/results.csv")
 
 
-def _check_regression_file_format(file_path):
+def _check_regression_file_format(file_path, num_results_lines=None):
     with open(file_path, "r") as f:
         lines = f.readlines()
 
@@ -116,8 +119,9 @@ def _check_regression_file_format(file_path):
     assert _check_second_line(lines[1])
     assert _check_regression_third_line(lines[2])
 
-    for i in range(3, 6):
-        assert _check_results_line(lines[i], probabilities=False)
+    _check_results_lines(
+        lines, num_results_lines=num_results_lines, probabilities=False
+    )
 
 
 def test_write_forecasting_results():
@@ -141,7 +145,7 @@ def test_write_forecasting_results():
     os.remove(f"{_FORECASTER_RESULTS_PATH}/Test/Predictions/Test/results.csv")
 
 
-def _check_forecasting_file_format(file_path):
+def _check_forecasting_file_format(file_path, num_results_lines=None):
     with open(file_path, "r") as f:
         lines = f.readlines()
 
@@ -149,8 +153,9 @@ def _check_forecasting_file_format(file_path):
     assert _check_second_line(lines[1])
     assert _check_forecasting_third_line(lines[2])
 
-    for i in range(3, 6):
-        assert _check_results_line(lines[i], probabilities=False)
+    _check_results_lines(
+        lines, num_results_lines=num_results_lines, probabilities=False
+    )
 
 
 def test_write_clustering_results():
@@ -170,6 +175,7 @@ def test_write_clustering_results():
         _CLUSTERER_RESULTS_PATH,
         full_path=False,
         first_line_comment="test_write_clustering_results",
+        n_clusters=3,
     )
 
     _check_clustering_file_format(
@@ -179,16 +185,16 @@ def test_write_clustering_results():
     os.remove(f"{_CLUSTERER_RESULTS_PATH}/Test/Predictions/Test/results.csv")
 
 
-def _check_clustering_file_format(file_path):
+def _check_clustering_file_format(file_path, num_results_lines=None):
     with open(file_path, "r") as f:
         lines = f.readlines()
 
     assert _check_first_line(lines[0])
     assert _check_second_line(lines[1])
     assert _check_clustering_third_line(lines[2])
+    n_probas = int(lines[2].split(",")[6])
 
-    for i in range(3, 6):
-        assert _check_results_line(lines[i])
+    _check_results_lines(lines, num_results_lines=num_results_lines, n_probas=n_probas)
 
 
 def test_write_clustering_results_invalid():

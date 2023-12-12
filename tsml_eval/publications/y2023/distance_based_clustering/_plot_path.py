@@ -44,14 +44,14 @@ def _pairwise_path(x, y, metric):  # pragma: no cover
     return path, pw_matrix.trace(), pw_matrix
 
 
-def _plot_path(  # pragma: no cover
+def _plot_path(
     x: np.ndarray,
     y: np.ndarray,
     metric: str,
     dist_kwargs: dict = None,
     title: str = "",
     plot_over_pw: bool = False,
-):
+):  # pragma: no cover
     _check_soft_dependencies("matplotlib")
 
     import matplotlib.pyplot as plt
@@ -116,9 +116,9 @@ def _plot_path(  # pragma: no cover
     return plt
 
 
-def _plot_alignment(  # pragma: no cover
+def _plot_alignment(
     x, y, metric, dist_kwargs: dict = None, title: str = ""
-):
+):  # pragma: no cover
     _check_soft_dependencies("matplotlib")
 
     import matplotlib.pyplot as plt

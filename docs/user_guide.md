@@ -4,14 +4,15 @@
 :gutter: 3
 
 :::{grid-item-card}
-:img-top: examples/images/wip.png
+:img-top: examples/images/data.png
+:class-img-top: tsml-card-image
 :text-align: center
 
 tsml-eval Data Format
 
 ^^^
 
-Placeholder.
+An overview of the datatypes used for `tsml-eval` experiments.
 
 +++
 
@@ -26,14 +27,61 @@ Datasets
 :::
 
 :::{grid-item-card}
+:img-top: examples/images/cd_diagram.png
+:class-img-top: tsml-card-image
+:text-align: center
+
+tsml-eval Results Evaluation
+
+^^^
+
+Use the `tsml-eval` package to evaluate your results.
+
++++
+
+```{button-ref} /examples/evaluation.ipynb
+:color: primary
+:click-parent:
+:expand:
+
+Evaluation
+```
+
+:::
+
+:::{grid-item-card}
+:img-top: examples/images/results.png
+:class-img-top: tsml-card-image
+:text-align: center
+
+tsml-eval Results Format
+
+^^^
+
+An overview of the results format output by `tsml-eval` experiments.
+
++++
+
+```{button-ref} /examples/results_format.ipynb
+:color: primary
+:click-parent:
+:expand:
+
+Results
+```
+
+:::
+
+:::{grid-item-card}
 :img-top: examples/images/TSC.png
+:class-img-top: tsml-card-image
 :text-align: center
 
 Time Series Classification
 
 ^^^
 
-Placeholder.
+TODO Placeholder.
 
 +++
 
@@ -49,13 +97,14 @@ TSC
 
 :::{grid-item-card}
 :img-top: examples/images/TSR.png
+:class-img-top: tsml-card-image
 :text-align: center
 
 Time Series Extrinsic Regression
 
 ^^^
 
-Placeholder.
+TODO Placeholder.
 
 +++
 
@@ -71,13 +120,14 @@ TSER
 
 :::{grid-item-card}
 :img-top: examples/images/TSCL.png
+:class-img-top: tsml-card-image
 :text-align: center
 
 Time Series Clustering
 
 ^^^
 
-Placeholder.
+TODO Placeholder.
 
 +++
 
@@ -92,45 +142,24 @@ TSCL
 :::
 
 :::{grid-item-card}
-:img-top: examples/images/wip.png
+:img-top: examples/images/forecasting.png
+:class-img-top: tsml-card-image
 :text-align: center
 
-tsml-eval Results Evaluation
+Time Series Forecasting
 
 ^^^
 
-Placeholder.
+TODO Placeholder.
 
 +++
 
-```{button-ref} /examples/evaluation.ipynb
+```{button-ref} /examples/forecasting_experiments.ipynb
 :color: primary
 :click-parent:
 :expand:
 
-Evaluation
-```
-
-:::
-
-:::{grid-item-card}
-:img-top: examples/images/wip.png
-:text-align: center
-
-tsml-eval Results Format
-
-^^^
-
-Placeholder.
-
-+++
-
-```{button-ref} /examples/results_format.ipynb
-:color: primary
-:click-parent:
-:expand:
-
-Results
+Forecasting
 ```
 
 :::
@@ -141,9 +170,10 @@ Results
 :hidden:
 
 ./examples/datasets.ipynb
+./examples/evaluation.ipynb
+./examples/results_format.ipynb
 ./examples/classification_experiments.ipynb
 ./examples/regression_experiments.ipynb
 ./examples/clustering_experiments.ipynb
-./examples/evaluation.ipynb
-./examples/results_format.ipynb
+./examples/forecasting_experiments.ipynb
 ```

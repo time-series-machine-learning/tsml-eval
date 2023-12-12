@@ -6,11 +6,11 @@ https://arxiv.org/abs/2203.13652
 """
 
 __author__ = ["patrickzib", "Arik Ermshaus"]
-__all__ = ["HYDRA", "HydraMultiRocket"]
+__all__ = ["HYDRA", "MultiRocketHydra"]
 
 import numpy as np
 from aeon.classification.base import BaseClassifier
-from aeon.transformations.collection.rocket import MultiRocket
+from aeon.transformations.collection.convolution_based import MultiRocket
 from aeon.utils.validation import check_n_jobs
 from aeon.utils.validation._dependencies import _check_soft_dependencies
 from sklearn.linear_model import RidgeClassifierCV
@@ -25,7 +25,18 @@ import torch.nn.functional as F  # noqa: E402
 
 
 class HYDRA(BaseClassifier):
-    """aeon-HYDRA classifier-adaptor."""
+    """
+    Hydra Classifier
+
+    Examples
+    --------
+    >>> from tsml_eval.estimators.classification.convolution_based import HYDRA
+    >>> from tsml.datasets import load_minimal_chinatown
+    >>> X, y = load_minimal_chinatown()
+    >>> classifier = HYDRA()
+    >>> classifier = classifier.fit(X, y)
+    >>> y_pred = classifier.predict(X)
+    """
 
     _tags = {
         "capability:multithreading": False,
@@ -61,8 +72,19 @@ class HYDRA(BaseClassifier):
         return self.clf.predict(X_test_transform)
 
 
-class HydraMultiRocket(BaseClassifier):
-    """aeon-HydraMultiRocket classifier-adaptor."""
+class MultiRocketHydra(BaseClassifier):
+    """
+    MultiRocket-Hydra Classifier
+
+    Examples
+    --------
+    >>> from tsml_eval.estimators.classification.convolution_based import MultiRocketHydra
+    >>> from tsml.datasets import load_minimal_chinatown
+    >>> X, y = load_minimal_chinatown()
+    >>> classifier = MultiRocketHydra()
+    >>> classifier = classifier.fit(X, y)
+    >>> y_pred = classifier.predict(X)
+    """
 
     _tags = {
         "capability:multithreading": False,
@@ -81,7 +103,7 @@ class HydraMultiRocket(BaseClassifier):
         n_jobs = check_n_jobs(n_jobs)
         torch.set_num_threads(n_jobs)
 
-        super(HydraMultiRocket, self).__init__()
+        super(MultiRocketHydra, self).__init__()
 
     def _fit(self, X, y):
         self.transform_hydra = HydraInternal(X.shape[-1])

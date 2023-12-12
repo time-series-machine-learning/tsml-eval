@@ -126,6 +126,7 @@ dmypy.json
 
 # Test output
 test_output/
+examples/generated_results/
 
 # Test datasts
 test_datasets/
@@ -143,3 +144,6 @@ local.py
 local_code/
 local_code.py
 debug.py
+
+# MacOs files
+.DS_Store

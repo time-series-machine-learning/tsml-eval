@@ -1,9 +1,17 @@
 #!/bin/bash
 # CHECK:
+#   username (your username)
+#   results_dir (where to check/write results),
+#   out_dir (where to write output logs),
 #   datasets (list of problems)
 #   results_dir (where to check/write results),
-#   for clusterer in (the clusterers we are running)
-
+#   clusterers_to_run (list of clusterers to run)
+#   script_file_path (path to clustering_experiments.py)
+#   env_name (name of conda environment)
+#   max_folds (number of folds to run)
+#   start_fold (fold to start from)
+#   normalise_data (true/false)
+#   combine_test_train_split (true/false)
 # While reading is fine, please dont write anything to the default directories in this script
 
 # Start and end for resamples
@@ -17,7 +25,7 @@ max_num_submitted=100
 queue="compute-64-512"
 
 # Enter your username and email here
-username="ajb"
+username="eej17ucu"
 mail="NONE"
 mailto=$username"@uea.ac.uk"
 
@@ -38,7 +46,7 @@ datasets="/gpfs/home/ajb/DataSetLists/TSC_112_2019.txt"
 local_path="/gpfs/home/$username/"
 
 # Results and output file write location. Change these to reflect your own file structure
-results_dir=$local_path"ClusteringResults/results/"
+results_dir=$local_path"ClusteringResults/"
 out_dir=$local_path"ClusteringResults/output/"
 
 # The python script we are running
@@ -54,24 +62,47 @@ generate_test_files="true"
 # If set for true, looks for <problem><fold>_TRAIN.ts file. This is useful for running tsml resamples
 predefined_folds="false"
 
+# Boolean on if to combine the test/train split
+combine_test_train_split="false"
+
+# Clusterers to loop over. Must be seperated by a space
+# See list of potential clusterers in set_clusterer
+clusterers_to_run="kmedoids-squared kmedoids-euclidean"
+
+# Normalise data before clustering
+normalise_data="true"
+
 # You can add extra arguments here. See tsml_eval/utils/experiments.py parse_args
 # You will have to add any variable to the python call close to the bottom of the script
 
-# generate a results file for the test data as well as train, set to empty string to stop
-generate_test_files="-te"
+# ======================================================================================
+# ======================================================================================
+# Dont change anything under here (unless you want to change how the experiment
+# is working)
+# ======================================================================================
+# ======================================================================================
 
-# If set to -pr, looks for <problem><resample>_TRAIN.ts files. This is useful for running tsml-java resamples
-predefined_folds=""
+# Set to -te to generate test files
+generate_test_files=$([ "${generate_test_files,,}" == "true" ] && echo "-te" || echo "")
 
-# List valid clusterers e.g KMeans KMedoids
-# See set_clusterer for aliases
+# Set to -pr to use predefined folds
+predefined_folds=$([ "${predefined_folds,,}" == "true" ] && echo "-pr" || echo "")
+
+# Update result path to split combined test train split and test train split
+results_dir="${results_dir}$([ "${combine_test_train_split,,}" == "true" ] && echo "combine-test-train-split/" || echo "test-train-split/")"
+
+# Update out path to split combined test train split and test train split
+out_dir="${out_dir}$([ "${combine_test_train_split,,}" == "true" ] && echo "combine-test-train-split/" || echo "test-train-split/")"
+
+# Set to -utts to combine test train split
+combine_test_train_split=$([ "${combine_test_train_split,,}" == "true" ] && echo "-ctts" || echo "")
+
+# Set to -rn to normalise data
+normalise_data=$([ "${normalise_data,,}" == "true" ] && echo "-rn" || echo "")
+
 count=0
 while read dataset; do
-for clusterer in KMeans KMedoids
-do
-
-# Dont change anything after here for regular runs
-
+for clusterer in $clusterers_to_run; do
 # Skip to the script start point
 ((count++))
 if ((count>=start_point)); then
@@ -121,7 +152,7 @@ source activate $env_name
 
 # Input args to the default clustering_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/clustering_experiments.py
-python -u ${script_file_path} ${data_dir} ${results_dir} ${clusterer} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_test_files} ${predefined_folds}"  > generatedFile.sub
+python -u ${script_file_path} ${data_dir} ${results_dir} ${clusterer} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_test_files} ${predefined_folds} ${combine_test_train_split} ${normalise_data}"  > generatedFile.sub
 
 echo ${count} ${clusterer}/${dataset}
 

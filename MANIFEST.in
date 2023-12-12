@@ -12,7 +12,7 @@ include pyproject.toml
 include README.md
 
 recursive-exclude .github *
-recursive-exclude _build_tools *
+recursive-exclude build_tools *
 recursive-exclude _tsml_group_experiments *
 exclude .codecov.yml
 exclude .gitattributes
