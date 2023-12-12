@@ -22,7 +22,7 @@ from sklearn import preprocessing
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.utils import check_random_state
 
-from tsml_eval.estimators.regression.transformations.sfa import SFA
+from tsml_eval._wip.hc2_regression.sfa import SFA
 
 
 class TemporalDictionaryEnsemble(BaseRegressor):

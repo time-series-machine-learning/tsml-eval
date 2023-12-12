@@ -25,7 +25,18 @@ import torch.nn.functional as F  # noqa: E402
 
 
 class HYDRA(BaseClassifier):
-    """aeon-HYDRA classifier-adaptor."""
+    """
+    Hydra Classifier
+
+    Examples
+    --------
+    >>> from tsml_eval.estimators.classification.convolution_based import HYDRA
+    >>> from tsml.datasets import load_minimal_chinatown
+    >>> X, y = load_minimal_chinatown()
+    >>> classifier = HYDRA()
+    >>> classifier = classifier.fit(X, y)
+    >>> y_pred = classifier.predict(X)
+    """
 
     _tags = {
         "capability:multithreading": False,
@@ -62,7 +73,18 @@ class HYDRA(BaseClassifier):
 
 
 class MultiRocketHydra(BaseClassifier):
-    """aeon-MultiRocketHydra classifier-adaptor."""
+    """
+    MultiRocket-Hydra Classifier
+
+    Examples
+    --------
+    >>> from tsml_eval.estimators.classification.convolution_based import MultiRocketHydra
+    >>> from tsml.datasets import load_minimal_chinatown
+    >>> X, y = load_minimal_chinatown()
+    >>> classifier = MultiRocketHydra()
+    >>> classifier = classifier.fit(X, y)
+    >>> y_pred = classifier.predict(X)
+    """
 
     _tags = {
         "capability:multithreading": False,

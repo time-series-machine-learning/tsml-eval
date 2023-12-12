@@ -188,7 +188,7 @@ def _set_regressor_convolution_based(
 
         return HydraRegressor(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif r == "arsenal" or r == "arsenalregressor":
-        from tsml_eval.estimators.regression.convolution_based import Arsenal
+        from tsml_eval._wip.hc2_regression.arsenal import Arsenal
 
         return Arsenal(
             random_state=random_state,
@@ -238,9 +238,7 @@ def _set_regressor_dictionary_based(
     r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
     if r == "temporaldictionaryensemble" or r == "tde":
-        from tsml_eval.estimators.regression.dictionary_based import (
-            TemporalDictionaryEnsemble,
-        )
+        from tsml_eval._wip.hc2_regression.tde import TemporalDictionaryEnsemble
 
         return TemporalDictionaryEnsemble(
             random_state=random_state,
@@ -328,7 +326,7 @@ def _set_regressor_hybrid(
     r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
     if r == "hivecotev2" or r == "hc2":
-        from tsml_eval.estimators.regression.hybrid import HIVECOTEV2
+        from tsml_eval._wip.hc2_regression.hivecote_v2 import HIVECOTEV2
 
         return HIVECOTEV2(
             random_state=random_state,
@@ -352,10 +350,7 @@ def _set_regressor_interval_based(
         )
     elif r == "tsf-i":
         from aeon.regression.interval_based import TimeSeriesForestRegressor
-
-        from tsml_eval.estimators.regression.column_ensemble import (
-            ColumnEnsembleRegressor,
-        )
+        from tsml.compose import ChannelEnsembleRegressor
 
         estimators = [
             (
@@ -365,11 +360,11 @@ def _set_regressor_interval_based(
                     n_jobs=n_jobs,
                     save_transformed_data=build_train_file,
                 ),
-                None,
+                "all-split",
             )
         ]
 
-        return ColumnEnsembleRegressor(estimators, **kwargs)
+        return ChannelEnsembleRegressor(estimators, **kwargs)
     elif r == "tsf-500":
         from aeon.regression.interval_based import TimeSeriesForestRegressor
 
@@ -432,9 +427,7 @@ def _set_regressor_shapelet_based(
     r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
     if r == "str-2hour":
-        from tsml_eval.estimators.regression.shapelet_based import (
-            ShapeletTransformRegressor,
-        )
+        from tsml_eval._wip.hc2_regression.str import ShapeletTransformRegressor
 
         return ShapeletTransformRegressor(
             transform_limit_in_minutes=120,
@@ -445,9 +438,7 @@ def _set_regressor_shapelet_based(
             **kwargs,
         )
     elif r == "shapelettransformregressor" or r == "str" or r == "stc":
-        from tsml_eval.estimators.regression.shapelet_based import (
-            ShapeletTransformRegressor,
-        )
+        from tsml_eval._wip.hc2_regression.str import ShapeletTransformRegressor
 
         return ShapeletTransformRegressor(
             random_state=random_state,
@@ -460,9 +451,7 @@ def _set_regressor_shapelet_based(
         from sklearn.linear_model import RidgeCV
         from sklearn.preprocessing import StandardScaler
 
-        from tsml_eval.estimators.regression.shapelet_based import (
-            ShapeletTransformRegressor,
-        )
+        from tsml_eval._wip.hc2_regression.str import ShapeletTransformRegressor
 
         return ShapeletTransformRegressor(
             estimator=make_pipeline(
