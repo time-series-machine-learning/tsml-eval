@@ -2,38 +2,112 @@
 
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
+import numpy as np
+from aeon.clustering import (
+    TimeSeriesCLARA,
+    TimeSeriesCLARANS,
+    TimeSeriesKMeans,
+    TimeSeriesKMedoids,
+)
+from aeon.transformations.collection import TimeSeriesScaler
+from sklearn.cluster import KMeans
+
+from tsml_eval.utils.experiments import load_experiment_data
 from tsml_eval.utils.functions import str_in_nested_list
 
 distance_based_clusterers = [
-    ["TimeSeriesKMeans", "kmeans-dtw", "k-means-dtw"],
-    ["kmeans-ddtw", "k-means-ddtw"],
-    ["kmeans-ed", "k-means-ed"],
-    ["kmeans-edr", "k-means-edr"],
-    ["kmeans-erp", "k-means-erp"],
-    ["kmeans-lcss", "k-means-lcss"],
-    ["kmeans-msm", "k-means-msm"],
-    ["kmeans-twe", "k-means-twe"],
-    ["kmeans-wdtw", "k-means-wdtw"],
-    ["kmeans-wddtw", "k-means-wddtw"],
-    ["TimeSeriesKMedoids", "kmedoids-dtw", "k-medoids-dtw"],
-    ["kmedoids-ddtw", "k-medoids-ddtw"],
-    ["kmedoids-ed", "k-medoids-ed"],
-    ["kmedoids-edr", "k-medoids-edr"],
-    ["kmedoids-erp", "k-medoids-erp"],
-    ["kmedoids-lcss", "k-medoids-lcss"],
-    ["kmedoids-msm", "k-medoids-msm"],
-    ["kmedoids-twe", "k-medoids-twe"],
-    ["kmedoids-wdtw", "k-medoids-wdtw"],
-    ["kmedoids-wddtw", "k-medoids-wddtw"],
+    "kmeans-euclidean",
+    "kmeans-squared",
+    "kmeans-dtw",
+    "kmeans-ddtw",
+    "kmeans-wdtw",
+    "kmeans-wddtw",
+    "kmeans-lcss",
+    "kmeans-erp",
+    "kmeans-edr",
+    "kmeans-twe",
+    "kmeans-msm",
+    "kmeans-adtw",
+    "kmeans-shape_dtw",
+    "kmedoids-euclidean",
+    "kmedoids-squared",
+    "kmedoids-dtw",
+    "kmedoids-ddtw",
+    "kmedoids-wdtw",
+    "kmedoids-wddtw",
+    "kmedoids-lcss",
+    "kmedoids-erp",
+    "kmedoids-edr",
+    "kmedoids-twe",
+    "kmedoids-msm",
+    "kmedoids-adtw",
+    "kmedoids-shape_dtw",
+    "clarans-euclidean",
+    "clarans-squared",
+    "clarans-dtw",
+    "clarans-ddtw",
+    "clarans-wdtw",
+    "clarans-wddtw",
+    "clarans-lcss",
+    "clarans-erp",
+    "clarans-edr",
+    "clarans-twe",
+    "clarans-msm",
+    "clarans-adtw",
+    "clarans-shape_dtw",
+    "clara-euclidean",
+    "clara-squared",
+    "clara-dtw",
+    "clara-ddtw",
+    "clara-wdtw",
+    "clara-wddtw",
+    "clara-lcss",
+    "clara-erp",
+    "clara-edr",
+    "clara-twe",
+    "clara-msm",
+    "clara-adtw",
+    "clara-shape_dtw",
+    "pam-euclidean",
+    "pam-squared",
+    "pam-dtw",
+    "pam-ddtw",
+    "pam-wdtw",
+    "pam-wddtw",
+    "pam-lcss",
+    "pam-erp",
+    "pam-edr",
+    "pam-twe",
+    "pam-msm",
+    "pam-adtw",
+    "pam-shape_dtw",
+    "kmeans-ba-euclidean",
+    "kmeans-ba-squared",
+    "kmeans-ba-dtw",
+    "kmeans-ba-ddtw",
+    "kmeans-ba-wdtw",
+    "kmeans-ba-wddtw",
+    "kmeans-ba-lcss",
+    "kmeans-ba-erp",
+    "kmeans-ba-edr",
+    "kmeans-ba-twe",
+    "kmeans-ba-msm",
+    "kmeans-ba-adtw",
+    "kmeans-ba-shape_dtw",
+    "timeserieskmeans",
+    "timeserieskmedoids",
+    "timeseriesclarans",
+    "timeseriesclara",
 ]
+
 other_clusterers = [
-    ["DummyClusterer", "dummy", "dummyclusterer-tsml"],
+    ["dummyclusterer", "dummy", "dummyclusterer-tsml"],
     "dummyclusterer-aeon",
     "dummyclusterer-sklearn",
 ]
 vector_clusterers = [
-    ["KMeans", "kmeans-sklearn"],
-    "DBSCAN",
+    ["kmeans", "kmeans-sklearn"],
+    "dbscan",
 ]
 
 
@@ -43,6 +117,8 @@ def set_clusterer(
     n_jobs=1,
     fit_contract=0,
     checkpoint=None,
+    data_vars=None,
+    row_normalise=False,
     **kwargs,
 ):
     """Return a clusterer matching a given input name.
@@ -63,6 +139,15 @@ def set_clusterer(
     n_jobs: int, default=1
         The number of jobs to run in parallel for both clusterer ``fit`` and
         ``predict`` if available. `-1` means using all processors.
+    fit_contract: int, default=0
+        The number of data points to use in the clusterer ``fit`` if available.
+    checkpoint: str, default=None
+        Checkpoint to save model
+    data_vars: list, default=None
+        List of arguments to load the dataset using
+        `tsml_eval.utils.experiments import load_experiment_data`.
+    row_normalise: bool, default=False
+        Whether to row normalise the data if it is loaded.
 
     Return
     ------
@@ -73,7 +158,14 @@ def set_clusterer(
 
     if str_in_nested_list(distance_based_clusterers, c):
         return _set_clusterer_distance_based(
-            c, random_state, n_jobs, fit_contract, checkpoint, kwargs
+            c,
+            random_state,
+            n_jobs,
+            fit_contract,
+            checkpoint,
+            data_vars,
+            row_normalise,
+            kwargs,
         )
     elif str_in_nested_list(other_clusterers, c):
         return _set_clusterer_other(
@@ -88,90 +180,138 @@ def set_clusterer(
 
 
 def _set_clusterer_distance_based(
-    c, random_state, n_jobs, fit_contract, checkpoint, kwargs
+    c,
+    random_state,
+    n_jobs,
+    fit_contract,
+    checkpoint,
+    data_vars,
+    row_normalise,
+    kwargs,
 ):
-    if c == "timeserieskmeans" or c == "kmeans-dtw" or c == "k-means-dtw":
-        from aeon.clustering.k_means import TimeSeriesKMeans
+    if "init_algorithm" in kwargs:
+        init_algorithm = kwargs["init_algorithm"]
+    else:
+        init_algorithm = "random"
 
-        return TimeSeriesKMeans(metric="dtw", random_state=random_state, **kwargs)
-    elif c == "kmeans-ddtw" or c == "k-means-ddtw":
-        from aeon.clustering.k_means import TimeSeriesKMeans
+    if "distance" in kwargs:
+        distance = kwargs["distance"]
+    else:
+        distance = c.split("-")[-1]
 
-        return TimeSeriesKMeans(metric="ddtw", random_state=random_state, **kwargs)
-    elif c == "kmeans-ed" or c == "k-means-ed":
-        from aeon.clustering.k_means import TimeSeriesKMeans
-
-        return TimeSeriesKMeans(metric="euclidean", random_state=random_state, **kwargs)
-    elif c == "kmeans-edr" or c == "k-means-edr":
-        from aeon.clustering.k_means import TimeSeriesKMeans
-
-        return TimeSeriesKMeans(metric="edr", random_state=random_state, **kwargs)
-    elif c == "kmeans-erp" or c == "k-means-erp":
-        from aeon.clustering.k_means import TimeSeriesKMeans
-
-        return TimeSeriesKMeans(metric="erp", random_state=random_state, **kwargs)
-    elif c == "kmeans-lcss" or c == "k-means-lcss":
-        from aeon.clustering.k_means import TimeSeriesKMeans
-
-        return TimeSeriesKMeans(metric="lcss", random_state=random_state, **kwargs)
-    elif c == "kmeans-msm" or c == "k-means-msm":
-        from aeon.clustering.k_means import TimeSeriesKMeans
-
-        return TimeSeriesKMeans(metric="msm", random_state=random_state, **kwargs)
-    elif c == "kmeans-twe" or c == "k-means-twe":
-        from aeon.clustering.k_means import TimeSeriesKMeans
-
-        return TimeSeriesKMeans(metric="twe", random_state=random_state, **kwargs)
-    elif c == "kmeans-wdtw" or c == "k-means-wdtw":
-        from aeon.clustering.k_means import TimeSeriesKMeans
-
-        return TimeSeriesKMeans(metric="wdtw", random_state=random_state, **kwargs)
-    elif c == "kmeans-wddtw" or c == "k-means-wddtw":
-        from aeon.clustering.k_means import TimeSeriesKMeans
-
-        return TimeSeriesKMeans(metric="wddtw", random_state=random_state, **kwargs)
-    elif c == "timeserieskmedoids" or c == "kmedoids-dtw" or c == "k-medoids-dtw":
-        from aeon.clustering.k_medoids import TimeSeriesKMedoids
-
-        return TimeSeriesKMedoids(distance="dtw", random_state=random_state, **kwargs)
-    elif c == "kmedoids-ddtw" or c == "k-medoids-ddtw":
-        from aeon.clustering.k_medoids import TimeSeriesKMedoids
-
-        return TimeSeriesKMedoids(distance="ddtw", random_state=random_state, **kwargs)
-    elif c == "kmedoids-ed" or c == "k-medoids-ed":
-        from aeon.clustering.k_medoids import TimeSeriesKMedoids
-
-        return TimeSeriesKMedoids(
-            distance="euclidean", random_state=random_state, **kwargs
+    if "distance_params" in kwargs:
+        distance_params = kwargs["distance_params"]
+    else:
+        distance_params = _get_distance_default_params(
+            distance, data_vars, row_normalise
         )
-    elif c == "kmedoids-edr" or c == "k-medoids-edr":
-        from aeon.clustering.k_medoids import TimeSeriesKMedoids
 
-        return TimeSeriesKMedoids(distance="edr", random_state=random_state, **kwargs)
-    elif c == "kmedoids-erp" or c == "k-medoids-erp":
-        from aeon.clustering.k_medoids import TimeSeriesKMedoids
+    if "kmeans" in c or "timeserieskmeans" in c:
+        if "average_params" in kwargs:
+            average_params = kwargs["average_params"]
+        else:
+            average_params = {"distance": distance, **distance_params.copy()}
+        if "ba" in c:
+            return TimeSeriesKMeans(
+                max_iter=50,
+                n_init=10,
+                init_algorithm=init_algorithm,
+                distance=distance,
+                distance_params=distance_params,
+                random_state=random_state,
+                averaging_method="ba",
+                average_params=average_params,
+                **kwargs,
+            )
+        else:
+            return TimeSeriesKMeans(
+                max_iter=50,
+                n_init=10,
+                init_algorithm=init_algorithm,
+                distance=distance,
+                distance_params=distance_params,
+                random_state=random_state,
+                averaging_method="mean",
+                **kwargs,
+            )
+    elif "kmedoids" in c or "timeserieskmedoids" in c:
+        return TimeSeriesKMedoids(
+            max_iter=50,
+            n_init=10,
+            init_algorithm=init_algorithm,
+            distance=distance,
+            distance_params=distance_params,
+            random_state=random_state,
+            method="alternate",
+            **kwargs,
+        )
+    elif "pam" in c or "timeseriespam" in c:
+        return TimeSeriesKMedoids(
+            max_iter=50,
+            n_init=10,
+            init_algorithm=init_algorithm,
+            distance=distance,
+            distance_params=distance_params,
+            random_state=random_state,
+            method="pam",
+            **kwargs,
+        )
+    elif "clarans" in c or "timeseriesclarans" in c:
+        return TimeSeriesCLARANS(
+            n_init=10,
+            init_algorithm=init_algorithm,
+            distance=distance,
+            distance_params=distance_params,
+            random_state=random_state,
+            **kwargs,
+        )
+    elif "clara" in c or "timeseriesclara" in c:
+        return TimeSeriesCLARA(
+            max_iter=50,
+            init_algorithm=init_algorithm,
+            distance=distance,
+            distance_params=distance_params,
+            random_state=random_state,
+            **kwargs,
+        )
+    return None
 
-        return TimeSeriesKMedoids(distance="erp", random_state=random_state, **kwargs)
-    elif c == "kmedoids-lcss" or c == "k-medoids-lcss":
-        from aeon.clustering.k_medoids import TimeSeriesKMedoids
 
-        return TimeSeriesKMedoids(distance="lcss", random_state=random_state, **kwargs)
-    elif c == "kmedoids-msm" or c == "k-medoids-msm":
-        from aeon.clustering.k_medoids import TimeSeriesKMedoids
+def _get_distance_default_params(
+    dist_name: str, data_vars: list, row_normalise: bool
+) -> dict:
+    if dist_name == "dtw" or dist_name == "ddtw":
+        return {"window": 0.2}
+    if dist_name == "lcss":
+        return {"epsilon": 1.0}
+    if dist_name == "erp":
+        # load dataset to get std if available
+        if data_vars is not None:
+            X_train, _, _, _, _ = load_experiment_data(*data_vars)
 
-        return TimeSeriesKMedoids(distance="msm", random_state=random_state, **kwargs)
-    elif c == "kmedoids-twe" or c == "k-medoids-twe":
-        from aeon.clustering.k_medoids import TimeSeriesKMedoids
+            # cant handle unequal length series
+            if isinstance(X_train, np.ndarray):
+                if row_normalise:
+                    scaler = TimeSeriesScaler()
+                    X_train = scaler.fit_transform(X_train)
 
-        return TimeSeriesKMedoids(distance="twe", random_state=random_state, **kwargs)
-    elif c == "kmedoids-wdtw" or c == "k-medoids-wdtw":
-        from aeon.clustering.k_medoids import TimeSeriesKMedoids
-
-        return TimeSeriesKMedoids(distance="wdtw", random_state=random_state, **kwargs)
-    elif c == "kmedoids-wddtw" or c == "k-medoids-wddtw":
-        from aeon.clustering.k_medoids import TimeSeriesKMedoids
-
-        return TimeSeriesKMedoids(distance="wddtw", random_state=random_state, **kwargs)
+                return {"g": X_train.std(axis=0).sum()}
+            elif not isinstance(X_train, list):
+                raise ValueError("Unknown data type in _get_distance_default_params")
+        return {"g": 0.05}
+    if dist_name == "msm":
+        return {"c": 1.0, "independent": True}
+    if dist_name == "edr":
+        return {"epsilon": None}
+    if dist_name == "twe":
+        return {"nu": 0.001, "lmbda": 1.0}
+    if dist_name == "psi_dtw":
+        return {"r": 0.5}
+    if dist_name == "adtw":
+        return {"warp_penalty": 1.0}
+    if dist_name == "shape_dtw":
+        return {"descriptor": "identity", "reach": 30}
+    return {}
 
 
 def _set_clusterer_other(c, random_state, n_jobs, fit_contract, checkpoint, kwargs):
@@ -182,20 +322,16 @@ def _set_clusterer_other(c, random_state, n_jobs, fit_contract, checkpoint, kwar
             strategy="random", n_clusters=1, random_state=random_state, **kwargs
         )
     elif c == "dummyclusterer-aeon":
-        from aeon.clustering.k_means import TimeSeriesKMeans
-
         return TimeSeriesKMeans(
             n_clusters=1,
             n_init=1,
             init_algorithm="random",
-            metric="euclidean",
+            distance="euclidean",
             max_iter=1,
             random_state=random_state,
             **kwargs,
         )
     elif c == "dummyclusterer-sklearn":
-        from sklearn.cluster import KMeans
-
         return KMeans(
             n_clusters=1,
             n_init=1,

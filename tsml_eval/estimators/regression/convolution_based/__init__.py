@@ -1,5 +1,5 @@
-""""""
-__all__ = ["Arsenal", "HydraRegressor"]
+"""Convolution based regression estimators."""
 
-from tsml_eval.estimators.regression.convolution_based.arsenal import Arsenal
+__all__ = ["HydraRegressor"]
+
 from tsml_eval.estimators.regression.convolution_based.hydra import HydraRegressor
