@@ -54,6 +54,8 @@ Functions for running experiments.
     experiments.load_and_run_regression_experiment
     experiments.run_clustering_experiment
     experiments.load_and_run_clustering_experiment
+    experiments.run_forecasting_experiment
+    experiments.load_and_run_forecasting_experiment
 ```
 
 ## Utilities: [tsml_eval.utils](https://github.com/time-series-machine-learning/tsml-eval/tree/main/tsml_eval/utils)
@@ -77,6 +79,7 @@ Public utility functions used elsewhere in the package.
     utils.experiments.compare_result_file_resample
     utils.experiments.assign_gpu
     utils.experiments.timing_benchmark
+    utils.experiments.estimator_attributes_to_file
     utils.functions.str_in_nested_list
     utils.functions.pair_list_to_dict
     utils.functions.time_to_milliseconds

@@ -2,7 +2,19 @@
 
 __author__ = ["MatthewMiddlehurst"]
 
+import shutil
+
 from tsml_eval.experiments import experiments
+from tsml_eval.testing.test_utils import _TEST_OUTPUT_PATH
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """
+    Called after test run is finished, right before returning the exit status to
+    the system.
+    """
+    if not hasattr(session.config, "workerinput"):
+        shutil.rmtree(_TEST_OUTPUT_PATH)
 
 
 def pytest_addoption(parser):

@@ -36,6 +36,7 @@ from tsml_eval.estimators import (
 )
 from tsml_eval.evaluation.metrics import clustering_accuracy_score
 from tsml_eval.utils.experiments import (
+    estimator_attributes_to_file,
     load_experiment_data,
     resample_data,
     stratified_resample_data,
@@ -66,7 +67,7 @@ def run_classification_experiment(
     resample_id=None,
     build_test_file=True,
     build_train_file=False,
-    attribute_output_path=None,
+    attribute_file_path=None,
     benchmark_time=True,
 ):
     """Run a classification experiment and save the results to file.
@@ -176,8 +177,8 @@ def run_classification_experiment(
         )
         fit_time += int(round(getattr(classifier, "_fit_time_milli", 0)))
 
-        if attribute_output_path is not None:
-            estimator_attributes_to_file(classifier, attribute_output_path)
+        if attribute_file_path is not None:
+            estimator_attributes_to_file(classifier, attribute_file_path)
 
     if build_test_file:
         start = int(round(time.time() * 1000))
@@ -360,7 +361,7 @@ def run_regression_experiment(
     resample_id=None,
     build_test_file=True,
     build_train_file=False,
-    attribute_output_path=None,
+    attribute_file_path=None,
     benchmark_time=True,
 ):
     """Run a regression experiment and save the results to file.
@@ -462,8 +463,8 @@ def run_regression_experiment(
         )
         fit_time += int(round(getattr(regressor, "_fit_time_milli", 0)))
 
-        if attribute_output_path is not None:
-            estimator_attributes_to_file(regressor, attribute_output_path)
+        if attribute_file_path is not None:
+            estimator_attributes_to_file(regressor, attribute_file_path)
 
     if build_test_file:
         start = int(round(time.time() * 1000))
@@ -636,7 +637,7 @@ def run_clustering_experiment(
     resample_id=None,
     build_test_file=False,
     build_train_file=True,
-    attribute_output_path=None,
+    attribute_file_path=None,
     benchmark_time=True,
 ):
     """Run a clustering experiment and save the results to file.
@@ -768,8 +769,8 @@ def run_clustering_experiment(
     )
     fit_time += int(round(getattr(clusterer, "_fit_time_milli", 0)))
 
-    if attribute_output_path is not None:
-        estimator_attributes_to_file(clusterer, attribute_output_path)
+    if attribute_file_path is not None:
+        estimator_attributes_to_file(clusterer, attribute_file_path)
 
     start = int(round(time.time() * 1000))
     if callable(getattr(clusterer, "predict_proba", None)):
@@ -987,7 +988,7 @@ def run_forecasting_experiment(
     forecaster_name=None,
     dataset_name="N/A",
     random_seed=None,
-    attribute_output_path=None,
+    attribute_file_path=None,
     benchmark_time=True,
 ):
     """Run a forecasting experiment and save the results to file.
@@ -1043,8 +1044,8 @@ def run_forecasting_experiment(
     )
     fit_time += int(round(getattr(forecaster, "_fit_time_milli", 0)))
 
-    if attribute_output_path is not None:
-        estimator_attributes_to_file(classifier, attribute_output_path)
+    if attribute_file_path is not None:
+        estimator_attributes_to_file(forecaster, attribute_file_path)
 
     start = int(round(time.time() * 1000))
     test_preds = forecaster.predict(np.arange(1, len(test) + 1))
