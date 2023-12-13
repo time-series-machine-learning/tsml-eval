@@ -39,84 +39,86 @@ def _set_distance_clusterer(
         raise ValueError(f"UNKNOWN CLUSTERER: {c} in set_distance_clusterer")
 
     if c == "timeserieskmeans" or c == "kmeans-dtw" or c == "k-means-dtw":
-        from aeon.clustering.k_means import TimeSeriesKMeans
+        from aeon.clustering import TimeSeriesKMeans
 
-        return TimeSeriesKMeans(metric="dtw", random_state=random_state, **kwargs)
+        return TimeSeriesKMeans(distance="dtw", random_state=random_state, **kwargs)
     elif c == "kmeans-ddtw" or c == "k-means-ddtw":
-        from aeon.clustering.k_means import TimeSeriesKMeans
+        from aeon.clustering import TimeSeriesKMeans
 
-        return TimeSeriesKMeans(metric="ddtw", random_state=random_state, **kwargs)
+        return TimeSeriesKMeans(distance="ddtw", random_state=random_state, **kwargs)
     elif c == "kmeans-ed" or c == "k-means-ed":
-        from aeon.clustering.k_means import TimeSeriesKMeans
+        from aeon.clustering import TimeSeriesKMeans
 
-        return TimeSeriesKMeans(metric="euclidean", random_state=random_state, **kwargs)
+        return TimeSeriesKMeans(
+            distance="euclidean", random_state=random_state, **kwargs
+        )
     elif c == "kmeans-edr" or c == "k-means-edr":
-        from aeon.clustering.k_means import TimeSeriesKMeans
+        from aeon.clustering import TimeSeriesKMeans
 
-        return TimeSeriesKMeans(metric="edr", random_state=random_state, **kwargs)
+        return TimeSeriesKMeans(distance="edr", random_state=random_state, **kwargs)
     elif c == "kmeans-erp" or c == "k-means-erp":
-        from aeon.clustering.k_means import TimeSeriesKMeans
+        from aeon.clustering import TimeSeriesKMeans
 
-        return TimeSeriesKMeans(metric="erp", random_state=random_state, **kwargs)
+        return TimeSeriesKMeans(distance="erp", random_state=random_state, **kwargs)
     elif c == "kmeans-lcss" or c == "k-means-lcss":
-        from aeon.clustering.k_means import TimeSeriesKMeans
+        from aeon.clustering import TimeSeriesKMeans
 
-        return TimeSeriesKMeans(metric="lcss", random_state=random_state, **kwargs)
+        return TimeSeriesKMeans(distance="lcss", random_state=random_state, **kwargs)
     elif c == "kmeans-msm" or c == "k-means-msm":
-        from aeon.clustering.k_means import TimeSeriesKMeans
+        from aeon.clustering import TimeSeriesKMeans
 
-        return TimeSeriesKMeans(metric="msm", random_state=random_state, **kwargs)
+        return TimeSeriesKMeans(distance="msm", random_state=random_state, **kwargs)
     elif c == "kmeans-twe" or c == "k-means-twe":
-        from aeon.clustering.k_means import TimeSeriesKMeans
+        from aeon.clustering import TimeSeriesKMeans
 
-        return TimeSeriesKMeans(metric="twe", random_state=random_state, **kwargs)
+        return TimeSeriesKMeans(distance="twe", random_state=random_state, **kwargs)
     elif c == "kmeans-wdtw" or c == "k-means-wdtw":
-        from aeon.clustering.k_means import TimeSeriesKMeans
+        from aeon.clustering import TimeSeriesKMeans
 
-        return TimeSeriesKMeans(metric="wdtw", random_state=random_state, **kwargs)
+        return TimeSeriesKMeans(distance="wdtw", random_state=random_state, **kwargs)
     elif c == "kmeans-wddtw" or c == "k-means-wddtw":
-        from aeon.clustering.k_means import TimeSeriesKMeans
+        from aeon.clustering import TimeSeriesKMeans
 
-        return TimeSeriesKMeans(metric="wddtw", random_state=random_state, **kwargs)
+        return TimeSeriesKMeans(distance="wddtw", random_state=random_state, **kwargs)
     elif c == "timeserieskmedoids" or c == "kmedoids-dtw" or c == "k-medoids-dtw":
-        from aeon.clustering.k_medoids import TimeSeriesKMedoids
+        from aeon.clustering import TimeSeriesKMedoids
 
         return TimeSeriesKMedoids(distance="dtw", random_state=random_state, **kwargs)
     elif c == "kmedoids-ddtw" or c == "k-medoids-ddtw":
-        from aeon.clustering.k_medoids import TimeSeriesKMedoids
+        from aeon.clustering import TimeSeriesKMedoids
 
         return TimeSeriesKMedoids(distance="ddtw", random_state=random_state, **kwargs)
     elif c == "kmedoids-ed" or c == "k-medoids-ed":
-        from aeon.clustering.k_medoids import TimeSeriesKMedoids
+        from aeon.clustering import TimeSeriesKMedoids
 
         return TimeSeriesKMedoids(
             distance="euclidean", random_state=random_state, **kwargs
         )
     elif c == "kmedoids-edr" or c == "k-medoids-edr":
-        from aeon.clustering.k_medoids import TimeSeriesKMedoids
+        from aeon.clustering import TimeSeriesKMedoids
 
         return TimeSeriesKMedoids(distance="edr", random_state=random_state, **kwargs)
     elif c == "kmedoids-erp" or c == "k-medoids-erp":
-        from aeon.clustering.k_medoids import TimeSeriesKMedoids
+        from aeon.clustering import TimeSeriesKMedoids
 
         return TimeSeriesKMedoids(distance="erp", random_state=random_state, **kwargs)
     elif c == "kmedoids-lcss" or c == "k-medoids-lcss":
-        from aeon.clustering.k_medoids import TimeSeriesKMedoids
+        from aeon.clustering import TimeSeriesKMedoids
 
         return TimeSeriesKMedoids(distance="lcss", random_state=random_state, **kwargs)
     elif c == "kmedoids-msm" or c == "k-medoids-msm":
-        from aeon.clustering.k_medoids import TimeSeriesKMedoids
+        from aeon.clustering import TimeSeriesKMedoids
 
         return TimeSeriesKMedoids(distance="msm", random_state=random_state, **kwargs)
     elif c == "kmedoids-twe" or c == "k-medoids-twe":
-        from aeon.clustering.k_medoids import TimeSeriesKMedoids
+        from aeon.clustering import TimeSeriesKMedoids
 
         return TimeSeriesKMedoids(distance="twe", random_state=random_state, **kwargs)
     elif c == "kmedoids-wdtw" or c == "k-medoids-wdtw":
-        from aeon.clustering.k_medoids import TimeSeriesKMedoids
+        from aeon.clustering import TimeSeriesKMedoids
 
         return TimeSeriesKMedoids(distance="wdtw", random_state=random_state, **kwargs)
     elif c == "kmedoids-wddtw" or c == "k-medoids-wddtw":
-        from aeon.clustering.k_medoids import TimeSeriesKMedoids
+        from aeon.clustering import TimeSeriesKMedoids
 
         return TimeSeriesKMedoids(distance="wddtw", random_state=random_state, **kwargs)
