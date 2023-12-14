@@ -52,6 +52,8 @@ def run_experiment(args, overwrite=False):
                 random_seed=args.resample_id
                 if args.random_seed is None
                 else args.random_seed,
+                write_attributes=args.write_attributes,
+                att_max_shape=args.att_max_shape,
                 benchmark_time=args.benchmark_time,
                 overwrite=args.overwrite,
             )
@@ -66,6 +68,9 @@ def run_experiment(args, overwrite=False):
         dataset_name = "ShampooSales"
         random_seed = 0
         n_jobs = 1
+        write_attributes = True
+        att_max_shape = 0
+        benchmark_time = True
         overwrite = False
         kwargs = {}
 
@@ -84,6 +89,9 @@ def run_experiment(args, overwrite=False):
             forecaster,
             forecaster_name=estimator_name,
             random_seed=random_seed,
+            write_attributes=write_attributes,
+            att_max_shape=att_max_shape,
+            benchmark_time=benchmark_time,
             overwrite=overwrite,
         )
 

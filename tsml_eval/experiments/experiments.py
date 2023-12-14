@@ -36,6 +36,7 @@ from tsml_eval.estimators import (
 )
 from tsml_eval.evaluation.metrics import clustering_accuracy_score
 from tsml_eval.utils.experiments import (
+    estimator_attributes_to_file,
     load_experiment_data,
     resample_data,
     stratified_resample_data,
@@ -66,6 +67,8 @@ def run_classification_experiment(
     resample_id=None,
     build_test_file=True,
     build_train_file=False,
+    attribute_file_path=None,
+    att_max_shape=0,
     benchmark_time=True,
 ):
     """Run a classification experiment and save the results to file.
@@ -175,6 +178,11 @@ def run_classification_experiment(
         )
         fit_time += int(round(getattr(classifier, "_fit_time_milli", 0)))
 
+        if attribute_file_path is not None:
+            estimator_attributes_to_file(
+                classifier, attribute_file_path, max_list_shape=att_max_shape
+            )
+
     if build_test_file:
         start = int(round(time.time() * 1000))
         test_probs = classifier.predict_proba(X_test)
@@ -258,6 +266,8 @@ def load_and_run_classification_experiment(
     classifier_name=None,
     resample_id=0,
     build_train_file=False,
+    write_attributes=False,
+    att_max_shape=0,
     benchmark_time=True,
     overwrite=False,
     predefined_resample=False,
@@ -303,6 +313,9 @@ def load_and_run_classification_experiment(
         the file format must include the resample_id at the end of the dataset name i.e.
         <problem_path>/<dataset>/<dataset>+<resample_id>+"_TRAIN.ts".
     """
+    if classifier_name is None:
+        classifier_name = type(classifier).__name__
+
     build_test_file, build_train_file = _check_existing_results(
         results_path,
         classifier_name,
@@ -326,6 +339,11 @@ def load_and_run_classification_experiment(
             X_train, y_train, X_test, y_test, random_state=resample_id
         )
 
+    if write_attributes:
+        attribute_file_path = f"{results_path}/{classifier_name}/Workspace/{dataset}/"
+    else:
+        attribute_file_path = None
+
     run_classification_experiment(
         X_train,
         y_train,
@@ -339,6 +357,8 @@ def load_and_run_classification_experiment(
         resample_id=resample_id,
         build_test_file=build_test_file,
         build_train_file=build_train_file,
+        attribute_file_path=attribute_file_path,
+        att_max_shape=att_max_shape,
         benchmark_time=benchmark_time,
     )
 
@@ -356,6 +376,8 @@ def run_regression_experiment(
     resample_id=None,
     build_test_file=True,
     build_train_file=False,
+    attribute_file_path=None,
+    att_max_shape=0,
     benchmark_time=True,
 ):
     """Run a regression experiment and save the results to file.
@@ -457,6 +479,9 @@ def run_regression_experiment(
         )
         fit_time += int(round(getattr(regressor, "_fit_time_milli", 0)))
 
+        if attribute_file_path is not None:
+            estimator_attributes_to_file(regressor, attribute_file_path)
+
     if build_test_file:
         start = int(round(time.time() * 1000))
         test_preds = regressor.predict(X_test)
@@ -525,6 +550,8 @@ def load_and_run_regression_experiment(
     regressor_name=None,
     resample_id=0,
     build_train_file=False,
+    write_attributes=False,
+    att_max_shape=0,
     benchmark_time=True,
     overwrite=False,
     predefined_resample=False,
@@ -570,6 +597,9 @@ def load_and_run_regression_experiment(
         the file format must include the resample_id at the end of the dataset name i.e.
         <problem_path>/<dataset>/<dataset>+<resample_id>+"_TRAIN.ts".
     """
+    if regressor_name is None:
+        regressor_name = type(regressor).__name__
+
     build_test_file, build_train_file = _check_existing_results(
         results_path,
         regressor_name,
@@ -593,6 +623,11 @@ def load_and_run_regression_experiment(
             X_train, y_train, X_test, y_test, random_state=resample_id
         )
 
+    if write_attributes:
+        attribute_file_path = f"{results_path}/{regressor_name}/Workspace/{dataset}/"
+    else:
+        attribute_file_path = None
+
     # Ensure labels are floats
     y_train = y_train.astype(float)
     y_test = y_test.astype(float)
@@ -610,6 +645,8 @@ def load_and_run_regression_experiment(
         resample_id=resample_id,
         build_test_file=build_test_file,
         build_train_file=build_train_file,
+        attribute_file_path=attribute_file_path,
+        att_max_shape=att_max_shape,
         benchmark_time=benchmark_time,
     )
 
@@ -628,6 +665,8 @@ def run_clustering_experiment(
     resample_id=None,
     build_test_file=False,
     build_train_file=True,
+    attribute_file_path=None,
+    att_max_shape=0,
     benchmark_time=True,
 ):
     """Run a clustering experiment and save the results to file.
@@ -759,6 +798,9 @@ def run_clustering_experiment(
     )
     fit_time += int(round(getattr(clusterer, "_fit_time_milli", 0)))
 
+    if attribute_file_path is not None:
+        estimator_attributes_to_file(clusterer, attribute_file_path)
+
     start = int(round(time.time() * 1000))
     if callable(getattr(clusterer, "predict_proba", None)):
         train_probs = clusterer.predict_proba(X_train)
@@ -860,6 +902,8 @@ def load_and_run_clustering_experiment(
     clusterer_name=None,
     resample_id=0,
     build_test_file=False,
+    write_attributes=False,
+    att_max_shape=0,
     benchmark_time=True,
     overwrite=False,
     predefined_resample=False,
@@ -913,6 +957,9 @@ def load_and_run_clustering_experiment(
         the train/test split is combined into a single train set. If False then the
         train/test split is used as normal.
     """
+    if clusterer_name is None:
+        clusterer_name = type(clusterer).__name__
+
     if combine_train_test_split:
         build_test_file = False
 
@@ -939,6 +986,11 @@ def load_and_run_clustering_experiment(
             X_train, y_train, X_test, y_test, random_state=resample_id
         )
 
+    if write_attributes:
+        attribute_file_path = f"{results_path}/{clusterer_name}/Workspace/{dataset}/"
+    else:
+        attribute_file_path = None
+
     if combine_train_test_split:
         y_train = np.concatenate((y_train, y_test), axis=None)
         X_train = (
@@ -963,6 +1015,8 @@ def load_and_run_clustering_experiment(
         resample_id=resample_id,
         build_train_file=build_train_file,
         build_test_file=build_test_file,
+        attribute_file_path=attribute_file_path,
+        att_max_shape=att_max_shape,
         benchmark_time=benchmark_time,
     )
 
@@ -975,6 +1029,8 @@ def run_forecasting_experiment(
     forecaster_name=None,
     dataset_name="N/A",
     random_seed=None,
+    attribute_file_path=None,
+    att_max_shape=0,
     benchmark_time=True,
 ):
     """Run a forecasting experiment and save the results to file.
@@ -1030,6 +1086,9 @@ def run_forecasting_experiment(
     )
     fit_time += int(round(getattr(forecaster, "_fit_time_milli", 0)))
 
+    if attribute_file_path is not None:
+        estimator_attributes_to_file(forecaster, attribute_file_path)
+
     start = int(round(time.time() * 1000))
     test_preds = forecaster.predict(np.arange(1, len(test) + 1))
     test_time = (
@@ -1068,6 +1127,8 @@ def load_and_run_forecasting_experiment(
     forecaster,
     forecaster_name=None,
     random_seed=None,
+    write_attributes=False,
+    att_max_shape=0,
     benchmark_time=True,
     overwrite=False,
 ):
@@ -1101,6 +1162,9 @@ def load_and_run_forecasting_experiment(
         If set to False, this will only build results if there is not a result file
         already present. If True, it will overwrite anything already there.
     """
+    if forecaster_name is None:
+        forecaster_name = type(forecaster).__name__
+
     build_test_file, _ = _check_existing_results(
         results_path,
         forecaster_name,
@@ -1114,6 +1178,11 @@ def load_and_run_forecasting_experiment(
     if not build_test_file:
         warnings.warn("All files exist and not overwriting, skipping.", stacklevel=1)
         return
+
+    if write_attributes:
+        attribute_file_path = f"{results_path}/{forecaster_name}/Workspace/{dataset}/"
+    else:
+        attribute_file_path = None
 
     train = pd.read_csv(
         f"{problem_path}/{dataset}/{dataset}_TRAIN.csv", index_col=0
@@ -1132,6 +1201,8 @@ def load_and_run_forecasting_experiment(
         forecaster_name=forecaster_name,
         dataset_name=dataset,
         random_seed=random_seed,
+        attribute_file_path=attribute_file_path,
+        att_max_shape=att_max_shape,
         benchmark_time=benchmark_time,
     )
 

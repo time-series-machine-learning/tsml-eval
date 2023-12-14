@@ -91,6 +91,8 @@ def run_experiment(args):
                 clusterer_name=args.estimator_name,
                 resample_id=args.resample_id,
                 build_test_file=args.test_fold,
+                write_attributes=args.write_attributes,
+                att_max_shape=args.att_max_shape,
                 benchmark_time=args.benchmark_time,
                 overwrite=args.overwrite,
                 predefined_resample=args.predefined_resample,
@@ -109,6 +111,9 @@ def run_experiment(args):
         n_clusters = -1
         resample_id = 0
         test_fold = False
+        write_attributes = True
+        att_max_shape = 0
+        benchmark_time = True
         overwrite = False
         predefined_resample = False
         fit_contract = 0
@@ -138,6 +143,9 @@ def run_experiment(args):
             clusterer_name=estimator_name,
             resample_id=resample_id,
             build_test_file=test_fold,
+            write_attributes=write_attributes,
+            att_max_shape=att_max_shape,
+            benchmark_time=benchmark_time,
             overwrite=overwrite,
             predefined_resample=predefined_resample,
             combine_train_test_split=combine_test_train_split,
