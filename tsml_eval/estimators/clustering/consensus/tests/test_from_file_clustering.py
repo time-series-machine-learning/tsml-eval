@@ -17,9 +17,9 @@ def test_from_file_simple_vote():
     X_test, y_test = load_arrow_head(split="test")
 
     file_paths = [
-        _TEST_RESULTS_PATH + "/PAM-DTW/Predictions/ArrowHead/",
-        _TEST_RESULTS_PATH + "/PAM-ERP/Predictions/ArrowHead/",
-        _TEST_RESULTS_PATH + "/PAM-MSM/Predictions/ArrowHead/",
+        _TEST_RESULTS_PATH + "/clustering/PAM-DTW/Predictions/ArrowHead/",
+        _TEST_RESULTS_PATH + "/clustering/PAM-ERP/Predictions/ArrowHead/",
+        _TEST_RESULTS_PATH + "/clustering/PAM-MSM/Predictions/ArrowHead/",
     ]
 
     sv = FromFileSimpleVote(clusterers=file_paths, n_clusters=3, random_state=0)
@@ -40,9 +40,9 @@ def test_from_file_iterative_voting_clustering():
     X_test, y_test = load_arrow_head(split="test")
 
     file_paths = [
-        _TEST_RESULTS_PATH + "/PAM-DTW/Predictions/ArrowHead/",
-        _TEST_RESULTS_PATH + "/PAM-ERP/Predictions/ArrowHead/",
-        _TEST_RESULTS_PATH + "/PAM-MSM/Predictions/ArrowHead/",
+        _TEST_RESULTS_PATH + "/clustering/PAM-DTW/Predictions/ArrowHead/",
+        _TEST_RESULTS_PATH + "/clustering/PAM-ERP/Predictions/ArrowHead/",
+        _TEST_RESULTS_PATH + "/clustering/PAM-MSM/Predictions/ArrowHead/",
     ]
 
     ivc = FromFileIterativeVotingClustering(

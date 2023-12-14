@@ -20,10 +20,10 @@ def test_hivecote_from_file():
     X_test, _ = load_italy_power_demand(split="test")
 
     file_paths = [
-        _TEST_RESULTS_PATH + "/Arsenal/Predictions/ItalyPowerDemand/",
-        _TEST_RESULTS_PATH + "/DrCIF/Predictions/ItalyPowerDemand/",
-        _TEST_RESULTS_PATH + "/STC/Predictions/ItalyPowerDemand/",
-        _TEST_RESULTS_PATH + "/TDE/Predictions/ItalyPowerDemand/",
+        _TEST_RESULTS_PATH + "/classification/Arsenal/Predictions/ItalyPowerDemand/",
+        _TEST_RESULTS_PATH + "/classification/DrCIF/Predictions/ItalyPowerDemand/",
+        _TEST_RESULTS_PATH + "/classification/STC/Predictions/ItalyPowerDemand/",
+        _TEST_RESULTS_PATH + "/classification/TDE/Predictions/ItalyPowerDemand/",
     ]
 
     hc2 = FromFileHIVECOTE(classifiers=file_paths, random_state=0)
@@ -64,10 +64,10 @@ def test_tuned_hivecote_from_file():
     X_test, _ = load_arrow_head(split="test")
 
     file_paths = [
-        _TEST_RESULTS_PATH + "/Arsenal/Predictions/ArrowHead/",
-        _TEST_RESULTS_PATH + "/DrCIF/Predictions/ArrowHead/",
-        _TEST_RESULTS_PATH + "/STC/Predictions/ArrowHead/",
-        _TEST_RESULTS_PATH + "/TDE/Predictions/ArrowHead/",
+        _TEST_RESULTS_PATH + "/classification/Arsenal/Predictions/ArrowHead/",
+        _TEST_RESULTS_PATH + "/classification/DrCIF/Predictions/ArrowHead/",
+        _TEST_RESULTS_PATH + "/classification/STC/Predictions/ArrowHead/",
+        _TEST_RESULTS_PATH + "/classification/TDE/Predictions/ArrowHead/",
     ]
 
     hc2 = FromFileHIVECOTE(classifiers=file_paths, tune_alpha=True, random_state=0)
