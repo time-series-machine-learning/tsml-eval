@@ -1,17 +1,14 @@
-import os
-from pathlib import Path
-
 import numpy as np
 from aeon.datasets import load_arrow_head
 from sklearn.metrics import rand_score
 
-from tsml_eval.estimators.clustering.consensus.ivc_from_file import \
-    FromFileIterativeVotingClustering
-from tsml_eval.estimators.clustering.consensus.simple_vote_from_file import \
-    FromFileSimpleVote
-
-
-_TEST_RESULTS_PATH = os.path.dirname(Path(__file__).parent.parent.parent.parent.parent) + "/tsml_eval/estimators/clustering/consensus/tests/test_files/"
+from tsml_eval.estimators.clustering.consensus.ivc_from_file import (
+    FromFileIterativeVotingClustering,
+)
+from tsml_eval.estimators.clustering.consensus.simple_vote_from_file import (
+    FromFileSimpleVote,
+)
+from tsml_eval.testing.test_utils import _TEST_RESULTS_PATH
 
 
 def test_from_file_simple_vote():
@@ -20,9 +17,9 @@ def test_from_file_simple_vote():
     X_test, y_test = load_arrow_head(split="test")
 
     file_paths = [
-        _TEST_RESULTS_PATH + "/ArrowHead/PAM-DTW/",
-        _TEST_RESULTS_PATH + "/ArrowHead/PAM-ERP/",
-        _TEST_RESULTS_PATH + "/ArrowHead/PAM-MSM/",
+        _TEST_RESULTS_PATH + "/PAM-DTW/Predictions/ArrowHead/",
+        _TEST_RESULTS_PATH + "/PAM-ERP/Predictions/ArrowHead/",
+        _TEST_RESULTS_PATH + "/PAM-MSM/Predictions/ArrowHead/",
     ]
 
     sv = FromFileSimpleVote(clusterers=file_paths, n_clusters=3, random_state=0)
@@ -43,12 +40,14 @@ def test_from_file_iterative_voting_clustering():
     X_test, y_test = load_arrow_head(split="test")
 
     file_paths = [
-        _TEST_RESULTS_PATH + "/ArrowHead/PAM-DTW/",
-        _TEST_RESULTS_PATH + "/ArrowHead/PAM-ERP/",
-        _TEST_RESULTS_PATH + "/ArrowHead/PAM-MSM/",
+        _TEST_RESULTS_PATH + "/PAM-DTW/Predictions/ArrowHead/",
+        _TEST_RESULTS_PATH + "/PAM-ERP/Predictions/ArrowHead/",
+        _TEST_RESULTS_PATH + "/PAM-MSM/Predictions/ArrowHead/",
     ]
 
-    ivc = FromFileIterativeVotingClustering(clusterers=file_paths, n_clusters=3, max_iterations=100, random_state=0)
+    ivc = FromFileIterativeVotingClustering(
+        clusterers=file_paths, n_clusters=3, max_iterations=100, random_state=0
+    )
     ivc.fit(X_train, y_train)
     preds = ivc.predict(X_test)
 
