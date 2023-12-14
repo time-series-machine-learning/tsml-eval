@@ -61,6 +61,8 @@ def run_experiment(args):
                 regressor_name=args.estimator_name,
                 resample_id=args.resample_id,
                 build_train_file=args.train_fold,
+                write_attributes=args.write_attributes,
+                att_max_shape=args.att_max_shape,
                 benchmark_time=args.benchmark_time,
                 overwrite=args.overwrite,
                 predefined_resample=args.predefined_resample,
@@ -77,6 +79,9 @@ def run_experiment(args):
         resample_id = 0
         n_jobs = 1
         train_fold = False
+        write_attributes = True
+        att_max_shape = 0
+        benchmark_time = True
         overwrite = False
         predefined_resample = False
         fit_contract = 0
@@ -103,6 +108,9 @@ def run_experiment(args):
             regressor_name=estimator_name,
             resample_id=resample_id,
             build_train_file=train_fold,
+            write_attributes=write_attributes,
+            att_max_shape=att_max_shape,
+            benchmark_time=benchmark_time,
             overwrite=overwrite,
             predefined_resample=predefined_resample,
         )

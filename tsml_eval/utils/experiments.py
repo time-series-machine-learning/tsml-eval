@@ -1010,6 +1010,30 @@ def timing_benchmark(num_arrays=1000, array_size=20000, random_state=None):
 def estimator_attributes_to_file(
     estimator, dir_path, estimator_name=None, max_depth=np.inf, max_list_shape=np.inf
 ):
+    """Write the attributes of an estimator to file(s).
+
+    Write the attributes of an estimator to file at a given directory. The function
+    will recursively write the attributes of any estimators or non-string sequences
+    containing estimators found in the attributes of the input estimator to spearate
+    files.
+
+    Parameters
+    ----------
+    estimator : estimator instance
+        The estimator to write the attributes of.
+    dir_path : str
+        The directory to write the attribute files to.
+    estimator_name : str or None, default=None
+        The name of the estimator. If None, the name of the estimator class will be
+        used.
+    max_depth : int, default=np.inf
+        The maximum depth to go when recursively writing attributes of estimators.
+    max_list_shape : int, default=np.inf
+        The maximum shape of a list to write when recursively writing attributes of
+        contained estimators. i.e. for 0, no estimators contained in lists will be
+        written, for 1, only estimators contained in 1-dimensional lists or the top
+        level of a list will be written.
+    """
     estimator_name = (
         estimator.__class__.__name__ if estimator_name is None else estimator_name
     )
@@ -1031,16 +1055,24 @@ def _write_estimator_attributes_recursive(
             value = getattr(estimator, attr)
             file.write(f"{attr}: {value}\n")
 
-            if isinstance(value, BaseEstimator):
-                new_dir_path = f"{dir_path}/{attr}/"
-                file.write(f"    See {new_dir_path}{attr}.txt for more details\n")
-                _write_estimator_attributes_recursive(
-                    value, new_dir_path, attr, depth + 1, max_depth, max_list_shape
-                )
-            elif _is_non_string_sequence(value):
-                _write_list_attributes_recursive(
-                    value, file, dir_path, attr, depth + 1, max_depth, 0, max_list_shape
-                )
+            if depth + 1 <= max_depth:
+                if isinstance(value, BaseEstimator):
+                    new_dir_path = f"{dir_path}/{attr}/"
+                    file.write(f"    See {new_dir_path}{attr}.txt for more details\n")
+                    _write_estimator_attributes_recursive(
+                        value, new_dir_path, attr, depth + 1, max_depth, max_list_shape
+                    )
+                elif _is_non_string_sequence(value):
+                    _write_list_attributes_recursive(
+                        value,
+                        file,
+                        dir_path,
+                        attr,
+                        depth + 1,
+                        max_depth,
+                        1,
+                        max_list_shape,
+                    )
 
 
 def _write_list_attributes_recursive(

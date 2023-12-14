@@ -77,7 +77,16 @@ def parse_args(args):
                             (default: False).
       -bt, --benchmark_time
                             run a benchmark function and save the time spent in the
-                            results file (default: %(default)s).
+                            results file (default: False).
+      -wa, --write_attributes
+                            write the estimator attributes to file when running
+                            experiments. Will recursively write the attributes of
+                            sub-estimators if present. (default: False).
+      -ams ATT_MAX_SHAPE, --att_max_shape ATT_MAX_SHAPE
+                            The max estimator collections shape allowed when
+                            writing attributes, at 0 no estimators in collections
+                            will be written, at 1 estimators in one-dimensional
+                            lists will be written etc. (default: 0).
       -kw KEY VALUE TYPE, --kwargs KEY VALUE TYPE, --kwarg KEY VALUE TYPE
                             additional keyword arguments to pass to the estimator.
                             Should contain the parameter to set, the parameter
@@ -215,6 +224,23 @@ def parse_args(args):
         action="store_true",
         help="run a benchmark function and save the time spent in the results file "
         "(default: %(default)s).",
+    )
+    parser.add_argument(
+        "-wa",
+        "--write_attributes",
+        action="store_true",
+        help="write the estimator attributes to file when running experiments. Will "
+        "recursively write the attributes of sub-estimators if present. "
+        "(default: %(default)s).",
+    )
+    parser.add_argument(
+        "-ams",
+        "--att_max_shape",
+        type=int,
+        default=0,
+        help="The max estimator collections shape allowed when writing attributes, at "
+        "0 no estimators in collections will be written, at 1 estimators in "
+        "one-dimensional lists will be written etc. (default: %(default)s).",
     )
     parser.add_argument(
         "-kw",
