@@ -41,14 +41,14 @@ title_labels_to_add = list(set(title_labels) - set(labels))
 paths = [file.filename for file in pr.get_files()]
 
 content_paths_to_labels = [
-    ("tsml-eval/datasets/", "datasets"),
-    ("tsml-eval/estimators/", "estimators"),
-    ("tsml-eval/evaluation/", "evaluation"),
+    ("tsml_eval/datasets/", "datasets"),
+    ("tsml_eval/estimators/", "estimators"),
+    ("tsml_eval/evaluation/", "evaluation"),
     ("examples/", "examples"),
-    ("tsml-eval/experiments/", "experiments"),
-    ("tsml-eval/publications/", "publications"),
+    ("tsml_eval/experiments/", "experiments"),
+    ("tsml_eval/publications/", "publications"),
     ("results/", "results"),
-    ("tsml-eval/testing/", "testing"),
+    ("tsml_eval/testing/", "testing"),
 ]
 
 present_content_labels = [
