@@ -126,7 +126,7 @@ class FromFileHIVECOTE(BaseClassifier):
                 if not self.skip_y_check and len(np.unique(y)) != int(line2[5]):
                     raise ValueError(
                         f"n_classes of {path + file_name} does not match X, "
-                        f"expected {len(np.unique(y))}, got {line2[6]}"
+                        f"expected {len(np.unique(y))}, got {line2[5]}"
                     )
 
                 for j in range(n_instances):
@@ -154,7 +154,7 @@ class FromFileHIVECOTE(BaseClassifier):
 
         # add a weight to the weight list based on the files accuracy
         for acc in acc_list:
-            self.weights_.append(acc ** self._alpha)
+            self.weights_.append(acc**self._alpha)
 
         self._use_classifier = [True for _ in range(len(self.classifiers))]
         if self.acc_filter is not None:
@@ -166,11 +166,13 @@ class FromFileHIVECOTE(BaseClassifier):
 
             if self._acc_filter[0] != "train" and self._acc_filter[0] != "test":
                 raise ValueError(
-                    f"acc_filter[0] must be 'train' or 'test', got {self._acc_filter[0]}"
+                    f"acc_filter[0] must be 'train' or 'test', got "
+                    f"{self._acc_filter[0]}"
                 )
             elif self._acc_filter[1] <= 0 or self._acc_filter[1] >= 1:
                 raise ValueError(
-                    f"acc_filter[1] must be in between 0 and 1, got {self._acc_filter[1]}"
+                    "acc_filter[1] must be in between 0 and 1, got "
+                    f"{self._acc_filter[1]}"
                 )
 
             if self._acc_filter[0] == "test":
@@ -179,10 +181,10 @@ class FromFileHIVECOTE(BaseClassifier):
                 if self.random_state is not None:
                     file_name = f"testResample{self.random_state}.csv"
                 else:
-                    file_name = f"testResample.csv"
+                    file_name = "testResample.csv"
 
                 acc_list = []
-                for i, path in enumerate(self.classifiers):
+                for path in self.classifiers:
                     f = open(path + file_name, "r")
                     lines = f.readlines()
                     line2 = lines[2].split(",")
@@ -213,7 +215,7 @@ class FromFileHIVECOTE(BaseClassifier):
         if self.random_state is not None:
             file_name = f"testResample{self.random_state}.csv"
         else:
-            file_name = f"testResample.csv"
+            file_name = "testResample.csv"
 
         dists = np.zeros((n_instances, self.n_classes_))
 
@@ -226,19 +228,15 @@ class FromFileHIVECOTE(BaseClassifier):
             line2 = lines[2].split(",")
 
             # verify file matches data
-            if len(lines) - 3 != n_instances:  # verify n_instances
-                print(
-                    "ERROR n_instances does not match in: ",
-                    path + file_name,
-                    len(lines) - 3,
-                    n_instances,
+            if len(lines) - 3 != n_instances:
+                raise ValueError(
+                    f"n_instances of {path + file_name} does not match X, "
+                    f"expected {X.shape[0]}, got {len(lines) - 3}"
                 )
-            if self.n_classes_ != int(line2[5]):  # verify n_classes
-                print(
-                    "ERROR n_classes does not match in: ",
-                    path + file_name,
-                    self.n_classes_,
-                    line2[5],
+            if self.n_classes_ != int(line2[5]):
+                raise ValueError(
+                    f"n_classes of {path + file_name} does not match X, "
+                    f"expected {self.n_classes_}, got {line2[5]}"
                 )
 
             #   apply this files weights to the probabilities in the test file
@@ -335,10 +333,10 @@ class FromFileHIVECOTE(BaseClassifier):
             `MyClass(**params)` or `MyClass(**params[i])` creates a valid test instance.
             `create_test_instance` uses the first (or only) dictionary in `params`.
         """
-        from tsml_eval.estimators.classification.hybrid.tests.test_hivecote import _TEST_RESULTS_PATH
+        from tsml_eval.testing.test_utils import _TEST_RESULTS_PATH
 
         file_paths = [
-            _TEST_RESULTS_PATH + "TestResults/Test1/",
-            _TEST_RESULTS_PATH + "TestResults/Test2/",
+            _TEST_RESULTS_PATH + "/classification/TestResults/Test1/",
+            _TEST_RESULTS_PATH + "/classification/TestResults/Test2/",
         ]
         return {"classifiers": file_paths, "skip_y_check": True, "random_state": 0}
