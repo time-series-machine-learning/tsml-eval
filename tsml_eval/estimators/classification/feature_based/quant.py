@@ -159,6 +159,8 @@ class QuantTransform(TransformerMixin, BaseTimeSeriesEstimator):
         X = self._validate_data(X=X, ensure_min_samples=2)
         X = self._convert_X(X)
 
+        X = torch.tensor(X).float()
+
         if self.div < 1 or self.depth < 1:
             raise ValueError("depth and div must be >= 1")
 
@@ -187,6 +189,8 @@ class QuantTransform(TransformerMixin, BaseTimeSeriesEstimator):
 
         X = self._validate_data(X=X, reset=False)
         X = self._convert_X(X)
+
+        X = torch.tensor(X).float()
 
         Xt = []
         for index, function in enumerate(self.representation_functions):
