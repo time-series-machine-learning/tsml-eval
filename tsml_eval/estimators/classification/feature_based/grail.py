@@ -20,7 +20,7 @@ class GRAIL(ClassifierMixin, BaseTimeSeriesEstimator):
     Examples
     --------
     >>> from tsml.datasets import load_minimal_chinatown
-    >>> from tsml_eval.estimators.classification.distance_based.grail import GRAIL
+    >>> from tsml_eval.estimators.classification.feature_based.grail import GRAIL
     >>> X, y = load_minimal_chinatown()
     >>> clf = GRAIL()
     >>> clf.fit(X, y)
