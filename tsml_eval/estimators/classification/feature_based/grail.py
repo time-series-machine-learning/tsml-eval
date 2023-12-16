@@ -1,4 +1,8 @@
-"""GRAIL classifier."""
+"""GRAIL classifier.
+
+See the original implementation here:
+https://github.com/TheDatumOrg/grail-python
+"""
 
 import os
 import sys
