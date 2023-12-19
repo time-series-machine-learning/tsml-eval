@@ -6,9 +6,6 @@ set -euxo pipefail
 CMD="jupyter nbconvert --to notebook --inplace --execute --ExecutePreprocessor.timeout=600"
 
 excluded=(
-  "examples/_wip/diagrams.ipynb"
-  "examples/_wip/evaluation_metric_results.ipynb"
-  "examples/_wip/evaluation_raw_results.ipynb"
   "tsml_eval/publications/y2023/distance_based_clustering/package_distance_timing.ipynb"
 )
 
