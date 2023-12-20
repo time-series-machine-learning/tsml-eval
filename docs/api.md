@@ -50,12 +50,16 @@ Functions for running experiments.
 
     experiments.run_classification_experiment
     experiments.load_and_run_classification_experiment
-    experiments.run_regression_experiment
-    experiments.load_and_run_regression_experiment
     experiments.run_clustering_experiment
     experiments.load_and_run_clustering_experiment
     experiments.run_forecasting_experiment
     experiments.load_and_run_forecasting_experiment
+    experiments.run_regression_experiment
+    experiments.load_and_run_regression_experiment
+    experiments.set_classifier
+    experiments.set_clusterer
+    experiments.set_forecaster
+    experiments.set_regressor
 ```
 
 ## Utilities: [tsml_eval.utils](https://github.com/time-series-machine-learning/tsml-eval/tree/main/tsml_eval/utils)
