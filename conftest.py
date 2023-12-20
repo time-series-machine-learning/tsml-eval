@@ -13,7 +13,7 @@ KEEP_PYTEST_OUTPUT = True
 def pytest_sessionfinish(session, exitstatus):
     """Call after test run is finished, before returning the exit status to system."""
     if not hasattr(session.config, "workerinput") and not KEEP_PYTEST_OUTPUT:
-        shutil.rmtree(_TEST_OUTPUT_PATH)
+        shutil.rmtree(_TEST_OUTPUT_PATH, ignore_errors=True)
 
 
 def pytest_addoption(parser):

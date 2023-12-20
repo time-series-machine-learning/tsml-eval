@@ -70,7 +70,10 @@ Public utility functions used elsewhere in the package.
 
     utils.arguments.parse_args
     utils.experiments.resample_data
+    utils.experiments.resample_data_indices
     utils.experiments.stratified_resample_data
+    utils.experiments.stratified_resample_data_indices
+    utils.experiments.load_experiment_data
     utils.experiments.write_classification_results
     utils.experiments.write_regression_results
     utils.experiments.write_clustering_results
