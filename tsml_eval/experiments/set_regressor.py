@@ -74,7 +74,7 @@ vector_regressors = [
 ]
 
 
-def set_regressor(
+def get_regressor_by_name(
     regressor_name,
     random_state=None,
     n_jobs=1,

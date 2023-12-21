@@ -11,6 +11,7 @@ from tsml.dummy import DummyClassifier, DummyClusterer
 from tsml_eval.datasets._test_data._data_sizes import DATA_TEST_SIZES, DATA_TRAIN_SIZES
 from tsml_eval.experiments import (
     clustering_experiments,
+    get_clusterer_by_name,
     run_clustering_experiment,
     set_clusterer,
     threaded_clustering_experiments,
@@ -163,8 +164,8 @@ def test_run_clustering_experiment_invalid_estimator():
         )
 
 
-def test_set_clusterer():
-    """Test set_clusterer method."""
+def test_get_clusterer_by_name():
+    """Test get_clusterer_by_name method."""
     clusterer_lists = [
         set_clusterer.distance_based_clusterers,
         set_clusterer.other_clusterers,
@@ -176,7 +177,7 @@ def test_set_clusterer():
 
     for clusterer_list in clusterer_lists:
         _check_set_method(
-            set_clusterer.set_clusterer,
+            get_clusterer_by_name,
             clusterer_list,
             clusterer_dict,
             all_clusterer_names,
@@ -187,10 +188,10 @@ def test_set_clusterer():
     )
 
 
-def test_set_clusterer_invalid():
-    """Test set_clusterer method with invalid estimator."""
+def test_get_clusterer_by_name_invalid():
+    """Test get_clusterer_by_name method with invalid estimator."""
     with pytest.raises(ValueError, match="UNKNOWN CLUSTERER"):
-        set_clusterer.set_clusterer("invalid")
+        get_clusterer_by_name("invalid")
 
 
 @pytest.mark.parametrize("n_clusters", ["4", "-1"])
