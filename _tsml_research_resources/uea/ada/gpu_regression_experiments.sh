@@ -1,28 +1,31 @@
 #!/bin/bash
-# CHECK:
+# CHECK before each new run:
 #   datasets (list of problems)
 #   results_dir (where to check/write results),
-#   for regressor in (the regressors we are running)
-
+#   regressors_to_run (list of regressors to run)
 # While reading is fine, please dont write anything to the default directories in this script
+
+# To use GPU resources you need to be given access (gpu qos), which involves emailing hpc.admin@uea.ac.uk
+# Ask Tony or on slack, and read the GPU section in https://my.uea.ac.uk/divisions/it-and-computing-services/service-catalogue/research-it-services/hpc/ada-cluster/using-ada/jobs
 
 # Start and end for resamples
 max_folds=30
 start_fold=1
 
 # To avoid dumping 1000s of jobs in the queue we have a higher level queue
-max_num_submitted=100
+max_num_submitted=10
 
 # Queue options are https://my.uea.ac.uk/divisions/it-and-computing-services/service-catalogue/research-it-services/hpc/ada-cluster/using-ada
-queue="compute-64-512"
+# Make sure GPU jobs are on one of the "gpu-" queues, .sub file qos may need to change for ones other than "gpu-rtx6000-2"
+queue="gpu-rtx6000-2"
 
 # Enter your username and email here
 username="ajb"
 mail="NONE"
 mailto=$username"@uea.ac.uk"
 
-# MB for jobs, increase incrementally and try not to use more than you need. If you need hundreds of GB consider the huge memory queue.
-max_memory=8000
+# MB for jobs, this is less important for GPU jobs but if you swap nodes check how much is available and how many jobs can be submitted.
+max_memory=90000
 
 # Max allowable is 7 days - 168 hours
 max_time="168:00:00"
@@ -46,25 +49,44 @@ script_file_path=$local_path"Code/tsml-eval/tsml_eval/experiments/regression_exp
 
 # Environment name, change accordingly, for set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
 # Separate environments for GPU (Python 3.8) and CPU (Python 3.10) are recommended
-env_name="tsml-eval"
+env_name="tsml-eval-gpu"
 
-# You can add extra arguments here. See tsml_eval/utils/experiments.py parse_args
+# You can add extra arguments here. See tsml_eval/utils/arguments.py parse_args
 # You will have to add any variable to the python call close to the bottom of the script
+# and possibly to the options handling below
 
-# Generating train folds is usually slower, set to empty string unless you need them
-generate_train_files="-tr"
+# generate a results file for the train data as well as test, usually slower
+generate_train_files="true"
 
-# If set to -pr, looks for <problem><resample>_TRAIN.ts files. This is useful for running tsml-java resamples
-predefined_folds=""
+# If set for true, looks for <problem><fold>_TRAIN.ts file. This is useful for running tsml-java resamples
+predefined_folds="false"
 
-# List valid regressors e.g KNeighborsTimeSeriesRegressor, RocketRegressor, TimeSeriesForestRegressor
-# See set_regressor for aliases
+# Regressors to loop over. Must be seperated by a space
+# See list of potential regressors in set_classifier
+regressors_to_run="CNNRegressor"
+
+# Normalise data before fit/predict
+normalise_data="true"
+
+# ======================================================================================
+# ======================================================================================
+# Dont change anything under here (unless you want to change how the experiment
+# is working)
+# ======================================================================================
+# ======================================================================================
+
+# Set to -tr to generate test files
+generate_train_files=$([ "${generate_train_files,,}" == "true" ] && echo "-tr" || echo "")
+
+# Set to -pr to use predefined folds
+predefined_folds=$([ "${predefined_folds,,}" == "true" ] && echo "-pr" || echo "")
+
+# Set to -rn to normalise data
+normalise_data=$([ "${normalise_data,,}" == "true" ] && echo "-rn" || echo "")
+
 count=0
 while read dataset; do
-for regressor in RocketRegressor TimeSeriesForestRegressor
-do
-
-# Dont change anything after here for regular runs
+for regressor in $regressors_to_run; do
 
 # Skip to the script start point
 ((count++))
@@ -98,6 +120,9 @@ if [ "${array_jobs}" != "" ]; then
 
 # This creates the scrip to run the job based on the info above
 echo "#!/bin/bash
+#SBATCH --qos=gpu-rtx #gpu-rtx-reserved
+#SBATCH --gres=gpu:1
+#SBATCH --cpus-per-task=12
 #SBATCH --mail-type=${mail}
 #SBATCH --mail-user=${mailto}
 #SBATCH -p ${queue}
@@ -111,15 +136,18 @@ echo "#!/bin/bash
 . /etc/profile
 
 module add python/anaconda/2019.10/3.7
+module add cuda/10.2.89
+module add cudnn/7.6.5
 source activate $env_name
+export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/gpfs/home/${username}/.conda/envs/${env_name}/lib/
 
 # Input args to the default regression_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/regression_experiments.py
-python -u ${script_file_path} ${data_dir} ${results_dir} ${regressor} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_train_files} ${predefined_folds}"  > generatedFile.sub
+python -u ${script_file_path} ${data_dir} ${results_dir} ${regressor} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_train_files} ${predefined_folds} ${normalise_data}"  > generatedFileGPU.sub
 
 echo ${count} ${regressor}/${dataset}
 
-sbatch < generatedFile.sub
+sbatch < generatedFileGPU.sub
 
 else
     echo ${count} ${regressor}/${dataset} has finished all required resamples, skipping

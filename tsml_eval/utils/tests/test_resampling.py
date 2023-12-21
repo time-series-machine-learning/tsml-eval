@@ -16,7 +16,9 @@ from tsml_eval.testing.test_utils import _TEST_RESULTS_PATH
 from tsml_eval.utils.experiments import (
     compare_result_file_resample,
     resample_data,
+    resample_data_indices,
     stratified_resample_data,
+    stratified_resample_data_indices,
 )
 
 
@@ -70,6 +72,28 @@ def test_resample_data_invalid():
 
     with pytest.raises(ValueError, match="X_train must be a"):
         resample_data(X, y, X, y)
+
+
+def test_resample_data_indices():
+    """Test resampling returns valid indices."""
+    X_train, y_train = load_minimal_chinatown(split="TRAIN")
+    X_test, y_test = load_minimal_chinatown(split="TEST")
+
+    new_X_train, _, new_X_test, _ = resample_data(
+        X_train, y_train, X_test, y_test, random_state=0
+    )
+    train_indices, test_indices = resample_data_indices(y_train, y_test, random_state=0)
+    X = np.concatenate((X_train, X_test), axis=0)
+
+    assert isinstance(train_indices, np.ndarray)
+    assert isinstance(test_indices, np.ndarray)
+    assert len(train_indices) == len(new_X_train)
+    assert len(test_indices) == len(new_X_test)
+    assert len(np.unique(np.concatenate((train_indices, test_indices), axis=0))) == len(
+        X
+    )
+    assert (new_X_train[0] == X[train_indices[0]]).all()
+    assert (new_X_test[0] == X[test_indices[0]]).all()
 
 
 @pytest.mark.parametrize(
@@ -142,6 +166,30 @@ def test_stratified_resample_data_invalid():
 
     with pytest.raises(ValueError, match="X_train must be a"):
         stratified_resample_data(X, y, X, y)
+
+
+def test_stratified_resample_data_indices():
+    """Test stratified resampling returns valid indices."""
+    X_train, y_train = load_minimal_chinatown(split="TRAIN")
+    X_test, y_test = load_minimal_chinatown(split="TEST")
+
+    new_X_train, _, new_X_test, _ = stratified_resample_data(
+        X_train, y_train, X_test, y_test, random_state=0
+    )
+    train_indices, test_indices = stratified_resample_data_indices(
+        y_train, y_test, random_state=0
+    )
+    X = np.concatenate((X_train, X_test), axis=0)
+
+    assert isinstance(train_indices, np.ndarray)
+    assert isinstance(test_indices, np.ndarray)
+    assert len(train_indices) == len(new_X_train)
+    assert len(test_indices) == len(new_X_test)
+    assert len(np.unique(np.concatenate((train_indices, test_indices), axis=0))) == len(
+        X
+    )
+    assert (new_X_train[0] == X[train_indices[0]]).all()
+    assert (new_X_test[0] == X[test_indices[0]]).all()
 
 
 @pytest.mark.parametrize(

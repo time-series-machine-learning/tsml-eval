@@ -1,9 +1,8 @@
 #!/bin/bash
-# CHECK:
+# CHECK before each new run:
 #   datasets (list of problems)
 #   results_dir (where to check/write results),
-#   for classifier in (the classifiers we are running)
-
+#   classifiers_to_run (list of classifiers to run)
 # While reading is fine, please dont write anything to the default directories in this script
 
 # Start and end for resamples
@@ -32,7 +31,7 @@ start_point=1
 
 # Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
 data_dir="/gpfs/home/ajb/Data/"
-datasets="/gpfs/home/ajb/DataSetLists/TSC_112_2019.txt"
+datasets="/gpfs/home/ajb/DataSetLists/Classification.txt"
 
 # Put your home directory here
 local_path="/gpfs/home/$username/"
@@ -48,23 +47,42 @@ script_file_path=$local_path"Code/tsml-eval/tsml_eval/experiments/classification
 # Separate environments for GPU (Python 3.8) and CPU (Python 3.10) are recommended
 env_name="tsml-eval"
 
-# You can add extra arguments here. See tsml_eval/utils/experiments.py parse_args
+# You can add extra arguments here. See tsml_eval/utils/arguments.py parse_args
 # You will have to add any variable to the python call close to the bottom of the script
+# and possibly to the options handling below
 
-# Generating train folds is usually slower, set to empty string unless you need them
-generate_train_files="-tr"
+# generate a results file for the train data as well as test, usually slower
+generate_train_files="true"
 
-# If set to -pr, looks for <problem><resample>_TRAIN.ts files. This is useful for running tsml-java resamples
-predefined_folds=""
+# If set for true, looks for <problem><fold>_TRAIN.ts file. This is useful for running tsml-java resamples
+predefined_folds="false"
 
-# List valid classifiers e.g DrCIF TDE Arsenal STC MUSE ROCKET Mini-ROCKET Multi-ROCKET
-# See set_classifier for aliases
+# Classifiers to loop over. Must be seperated by a space
+# See list of potential classifiers in set_classifier
+classifiers_to_run="ROCKET DrCIF"
+
+# Normalise data before fit/predict
+normalise_data="true"
+
+# ======================================================================================
+# ======================================================================================
+# Dont change anything under here (unless you want to change how the experiment
+# is working)
+# ======================================================================================
+# ======================================================================================
+
+# Set to -tr to generate test files
+generate_train_files=$([ "${generate_train_files,,}" == "true" ] && echo "-tr" || echo "")
+
+# Set to -pr to use predefined folds
+predefined_folds=$([ "${predefined_folds,,}" == "true" ] && echo "-pr" || echo "")
+
+# Set to -rn to normalise data
+normalise_data=$([ "${normalise_data,,}" == "true" ] && echo "-rn" || echo "")
+
 count=0
 while read dataset; do
-for classifier in ROCKET DrCIF
-do
-
-# Dont change anything after here for regular runs
+for classifier in $classifiers_to_run; do
 
 # Skip to the script start point
 ((count++))
@@ -94,9 +112,7 @@ do
     fi
 done
 
-
 if [ "${array_jobs}" != "" ]; then
-mkdir -p ${out_dir}${classifier}/${dataset}/
 
 # This creates the scrip to run the job based on the info above
 echo "#!/bin/bash
@@ -117,7 +133,7 @@ source activate $env_name
 
 # Input args to the default classification_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/classification_experiments.py
-python -u ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_train_files} ${predefined_folds}"  > generatedFile.sub
+python -u ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_train_files} ${predefined_folds} ${normalise_data}"  > generatedFile.sub
 
 echo ${count} ${classifier}/${dataset}
 

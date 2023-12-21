@@ -99,7 +99,7 @@ vector_classifiers = [
 ]
 
 
-def set_classifier(
+def get_classifier_by_name(
     classifier_name,
     random_state=None,
     n_jobs=1,

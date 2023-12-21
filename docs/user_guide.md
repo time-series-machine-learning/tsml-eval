@@ -1,5 +1,8 @@
 # User Guide
 
+We provide basic notebook guides for users to get started with `tsml-eval` for running
+experiments or evaluation.
+
 ::::{grid} 1 2 2 2
 :gutter: 3
 
@@ -81,7 +84,7 @@ Time Series Classification
 
 ^^^
 
-TODO Placeholder.
+Run basic TSC experiments using `tsml-eval`.
 
 +++
 
@@ -104,7 +107,7 @@ Time Series Extrinsic Regression
 
 ^^^
 
-TODO Placeholder.
+Run basic TSER experiments using `tsml-eval`.
 
 +++
 
@@ -127,7 +130,7 @@ Time Series Clustering
 
 ^^^
 
-TODO Placeholder.
+Run basic TSCL experiments using `tsml-eval`.
 
 +++
 
@@ -150,7 +153,7 @@ Time Series Forecasting
 
 ^^^
 
-TODO Placeholder.
+Run basic forecasting experiments using `tsml-eval`.
 
 +++
 

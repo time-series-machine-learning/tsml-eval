@@ -19,7 +19,7 @@ import numba
 from aeon.utils.validation._dependencies import _check_soft_dependencies
 
 from tsml_eval.experiments import load_and_run_classification_experiment
-from tsml_eval.experiments.set_classifier import set_classifier
+from tsml_eval.experiments.set_classifier import get_classifier_by_name
 from tsml_eval.experiments.tests import _CLASSIFIER_RESULTS_PATH
 from tsml_eval.testing.test_utils import _TEST_DATA_PATH
 from tsml_eval.utils.arguments import parse_args
@@ -69,7 +69,7 @@ def run_experiment(args):
                 args.data_path,
                 args.results_path,
                 args.dataset_name,
-                set_classifier(
+                get_classifier_by_name(
                     args.estimator_name,
                     random_state=args.resample_id
                     if args.random_seed is None
@@ -111,7 +111,7 @@ def run_experiment(args):
         checkpoint = None
         kwargs = {}
 
-        classifier = set_classifier(
+        classifier = get_classifier_by_name(
             estimator_name,
             random_state=resample_id,
             n_jobs=1,

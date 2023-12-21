@@ -144,6 +144,7 @@ class HydraRegressor(BaseRegressor):
     >>> regressor = regressor.fit(X, y)
     >>> y_pred = regressor.predict(X)
     """
+
     _tags = {
         "capability:multivariate": True,
         "classifier_type": "kernel",

@@ -41,6 +41,7 @@ title_labels_to_add = list(set(title_labels) - set(labels))
 paths = [file.filename for file in pr.get_files()]
 
 content_paths_to_labels = [
+    ("_tsml_research_resources/", "tsml research resources"),
     ("tsml_eval/datasets/", "datasets"),
     ("tsml_eval/estimators/", "estimators"),
     ("tsml_eval/evaluation/", "evaluation"),
