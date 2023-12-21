@@ -1,7 +1,7 @@
 # API
 
-This page contains the auto-generated API documentation for tsml-eval package functions
-and classes.
+This page contains the auto-generated API documentation for `tsml-eval` package
+functions and classes.
 
 ## Evaluation: [tsml_eval.evaluation](https://github.com/time-series-machine-learning/tsml-eval/tree/main/tsml_eval/evaluation)
 

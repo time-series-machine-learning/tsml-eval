@@ -8,7 +8,8 @@ hide-toc: true
 
 `tsml-eval` is a package containing tools for running experiments with time series
 machine learning algorithms and evaluating the results. The package currently supports
-the classification, regression and clustering algorithms.
+the classification, regression and clustering learning tasks with a basic framework
+for time series forecasting.
 
 <br>
 
