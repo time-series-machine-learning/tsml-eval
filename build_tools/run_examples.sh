@@ -7,6 +7,7 @@ CMD="jupyter nbconvert --to notebook --inplace --execute --ExecutePreprocessor.t
 
 excluded=(
   "tsml_eval/publications/y2023/distance_based_clustering/package_distance_timing.ipynb"
+  "examples/regression_experiments.ipynb"
 )
 
 shopt -s lastpipe

@@ -10,7 +10,7 @@ __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 import sys
 
 from tsml_eval.experiments import load_and_run_regression_experiment
-from tsml_eval.experiments.set_regressor import set_regressor
+from tsml_eval.experiments.set_regressor import get_regressor_by_name
 from tsml_eval.experiments.tests import _REGRESSOR_RESULTS_PATH
 from tsml_eval.testing.test_utils import _TEST_DATA_PATH
 from tsml_eval.utils.arguments import parse_args
@@ -46,7 +46,7 @@ def run_experiment(args):
                 args.data_path,
                 args.results_path,
                 args.dataset_name,
-                set_regressor(
+                get_regressor_by_name(
                     args.estimator_name,
                     random_state=args.resample_id
                     if args.random_seed is None
@@ -88,7 +88,7 @@ def run_experiment(args):
         checkpoint = None
         kwargs = {}
 
-        regressor = set_regressor(
+        regressor = get_regressor_by_name(
             estimator_name,
             random_state=resample_id,
             n_jobs=n_jobs,

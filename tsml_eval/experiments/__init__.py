@@ -9,10 +9,10 @@ __all__ = [
     "load_and_run_forecasting_experiment",
     "run_regression_experiment",
     "load_and_run_regression_experiment",
-    "set_classifier",
-    "set_clusterer",
-    "set_forecaster",
-    "set_regressor",
+    "get_classifier_by_name",
+    "get_clusterer_by_name",
+    "get_forecaster_by_name",
+    "get_regressor_by_name",
 ]
 
 from tsml_eval.experiments.experiments import (
@@ -25,7 +25,7 @@ from tsml_eval.experiments.experiments import (
     run_forecasting_experiment,
     run_regression_experiment,
 )
-from tsml_eval.experiments.set_classifier import set_classifier
-from tsml_eval.experiments.set_clusterer import set_clusterer
-from tsml_eval.experiments.set_forecaster import set_forecaster
-from tsml_eval.experiments.set_regressor import set_regressor
+from tsml_eval.experiments.set_classifier import get_classifier_by_name
+from tsml_eval.experiments.set_clusterer import get_clusterer_by_name
+from tsml_eval.experiments.set_forecaster import get_forecaster_by_name
+from tsml_eval.experiments.set_regressor import get_regressor_by_name

@@ -10,6 +10,7 @@ from tsml.dummy import DummyClassifier
 
 from tsml_eval.datasets._test_data._data_sizes import DATA_TEST_SIZES
 from tsml_eval.experiments import (
+    get_regressor_by_name,
     regression_experiments,
     run_regression_experiment,
     set_regressor,
@@ -160,8 +161,8 @@ def test_run_regression_experiment_invalid_estimator():
         )
 
 
-def test_set_regressor():
-    """Test set_regressor method."""
+def test_get_regressor_by_name():
+    """Test get_regressor_by_name method."""
     regressor_lists = [
         set_regressor.convolution_based_regressors,
         set_regressor.deep_learning_regressors,
@@ -180,7 +181,7 @@ def test_set_regressor():
 
     for regressor_list in regressor_lists:
         _check_set_method(
-            set_regressor.set_regressor,
+            get_regressor_by_name,
             regressor_list,
             regressor_dict,
             all_regressor_names,
@@ -191,7 +192,7 @@ def test_set_regressor():
     )
 
 
-def test_set_regressor_invalid():
-    """Test set_regressor method with invalid estimator."""
+def test_get_regressor_by_name_invalid():
+    """Test get_regressor_by_name method with invalid estimator."""
     with pytest.raises(ValueError, match="UNKNOWN REGRESSOR"):
-        set_regressor.set_regressor("invalid")
+        get_regressor_by_name("invalid")
