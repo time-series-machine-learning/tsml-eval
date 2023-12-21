@@ -56,7 +56,7 @@ all_extras = [
     "xgboost",
     "torch>=1.13.1",
     # temp
-    "fdasrsf<=2.5.3",
+    "fdasrsf<=2.5.2",
 ]
 unstable_extras = [
     "aeon[unstable_extras]",
