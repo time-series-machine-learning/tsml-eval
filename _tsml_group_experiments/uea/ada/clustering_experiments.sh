@@ -1,17 +1,8 @@
 #!/bin/bash
-# CHECK:
-#   username (your username)
-#   results_dir (where to check/write results),
-#   out_dir (where to write output logs),
+# CHECK before each new run:
 #   datasets (list of problems)
 #   results_dir (where to check/write results),
 #   clusterers_to_run (list of clusterers to run)
-#   script_file_path (path to clustering_experiments.py)
-#   env_name (name of conda environment)
-#   max_folds (number of folds to run)
-#   start_fold (fold to start from)
-#   normalise_data (true/false)
-#   combine_test_train_split (true/false)
 # While reading is fine, please dont write anything to the default directories in this script
 
 # Start and end for resamples
@@ -25,7 +16,7 @@ max_num_submitted=100
 queue="compute-64-512"
 
 # Enter your username and email here
-username="eej17ucu"
+username="ajb"
 mail="NONE"
 mailto=$username"@uea.ac.uk"
 
@@ -40,13 +31,13 @@ start_point=1
 
 # Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
 data_dir="/gpfs/home/ajb/Data/"
-datasets="/gpfs/home/ajb/DataSetLists/TSC_112_2019.txt"
+datasets="/gpfs/home/ajb/DataSetLists/Clustering.txt"
 
 # Put your home directory here
 local_path="/gpfs/home/$username/"
 
 # Results and output file write location. Change these to reflect your own file structure
-results_dir=$local_path"ClusteringResults/"
+results_dir=$local_path"ClusteringResults/results/"
 out_dir=$local_path"ClusteringResults/output/"
 
 # The python script we are running
@@ -56,10 +47,14 @@ script_file_path=$local_path"Code/tsml-eval/tsml_eval/experiments/clustering_exp
 # Separate environments for GPU (Python 3.8) and CPU (Python 3.10) are recommended
 env_name="tsml-eval"
 
-# generate a results file for the test data as well as train
+# You can add extra arguments here. See tsml_eval/utils/arguments.py parse_args
+# You will have to add any variable to the python call close to the bottom of the script
+# and possibly to the options handling below
+
+# generate a results file for the test data as well as train, usually slower
 generate_test_files="true"
 
-# If set for true, looks for <problem><fold>_TRAIN.ts file. This is useful for running tsml resamples
+# If set for true, looks for <problem><fold>_TRAIN.ts file. This is useful for running tsml-java resamples
 predefined_folds="false"
 
 # Boolean on if to combine the test/train split
@@ -69,11 +64,8 @@ combine_test_train_split="false"
 # See list of potential clusterers in set_clusterer
 clusterers_to_run="kmedoids-squared kmedoids-euclidean"
 
-# Normalise data before clustering
+# Normalise data before fit/predict
 normalise_data="true"
-
-# You can add extra arguments here. See tsml_eval/utils/experiments.py parse_args
-# You will have to add any variable to the python call close to the bottom of the script
 
 # ======================================================================================
 # ======================================================================================
@@ -103,6 +95,7 @@ normalise_data=$([ "${normalise_data,,}" == "true" ] && echo "-rn" || echo "")
 count=0
 while read dataset; do
 for clusterer in $clusterers_to_run; do
+
 # Skip to the script start point
 ((count++))
 if ((count>=start_point)); then

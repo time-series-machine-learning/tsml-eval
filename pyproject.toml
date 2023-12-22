@@ -55,6 +55,7 @@ all_extras = [
     "tsml[extras]",
     "xgboost",
     "torch>=1.13.1",
+    "grailts",
 ]
 unstable_extras = [
     "aeon[unstable_extras]",
