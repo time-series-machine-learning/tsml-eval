@@ -1177,14 +1177,14 @@ def _create_directory_for_statistic(
             f"{statistic_name}.csv",
             "w",
         ) as file:
-            file.write(f",{','.join([str(j) for j in resamples])}\n")
+            file.write(f"Resamples:,{','.join([str(j) for j in resamples])}\n")
             for n, dataset_name in enumerate(datasets):
                 file.write(
                     f"{dataset_name},{','.join([str(j) for j in est_stats[n]])}\n"
                 )
 
     with open(f"{save_path}/{statistic_name}/{statistic_name}_mean.csv", "w") as file:
-        file.write(f",{','.join(estimators)}\n")
+        file.write(f"Estimators:,{','.join(estimators)}\n")
         for i, dataset_name in enumerate(datasets):
             file.write(
                 f"{dataset_name},{','.join([str(n) for n in average_stats[i]])}\n"
@@ -1195,7 +1195,7 @@ def _create_directory_for_statistic(
     )
 
     with open(f"{save_path}/{statistic_name}/{statistic_name}_ranks.csv", "w") as file:
-        file.write(f",{','.join(estimators)}\n")
+        file.write(f"Estimators:,{','.join(estimators)}\n")
         for i, dataset_name in enumerate(datasets):
             file.write(f"{dataset_name},{','.join([str(n) for n in ranks[i]])}\n")
 
