@@ -75,10 +75,18 @@ jobs:
 
       - if: matrix.os == 'windows-2022'
         name: Windows install
-        run: python -m pip install "${env:WHEELNAME}[dev,all_extras,unstable_extras,deep_learning]"
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          command: python -m pip install "${env:WHEELNAME}[dev,all_extras,unstable_extras,deep_learning]"
       - if: matrix.os != 'windows-2022'
         name: Unix install
-        run: python -m pip install "${{ env.WHEELNAME }}[dev,all_extras,unstable_extras,deep_learning]"
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          command: python -m pip install "${{ env.WHEELNAME }}[dev,all_extras,unstable_extras,deep_learning]"
 
       - name: Tests
         run: python -m pytest
