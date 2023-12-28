@@ -6,7 +6,7 @@ from datetime import datetime
 
 import numpy as np
 from aeon.benchmarking import plot_critical_difference
-from aeon.benchmarking.results_plotting import plot_scatter
+from aeon.benchmarking.results_plotting import plot_boxplot_median, plot_scatter
 from matplotlib import pyplot as plt
 
 from tsml_eval.evaluation.storage import (
@@ -16,6 +16,21 @@ from tsml_eval.evaluation.storage import (
     RegressorResults,
 )
 from tsml_eval.utils.functions import rank_array, time_to_milliseconds
+
+__all__ = [
+    "evaluate_classifiers",
+    "evaluate_classifiers_from_file",
+    "evaluate_classifiers_by_problem",
+    "evaluate_clusterers",
+    "evaluate_clusterers_from_file",
+    "evaluate_clusterers_by_problem",
+    "evaluate_regressors",
+    "evaluate_regressors_from_file",
+    "evaluate_regressors_by_problem",
+    "evaluate_forecasters",
+    "evaluate_forecasters_from_file",
+    "evaluate_forecasters_by_problem",
+]
 
 
 def evaluate_classifiers(
@@ -1196,7 +1211,7 @@ def _figures_for_statistic(
 ):
     os.makedirs(f"{save_path}/{statistic_name}/figures/", exist_ok=True)
 
-    cd = plot_critical_difference(scores, estimators, errors=not higher_better)
+    cd = plot_critical_difference(scores, estimators, lower_better=not higher_better)
     cd.savefig(
         f"{save_path}/{statistic_name}/figures/"
         f"{statistic_name}_critical_difference.pdf",
@@ -1212,24 +1227,25 @@ def _figures_for_statistic(
     )
     plt.close()
 
-    # crashes when scores are the same?
-
-    # box = plot_boxplot_median(scores.transpose(), estimators)
-    # box.savefig(
-    #     f"{save_path}/{statistic_name}/figures/{statistic_name}_boxplot.pdf",
-    #     bbox_inches="tight",
-    # )
-    # pickle.dump(
-    #     box,
-    #     open(
-    #         f"{save_path}/{statistic_name}/figures/{statistic_name}_boxplot.pickle",
-    #         "wb",
-    #     ),
-    # )
-    # plt.close()
+    box = plot_boxplot_median(scores.transpose(), estimators)
+    box.savefig(
+        f"{save_path}/{statistic_name}/figures/{statistic_name}_boxplot.pdf",
+        bbox_inches="tight",
+    )
+    pickle.dump(
+        box,
+        open(
+            f"{save_path}/{statistic_name}/figures/{statistic_name}_boxplot.pickle",
+            "wb",
+        ),
+    )
+    plt.close()
 
     for i, est1 in enumerate(estimators):
         for n, est2 in enumerate(estimators):
+            if i == n:
+                continue
+
             os.makedirs(
                 f"{save_path}/{statistic_name}/figures/scatters/{est1}/", exist_ok=True
             )

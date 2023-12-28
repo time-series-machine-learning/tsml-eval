@@ -48,11 +48,14 @@ extensions = [
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.intersphinx",
     "sphinx.ext.linkcode",
+    "sphinxext.opengraph",
     "numpydoc",
     "nbsphinx",
     "sphinx_design",
     "sphinx_issues",
     "sphinx_copybutton",
+    "sphinx_remove_toctrees",
+    "versionwarning.extension",
     "myst_parser",
 ]
 
@@ -92,8 +95,14 @@ numpydoc_validation_checks = {"all"}
 # Link to GitHub repo for github_issues extension
 issues_github_path = "time-series-machine-learning/tsml-eval"
 
-# sphinx-copybutton configuration
+# sphinx-copybutton
+
 copybutton_exclude = ".linenos, .gp, .go"
+
+# sphinx-remove-toctrees configuration
+# see https://github.com/pradyunsg/furo/pull/674
+
+remove_from_toctrees = ["auto_generated/*"]
 
 # nbsphinx
 
@@ -171,3 +180,4 @@ def linkcode_resolve(domain, info):
 
 html_theme = "furo"
 html_static_path = ["_static"]
+html_css_files = ["css/custom.css"]

@@ -22,7 +22,7 @@ other_forecasters = [
 ]
 
 
-def set_forecaster(forecaster_name, random_state=None, n_jobs=1, **kwargs):
+def get_forecaster_by_name(forecaster_name, random_state=None, n_jobs=1, **kwargs):
     """Return a forecaster matching a given input name.
 
     Basic way of creating a forecaster to build using the default or alternative

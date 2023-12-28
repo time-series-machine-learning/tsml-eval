@@ -2,7 +2,7 @@
 
 import pytest
 
-from tsml_eval.utils.experiments import _results_present
+from tsml_eval.utils.experiments import _results_present, timing_benchmark
 
 
 @pytest.mark.parametrize("split", ["BOTH", "TRAIN", "TEST", None, "invalid"])
@@ -23,3 +23,9 @@ def test_results_present_split_inputs(split):
             "test",
             split=split,
         )
+
+
+def test_timing_benchmark_invalid_input():
+    """Test timing_benchmark function with invalid input."""
+    with pytest.raises(ValueError):
+        timing_benchmark(random_state="invalid")

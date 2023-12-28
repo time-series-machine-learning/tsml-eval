@@ -11,6 +11,7 @@ from tsml.dummy import DummyRegressor
 from tsml_eval.datasets._test_data._data_sizes import DATA_TEST_SIZES
 from tsml_eval.experiments import (
     classification_experiments,
+    get_classifier_by_name,
     run_classification_experiment,
     set_classifier,
     threaded_classification_experiments,
@@ -163,8 +164,8 @@ def test_run_classification_experiment_invalid_estimator():
         )
 
 
-def test_set_classifier():
-    """Test set_classifier method."""
+def test_get_classifier_by_name():
+    """Test get_classifier_by_name method."""
     classifier_lists = [
         set_classifier.convolution_based_classifiers,
         set_classifier.deep_learning_classifiers,
@@ -183,7 +184,7 @@ def test_set_classifier():
 
     for classifier_list in classifier_lists:
         _check_set_method(
-            set_classifier.set_classifier,
+            get_classifier_by_name,
             classifier_list,
             classifier_dict,
             all_classifier_names,
@@ -194,7 +195,7 @@ def test_set_classifier():
     )
 
 
-def test_set_classifier_invalid():
-    """Test set_classifier method with invalid estimator."""
+def test_get_classifier_by_name_invalid():
+    """Test get_classifier_by_name method with invalid estimator."""
     with pytest.raises(ValueError, match="UNKNOWN CLASSIFIER"):
-        set_classifier.set_classifier("invalid")
+        get_classifier_by_name("invalid")

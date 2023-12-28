@@ -6,9 +6,10 @@ hide-toc: true
 
 <br>
 
-``tsml-eval`` is a package containing tools for running experiments with time series
+`tsml-eval` is a package containing tools for running experiments with time series
 machine learning algorithms and evaluating the results. The package currently supports
-the classification, regression and clustering algorithms.
+the classification, regression and clustering learning tasks with a basic framework
+for time series forecasting.
 
 <br>
 
@@ -22,7 +23,7 @@ Installation
 
 ^^^
 
-Instructions to install ``tsml-eval``.
+Instructions to install `tsml-eval`.
 
 +++
 
@@ -43,7 +44,7 @@ User Guide
 
 ^^^
 
-Guides for users for running experiments using ``tsml-eval``.
+Guides for users for running experiments or evaluation using `tsml-eval`.
 
 +++
 
@@ -57,26 +58,6 @@ User Guide
 
 :::
 
-:::{grid-item-card}
-:text-align: center
-
-Publications
-
-^^^
-
-Supplementary material for publications using ``tsml-eval``.
-
-+++
-
-```{button-ref} publications
-:color: primary
-:click-parent:
-:expand:
-
-Publications
-```
-
-:::
 
 :::{grid-item-card}
 :text-align: center
@@ -99,13 +80,35 @@ API
 
 :::
 
+:::{grid-item-card}
+:text-align: center
+
+Publications
+
+^^^
+
+Supplementary material for publications using that use `tsml-eval`.
+
++++
+
+```{button-ref} publications
+:color: primary
+:click-parent:
+:expand:
+
+Publications
+```
+
+:::
+
 ::::
+
 
 ```{toctree}
 :hidden:
 
 installation.md
 user_guide.md
-publications.md
 api.md
+publications.md
 ```

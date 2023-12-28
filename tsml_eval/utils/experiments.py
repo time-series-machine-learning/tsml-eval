@@ -4,7 +4,10 @@ __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 __all__ = [
     "resample_data",
+    "resample_data_indices",
     "stratified_resample_data",
+    "stratified_resample_data_indices",
+    "load_experiment_data",
     "write_classification_results",
     "write_regression_results",
     "write_clustering_results",
@@ -14,13 +17,16 @@ __all__ = [
     "compare_result_file_resample",
     "assign_gpu",
     "timing_benchmark",
+    "estimator_attributes_to_file",
 ]
 
 import os
 import time
+from collections.abc import Sequence
 
 import gpustat
 import numpy as np
+from sklearn.base import BaseEstimator
 from sklearn.utils import check_random_state
 from tsml.datasets import load_from_ts_file
 
@@ -84,9 +90,8 @@ def resample_data(X_train, y_train, X_test, y_test, random_state=None):
     indices = np.arange(len(all_data), dtype=int)
     rng.shuffle(indices)
 
-    train_cases = y_train.size
-    train_indices = indices[:train_cases]
-    test_indices = indices[train_cases:]
+    train_indices = indices[: len(X_train)]
+    test_indices = indices[len(X_train) :]
 
     # split the shuffled data into train and test
     X_train = (
@@ -99,60 +104,42 @@ def resample_data(X_train, y_train, X_test, y_test, random_state=None):
     return X_train, y_train, X_test, y_test
 
 
-def load_experiment_data(
-    problem_path: str,
-    dataset: str,
-    resample_id: int,
-    predefined_resample: bool,
-):
-    """Load data for experiments.
+def resample_data_indices(y_train, y_test, random_state=None):
+    """Return data resample indices without replacement using a random state.
+
+    Reproducible resampling. Combines train and test, randomly resamples, then returns
+    the new position for both the train and test set. Uses indices for a combined train
+    and test set, with test indices appearing after train indices.
 
     Parameters
     ----------
-    problem_path : str
-        Path to the problem folder.
-    dataset : str
-        Name of the dataset.
-    resample_id : int or None
-        Id of the data resample to use.
-    predefined_resample : boolean
-        If True, use the predefined resample.
+    y_train : np.ndarray
+        Train data labels.
+    y_test : np.ndarray
+        Test data labels.
+    random_state : int, RandomState instance or None, default=None
+        If `int`, random_state is the seed used by the random number generator;
+        If `RandomState` instance, random_state is the random number generator;
+        If `None`, the random number generator is the `RandomState` instance used
+        by `np.random`.
 
     Returns
     -------
-    X_train : np.ndarray or list of np.ndarray
-        Train data in a 2d or 3d ndarray or list of arrays.
-    y_train : np.ndarray
-        Train data labels.
-    X_test : np.ndarray or list of np.ndarray
-        Test data in a 2d or 3d ndarray or list of arrays.
-    y_test : np.ndarray
-        Test data labels.
-    resample : boolean
-        If True, the data is to be resampled.
+    train_indices : np.ndarray
+        The index of cases to use in the train set from the combined train and test
+        data.
+    test_indices : np.ndarray
+        The index of cases to use in the test set from the combined train and test data.
     """
-    if resample_id is not None and predefined_resample:
-        resample_str = "" if resample_id is None else str(resample_id)
+    # shuffle data indices
+    rng = check_random_state(random_state)
+    indices = np.arange(len(y_train) + len(y_test), dtype=int)
+    rng.shuffle(indices)
 
-        X_train, y_train = load_from_ts_file(
-            f"{problem_path}/{dataset}/{dataset}{resample_str}_TRAIN.ts"
-        )
-        X_test, y_test = load_from_ts_file(
-            f"{problem_path}/{dataset}/{dataset}{resample_str}_TEST.ts"
-        )
+    train_indices = indices[: len(y_train)]
+    test_indices = indices[len(y_train) :]
 
-        resample_data = False
-    else:
-        X_train, y_train = load_from_ts_file(
-            f"{problem_path}/{dataset}/{dataset}_TRAIN.ts"
-        )
-        X_test, y_test = load_from_ts_file(
-            f"{problem_path}/{dataset}/{dataset}_TEST.ts"
-        )
-
-        resample_data = True if resample_id != 0 else False
-
-    return X_train, y_train, X_test, y_test, resample_data
+    return train_indices, test_indices
 
 
 def stratified_resample_data(X_train, y_train, X_test, y_test, random_state=None):
@@ -229,9 +216,8 @@ def stratified_resample_data(X_train, y_train, X_test, y_test, random_state=None
         indices = np.where(all_labels == label)[0]
         rng.shuffle(indices)
 
-        train_cases = counts_train[label_index]
-        train_indices = indices[:train_cases]
-        test_indices = indices[train_cases:]
+        train_indices = indices[: counts_train[label_index]]
+        test_indices = indices[counts_train[label_index] :]
 
         # extract data from corresponding indices
         train_cases = (
@@ -260,6 +246,123 @@ def stratified_resample_data(X_train, y_train, X_test, y_test, random_state=None
         y_test = np.concatenate([y_test, test_labels], axis=None)
 
     return X_train, y_train, X_test, y_test
+
+
+def stratified_resample_data_indices(y_train, y_test, random_state=None):
+    """Return stratified data resample indices without replacement using a random state.
+
+    Reproducible resampling. Combines train and test, resamples to get the same class
+    distribution, then returns the new position for both the train and test set.
+    Uses indices for a combined train and test set, with test indices appearing after
+    train indices.
+
+    Parameters
+    ----------
+    y_train : np.ndarray
+        Train data labels.
+    y_test : np.ndarray
+        Test data labels.
+    random_state : int, RandomState instance or None, default=None
+        If `int`, random_state is the seed used by the random number generator;
+        If `RandomState` instance, random_state is the random number generator;
+        If `None`, the random number generator is the `RandomState` instance used
+        by `np.random`.
+
+    Returns
+    -------
+    train_indices : np.ndarray
+        The index of cases to use in the train set from the combined train and test
+        data.
+    test_indices : np.ndarray
+        The index of cases to use in the test set from the combined train and test data.
+    """
+    # add both train and test to a single dataset
+    all_labels = np.concatenate((y_train, y_test), axis=None)
+
+    # shuffle data indices
+    rng = check_random_state(random_state)
+
+    # count class occurrences
+    unique_train, counts_train = np.unique(y_train, return_counts=True)
+    unique_test, counts_test = np.unique(y_test, return_counts=True)
+
+    # ensure same classes exist in both train and test
+    assert list(unique_train) == list(unique_test)
+
+    train_indices = np.zeros(0, dtype=int)
+    test_indices = np.zeros(0, dtype=int)
+
+    # for each class
+    for label_index in range(len(unique_train)):
+        # get the indices of all instances with this class label and shuffle them
+        label = unique_train[label_index]
+        indices = np.where(all_labels == label)[0]
+        rng.shuffle(indices)
+
+        train_indices = np.concatenate(
+            [train_indices, indices[: counts_train[label_index]]], axis=None
+        )
+        test_indices = np.concatenate(
+            [test_indices, indices[counts_train[label_index] :]], axis=None
+        )
+
+    return train_indices, test_indices
+
+
+def load_experiment_data(
+    problem_path: str,
+    dataset: str,
+    resample_id: int,
+    predefined_resample: bool,
+):
+    """Load data for experiments.
+
+    Parameters
+    ----------
+    problem_path : str
+        Path to the problem folder.
+    dataset : str
+        Name of the dataset.
+    resample_id : int or None
+        Id of the data resample to use.
+    predefined_resample : boolean
+        If True, use the predefined resample.
+
+    Returns
+    -------
+    X_train : np.ndarray or list of np.ndarray
+        Train data in a 2d or 3d ndarray or list of arrays.
+    y_train : np.ndarray
+        Train data labels.
+    X_test : np.ndarray or list of np.ndarray
+        Test data in a 2d or 3d ndarray or list of arrays.
+    y_test : np.ndarray
+        Test data labels.
+    resample : boolean
+        If True, the data is to be resampled.
+    """
+    if resample_id is not None and predefined_resample:
+        resample_str = "" if resample_id is None else str(resample_id)
+
+        X_train, y_train = load_from_ts_file(
+            f"{problem_path}/{dataset}/{dataset}{resample_str}_TRAIN.ts"
+        )
+        X_test, y_test = load_from_ts_file(
+            f"{problem_path}/{dataset}/{dataset}{resample_str}_TEST.ts"
+        )
+
+        resample_data = False
+    else:
+        X_train, y_train = load_from_ts_file(
+            f"{problem_path}/{dataset}/{dataset}_TRAIN.ts"
+        )
+        X_test, y_test = load_from_ts_file(
+            f"{problem_path}/{dataset}/{dataset}_TEST.ts"
+        )
+
+        resample_data = True if resample_id != 0 else False
+
+    return X_train, y_train, X_test, y_test, resample_data
 
 
 def write_classification_results(
@@ -763,10 +866,7 @@ def write_results_to_tsml_format(
     if not full_path:
         file_path = f"{file_path}/{estimator_name}/Predictions/{dataset_name}/"
 
-    try:
-        os.makedirs(file_path)
-    except os.error:
-        pass  # raises os.error if path already exists, so just ignore this
+    os.makedirs(file_path, exist_ok=True)
 
     if split is None:
         split = ""
@@ -892,10 +992,7 @@ def fix_broken_second_line(file_path, save_path=None):
         if save_path is None:
             save_path = file_path
 
-        try:
-            os.makedirs(os.path.dirname(save_path))
-        except os.error:
-            pass  # raises os.error if path already exists, so just ignore this
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
         with open(save_path, "w") as f:
             f.writelines(lines)
@@ -1008,3 +1105,108 @@ def timing_benchmark(num_arrays=1000, array_size=20000, random_state=None):
         total_time += end_time - start_time
 
     return int(round(total_time * 1000))
+
+
+def estimator_attributes_to_file(
+    estimator, dir_path, estimator_name=None, max_depth=np.inf, max_list_shape=np.inf
+):
+    """Write the attributes of an estimator to file(s).
+
+    Write the attributes of an estimator to file at a given directory. The function
+    will recursively write the attributes of any estimators or non-string sequences
+    containing estimators found in the attributes of the input estimator to spearate
+    files.
+
+    Parameters
+    ----------
+    estimator : estimator instance
+        The estimator to write the attributes of.
+    dir_path : str
+        The directory to write the attribute files to.
+    estimator_name : str or None, default=None
+        The name of the estimator. If None, the name of the estimator class will be
+        used.
+    max_depth : int, default=np.inf
+        The maximum depth to go when recursively writing attributes of estimators.
+    max_list_shape : int, default=np.inf
+        The maximum shape of a list to write when recursively writing attributes of
+        contained estimators. i.e. for 0, no estimators contained in lists will be
+        written, for 1, only estimators contained in 1-dimensional lists or the top
+        level of a list will be written.
+    """
+    estimator_name = (
+        estimator.__class__.__name__ if estimator_name is None else estimator_name
+    )
+    _write_estimator_attributes_recursive(
+        estimator, dir_path, estimator_name, 0, max_depth, max_list_shape
+    )
+
+
+def _write_estimator_attributes_recursive(
+    estimator, dir_path, file_name, depth, max_depth, max_list_shape
+):
+    if depth > max_depth:
+        return
+
+    path = f"{dir_path}/{file_name}.txt"
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as file:
+        for attr in estimator.__dict__:
+            value = getattr(estimator, attr)
+            file.write(f"{attr}: {value}\n")
+
+            if depth + 1 <= max_depth:
+                if isinstance(value, BaseEstimator):
+                    new_dir_path = f"{dir_path}/{attr}/"
+                    file.write(f"    See {new_dir_path}{attr}.txt for more details\n")
+                    _write_estimator_attributes_recursive(
+                        value, new_dir_path, attr, depth + 1, max_depth, max_list_shape
+                    )
+                elif _is_non_string_sequence(value):
+                    _write_list_attributes_recursive(
+                        value,
+                        file,
+                        dir_path,
+                        attr,
+                        depth + 1,
+                        max_depth,
+                        1,
+                        max_list_shape,
+                    )
+
+
+def _write_list_attributes_recursive(
+    it, file, dir_path, file_name, depth, max_depth, shape, max_list_shape
+):
+    if shape > max_list_shape:
+        return
+
+    for idx, item in enumerate(it):
+        if isinstance(item, BaseEstimator):
+            new_dir_path = f"{dir_path}/{file_name}_{idx}/"
+            file.write(
+                f"    See {new_dir_path}{file_name}_{idx}.txt for more details\n"
+            )
+            _write_estimator_attributes_recursive(
+                item,
+                new_dir_path,
+                f"{file_name}_{idx}",
+                depth,
+                max_depth,
+                max_list_shape,
+            )
+        elif _is_non_string_sequence(item):
+            _write_list_attributes_recursive(
+                item,
+                file,
+                dir_path,
+                f"{file_name}_{idx}",
+                depth,
+                max_depth,
+                shape + 1,
+                max_list_shape,
+            )
+
+
+def _is_non_string_sequence(obj):
+    return isinstance(obj, Sequence) and not isinstance(obj, (str, bytes, bytearray))

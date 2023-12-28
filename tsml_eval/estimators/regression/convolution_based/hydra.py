@@ -132,6 +132,19 @@ class HydraPipeline:
 
 
 class HydraRegressor(BaseRegressor):
+    """
+    Hydra Regressor
+
+    Examples
+    --------
+    >>> from tsml_eval.estimators.regression.convolution_based.hydra import HydraRegressor
+    >>> from tsml.datasets import load_minimal_gas_prices
+    >>> X, y = load_minimal_gas_prices()
+    >>> regressor = HydraRegressor()
+    >>> regressor = regressor.fit(X, y)
+    >>> y_pred = regressor.predict(X)
+    """
+
     _tags = {
         "capability:multivariate": True,
         "classifier_type": "kernel",

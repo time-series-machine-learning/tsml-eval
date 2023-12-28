@@ -19,7 +19,7 @@ import numba
 from aeon.utils.validation._dependencies import _check_soft_dependencies
 
 from tsml_eval.experiments import load_and_run_classification_experiment
-from tsml_eval.experiments.set_classifier import set_classifier
+from tsml_eval.experiments.set_classifier import get_classifier_by_name
 from tsml_eval.experiments.tests import _CLASSIFIER_RESULTS_PATH
 from tsml_eval.testing.test_utils import _TEST_DATA_PATH
 from tsml_eval.utils.arguments import parse_args
@@ -69,7 +69,7 @@ def run_experiment(args):
                 args.data_path,
                 args.results_path,
                 args.dataset_name,
-                set_classifier(
+                get_classifier_by_name(
                     args.estimator_name,
                     random_state=args.resample_id
                     if args.random_seed is None
@@ -84,6 +84,8 @@ def run_experiment(args):
                 classifier_name=args.estimator_name,
                 resample_id=args.resample_id,
                 build_train_file=args.train_fold,
+                write_attributes=args.write_attributes,
+                att_max_shape=args.att_max_shape,
                 benchmark_time=args.benchmark_time,
                 overwrite=args.overwrite,
                 predefined_resample=args.predefined_resample,
@@ -100,13 +102,16 @@ def run_experiment(args):
         row_normalise = False
         resample_id = 0
         train_fold = False
+        write_attributes = True
+        att_max_shape = 0
+        benchmark_time = True
         overwrite = False
         predefined_resample = False
         fit_contract = 0
         checkpoint = None
         kwargs = {}
 
-        classifier = set_classifier(
+        classifier = get_classifier_by_name(
             estimator_name,
             random_state=resample_id,
             n_jobs=1,
@@ -126,6 +131,9 @@ def run_experiment(args):
             classifier_name=estimator_name,
             resample_id=resample_id,
             build_train_file=train_fold,
+            write_attributes=write_attributes,
+            att_max_shape=att_max_shape,
+            benchmark_time=benchmark_time,
             overwrite=overwrite,
             predefined_resample=predefined_resample,
         )

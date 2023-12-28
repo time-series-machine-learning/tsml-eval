@@ -7,6 +7,7 @@ from tsml.dummy import DummyClassifier
 from tsml_eval.datasets._test_data._data_sizes import DATA_TEST_SIZES
 from tsml_eval.experiments import (
     forecasting_experiments,
+    get_forecaster_by_name,
     run_forecasting_experiment,
     set_forecaster,
     threaded_forecasting_experiments,
@@ -126,8 +127,8 @@ def test_run_forecasting_experiment_invalid_estimator():
         )
 
 
-def test_set_forecasters():
-    """Test set_forecaster method."""
+def test_get_forecaster_by_name():
+    """Test get_forecaster_by_name method."""
     forecaster_lists = [
         set_forecaster.ml_forecasters,
         set_forecaster.other_forecasters,
@@ -138,7 +139,7 @@ def test_set_forecasters():
 
     for forecaster_list in forecaster_lists:
         _check_set_method(
-            set_forecaster.set_forecaster,
+            get_forecaster_by_name,
             forecaster_list,
             forecaster_dict,
             all_forecaster_names,
@@ -149,7 +150,7 @@ def test_set_forecasters():
     )
 
 
-def test_set_forecaster_invalid():
-    """Test set_forecasters method with invalid estimator."""
+def test_get_forecaster_by_name_invalid():
+    """Test get_forecaster_by_name method with invalid estimator."""
     with pytest.raises(ValueError, match="UNKNOWN FORECASTER"):
-        set_forecaster.set_forecaster("invalid")
+        get_forecaster_by_name("invalid")
