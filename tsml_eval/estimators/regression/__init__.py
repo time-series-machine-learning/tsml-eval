@@ -1,3 +1,5 @@
+"""Regression estimators."""
+
 __all__ = [
     "SklearnToTsmlRegressor",
 ]

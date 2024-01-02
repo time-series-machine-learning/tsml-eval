@@ -1,9 +1,8 @@
+"""Simple vote ensemble for clustering using results files."""
+
 import numpy as np
 import pandas as pd
 from sklearn import preprocessing
-from sklearn.cluster import KMeans
-from sklearn.utils import check_random_state
-from tsml.base import _clone_estimator
 
 from tsml_eval.estimators.clustering.consensus.simple_vote import SimpleVote
 
@@ -49,6 +48,7 @@ class FromFileSimpleVote(SimpleVote):
         )
 
     def fit(self, X, y=None):
+        """Fit model to X using a simple vote ensemble."""
         if isinstance(X, np.ndarray) and len(X.shape) == 3 and X.shape[1] == 1:
             X = np.reshape(X, (X.shape[0], -1))
         elif isinstance(X, pd.DataFrame) and len(X.shape) == 2:
@@ -128,6 +128,7 @@ class FromFileSimpleVote(SimpleVote):
         return self
 
     def predict_proba(self, X):
+        """Predict cluster probabilities for X."""
         if isinstance(X, np.ndarray) and len(X.shape) == 3 and X.shape[1] == 1:
             X = np.reshape(X, (X.shape[0], -1))
         elif isinstance(X, pd.DataFrame) and len(X.shape) == 2:

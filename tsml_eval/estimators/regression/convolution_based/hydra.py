@@ -1,10 +1,12 @@
-# Angus Dempster, Daniel F. Schmidt, Geoffrey I. Webb
+"""HYDRA regressor.
 
-# HYDRA: Competing convolutional kernels for fast and accurate time series classification
-# https://arxiv.org/abs/2203.13652
+Angus Dempster, Daniel F. Schmidt, Geoffrey I. Webb
 
-# import copy
-import time
+HYDRA: Competing convolutional kernels for fast and accurate time series
+classification
+https://arxiv.org/abs/2203.13652
+"""
+
 
 import numpy as np
 from aeon.regression.base import BaseRegressor
@@ -20,7 +22,9 @@ import torch.nn as nn  # noqa: E402
 import torch.nn.functional as F  # noqa: E402
 
 
-class Hydra(nn.Module):
+class _Hydra(nn.Module):
+    """HYDRA module for regression."""
+
     def __init__(self, ts_shape, k=8, g=64, max_num_channels=8):
         super().__init__()
 
@@ -43,26 +47,26 @@ class Hydra(nn.Module):
         _g = g // divisor
         self._g = _g
 
-        self.W = [
-            self.normalize(torch.randn(divisor, k * _g, 1, 9))
+        self.W_ = [
+            self._normalize(torch.randn(divisor, k * _g, 1, 9))
             for _ in range(self.num_dilations)
         ]
 
         # combine num_channels // 2 channels (2 < n < max_num_channels)
         if self.n_dims_ > 1:
             n_dims_per = np.clip(self.n_dims_ // 2, 2, max_num_channels)
-            self.I = [
+            self.I_ = [
                 torch.randint(0, self.n_dims_, (divisor, _g, n_dims_per))
                 for _ in range(self.num_dilations)
             ]
 
     @staticmethod
-    def normalize(W):
+    def _normalize(W):
         W -= W.mean(-1, keepdims=True)
         W /= W.abs().sum(-1, keepdims=True)
         return W
 
-    def forward(self, X):
+    def _forward(self, X):
         num_examples = X.shape[0]
 
         X = torch.from_numpy(X).float()
@@ -81,10 +85,10 @@ class Hydra(nn.Module):
             for diff_index in range(min(2, self.g)):
                 if self.n_dims_ > 1:  # Multivariate
                     _Z = F.conv1d(
-                        X[:, self.I[dilation_index][diff_index]].sum(2)
+                        X[:, self.I_[dilation_index][diff_index]].sum(2)
                         if diff_index == 0
-                        else diff_X[:, self.I[dilation_index][diff_index]].sum(2),
-                        self.W[dilation_index][diff_index],
+                        else diff_X[:, self.I_[dilation_index][diff_index]].sum(2),
+                        self.W_[dilation_index][diff_index],
                         dilation=d,
                         padding=p,
                         groups=self._g,
@@ -92,7 +96,7 @@ class Hydra(nn.Module):
                 else:  # Univariate
                     _Z = F.conv1d(
                         X if diff_index == 0 else diff_X,
-                        self.W[dilation_index][diff_index],
+                        self.W_[dilation_index][diff_index],
                         dilation=d,
                         padding=p,
                     ).view(num_examples, self._g, self.k, -1)
@@ -114,7 +118,9 @@ class Hydra(nn.Module):
         return Z
 
 
-class HydraPipeline:
+class _HydraPipeline:
+    """HYDRA pipeline for regression."""
+
     def __init__(self, ts_shape, k=8, g=64, max_num_channels=8):
         self.ts_shape = ts_shape
         self.k = k
@@ -122,7 +128,7 @@ class HydraPipeline:
         self.max_num_channels = max_num_channels
 
     def fit(self, X, y=None):
-        self.transformation = Hydra(
+        self.transformation = _Hydra(
             self.ts_shape, self.k, self.g, self.max_num_channels
         )
         return self
@@ -133,11 +139,12 @@ class HydraPipeline:
 
 class HydraRegressor(BaseRegressor):
     """
-    Hydra Regressor
+    Hydra Regressor.
 
     Examples
     --------
-    >>> from tsml_eval.estimators.regression.convolution_based.hydra import HydraRegressor
+    >>> from tsml_eval.estimators.regression.convolution_based.hydra import
+    ...     HydraRegressor
     >>> from tsml.datasets import load_minimal_gas_prices
     >>> X, y = load_minimal_gas_prices()
     >>> regressor = HydraRegressor()
@@ -165,7 +172,7 @@ class HydraRegressor(BaseRegressor):
 
     def _fit(self, X, y):
         self.regressor = make_pipeline(
-            HydraPipeline(
+            _HydraPipeline(
                 ts_shape=X.shape,
                 k=self.k,
                 g=self.g,

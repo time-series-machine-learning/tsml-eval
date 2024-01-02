@@ -1,3 +1,5 @@
+"""IVC consensus clustering algorithm from results files."""
+
 import numpy as np
 import pandas as pd
 from sklearn import preprocessing
@@ -14,8 +16,8 @@ class FromFileIterativeVotingClustering(IterativeVotingClustering):
     base clusterers to find a consensus clustering. It iteratively refines cluster
     assignments based on a majority voting scheme.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     clusterers : list of str
         A list of paths to the clusterer result files to use in the ensemble.
     init : {'plus', 'random', 'aligned'}, default='plus'
@@ -64,6 +66,7 @@ class FromFileIterativeVotingClustering(IterativeVotingClustering):
         )
 
     def fit(self, X, y=None):
+        """Fit model to X using IVC."""
         if isinstance(X, np.ndarray) and len(X.shape) == 3 and X.shape[1] == 1:
             X = np.reshape(X, (X.shape[0], -1))
         elif isinstance(X, pd.DataFrame) and len(X.shape) == 2:
@@ -137,6 +140,7 @@ class FromFileIterativeVotingClustering(IterativeVotingClustering):
         return self
 
     def predict(self, X):
+        """Predict cluster labels for X."""
         if isinstance(X, np.ndarray) and len(X.shape) == 3 and X.shape[1] == 1:
             X = np.reshape(X, (X.shape[0], -1))
         elif isinstance(X, pd.DataFrame) and len(X.shape) == 2:

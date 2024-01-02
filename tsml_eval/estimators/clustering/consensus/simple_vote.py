@@ -1,3 +1,5 @@
+"""Simple vote ensemble for clustering."""
+
 import numpy as np
 import pandas as pd
 from scipy.optimize import linear_sum_assignment
@@ -48,6 +50,7 @@ class SimpleVote(BaseEstimator, ClusterMixin):
         self.random_state = random_state
 
     def fit(self, X, y=None):
+        """Fit model to X using a simple vote ensemble."""
         if isinstance(X, np.ndarray) and len(X.shape) == 3 and X.shape[1] == 1:
             X = np.reshape(X, (X.shape[0], -1))
         elif isinstance(X, pd.DataFrame) and len(X.shape) == 2:
@@ -106,6 +109,7 @@ class SimpleVote(BaseEstimator, ClusterMixin):
         return self
 
     def predict(self, X):
+        """Predict cluster labels for X."""
         rng = check_random_state(self.random_state)
         return np.array(
             [
@@ -115,6 +119,7 @@ class SimpleVote(BaseEstimator, ClusterMixin):
         )
 
     def predict_proba(self, X):
+        """Predict cluster probabilities for X."""
         if isinstance(X, np.ndarray) and len(X.shape) == 3 and X.shape[1] == 1:
             X = np.reshape(X, (X.shape[0], -1))
         elif isinstance(X, pd.DataFrame) and len(X.shape) == 2:
