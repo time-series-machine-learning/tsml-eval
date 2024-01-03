@@ -133,6 +133,7 @@ def evaluate_classifiers_by_problem(
     error_on_missing=True,
     eval_name=None,
     verify_results=True,
+    verbose=False,
 ):
     """
     Evaluate multiple classifiers on multiple datasets from file using standard paths.
@@ -175,6 +176,8 @@ def evaluate_classifiers_by_problem(
         The name of the evaluation, used in save_path.
     verify_results : bool, default=True
         If the verification should be performed on the loaded results values.
+    verbose : bool, default=False
+        If verbose output should be printed.
     """
     load_path, classifier_names, dataset_names, resamples = _evaluate_by_problem_init(
         "classifier",
@@ -225,13 +228,21 @@ def evaluate_classifiers_by_problem(
                             names.append(classifier_eval_name)
                             found_estimator = True
                             found_datasets[n] = True
-                        except FileNotFoundError:
-                            if error_on_missing:
-                                raise FileNotFoundError(
-                                    f"Results for {classifier_eval_name} on "
-                                    f"{dataset_name} {split} resample {resample} not "
-                                    "found."
+
+                            if verbose:
+                                print(  # noqa: T201
+                                    f"Loaded {classifier_eval_name} on {dataset_name} "
+                                    f"{split} resample {resample}."
                                 )
+                        except FileNotFoundError:
+                            msg = (
+                                f"Results for {classifier_eval_name} on {dataset_name} "
+                                f"{split} resample {resample} not found."
+                            )
+                            if error_on_missing:
+                                raise FileNotFoundError(msg)
+                            elif verbose:
+                                print(msg)  # noqa: T201
 
             if not found_estimator:
                 print(f"Classifier {classifier_eval_name} not found.")  # noqa: T201
@@ -357,6 +368,7 @@ def evaluate_clusterers_by_problem(
     error_on_missing=True,
     eval_name=None,
     verify_results=True,
+    verbose=False,
 ):
     """
     Evaluate multiple clusterers on multiple datasets from file using standard paths.
@@ -399,6 +411,8 @@ def evaluate_clusterers_by_problem(
         The name of the evaluation, used in save_path.
     verify_results : bool, default=True
         If the verification should be performed on the loaded results values.
+    verbose : bool, default=False
+        If verbose output should be printed.
     """
     load_path, clusterer_names, dataset_names, resamples = _evaluate_by_problem_init(
         "clusterer",
@@ -449,13 +463,21 @@ def evaluate_clusterers_by_problem(
                             names.append(clusterer_eval_name)
                             found_estimator = True
                             found_datasets[n] = True
-                        except FileNotFoundError:
-                            if error_on_missing:
-                                raise FileNotFoundError(
-                                    f"Results for {clusterer_eval_name} on "
-                                    f"{dataset_name} {split} resample {resample} not "
-                                    "found."
+
+                            if verbose:
+                                print(  # noqa: T201
+                                    f"Loaded {clusterer_eval_name} on {dataset_name} "
+                                    f"{split} resample {resample}."
                                 )
+                        except FileNotFoundError:
+                            msg = (
+                                f"Results for {clusterer_eval_name} on {dataset_name} "
+                                f"{split} resample {resample} not found."
+                            )
+                            if error_on_missing:
+                                raise FileNotFoundError(msg)
+                            elif verbose:
+                                print(msg)  # noqa: T201
 
             if not found_estimator:
                 print(f"Clusterer {clusterer_eval_name} not found.")  # noqa: T201
@@ -581,6 +603,7 @@ def evaluate_regressors_by_problem(
     error_on_missing=True,
     eval_name=None,
     verify_results=True,
+    verbose=False,
 ):
     """
     Evaluate multiple regressors on multiple datasets from file using standard paths.
@@ -623,6 +646,8 @@ def evaluate_regressors_by_problem(
         The name of the evaluation, used in save_path.
     verify_results : bool, default=True
         If the verification should be performed on the loaded results values.
+    verbose : bool, default=False
+        If verbose output should be printed.
     """
     load_path, regressor_names, dataset_names, resamples = _evaluate_by_problem_init(
         "regressor",
@@ -673,13 +698,21 @@ def evaluate_regressors_by_problem(
                             names.append(regressor_eval_name)
                             found_estimator = True
                             found_datasets[n] = True
-                        except FileNotFoundError:
-                            if error_on_missing:
-                                raise FileNotFoundError(
-                                    f"Results for {regressor_eval_name} on "
-                                    f"{dataset_name} {split} resample {resample} not "
-                                    f"found."
+
+                            if verbose:
+                                print(  # noqa: T201
+                                    f"Loaded {regressor_eval_name} on {dataset_name} "
+                                    f"{split} resample {resample}."
                                 )
+                        except FileNotFoundError:
+                            msg = (
+                                f"Results for {regressor_eval_name} on {dataset_name} "
+                                f"{split} resample {resample} not found."
+                            )
+                            if error_on_missing:
+                                raise FileNotFoundError(msg)
+                            elif verbose:
+                                print(msg)  # noqa: T201
 
             if not found_estimator:
                 print(f"Regressor {regressor_eval_name} not found.")  # noqa: T201
@@ -804,6 +837,7 @@ def evaluate_forecasters_by_problem(
     error_on_missing=True,
     eval_name=None,
     verify_results=True,
+    verbose=False,
 ):
     """
     Evaluate multiple forecasters on multiple datasets from file using standard paths.
@@ -844,6 +878,8 @@ def evaluate_forecasters_by_problem(
         The name of the evaluation, used in save_path.
     verify_results : bool, default=True
         If the verification should be performed on the loaded results values.
+    verbose : bool, default=False
+        If verbose output should be printed.
     """
     load_path, forecaster_names, dataset_names, resamples = _evaluate_by_problem_init(
         "forecaster",
@@ -888,12 +924,21 @@ def evaluate_forecasters_by_problem(
                         names.append(forecaster_eval_name)
                         found_estimator = True
                         found_datasets[n] = True
-                    except FileNotFoundError:
-                        if error_on_missing:
-                            raise FileNotFoundError(
-                                f"Results for {forecaster_eval_name} on {dataset_name} "
-                                f"resample {resample} not found."
+
+                        if verbose:
+                            print(  # noqa: T201
+                                f"Loaded {forecaster_eval_name} on {dataset_name} "
+                                f"resample {resample}."
                             )
+                    except FileNotFoundError:
+                        msg = (
+                            f"Results for {forecaster_eval_name} on {dataset_name} "
+                            f"resample {resample} not found."
+                        )
+                        if error_on_missing:
+                            raise FileNotFoundError(msg)
+                        elif verbose:
+                            print(msg)  # noqa: T201
 
             if not found_estimator:
                 print(f"Forecaster {forecaster_eval_name} not found.")  # noqa: T201
