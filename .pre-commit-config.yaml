@@ -23,19 +23,19 @@ repos:
     - id: trailing-whitespace
 
   - repo: https://github.com/pycqa/isort
-    rev: 5.13.0
+    rev: 5.13.2
     hooks:
       - id: isort
         name: isort (python)
         args: [ "--profile=black", "--multi-line=3" ]
-        exclude: "tsml_eval/_wip/|tsml_eval/estimators/"
+        exclude: "tsml_eval/_wip/"
 
   - repo: https://github.com/psf/black
-    rev: 23.11.0
+    rev: 23.12.1
     hooks:
       - id: black
         language_version: python3
-        exclude: "tsml_eval/_wip/|tsml_eval/estimators/"
+        exclude: "tsml_eval/_wip/"
 
   - repo: https://github.com/pycqa/flake8
     rev: 6.1.0
@@ -63,10 +63,10 @@ repos:
       - id: pydocstyle
         args: ["--convention=numpy"]
         additional_dependencies: [ toml, tomli ]
-        exclude: "^tsml_eval/_wip/|tsml_eval/estimators/"
+        exclude: "^tsml_eval/_wip/"
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.7.1
+    rev: v1.8.0
     hooks:
       - id: mypy
         files: tsml_estimator_evaluation/

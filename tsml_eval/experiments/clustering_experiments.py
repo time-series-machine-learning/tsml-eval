@@ -19,7 +19,7 @@ import numba
 from aeon.utils.validation._dependencies import _check_soft_dependencies
 
 from tsml_eval.experiments import load_and_run_clustering_experiment
-from tsml_eval.experiments.set_clusterer import set_clusterer
+from tsml_eval.experiments.set_clusterer import get_clusterer_by_name
 from tsml_eval.experiments.tests import _CLUSTERER_RESULTS_PATH
 from tsml_eval.testing.test_utils import _TEST_DATA_PATH
 from tsml_eval.utils.arguments import parse_args
@@ -69,7 +69,7 @@ def run_experiment(args):
                 args.data_path,
                 args.results_path,
                 args.dataset_name,
-                set_clusterer(
+                get_clusterer_by_name(
                     args.estimator_name,
                     random_state=args.resample_id
                     if args.random_seed is None
@@ -91,6 +91,8 @@ def run_experiment(args):
                 clusterer_name=args.estimator_name,
                 resample_id=args.resample_id,
                 build_test_file=args.test_fold,
+                write_attributes=args.write_attributes,
+                att_max_shape=args.att_max_shape,
                 benchmark_time=args.benchmark_time,
                 overwrite=args.overwrite,
                 predefined_resample=args.predefined_resample,
@@ -109,6 +111,9 @@ def run_experiment(args):
         n_clusters = -1
         resample_id = 0
         test_fold = False
+        write_attributes = True
+        att_max_shape = 0
+        benchmark_time = True
         overwrite = False
         predefined_resample = False
         fit_contract = 0
@@ -116,7 +121,7 @@ def run_experiment(args):
         combine_test_train_split = True
         kwargs = {}
 
-        clusterer = set_clusterer(
+        clusterer = get_clusterer_by_name(
             estimator_name,
             random_state=resample_id,
             n_jobs=1,
@@ -138,6 +143,9 @@ def run_experiment(args):
             clusterer_name=estimator_name,
             resample_id=resample_id,
             build_test_file=test_fold,
+            write_attributes=write_attributes,
+            att_max_shape=att_max_shape,
+            benchmark_time=benchmark_time,
             overwrite=overwrite,
             predefined_resample=predefined_resample,
             combine_train_test_split=combine_test_train_split,

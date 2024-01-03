@@ -3,7 +3,7 @@
 import sys
 
 import numpy as np
-from aeon.clustering.k_means import TimeSeriesKMeans
+from aeon.clustering import TimeSeriesKMeans
 from sklearn.metrics import davies_bouldin_score
 
 

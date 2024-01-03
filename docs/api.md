@@ -1,7 +1,7 @@
 # API
 
-This page contains the auto-generated API documentation for tsml-eval package functions
-and classes.
+This page contains the auto-generated API documentation for `tsml-eval` package
+functions and classes.
 
 ## Evaluation: [tsml_eval.evaluation](https://github.com/time-series-machine-learning/tsml-eval/tree/main/tsml_eval/evaluation)
 
@@ -50,10 +50,16 @@ Functions for running experiments.
 
     experiments.run_classification_experiment
     experiments.load_and_run_classification_experiment
-    experiments.run_regression_experiment
-    experiments.load_and_run_regression_experiment
     experiments.run_clustering_experiment
     experiments.load_and_run_clustering_experiment
+    experiments.run_forecasting_experiment
+    experiments.load_and_run_forecasting_experiment
+    experiments.run_regression_experiment
+    experiments.load_and_run_regression_experiment
+    experiments.set_classifier
+    experiments.set_clusterer
+    experiments.set_forecaster
+    experiments.set_regressor
 ```
 
 ## Utilities: [tsml_eval.utils](https://github.com/time-series-machine-learning/tsml-eval/tree/main/tsml_eval/utils)
@@ -68,7 +74,10 @@ Public utility functions used elsewhere in the package.
 
     utils.arguments.parse_args
     utils.experiments.resample_data
+    utils.experiments.resample_data_indices
     utils.experiments.stratified_resample_data
+    utils.experiments.stratified_resample_data_indices
+    utils.experiments.load_experiment_data
     utils.experiments.write_classification_results
     utils.experiments.write_regression_results
     utils.experiments.write_clustering_results
@@ -77,6 +86,7 @@ Public utility functions used elsewhere in the package.
     utils.experiments.compare_result_file_resample
     utils.experiments.assign_gpu
     utils.experiments.timing_benchmark
+    utils.experiments.estimator_attributes_to_file
     utils.functions.str_in_nested_list
     utils.functions.pair_list_to_dict
     utils.functions.time_to_milliseconds

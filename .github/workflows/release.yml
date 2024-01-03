@@ -38,7 +38,7 @@ jobs:
           python -m build
 
       - name: Store build files
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist/*
@@ -61,24 +61,32 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist
 
-      - if: matrix.os == 'windows-latest'
+      - if: matrix.os == 'windows-2022'
         name: Windows wheel filename
         run: echo "WHEELNAME=$(ls ./dist/tsml_eval-*-none-any.whl)" >> $env:GITHUB_ENV
-      - if: matrix.os != 'windows-latest'
+      - if: matrix.os != 'windows-2022'
         name: Unix wheel filename
         run: echo "WHEELNAME=$(ls ./dist/tsml_eval-*-none-any.whl)" >> $GITHUB_ENV
 
-      - if: matrix.os == 'windows-latest'
+      - if: matrix.os == 'windows-2022'
         name: Windows install
-        run: python -m pip install "${env:WHEELNAME}[dev,all_extras,unstable_extras,deep_learning]"
-      - if: matrix.os != 'windows-latest'
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          command: python -m pip install "${env:WHEELNAME}[dev,all_extras,unstable_extras,deep_learning]"
+      - if: matrix.os != 'windows-2022'
         name: Unix install
-        run: python -m pip install "${{ env.WHEELNAME }}[dev,all_extras,unstable_extras,deep_learning]"
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          command: python -m pip install "${{ env.WHEELNAME }}[dev,all_extras,unstable_extras,deep_learning]"
 
       - name: Tests
         run: python -m pytest
@@ -88,7 +96,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist

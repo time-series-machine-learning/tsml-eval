@@ -4,6 +4,11 @@ from tsml_eval.estimators.clustering.consensus.ivc import IterativeVotingCluster
 from tsml_eval.estimators.clustering.consensus.simple_vote import SimpleVote
 
 
-@parametrize_with_checks([SimpleVote(n_clusters=2), IterativeVotingClustering(n_clusters=2, max_iterations=5)])
+@parametrize_with_checks(
+    [
+        SimpleVote(n_clusters=2),
+        IterativeVotingClustering(n_clusters=2, max_iterations=5),
+    ]
+)
 def test_simple_vote(estimator, check):
     check(estimator)

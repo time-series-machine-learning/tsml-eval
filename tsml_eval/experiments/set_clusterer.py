@@ -111,7 +111,7 @@ vector_clusterers = [
 ]
 
 
-def set_clusterer(
+def get_clusterer_by_name(
     clusterer_name,
     random_state=None,
     n_jobs=1,

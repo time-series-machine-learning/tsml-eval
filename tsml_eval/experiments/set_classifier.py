@@ -23,7 +23,7 @@ deep_learning_classifiers = [
     ["individualinceptionclassifier", "singleinception"],
     ["inceptiontimeclassifier", "inceptiontime"],
     ["h-inceptiontimeclassifier", "h-inceptiontime"],
-    #    ["litetimeclassifier", "litetime"],
+    ["litetimeclassifier", "litetime"],
 ]
 dictionary_based_classifiers = [
     ["bossensemble", "boss"],
@@ -84,6 +84,8 @@ other_classifiers = [
     ["dummyclassifier", "dummy", "dummyclassifier-aeon"],
     "dummyclassifier-tsml",
     "dummyclassifier-sklearn",
+    "grail",
+    ["quantclassifier", "quant"],
 ]
 shapelet_based_classifiers = [
     "stc-2hour",
@@ -99,7 +101,7 @@ vector_classifiers = [
 ]
 
 
-def set_classifier(
+def get_classifier_by_name(
     classifier_name,
     random_state=None,
     n_jobs=1,
@@ -260,46 +262,39 @@ def _set_classifier_deep_learning(
 
         return CNNClassifier(random_state=random_state, **kwargs)
     elif c == "fcnclassifier" or c == "fcnn":
-        from aeon.classification.deep_learning.fcn import FCNClassifier
+        from aeon.classification.deep_learning import FCNClassifier
 
         return FCNClassifier(random_state=random_state, **kwargs)
     elif c == "mlpclassifier" or c == "mlp":
-        from aeon.classification.deep_learning.mlp import MLPClassifier
+        from aeon.classification.deep_learning import MLPClassifier
 
         return MLPClassifier(random_state=random_state, **kwargs)
     elif c == "tapnetclassifier" or c == "tapnet":
-        from aeon.classification.deep_learning.tapnet import TapNetClassifier
+        from aeon.classification.deep_learning import TapNetClassifier
 
         return TapNetClassifier(random_state=random_state, **kwargs)
     elif c == "resnetclassifier" or c == "resnet":
-        from aeon.classification.deep_learning.resnet import ResNetClassifier
+        from aeon.classification.deep_learning import ResNetClassifier
 
         return ResNetClassifier(random_state=random_state, **kwargs)
     elif c == "individualinceptionclassifier" or c == "singleinception":
-        from aeon.classification.deep_learning.inception_time import (
-            IndividualInceptionClassifier,
-        )
+        from aeon.classification.deep_learning import IndividualInceptionClassifier
 
         return IndividualInceptionClassifier(random_state=random_state, **kwargs)
     elif c == "inceptiontimeclassifier" or c == "inceptiontime":
-        from aeon.classification.deep_learning.inception_time import (
-            InceptionTimeClassifier,
-        )
+        from aeon.classification.deep_learning import InceptionTimeClassifier
 
         return InceptionTimeClassifier(random_state=random_state, **kwargs)
     elif c == "h-inceptiontimeclassifier" or c == "h-inceptiontime":
-        from aeon.classification.deep_learning.inception_time import (
-            InceptionTimeClassifier,
-        )
+        from aeon.classification.deep_learning import InceptionTimeClassifier
 
         return InceptionTimeClassifier(
             use_custom_filters=True, random_state=random_state, **kwargs
         )
-    # Add in once 0.6 released
-    # elif c == "litetimeclassifier" or c == "litetime":
-    #    from aeon.classification.deep_learning.inception_time import LiteTimeClassifier
-    #
-    #    return LiteTimeClassifier(random_state=random_state, **kwargs)
+    elif c == "litetimeclassifier" or c == "litetime":
+        from aeon.classification.deep_learning import LITETimeClassifier
+
+        return LITETimeClassifier(random_state=random_state, **kwargs)
 
 
 def _set_classifier_dictionary_based(
@@ -382,9 +377,7 @@ def _set_classifier_dictionary_based(
 
         return WEASEL_V2(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "musedilation" or c == "muse-dilation" or c == "muse-d":
-        from tsml_eval.estimators.classification.dictionary_based.muse import (
-            MUSEDilation,
-        )
+        from tsml_eval._wip.dilation_muse.muse import MUSEDilation
 
         return MUSEDilation(random_state=random_state, n_jobs=n_jobs, **kwargs)
 
@@ -629,7 +622,7 @@ def _set_classifier_interval_based(
         )
     elif c == "summary-intervals":
         from aeon.classification.interval_based import RandomIntervalClassifier
-        from aeon.transformations.series.summarize import SummaryTransformer
+        from aeon.transformations.summarize import SummaryTransformer
         from sklearn.ensemble import RandomForestClassifier
 
         return RandomIntervalClassifier(
@@ -679,6 +672,18 @@ def _set_classifier_other(
         from sklearn.dummy import DummyClassifier
 
         return DummyClassifier(random_state=random_state, **kwargs)
+
+    # temp holding
+    elif c == "grail":
+        from tsml_eval.estimators.classification.feature_based.grail import GRAIL
+
+        return GRAIL(**kwargs)
+    elif c == "quantclassifier" or c == "quant":
+        from tsml_eval.estimators.classification.feature_based.quant import (
+            QuantClassifier,
+        )
+
+        return QuantClassifier(random_state=random_state, **kwargs)
 
 
 def _set_classifier_shapelet_based(

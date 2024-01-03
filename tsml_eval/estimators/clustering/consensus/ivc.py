@@ -1,3 +1,5 @@
+"""IVC consensus clustering algorithm."""
+
 import numpy as np
 import pandas as pd
 from scipy.optimize import linear_sum_assignment
@@ -15,8 +17,8 @@ class IterativeVotingClustering(BaseEstimator, ClusterMixin):
     base clusterers to find a consensus clustering. It iteratively refines cluster
     assignments based on a majority voting scheme.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     clusterers : list of clusterers, default=None
         A list of clusterers to use in the ensemble. If None, defaults to 5
         KMeans clusterers.
@@ -67,6 +69,7 @@ class IterativeVotingClustering(BaseEstimator, ClusterMixin):
         self.random_state = random_state
 
     def fit(self, X, y=None):
+        """Fit model to X using IVC."""
         if isinstance(X, np.ndarray) and len(X.shape) == 3 and X.shape[1] == 1:
             X = np.reshape(X, (X.shape[0], -1))
         elif isinstance(X, pd.DataFrame) and len(X.shape) == 2:
@@ -119,6 +122,7 @@ class IterativeVotingClustering(BaseEstimator, ClusterMixin):
         return self
 
     def predict(self, X):
+        """Predict cluster labels for X."""
         if isinstance(X, np.ndarray) and len(X.shape) == 3 and X.shape[1] == 1:
             X = np.reshape(X, (X.shape[0], -1))
         elif isinstance(X, pd.DataFrame) and len(X.shape) == 2:

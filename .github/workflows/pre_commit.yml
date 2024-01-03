@@ -27,7 +27,7 @@ jobs:
         with:
           python-version: "3.10"
 
-      - uses: tj-actions/changed-files@v40.2.2
+      - uses: tj-actions/changed-files@v41.0.1
         id: changed-files
 
       - if: ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'full pre-commit') }}

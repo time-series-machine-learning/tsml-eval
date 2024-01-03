@@ -19,7 +19,7 @@ import numba
 from aeon.utils.validation._dependencies import _check_soft_dependencies
 
 from tsml_eval.experiments import load_and_run_forecasting_experiment
-from tsml_eval.experiments.set_forecaster import set_forecaster
+from tsml_eval.experiments.set_forecaster import get_forecaster_by_name
 from tsml_eval.experiments.tests import _FORECASTER_RESULTS_PATH
 from tsml_eval.testing.test_utils import _TEST_DATA_PATH
 from tsml_eval.utils.arguments import parse_args
@@ -65,7 +65,7 @@ def run_experiment(args, overwrite=False):
                 args.data_path,
                 args.results_path,
                 args.dataset_name,
-                set_forecaster(
+                get_forecaster_by_name(
                     args.estimator_name,
                     random_state=args.resample_id
                     if args.random_seed is None
@@ -77,6 +77,8 @@ def run_experiment(args, overwrite=False):
                 random_seed=args.resample_id
                 if args.random_seed is None
                 else args.random_seed,
+                write_attributes=args.write_attributes,
+                att_max_shape=args.att_max_shape,
                 benchmark_time=args.benchmark_time,
                 overwrite=args.overwrite,
             )
@@ -90,10 +92,13 @@ def run_experiment(args, overwrite=False):
         estimator_name = "NaiveForecaster"
         dataset_name = "ShampooSales"
         random_seed = 0
+        write_attributes = True
+        att_max_shape = 0
+        benchmark_time = True
         overwrite = False
         kwargs = {}
 
-        forecaster = set_forecaster(
+        forecaster = get_forecaster_by_name(
             estimator_name,
             random_state=random_seed,
             n_jobs=1,
@@ -108,6 +113,9 @@ def run_experiment(args, overwrite=False):
             forecaster,
             forecaster_name=estimator_name,
             random_seed=random_seed,
+            write_attributes=write_attributes,
+            att_max_shape=att_max_shape,
+            benchmark_time=benchmark_time,
             overwrite=overwrite,
         )
 

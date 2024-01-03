@@ -80,7 +80,7 @@ class ClassifierResults(EstimatorResults):
         Balanced accuracy of the classifier.
     f1_score : float or None
         F1 score of the classifier.
-    negative_log_likelihood : float or None
+    log_loss : float or None
         Negative log likelihood of the classifier.
     auroc_score : float or None
         Mean area under the ROC curve of the classifier.
@@ -331,7 +331,7 @@ def load_classifier_results(file_path, calculate_stats=True, verify_values=True)
         predictions = np.zeros(n_cases)
         probabilities = np.zeros((n_cases, n_classes))
 
-        if line_size > 3 + n_classes:
+        if line_size > 4 + n_classes:
             pred_times = np.zeros(n_cases)
         else:
             pred_times = None
@@ -350,7 +350,7 @@ def load_classifier_results(file_path, calculate_stats=True, verify_values=True)
                 probabilities[i, j] = float(line[3 + j])
 
             if pred_times is not None:
-                pred_times[i] = float(line[5 + n_classes])
+                pred_times[i] = float(line[4 + n_classes])
 
             if pred_descriptions is not None:
                 pred_descriptions.append(",".join(line[6 + n_classes :]).strip())
