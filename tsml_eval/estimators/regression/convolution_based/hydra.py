@@ -66,7 +66,8 @@ class _Hydra(nn.Module):
         W /= W.abs().sum(-1, keepdims=True)
         return W
 
-    def _forward(self, X):
+    def forward(self, X):
+        """Iheritance from nn.Module."""
         num_examples = X.shape[0]
 
         X = torch.from_numpy(X).float()
