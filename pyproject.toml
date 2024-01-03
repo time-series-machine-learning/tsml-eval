@@ -147,6 +147,6 @@ addopts = '''
     --showlocals
     --doctest-modules
     --numprocesses auto
-    --reruns 3
+    --reruns 2
     --meminterval 0.1
 '''
