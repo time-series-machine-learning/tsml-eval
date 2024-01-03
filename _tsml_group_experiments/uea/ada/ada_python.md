@@ -79,6 +79,14 @@ After installation, the installed packages can be viewed with:
 
 >conda list
 
+Note that you can install a specific branch for aeon like so
+>source /gpfs/software/ada/python/anaconda/2019.10/3.7/etc/profile.d/conda.sh
+>conda activate tsml-eval-stc
+>pip uninstall aeon
+>pip install git+https://github.com/aeon-toolkit/aeon.git@main
+or
+> pip install git+https://github.com/aeon-toolkit/aeon.git@ajb/stc
+ 
 #### 5.1. tsml-eval CPU
 
 Move to the package directory and run:
@@ -138,12 +146,15 @@ For CPU experiments start with one of the following scripts:
 >classification_experiments.sh
 >
 >regression_experiments.sh
+>regression_experiments.sh
 >
 >clustering_experiments.sh
 
-The default queue for CPU jobs is _compute-64-512_, but you may want to swap to _compute-24-128_ or _compute-24-96_ if they have more resources available.
+The default queue for CPU jobs is _compute-64-512_, but you may want to swap to _compute-24-128_ or _compute-24-96_ 
+if they have more resources available.
 
-Do not run threaded code on the cluster without reserving whole nodes, as there is nothing to stop the job from using the CPU resources allocated to others. The default python file in the scripts attempts to avoid threading as much as possible. You should ensure processes are not intentionally using multiple threads if you change it.
+Do not run threaded code on the cluster without reserving whole nodes, as there is nothing to stop the job from using 
+the CPU resources allocated to others. The default python file in the scripts attempts to avoid threading as much as possible. You should ensure processes are not intentionally using multiple threads if you change it.
 
 Requesting memory for a job will allocate it all on the jobs assigned node. New jobs will not be submitted to a node if the total allocated memory exceeds the amount available for the node. As such, requesting too much memory can block new jobs from using the node. This is ok if the memory is actually being used, but large amounts of memory should not be requested unless you know it will be required for the jobs you are submitting. ADA is a shared resource, and instantly requesting hundreds of GB will hurt the overall efficiency of the cluster.
 
@@ -159,10 +170,16 @@ For GPU experiments use one of the following scripts:
 
 It is recommended you use different environments for CPU and GPU jobs.
 
-The default queue for GPU jobs is _gpu-rtx6000-2_.
+The default queue for GPU jobs is _gpu-rtx_.
 
 If you will be running a lot of jobs, it may be worth booking out the reserved gpu qos (_gpu-rtx-reserved_).
 https://outlook.office365.com/owa/calendar/ITCSResearchandSpecialistComputingHPCGPUFarm@ueanorwich.onmicrosoft.com/bookings/
+
+Not that if you get the messsage
+
+"sbatch: error: Batch job submission failed: Invalid qos specification"
+
+it means you are not set up to use the gpu. Please email hpc.admin@uea.ac.uk to get permission.
 
 ## Monitoring jobs on ADA
 
@@ -204,3 +221,6 @@ https://my.uea.ac.uk/divisions/it-and-computing-services/service-catalogue/resea
 
 conda cheat sheet:
 https://docs.conda.io/projects/conda/en/4.6.0/_downloads/52a95608c49671267e40c689e0bc00ca/conda-cheatsheet.pdf
+
+Reserved queue booking
+https://outlook.office365.com/owa/calendar/ITCSResearchandSpecialistComputingHPCGPUFarm@ueanorwich.onmicrosoft.com/bookings/s/XMQoaD7GQUGytUBbMMyBrg2
