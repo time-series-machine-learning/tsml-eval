@@ -182,7 +182,7 @@ def _check_results_line(line, probabilities=True, n_probas=2):
             return False
 
         try:
-            float(line[5 + n_probas])
+            float(line[4 + n_probas])
         except ValueError:
             return False
 

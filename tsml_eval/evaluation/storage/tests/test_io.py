@@ -23,6 +23,20 @@ def test_classifier_results():
     os.remove(_TEST_OUTPUT_PATH + "/classification/results_io/testResample0.csv")
 
 
+def test_java_classifier_results():
+    """Test ClassifierResults loading and saving."""
+    cr = ClassifierResults().load_from_file(
+        _TEST_RESULTS_PATH + "/classification/javaResultsFile.csv"
+    )
+    cr.save_to_file(_TEST_OUTPUT_PATH + "/classification/results_io/java/")
+
+    assert validate_results_file(
+        _TEST_OUTPUT_PATH + "/classification/results_io/java/testResample0.csv"
+    )
+
+    os.remove(_TEST_OUTPUT_PATH + "/classification/results_io/java/testResample0.csv")
+
+
 def test_clusterer_results():
     """Test ClustererResults loading and saving."""
     cr = ClustererResults().load_from_file(
