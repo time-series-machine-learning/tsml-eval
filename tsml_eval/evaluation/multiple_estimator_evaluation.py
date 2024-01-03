@@ -1145,6 +1145,7 @@ def _evaluate_estimators(
                 time,
                 var,
                 save_path,
+                eval_name,
             )
             stats.append((average, rank, stat, ascending, split))
 
@@ -1195,6 +1196,7 @@ def _create_directory_for_statistic(
     is_timing,
     variable_name,
     save_path,
+    eval_name,
 ):
     os.makedirs(f"{save_path}/{statistic_name}/all_resamples/", exist_ok=True)
 
@@ -1218,7 +1220,7 @@ def _create_directory_for_statistic(
             average_stats[n, i] = np.mean(est_stats[n, :])
 
         with open(
-            f"{save_path}/{statistic_name}/all_resamples/{estimator_name}_"
+            f"{save_path}/{statistic_name}/all_resamples/{eval_name}_{estimator_name}_"
             f"{statistic_name}.csv",
             "w",
         ) as file:
@@ -1228,7 +1230,9 @@ def _create_directory_for_statistic(
                     f"{dataset_name},{','.join([str(j) for j in est_stats[n]])}\n"
                 )
 
-    with open(f"{save_path}/{statistic_name}/{statistic_name}_mean.csv", "w") as file:
+    with open(
+        f"{save_path}/{statistic_name}/{eval_name}_" f"{statistic_name}_mean.csv", "w"
+    ) as file:
         file.write(f"Estimators:,{','.join(estimators)}\n")
         for i, dataset_name in enumerate(datasets):
             file.write(
@@ -1239,34 +1243,36 @@ def _create_directory_for_statistic(
         lambda x: rank_array(x, higher_better=higher_better), 1, average_stats
     )
 
-    with open(f"{save_path}/{statistic_name}/{statistic_name}_ranks.csv", "w") as file:
+    with open(
+        f"{save_path}/{statistic_name}/{eval_name}_" f"{statistic_name}_ranks.csv", "w"
+    ) as file:
         file.write(f"Estimators:,{','.join(estimators)}\n")
         for i, dataset_name in enumerate(datasets):
             file.write(f"{dataset_name},{','.join([str(n) for n in ranks[i]])}\n")
 
     _figures_for_statistic(
-        average_stats, estimators, statistic_name, higher_better, save_path
+        average_stats, estimators, statistic_name, higher_better, save_path, eval_name
     )
 
     return average_stats, ranks
 
 
 def _figures_for_statistic(
-    scores, estimators, statistic_name, higher_better, save_path
+    scores, estimators, statistic_name, higher_better, save_path, eval_name
 ):
     os.makedirs(f"{save_path}/{statistic_name}/figures/", exist_ok=True)
 
     cd = plot_critical_difference(scores, estimators, lower_better=not higher_better)
     cd.savefig(
         f"{save_path}/{statistic_name}/figures/"
-        f"{statistic_name}_critical_difference.pdf",
+        f"{eval_name}_{statistic_name}_critical_difference.pdf",
         bbox_inches="tight",
     )
     pickle.dump(
         cd,
         open(
             f"{save_path}/{statistic_name}/figures/"
-            f"{statistic_name}_critical_difference.pickle",
+            f"{eval_name}_{statistic_name}_critical_difference.pickle",
             "wb",
         ),
     )
@@ -1274,13 +1280,15 @@ def _figures_for_statistic(
 
     box = plot_boxplot_median(scores.transpose(), estimators)
     box.savefig(
-        f"{save_path}/{statistic_name}/figures/{statistic_name}_boxplot.pdf",
+        f"{save_path}/{statistic_name}/figures/{eval_name}_"
+        f"{statistic_name}_boxplot.pdf",
         bbox_inches="tight",
     )
     pickle.dump(
         box,
         open(
-            f"{save_path}/{statistic_name}/figures/{statistic_name}_boxplot.pickle",
+            f"{save_path}/{statistic_name}/figures/{eval_name}_"
+            f"{statistic_name}_boxplot.pickle",
             "wb",
         ),
     )
@@ -1298,14 +1306,14 @@ def _figures_for_statistic(
             scatter = plot_scatter(scores[:, (i, n)], est1, est2)
             scatter.savefig(
                 f"{save_path}/{statistic_name}/figures/scatters/{est1}/"
-                f"{statistic_name}_scatter_{est1}_{est2}.pdf",
+                f"{eval_name}_{statistic_name}_scatter_{est1}_{est2}.pdf",
                 bbox_inches="tight",
             )
             pickle.dump(
                 scatter,
                 open(
                     f"{save_path}/{statistic_name}/figures/scatters/{est1}/"
-                    f"{statistic_name}_scatter_{est1}_{est2}.pickle",
+                    f"{eval_name}_{statistic_name}_scatter_{est1}_{est2}.pickle",
                     "wb",
                 ),
             )
