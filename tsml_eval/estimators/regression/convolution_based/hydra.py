@@ -143,8 +143,8 @@ class HydraRegressor(BaseRegressor):
 
     Examples
     --------
-    >>> from tsml_eval.estimators.regression.convolution_based.hydra import
-    ...     HydraRegressor
+    >>> from tsml_eval.estimators.regression.convolution_based.hydra import (
+    ...     HydraRegressor)
     >>> from tsml.datasets import load_minimal_gas_prices
     >>> X, y = load_minimal_gas_prices()
     >>> regressor = HydraRegressor()
