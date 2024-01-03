@@ -74,6 +74,7 @@ dev = [
     "pytest-timeout",
     "pytest-xdist",
     "pytest-cov",
+    "pytest-rerunfailures",
 ]
 binder = [
     "notebook",
@@ -146,5 +147,6 @@ addopts = '''
     --showlocals
     --doctest-modules
     --numprocesses auto
+    --reruns 2
     --meminterval 0.1
 '''

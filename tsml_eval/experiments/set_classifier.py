@@ -84,6 +84,8 @@ other_classifiers = [
     ["dummyclassifier", "dummy", "dummyclassifier-aeon"],
     "dummyclassifier-tsml",
     "dummyclassifier-sklearn",
+    "grail",
+    ["quantclassifier", "quant"],
 ]
 shapelet_based_classifiers = [
     "stc-2hour",
@@ -620,7 +622,7 @@ def _set_classifier_interval_based(
         )
     elif c == "summary-intervals":
         from aeon.classification.interval_based import RandomIntervalClassifier
-        from aeon.transformations.series.summarize import SummaryTransformer
+        from aeon.transformations.summarize import SummaryTransformer
         from sklearn.ensemble import RandomForestClassifier
 
         return RandomIntervalClassifier(
@@ -670,6 +672,18 @@ def _set_classifier_other(
         from sklearn.dummy import DummyClassifier
 
         return DummyClassifier(random_state=random_state, **kwargs)
+
+    # temp holding
+    elif c == "grail":
+        from tsml_eval.estimators.classification.feature_based.grail import GRAIL
+
+        return GRAIL(**kwargs)
+    elif c == "quantclassifier" or c == "quant":
+        from tsml_eval.estimators.classification.feature_based.quant import (
+            QuantClassifier,
+        )
+
+        return QuantClassifier(random_state=random_state, **kwargs)
 
 
 def _set_classifier_shapelet_based(

@@ -1,3 +1,5 @@
+"""Clustering estimators."""
+
 __all__ = [
     "SklearnToTsmlClusterer",
 ]

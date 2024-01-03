@@ -133,6 +133,7 @@ def evaluate_classifiers_by_problem(
     error_on_missing=True,
     eval_name=None,
     verify_results=True,
+    verbose=False,
 ):
     """
     Evaluate multiple classifiers on multiple datasets from file using standard paths.
@@ -175,6 +176,8 @@ def evaluate_classifiers_by_problem(
         The name of the evaluation, used in save_path.
     verify_results : bool, default=True
         If the verification should be performed on the loaded results values.
+    verbose : bool, default=False
+        If verbose output should be printed.
     """
     load_path, classifier_names, dataset_names, resamples = _evaluate_by_problem_init(
         "classifier",
@@ -225,13 +228,21 @@ def evaluate_classifiers_by_problem(
                             names.append(classifier_eval_name)
                             found_estimator = True
                             found_datasets[n] = True
-                        except FileNotFoundError:
-                            if error_on_missing:
-                                raise FileNotFoundError(
-                                    f"Results for {classifier_eval_name} on "
-                                    f"{dataset_name} {split} resample {resample} not "
-                                    "found."
+
+                            if verbose:
+                                print(  # noqa: T201
+                                    f"Loaded {classifier_eval_name} on {dataset_name} "
+                                    f"{split} resample {resample}."
                                 )
+                        except FileNotFoundError:
+                            msg = (
+                                f"Results for {classifier_eval_name} on {dataset_name} "
+                                f"{split} resample {resample} not found."
+                            )
+                            if error_on_missing:
+                                raise FileNotFoundError(msg)
+                            elif verbose:
+                                print(msg)  # noqa: T201
 
             if not found_estimator:
                 print(f"Classifier {classifier_eval_name} not found.")  # noqa: T201
@@ -357,6 +368,7 @@ def evaluate_clusterers_by_problem(
     error_on_missing=True,
     eval_name=None,
     verify_results=True,
+    verbose=False,
 ):
     """
     Evaluate multiple clusterers on multiple datasets from file using standard paths.
@@ -399,6 +411,8 @@ def evaluate_clusterers_by_problem(
         The name of the evaluation, used in save_path.
     verify_results : bool, default=True
         If the verification should be performed on the loaded results values.
+    verbose : bool, default=False
+        If verbose output should be printed.
     """
     load_path, clusterer_names, dataset_names, resamples = _evaluate_by_problem_init(
         "clusterer",
@@ -449,13 +463,21 @@ def evaluate_clusterers_by_problem(
                             names.append(clusterer_eval_name)
                             found_estimator = True
                             found_datasets[n] = True
-                        except FileNotFoundError:
-                            if error_on_missing:
-                                raise FileNotFoundError(
-                                    f"Results for {clusterer_eval_name} on "
-                                    f"{dataset_name} {split} resample {resample} not "
-                                    "found."
+
+                            if verbose:
+                                print(  # noqa: T201
+                                    f"Loaded {clusterer_eval_name} on {dataset_name} "
+                                    f"{split} resample {resample}."
                                 )
+                        except FileNotFoundError:
+                            msg = (
+                                f"Results for {clusterer_eval_name} on {dataset_name} "
+                                f"{split} resample {resample} not found."
+                            )
+                            if error_on_missing:
+                                raise FileNotFoundError(msg)
+                            elif verbose:
+                                print(msg)  # noqa: T201
 
             if not found_estimator:
                 print(f"Clusterer {clusterer_eval_name} not found.")  # noqa: T201
@@ -581,6 +603,7 @@ def evaluate_regressors_by_problem(
     error_on_missing=True,
     eval_name=None,
     verify_results=True,
+    verbose=False,
 ):
     """
     Evaluate multiple regressors on multiple datasets from file using standard paths.
@@ -623,6 +646,8 @@ def evaluate_regressors_by_problem(
         The name of the evaluation, used in save_path.
     verify_results : bool, default=True
         If the verification should be performed on the loaded results values.
+    verbose : bool, default=False
+        If verbose output should be printed.
     """
     load_path, regressor_names, dataset_names, resamples = _evaluate_by_problem_init(
         "regressor",
@@ -673,13 +698,21 @@ def evaluate_regressors_by_problem(
                             names.append(regressor_eval_name)
                             found_estimator = True
                             found_datasets[n] = True
-                        except FileNotFoundError:
-                            if error_on_missing:
-                                raise FileNotFoundError(
-                                    f"Results for {regressor_eval_name} on "
-                                    f"{dataset_name} {split} resample {resample} not "
-                                    f"found."
+
+                            if verbose:
+                                print(  # noqa: T201
+                                    f"Loaded {regressor_eval_name} on {dataset_name} "
+                                    f"{split} resample {resample}."
                                 )
+                        except FileNotFoundError:
+                            msg = (
+                                f"Results for {regressor_eval_name} on {dataset_name} "
+                                f"{split} resample {resample} not found."
+                            )
+                            if error_on_missing:
+                                raise FileNotFoundError(msg)
+                            elif verbose:
+                                print(msg)  # noqa: T201
 
             if not found_estimator:
                 print(f"Regressor {regressor_eval_name} not found.")  # noqa: T201
@@ -804,6 +837,7 @@ def evaluate_forecasters_by_problem(
     error_on_missing=True,
     eval_name=None,
     verify_results=True,
+    verbose=False,
 ):
     """
     Evaluate multiple forecasters on multiple datasets from file using standard paths.
@@ -844,6 +878,8 @@ def evaluate_forecasters_by_problem(
         The name of the evaluation, used in save_path.
     verify_results : bool, default=True
         If the verification should be performed on the loaded results values.
+    verbose : bool, default=False
+        If verbose output should be printed.
     """
     load_path, forecaster_names, dataset_names, resamples = _evaluate_by_problem_init(
         "forecaster",
@@ -888,12 +924,21 @@ def evaluate_forecasters_by_problem(
                         names.append(forecaster_eval_name)
                         found_estimator = True
                         found_datasets[n] = True
-                    except FileNotFoundError:
-                        if error_on_missing:
-                            raise FileNotFoundError(
-                                f"Results for {forecaster_eval_name} on {dataset_name} "
-                                f"resample {resample} not found."
+
+                        if verbose:
+                            print(  # noqa: T201
+                                f"Loaded {forecaster_eval_name} on {dataset_name} "
+                                f"resample {resample}."
                             )
+                    except FileNotFoundError:
+                        msg = (
+                            f"Results for {forecaster_eval_name} on {dataset_name} "
+                            f"resample {resample} not found."
+                        )
+                        if error_on_missing:
+                            raise FileNotFoundError(msg)
+                        elif verbose:
+                            print(msg)  # noqa: T201
 
             if not found_estimator:
                 print(f"Forecaster {forecaster_eval_name} not found.")  # noqa: T201
@@ -1100,6 +1145,7 @@ def _evaluate_estimators(
                 time,
                 var,
                 save_path,
+                eval_name,
             )
             stats.append((average, rank, stat, ascending, split))
 
@@ -1150,6 +1196,7 @@ def _create_directory_for_statistic(
     is_timing,
     variable_name,
     save_path,
+    eval_name,
 ):
     os.makedirs(f"{save_path}/{statistic_name}/all_resamples/", exist_ok=True)
 
@@ -1173,18 +1220,20 @@ def _create_directory_for_statistic(
             average_stats[n, i] = np.mean(est_stats[n, :])
 
         with open(
-            f"{save_path}/{statistic_name}/all_resamples/{estimator_name}_"
+            f"{save_path}/{statistic_name}/all_resamples/{eval_name}_{estimator_name}_"
             f"{statistic_name}.csv",
             "w",
         ) as file:
-            file.write(f",{','.join([str(j) for j in resamples])}\n")
+            file.write(f"Resamples:,{','.join([str(j) for j in resamples])}\n")
             for n, dataset_name in enumerate(datasets):
                 file.write(
                     f"{dataset_name},{','.join([str(j) for j in est_stats[n]])}\n"
                 )
 
-    with open(f"{save_path}/{statistic_name}/{statistic_name}_mean.csv", "w") as file:
-        file.write(f",{','.join(estimators)}\n")
+    with open(
+        f"{save_path}/{statistic_name}/{eval_name}_" f"{statistic_name}_mean.csv", "w"
+    ) as file:
+        file.write(f"Estimators:,{','.join(estimators)}\n")
         for i, dataset_name in enumerate(datasets):
             file.write(
                 f"{dataset_name},{','.join([str(n) for n in average_stats[i]])}\n"
@@ -1194,34 +1243,36 @@ def _create_directory_for_statistic(
         lambda x: rank_array(x, higher_better=higher_better), 1, average_stats
     )
 
-    with open(f"{save_path}/{statistic_name}/{statistic_name}_ranks.csv", "w") as file:
-        file.write(f",{','.join(estimators)}\n")
+    with open(
+        f"{save_path}/{statistic_name}/{eval_name}_" f"{statistic_name}_ranks.csv", "w"
+    ) as file:
+        file.write(f"Estimators:,{','.join(estimators)}\n")
         for i, dataset_name in enumerate(datasets):
             file.write(f"{dataset_name},{','.join([str(n) for n in ranks[i]])}\n")
 
     _figures_for_statistic(
-        average_stats, estimators, statistic_name, higher_better, save_path
+        average_stats, estimators, statistic_name, higher_better, save_path, eval_name
     )
 
     return average_stats, ranks
 
 
 def _figures_for_statistic(
-    scores, estimators, statistic_name, higher_better, save_path
+    scores, estimators, statistic_name, higher_better, save_path, eval_name
 ):
     os.makedirs(f"{save_path}/{statistic_name}/figures/", exist_ok=True)
 
     cd = plot_critical_difference(scores, estimators, lower_better=not higher_better)
     cd.savefig(
         f"{save_path}/{statistic_name}/figures/"
-        f"{statistic_name}_critical_difference.pdf",
+        f"{eval_name}_{statistic_name}_critical_difference.pdf",
         bbox_inches="tight",
     )
     pickle.dump(
         cd,
         open(
             f"{save_path}/{statistic_name}/figures/"
-            f"{statistic_name}_critical_difference.pickle",
+            f"{eval_name}_{statistic_name}_critical_difference.pickle",
             "wb",
         ),
     )
@@ -1229,13 +1280,15 @@ def _figures_for_statistic(
 
     box = plot_boxplot_median(scores.transpose(), estimators)
     box.savefig(
-        f"{save_path}/{statistic_name}/figures/{statistic_name}_boxplot.pdf",
+        f"{save_path}/{statistic_name}/figures/{eval_name}_"
+        f"{statistic_name}_boxplot.pdf",
         bbox_inches="tight",
     )
     pickle.dump(
         box,
         open(
-            f"{save_path}/{statistic_name}/figures/{statistic_name}_boxplot.pickle",
+            f"{save_path}/{statistic_name}/figures/{eval_name}_"
+            f"{statistic_name}_boxplot.pickle",
             "wb",
         ),
     )
@@ -1253,14 +1306,14 @@ def _figures_for_statistic(
             scatter = plot_scatter(scores[:, (i, n)], est1, est2)
             scatter.savefig(
                 f"{save_path}/{statistic_name}/figures/scatters/{est1}/"
-                f"{statistic_name}_scatter_{est1}_{est2}.pdf",
+                f"{eval_name}_{statistic_name}_scatter_{est1}_{est2}.pdf",
                 bbox_inches="tight",
             )
             pickle.dump(
                 scatter,
                 open(
                     f"{save_path}/{statistic_name}/figures/scatters/{est1}/"
-                    f"{statistic_name}_scatter_{est1}_{est2}.pickle",
+                    f"{eval_name}_{statistic_name}_scatter_{est1}_{est2}.pickle",
                     "wb",
                 ),
             )
