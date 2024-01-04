@@ -4,6 +4,8 @@ from contextlib import contextmanager
 from os import devnull
 from pathlib import Path
 
+from sklearn.base import BaseEstimator
+
 _TEST_DATA_PATH = os.path.dirname(Path(__file__).parent.parent) + "/tsml_eval/datasets/"
 
 _TEST_RESULTS_PATH = (
@@ -28,12 +30,12 @@ def _check_set_method(
             ), f"Estimator {estimator_alias} is duplicated"
             all_estimator_names.append(estimator_alias)
 
-            try:
-                e = set_method(estimator_alias)
-            except ModuleNotFoundError:
-                continue
+            e = set_method(estimator_alias)
 
             assert e is not None, f"Estimator {estimator_alias} not found"
+            assert isinstance(
+                e, BaseEstimator
+            ), f"Estimator {estimator_alias} is not a BaseEstimator"
 
             c_name = e.__class__.__name__.lower()
             if c_name == estimator_alias.lower():

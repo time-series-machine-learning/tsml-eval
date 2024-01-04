@@ -47,6 +47,7 @@ distance_based_classifiers = [
     ["elasticensemble", "ee"],
     "shapedtw",
     ["matrixprofileclassifier", "matrixprofile"],
+    "grail",
 ]
 feature_based_classifiers = [
     "summary-500",
@@ -62,6 +63,7 @@ hybrid_classifiers = [
     ["hivecotev1", "hc1"],
     ["hivecotev2", "hc2"],
     ["tschief", "ts-chief"],
+    ["ristclassifier", "rist", "rist-extrat"],
 ]
 interval_based_classifiers = [
     "rstsf-500",
@@ -79,13 +81,12 @@ interval_based_classifiers = [
     "summary-intervals",
     ["randomintervals-rf", "catch22-intervals-rf"],
     ["randomintervalclassifier", "randomintervals", "catch22-intervals"],
+    ["quantclassifier", "quant"],
 ]
 other_classifiers = [
     ["dummyclassifier", "dummy", "dummyclassifier-aeon"],
     "dummyclassifier-tsml",
     "dummyclassifier-sklearn",
-    "grail",
-    ["quantclassifier", "quant"],
 ]
 shapelet_based_classifiers = [
     "stc-2hour",
@@ -428,6 +429,10 @@ def _set_classifier_distance_based(
             scoring="accuracy",
             **kwargs,
         )
+    elif c == "grail":
+        from tsml_eval.estimators.classification.feature_based.grail import GRAIL
+
+        return GRAIL(**kwargs)
 
 
 def _set_classifier_feature_based(
@@ -504,6 +509,16 @@ def _set_classifier_hybrid(
         from tsml_eval._wip.tschief.tschief import TsChief
 
         return TsChief(random_state=random_state, **kwargs)
+    elif c == "ristclassifier" or c == "rist" or c == "rist-extrat":
+        from sklearn.ensemble import ExtraTreesClassifier
+        from tsml.hybrid import RISTClassifier
+
+        return RISTClassifier(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            estimator=ExtraTreesClassifier(n_estimators=500, criterion="entropy"),
+            **kwargs,
+        )
 
 
 def _set_classifier_interval_based(
@@ -655,6 +670,12 @@ def _set_classifier_interval_based(
         return RandomIntervalClassifier(
             random_state=random_state, n_jobs=n_jobs, **kwargs
         )
+    elif c == "quantclassifier" or c == "quant":
+        from tsml_eval.estimators.classification.feature_based.quant import (
+            QuantClassifier,
+        )
+
+        return QuantClassifier(random_state=random_state, **kwargs)
 
 
 def _set_classifier_other(
@@ -672,18 +693,6 @@ def _set_classifier_other(
         from sklearn.dummy import DummyClassifier
 
         return DummyClassifier(random_state=random_state, **kwargs)
-
-    # temp holding
-    elif c == "grail":
-        from tsml_eval.estimators.classification.feature_based.grail import GRAIL
-
-        return GRAIL(**kwargs)
-    elif c == "quantclassifier" or c == "quant":
-        from tsml_eval.estimators.classification.feature_based.quant import (
-            QuantClassifier,
-        )
-
-        return QuantClassifier(random_state=random_state, **kwargs)
 
 
 def _set_classifier_shapelet_based(
