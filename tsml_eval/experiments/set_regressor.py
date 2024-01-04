@@ -41,6 +41,7 @@ feature_based_regressors = [
 ]
 hybrid_regressors = [
     ["hivecotev2", "hc2"],
+    ["ristregressor", "rist", "rist-extrat"],
 ]
 interval_based_regressors = [
     ["timeseriesforestregressor", "tsf"],
@@ -203,11 +204,11 @@ def _set_regressor_deep_learning(
     r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
     if r == "cnnregressor" or r == "cnn":
-        from aeon.regression.deep_learning.cnn import CNNRegressor
+        from aeon.regression.deep_learning import CNNRegressor
 
         return CNNRegressor(random_state=random_state, **kwargs)
     elif r == "tapnetregressor" or r == "tapnet":
-        from aeon.regression.deep_learning.tapnet import TapNetRegressor
+        from aeon.regression.deep_learning import TapNetRegressor
 
         return TapNetRegressor(random_state=random_state, **kwargs)
     elif r == "resnetregressor" or r == "resnet":
@@ -215,7 +216,7 @@ def _set_regressor_deep_learning(
 
         return ResNetRegressor(random_state=random_state, **kwargs)
     elif r == "inceptiontimeregressor" or r == "inception" or r == "inceptiontime":
-        from aeon.regression.deep_learning.inception_time import InceptionTimeRegressor
+        from aeon.regression.deep_learning import InceptionTimeRegressor
 
         return InceptionTimeRegressor(random_state=random_state, **kwargs)
     elif (
@@ -223,9 +224,7 @@ def _set_regressor_deep_learning(
         or r == "singleinception"
         or r == "individualinception"
     ):
-        from aeon.regression.deep_learning.inception_time import (
-            IndividualInceptionRegressor,
-        )
+        from aeon.regression.deep_learning import IndividualInceptionRegressor
 
         return IndividualInceptionRegressor(random_state=random_state, **kwargs)
     elif r == "fcnregressor" or r == "fcnn" or r == "fcn":
@@ -332,6 +331,16 @@ def _set_regressor_hybrid(
             random_state=random_state,
             n_jobs=n_jobs,
             time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif r == "ristregressor" or r == "rist" or r == "rist-extrat":
+        from sklearn.ensemble import ExtraTreesRegressor
+        from tsml.hybrid import RISTRegressor
+
+        return RISTRegressor(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            estimator=ExtraTreesRegressor(n_estimators=500),
             **kwargs,
         )
 
