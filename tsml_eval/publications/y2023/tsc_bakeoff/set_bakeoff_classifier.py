@@ -290,16 +290,14 @@ def _set_bakeoff_classifier(
             **kwargs,
         )
     elif c == "resnetclassifier" or c == "resnet":
-        from aeon.classification.deep_learning.resnet import ResNetClassifier
+        from aeon.classification.deep_learning import ResNetClassifier
 
         return ResNetClassifier(
             random_state=random_state,
             **kwargs,
         )
     elif c == "inceptiontimeclassifier" or c == "inceptiontime":
-        from aeon.classification.deep_learning.inception_time import (
-            InceptionTimeClassifier,
-        )
+        from aeon.classification.deep_learning import InceptionTimeClassifier
 
         return InceptionTimeClassifier(
             random_state=random_state,
