@@ -22,7 +22,7 @@ queue="gpu-rtx6000-2"
 # Enter your username and email here
 username="ajb"
 mail="NONE"
-mailto=$username"@uea.ac.uk"
+mailto="$username@uea.ac.uk"
 
 # MB for jobs, this is less important for GPU jobs but if you swap nodes check how much is available and how many jobs can be submitted.
 max_memory=90000
@@ -33,23 +33,27 @@ max_time="168:00:00"
 # Start point for the script i.e. 3 datasets, 3 clusterers = 9 jobs to submit, start_point=5 will skip to job 5
 start_point=1
 
-# Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
-data_dir="/gpfs/home/ajb/Data/"
-datasets="/gpfs/home/ajb/DataSetLists/Clustering.txt"
-
 # Put your home directory here
 local_path="/gpfs/home/$username/"
 
+# Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
+data_dir="$local_path/Data/"
+datasets="$local_path/DataSetLists/Clustering.txt"
+
 # Results and output file write location. Change these to reflect your own file structure
-results_dir=$local_path"ClusteringResults/results/"
-out_dir=$local_path"ClusteringResults/output/"
+results_dir="$local_path/ClusteringResults/results/"
+out_dir="$local_path/ClusteringResults/output/"
 
 # The python script we are running
-script_file_path=$local_path"Code/tsml-eval/tsml_eval/experiments/clustering_experiments.py"
+script_file_path="$local_path/tsml-eval/tsml_eval/experiments/clustering_experiments.py"
 
-# Environment name, change accordingly, for set up, see https://hackmd.io/ds5IEK3oQAquD4c6AP2xzQ
-# Separate environments for GPU (Python 3.8) and CPU (Python 3.10) are recommended
+# Environment name, change accordingly, for set up, see https://github.com/time-series-machine-learning/tsml-eval/blob/main/_tsml_research_resources/uea/ada/ada_python.md
+# Separate environments for GPU and CPU are recommended
 env_name="tsml-eval-gpu"
+
+# Clusterers to loop over. Must be seperated by a space
+# See list of potential clusterers in set_clusterer
+clusterers_to_run="kmedoids-squared kmedoids-euclidean"
 
 # You can add extra arguments here. See tsml_eval/utils/arguments.py parse_args
 # You will have to add any variable to the python call close to the bottom of the script
@@ -63,10 +67,6 @@ predefined_folds="false"
 
 # Boolean on if to combine the test/train split
 combine_test_train_split="false"
-
-# Clusterers to loop over. Must be seperated by a space
-# See list of potential clusterers in set_clusterer
-clusterers_to_run="kmedoids-squared kmedoids-euclidean"
 
 # Normalise data before fit/predict
 normalise_data="true"
@@ -113,7 +113,7 @@ do
     num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue}" -e "PD ${queue}" | wc -l)
 done
 
-mkdir -p ${out_dir}${clusterer}/${dataset}/
+mkdir -p "${out_dir}${clusterer}/${dataset}/"
 
 # This skips jobs which have test/train files already written to the results directory. Only looks for Resamples, not Folds (old file name)
 array_jobs=""
@@ -157,12 +157,12 @@ export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/gpfs/home/${username}/.conda/envs/${en
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/clustering_experiments.py
 python -u ${script_file_path} ${data_dir} ${results_dir} ${clusterer} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_test_files} ${predefined_folds}"  > generatedFileGPU.sub
 
-echo ${count} ${clusterer}/${dataset}
+echo "${count} ${clusterer}/${dataset}"
 
 sbatch < generatedFileGPU.sub
 
 else
-    echo ${count} ${clusterer}/${dataset} has finished all required resamples, skipping
+    echo "${count} ${clusterer}/${dataset}" has finished all required resamples, skipping
 fi
 
 fi

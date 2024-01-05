@@ -64,7 +64,7 @@ def _set_forecaster_ml(f, random_state, n_jobs, kwargs):
         from aeon.forecasting.compose import make_reduction
         from aeon.forecasting.trend import PolynomialTrendForecaster
         from aeon.pipeline import make_pipeline
-        from aeon.transformations.series.detrend import Detrender
+        from aeon.transformations.detrend import Detrender
         from sklearn.linear_model import LinearRegression
         from sklearn.preprocessing import StandardScaler
 
@@ -78,7 +78,7 @@ def _set_forecaster_ml(f, random_state, n_jobs, kwargs):
         from aeon.forecasting.compose import make_reduction
         from aeon.forecasting.trend import PolynomialTrendForecaster
         from aeon.pipeline import make_pipeline
-        from aeon.transformations.series.detrend import Detrender
+        from aeon.transformations.detrend import Detrender
         from sklearn.neighbors import KNeighborsRegressor
         from sklearn.preprocessing import StandardScaler
 
@@ -92,7 +92,7 @@ def _set_forecaster_ml(f, random_state, n_jobs, kwargs):
         from aeon.forecasting.compose import make_reduction
         from aeon.forecasting.trend import PolynomialTrendForecaster
         from aeon.pipeline import make_pipeline
-        from aeon.transformations.series.detrend import Detrender
+        from aeon.transformations.detrend import Detrender
         from sklearn.ensemble import RandomForestRegressor
         from sklearn.preprocessing import StandardScaler
 
@@ -108,7 +108,7 @@ def _set_forecaster_ml(f, random_state, n_jobs, kwargs):
         from aeon.forecasting.compose import make_reduction
         from aeon.forecasting.trend import PolynomialTrendForecaster
         from aeon.pipeline import make_pipeline
-        from aeon.transformations.series.detrend import Detrender
+        from aeon.transformations.detrend import Detrender
         from sklearn.preprocessing import StandardScaler
         from xgboost import XGBRegressor
 
@@ -126,7 +126,7 @@ def _set_forecaster_ml(f, random_state, n_jobs, kwargs):
         from aeon.forecasting.trend import PolynomialTrendForecaster
         from aeon.pipeline import make_pipeline
         from aeon.regression.deep_learning import InceptionTimeRegressor
-        from aeon.transformations.series.detrend import Detrender
+        from aeon.transformations.detrend import Detrender
         from sklearn.preprocessing import StandardScaler
 
         regressor = InceptionTimeRegressor(random_state=random_state, **kwargs)
@@ -140,7 +140,7 @@ def _set_forecaster_ml(f, random_state, n_jobs, kwargs):
         from aeon.forecasting.trend import PolynomialTrendForecaster
         from aeon.pipeline import make_pipeline
         from aeon.regression.convolution_based import RocketRegressor
-        from aeon.transformations.series.detrend import Detrender
+        from aeon.transformations.detrend import Detrender
         from sklearn.preprocessing import StandardScaler
 
         regressor = RocketRegressor(random_state=random_state, n_jobs=n_jobs, **kwargs)
@@ -154,7 +154,7 @@ def _set_forecaster_ml(f, random_state, n_jobs, kwargs):
         from aeon.forecasting.trend import PolynomialTrendForecaster
         from aeon.pipeline import make_pipeline
         from aeon.regression.feature_based import FreshPRINCERegressor
-        from aeon.transformations.series.detrend import Detrender
+        from aeon.transformations.detrend import Detrender
         from sklearn.preprocessing import StandardScaler
 
         regressor = FreshPRINCERegressor(
@@ -170,7 +170,7 @@ def _set_forecaster_ml(f, random_state, n_jobs, kwargs):
         from aeon.forecasting.trend import PolynomialTrendForecaster
         from aeon.pipeline import make_pipeline
         from aeon.regression.interval_based import DrCIFRegressor
-        from aeon.transformations.series.detrend import Detrender
+        from aeon.transformations.detrend import Detrender
         from sklearn.preprocessing import StandardScaler
 
         regressor = DrCIFRegressor(
@@ -186,7 +186,7 @@ def _set_forecaster_ml(f, random_state, n_jobs, kwargs):
         from aeon.forecasting.trend import PolynomialTrendForecaster
         from aeon.pipeline import make_pipeline
         from aeon.regression.sklearn import RotationForestRegressor
-        from aeon.transformations.series.detrend import Detrender
+        from aeon.transformations.detrend import Detrender
         from sklearn.preprocessing import StandardScaler
 
         regressor = RotationForestRegressor(

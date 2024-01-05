@@ -21,7 +21,7 @@ from sklearn.linear_model import LogisticRegression, RidgeClassifierCV
 from sklearn.pipeline import make_pipeline
 from sklearn.utils import check_random_state
 
-from tsml_eval.estimators.classification.transformations import SFADilation
+from tsml_eval._wip.dilation_muse.sfa_dilation import SFADilation
 
 
 class MUSEDilation(BaseClassifier):

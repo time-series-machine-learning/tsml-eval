@@ -125,7 +125,7 @@ If any a dependency install is "Killed", it is likely the interactive session ha
 
 # Running experiments
 
-For running jobs on ADA, we recommend using the submission scripts provided in this folder.
+For running jobs on Iridis, we recommend using copies of the submission scripts provided in this folder.
 
 **NOTE: Scripts will not run properly if done whilst the conda environment is active.**
 
@@ -138,13 +138,14 @@ Prior to running the script, you should activate an interactive session to preve
 For CPU experiments start with one of the following scripts:
 
 >classification_experiments.sh
->
+
 >regression_experiments.sh
->
+
 >clustering_experiments.sh
 
-The default queue for CPU jobs is _compute-64-512_, but you may want to swap to _compute-24-128_ or _compute-24-96_
-if they have more resources available.
+You may need to use `dos2unix` to convert the line endings to unix format.
+
+The default queue for CPU jobs is _batch_.
 
 Do not run threaded code on the cluster without reserving whole nodes, as there is nothing to stop the job from using
 the CPU resources allocated to others. The default python file in the scripts attempts to avoid threading as much as possible. You should ensure processes are not intentionally using multiple threads if you change it.

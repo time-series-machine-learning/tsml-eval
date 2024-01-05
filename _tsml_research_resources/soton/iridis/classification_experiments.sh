@@ -5,41 +5,40 @@
 #   classifiers_to_run (list of classifiers to run)
 # While reading is fine, please dont write anything to the default directories in this script
 
-# To use GPU resources you need to be given access (gpu qos), which involves emailing hpc.admin@uea.ac.uk
-# Ask Tony or on slack, and read the GPU section in https://my.uea.ac.uk/divisions/it-and-computing-services/service-catalogue/research-it-services/hpc/ada-cluster/using-ada/jobs
-
 # Start and end for resamples
 max_folds=30
 start_fold=1
 
 # To avoid dumping 1000s of jobs in the queue we have a higher level queue
-max_num_submitted=10
+max_num_submitted=100
 
-# Queue options are https://my.uea.ac.uk/divisions/it-and-computing-services/service-catalogue/research-it-services/hpc/ada-cluster/using-ada
-# Make sure GPU jobs are on one of the "gpu-" queues, .sub file qos may need to change for ones other than "gpu-rtx6000-2"
-queue="gpu-rtx6000-2"
+# Queue options are https://sotonac.sharepoint.com/teams/HPCCommunityWiki/SitePages/Iridis%205%20Job-submission-and-Limits-Quotas.aspx
+queue="batch"
+
+# The partition name may not always be the same as the queue name, i.e. batch is the queue, serial is the partition
+# This is used for the script job limit queue
+queue_alias=$queue
 
 # Enter your username and email here
-username="ajb"
+username="ajb2u23"
 mail="NONE"
-mailto="$username@uea.ac.uk"
+mailto="$username@soton.ac.uk"
 
-# MB for jobs, this is less important for GPU jobs but if you swap nodes check how much is available and how many jobs can be submitted.
-max_memory=90000
+# MB for jobs, increase incrementally and try not to use more than you need. If you need hundreds of GB consider the huge memory queue.
+max_memory=8000
 
-# Max allowable is 7 days - 168 hours
-max_time="168:00:00"
+# Max allowable is 60 hours
+max_time="60:00:00"
 
 # Start point for the script i.e. 3 datasets, 3 classifiers = 9 jobs to submit, start_point=5 will skip to job 5
 start_point=1
 
 # Put your home directory here
-local_path="/gpfs/home/$username/"
+local_path="/mainfs/home/$username/"
 
 # Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
 data_dir="$local_path/Data/"
 datasets="$local_path/DataSetLists/Classification.txt"
-
 
 # Results and output file write location. Change these to reflect your own file structure
 results_dir="$local_path/ClassificationResults/results/"
@@ -48,26 +47,26 @@ out_dir="$local_path/ClassificationResults/output/"
 # The python script we are running
 script_file_path="$local_path/tsml-eval/tsml_eval/experiments/classification_experiments.py"
 
-# Environment name, change accordingly, for set up, see https://github.com/time-series-machine-learning/tsml-eval/blob/main/_tsml_research_resources/uea/ada/ada_python.md
+# Environment name, change accordingly, for set up, see https://github.com/time-series-machine-learning/tsml-eval/blob/main/_tsml_research_resources/soton/iridis/iridis_python.md
 # Separate environments for GPU and CPU are recommended
-env_name="tsml-eval-gpu"
+env_name="tsml-eval"
 
 # Classifiers to loop over. Must be seperated by a space
 # See list of potential classifiers in set_classifier
-classifiers_to_run="CNNClassifier FCNClassifier"
+classifiers_to_run="ROCKET DrCIF"
 
 # You can add extra arguments here. See tsml_eval/utils/arguments.py parse_args
 # You will have to add any variable to the python call close to the bottom of the script
 # and possibly to the options handling below
 
 # generate a results file for the train data as well as test, usually slower
-generate_train_files="true"
+generate_train_files="false"
 
 # If set for true, looks for <problem><fold>_TRAIN.ts file. This is useful for running tsml-java resamples
 predefined_folds="false"
 
 # Normalise data before fit/predict
-normalise_data="true"
+normalise_data="false"
 
 # ======================================================================================
 # ======================================================================================
@@ -94,12 +93,12 @@ for classifier in $classifiers_to_run; do
 if ((count>=start_point)); then
 
 # This is the loop to keep from dumping everything in the queue which is maintained around max_num_submitted jobs
-num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue}" -e "PD ${queue}" | wc -l)
+num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue_alias}" -e "PD ${queue_alias}" | wc -l)
 while [ "${num_jobs}" -ge "${max_num_submitted}" ]
 do
-    echo Waiting 60s, ${num_jobs} currently submitted on ${queue}, user-defined max is ${max_num_submitted}
+    echo Waiting 60s, "${num_jobs}" currently submitted on ${queue}, user-defined max is ${max_num_submitted}
     sleep 60
-    num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue}" -e "PD ${queue}" | wc -l)
+    num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue_alias}" -e "PD ${queue_alias}" | wc -l)
 done
 
 mkdir -p "${out_dir}${classifier}/${dataset}/"
@@ -121,9 +120,6 @@ if [ "${array_jobs}" != "" ]; then
 
 # This creates the scrip to run the job based on the info above
 echo "#!/bin/bash
-#SBATCH --qos=gpu-rtx #gpu-rtx-reserved
-#SBATCH --gres=gpu:1
-#SBATCH --cpus-per-task=12
 #SBATCH --mail-type=${mail}
 #SBATCH --mail-user=${mailto}
 #SBATCH -p ${queue}
@@ -133,22 +129,20 @@ echo "#!/bin/bash
 #SBATCH --mem=${max_memory}M
 #SBATCH -o ${out_dir}${classifier}/${dataset}/%A-%a.out
 #SBATCH -e ${out_dir}${classifier}/${dataset}/%A-%a.err
+#SBATCH --nodes=1
 
 . /etc/profile
 
-module add python/anaconda/2019.10/3.7
-module add cuda/10.2.89
-module add cudnn/7.6.5
+module load anaconda/py3.10
 source activate $env_name
-export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/gpfs/home/${username}/.conda/envs/${env_name}/lib/
 
 # Input args to the default classification_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/classification_experiments.py
-python -u ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_train_files} ${predefined_folds} ${normalise_data}"  > generatedFileGPU.sub
+python -u ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_train_files} ${predefined_folds} ${normalise_data}"  > generatedFile.sub
 
 echo "${count} ${classifier}/${dataset}"
 
-sbatch < generatedFileGPU.sub
+sbatch < generatedFile.sub
 
 else
     echo "${count} ${classifier}/${dataset}" has finished all required resamples, skipping

@@ -220,10 +220,7 @@ def _set_tser_exp_regressor(
         )
     elif r == "tsf" or r == "timeseriesforestregressor":
         from aeon.regression.interval_based import TimeSeriesForestRegressor
-
-        from tsml_eval.estimators.regression.column_ensemble import (
-            ColumnEnsembleRegressor,
-        )
+        from tsml.compose import ChannelEnsembleRegressor
 
         estimators = [
             (
@@ -237,7 +234,7 @@ def _set_tser_exp_regressor(
                 None,
             )
         ]
-        return ColumnEnsembleRegressor(estimators)
+        return ChannelEnsembleRegressor(estimators)
     elif r == "drcif" or r == "drcifregressor":
         from aeon.regression.interval_based import DrCIFRegressor
 
