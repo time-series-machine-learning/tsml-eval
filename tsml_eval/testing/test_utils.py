@@ -33,7 +33,12 @@ def _check_set_method(
             try:
                 e = set_method(estimator_alias)
             except ModuleNotFoundError as err:
-                if "soft dependency" in str(err):
+                exempt_errors = [
+                    "optional dependency",
+                    "soft dependency",
+                    "python version",
+                ]
+                if any(s in str(err) for s in exempt_errors):
                     continue
                 else:
                     raise err
