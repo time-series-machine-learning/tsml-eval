@@ -26,9 +26,9 @@ from collections.abc import Sequence
 
 import gpustat
 import numpy as np
+from aeon.datasets._data_loaders import load_from_ts_file
 from sklearn.base import BaseEstimator
 from sklearn.utils import check_random_state
-from tsml.datasets import load_from_ts_file
 
 from tsml_eval.utils.validation import (
     _check_classification_third_line,

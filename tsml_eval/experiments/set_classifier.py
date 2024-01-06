@@ -376,7 +376,12 @@ def _set_classifier_dictionary_based(
     ):
         from aeon.classification.dictionary_based import WEASEL_V2
 
-        return WEASEL_V2(random_state=random_state, n_jobs=n_jobs, **kwargs)
+        return WEASEL_V2(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            **kwargs,
+            support_probabilities=True,
+        )
     elif c == "musedilation" or c == "muse-dilation" or c == "muse-d":
         from tsml_eval._wip.dilation_muse.muse import MUSEDilation
 
