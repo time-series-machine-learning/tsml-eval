@@ -26,7 +26,7 @@ from collections.abc import Sequence
 
 import gpustat
 import numpy as np
-from aeon.datasets._data_loaders import load_from_ts_file
+from aeon.datasets._data_loaders import load_from_tsfile
 from sklearn.base import BaseEstimator
 from sklearn.utils import check_random_state
 
@@ -344,21 +344,19 @@ def load_experiment_data(
     if resample_id is not None and predefined_resample:
         resample_str = "" if resample_id is None else str(resample_id)
 
-        X_train, y_train = load_from_ts_file(
+        X_train, y_train = load_from_tsfile(
             f"{problem_path}/{dataset}/{dataset}{resample_str}_TRAIN.ts"
         )
-        X_test, y_test = load_from_ts_file(
+        X_test, y_test = load_from_tsfile(
             f"{problem_path}/{dataset}/{dataset}{resample_str}_TEST.ts"
         )
 
         resample_data = False
     else:
-        X_train, y_train = load_from_ts_file(
+        X_train, y_train = load_from_tsfile(
             f"{problem_path}/{dataset}/{dataset}_TRAIN.ts"
         )
-        X_test, y_test = load_from_ts_file(
-            f"{problem_path}/{dataset}/{dataset}_TEST.ts"
-        )
+        X_test, y_test = load_from_tsfile(f"{problem_path}/{dataset}/{dataset}_TEST.ts")
 
         resample_data = True if resample_id != 0 else False
 
