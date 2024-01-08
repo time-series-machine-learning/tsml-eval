@@ -60,7 +60,7 @@ class GRAIL(ClassifierMixin, BaseTimeSeriesEstimator):
         check_classification_targets(y)
 
         self.n_instances_, self.n_timepoints_ = X.shape
-        self.classes_ = np.unique(y)
+        self.classes_, class_count = np.unique(y, return_counts=True)
         self.n_classes_ = self.classes_.shape[0]
         self.class_dictionary_ = {}
         for index, class_val in enumerate(self.classes_):
@@ -87,7 +87,7 @@ class GRAIL(ClassifierMixin, BaseTimeSeriesEstimator):
             self._clf = GridSearchCV(
                 SVC(kernel="linear", probability=True),
                 param_grid={"C": [i**2 for i in np.arange(-10, 20, 0.11)]},
-                cv=5,
+                cv=min(min(class_count), 5),
             )
             self._clf.fit(Xt, y)
         elif self.classifier == "knn":
