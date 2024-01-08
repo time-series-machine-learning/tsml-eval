@@ -57,7 +57,7 @@ all_extras = [
     "torch>=1.13.1",
     # temp
     "grailts",
-    "fdasrsf<=2.5.2",
+    "fdasrsf<=2.5.6",
 ]
 unstable_extras = [
     "aeon[unstable_extras]",
