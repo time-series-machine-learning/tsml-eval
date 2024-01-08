@@ -1,7 +1,12 @@
 """Test utility functions."""
 import numpy as np
+import pytest
 
-from tsml_eval.utils.functions import pair_list_to_dict, rank_array
+from tsml_eval.utils.functions import (
+    pair_list_to_dict,
+    rank_array,
+    time_to_milliseconds,
+)
 
 
 def test_pair_list_to_dict():
@@ -78,3 +83,9 @@ def test_rank_array():
     assert (
         rank_array(np.array(arr4), higher_better=False) == np.array(inverse_ranks4)
     ).all()
+
+
+def test_time_to_milliseconds_invalid_unit():
+    """Test time_to_milliseconds function with invalid time unit."""
+    with pytest.raises(ValueError, match="Unknown time unit"):
+        time_to_milliseconds(500, "gigaseconds")

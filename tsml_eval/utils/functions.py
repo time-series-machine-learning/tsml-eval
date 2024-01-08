@@ -47,6 +47,7 @@ def time_to_milliseconds(time_value, time_unit):
     float
         The time in milliseconds.
     """
+    time_unit = time_unit.lower().strip()
     time_units = {
         "nanoseconds": 1e-6,
         "microseconds": 1e-3,
