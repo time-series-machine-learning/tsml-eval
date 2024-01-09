@@ -22,7 +22,7 @@ class QuantClassifier(ClassifierMixin, BaseTimeSeriesEstimator):
 
     Examples
     --------
-    >>> from tsml_eval.estimators.classification.feature_based.quant import (
+    >>> from tsml_eval.estimators.classification.interval_based.quant import (
     ...     QuantClassifier)
     >>> from tsml.datasets import load_minimal_chinatown
     >>> X, y = load_minimal_chinatown()

@@ -37,7 +37,8 @@ dictionary_based_classifiers = [
     "muse-logistic",
     ["weasel_v2", "weaseldilation", "weasel-dilation", "weasel-d"],
     ["musedilation", "muse-dilation", "muse-d"],
-    "",
+    "redcomets",
+    "redcomets-500",
 ]
 distance_based_classifiers = [
     ["kneighborstimeseriesclassifier", "dtw", "1nn-dtw"],
@@ -48,7 +49,7 @@ distance_based_classifiers = [
     ["elasticensemble", "ee"],
     "shapedtw",
     ["matrixprofileclassifier", "matrixprofile"],
-    "grail",
+    ["grailclassifier", "grail"],
 ]
 feature_based_classifiers = [
     "summary-500",
@@ -444,10 +445,10 @@ def _set_classifier_distance_based(
             scoring="accuracy",
             **kwargs,
         )
-    elif c == "grail":
-        from tsml.distance_based import GRAIL
+    elif c == "grailclassifier" or c == "grail":
+        from tsml.distance_based import GRAILClassifier
 
-        return GRAIL(**kwargs)
+        return GRAILClassifier(**kwargs)
 
 
 def _set_classifier_feature_based(

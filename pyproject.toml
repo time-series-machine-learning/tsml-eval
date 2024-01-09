@@ -52,7 +52,7 @@ dependencies = [
 [project.optional-dependencies]
 all_extras = [
     "aeon[all_extras,dl]",
-    "tsml[extras]",
+    "tsml[all_extras]",
     "xgboost",
     "torch>=1.13.1",
 ]
