@@ -93,7 +93,7 @@ jobs:
 
   upload_wheels:
     needs: test_wheels
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/download-artifact@v4

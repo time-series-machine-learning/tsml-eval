@@ -96,11 +96,11 @@ elif title_labels_str == "":
 
 pr.create_issue_comment(
     f"""
-## Thank you for contributing to `tsml-eval`!
+## Thank you for contributing to `tsml-eval`
 
 {title_labels_str}
 {content_labels_str}
 
-The [Checks](https://github.com/aeon-toolkit/aeon/pull/{pr_number}/checks) tab will show the status of our automated tests. You can click on individual test runs in the tab or "Details" in the panel below to see more information if there is a failure.
+The [Checks](https://github.com/time-series-machine-learning/tsml-eval/pull/{pr_number}/checks) tab will show the status of our automated tests. You can click on individual test runs in the tab or "Details" in the panel below to see more information if there is a failure.
     """  # noqa
 )
