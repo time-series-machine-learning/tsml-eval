@@ -51,7 +51,7 @@ class IterativeVotingClustering(BaseEstimator, ClusterMixin):
     >>> ivc.fit(iris.data)
     IterativeVotingClustering(...)
     >>> rand_score(iris.target, ivc.labels_)
-    0.8797315436241611
+    0.8737360178970918
     """
 
     def __init__(

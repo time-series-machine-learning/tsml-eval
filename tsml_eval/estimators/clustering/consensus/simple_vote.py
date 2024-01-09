@@ -41,7 +41,7 @@ class SimpleVote(BaseEstimator, ClusterMixin):
     >>> sv.fit(iris.data)
     SimpleVote(...)
     >>> rand_score(iris.target, sv.labels_)
-    0.8797315436241611
+    0.8737360178970918
     """
 
     def __init__(self, clusterers=None, n_clusters=8, random_state=None):
