@@ -5,11 +5,8 @@ import pickle
 from datetime import datetime
 
 import numpy as np
-from aeon.visualisation import (
-    plot_boxplot_median,
-    plot_critical_difference,
-    plot_scatter,
-)
+from aeon.benchmarking import plot_critical_difference
+from aeon.benchmarking.results_plotting import plot_boxplot_median, plot_scatter
 from matplotlib import pyplot as plt
 
 from tsml_eval.evaluation.storage import (
