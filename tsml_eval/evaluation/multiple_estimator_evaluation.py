@@ -218,13 +218,12 @@ def evaluate_classifiers_by_problem(
                 for resample in resamples:
                     for split in splits:
                         try:
-                            classifier_results.append(
-                                ClassifierResults().load_from_file(
-                                    f"{path}/{classifier_name}/Predictions/"
-                                    f"{dataset_name}/{split}Resample{resample}.csv",
-                                    verify_values=verify_results,
-                                )
+                            result = ClassifierResults().load_from_file(
+                                f"{path}/{classifier_name}/Predictions/"
+                                f"{dataset_name}/{split}Resample{resample}.csv",
+                                verify_values=verify_results,
                             )
+                            classifier_results.append(result)
                             names.append(classifier_eval_name)
                             found_estimator = True
                             found_datasets[n] = True
@@ -234,6 +233,17 @@ def evaluate_classifiers_by_problem(
                                     f"Loaded {classifier_eval_name} on {dataset_name} "
                                     f"{split} resample {resample}."
                                 )
+
+                            if result.dataset_name != dataset_name:
+                                if verbose:
+                                    print(  # noqa: T201
+                                        f"File for {classifier_eval_name} on "
+                                        f"{dataset_name} {split} resample {resample} "
+                                        f"has a different dataset name than used to "
+                                        f"load the file. Setting dataset name to "
+                                        f"{dataset_name} from {result.dataset_name}."
+                                    )
+                                result.dataset_name = dataset_name
                         except FileNotFoundError:
                             msg = (
                                 f"Results for {classifier_eval_name} on {dataset_name} "
@@ -453,13 +463,12 @@ def evaluate_clusterers_by_problem(
                 for resample in resamples:
                     for split in splits:
                         try:
-                            clusterer_results.append(
-                                ClustererResults().load_from_file(
-                                    f"{path}/{clusterer_name}/Predictions/"
-                                    f"{dataset_name}/{split}Resample{resample}.csv",
-                                    verify_values=verify_results,
-                                )
+                            result = ClustererResults().load_from_file(
+                                f"{path}/{clusterer_name}/Predictions/"
+                                f"{dataset_name}/{split}Resample{resample}.csv",
+                                verify_values=verify_results,
                             )
+                            clusterer_results.append(result)
                             names.append(clusterer_eval_name)
                             found_estimator = True
                             found_datasets[n] = True
@@ -469,6 +478,17 @@ def evaluate_clusterers_by_problem(
                                     f"Loaded {clusterer_eval_name} on {dataset_name} "
                                     f"{split} resample {resample}."
                                 )
+
+                            if result.dataset_name != dataset_name:
+                                if verbose:
+                                    print(  # noqa: T201
+                                        f"File for {clusterer_eval_name} on "
+                                        f"{dataset_name} {split} resample {resample} "
+                                        f"has a different dataset name than used to "
+                                        f"load the file. Setting dataset name to "
+                                        f"{dataset_name} from {result.dataset_name}."
+                                    )
+                                result.dataset_name = dataset_name
                         except FileNotFoundError:
                             msg = (
                                 f"Results for {clusterer_eval_name} on {dataset_name} "
@@ -688,13 +708,12 @@ def evaluate_regressors_by_problem(
                 for resample in resamples:
                     for split in splits:
                         try:
-                            regressor_results.append(
-                                RegressorResults().load_from_file(
-                                    f"{path}/{regressor_name}/Predictions/"
-                                    f"{dataset_name}/{split}Resample{resample}.csv",
-                                    verify_values=verify_results,
-                                )
+                            result = RegressorResults().load_from_file(
+                                f"{path}/{regressor_name}/Predictions/"
+                                f"{dataset_name}/{split}Resample{resample}.csv",
+                                verify_values=verify_results,
                             )
+                            regressor_results.append(result)
                             names.append(regressor_eval_name)
                             found_estimator = True
                             found_datasets[n] = True
@@ -704,6 +723,17 @@ def evaluate_regressors_by_problem(
                                     f"Loaded {regressor_eval_name} on {dataset_name} "
                                     f"{split} resample {resample}."
                                 )
+
+                            if result.dataset_name != dataset_name:
+                                if verbose:
+                                    print(  # noqa: T201
+                                        f"File for {regressor_eval_name} on "
+                                        f"{dataset_name} {split} resample {resample} "
+                                        f"has a different dataset name than used to "
+                                        f"load the file. Setting dataset name to "
+                                        f"{dataset_name} from {result.dataset_name}."
+                                    )
+                                result.dataset_name = dataset_name
                         except FileNotFoundError:
                             msg = (
                                 f"Results for {regressor_eval_name} on {dataset_name} "
@@ -914,13 +944,12 @@ def evaluate_forecasters_by_problem(
             for n, dataset_name in enumerate(dataset_names[i]):
                 for resample in resamples:
                     try:
-                        forecaster_results.append(
-                            ForecasterResults().load_from_file(
-                                f"{path}/{forecaster_name}/Predictions/"
-                                f"{dataset_name}/testResample{resample}.csv",
-                                verify_values=verify_results,
-                            )
+                        result = ForecasterResults().load_from_file(
+                            f"{path}/{forecaster_name}/Predictions/"
+                            f"{dataset_name}/testResample{resample}.csv",
+                            verify_values=verify_results,
                         )
+                        forecaster_results.append(result)
                         names.append(forecaster_eval_name)
                         found_estimator = True
                         found_datasets[n] = True
@@ -930,6 +959,17 @@ def evaluate_forecasters_by_problem(
                                 f"Loaded {forecaster_eval_name} on {dataset_name} "
                                 f"resample {resample}."
                             )
+
+                        if result.dataset_name != dataset_name:
+                            if verbose:
+                                print(  # noqa: T201
+                                    f"File for {forecaster_eval_name} on "
+                                    f"{dataset_name} resample {resample} "
+                                    f"has a different dataset name than used to "
+                                    f"load the file. Setting dataset name to "
+                                    f"{dataset_name} from {result.dataset_name}."
+                                )
+                            result.dataset_name = dataset_name
                     except FileNotFoundError:
                         msg = (
                             f"Results for {forecaster_eval_name} on {dataset_name} "
@@ -1220,8 +1260,8 @@ def _create_directory_for_statistic(
             average_stats[n, i] = np.mean(est_stats[n, :])
 
         with open(
-            f"{save_path}/{statistic_name}/all_resamples/{eval_name}_{estimator_name}_"
-            f"{statistic_name}.csv",
+            f"{save_path}/{statistic_name}/all_resamples/"
+            f"{estimator_name}_{statistic_name.lower()}.csv",
             "w",
         ) as file:
             file.write(f"Resamples:,{','.join([str(j) for j in resamples])}\n")
@@ -1231,7 +1271,7 @@ def _create_directory_for_statistic(
                 )
 
     with open(
-        f"{save_path}/{statistic_name}/{eval_name}_" f"{statistic_name}_mean.csv", "w"
+        f"{save_path}/{statistic_name}/{statistic_name.lower()}_mean.csv", "w"
     ) as file:
         file.write(f"Estimators:,{','.join(estimators)}\n")
         for i, dataset_name in enumerate(datasets):
@@ -1244,7 +1284,7 @@ def _create_directory_for_statistic(
     )
 
     with open(
-        f"{save_path}/{statistic_name}/{eval_name}_" f"{statistic_name}_ranks.csv", "w"
+        f"{save_path}/{statistic_name}/{statistic_name.lower()}_ranks.csv", "w"
     ) as file:
         file.write(f"Estimators:,{','.join(estimators)}\n")
         for i, dataset_name in enumerate(datasets):
@@ -1265,30 +1305,30 @@ def _figures_for_statistic(
     cd = plot_critical_difference(scores, estimators, lower_better=not higher_better)
     cd.savefig(
         f"{save_path}/{statistic_name}/figures/"
-        f"{eval_name}_{statistic_name}_critical_difference.pdf",
+        f"{eval_name}_{statistic_name.lower()}_critical_difference.pdf",
         bbox_inches="tight",
     )
     pickle.dump(
         cd,
         open(
             f"{save_path}/{statistic_name}/figures/"
-            f"{eval_name}_{statistic_name}_critical_difference.pickle",
+            f"{eval_name}_{statistic_name.lower()}_critical_difference.pickle",
             "wb",
         ),
     )
     plt.close()
 
-    box = plot_boxplot_median(scores.transpose(), estimators)
+    box = plot_boxplot_median(scores, estimators)
     box.savefig(
-        f"{save_path}/{statistic_name}/figures/{eval_name}_"
-        f"{statistic_name}_boxplot.pdf",
+        f"{save_path}/{statistic_name}/figures/"
+        f"{eval_name}_{statistic_name.lower()}_boxplot.pdf",
         bbox_inches="tight",
     )
     pickle.dump(
         box,
         open(
-            f"{save_path}/{statistic_name}/figures/{eval_name}_"
-            f"{statistic_name}_boxplot.pickle",
+            f"{save_path}/{statistic_name}/figures/"
+            f"{eval_name}_{statistic_name.lower()}_boxplot.pickle",
             "wb",
         ),
     )
@@ -1306,14 +1346,15 @@ def _figures_for_statistic(
             scatter = plot_scatter(scores[:, (i, n)], est1, est2)
             scatter.savefig(
                 f"{save_path}/{statistic_name}/figures/scatters/{est1}/"
-                f"{eval_name}_{statistic_name}_scatter_{est1}_{est2}.pdf",
+                f"{eval_name}_{statistic_name.lower()}_scatter_{est1}_{est2}.pdf",
                 bbox_inches="tight",
             )
             pickle.dump(
                 scatter,
                 open(
                     f"{save_path}/{statistic_name}/figures/scatters/{est1}/"
-                    f"{eval_name}_{statistic_name}_scatter_{est1}_{est2}.pickle",
+                    f"{eval_name}_{statistic_name.lower()}_scatter_{est1}_{est2}"
+                    f".pickle",
                     "wb",
                 ),
             )
