@@ -53,7 +53,7 @@ def record_max_memory(
         if mem > max_memory:
             max_memory = mem
 
-        if thread.has_shutdown:
+        if thread.has_shutdown or not thread.is_alive():
             if thread.exception is not None:
                 raise thread.exception
 

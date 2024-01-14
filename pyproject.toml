@@ -135,14 +135,16 @@ per-file-ignores = [
 ]
 
 [tool.pytest.ini_options]
-testpaths = "tsml_eval/"
+testpaths = "tsml_eval"
 addopts = '''
     --ignore tsml_eval/_wip
     --ignore tsml_eval/publications/2023
     --durations 20
     --timeout 600
+    --showlocals
     --doctest-modules
     --numprocesses auto
-    --reruns 0
+    --reruns 2
+    --only-rerun "crashed while running"
     --meminterval 0.1
 '''
