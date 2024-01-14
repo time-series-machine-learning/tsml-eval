@@ -145,5 +145,6 @@ addopts = '''
     --doctest-modules
     --numprocesses auto
     --reruns 2
+    --only-rerun "crashed while running"
     --meminterval 0.1
 '''
