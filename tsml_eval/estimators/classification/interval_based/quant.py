@@ -75,11 +75,13 @@ class QuantClassifier(ClassifierMixin, BaseTimeSeriesEstimator):
         )
 
         self._estimator = _clone_estimator(
-            ExtraTreesClassifier(
-                n_estimators=200, max_features=0.1, criterion="entropy"
-            )
-            if self.estimator is None
-            else self.estimator,
+            (
+                ExtraTreesClassifier(
+                    n_estimators=200, max_features=0.1, criterion="entropy"
+                )
+                if self.estimator is None
+                else self.estimator
+            ),
             self.random_state,
         )
 

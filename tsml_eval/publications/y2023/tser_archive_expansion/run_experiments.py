@@ -82,14 +82,16 @@ def _run_experiment(args):
             data_path,
             results_path,
             dataset_name,
-            _set_tser_exp_regressor(
-                regressor,
-                random_state=resample_id,
-                n_jobs=n_jobs,
-                **kwargs,
-            )
-            if isinstance(regressor, str)
-            else _clone_estimator(regressor, resample_id),
+            (
+                _set_tser_exp_regressor(
+                    regressor,
+                    random_state=resample_id,
+                    n_jobs=n_jobs,
+                    **kwargs,
+                )
+                if isinstance(regressor, str)
+                else _clone_estimator(regressor, resample_id)
+            ),
             regressor_name=regressor,
             resample_id=resample_id,
             overwrite=overwrite,

@@ -42,16 +42,18 @@ def run_experiment(args, overwrite=False):
                 args.dataset_name,
                 get_forecaster_by_name(
                     args.estimator_name,
-                    random_state=args.resample_id
-                    if args.random_seed is None
-                    else args.random_seed,
+                    random_state=(
+                        args.resample_id
+                        if args.random_seed is None
+                        else args.random_seed
+                    ),
                     n_jobs=args.n_jobs,
                     **args.kwargs,
                 ),
                 forecaster_name=args.estimator_name,
-                random_seed=args.resample_id
-                if args.random_seed is None
-                else args.random_seed,
+                random_seed=(
+                    args.resample_id if args.random_seed is None else args.random_seed
+                ),
                 write_attributes=args.write_attributes,
                 att_max_shape=args.att_max_shape,
                 benchmark_time=args.benchmark_time,

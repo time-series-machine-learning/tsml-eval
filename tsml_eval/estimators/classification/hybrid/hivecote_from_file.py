@@ -278,9 +278,11 @@ class FromFileHIVECOTE(BaseClassifier):
             kf = StratifiedKFold(
                 n_splits=n_splits,
                 shuffle=True,
-                random_state=np.random.randint(0, np.iinfo(np.int32).max)
-                if self.random_state is None
-                else self.random_state,
+                random_state=(
+                    np.random.randint(0, np.iinfo(np.int32).max)
+                    if self.random_state is None
+                    else self.random_state
+                ),
             )
             preds = np.zeros(n_instances)
 

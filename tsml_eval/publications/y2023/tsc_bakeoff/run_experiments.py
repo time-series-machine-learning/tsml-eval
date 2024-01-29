@@ -89,14 +89,16 @@ def _run_experiment(args, predefined_resample):
             data_path,
             results_path,
             dataset_name,
-            _set_bakeoff_classifier(
-                classifier,
-                random_state=resample_id,
-                n_jobs=n_jobs,
-                **kwargs,
-            )
-            if isinstance(classifier, str)
-            else _clone_estimator(classifier, resample_id),
+            (
+                _set_bakeoff_classifier(
+                    classifier,
+                    random_state=resample_id,
+                    n_jobs=n_jobs,
+                    **kwargs,
+                )
+                if isinstance(classifier, str)
+                else _clone_estimator(classifier, resample_id)
+            ),
             classifier_name=classifier,
             resample_id=resample_id,
             overwrite=overwrite,

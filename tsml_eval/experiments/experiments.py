@@ -133,9 +133,9 @@ def run_classification_experiment(
             pad_unequal=True,
             concatenate_channels=True,
             clone_estimator=False,
-            random_state=classifier.random_state
-            if hasattr(classifier, "random_state")
-            else None,
+            random_state=(
+                classifier.random_state if hasattr(classifier, "random_state") else None
+            ),
         )
     else:
         raise TypeError("classifier must be a tsml, aeon or sklearn classifier.")
@@ -448,9 +448,9 @@ def run_clustering_experiment(
             pad_unequal=True,
             concatenate_channels=True,
             clone_estimator=False,
-            random_state=clusterer.random_state
-            if hasattr(clusterer, "random_state")
-            else None,
+            random_state=(
+                clusterer.random_state if hasattr(clusterer, "random_state") else None
+            ),
         )
     else:
         raise TypeError("clusterer must be a tsml, aeon or sklearn clusterer.")
@@ -570,9 +570,11 @@ def run_clustering_experiment(
             test_probs = np.zeros(
                 (
                     len(test_preds),
-                    n_clusters
-                    if n_clusters is not None
-                    else len(np.unique(train_preds)),
+                    (
+                        n_clusters
+                        if n_clusters is not None
+                        else len(np.unique(train_preds))
+                    ),
                 )
             )
             test_probs[np.arange(len(test_preds)), test_preds] = 1
@@ -1002,9 +1004,9 @@ def run_regression_experiment(
             pad_unequal=True,
             concatenate_channels=True,
             clone_estimator=False,
-            random_state=regressor.random_state
-            if hasattr(regressor, "random_state")
-            else None,
+            random_state=(
+                regressor.random_state if hasattr(regressor, "random_state") else None
+            ),
         )
     else:
         raise TypeError("regressor must be a tsml, aeon or sklearn regressor.")
