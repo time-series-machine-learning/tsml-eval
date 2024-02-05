@@ -42,7 +42,7 @@ jobs:
         with:
           timeout_minutes: 30
           max_attempts: 3
-          command: python -m pip install .[dev,all_extras,unstable_extras,deep_learning]
+          command: python -m pip install .[dev,all_extras,unstable_extras]
 
       - name: Tests
         run: python -m pytest
@@ -66,9 +66,11 @@ jobs:
         with:
           timeout_minutes: 30
           max_attempts: 3
-          command: python -m pip install .[dev,all_extras,unstable_extras,deep_learning]
+          command: python -m pip install .[dev,all_extras,unstable_extras]
 
       - name: Tests
         run: python -m pytest --cov=tsml_eval --cov-report=xml
 
       - uses: codecov/codecov-action@v4
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
