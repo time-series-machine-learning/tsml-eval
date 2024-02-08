@@ -113,13 +113,15 @@ def _run_experiment(args):
             data_path,
             results_path,
             dataset_name,
-            _set_distance_clusterer(
-                clusterer,
-                random_state=resample_id + 1,
-                **kwargs,
-            )
-            if isinstance(clusterer, str)
-            else _clone_estimator(clusterer, resample_id),
+            (
+                _set_distance_clusterer(
+                    clusterer,
+                    random_state=resample_id + 1,
+                    **kwargs,
+                )
+                if isinstance(clusterer, str)
+                else _clone_estimator(clusterer, resample_id)
+            ),
             row_normalise=normalise,
             n_clusters=-1,
             clusterer_name=clusterer,

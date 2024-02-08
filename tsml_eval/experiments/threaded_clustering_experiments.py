@@ -48,9 +48,11 @@ def run_experiment(args):
                 args.dataset_name,
                 get_clusterer_by_name(
                     args.estimator_name,
-                    random_state=args.resample_id
-                    if args.random_seed is None
-                    else args.random_seed,
+                    random_state=(
+                        args.resample_id
+                        if args.random_seed is None
+                        else args.random_seed
+                    ),
                     n_jobs=args.n_jobs,
                     fit_contract=args.fit_contract,
                     checkpoint=args.checkpoint,

@@ -43,10 +43,12 @@ def test_run_distance_based_clustering_experiment():
 
     # this covers both the main method and present result file checking
     runpy.run_path(
-        "./tsml_eval/publications/y2023/distance_based_clustering/"
-        "run_distance_experiments.py"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else "../run_distance_experiments.py",
+        (
+            "./tsml_eval/publications/y2023/distance_based_clustering/"
+            "run_distance_experiments.py"
+            if os.getcwd().split("\\")[-1] != "tests"
+            else "../run_distance_experiments.py"
+        ),
         run_name="__main__",
     )
 

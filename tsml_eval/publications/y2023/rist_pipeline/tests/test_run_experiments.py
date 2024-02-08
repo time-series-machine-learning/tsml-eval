@@ -40,9 +40,12 @@ def test_run_rist_pipeline_classification_experiment():
 
     # this covers both the main method and present result file checking
     runpy.run_path(
-        "./tsml_eval/publications/y2023/rist_pipeline/run_classification_experiments.py"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else "../run_classification_experiments.py",
+        (
+            "./tsml_eval/publications/y2023/rist_pipeline/"
+            "run_classification_experiments.py"
+            if os.getcwd().split("\\")[-1] != "tests"
+            else "../run_classification_experiments.py"
+        ),
         run_name="__main__",
     )
 
@@ -74,9 +77,11 @@ def test_run_rist_pipeline_regression_experiment():
 
     # this covers both the main method and present result file checking
     runpy.run_path(
-        "./tsml_eval/publications/y2023/rist_pipeline/run_regression_experiments.py"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else "../run_regression_experiments.py",
+        (
+            "./tsml_eval/publications/y2023/rist_pipeline/run_regression_experiments.py"
+            if os.getcwd().split("\\")[-1] != "tests"
+            else "../run_regression_experiments.py"
+        ),
         run_name="__main__",
     )
 

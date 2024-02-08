@@ -59,9 +59,11 @@ def test_run_forecasting_experiment_main():
     # run twice to test results present check
     for _ in range(2):
         runpy.run_path(
-            "./tsml_eval/experiments/forecasting_experiments.py"
-            if os.getcwd().split("\\")[-1] != "tests"
-            else "../forecasting_experiments.py",
+            (
+                "./tsml_eval/experiments/forecasting_experiments.py"
+                if os.getcwd().split("\\")[-1] != "tests"
+                else "../forecasting_experiments.py"
+            ),
             run_name="__main__",
         )
 
@@ -107,9 +109,11 @@ def test_run_threaded_forecasting_experiment():
 
     # this covers the main method and experiment function result file checking
     runpy.run_path(
-        "./tsml_eval/experiments/threaded_forecasting_experiments.py"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else "../threaded_forecasting_experiments.py",
+        (
+            "./tsml_eval/experiments/threaded_forecasting_experiments.py"
+            if os.getcwd().split("\\")[-1] != "tests"
+            else "../threaded_forecasting_experiments.py"
+        ),
         run_name="__main__",
     )
 

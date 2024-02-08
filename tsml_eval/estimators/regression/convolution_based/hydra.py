@@ -7,7 +7,6 @@ classification
 https://arxiv.org/abs/2203.13652
 """
 
-
 import numpy as np
 from aeon.regression.base import BaseRegressor
 from aeon.utils.validation._dependencies import _check_soft_dependencies
@@ -86,9 +85,11 @@ class _Hydra(nn.Module):
             for diff_index in range(min(2, self.g)):
                 if self.n_dims_ > 1:  # Multivariate
                     _Z = F.conv1d(
-                        X[:, self.I_[dilation_index][diff_index]].sum(2)
-                        if diff_index == 0
-                        else diff_X[:, self.I_[dilation_index][diff_index]].sum(2),
+                        (
+                            X[:, self.I_[dilation_index][diff_index]].sum(2)
+                            if diff_index == 0
+                            else diff_X[:, self.I_[dilation_index][diff_index]].sum(2)
+                        ),
                         self.W_[dilation_index][diff_index],
                         dilation=d,
                         padding=p,

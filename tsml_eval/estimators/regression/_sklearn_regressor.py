@@ -65,7 +65,7 @@ class SklearnToTsmlRegressor(RegressorMixin, BaseTimeSeriesEstimator):
     def _more_tags(self):
         return {
             "X_types": ["2darray"],
-            "equal_length_only": False
-            if self.pad_unequal or self.concatenate_channels
-            else True,
+            "equal_length_only": (
+                False if self.pad_unequal or self.concatenate_channels else True
+            ),
         }

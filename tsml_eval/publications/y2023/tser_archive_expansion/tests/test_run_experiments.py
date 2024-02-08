@@ -37,9 +37,11 @@ def test_run_expansion_regression_experiment():
 
     # this covers both the main method and present result file checking
     runpy.run_path(
-        "./tsml_eval/publications/y2023/tser_archive_expansion/run_experiments.py"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else "../run_experiments.py",
+        (
+            "./tsml_eval/publications/y2023/tser_archive_expansion/run_experiments.py"
+            if os.getcwd().split("\\")[-1] != "tests"
+            else "../run_experiments.py"
+        ),
         run_name="__main__",
     )
 

@@ -71,9 +71,11 @@ def run_experiment(args):
                 args.dataset_name,
                 get_regressor_by_name(
                     args.estimator_name,
-                    random_state=args.resample_id
-                    if args.random_seed is None
-                    else args.random_seed,
+                    random_state=(
+                        args.resample_id
+                        if args.random_seed is None
+                        else args.random_seed
+                    ),
                     n_jobs=1,
                     build_train_file=args.train_fold,
                     fit_contract=args.fit_contract,
