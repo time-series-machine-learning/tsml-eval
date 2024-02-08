@@ -5,7 +5,7 @@ __author__ = ["MatthewMiddlehurst"]
 import shutil
 
 from tsml_eval.experiments import experiments
-from tsml_eval.testing.test_utils import _TEST_OUTPUT_PATH
+from tsml_eval.testing.testing_utils import _TEST_OUTPUT_PATH
 
 KEEP_PYTEST_OUTPUT = True
 
