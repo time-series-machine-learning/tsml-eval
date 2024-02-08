@@ -20,7 +20,7 @@ from tsml_eval.publications.y2023.tser_archive_expansion.set_tser_exp_regressor 
 from tsml_eval.publications.y2023.tser_archive_expansion.tests import (
     _TSER_ARCHIVE_TEST_RESULTS_PATH,
 )
-from tsml_eval.testing.test_utils import _TEST_DATA_PATH
+from tsml_eval.testing.testing_utils import _TEST_DATA_PATH
 from tsml_eval.utils.arguments import parse_args
 from tsml_eval.utils.experiments import _results_present
 

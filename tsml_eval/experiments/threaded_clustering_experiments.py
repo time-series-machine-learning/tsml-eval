@@ -12,7 +12,7 @@ import sys
 from tsml_eval.experiments import load_and_run_clustering_experiment
 from tsml_eval.experiments.set_clusterer import get_clusterer_by_name
 from tsml_eval.experiments.tests import _CLUSTERER_RESULTS_PATH
-from tsml_eval.testing.test_utils import _TEST_DATA_PATH
+from tsml_eval.testing.testing_utils import _TEST_DATA_PATH
 from tsml_eval.utils.arguments import parse_args
 from tsml_eval.utils.experiments import _results_present
 

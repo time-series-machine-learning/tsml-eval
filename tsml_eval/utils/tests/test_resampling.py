@@ -12,7 +12,7 @@ from tsml.datasets import (
     load_unequal_minimal_chinatown,
 )
 
-from tsml_eval.testing.test_utils import _TEST_RESULTS_PATH
+from tsml_eval.testing.testing_utils import _TEST_RESULTS_PATH
 from tsml_eval.utils.experiments import (
     compare_result_file_resample,
     resample_data,

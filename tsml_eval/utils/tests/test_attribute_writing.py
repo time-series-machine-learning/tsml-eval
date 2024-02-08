@@ -4,7 +4,7 @@ from aeon.classification.shapelet_based import ShapeletTransformClassifier
 from aeon.classification.sklearn import RotationForestClassifier
 from tsml.datasets import load_minimal_chinatown
 
-from tsml_eval.testing.test_utils import _TEST_OUTPUT_PATH
+from tsml_eval.testing.testing_utils import _TEST_OUTPUT_PATH
 from tsml_eval.utils.experiments import estimator_attributes_to_file
 
 

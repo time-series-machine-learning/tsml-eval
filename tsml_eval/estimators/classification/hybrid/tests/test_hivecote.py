@@ -11,7 +11,7 @@ from aeon.utils.estimator_checks import check_estimator
 from tsml_eval.estimators.classification.hybrid.hivecote_from_file import (
     FromFileHIVECOTE,
 )
-from tsml_eval.testing.test_utils import _TEST_RESULTS_PATH
+from tsml_eval.testing.testing_utils import _TEST_RESULTS_PATH
 
 
 def test_hivecote_from_file():

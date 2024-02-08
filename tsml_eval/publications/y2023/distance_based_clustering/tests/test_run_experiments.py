@@ -7,7 +7,7 @@ from tsml_eval.publications.y2023.distance_based_clustering import _run_experime
 from tsml_eval.publications.y2023.distance_based_clustering.tests import (
     _DISTANCE_TEST_RESULTS_PATH,
 )
-from tsml_eval.testing.test_utils import _TEST_DATA_PATH
+from tsml_eval.testing.testing_utils import _TEST_DATA_PATH
 from tsml_eval.utils.tests.test_results_writing import _check_clustering_file_format
 
 

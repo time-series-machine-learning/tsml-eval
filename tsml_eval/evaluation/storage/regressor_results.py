@@ -83,7 +83,7 @@ class RegressorResults(EstimatorResults):
     Examples
     --------
     >>> from tsml_eval.evaluation.storage import RegressorResults
-    >>> from tsml_eval.testing.test_utils import _TEST_RESULTS_PATH
+    >>> from tsml_eval.testing.testing_utils import _TEST_RESULTS_PATH
     >>> rr = RegressorResults().load_from_file(
     ...     _TEST_RESULTS_PATH +
     ...     "/regression/ROCKET/Predictions/Covid3Month/testResample0.csv"

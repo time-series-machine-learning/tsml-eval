@@ -8,7 +8,7 @@ from tsml_eval.publications.y2023.rist_pipeline import (
     rist_classifiers,
     rist_regressors,
 )
-from tsml_eval.testing.test_utils import _check_set_method, _check_set_method_results
+from tsml_eval.testing.testing_utils import _check_set_method, _check_set_method_results
 
 
 def test_set_rist_classifier():

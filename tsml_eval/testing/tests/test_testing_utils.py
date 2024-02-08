@@ -2,7 +2,7 @@
 
 import pytest
 
-from tsml_eval.testing.test_utils import (
+from tsml_eval.testing.testing_utils import (
     _check_set_method,
     _check_set_method_results,
     suppress_output,

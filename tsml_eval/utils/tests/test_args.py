@@ -1,6 +1,6 @@
 import pytest
 
-from tsml_eval.testing.test_utils import suppress_output
+from tsml_eval.testing.testing_utils import suppress_output
 from tsml_eval.utils.arguments import parse_args
 
 

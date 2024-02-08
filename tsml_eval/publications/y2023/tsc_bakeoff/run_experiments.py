@@ -18,7 +18,7 @@ from tsml_eval.publications.y2023.tsc_bakeoff.set_bakeoff_classifier import (
     _set_bakeoff_classifier,
 )
 from tsml_eval.publications.y2023.tsc_bakeoff.tests import _BAKEOFF_TEST_RESULTS_PATH
-from tsml_eval.testing.test_utils import _TEST_DATA_PATH
+from tsml_eval.testing.testing_utils import _TEST_DATA_PATH
 from tsml_eval.utils.arguments import parse_args
 from tsml_eval.utils.experiments import _results_present
 
