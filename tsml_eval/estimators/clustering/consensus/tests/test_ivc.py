@@ -1,37 +1,31 @@
 import numpy as np
+import pytest
 from aeon.datasets import load_arrow_head
 from sklearn.metrics import rand_score
+from tsml.utils.testing import generate_3d_test_data
 
+from tsml_eval.estimators.clustering.consensus.ivc import IterativeVotingClustering
 from tsml_eval.estimators.clustering.consensus.ivc_from_file import (
     FromFileIterativeVotingClustering,
 )
-from tsml_eval.estimators.clustering.consensus.simple_vote_from_file import (
-    FromFileSimpleVote,
-)
-from tsml_eval.testing.test_utils import _TEST_RESULTS_PATH
+from tsml_eval.testing.testing_utils import _TEST_RESULTS_PATH
 
 
-def test_from_file_simple_vote():
-    """Test SimpleVote from file with ArrowHead results."""
-    X_train, y_train = load_arrow_head(split="train")
-    X_test, y_test = load_arrow_head(split="test")
+@pytest.mark.parametrize("init", ["plus", "random", "aligned"])
+def test_ivc_init_methods(init):
+    """Test IVC init methods."""
+    X, y = generate_3d_test_data(n_labels=4)
 
-    file_paths = [
-        _TEST_RESULTS_PATH + "/clustering/PAM-DTW/Predictions/ArrowHead/",
-        _TEST_RESULTS_PATH + "/clustering/PAM-ERP/Predictions/ArrowHead/",
-        _TEST_RESULTS_PATH + "/clustering/PAM-MSM/Predictions/ArrowHead/",
-    ]
+    ivc = IterativeVotingClustering(
+        n_clusters=4,
+        max_iterations=10,
+        init=init,
+    )
+    ivc.fit(X, y)
+    preds = ivc.predict(X)
 
-    sv = FromFileSimpleVote(clusterers=file_paths, n_clusters=3, random_state=0)
-    sv.fit(X_train, y_train)
-    preds = sv.predict(X_test)
-
-    assert sv.labels_.shape == (len(X_train),)
-    assert isinstance(sv.labels_, np.ndarray)
-    assert rand_score(y_train, sv.labels_) >= 0.6
-    assert preds.shape == (len(X_test),)
-    assert isinstance(preds, np.ndarray)
-    assert rand_score(y_test, preds) >= 0.6
+    assert ivc.labels_.shape == (len(X),)
+    assert preds.shape == (len(X),)
 
 
 def test_from_file_iterative_voting_clustering():
