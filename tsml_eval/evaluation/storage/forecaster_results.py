@@ -60,7 +60,7 @@ class ForecasterResults(EstimatorResults):
     Examples
     --------
     >>> from tsml_eval.evaluation.storage import ForecasterResults
-    >>> from tsml_eval.testing.test_utils import _TEST_RESULTS_PATH
+    >>> from tsml_eval.testing.testing_utils import _TEST_RESULTS_PATH
     >>> fr = ForecasterResults().load_from_file(
     ...     _TEST_RESULTS_PATH +
     ...     "/forecasting/NaiveForecaster/Predictions/Airline/testResample0.csv"

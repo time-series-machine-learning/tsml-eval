@@ -5,7 +5,7 @@ import runpy
 
 from tsml_eval.publications.y2023.tsc_bakeoff.run_experiments import _run_experiment
 from tsml_eval.publications.y2023.tsc_bakeoff.tests import _BAKEOFF_TEST_RESULTS_PATH
-from tsml_eval.testing.test_utils import _TEST_DATA_PATH
+from tsml_eval.testing.testing_utils import _TEST_DATA_PATH
 from tsml_eval.utils.tests.test_results_writing import _check_classification_file_format
 
 

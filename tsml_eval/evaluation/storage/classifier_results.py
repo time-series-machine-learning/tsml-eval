@@ -88,7 +88,7 @@ class ClassifierResults(EstimatorResults):
     Examples
     --------
     >>> from tsml_eval.evaluation.storage import ClassifierResults
-    >>> from tsml_eval.testing.test_utils import _TEST_RESULTS_PATH
+    >>> from tsml_eval.testing.testing_utils import _TEST_RESULTS_PATH
     >>> cr = ClassifierResults().load_from_file(
     ...     _TEST_RESULTS_PATH +
     ...     "/classification/ROCKET/Predictions/Chinatown/testResample0.csv"

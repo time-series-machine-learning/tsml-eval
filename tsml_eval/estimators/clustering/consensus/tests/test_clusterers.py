@@ -10,5 +10,5 @@ from tsml_eval.estimators.clustering.consensus.simple_vote import SimpleVote
         IterativeVotingClustering(n_clusters=2, max_iterations=5),
     ]
 )
-def test_simple_vote(estimator, check):
+def test_sklearn_checks(estimator, check):
     check(estimator)

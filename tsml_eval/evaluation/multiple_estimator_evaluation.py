@@ -1294,6 +1294,13 @@ def _create_directory_for_statistic(
         average_stats, estimators, statistic_name, higher_better, save_path, eval_name
     )
 
+    # with open(
+    #     f"{save_path}/{statistic_name}/{statistic_name.lower()}_p_values.csv", "w"
+    # ) as file:
+    #     file.write(f"Estimators:,{','.join(sorted_estimators)}\n")
+    #     for i, estimator_name in enumerate(sorted_estimators):
+    #       file.write(f"{estimator_name},{','.join([str(n) for n in p_values[i]])}\n")
+
     return average_stats, ranks
 
 

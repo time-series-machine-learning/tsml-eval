@@ -4,7 +4,7 @@ import os
 
 import pytest
 
-from tsml_eval.testing.test_utils import _TEST_OUTPUT_PATH, _TEST_RESULTS_PATH
+from tsml_eval.testing.testing_utils import _TEST_OUTPUT_PATH, _TEST_RESULTS_PATH
 from tsml_eval.utils.experiments import fix_broken_second_line
 from tsml_eval.utils.validation import validate_results_file
 

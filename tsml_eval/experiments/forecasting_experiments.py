@@ -21,7 +21,7 @@ from aeon.utils.validation._dependencies import _check_soft_dependencies
 from tsml_eval.experiments import load_and_run_forecasting_experiment
 from tsml_eval.experiments.set_forecaster import get_forecaster_by_name
 from tsml_eval.experiments.tests import _FORECASTER_RESULTS_PATH
-from tsml_eval.testing.test_utils import _TEST_DATA_PATH
+from tsml_eval.testing.testing_utils import _TEST_DATA_PATH
 from tsml_eval.utils.arguments import parse_args
 from tsml_eval.utils.experiments import _results_present, assign_gpu
 

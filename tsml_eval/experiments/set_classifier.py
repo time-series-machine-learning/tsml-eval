@@ -47,6 +47,7 @@ distance_based_classifiers = [
     ["twe", "1nn-twe"],
     "1nn-dtw-cv",
     ["elasticensemble", "ee"],
+    ["proximityforestclassifier", "proximityforest", "pf"],
     "shapedtw",
     ["matrixprofileclassifier", "matrixprofile"],
     ["grailclassifier", "grail"],
@@ -424,6 +425,12 @@ def _set_classifier_distance_based(
         from aeon.classification.distance_based import ElasticEnsemble
 
         return ElasticEnsemble(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "proximityforestclassifier" or c == "proximityforest" or c == "pf":
+        from tsml.distance_based import ProximityForestClassifier
+
+        return ProximityForestClassifier(
+            random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
     elif c == "shapedtw":
         from aeon.classification.distance_based import ShapeDTW
 

@@ -17,7 +17,7 @@ from tsml_eval.experiments import (
     threaded_classification_experiments,
 )
 from tsml_eval.experiments.tests import _CLASSIFIER_RESULTS_PATH
-from tsml_eval.testing.test_utils import (
+from tsml_eval.testing.testing_utils import (
     _TEST_DATA_PATH,
     _check_set_method,
     _check_set_method_results,

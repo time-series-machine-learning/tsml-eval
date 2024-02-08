@@ -1,3 +1,5 @@
+"""Unit test utilities."""
+
 import os
 import sys
 from contextlib import contextmanager

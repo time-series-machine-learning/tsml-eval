@@ -85,7 +85,7 @@ class ClustererResults(EstimatorResults):
     Examples
     --------
     >>> from tsml_eval.evaluation.storage import ClustererResults
-    >>> from tsml_eval.testing.test_utils import _TEST_RESULTS_PATH
+    >>> from tsml_eval.testing.testing_utils import _TEST_RESULTS_PATH
     >>> cr = ClustererResults().load_from_file(
     ...     _TEST_RESULTS_PATH +
     ...     "/clustering/KMeans/Predictions/Trace/trainResample0.csv"

@@ -335,7 +335,7 @@ class FromFileHIVECOTE(BaseClassifier):
             `MyClass(**params)` or `MyClass(**params[i])` creates a valid test instance.
             `create_test_instance` uses the first (or only) dictionary in `params`.
         """
-        from tsml_eval.testing.test_utils import _TEST_RESULTS_PATH
+        from tsml_eval.testing.testing_utils import _TEST_RESULTS_PATH
 
         file_paths = [
             _TEST_RESULTS_PATH + "/classification/TestResults/Test1/",

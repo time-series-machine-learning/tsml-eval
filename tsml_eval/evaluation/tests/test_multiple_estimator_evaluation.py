@@ -4,7 +4,7 @@ from tsml_eval.evaluation.multiple_estimator_evaluation import (
     evaluate_forecasters_by_problem,
     evaluate_regressors_by_problem,
 )
-from tsml_eval.testing.test_utils import _TEST_OUTPUT_PATH, _TEST_RESULTS_PATH
+from tsml_eval.testing.testing_utils import _TEST_OUTPUT_PATH, _TEST_RESULTS_PATH
 
 
 def test_evaluate_classifiers_by_problem():

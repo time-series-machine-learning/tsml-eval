@@ -18,7 +18,7 @@ from tsml_eval.publications.y2023.rist_pipeline.set_rist_regressor import (
     _set_rist_regressor,
 )
 from tsml_eval.publications.y2023.rist_pipeline.tests import _RIST_TEST_RESULTS_PATH
-from tsml_eval.testing.test_utils import _TEST_DATA_PATH
+from tsml_eval.testing.testing_utils import _TEST_DATA_PATH
 from tsml_eval.utils.arguments import parse_args
 from tsml_eval.utils.experiments import _results_present
 
