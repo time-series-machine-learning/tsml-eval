@@ -1,5 +1,7 @@
 """Alignment path plotting utilities."""
 
+from typing import Optional
+
 import numpy as np
 from aeon.distances import cost_matrix as compute_cost_matrix
 from aeon.distances._distance import alignment_path, pairwise_distance
@@ -48,7 +50,7 @@ def _plot_path(
     x: np.ndarray,
     y: np.ndarray,
     metric: str,
-    dist_kwargs: dict = None,
+    dist_kwargs: Optional[dict] = None,
     title: str = "",
     plot_over_pw: bool = False,
 ):  # pragma: no cover
@@ -117,7 +119,7 @@ def _plot_path(
 
 
 def _plot_alignment(
-    x, y, metric, dist_kwargs: dict = None, title: str = ""
+    x, y, metric, dist_kwargs: Optional[dict] = None, title: str = ""
 ):  # pragma: no cover
     _check_soft_dependencies("matplotlib")
 
