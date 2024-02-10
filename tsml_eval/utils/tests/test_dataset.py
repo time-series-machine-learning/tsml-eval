@@ -1,41 +1,36 @@
 import os
 
-from tsml_eval.testing.testing_utils import _TEST_EVAL_PATH, _TEST_OUTPUT_PATH
-from tsml_eval.utils.publications import extract_publication_csvs_from_evaluation
+from tsml_eval.testing.testing_utils import _TEST_DATA_PATH, _TEST_OUTPUT_PATH
+from tsml_eval.utils.datasets import copy_dataset_ts_files
 
 
 def test_copy_dataset_ts_files():
-    extract_publication_csvs_from_evaluation(
-        "Accuracy",
-        f"{_TEST_EVAL_PATH}/classification/",
-        f"{_TEST_OUTPUT_PATH}/eval_result_files_test/",
+    copy_path = f"{_TEST_OUTPUT_PATH}/datasets/"
+
+    copy_dataset_ts_files(
+        f"{_TEST_DATA_PATH}/_test_data/test_datalist.txt",
+        _TEST_DATA_PATH,
+        copy_path,
     )
 
+    assert os.path.exists(f"{copy_path}/MinimalChinatown/MinimalChinatown_TRAIN.ts")
+    assert os.path.exists(f"{copy_path}/MinimalChinatown/MinimalChinatown_TEST.ts")
+    assert os.path.exists(f"{copy_path}/MinimalGasPrices/MinimalGasPrices_TRAIN.ts")
+    assert os.path.exists(f"{copy_path}/MinimalGasPrices/MinimalGasPrices_TEST.ts")
     assert os.path.exists(
-        f"{_TEST_EVAL_PATH}/classification/Accuracy/all_resamples/1NN-DTW_accuracy.csv"
+        f"{_TEST_DATA_PATH}/MinimalChinatown/MinimalChinatown_TRAIN.ts"
     )
     assert os.path.exists(
-        f"{_TEST_EVAL_PATH}/classification/Accuracy/all_resamples/ROCKET_accuracy.csv"
+        f"{_TEST_DATA_PATH}/MinimalChinatown/MinimalChinatown_TEST.ts"
     )
     assert os.path.exists(
-        f"{_TEST_EVAL_PATH}/classification/Accuracy/all_resamples/TSF_accuracy.csv"
+        f"{_TEST_DATA_PATH}/MinimalGasPrices/MinimalGasPrices_TRAIN.ts"
     )
     assert os.path.exists(
-        f"{_TEST_OUTPUT_PATH}/eval_result_files_test/1NN-DTW_accuracy.csv"
-    )
-    assert os.path.exists(
-        f"{_TEST_OUTPUT_PATH}/eval_result_files_test/ROCKET_accuracy.csv"
-    )
-    assert os.path.exists(
-        f"{_TEST_OUTPUT_PATH}/eval_result_files_test/TSF_accuracy.csv"
+        f"{_TEST_DATA_PATH}/MinimalGasPrices/MinimalGasPrices_TEST.ts"
     )
 
-    os.remove(
-        f"{_TEST_EVAL_PATH}/classification/Accuracy/all_resamples/1NN-DTW_accuracy.csv"
-    )
-    os.remove(
-        f"{_TEST_EVAL_PATH}/classification/Accuracy/all_resamples/ROCKET_accuracy.csv"
-    )
-    os.remove(
-        f"{_TEST_EVAL_PATH}/classification/Accuracy/all_resamples/TSF_accuracy.csv"
-    )
+    os.remove(f"{copy_path}/MinimalChinatown/MinimalChinatown_TRAIN.ts")
+    os.remove(f"{copy_path}/MinimalChinatown/MinimalChinatown_TEST.ts")
+    os.remove(f"{copy_path}/MinimalGasPrices/MinimalGasPrices_TRAIN.ts")
+    os.remove(f"{copy_path}/MinimalGasPrices/MinimalGasPrices_TEST.ts")

@@ -4,7 +4,7 @@ import os
 import shutil
 
 
-def extract_publication_csvs_from_evaluation(stats, eval_path, write_path):
+def extract_publication_csv_from_evaluation(stats, eval_path, write_path):
     """Extract the CSV files from the evaluation directory to a new directory.
 
     Parameters
@@ -25,9 +25,9 @@ def extract_publication_csvs_from_evaluation(stats, eval_path, write_path):
     ...     _TEST_EVAL_PATH, _TEST_OUTPUT_PATH
     ... )
     >>> from tsml_eval.utils.publications import (
-    ...     extract_publication_csvs_from_evaluation
+    ...     extract_publication_csv_from_evaluation
     ... )
-    >>> extract_publication_csvs_from_evaluation(
+    >>> extract_publication_csv_from_evaluation(
     ...     ["Accuracy", "BalAcc"],
     ...     f"{_TEST_EVAL_PATH}/classification/",
     ...     f"{_TEST_OUTPUT_PATH}/result_files/",
