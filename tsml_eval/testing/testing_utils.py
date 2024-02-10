@@ -8,14 +8,19 @@ from pathlib import Path
 
 from sklearn.base import BaseEstimator
 
-_TEST_DATA_PATH = os.path.dirname(Path(__file__).parent.parent) + "/tsml_eval/datasets/"
+_TEST_DATA_PATH = f"{os.path.dirname(Path(__file__).parent.parent)}/tsml_eval/datasets/"
 
 _TEST_RESULTS_PATH = (
-    os.path.dirname(Path(__file__).parent.parent)
-    + "/tsml_eval/testing/_test_result_files/"
+    f"{os.path.dirname(Path(__file__).parent.parent)}/tsml_eval/testing/"
+    f"_test_results_files/"
 )
 
-_TEST_OUTPUT_PATH = os.path.dirname(Path(__file__).parent.parent) + "/test_output/"
+_TEST_EVAL_PATH = (
+    f"{os.path.dirname(Path(__file__).parent.parent)}/tsml_eval/testing/"
+    f"_test_eval_files/"
+)
+
+_TEST_OUTPUT_PATH = f"{os.path.dirname(Path(__file__).parent.parent)}/test_output/"
 
 
 def _check_set_method(

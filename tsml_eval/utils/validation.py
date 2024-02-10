@@ -172,7 +172,7 @@ def _check_results_line(line, probabilities=True, n_probas=2):
         except ValueError:
             return False
 
-        if psum < 0.999 or psum > 1.001:
+        if psum < 0.99999 or psum > 1.00001:
             return False
     else:
         n_probas = 0
