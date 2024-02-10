@@ -3,11 +3,11 @@
 import os
 import shutil
 from os.path import exists
-from typing import Union
+from typing import List, Union
 
 
 def copy_dataset_ts_files(
-    datasets: Union[list[str], str],
+    datasets: Union[List[str], str],
     source_path: str,
     destination_path: str,
 ):
