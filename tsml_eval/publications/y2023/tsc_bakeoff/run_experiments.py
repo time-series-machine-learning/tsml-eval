@@ -23,10 +23,10 @@ from tsml_eval.utils.arguments import parse_args
 from tsml_eval.utils.experiments import _results_present
 
 # all classifiers ran without duplicates
-distance_based = ["1NN-DTW", "ShapeDTW"]
+distance_based = ["1NN-DTW", "ShapeDTW", "GRAIL"]
 feature_based = ["Catch22", "FreshPRINCE", "TSFresh", "Signatures"]
 shapelet_based = ["STC", "RDST", "RSF", "MrSQM"]
-interval_based = ["R-STSF", "RISE", "TSF", "CIF", "STSF", "DrCIF"]
+interval_based = ["R-STSF", "RISE", "TSF", "CIF", "STSF", "DrCIF", "QUANT"]
 dictionary_based = ["BOSS", "cBOSS", "TDE", "WEASEL", "WEASEL-D"]
 convolution_based = [
     "ROCKET",
@@ -36,16 +36,16 @@ convolution_based = [
     "Hydra",
     "Hydra-MultiROCKET",
 ]
-deep_learning = ["CNN", "ResNet", "InceptionTime"]
-hybrid = ["HC1", "HC2"]
+deep_learning = ["CNN", "ResNet", "InceptionTime", "H-InceptionTime", "LITETime"]
+hybrid = ["HC1", "HC2", "RIST"]
 # top performing classifiers
 top_classifiers = [
     "FreshPRINCE",
     "RDST",
-    "R-STSF",
+    "QUANT",
     "WEASEL-D",
     "Hydra-MultiROCKET",
-    "InceptionTime",
+    "H-InceptionTime",
     "HC2",
 ]
 

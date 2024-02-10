@@ -160,8 +160,10 @@ def evaluate_classifiers_by_problem(
         results in the second.
         If load_path is a list, classifier_names must be a list of lists with the same
         length as load_path.
-    dataset_names : list of str or list of list
-        The names of the datasets to evaluate.
+    dataset_names : str, list of str or list of list
+        The names of the datasets to evaluate. If a list of strings, each item is the
+        name of a dataset. If a string, it is the path to a file containing the names
+        of the datasets, one per line.
         If load_path is a list, dataset_names must be a list of lists with the same
         length as load_path.
     save_path : str
@@ -405,8 +407,10 @@ def evaluate_clusterers_by_problem(
         results in the second.
         If load_path is a list, clusterer_names must be a list of lists with the same
         length as load_path.
-    dataset_names : list of str or list of list
-        The names of the datasets to evaluate.
+    dataset_names : str, list of str or list of list
+        The names of the datasets to evaluate. If a list of strings, each item is the
+        name of a dataset. If a string, it is the path to a file containing the names
+        of the datasets, one per line.
         If load_path is a list, dataset_names must be a list of lists with the same
         length as load_path.
     save_path : str
@@ -650,8 +654,10 @@ def evaluate_regressors_by_problem(
         results in the second.
         If load_path is a list, regressor_names must be a list of lists with the same
         length as load_path.
-    dataset_names : list of str or list of list
-        The names of the datasets to evaluate.
+    dataset_names : str, list of str or list of list
+        The names of the datasets to evaluate. If a list of strings, each item is the
+        name of a dataset. If a string, it is the path to a file containing the names
+        of the datasets, one per line.
         If load_path is a list, dataset_names must be a list of lists with the same
         length as load_path.
     save_path : str
@@ -894,10 +900,12 @@ def evaluate_forecasters_by_problem(
         results in the second.
         If load_path is a list, regressor_names must be a list of lists with the same
         length as load_path.
-    dataset_names : list of str or list of list
-        The names of the datasets to evaluate.
+    dataset_names : str, list of str or list of list
+        The names of the datasets to evaluate. If a list of strings, each item is the
+        name of a dataset. If a string, it is the path to a file containing the names
+        of the datasets, one per line.
         If load_path is a list, dataset_names must be a list of lists with the same
-        length as load_path..
+        length as load_path.
     save_path : str
         The path to save the evaluation results to.
     resamples : int or list of int, default=None
@@ -1017,7 +1025,11 @@ def _evaluate_by_problem_init(
     elif not isinstance(estimator_names[0], list):
         raise TypeError(f"{type}_names must be a str, tuple or list of str or tuple.")
 
-    if isinstance(dataset_names[0], str):
+    if isinstance(dataset_names, str):
+        with open(dataset_names, "r") as f:
+            dataset_names = f.readlines()
+            dataset_names = [[d.strip() for d in dataset_names]]
+    elif isinstance(dataset_names[0], str):
         dataset_names = [dataset_names]
     elif not isinstance(dataset_names[0], list):
         raise TypeError("dataset_names must be a str or list of str.")

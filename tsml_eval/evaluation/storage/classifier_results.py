@@ -1,6 +1,7 @@
 """Class for storing and loading results from a classification experiment."""
 
 import numpy as np
+from numpy.testing import assert_allclose
 from sklearn.metrics import (
     accuracy_score,
     balanced_accuracy_score,
@@ -258,10 +259,16 @@ class ClassifierResults(EstimatorResults):
                 self.class_labels, self.predictions
             )
         if self.log_loss is None or overwrite:
+            import warnings
+
+            warnings.filterwarnings(
+                "ignore",
+                message="The y_pred values do not sum to one. Starting from 1.5 "
+                "thiswill result in an error.",
+            )
             self.log_loss = log_loss(
                 self.class_labels,
                 self.probabilities,
-                eps=0.01,
             )
         if self.auroc_score is None or overwrite:
             self.auroc_score = roc_auc_score(
@@ -395,6 +402,8 @@ def load_classifier_results(file_path, calculate_stats=True, verify_values=True)
         cr.infer_size(overwrite=True)
         assert cr.n_cases == n_cases
         assert cr.n_classes == n_classes
+
+        assert_allclose(probabilities.sum(axis=1), 1, rtol=1e-5)
 
         if calculate_stats:
             assert cr.accuracy == acc

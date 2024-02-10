@@ -1,6 +1,7 @@
 """Class for storing and loading results from a clustering experiment."""
 
 import numpy as np
+from numpy.testing import assert_allclose
 from sklearn.metrics import (
     adjusted_mutual_info_score,
     adjusted_rand_score,
@@ -379,6 +380,8 @@ def load_clusterer_results(file_path, calculate_stats=True, verify_values=True):
         cr.infer_size(overwrite=True)
         assert cr.n_cases == n_cases
         assert cr.n_clusters == n_clusters
+
+        assert_allclose(probabilities.sum(axis=1), 1, rtol=1e-6)
 
         if calculate_stats:
             assert cr.clustering_accuracy == cl_acc

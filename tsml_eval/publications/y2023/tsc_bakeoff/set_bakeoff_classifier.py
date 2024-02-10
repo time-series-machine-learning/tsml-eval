@@ -8,6 +8,7 @@ bakeoff_classifiers = [
     # distance based
     ["KNeighborsTimeSeriesClassifier", "dtw", "1nn-dtw"],
     "ShapeDTW",
+    ["GRAILClassifier", "grail"],
     # feature based
     ["Catch22Classifier", "catch22"],
     ["FreshPRINCEClassifier", "freshprince"],
@@ -25,6 +26,7 @@ bakeoff_classifiers = [
     ["CanonicalIntervalForestClassifier", "cif"],
     ["SupervisedTimeSeriesForest", "stsf"],
     ["drcif", "DrCIFClassifier"],
+    ["quant", "QUANTClassifier"],
     # dictionary based
     ["BOSSEnsemble", "boss"],
     ["ContractableBOSS", "cboss"],
@@ -42,9 +44,12 @@ bakeoff_classifiers = [
     ["CNNClassifier", "cnn"],
     ["ResNetClassifier", "resnet"],
     ["InceptionTimeClassifier", "inceptiontime"],
+    ["h-inceptiontimeclassifier", "h-inceptiontime"],
+    ["LITETimeClassifier", "litetime"],
     # hybrid
     ["HIVECOTEV1", "hc1"],
     ["HIVECOTEV2", "hc2"],
+    ["RIST", "RISTClassifier"],
 ]
 
 
@@ -69,6 +74,10 @@ def _set_bakeoff_classifier(
         return ShapeDTW(
             **kwargs,
         )
+    elif c == "grailclassifier" or c == "grail":
+        from tsml.distance_based import GRAILClassifier
+
+        return GRAILClassifier(**kwargs)
     elif c == "catch22classifier" or c == "catch22":
         from aeon.classification.feature_based import Catch22Classifier
         from sklearn.ensemble import RandomForestClassifier
@@ -184,6 +193,12 @@ def _set_bakeoff_classifier(
             n_jobs=n_jobs,
             **kwargs,
         )
+    elif c == "quantclassifier" or c == "quant":
+        from tsml_eval.estimators.classification.interval_based.quant import (
+            QuantClassifier,
+        )
+
+        return QuantClassifier(random_state=random_state, **kwargs)
     elif c == "bossensemble" or c == "boss":
         from aeon.classification.dictionary_based import BOSSEnsemble
 
@@ -303,6 +318,16 @@ def _set_bakeoff_classifier(
             random_state=random_state,
             **kwargs,
         )
+    elif c == "h-inceptiontimeclassifier" or c == "h-inceptiontime":
+        from aeon.classification.deep_learning import InceptionTimeClassifier
+
+        return InceptionTimeClassifier(
+            use_custom_filters=True, random_state=random_state, **kwargs
+        )
+    elif c == "litetimeclassifier" or c == "litetime":
+        from aeon.classification.deep_learning import LITETimeClassifier
+
+        return LITETimeClassifier(random_state=random_state, **kwargs)
     elif c == "hivecotev1" or c == "hc1":
         from aeon.classification.hybrid import HIVECOTEV1
 
@@ -317,5 +342,15 @@ def _set_bakeoff_classifier(
         return HIVECOTEV2(
             random_state=random_state,
             n_jobs=n_jobs,
+            **kwargs,
+        )
+    elif c == "ristclassifier" or c == "rist":
+        from sklearn.ensemble import ExtraTreesClassifier
+        from tsml.hybrid import RISTClassifier
+
+        return RISTClassifier(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            estimator=ExtraTreesClassifier(n_estimators=500, criterion="entropy"),
             **kwargs,
         )
