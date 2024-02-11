@@ -966,7 +966,7 @@ def fix_broken_second_line(file_path, save_path=None):
         Path to save the fixed results file to, including the file new files name.
         If None, the new file will replace the original file.
     """
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         lines = f.readlines()
 
     line_count = 2
@@ -1014,10 +1014,10 @@ def compare_result_file_resample(file_path1, file_path2):
     same_resample : bool
         True if the results file use the same data resample, False otherwise.
     """
-    with open(file_path1, "r") as f:
+    with open(file_path1) as f:
         lines1 = f.readlines()
 
-    with open(file_path2, "r") as f:
+    with open(file_path2) as f:
         lines2 = f.readlines()
 
     if len(lines1) != len(lines2):

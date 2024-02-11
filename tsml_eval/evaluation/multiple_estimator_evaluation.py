@@ -1026,7 +1026,7 @@ def _evaluate_by_problem_init(
         raise TypeError(f"{type}_names must be a str, tuple or list of str or tuple.")
 
     if isinstance(dataset_names, str):
-        with open(dataset_names, "r") as f:
+        with open(dataset_names) as f:
             dataset_names = f.readlines()
             dataset_names = [[d.strip() for d in dataset_names]]
     elif isinstance(dataset_names[0], str):

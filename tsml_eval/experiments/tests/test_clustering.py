@@ -270,7 +270,7 @@ def test_combined_train_test(dataset):
 
 
 def _check_clustering_file_n_clusters(file_path, expected):
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         lines = f.readlines()
 
     line = lines[2].split(",")

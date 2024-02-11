@@ -187,7 +187,7 @@ class SFA(BaseTransformer):
         self.level_bits = 0
         self.level_max = 0
 
-        super(SFA, self).__init__()
+        super().__init__()
 
         if not return_pandas_data_series:
             self._output_convert = "off"
@@ -976,7 +976,7 @@ class SFA(BaseTransformer):
         """Convert a bag of SFA words into a string."""
         s = "{"
         for word, value in bag.items():
-            s += "{0}: {1}, ".format(
+            s += "{}: {}, ".format(
                 self.word_list_typed(word) if self.typed_dict else self.word_list(word),
                 value,
             )

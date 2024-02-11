@@ -43,7 +43,7 @@ class FromFileSimpleVote(SimpleVote):
         self.overwrite_y = overwrite_y
         self.skip_y_check = skip_y_check
 
-        super(FromFileSimpleVote, self).__init__(
+        super().__init__(
             clusterers=clusterers, n_clusters=n_clusters, random_state=random_state
         )
 
@@ -74,7 +74,7 @@ class FromFileSimpleVote(SimpleVote):
             (len(self.clusterers), X.shape[0]), dtype=np.int32
         )
         for i, path in enumerate(self.clusterers):
-            f = open(path + file_name, "r")
+            f = open(path + file_name)
             lines = f.readlines()
             line2 = lines[2].split(",")
 
@@ -154,7 +154,7 @@ class FromFileSimpleVote(SimpleVote):
             (len(self.clusterers), X.shape[0]), dtype=np.int32
         )
         for i, path in enumerate(self.clusterers):
-            f = open(path + file_name, "r")
+            f = open(path + file_name)
             lines = f.readlines()
 
             # verify file matches data

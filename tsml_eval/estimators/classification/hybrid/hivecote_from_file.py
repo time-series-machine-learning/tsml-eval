@@ -89,7 +89,7 @@ class FromFileHIVECOTE(BaseClassifier):
         self.skip_y_check = skip_y_check
         self.random_state = random_state
 
-        super(FromFileHIVECOTE, self).__init__()
+        super().__init__()
 
     def _fit(self, X, y):
         self.weights_ = []
@@ -113,7 +113,7 @@ class FromFileHIVECOTE(BaseClassifier):
                 )
 
             for i, path in enumerate(self.classifiers):
-                f = open(path + file_name, "r")
+                f = open(path + file_name)
                 lines = f.readlines()
                 line2 = lines[2].split(",")
 
@@ -185,7 +185,7 @@ class FromFileHIVECOTE(BaseClassifier):
 
                 acc_list = []
                 for path in self.classifiers:
-                    f = open(path + file_name, "r")
+                    f = open(path + file_name)
                     lines = f.readlines()
                     line2 = lines[2].split(",")
 
@@ -223,7 +223,7 @@ class FromFileHIVECOTE(BaseClassifier):
             y = np.zeros(n_instances)
 
         for i, path in enumerate(self.classifiers):
-            f = open(path + file_name, "r")
+            f = open(path + file_name)
             lines = f.readlines()
             line2 = lines[2].split(",")
 

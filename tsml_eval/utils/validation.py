@@ -58,7 +58,7 @@ def validate_results_file(file_path):
     valid_file : bool
         True if the results file is valid, False otherwise.
     """
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         lines = f.readlines()
 
     if not _check_first_line(lines[0]) or not _check_second_line(lines[1]):
