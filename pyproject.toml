@@ -118,6 +118,12 @@ ignore = [
     "docs/publications/**",
 ]
 
+[tool.ruff.lint]
+select = ["D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
 [tool.flake8]
 exclude = [
     "tsml_eval/_wip/*",
