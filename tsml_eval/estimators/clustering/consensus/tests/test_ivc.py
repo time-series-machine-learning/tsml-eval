@@ -1,33 +1,33 @@
-import numpy as np
+"""Tests for IterativeVotingClustering."""
 
-# import pytest
+import numpy as np
+import pytest
 from aeon.datasets import load_arrow_head
 from sklearn.metrics import rand_score
+from tsml.utils.testing import generate_3d_test_data
 
-# from tsml_eval.estimators.clustering.consensus.ivc import IterativeVotingClustering
+from tsml_eval.estimators.clustering.consensus.ivc import IterativeVotingClustering
 from tsml_eval.estimators.clustering.consensus.ivc_from_file import (
     FromFileIterativeVotingClustering,
 )
 from tsml_eval.testing.testing_utils import _TEST_RESULTS_PATH
 
-# from tsml.utils.testing import generate_3d_test_data
 
+@pytest.mark.parametrize("init", ["plus", "random", "aligned"])
+def test_ivc_init_methods(init):
+    """Test IVC init methods."""
+    X, y = generate_3d_test_data(n_labels=4)
 
-# @pytest.mark.parametrize("init", ["plus", "random", "aligned"])
-# def test_ivc_init_methods(init):
-#     """Test IVC init methods."""
-#     X, y = generate_3d_test_data(n_labels=4)
-#
-#     ivc = IterativeVotingClustering(
-#         n_clusters=4,
-#         max_iterations=10,
-#         init=init,
-#     )
-#     ivc.fit(X, y)
-#     preds = ivc.predict(X)
-#
-#     assert ivc.labels_.shape == (len(X),)
-#     assert preds.shape == (len(X),)
+    ivc = IterativeVotingClustering(
+        n_clusters=4,
+        max_iterations=10,
+        init=init,
+    )
+    ivc.fit(X, y)
+    preds = ivc.predict(X)
+
+    assert ivc.labels_.shape == (len(X),)
+    assert preds.shape == (len(X),)
 
 
 def test_from_file_iterative_voting_clustering():

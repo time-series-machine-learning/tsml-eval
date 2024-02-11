@@ -1,3 +1,5 @@
+"""General tests for the experiments module."""
+
 import os
 
 from tsml.dummy import DummyClassifier

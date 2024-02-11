@@ -1,3 +1,5 @@
+"""Tests for arguments parsing."""
+
 import pytest
 
 from tsml_eval.testing.testing_utils import suppress_output
@@ -5,6 +7,7 @@ from tsml_eval.utils.arguments import parse_args
 
 
 def test_positional_args():
+    """Test parsing of positional arguments."""
     args = [
         "D:/data/",
         "D:/results/",
@@ -37,11 +40,13 @@ def test_positional_args():
 )
 @suppress_output()
 def test_wrong_positional_args(args):
+    """Test parsing of incorrect positional arguments."""
     with pytest.raises((SystemExit, TypeError, ValueError)):
         parse_args(args)
 
 
 def test_kw_args():
+    """Test parsing of keyword arguments."""
     args = [
         "D:/data/",
         "D:/results/",
@@ -88,5 +93,6 @@ def test_kw_args():
 )
 @suppress_output()
 def test_wrong_kw_args(args):
+    """Test parsing of incorrect keyword arguments."""
     with pytest.raises((SystemExit, TypeError, ValueError)):
         parse_args(args)
