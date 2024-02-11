@@ -27,7 +27,7 @@ class SklearnToTsmlClassifier(ClassifierMixin, BaseTimeSeriesEstimator):
         self.clone_estimator = clone_estimator
         self.random_state = random_state
 
-        super(SklearnToTsmlClassifier, self).__init__()
+        super().__init__()
 
     def fit(self, X, y):
         """Wrap fit."""

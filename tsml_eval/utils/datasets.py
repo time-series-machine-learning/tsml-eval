@@ -38,7 +38,7 @@ def copy_dataset_ts_files(
     ... )
     """
     if isinstance(datasets, str):
-        with open(datasets, "r") as f:
+        with open(datasets) as f:
             datasets = f.readlines()
             datasets = [d.strip() for d in datasets]
 

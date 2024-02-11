@@ -137,7 +137,7 @@ class RegressorResults(EstimatorResults):
         self.r2_score = None
         self.mean_absolute_percentage_error = None
 
-        super(RegressorResults, self).__init__(
+        super().__init__(
             dataset_name=dataset_name,
             estimator_name=regressor_name,
             split=split,
@@ -301,7 +301,7 @@ def load_regressor_results(file_path, calculate_stats=True, verify_values=True):
     rr : RegressorResults
         A RegressorResults object containing the results loaded from the file.
     """
-    with open(file_path, "r") as file:
+    with open(file_path) as file:
         lines = file.readlines()
 
         line1 = lines[0].split(",")

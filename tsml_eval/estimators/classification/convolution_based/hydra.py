@@ -43,7 +43,7 @@ class HYDRA(BaseClassifier):
         self.n_jobs = n_jobs
         self.random_state = random_state
 
-        super(HYDRA, self).__init__()
+        super().__init__()
 
     def _fit(self, X, y):
         import torch
@@ -100,7 +100,7 @@ class MultiRocketHydra(BaseClassifier):
         self.n_jobs = n_jobs
         self.random_state = random_state
 
-        super(MultiRocketHydra, self).__init__()
+        super().__init__()
 
     def _fit(self, X, y):
         import torch

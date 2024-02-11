@@ -102,7 +102,7 @@ class ForecasterResults(EstimatorResults):
 
         self.mean_absolute_percentage_error = None
 
-        super(ForecasterResults, self).__init__(
+        super().__init__(
             dataset_name=dataset_name,
             estimator_name=forecaster_name,
             split=split,
@@ -245,7 +245,7 @@ def load_forecaster_results(file_path, calculate_stats=True, verify_values=True)
     fr : ForecasterResults
         A ForecasterResults object containing the results loaded from the file.
     """
-    with open(file_path, "r") as file:
+    with open(file_path) as file:
         lines = file.readlines()
 
         line1 = lines[0].split(",")

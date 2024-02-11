@@ -33,7 +33,7 @@ class TsChief(BaseClassifier):
         self.n_boss_transformations = n_boss_transformations
         self.random_state = random_state
 
-        super(TsChief, self).__init__()
+        super().__init__()
 
     def _fit(self, X, y):
         self._class_dtype = y.dtype
