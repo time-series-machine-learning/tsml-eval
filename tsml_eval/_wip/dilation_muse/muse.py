@@ -7,7 +7,9 @@ __author__ = ["patrickzib"]
 __all__ = ["MUSEDilation"]
 
 import math
+import sys
 import warnings
+from pathlib import Path
 
 import numpy as np
 from aeon.classification.base import BaseClassifier

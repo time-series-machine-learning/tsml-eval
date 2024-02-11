@@ -7,6 +7,8 @@ summary stats and extracting stats from these for the website
 
 """
 
+from tsml_eval.evaluation.multiple_estimator_evaluation import \
+     evaluate_clusterers_by_problem, evaluate_classifiers_by_problem, evaluate_regressors_by_problem
 from aeon.datasets.tsc_data_lists import univariate_equal_length
 from aeon.benchmarking import plot_critical_difference
 from aeon.benchmarking.results_loaders import get_estimator_results
@@ -16,6 +18,8 @@ import numpy as np
 
 import numpy as np
 
+from aeon.classification.tests.test_classification_reproduction import _print_results_for_classifier
+from aeon.transformations.tests.test_transformer_reproduction import _print_results_for_transformer
 
 
 from aeon.datasets.tsc_data_lists import univariate_equal_length
@@ -76,7 +80,7 @@ def collate_by_algorithm(estimators, measures, destination, location):
 print(univariate_equal_length)
 print(list(univariate_equal_length))
 
-from aeon.benchmarking import get_estimator_results
+from aeon.benchmarking import get_estimator_results, get_estimator_results_as_array
 est = ["STC","RDST","ROCKET","MrSQM"]
 import pandas as pd
 

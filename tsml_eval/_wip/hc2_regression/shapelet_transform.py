@@ -9,6 +9,9 @@ __all__ = ["RandomShapeletTransform"]
 import heapq
 import math
 import time
+import warnings
+from itertools import zip_longest
+from operator import itemgetter
 
 import numpy as np
 import pandas as pd
@@ -19,7 +22,10 @@ from joblib import Parallel, delayed
 from numba import njit
 from numba.typed.typedlist import List
 from scipy.stats import linregress
+from sklearn import preprocessing
+from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils import check_random_state
+from sklearn.utils.multiclass import class_distribution
 
 
 class RandomShapeletTransform(BaseTransformer):
