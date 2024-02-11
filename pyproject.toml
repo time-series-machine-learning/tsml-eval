@@ -118,6 +118,11 @@ ignore = [
     "docs/publications/**",
 ]
 
+[tool.ruff]
+extend-exclude = [
+    "tsml_eval/_wip/*",
+]
+
 [tool.ruff.lint]
 select = ["D"]
 
