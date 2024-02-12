@@ -1,5 +1,6 @@
 [![github-actions-release](https://img.shields.io/github/actions/workflow/status/time-series-machine-learning/tsml-eval/release.yml?logo=github&label=build%20%28release%29)](https://github.com/time-series-machine-learning/tsml-eval/actions/workflows/release.yml)
-[![github-actions-main](https://img.shields.io/github/actions/workflow/status/time-series-machine-learning/tsml-eval/tests.yml?logo=github&branch=main&label=build%20%28main%29)](https://github.com/time-series-machine-learning/tsml-eval/actions/workflows/tests.yml)
+[![github-actions-main](https://img.shields.io/github/actions/workflow/status/time-series-machine-learning/tsml-eval/pr_pytest.yml?logo=github&branch=main&label=build%20%28main%29)](https://github.com/time-series-machine-learning/tsml-eval/actions/workflows/pr_pytest.yml)
+[![github-actions-nightly](https://img.shields.io/github/actions/workflow/status/time-series-machine-learning/tsml-eval/periodic_tests.yml?logo=github&label=build%20%28nightly%29)](https://github.com/time-series-machine-learning/tsml-eval/actions/workflows/periodic_tests.yml)
 [![docs-release](https://img.shields.io/readthedocs/tsml-eval/stable?logo=readthedocs&label=docs%20%28stable%29)](https://tsml-eval.readthedocs.io/en/stable/)
 [![docs-main](https://img.shields.io/readthedocs/tsml-eval/latest?logo=readthedocs&label=docs%20%28latest%29)](https://tsml-eval.readthedocs.io/en/latest/)
 [![codecov](https://img.shields.io/codecov/c/github/time-series-machine-learning/tsml-eval?label=codecov&logo=codecov)](https://codecov.io/gh/time-series-machine-learning/tsml-eval)
