@@ -2,6 +2,7 @@
 
 import os
 import pickle
+import warnings
 from datetime import datetime
 
 import numpy as np
@@ -1026,7 +1027,7 @@ def _evaluate_by_problem_init(
         raise TypeError(f"{type}_names must be a str, tuple or list of str or tuple.")
 
     if isinstance(dataset_names, str):
-        with open(dataset_names, "r") as f:
+        with open(dataset_names) as f:
             dataset_names = f.readlines()
             dataset_names = [[d.strip() for d in dataset_names]]
     elif isinstance(dataset_names[0], str):
@@ -1302,9 +1303,20 @@ def _create_directory_for_statistic(
         for i, dataset_name in enumerate(datasets):
             file.write(f"{dataset_name},{','.join([str(n) for n in ranks[i]])}\n")
 
-    _figures_for_statistic(
-        average_stats, estimators, statistic_name, higher_better, save_path, eval_name
-    )
+    try:
+        _figures_for_statistic(
+            average_stats,
+            estimators,
+            statistic_name,
+            higher_better,
+            save_path,
+            eval_name,
+        )
+    except ValueError as e:
+        warnings.warn(
+            f"Error during figure creation for {statistic_name}: {e}",
+            stacklevel=2,
+        )
 
     # with open(
     #     f"{save_path}/{statistic_name}/{statistic_name.lower()}_p_values.csv", "w"

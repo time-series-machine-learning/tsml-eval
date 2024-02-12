@@ -55,7 +55,7 @@ def test_write_classification_results():
 
 
 def _check_classification_file_format(file_path, num_results_lines=None):
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         lines = f.readlines()
 
     assert _check_first_line(lines[0])
@@ -112,7 +112,7 @@ def test_write_regression_results():
 
 
 def _check_regression_file_format(file_path, num_results_lines=None):
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         lines = f.readlines()
 
     assert _check_first_line(lines[0])
@@ -146,7 +146,7 @@ def test_write_forecasting_results():
 
 
 def _check_forecasting_file_format(file_path, num_results_lines=None):
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         lines = f.readlines()
 
     assert _check_first_line(lines[0])
@@ -186,7 +186,7 @@ def test_write_clustering_results():
 
 
 def _check_clustering_file_format(file_path, num_results_lines=None):
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         lines = f.readlines()
 
     assert _check_first_line(lines[0])

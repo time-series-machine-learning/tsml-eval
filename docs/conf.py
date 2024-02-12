@@ -169,9 +169,11 @@ def linkcode_resolve(domain, info):
     except Exception:
         filename = info["module"].replace(".", "/") + ".py"
 
-    return "https://github.com/time-series-machine-learning/tsml-eval/blob/%s/%s" % (
-        version,
-        filename,
+    return (
+        "https://github.com/time-series-machine-learning/tsml-eval/blob/{}/{}".format(
+            version,
+            filename,
+        )
     )
 
 

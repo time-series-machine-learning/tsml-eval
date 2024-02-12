@@ -140,7 +140,7 @@ class ClustererResults(EstimatorResults):
         self.adjusted_mutual_information = None
         self.normalised_mutual_information = None
 
-        super(ClustererResults, self).__init__(
+        super().__init__(
             dataset_name=dataset_name,
             estimator_name=clusterer_name,
             split=split,
@@ -313,7 +313,7 @@ def load_clusterer_results(file_path, calculate_stats=True, verify_values=True):
     cr : ClustererResults
         A ClustererResults object containing the results loaded from the file.
     """
-    with open(file_path, "r") as file:
+    with open(file_path) as file:
         lines = file.readlines()
 
         line1 = lines[0].split(",")

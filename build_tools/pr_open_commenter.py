@@ -17,6 +17,9 @@ repo = g.get_repo(repo)
 pr_number = context_dict["event"]["number"]
 pr = repo.get_pull(number=pr_number)
 
+if "[bot]" in pr.user.login:
+    sys.exit(0)
+
 print(sys.argv[2:])  # noqa
 title_labels = sys.argv[2][1:-1].split(",")
 title_labels_new = sys.argv[3][1:-1].split(",")
@@ -33,17 +36,17 @@ for i, label in enumerate(content_labels):
 
 labels = [(label.name, label.color) for label in repo.get_labels()]
 title_labels = [
-    "$\\color{#%s}{\\textsf{%s}}$" % (color, label)
+    f"$\\color{{#{color}}}{{\\textsf{{{label}}}}}$"
     for label, color in labels
     if label in title_labels
 ]
 title_labels_new = [
-    "$\\color{#%s}{\\textsf{%s}}$" % (color, label)
+    f"$\\color{{#{color}}}{{\\textsf{{{label}}}}}$"
     for label, color in labels
     if label in title_labels_new
 ]
 content_labels = [
-    "$\\color{#%s}{\\textsf{%s}}$" % (color, label)
+    f"$\\color{{#{color}}}{{\\textsf{{{label}}}}}$"
     for label, color in labels
     if label in content_labels
 ]

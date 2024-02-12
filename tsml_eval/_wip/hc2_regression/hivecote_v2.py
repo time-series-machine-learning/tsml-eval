@@ -134,7 +134,7 @@ class HIVECOTEV2(BaseRegressor):
         self._arsenal = None
         self._tde = None
 
-        super(HIVECOTEV2, self).__init__()
+        super().__init__()
 
     def _fit(self, X, y):
         """Fit HIVE-COTE 2.0 to training data.

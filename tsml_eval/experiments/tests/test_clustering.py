@@ -270,7 +270,7 @@ def test_combined_train_test(dataset):
 
 
 def _check_clustering_file_n_clusters(file_path, expected):
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         lines = f.readlines()
 
     line = lines[2].split(",")
@@ -278,6 +278,7 @@ def _check_clustering_file_n_clusters(file_path, expected):
 
 
 def test_invalid_n_clusters():
+    """Test invalid n_clusters parameter."""
     with pytest.raises(ValueError, match="n_clusters must be a"):
         run_clustering_experiment(
             [],
@@ -289,6 +290,7 @@ def test_invalid_n_clusters():
 
 
 def test_invalid_test_settings():
+    """Test build_test_file without test data."""
     with pytest.raises(ValueError, match="Test data and labels not provided"):
         run_clustering_experiment(
             [],

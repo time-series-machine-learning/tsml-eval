@@ -1,3 +1,5 @@
+"""Test dataset utilities."""
+
 import os
 
 from tsml_eval.testing.testing_utils import _TEST_DATA_PATH, _TEST_OUTPUT_PATH
@@ -5,6 +7,7 @@ from tsml_eval.utils.datasets import copy_dataset_ts_files
 
 
 def test_copy_dataset_ts_files():
+    """Test copying .ts dataset files."""
     copy_path = f"{_TEST_OUTPUT_PATH}/datasets/"
 
     copy_dataset_ts_files(

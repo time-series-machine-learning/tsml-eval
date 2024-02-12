@@ -2,7 +2,7 @@
 
 from sklearn.cluster import KMeans
 from sklearn.dummy import DummyClassifier, DummyRegressor
-from tsml.interval_based import DrCIFClassifier
+from tsml.interval_based import TSFClassifier
 
 from tsml_eval.utils.validation import (
     is_sklearn_classifier,
@@ -15,7 +15,7 @@ from tsml_eval.utils.validation import (
 def test_is_sklearn_estimator():
     """Test is_sklearn_estimator."""
     assert is_sklearn_estimator(DummyClassifier())
-    assert not is_sklearn_estimator(DrCIFClassifier())
+    assert not is_sklearn_estimator(TSFClassifier())
 
 
 def test_is_sklearn_classifier():

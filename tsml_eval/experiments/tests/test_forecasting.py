@@ -1,3 +1,5 @@
+"""Tests for forecasting experiments."""
+
 import os
 import runpy
 

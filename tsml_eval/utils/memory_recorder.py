@@ -74,7 +74,7 @@ class _FunctionThread(Thread):
         self.function_time = -1
         self.exception = None
 
-        super(_FunctionThread, self).__init__(daemon=True)
+        super().__init__(daemon=True)
 
     def run(self):
         """Overloads the threading.Thread.run."""

@@ -1,4 +1,4 @@
-name: pre-commit
+name: PR pre-commit
 
 on:
   push:
@@ -7,10 +7,6 @@ on:
   pull_request:
     branches:
       - main
-  schedule:
-    # every day at 1:30 AM UTC
-    - cron: "30 1 * * *"
-  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
@@ -18,7 +14,7 @@ concurrency:
 
 jobs:
   pre-commit:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
 
     steps:
       - uses: actions/checkout@v4
@@ -29,6 +25,9 @@ jobs:
 
       - uses: tj-actions/changed-files@v42.0.2
         id: changed-files
+
+      - name: List changed files
+        run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
 
       - if: ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'full pre-commit') }}
         name: Full pre-commit

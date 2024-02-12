@@ -7,7 +7,7 @@ import shutil
 from tsml_eval.experiments import experiments
 from tsml_eval.testing.testing_utils import _TEST_OUTPUT_PATH
 
-KEEP_PYTEST_OUTPUT = True
+KEEP_PYTEST_OUTPUT = False
 
 
 def pytest_sessionfinish(session, exitstatus):

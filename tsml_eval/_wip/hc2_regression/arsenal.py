@@ -142,7 +142,7 @@ class Arsenal(BaseRegressor):
         self._weight_sum = 0
         self._label_average = 0
 
-        super(Arsenal, self).__init__()
+        super().__init__()
 
     def _fit(self, X, y):
         """Fit Arsenal to training data.

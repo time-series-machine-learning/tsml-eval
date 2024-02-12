@@ -204,7 +204,7 @@ class SFADilation(BaseTransformer):
         #     n_jobs = self.n_jobs
         # set_num_threads(n_jobs)
 
-        super(SFADilation, self).__init__()
+        super().__init__()
 
         if not return_pandas_data_series:
             self._output_convert = "off"

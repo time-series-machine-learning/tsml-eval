@@ -69,7 +69,7 @@ dev = [
     "pytest",
     "pytest-randomly",
     "pytest-timeout",
-    "pytest-xdist",
+    "pytest-xdist[psutil]",
     "pytest-cov",
     "pytest-rerunfailures",
 ]
@@ -118,6 +118,17 @@ ignore = [
     "docs/publications/**",
 ]
 
+[tool.ruff]
+extend-exclude = [
+    "tsml_eval/_wip/*",
+]
+
+[tool.ruff.lint]
+select = ["D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
 [tool.flake8]
 exclude = [
     "tsml_eval/_wip/*",
@@ -139,11 +150,12 @@ testpaths = "tsml_eval"
 addopts = '''
     --ignore tsml_eval/_wip
     --ignore tsml_eval/publications/2023
+    --doctest-modules
     --durations 20
     --timeout 600
     --showlocals
-    --doctest-modules
     --numprocesses auto
+    --dist worksteal
     --reruns 2
     --only-rerun "crashed while running"
     --meminterval 0.1

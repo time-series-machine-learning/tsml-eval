@@ -17,6 +17,7 @@ def test_pair_list_to_dict():
 
 
 def test_rank_array():
+    """Test array ranking function."""
     arr1 = [
         0.611111111,
         0.638888889,

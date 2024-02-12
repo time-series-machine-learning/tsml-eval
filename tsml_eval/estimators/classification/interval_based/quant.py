@@ -37,7 +37,7 @@ class QuantClassifier(ClassifierMixin, BaseTimeSeriesEstimator):
         self.estimator = estimator
         self.random_state = random_state
 
-        super(QuantClassifier, self).__init__()
+        super().__init__()
 
     def fit(self, X, y):
         """Fit the estimator to training data.
@@ -154,7 +154,7 @@ class QuantTransform(TransformerMixin, BaseTimeSeriesEstimator):
         self.depth = depth
         self.div = div
 
-        super(QuantTransform, self).__init__()
+        super().__init__()
 
     def fit(self, X, y=None):
         """Fits transformer to X."""
@@ -214,7 +214,7 @@ class QuantTransform(TransformerMixin, BaseTimeSeriesEstimator):
             intervals.append(intervals_n)
             if n > 1 and intervals_n.diff().median() > 1:
                 shift = int(np.ceil(input_length / n / 2))
-                intervals.append((intervals_n[:-1] + shift))
+                intervals.append(intervals_n[:-1] + shift)
         return torch.cat(intervals)
 
     @staticmethod

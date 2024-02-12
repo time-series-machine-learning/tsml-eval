@@ -1,3 +1,5 @@
+"""Test the SimpleVote."""
+
 import numpy as np
 from aeon.datasets import load_arrow_head
 from sklearn.metrics import rand_score

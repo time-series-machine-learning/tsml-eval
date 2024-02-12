@@ -8,6 +8,7 @@
 [![python-versions](https://img.shields.io/pypi/pyversions/tsml-eval?logo=python)](https://www.python.org/)
 [![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![license](https://img.shields.io/badge/license-BSD%203--Clause-green?logo=style)](https://github.com/time-series-machine-learning/tsml-eval/blob/main/LICENSE)
+[![binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/time-series-machine-learning/tsml-eval/main?filepath=examples)
 
 # tsml-eval
 

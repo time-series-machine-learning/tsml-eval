@@ -1,3 +1,5 @@
+"""Test publication utilities."""
+
 import os
 
 from tsml_eval.testing.testing_utils import _TEST_EVAL_PATH, _TEST_OUTPUT_PATH
@@ -5,6 +7,7 @@ from tsml_eval.utils.publications import extract_publication_csv_from_evaluation
 
 
 def test_extract_publication_csv_from_evaluation():
+    """Test extracting publication results CSVs from evaluation directories."""
     extract_publication_csv_from_evaluation(
         "Accuracy",
         f"{_TEST_EVAL_PATH}/classification/",

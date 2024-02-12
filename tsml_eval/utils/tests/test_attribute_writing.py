@@ -1,3 +1,5 @@
+"""Tests for attribute writing functionality."""
+
 import os
 
 from aeon.classification.shapelet_based import ShapeletTransformClassifier
@@ -9,6 +11,7 @@ from tsml_eval.utils.experiments import estimator_attributes_to_file
 
 
 def test_estimator_attributes_to_file():
+    """Test writing estimator attributes to file."""
     estimator = ShapeletTransformClassifier(
         n_shapelet_samples=50,
         estimator=RotationForestClassifier(n_estimators=2),
@@ -27,6 +30,7 @@ def test_estimator_attributes_to_file():
 
 
 def test_max_depth():
+    """Test writing estimator attributes to file max depth parameter."""
     estimator = ShapeletTransformClassifier(
         n_shapelet_samples=50,
         estimator=RotationForestClassifier(n_estimators=2),
@@ -47,6 +51,7 @@ def test_max_depth():
 
 
 def test_max_list_shape():
+    """Test writing estimator attributes to file max list shape parameter."""
     estimator = ShapeletTransformClassifier(
         n_shapelet_samples=50,
         estimator=RotationForestClassifier(n_estimators=2),

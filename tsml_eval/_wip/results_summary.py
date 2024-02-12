@@ -33,7 +33,7 @@ def count_files(directory, pattern):
 
 def count_lines(full_path):
     line_count = 0
-    with open(full_path, 'r') as file:
+    with open(full_path) as file:
         for line in file:
             line_count += 1
     return line_count
