@@ -168,7 +168,7 @@ class IterativeVotingClustering(BaseEstimator, ClusterMixin):
                 self._select_cluster_centers(cluster_assignments, rng)
 
             labels = self._calculate_cluster_membership(cluster_assignments, rng)
-            self._ensure_all_clusters_in_labels(labels, rng)
+            labels = self._ensure_all_clusters_in_labels(labels, rng)
 
             if (labels == self.labels_).all():
                 break
@@ -196,7 +196,7 @@ class IterativeVotingClustering(BaseEstimator, ClusterMixin):
 
     def _initial_cluster_centers_random(self, cluster_assignments, rng):
         self.labels_ = rng.randint(self.n_clusters, size=cluster_assignments.shape[1])
-        self._ensure_all_clusters_in_labels(self.labels_, rng)
+        self.labels_ = self._ensure_all_clusters_in_labels(self.labels_, rng)
 
         self._select_cluster_centers(cluster_assignments, rng)
 
@@ -222,7 +222,7 @@ class IterativeVotingClustering(BaseEstimator, ClusterMixin):
         self.labels_ = np.array(
             [rng.choice(np.flatnonzero(v == v.max())) for v in votes]
         )
-        self._ensure_all_clusters_in_labels(self.labels_, rng)
+        self.labels_ = self._ensure_all_clusters_in_labels(self.labels_, rng)
 
         self._select_cluster_centers(cluster_assignments, rng)
 
@@ -275,3 +275,5 @@ class IterativeVotingClustering(BaseEstimator, ClusterMixin):
                         ]
                     )
                     labels[rng.choice(x)] = i
+
+        return labels
