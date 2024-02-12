@@ -154,7 +154,6 @@ addopts = '''
     --durations 20
     --timeout 600
     --showlocals
-    --numprocesses auto
     --dist worksteal
     --reruns 2
     --only-rerun "crashed while running"
