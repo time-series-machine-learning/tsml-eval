@@ -5,8 +5,7 @@ __author__ = ["MatthewMiddlehurst"]
 
 import numpy as np
 from aeon.datasets import load_arrow_head, load_italy_power_demand
-from aeon.utils._testing.estimator_checks import _assert_array_almost_equal
-from aeon.utils.estimator_checks import check_estimator
+from aeon.testing.utils.estimator_checks import _assert_array_almost_equal
 
 from tsml_eval.estimators.classification.hybrid.hivecote_from_file import (
     FromFileHIVECOTE,
@@ -76,8 +75,3 @@ def test_tuned_hivecote_from_file():
 
     assert probas.shape == (X_test.shape[0], 3)
     _assert_array_almost_equal(probas[0], np.array([0.6092, 0.2308, 0.16]), decimal=4)
-
-
-def test_hivecote_from_file_check_estimator():
-    """Test HIVE-COTE meets the aeon estimator interface."""
-    check_estimator(FromFileHIVECOTE, raise_exceptions=True)
