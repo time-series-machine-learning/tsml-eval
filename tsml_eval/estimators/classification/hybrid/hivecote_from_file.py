@@ -49,6 +49,10 @@ class FromFileHIVECOTE(BaseClassifier):
     skip_y_check : bool, default=False
         If True, the labels in the loaded files will not be checked against
         the labels passed in the fit method.
+    skip_shape_check : bool, default=False
+        If True, the shape of the loaded files (n_cases and n_classes) will not be
+        checked against the shape of the data passed in the fit method. This can cause
+        breakage, so use with caution.
     random_state : int or None, default=None
         Seed for random number generation.
 
@@ -78,6 +82,7 @@ class FromFileHIVECOTE(BaseClassifier):
         acc_filter=None,
         overwrite_y=False,
         skip_y_check=False,
+        skip_shape_check=False,
         random_state=None,
     ):
         self.classifiers = classifiers
@@ -87,6 +92,7 @@ class FromFileHIVECOTE(BaseClassifier):
         self.acc_filter = acc_filter
         self.overwrite_y = overwrite_y
         self.skip_y_check = skip_y_check
+        self.skip_shape_check = skip_shape_check
         self.random_state = random_state
 
         super().__init__()
@@ -118,16 +124,17 @@ class FromFileHIVECOTE(BaseClassifier):
                 line2 = lines[2].split(",")
 
                 # verify file matches data
-                if len(lines) - 3 != n_instances:
-                    raise ValueError(
-                        f"n_instances of {path + file_name} does not match X, "
-                        f"expected {X.shape[0]}, got {len(lines) - 3}"
-                    )
-                if not self.skip_y_check and len(np.unique(y)) != int(line2[5]):
-                    raise ValueError(
-                        f"n_classes of {path + file_name} does not match X, "
-                        f"expected {len(np.unique(y))}, got {line2[5]}"
-                    )
+                if not self.skip_shape_check:
+                    if len(lines) - 3 != n_instances:
+                        raise ValueError(
+                            f"n_instances of {path + file_name} does not match X, "
+                            f"expected {X.shape[0]}, got {len(lines) - 3}"
+                        )
+                    if not self.skip_y_check and self.n_classes_ != int(line2[5]):
+                        raise ValueError(
+                            f"n_classes of {path + file_name} does not match X, "
+                            f"expected {len(np.unique(y))}, got {line2[5]}"
+                        )
 
                 for j in range(n_instances):
                     line = lines[j + 3].split(",")
@@ -228,18 +235,19 @@ class FromFileHIVECOTE(BaseClassifier):
             line2 = lines[2].split(",")
 
             # verify file matches data
-            if len(lines) - 3 != n_instances:
-                raise ValueError(
-                    f"n_instances of {path + file_name} does not match X, "
-                    f"expected {X.shape[0]}, got {len(lines) - 3}"
-                )
-            if self.n_classes_ != int(line2[5]):
-                raise ValueError(
-                    f"n_classes of {path + file_name} does not match X, "
-                    f"expected {self.n_classes_}, got {line2[5]}"
-                )
+            if not self.skip_shape_check:
+                if len(lines) - 3 != n_instances:
+                    raise ValueError(
+                        f"n_instances of {path + file_name} does not match X, "
+                        f"expected {X.shape[0]}, got {len(lines) - 3}"
+                    )
+                if not self.skip_y_check and self.n_classes_ != int(line2[5]):
+                    raise ValueError(
+                        f"n_classes of {path + file_name} does not match X, "
+                        f"expected {self.n_classes_}, got {line2[5]}"
+                    )
 
-            #   apply this files weights to the probabilities in the test file
+            # apply this files weights to the probabilities in the test file
             for j in range(n_instances):
                 line = lines[j + 3].split(",")
 
@@ -341,4 +349,9 @@ class FromFileHIVECOTE(BaseClassifier):
             _TEST_RESULTS_PATH + "/classification/TestResults/Test1/",
             _TEST_RESULTS_PATH + "/classification/TestResults/Test2/",
         ]
-        return {"classifiers": file_paths, "skip_y_check": True, "random_state": 0}
+        return {
+            "classifiers": file_paths,
+            "skip_y_check": True,
+            "skip_shape_check": True,
+            "random_state": 0,
+        }
