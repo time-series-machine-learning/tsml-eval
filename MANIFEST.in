@@ -4,7 +4,8 @@ recursive-include results *
 recursive-include tsml_eval *.py
 recursive-include tsml_eval/datasets *.ts *.csv
 recursive-include tsml_eval/publications *.csv *.txt *.ipynb
-recursive-include tsml_eval/testing/_test_result_files *.csv
+recursive-include tsml_eval/testing/_test_eval_files *.csv *.pdf *.pickle
+recursive-include tsml_eval/testing/_test_results_files *.csv
 include .coveragerc
 include conftest.py
 include LICENSE
@@ -14,10 +15,9 @@ include README.md
 
 recursive-exclude .github *
 recursive-exclude build_tools *
-recursive-exclude _tsml_group_experiments *
+recursive-exclude _tsml_research_resources *
 exclude .codecov.yml
 exclude .gitattributes
 exclude .gitignore
 exclude .pre-commit-config.yaml
 exclude .readthedocs.yml
-exclude sweep.yaml

@@ -108,6 +108,7 @@ ignore = [
     "venv/**",
     # Ignore local files
     "local/**",
+    "examples/generated_results/**",
     # Ignore the publications symlinks and its contents
     "tsml_eval/publications/2023",
     "tsml_eval/publications/2023/**",
