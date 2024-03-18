@@ -31,15 +31,15 @@ bakeoff_classifiers = [
     ["BOSSEnsemble", "boss"],
     ["ContractableBOSS", "cboss"],
     ["TemporalDictionaryEnsemble", "tde"],
-    "WEASEL",
-    ["WEASEL_V2", "weaseldilation", "weasel-dilation", "weasel-d"],
+    ["WEASEL", "weasel v1", "weasel v1.0"],
+    ["weasel v2", "weasel v2.0", "weaseldilation", "weasel-dilation", "weasel-d"],
     # convolution based
     ["RocketClassifier", "rocket"],
     ["minirocket", "mini-rocket"],
     ["multirocket", "multi-rocket"],
     ["arsenalclassifier", "Arsenal"],
     "HYDRA",
-    ["MultiRocketHydra", "multirocket-hydra"],
+    ["mr-hydra", "multirockethydra", "multirocket-hydra"],
     # deep learning
     ["CNNClassifier", "cnn"],
     ["ResNetClassifier", "resnet"],
@@ -223,7 +223,7 @@ def _set_bakeoff_classifier(
             n_jobs=n_jobs,
             **kwargs,
         )
-    elif c == "weasel":
+    elif c == "weasel" or c == "weasel v1" or c == "weasel v1.0":
         from aeon.classification.dictionary_based import WEASEL
 
         return WEASEL(
@@ -233,7 +233,8 @@ def _set_bakeoff_classifier(
             **kwargs,
         )
     elif (
-        c == "weasel_v2"
+        c == "weasel v2"
+        or c == "weasel v2.0"
         or c == "weaseldilation"
         or c == "weasel-dilation"
         or c == "weasel-d"
@@ -287,7 +288,7 @@ def _set_bakeoff_classifier(
             n_jobs=n_jobs,
             **kwargs,
         )
-    elif c == "multirockethydra" or c == "multirocket-hydra":
+    elif c == "mr-hydra" or c == "multirockethydra" or c == "multirocket-hydra":
         from tsml_eval.estimators.classification.convolution_based.hydra import (
             MultiRocketHydra,
         )
