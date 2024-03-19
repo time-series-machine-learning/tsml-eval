@@ -67,7 +67,9 @@ def _set_bakeoff_classifier(
     if c == "kneighborstimeseriesclassifier" or c == "dtw" or c == "1nn-dtw":
         from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
 
-        return KNeighborsTimeSeriesClassifier(distance="dtw", n_jobs=n_jobs, **kwargs)
+        return KNeighborsTimeSeriesClassifier(
+            distance="dtw", n_neighbors=1, n_jobs=n_jobs, **kwargs
+        )
     elif c == "shapedtw":
         from aeon.classification.distance_based import ShapeDTW
 
@@ -84,6 +86,7 @@ def _set_bakeoff_classifier(
 
         return Catch22Classifier(
             estimator=RandomForestClassifier(n_estimators=500),
+            catch24=False,
             random_state=random_state,
             n_jobs=n_jobs,
             **kwargs,
@@ -107,7 +110,7 @@ def _set_bakeoff_classifier(
         from aeon.classification.shapelet_based import ShapeletTransformClassifier
 
         return ShapeletTransformClassifier(
-            transform_limit_in_minutes=120,
+            n_shapelet_samples=10000,
             random_state=random_state,
             n_jobs=n_jobs,
             **kwargs,
@@ -154,6 +157,7 @@ def _set_bakeoff_classifier(
 
         return RandomIntervalSpectralEnsembleClassifier(
             n_estimators=500,
+            min_interval_length=16,
             random_state=random_state,
             n_jobs=n_jobs,
             **kwargs,
