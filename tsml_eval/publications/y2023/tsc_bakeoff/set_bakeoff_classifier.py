@@ -31,15 +31,15 @@ bakeoff_classifiers = [
     ["BOSSEnsemble", "boss"],
     ["ContractableBOSS", "cboss"],
     ["TemporalDictionaryEnsemble", "tde"],
-    "WEASEL",
-    ["WEASEL_V2", "weaseldilation", "weasel-dilation", "weasel-d"],
+    ["WEASEL", "weasel v1", "weasel v1.0"],
+    ["weasel_v2", "weasel v2", "weasel v2.0", "weasel-dilation", "weasel-d"],
     # convolution based
     ["RocketClassifier", "rocket"],
     ["minirocket", "mini-rocket"],
     ["multirocket", "multi-rocket"],
     ["arsenalclassifier", "Arsenal"],
     "HYDRA",
-    ["MultiRocketHydra", "multirocket-hydra"],
+    ["mr-hydra", "multirockethydra", "multirocket-hydra"],
     # deep learning
     ["CNNClassifier", "cnn"],
     ["ResNetClassifier", "resnet"],
@@ -67,7 +67,9 @@ def _set_bakeoff_classifier(
     if c == "kneighborstimeseriesclassifier" or c == "dtw" or c == "1nn-dtw":
         from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
 
-        return KNeighborsTimeSeriesClassifier(distance="dtw", n_jobs=n_jobs, **kwargs)
+        return KNeighborsTimeSeriesClassifier(
+            distance="dtw", n_neighbors=1, n_jobs=n_jobs, **kwargs
+        )
     elif c == "shapedtw":
         from aeon.classification.distance_based import ShapeDTW
 
@@ -84,6 +86,7 @@ def _set_bakeoff_classifier(
 
         return Catch22Classifier(
             estimator=RandomForestClassifier(n_estimators=500),
+            catch24=False,
             random_state=random_state,
             n_jobs=n_jobs,
             **kwargs,
@@ -107,7 +110,7 @@ def _set_bakeoff_classifier(
         from aeon.classification.shapelet_based import ShapeletTransformClassifier
 
         return ShapeletTransformClassifier(
-            transform_limit_in_minutes=120,
+            n_shapelet_samples=10000,
             random_state=random_state,
             n_jobs=n_jobs,
             **kwargs,
@@ -154,6 +157,7 @@ def _set_bakeoff_classifier(
 
         return RandomIntervalSpectralEnsembleClassifier(
             n_estimators=500,
+            min_interval_length=16,
             random_state=random_state,
             n_jobs=n_jobs,
             **kwargs,
@@ -223,7 +227,7 @@ def _set_bakeoff_classifier(
             n_jobs=n_jobs,
             **kwargs,
         )
-    elif c == "weasel":
+    elif c == "weasel" or c == "weasel v1" or c == "weasel v1.0":
         from aeon.classification.dictionary_based import WEASEL
 
         return WEASEL(
@@ -234,7 +238,8 @@ def _set_bakeoff_classifier(
         )
     elif (
         c == "weasel_v2"
-        or c == "weaseldilation"
+        or c == "weasel v2"
+        or c == "weasel v2.0"
         or c == "weasel-dilation"
         or c == "weasel-d"
     ):
@@ -287,7 +292,7 @@ def _set_bakeoff_classifier(
             n_jobs=n_jobs,
             **kwargs,
         )
-    elif c == "multirockethydra" or c == "multirocket-hydra":
+    elif c == "mr-hydra" or c == "multirockethydra" or c == "multirocket-hydra":
         from tsml_eval.estimators.classification.convolution_based.hydra import (
             MultiRocketHydra,
         )

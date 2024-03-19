@@ -44,3 +44,34 @@ def extract_publication_csv_from_evaluation(stats, eval_path, write_path):
         for file in os.listdir(stat_dir):
             if file.endswith(".csv"):
                 shutil.copy(f"{stat_dir}/{file}", f"{write_path}/{file}")
+
+
+def parameter_table_from_estimator_selection_function(
+    selection_function, estimator_names
+):
+    """Create a table of estimator names and their parameters.
+
+    Parameters
+    ----------
+    selection_function : function
+        The function that selects the estimator.
+    estimator_names : list of str
+        The names of the estimators.
+    """
+    parameters = []
+    for estimator_name in estimator_names:
+        est = selection_function(estimator_name)
+        params = est.get_params()
+        params.pop("random_state", None)
+        params.pop("n_jobs", None)
+        params.pop("verbose", None)
+        parameters.append(params)
+
+    table = "Estimator & Parameters \\\\ \\hline \n"
+    for i, params in enumerate(parameters):
+        table += estimator_names[i] + " & "
+        for key, value in params.items():
+            table += f"{key}: {value}, "
+        table += " \\\\ \n"
+
+    return table
