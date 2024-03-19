@@ -32,7 +32,7 @@ bakeoff_classifiers = [
     ["ContractableBOSS", "cboss"],
     ["TemporalDictionaryEnsemble", "tde"],
     ["WEASEL", "weasel v1", "weasel v1.0"],
-    ["weasel v2", "weasel v2.0", "weaseldilation", "weasel-dilation", "weasel-d"],
+    ["weasel_v2", "weasel v2", "weasel v2.0", "weasel-dilation", "weasel-d"],
     # convolution based
     ["RocketClassifier", "rocket"],
     ["minirocket", "mini-rocket"],
@@ -237,9 +237,9 @@ def _set_bakeoff_classifier(
             **kwargs,
         )
     elif (
-        c == "weasel v2"
+        c == "weasel_v2"
+        or c == "weasel v2"
         or c == "weasel v2.0"
-        or c == "weaseldilation"
         or c == "weasel-dilation"
         or c == "weasel-d"
     ):
