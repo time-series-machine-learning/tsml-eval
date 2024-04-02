@@ -41,7 +41,7 @@ classifiers = [
 ]
 requires-python = ">=3.8,<3.12"
 dependencies = [
-    "aeon>=0.6.0,<0.7.0",
+    "aeon@git+https://github.com/aeon-toolkit/aeon.git@ba-major-minimise-mean#egg=aeon",
     "tsml>=0.3.0,<0.4.0",
     "scikit-learn>=1.0.0,<1.5.0",
     "matplotlib",
@@ -150,15 +150,4 @@ per-file-ignores = [
 [tool.pytest.ini_options]
 testpaths = "tsml_eval"
 addopts = '''
-    --ignore tsml_eval/_wip
-    --ignore tsml_eval/publications/2023
-    --doctest-modules
-    --durations 20
-    --timeout 600
-    --showlocals
-    --numprocesses logical
-    --dist worksteal
-    --reruns 2
-    --only-rerun "crashed while running"
-    --meminterval 0.1
 '''

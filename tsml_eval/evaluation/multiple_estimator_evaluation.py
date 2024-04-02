@@ -6,8 +6,8 @@ import warnings
 from datetime import datetime
 
 import numpy as np
-from aeon.benchmarking import plot_critical_difference
-from aeon.benchmarking.results_plotting import plot_boxplot_median, plot_scatter
+from aeon.visualisation import plot_critical_difference
+from aeon.visualisation import plot_boxplot_median, plot_pairwise_scatter
 from matplotlib import pyplot as plt
 
 from tsml_eval.evaluation.storage import (
@@ -1374,7 +1374,7 @@ def _figures_for_statistic(
                 f"{save_path}/{statistic_name}/figures/scatters/{est1}/", exist_ok=True
             )
 
-            scatter = plot_scatter(scores[:, (i, n)], est1, est2)
+            scatter = plot_pairwise_scatter(scores[:, (i, n)], est1, est2)
             scatter.savefig(
                 f"{save_path}/{statistic_name}/figures/scatters/{est1}/"
                 f"{eval_name}_{statistic_name.lower()}_scatter_{est1}_{est2}.pdf",

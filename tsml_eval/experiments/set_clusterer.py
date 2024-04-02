@@ -94,6 +94,19 @@ distance_based_clusterers = [
     "kmeans-ba-msm",
     "kmeans-ba-adtw",
     "kmeans-ba-shape_dtw",
+    "kmeans-sba-euclidean",
+    "kmeans-sba-squared",
+    "kmeans-sba-dtw",
+    "kmeans-sba-ddtw",
+    "kmeans-sba-wdtw",
+    "kmeans-sba-wddtw",
+    "kmeans-sba-lcss",
+    "kmeans-sba-erp",
+    "kmeans-sba-edr",
+    "kmeans-sba-twe",
+    "kmeans-sba-msm",
+    "kmeans-sba-adtw",
+    "kmeans-sba-shape_dtw",
     "timeserieskmeans",
     "timeserieskmedoids",
     "timeseriesclarans",
@@ -211,7 +224,25 @@ def _set_clusterer_distance_based(
             average_params = kwargs["average_params"]
         else:
             average_params = {"distance": distance, **distance_params.copy()}
-        if "ba" in c:
+
+        if "sba" in c:
+            # Sets to use subgradient BA
+            average_params = {
+                **average_params,
+                "method": "subgradient",
+            }
+            return TimeSeriesKMeans(
+                max_iter=50,
+                n_init=10,
+                init_algorithm=init_algorithm,
+                distance=distance,
+                distance_params=distance_params,
+                random_state=random_state,
+                averaging_method="ba",
+                average_params=average_params,
+                **kwargs,
+            )
+        elif "ba" in c:
             return TimeSeriesKMeans(
                 max_iter=50,
                 n_init=10,
