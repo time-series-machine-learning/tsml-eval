@@ -41,7 +41,7 @@ classifiers = [
 ]
 requires-python = ">=3.8,<3.12"
 dependencies = [
-    "aeon@git+https://github.com/aeon-toolkit/aeon.git@ba-major-minimise-mean#egg=aeon",
+    "aeon@git+https://github.com/aeon-toolkit/aeon.git@ssg-ba-experiment#egg=aeon",
     "tsml>=0.3.0,<0.4.0",
     "scikit-learn>=1.0.0,<1.5.0",
     "matplotlib",
