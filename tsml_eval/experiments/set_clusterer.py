@@ -101,7 +101,7 @@ distance_based_clusterers = [
     "kmeans-ssg-ba-wdtw",
     "kmeans-ssg-ba-wddtw",
     "kmeans-ssg-ba-erp",
-    "kmeans-ssgba-edr",
+    "kmeans-ssg-ba-edr",
     "kmeans-ssg-ba-twe",
     "kmeans-ssg-ba-msm",
     "kmeans-ssg-ba-adtw",
