@@ -94,19 +94,18 @@ distance_based_clusterers = [
     "kmeans-ba-msm",
     "kmeans-ba-adtw",
     "kmeans-ba-shape_dtw",
-    "kmeans-sba-euclidean",
-    "kmeans-sba-squared",
-    "kmeans-sba-dtw",
-    "kmeans-sba-ddtw",
-    "kmeans-sba-wdtw",
-    "kmeans-sba-wddtw",
-    "kmeans-sba-lcss",
-    "kmeans-sba-erp",
-    "kmeans-sba-edr",
-    "kmeans-sba-twe",
-    "kmeans-sba-msm",
-    "kmeans-sba-adtw",
-    "kmeans-sba-shape_dtw",
+    "kmeans-ssg-ba-euclidean",
+    "kmeans-ssg-ba-squared",
+    "kmeans-ssg-ba-dtw",
+    "kmeans-ssg-ba-ddtw",
+    "kmeans-ssg-ba-wdtw",
+    "kmeans-ssg-ba-wddtw",
+    "kmeans-ssg-ba-erp",
+    "kmeans-ssgba-edr",
+    "kmeans-ssg-ba-twe",
+    "kmeans-ssg-ba-msm",
+    "kmeans-ssg-ba-adtw",
+    "kmeans-ssg-ba-shape_dtw",
     "timeserieskmeans",
     "timeserieskmedoids",
     "timeseriesclarans",
@@ -225,7 +224,7 @@ def _set_clusterer_distance_based(
         else:
             average_params = {"distance": distance, **distance_params.copy()}
 
-        if "sba" in c:
+        if "ssg" in c:
             # Sets to use subgradient BA
             average_params = {
                 **average_params,
