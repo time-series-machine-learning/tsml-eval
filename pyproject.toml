@@ -55,7 +55,11 @@ all_extras = [
     "tsml[all_extras]",
     "xgboost",
     "torch>=1.13.1",
-    "dask<2024.3.0",  # temporary for CI
+
+    # temporary for CI
+    "dask[dataframe]<2024.3.0; python_version < '3.11'",
+    "pyarrow<12; python_version < '3.12'",
+    "pyarrow-hotfix; python_version < '3.12'",
 ]
 unstable_extras = [
     "aeon[unstable_extras]",
