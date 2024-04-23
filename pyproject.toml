@@ -55,6 +55,7 @@ all_extras = [
     "tsml[all_extras]",
     "xgboost",
     "torch>=1.13.1",
+    "dask<2024.3.0",  # temporary for CI
 ]
 unstable_extras = [
     "aeon[unstable_extras]",

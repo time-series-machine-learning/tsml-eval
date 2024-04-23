@@ -1033,9 +1033,9 @@ def _evaluate_by_problem_init(
     if isinstance(dataset_names, str):
         with open(dataset_names) as f:
             dataset_names = f.readlines()
-            dataset_names = [[d.strip() for d in dataset_names]]
+            dataset_names = [[d.strip() for d in dataset_names]] * len(load_path)
     elif isinstance(dataset_names[0], str):
-        dataset_names = [dataset_names]
+        dataset_names = [dataset_names] * len(load_path)
     elif not isinstance(dataset_names[0], list):
         raise TypeError("dataset_names must be a str or list of str.")
 
