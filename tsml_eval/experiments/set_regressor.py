@@ -79,7 +79,6 @@ def get_regressor_by_name(
     regressor_name,
     random_state=None,
     n_jobs=1,
-    build_train_file=False,
     fit_contract=0,
     checkpoint=None,
     **kwargs,
@@ -99,14 +98,16 @@ def get_regressor_by_name(
         String indicating which regressor to be returned.
     random_state : int, RandomState instance or None, default=None
         Random seed or RandomState object to be used in the regressor if available.
-    build_train_file : bool, default=False
-        Whether a train data results file is being produced. If True, regressor specific
-        parameters for generating train results will be toggled if available.
     n_jobs: int, default=1
         The number of jobs to run in parallel for both regressor ``fit`` and
         ``predict`` if available. `-1` means using all processors.
     fit_contract: int, default=0
         Contract time in minutes for regressor ``fit`` if available.
+    checkpoint: str or None, default=None
+        Path to a checkpoint file to save the regressor if available. No checkpointing
+        if None.
+    **kwargs
+        Additional keyword arguments to be passed to the regressor.
 
     Return
     ------
@@ -117,50 +118,50 @@ def get_regressor_by_name(
 
     if str_in_nested_list(convolution_based_regressors, r):
         return _set_regressor_convolution_based(
-            r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
+            r, random_state, n_jobs, fit_contract, checkpoint, kwargs
         )
     elif str_in_nested_list(deep_learning_regressors, r):
         return _set_regressor_deep_learning(
-            r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
+            r, random_state, n_jobs, fit_contract, checkpoint, kwargs
         )
     elif str_in_nested_list(dictionary_based_regressors, r):
         return _set_regressor_dictionary_based(
-            r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
+            r, random_state, n_jobs, fit_contract, checkpoint, kwargs
         )
     elif str_in_nested_list(distance_based_regressors, r):
         return _set_regressor_distance_based(
-            r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
+            r, random_state, n_jobs, fit_contract, checkpoint, kwargs
         )
     elif str_in_nested_list(feature_based_regressors, r):
         return _set_regressor_feature_based(
-            r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
+            r, random_state, n_jobs, fit_contract, checkpoint, kwargs
         )
     elif str_in_nested_list(hybrid_regressors, r):
         return _set_regressor_hybrid(
-            r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
+            r, random_state, n_jobs, fit_contract, checkpoint, kwargs
         )
     elif str_in_nested_list(interval_based_regressors, r):
         return _set_regressor_interval_based(
-            r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
+            r, random_state, n_jobs, fit_contract, checkpoint, kwargs
         )
     elif str_in_nested_list(other_regressors, r):
         return _set_regressor_other(
-            r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
+            r, random_state, n_jobs, fit_contract, checkpoint, kwargs
         )
     elif str_in_nested_list(shapelet_based_regressors, r):
         return _set_regressor_shapelet_based(
-            r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
+            r, random_state, n_jobs, fit_contract, checkpoint, kwargs
         )
     elif str_in_nested_list(vector_regressors, r):
         return _set_regressor_vector(
-            r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
+            r, random_state, n_jobs, fit_contract, checkpoint, kwargs
         )
     else:
         raise ValueError(f"UNKNOWN REGRESSOR: {r} in set_regressor")
 
 
 def _set_regressor_convolution_based(
-    r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
+    r, random_state, n_jobs, fit_contract, checkpoint, kwargs
 ):
     if r == "rocketregressor" or r == "rocket":
         from aeon.regression.convolution_based import RocketRegressor
@@ -194,14 +195,13 @@ def _set_regressor_convolution_based(
         return Arsenal(
             random_state=random_state,
             n_jobs=n_jobs,
-            save_transformed_data=build_train_file,
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
 
 
 def _set_regressor_deep_learning(
-    r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
+    r, random_state, n_jobs, fit_contract, checkpoint, kwargs
 ):
     if r == "cnnregressor" or r == "cnn":
         from aeon.regression.deep_learning import CNNRegressor
@@ -234,7 +234,7 @@ def _set_regressor_deep_learning(
 
 
 def _set_regressor_dictionary_based(
-    r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
+    r, random_state, n_jobs, fit_contract, checkpoint, kwargs
 ):
     if r == "temporaldictionaryensemble" or r == "tde":
         from tsml_eval._wip.hc2_regression.tde import TemporalDictionaryEnsemble
@@ -242,14 +242,13 @@ def _set_regressor_dictionary_based(
         return TemporalDictionaryEnsemble(
             random_state=random_state,
             n_jobs=n_jobs,
-            save_train_predictions=build_train_file,
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
 
 
 def _set_regressor_distance_based(
-    r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
+    r, random_state, n_jobs, fit_contract, checkpoint, kwargs
 ):
     if r == "1nn-ed":
         from aeon.regression.distance_based import KNeighborsTimeSeriesRegressor
@@ -290,7 +289,7 @@ def _set_regressor_distance_based(
 
 
 def _set_regressor_feature_based(
-    r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
+    r, random_state, n_jobs, fit_contract, checkpoint, kwargs
 ):
     if r == "freshprinceregressor" or r == "fresh-prince" or r == "freshprince":
         from aeon.regression.feature_based import FreshPRINCERegressor
@@ -298,7 +297,6 @@ def _set_regressor_feature_based(
         return FreshPRINCERegressor(
             random_state=random_state,
             n_jobs=n_jobs,
-            save_transformed_data=build_train_file,
             **kwargs,
         )
     elif r == "freshprince-500":
@@ -308,7 +306,6 @@ def _set_regressor_feature_based(
             n_estimators=500,
             random_state=random_state,
             n_jobs=n_jobs,
-            save_transformed_data=build_train_file,
             **kwargs,
         )
     elif r == "fpcaregressor" or r == "fpcregressor" or r == "fpcr":
@@ -321,9 +318,7 @@ def _set_regressor_feature_based(
         return FPCARegressor(n_jobs=n_jobs, bspline=True, order=4, n_basis=10, **kwargs)
 
 
-def _set_regressor_hybrid(
-    r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
-):
+def _set_regressor_hybrid(r, random_state, n_jobs, fit_contract, checkpoint, kwargs):
     if r == "hivecotev2" or r == "hc2":
         from tsml_eval._wip.hc2_regression.hivecote_v2 import HIVECOTEV2
 
@@ -346,7 +341,7 @@ def _set_regressor_hybrid(
 
 
 def _set_regressor_interval_based(
-    r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
+    r, random_state, n_jobs, fit_contract, checkpoint, kwargs
 ):
     if r == "timeseriesforestregressor" or r == "tsf":
         from aeon.regression.interval_based import TimeSeriesForestRegressor
@@ -354,7 +349,6 @@ def _set_regressor_interval_based(
         return TimeSeriesForestRegressor(
             random_state=random_state,
             n_jobs=n_jobs,
-            save_transformed_data=build_train_file,
             **kwargs,
         )
     elif r == "tsf-i":
@@ -367,7 +361,6 @@ def _set_regressor_interval_based(
                 TimeSeriesForestRegressor(
                     random_state=random_state,
                     n_jobs=n_jobs,
-                    save_transformed_data=build_train_file,
                 ),
                 "all-split",
             )
@@ -381,7 +374,6 @@ def _set_regressor_interval_based(
             n_estimators=500,
             random_state=random_state,
             n_jobs=n_jobs,
-            save_transformed_data=build_train_file,
             **kwargs,
         )
     elif r == "drcif" or r == "drcifregressor":
@@ -390,7 +382,6 @@ def _set_regressor_interval_based(
         return DrCIFRegressor(
             random_state=random_state,
             n_jobs=n_jobs,
-            save_transformed_data=build_train_file,
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
@@ -401,15 +392,12 @@ def _set_regressor_interval_based(
             n_estimators=500,
             random_state=random_state,
             n_jobs=n_jobs,
-            save_transformed_data=build_train_file,
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
 
 
-def _set_regressor_other(
-    r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
-):
+def _set_regressor_other(r, random_state, n_jobs, fit_contract, checkpoint, kwargs):
     if r == "dummy" or r == "dummyregressor" or r == "dummyregressor-tsml":
         from tsml.dummy import DummyRegressor
 
@@ -433,7 +421,7 @@ def _set_regressor_other(
 
 
 def _set_regressor_shapelet_based(
-    r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
+    r, random_state, n_jobs, fit_contract, checkpoint, kwargs
 ):
     if r == "str-2hour":
         from tsml_eval._wip.hc2_regression.str import ShapeletTransformRegressor
@@ -442,7 +430,6 @@ def _set_regressor_shapelet_based(
             transform_limit_in_minutes=120,
             random_state=random_state,
             n_jobs=n_jobs,
-            save_transformed_data=build_train_file,
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
@@ -452,7 +439,6 @@ def _set_regressor_shapelet_based(
         return ShapeletTransformRegressor(
             random_state=random_state,
             n_jobs=n_jobs,
-            save_transformed_data=build_train_file,
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
@@ -470,22 +456,18 @@ def _set_regressor_shapelet_based(
             transform_limit_in_minutes=120,
             random_state=random_state,
             n_jobs=n_jobs,
-            save_transformed_data=build_train_file,
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
 
 
-def _set_regressor_vector(
-    r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
-):
+def _set_regressor_vector(r, random_state, n_jobs, fit_contract, checkpoint, kwargs):
     if r == "rotationforestregressor" or r == "rotf" or r == "rotationforest":
         from aeon.regression.sklearn import RotationForestRegressor
 
         return RotationForestRegressor(
             random_state=random_state,
             n_jobs=n_jobs,
-            save_transformed_data=build_train_file,
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
