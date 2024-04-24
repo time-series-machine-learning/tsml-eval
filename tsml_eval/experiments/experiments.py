@@ -68,6 +68,7 @@ def run_classification_experiment(
     resample_id=None,
     build_test_file=True,
     build_train_file=False,
+    ignore_custom_train_estimate=False,
     attribute_file_path=None,
     att_max_shape=0,
     benchmark_time=True,
@@ -110,6 +111,12 @@ def run_classification_experiment(
         Whether to generate train files or not. If true, it performs a 10-fold
         cross-validation on the train data and saves. If the classifier can produce its
         own estimates, those are used instead.
+    ignore_custom_train_estimate : bool, default=False
+        todo
+    attribute_file_path : str or None, default=None
+        todo (only test)
+    att_max_shape : int, default=0
+        todo
     benchmark_time : bool, default=True
         Whether to benchmark the hardware used with a simple function and write the
         results. This will typically take ~2 seconds, but is hardware dependent.
@@ -123,9 +130,13 @@ def run_classification_experiment(
     if classifier_name is None:
         classifier_name = type(classifier).__name__
 
-    if isinstance(classifier, BaseClassifier) or (
-        isinstance(classifier, BaseTimeSeriesEstimator) and is_classifier(classifier)
-    ):
+    use_fit_predict = False
+    if isinstance(classifier, BaseClassifier):
+        if not ignore_custom_train_estimate and classifier.get_tag(
+            "capability:train_estimate", False, False
+        ):
+            use_fit_predict = True
+    elif isinstance(classifier, BaseTimeSeriesEstimator) and is_classifier(classifier):
         pass
     elif isinstance(classifier, BaseEstimator) and is_classifier(classifier):
         classifier = SklearnToTsmlClassifier(
@@ -152,12 +163,12 @@ def run_classification_experiment(
     encoder_dict = {label: i for i, label in enumerate(le.classes_)}
     n_classes = len(np.unique(y_train))
 
-    classifier_train_probs = build_train_file and callable(
-        getattr(classifier, "_get_train_probs", None)
-    )
+    needs_fit = True
     fit_time = -1
     mem_usage = -1
     benchmark = -1
+    train_time = -1
+    fit_and_train_time = -1
 
     if benchmark_time:
         benchmark = timing_benchmark(random_state=resample_id)
@@ -170,21 +181,66 @@ def run_classification_experiment(
 
     second = str(classifier.get_params()).replace("\n", " ").replace("\r", " ")
 
-    if build_test_file or classifier_train_probs:
-        mem_usage, fit_time = record_max_memory(
-            classifier.fit,
-            args=(X_train, y_train),
-            interval=MEMRECORD_INTERVAL,
-            return_func_time=True,
+    if build_train_file:
+        cv_size = 10
+        start = int(round(time.time() * 1000))
+        if use_fit_predict:
+            train_probs = classifier.fit_predict_proba(X_train, y_train)
+            needs_fit = False
+            fit_and_train_time = int(round(time.time() * 1000)) - start
+        else:
+            _, counts = np.unique(y_train, return_counts=True)
+            min_class = max(2, np.min(counts))
+            if min_class < cv_size:
+                cv_size = min_class
+
+            train_probs = cross_val_predict(
+                classifier, X_train, y=y_train, cv=cv_size, method="predict_proba"
+            )
+            train_time = int(round(time.time() * 1000)) - start
+
+        train_preds = np.unique(y_train)[np.argmax(train_probs, axis=1)]
+        train_acc = accuracy_score(y_train, train_preds)
+
+        write_classification_results(
+            train_preds,
+            train_probs,
+            y_train,
+            classifier_name,
+            dataset_name,
+            results_path,
+            full_path=False,
+            split="TRAIN",
+            resample_id=resample_id,
+            time_unit="MILLISECONDS",
+            first_line_comment=first_comment,
+            parameter_info=second,
+            accuracy=train_acc,
+            fit_time=fit_time,
+            predict_time=-1,
+            benchmark_time=benchmark,
+            memory_usage=mem_usage,
+            n_classes=n_classes,
+            train_estimate_method="Custom" if use_fit_predict else f"{cv_size}F-CV",
+            train_estimate_time=train_time,
+            fit_and_estimate_time=fit_and_train_time,
         )
-        fit_time += int(round(getattr(classifier, "_fit_time_milli", 0)))
+
+    if build_test_file:
+        if needs_fit:
+            mem_usage, fit_time = record_max_memory(
+                classifier.fit,
+                args=(X_train, y_train),
+                interval=MEMRECORD_INTERVAL,
+                return_func_time=True,
+            )
+            fit_time += int(round(getattr(classifier, "_fit_time_milli", 0)))
 
         if attribute_file_path is not None:
             estimator_attributes_to_file(
                 classifier, attribute_file_path, max_list_shape=att_max_shape
             )
 
-    if build_test_file:
         start = int(round(time.time() * 1000))
         test_probs = classifier.predict_proba(X_test)
         test_time = (
@@ -215,46 +271,9 @@ def run_classification_experiment(
             benchmark_time=benchmark,
             memory_usage=mem_usage,
             n_classes=n_classes,
-        )
-
-    if build_train_file:
-        start = int(round(time.time() * 1000))
-        if classifier_train_probs:  # Normally can only do this if test has been built
-            train_probs = classifier._get_train_probs(X_train, y_train)
-        else:
-            cv_size = 10
-            _, counts = np.unique(y_train, return_counts=True)
-            min_class = max(2, np.min(counts))
-            if min_class < cv_size:
-                cv_size = min_class
-
-            train_probs = cross_val_predict(
-                classifier, X_train, y=y_train, cv=cv_size, method="predict_proba"
-            )
-        train_time = int(round(time.time() * 1000)) - start
-
-        train_preds = classifier.classes_[np.argmax(train_probs, axis=1)]
-        train_acc = accuracy_score(y_train, train_preds)
-
-        write_classification_results(
-            train_preds,
-            train_probs,
-            y_train,
-            classifier_name,
-            dataset_name,
-            results_path,
-            full_path=False,
-            split="TRAIN",
-            resample_id=resample_id,
-            time_unit="MILLISECONDS",
-            first_line_comment=first_comment,
-            parameter_info=second,
-            accuracy=train_acc,
-            fit_time=fit_time,
-            benchmark_time=benchmark,
-            n_classes=n_classes,
-            train_estimate_time=train_time,
-            fit_and_estimate_time=fit_time + train_time,
+            train_estimate_method="N/A",
+            train_estimate_time=-1,
+            fit_and_estimate_time=fit_and_train_time,
         )
 
 
@@ -939,6 +958,7 @@ def run_regression_experiment(
     resample_id=None,
     build_test_file=True,
     build_train_file=False,
+    ignore_custom_train_estimate=False,
     attribute_file_path=None,
     att_max_shape=0,
     benchmark_time=True,
@@ -981,6 +1001,12 @@ def run_regression_experiment(
         Whether to generate train files or not. If true, it performs a 10-fold
         cross-validation on the train data and saves. If the regressor can produce its
         own estimates, those are used instead.
+    ignore_custom_train_estimate : bool, default=False
+        todo
+    attribute_file_path : str or None, default=None
+        todo (only test)
+    att_max_shape : int, default=0
+        todo
     benchmark_time : bool, default=True
         Whether to benchmark the hardware used with a simple function and write the
         results. This will typically take ~2 seconds, but is hardware dependent.
@@ -994,9 +1020,13 @@ def run_regression_experiment(
     if regressor_name is None:
         regressor_name = type(regressor).__name__
 
-    if isinstance(regressor, BaseRegressor) or (
-        isinstance(regressor, BaseTimeSeriesEstimator) and is_regressor(regressor)
-    ):
+    use_fit_predict = False
+    if isinstance(regressor, BaseRegressor):
+        if not ignore_custom_train_estimate and regressor.get_tag(
+            "capability:train_estimate", False, False
+        ):
+            use_fit_predict = True
+    elif isinstance(regressor, BaseTimeSeriesEstimator) and is_regressor(regressor):
         pass
     elif isinstance(regressor, BaseEstimator) and is_regressor(regressor):
         regressor = SklearnToTsmlRegressor(
@@ -1016,12 +1046,12 @@ def run_regression_experiment(
         X_train = scaler.fit_transform(X_train)
         X_test = scaler.fit_transform(X_test)
 
-    regressor_train_preds = build_train_file and callable(
-        getattr(regressor, "_get_train_preds", None)
-    )
+    needs_fit = True
     fit_time = -1
     mem_usage = -1
     benchmark = -1
+    train_time = -1
+    fit_and_train_time = -1
 
     if benchmark_time:
         benchmark = timing_benchmark(random_state=resample_id)
@@ -1033,21 +1063,56 @@ def run_regression_experiment(
 
     second = str(regressor.get_params()).replace("\n", " ").replace("\r", " ")
 
-    if build_test_file or regressor_train_preds:
-        mem_usage, fit_time = record_max_memory(
-            regressor.fit,
-            args=(X_train, y_train),
-            interval=MEMRECORD_INTERVAL,
-            return_func_time=True,
+    if build_train_file:
+        cv_size = min(10, len(y_train))
+        start = int(round(time.time() * 1000))
+        if use_fit_predict:
+            train_preds = regressor.fit_predict(X_train, y_train)
+            needs_fit = False
+            fit_and_train_time = int(round(time.time() * 1000)) - start
+        else:
+            train_preds = cross_val_predict(regressor, X_train, y=y_train, cv=cv_size)
+            train_time = int(round(time.time() * 1000)) - start
+
+        train_mse = mean_squared_error(y_train, train_preds)
+
+        write_regression_results(
+            train_preds,
+            y_train,
+            regressor_name,
+            dataset_name,
+            results_path,
+            full_path=False,
+            split="TRAIN",
+            resample_id=resample_id,
+            time_unit="MILLISECONDS",
+            first_line_comment=first_comment,
+            parameter_info=second,
+            mse=train_mse,
+            fit_time=fit_time,
+            predict_time=-1,
+            benchmark_time=benchmark,
+            memory_usage=mem_usage,
+            train_estimate_method="Custom" if use_fit_predict else f"{cv_size}F-CV",
+            train_estimate_time=train_time,
+            fit_and_estimate_time=fit_and_train_time,
         )
-        fit_time += int(round(getattr(regressor, "_fit_time_milli", 0)))
+
+    if build_test_file:
+        if needs_fit:
+            mem_usage, fit_time = record_max_memory(
+                regressor.fit,
+                args=(X_train, y_train),
+                interval=MEMRECORD_INTERVAL,
+                return_func_time=True,
+            )
+            fit_time += int(round(getattr(regressor, "_fit_time_milli", 0)))
 
         if attribute_file_path is not None:
             estimator_attributes_to_file(
                 regressor, attribute_file_path, max_list_shape=att_max_shape
             )
 
-    if build_test_file:
         start = int(round(time.time() * 1000))
         test_preds = regressor.predict(X_test)
         test_time = (int(round(time.time() * 1000)) - start) + int(
@@ -1073,36 +1138,9 @@ def run_regression_experiment(
             predict_time=test_time,
             benchmark_time=benchmark,
             memory_usage=mem_usage,
-        )
-
-    if build_train_file:
-        start = int(round(time.time() * 1000))
-        if regressor_train_preds:  # Normally can only do this if test has been built
-            train_preds = regressor._get_train_preds(X_train, y_train)
-        else:
-            cv_size = min(10, len(y_train))
-            train_preds = cross_val_predict(regressor, X_train, y=y_train, cv=cv_size)
-        train_time = int(round(time.time() * 1000)) - start
-
-        train_mse = mean_squared_error(y_train, train_preds)
-
-        write_regression_results(
-            train_preds,
-            y_train,
-            regressor_name,
-            dataset_name,
-            results_path,
-            full_path=False,
-            split="TRAIN",
-            resample_id=resample_id,
-            time_unit="MILLISECONDS",
-            first_line_comment=first_comment,
-            parameter_info=second,
-            mse=train_mse,
-            fit_time=fit_time,
-            benchmark_time=benchmark,
-            train_estimate_time=train_time,
-            fit_and_estimate_time=fit_time + train_time,
+            train_estimate_method="N/A",
+            train_estimate_time=-1,
+            fit_and_estimate_time=fit_and_train_time,
         )
 
 
