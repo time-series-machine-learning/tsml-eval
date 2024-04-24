@@ -81,7 +81,7 @@ def run_classification_experiment(
 
     Parameters
     ----------
-    X_train : pd.DataFrame or np.array todo
+    X_train : pd.DataFrame or np.array    todo
         The data to train the classifier.
     y_train : np.array
         Training data class labels.
