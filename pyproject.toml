@@ -58,7 +58,7 @@ all_extras = [
     "torch>=1.13.1",
 
     # temporary for CI
-    "dask[dataframe]<2024.3.0; python_version < '3.11'",
+    "dask[dataframe]>2024.4.0",
     "pyarrow<12; python_version < '3.12'",
     "pyarrow-hotfix; python_version < '3.12'",
 ]
