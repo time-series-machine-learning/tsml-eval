@@ -9,6 +9,9 @@ excluded=(
   "tsml_eval/publications/y2023/distance_based_clustering/package_distance_timing.ipynb"
   "examples/regression_experiments.ipynb"
 )
+#if [ "$1" = true ]; then
+#  excluded+=()
+#fi
 
 shopt -s lastpipe
 notebooks=()

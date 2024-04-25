@@ -77,7 +77,6 @@ def run_experiment(args):
                         else args.random_seed
                     ),
                     n_jobs=1,
-                    build_train_file=args.train_fold,
                     fit_contract=args.fit_contract,
                     checkpoint=args.checkpoint,
                     **args.kwargs,
@@ -117,7 +116,6 @@ def run_experiment(args):
             estimator_name,
             random_state=resample_id,
             n_jobs=1,
-            build_train_file=train_fold,
             fit_contract=fit_contract,
             checkpoint=checkpoint,
             **kwargs,
