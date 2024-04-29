@@ -48,7 +48,7 @@ from tsml_eval.utils.experiments import (
 )
 from tsml_eval.utils.memory_recorder import record_max_memory
 
-if os.getenv("MEMRECORD_INTERVAL") is not None:
+if os.getenv("MEMRECORD_INTERVAL") is not None:  # pragma: no cover
     TEMP = os.getenv("MEMRECORD_INTERVAL")
     MEMRECORD_INTERVAL = float(TEMP) if isinstance(TEMP, str) else 5.0
 else:
