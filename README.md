@@ -16,7 +16,7 @@
 `tsml-eval` contains benchmarking and evaluation tools for time series machine learning
 algorithms.
 
-The current release of `tsml-eval` is v0.2.1.
+The current release of `tsml-eval` is v0.3.0.
 
 ## Installation
 
