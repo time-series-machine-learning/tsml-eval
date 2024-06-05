@@ -23,7 +23,7 @@ from tsml_eval.utils.arguments import parse_args
 from tsml_eval.utils.experiments import _results_present
 
 # all classifiers ran without duplicates
-distance_based = ["1NN-DTW", "ShapeDTW", "GRAIL"]
+distance_based = ["1NN-DTW", "GRAIL"]
 feature_based = ["Catch22", "FreshPRINCE", "TSFresh", "Signatures"]
 shapelet_based = ["STC", "RDST", "RSF", "MrSQM"]
 interval_based = ["R-STSF", "RISE", "TSF", "CIF", "STSF", "DrCIF", "QUANT"]
