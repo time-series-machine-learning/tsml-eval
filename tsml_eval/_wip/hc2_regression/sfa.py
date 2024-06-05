@@ -13,7 +13,6 @@ import warnings
 import numpy as np
 import pandas as pd
 from aeon.transformations.base import BaseTransformer
-from aeon.utils.validation.panel import check_X
 from joblib import Parallel, delayed
 from numba import NumbaTypeSafetyWarning, njit, types
 from numba.typed import Dict
@@ -239,7 +238,7 @@ class SFA(BaseTransformer):
                 "(this is way to many anyway)."
             )
 
-        X = check_X(X, enforce_univariate=True, coerce_to_numpy=True)
+        # X = check_X(X, enforce_univariate=True, coerce_to_numpy=True)
         X = X.squeeze(1)
 
         if self.levels > 1:

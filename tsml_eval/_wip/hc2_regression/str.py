@@ -11,7 +11,6 @@ import numpy as np
 from aeon.base._base import _clone_estimator
 from aeon.regression.base import BaseRegressor
 from aeon.regression.sklearn import RotationForestRegressor
-from aeon.utils.validation.panel import check_X_y
 from sklearn.model_selection import cross_val_predict
 from sklearn.utils.multiclass import type_of_target
 
@@ -246,7 +245,7 @@ class ShapeletTransformRegressor(BaseRegressor):
 
     def _get_train_preds(self, X, y) -> np.ndarray:
         self.check_is_fitted()
-        X, y = check_X_y(X, y, coerce_to_pandas=True)
+        # X, y = check_X_y(X, y, coerce_to_pandas=True)
 
         n_instances, n_dims = X.shape
 

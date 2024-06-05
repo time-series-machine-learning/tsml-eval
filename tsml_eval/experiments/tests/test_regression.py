@@ -170,7 +170,6 @@ def test_get_regressor_by_name():
     regressor_lists = [
         set_regressor.convolution_based_regressors,
         set_regressor.deep_learning_regressors,
-        set_regressor.dictionary_based_regressors,
         set_regressor.distance_based_regressors,
         set_regressor.feature_based_regressors,
         set_regressor.hybrid_regressors,

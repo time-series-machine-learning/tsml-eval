@@ -11,13 +11,14 @@ convolution_based_classifiers = [
     ["arsenalclassifier", "arsenal"],
     ["miniarsenal", "mini-arsenal"],
     ["multiarsenal", "multi-arsenal"],
-    "hydra",
-    ["multirockethydra", "multirocket-hydra"],
+    ["hydraclassifier", "hydra"],
+    ["multirockethydraclassifier", "multirockethydra", "multirocket-hydra"],
 ]
 deep_learning_classifiers = [
     ["cnnclassifier", "cnn"],
     ["fcnclassifier", "fcnn"],
     ["mlpclassifier", "mlp"],
+    ["encoderclassifier", "encoder"],
     ["tapnetclassifier", "tapnet"],
     ["resnetclassifier", "resnet"],
     ["individualinceptionclassifier", "singleinception"],
@@ -36,7 +37,6 @@ dictionary_based_classifiers = [
     "muse",
     "muse-logistic",
     ["weasel_v2", "weaseldilation", "weasel-dilation", "weasel-d"],
-    ["musedilation", "muse-dilation", "muse-d"],
     "redcomets",
     "redcomets-500",
 ]
@@ -47,7 +47,6 @@ distance_based_classifiers = [
     ["twe", "1nn-twe"],
     "1nn-dtw-cv",
     ["elasticensemble", "ee"],
-    "shapedtw",
     ["grailclassifier", "grail"],
 ]
 feature_based_classifiers = [
@@ -56,6 +55,7 @@ feature_based_classifiers = [
     "catch22-500",
     ["catch22classifier", "catch22"],
     ["freshprinceclassifier", "freshprince"],
+    "freshprince-500",
     "tsfresh-nofs",
     ["tsfreshclassifier", "tsfresh"],
     ["signatureclassifier", "signatures"],
@@ -63,7 +63,6 @@ feature_based_classifiers = [
 hybrid_classifiers = [
     ["hivecotev1", "hc1"],
     ["hivecotev2", "hc2"],
-    ["tschief", "ts-chief"],
     ["ristclassifier", "rist", "rist-extrat"],
 ]
 interval_based_classifiers = [
@@ -80,7 +79,7 @@ interval_based_classifiers = [
     "drcif-500",
     ["drcif", "drcifclassifier"],
     "summary-intervals",
-    ["randomintervals-rf", "catch22-intervals-rf"],
+    ["randomintervals-500", "catch22-intervals-500"],
     ["randomintervalclassifier", "randomintervals", "catch22-intervals"],
     ["quantclassifier", "quant"],
 ]
@@ -95,6 +94,8 @@ shapelet_based_classifiers = [
     ["rdstclassifier", "rdst"],
     ["randomshapeletforestclassifier", "randomshapeletforest", "rsf"],
     ["mrsqmclassifier", "mrsqm"],
+    ["sastclassifier", "sast"],
+    ["rsastclassifier", "rsast"],
 ]
 vector_classifiers = [
     ["rotationforestclassifier", "rotationforest", "rotf"],
@@ -242,16 +243,20 @@ def _set_classifier_convolution_based(
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
-    elif c == "hydra":
-        from tsml_eval.estimators.classification.convolution_based.hydra import HYDRA
+    elif c == "hydraclassifier" or c == "hydra":
+        from aeon.classification.convolution_based import HydraClassifier
 
-        return HYDRA(random_state=random_state, n_jobs=n_jobs, **kwargs)
-    elif c == "multirockethydra" or c == "multirocket-hydra":
-        from tsml_eval.estimators.classification.convolution_based.hydra import (
-            MultiRocketHydra,
+        return HydraClassifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif (
+        c == "multirockethydraclassifier"
+        or c == "multirockethydra"
+        or c == "multirocket-hydra"
+    ):
+        from aeon.classification.convolution_based import MultiRocketHydraClassifier
+
+        return MultiRocketHydraClassifier(
+            random_state=random_state, n_jobs=n_jobs, **kwargs
         )
-
-        return MultiRocketHydra(random_state=random_state, n_jobs=n_jobs, **kwargs)
 
 
 def _set_classifier_deep_learning(
@@ -269,6 +274,10 @@ def _set_classifier_deep_learning(
         from aeon.classification.deep_learning import MLPClassifier
 
         return MLPClassifier(random_state=random_state, **kwargs)
+    elif c == "encoderclassifier" or c == "encoder":
+        from aeon.classification.deep_learning import EncoderClassifier
+
+        return EncoderClassifier(random_state=random_state, **kwargs)
     elif c == "tapnetclassifier" or c == "tapnet":
         from aeon.classification.deep_learning import TapNetClassifier
 
@@ -377,10 +386,6 @@ def _set_classifier_dictionary_based(
             n_jobs=n_jobs,
             **kwargs,
         )
-    elif c == "musedilation" or c == "muse-dilation" or c == "muse-d":
-        from tsml_eval._wip.dilation_muse.muse import MUSEDilation
-
-        return MUSEDilation(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "redcomets":
         from aeon.classification.dictionary_based import REDCOMETS
 
@@ -418,10 +423,6 @@ def _set_classifier_distance_based(
         from aeon.classification.distance_based import ElasticEnsemble
 
         return ElasticEnsemble(random_state=random_state, n_jobs=n_jobs, **kwargs)
-    elif c == "shapedtw":
-        from aeon.classification.distance_based import ShapeDTW
-
-        return ShapeDTW(**kwargs)
     elif c == "1nn-dtw-cv":
         from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
         from sklearn.model_selection import GridSearchCV
@@ -474,6 +475,12 @@ def _set_classifier_feature_based(
         from aeon.classification.feature_based import FreshPRINCEClassifier
 
         return FreshPRINCEClassifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "freshprince-500":
+        from aeon.classification.feature_based import FreshPRINCEClassifier
+
+        return FreshPRINCEClassifier(
+            n_estimators=500, random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
     elif c == "tsfresh-nofs":
         from aeon.classification.feature_based import TSFreshClassifier
 
@@ -507,13 +514,9 @@ def _set_classifier_hybrid(c, random_state, n_jobs, fit_contract, checkpoint, kw
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
-    elif c == "tschief" or c == "ts-chief":
-        from tsml_eval._wip.tschief.tschief import TsChief
-
-        return TsChief(random_state=random_state, **kwargs)
     elif c == "ristclassifier" or c == "rist" or c == "rist-extrat":
+        from aeon.classification.hybrid import RISTClassifier
         from sklearn.ensemble import ExtraTreesClassifier
-        from tsml.hybrid import RISTClassifier
 
         return RISTClassifier(
             random_state=random_state,
@@ -527,15 +530,15 @@ def _set_classifier_interval_based(
     c, random_state, n_jobs, fit_contract, checkpoint, kwargs
 ):
     if c == "rstsf-500":
-        from tsml.interval_based import RSTSFClassifier
+        from aeon.classification.interval_based import RSTSF
 
-        return RSTSFClassifier(
+        return RSTSF(
             n_estimators=500, random_state=random_state, n_jobs=n_jobs, **kwargs
         )
     elif c == "rstsfclassifier" or c == "rstsf" or c == "r-stsf":
-        from tsml.interval_based import RSTSFClassifier
+        from aeon.classification.interval_based import RSTSF
 
-        return RSTSFClassifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
+        return RSTSF(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "rise-500":
         from aeon.classification.interval_based import (
             RandomIntervalSpectralEnsembleClassifier,
@@ -629,20 +632,19 @@ def _set_classifier_interval_based(
         )
     elif c == "summary-intervals":
         from aeon.classification.interval_based import RandomIntervalClassifier
-        from aeon.transformations.summarize import SummaryTransformer
+        from aeon.transformations.collection.feature_based import (
+            SevenNumberSummaryTransformer,
+        )
         from sklearn.ensemble import RandomForestClassifier
 
         return RandomIntervalClassifier(
-            features=SummaryTransformer(
-                summary_function=("mean", "std", "min", "max"),
-                quantiles=(0.25, 0.5, 0.75),
-            ),
+            features=SevenNumberSummaryTransformer(),
             estimator=RandomForestClassifier(n_estimators=500),
             random_state=random_state,
             n_jobs=n_jobs,
             **kwargs,
         )
-    elif c == "randomintervals-rf" or c == "catch22-intervals-rf":
+    elif c == "randomintervals-500" or c == "catch22-intervals-500":
         from aeon.classification.interval_based import RandomIntervalClassifier
         from sklearn.ensemble import RandomForestClassifier
 
@@ -663,11 +665,9 @@ def _set_classifier_interval_based(
             random_state=random_state, n_jobs=n_jobs, **kwargs
         )
     elif c == "quantclassifier" or c == "quant":
-        from tsml_eval.estimators.classification.interval_based.quant import (
-            QuantClassifier,
-        )
+        from aeon.classification.interval_based import QUANTClassifier
 
-        return QuantClassifier(random_state=random_state, **kwargs)
+        return QUANTClassifier(random_state=random_state, **kwargs)
 
 
 def _set_classifier_other(c, random_state, n_jobs, fit_contract, checkpoint, kwargs):
@@ -724,6 +724,14 @@ def _set_classifier_shapelet_based(
         from aeon.classification.shapelet_based import MrSQMClassifier
 
         return MrSQMClassifier(random_state=random_state, **kwargs)
+    elif c == "sastclassifier" or c == "sast":
+        from aeon.classification.shapelet_based import SASTClassifier
+
+        return SASTClassifier(seed=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "rsastclassifier" or c == "rsast":
+        from aeon.classification.shapelet_based import RSASTClassifier
+
+        return RSASTClassifier(seed=random_state, n_jobs=n_jobs, **kwargs)
 
 
 def _set_classifier_vector(c, random_state, n_jobs, fit_contract, checkpoint, kwargs):
