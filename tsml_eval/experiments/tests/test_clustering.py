@@ -6,6 +6,7 @@ import os
 import runpy
 
 import pytest
+from aeon.registry import all_estimators
 from tsml.dummy import DummyClassifier, DummyClusterer
 
 from tsml_eval.datasets._test_data._data_sizes import DATA_TEST_SIZES, DATA_TRAIN_SIZES
@@ -196,6 +197,29 @@ def test_get_clusterer_by_name_invalid():
     """Test get_clusterer_by_name method with invalid estimator."""
     with pytest.raises(ValueError, match="UNKNOWN CLUSTERER"):
         get_clusterer_by_name("invalid")
+
+
+def test_aeon_clusterers_available():
+    """Test all aeon clusterers are available."""
+    excluded = [
+        # composable
+        "ClustererPipeline",
+        # just missing
+        "AEFCNClusterer",
+        "AEResNetClusterer",
+        "TimeSeriesKShapes",
+        "TimeSeriesKernelKMeans",
+    ]
+
+    est = [e for e, _ in all_estimators(estimator_types="clusterer")]
+    for e in est:
+        if e in excluded:
+            continue
+
+        try:
+            assert get_clusterer_by_name(e) is not None
+        except ModuleNotFoundError:
+            continue
 
 
 @pytest.mark.parametrize("n_clusters", ["4", "-1"])

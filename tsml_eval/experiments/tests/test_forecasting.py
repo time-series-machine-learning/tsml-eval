@@ -160,3 +160,21 @@ def test_get_forecaster_by_name_invalid():
     """Test get_forecaster_by_name method with invalid estimator."""
     with pytest.raises(ValueError, match="UNKNOWN FORECASTER"):
         get_forecaster_by_name("invalid")
+
+
+# def test_aeon_forecasters_available():
+#     """Test all aeon forecasters are available."""
+#     excluded = [
+#         # composable
+#         # just missing
+#     ]
+#
+#     est = [e for e, _ in all_estimators(estimator_types="forecaster")]
+#     for e in est:
+#         if e in excluded:
+#             continue
+#
+#         try:
+#             assert get_forecaster_by_name(e) is not None
+#         except ModuleNotFoundError:
+#             continue
