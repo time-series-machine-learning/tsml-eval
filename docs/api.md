@@ -14,7 +14,7 @@ functions and classes.
     estimators.SklearnToTsmlClassifier
     estimators.SklearnToTsmlClusterer
     estimators.SklearnToTsmlRegressor
-    estimators.classification.hyrbid.FromFileHIVECOTE
+    estimators.classification.hybrid.FromFileHIVECOTE
     estimators.clustering.consensus.IterativeVotingClustering
     estimators.clustering.consensus.FromFileIterativeVotingClustering
     estimators.clustering.consensus.SimpleVote
