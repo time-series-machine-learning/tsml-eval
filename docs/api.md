@@ -3,6 +3,24 @@
 This page contains the auto-generated API documentation for `tsml-eval` package
 functions and classes.
 
+## Estimators: [tsml_eval.estimators](https://github.com/time-series-machine-learning/tsml-eval/tree/main/tsml_eval/estimators)
+
+```{eval-rst}
+.. currentmodule:: tsml_eval
+.. autosummary::
+    :toctree: auto_generated/
+    :template: class.rst
+
+    estimators.SklearnToTsmlClassifier
+    estimators.SklearnToTsmlClusterer
+    estimators.SklearnToTsmlRegressor
+    estimators.classification.hyrbid.FromFileHIVECOTE
+    estimators.clustering.consensus.IterativeVotingClustering
+    estimators.clustering.consensus.FromFileIterativeVotingClustering
+    estimators.clustering.consensus.SimpleVote
+    estimators.clustering.consensus.FromFileSimpleVote
+```
+
 ## Evaluation: [tsml_eval.evaluation](https://github.com/time-series-machine-learning/tsml-eval/tree/main/tsml_eval/evaluation)
 
 Functions for evaluating the performance of a model.
@@ -33,9 +51,6 @@ Functions for evaluating the performance of a model.
     evaluation.storage.load_clusterer_results
     evaluation.storage.load_forecaster_results
     evaluation.storage.load_regressor_results
-    evaluation.efficiency_benchmark.compare_estimators
-    evaluation.efficiency_benchmark.benchmark_estimator
-    evaluation.metrics.clustering_accuracy_score
 ```
 
 ## Experiments: [tsml_eval.experiments](https://github.com/time-series-machine-learning/tsml-eval/tree/main/tsml_eval/experiments)
@@ -56,10 +71,10 @@ Functions for running experiments.
     experiments.load_and_run_forecasting_experiment
     experiments.run_regression_experiment
     experiments.load_and_run_regression_experiment
-    experiments.set_classifier
-    experiments.set_clusterer
-    experiments.set_forecaster
-    experiments.set_regressor
+    experiments.get_classifier_by_name
+    experiments.get_clusterer_by_name
+    experiments.get_forecaster_by_name
+    experiments.get_regressor_by_name
 ```
 
 ## Utilities: [tsml_eval.utils](https://github.com/time-series-machine-learning/tsml-eval/tree/main/tsml_eval/utils)
@@ -73,6 +88,7 @@ Public utility functions used elsewhere in the package.
     :template: function.rst
 
     utils.arguments.parse_args
+    utils.datasets.copy_dataset_ts_files
     utils.experiments.resample_data
     utils.experiments.resample_data_indices
     utils.experiments.stratified_resample_data
@@ -81,6 +97,7 @@ Public utility functions used elsewhere in the package.
     utils.experiments.write_classification_results
     utils.experiments.write_regression_results
     utils.experiments.write_clustering_results
+    utils.experiments.write_forecasting_results
     utils.experiments.write_results_to_tsml_format
     utils.experiments.fix_broken_second_line
     utils.experiments.compare_result_file_resample
@@ -92,6 +109,8 @@ Public utility functions used elsewhere in the package.
     utils.functions.time_to_milliseconds
     utils.functions.rank_array
     utils.memory_recorder.record_max_memory
+    utils.publications.extract_publication_csv_from_evaluation
+    utils.publications.parameter_table_from_estimator_selection_function
     utils.validation.is_sklearn_estimator
     utils.validation.is_sklearn_classifier
     utils.validation.is_sklearn_regressor

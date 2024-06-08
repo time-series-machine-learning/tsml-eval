@@ -1,6 +1,7 @@
 """Class for storing and loading results from a clustering experiment."""
 
 import numpy as np
+from aeon.performance_metrics.clustering import clustering_accuracy_score
 from numpy.testing import assert_allclose
 from sklearn.metrics import (
     adjusted_mutual_info_score,
@@ -10,7 +11,6 @@ from sklearn.metrics import (
     rand_score,
 )
 
-from tsml_eval.evaluation.metrics import clustering_accuracy_score
 from tsml_eval.evaluation.storage.estimator_results import EstimatorResults
 from tsml_eval.utils.experiments import write_clustering_results
 
