@@ -6,6 +6,7 @@ import os
 import runpy
 
 import pytest
+from aeon.registry import all_estimators
 from tsml.dummy import DummyRegressor
 
 from tsml_eval.datasets._test_data._data_sizes import DATA_TEST_SIZES
@@ -203,3 +204,30 @@ def test_get_classifier_by_name_invalid():
     """Test get_classifier_by_name method with invalid estimator."""
     with pytest.raises(ValueError, match="UNKNOWN CLASSIFIER"):
         get_classifier_by_name("invalid")
+
+
+def test_aeon_classifiers_available():
+    """Test all aeon classifiers are available."""
+    excluded = [
+        # composable
+        "ChannelEnsembleClassifier",
+        "ClassifierPipeline",
+        "WeightedEnsembleClassifier",
+        # just missing
+        "IndividualLITEClassifier",
+        "OrdinalTDE",
+        "IndividualOrdinalTDE",
+        "IntervalForestClassifier",
+        "SupervisedIntervalClassifier",
+        "LearningShapeletClassifier",
+    ]
+
+    est = [e for e, _ in all_estimators(estimator_types="classifier")]
+    for e in est:
+        if e in excluded:
+            continue
+
+        try:
+            assert get_classifier_by_name(e) is not None
+        except ModuleNotFoundError:
+            continue
