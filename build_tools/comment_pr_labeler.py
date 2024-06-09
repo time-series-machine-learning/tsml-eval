@@ -32,7 +32,7 @@ def check_label_option(label, option):
 
 
 label_options = [
-    ("full pytest actions", "Run `pre-commit` checks for all files"),
+    ("full pre-commit", "Run `pre-commit` checks for all files"),
     ("full examples run", "Run all notebook example tests"),
     (
         "stop pre-commit fixes",
