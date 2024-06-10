@@ -11,7 +11,7 @@ __all__ = [
 import numpy as np
 from sklearn.model_selection import KFold, StratifiedKFold
 
-from tsml_eval.experiments import (
+from tsml_eval.experiments.experiments import (
     run_classification_experiment,
     run_regression_experiment,
 )
