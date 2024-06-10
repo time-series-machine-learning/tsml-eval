@@ -862,7 +862,12 @@ def write_results_to_tsml_format(
 
     # If the full directory path is not passed, make the standard structure
     if not full_path:
-        file_path = f"{file_path}/{estimator_name}/Predictions/{dataset_name}/"
+        d = (
+            ""
+            if dataset_name is None or dataset_name == "" or dataset_name == "N/A"
+            else f"{dataset_name}/"
+        )
+        file_path = f"{file_path}/{estimator_name}/Predictions/{d}"
 
     os.makedirs(file_path, exist_ok=True)
 
