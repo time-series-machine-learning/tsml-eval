@@ -4,7 +4,16 @@ Results are saved a standardised format used by tsml.
 """
 
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
-
+__all__ = [
+    "run_classification_experiment",
+    "load_and_run_classification_experiment",
+    "run_regression_experiment",
+    "load_and_run_regression_experiment",
+    "run_classification_experiment",
+    "load_and_run_clustering_experiment",
+    "run_forecasting_experiment",
+    "load_and_run_forecasting_experiment",
+]
 
 import os
 import time
@@ -373,6 +382,315 @@ def load_and_run_classification_experiment(
         results_path,
         row_normalise=row_normalise,
         classifier_name=classifier_name,
+        dataset_name=dataset,
+        resample_id=resample_id,
+        build_test_file=build_test_file,
+        build_train_file=build_train_file,
+        attribute_file_path=attribute_file_path,
+        att_max_shape=att_max_shape,
+        benchmark_time=benchmark_time,
+    )
+
+
+def run_regression_experiment(
+    X_train,
+    y_train,
+    X_test,
+    y_test,
+    regressor,
+    results_path,
+    row_normalise=False,
+    regressor_name=None,
+    dataset_name="",
+    resample_id=None,
+    build_test_file=True,
+    build_train_file=False,
+    ignore_custom_train_estimate=False,
+    attribute_file_path=None,
+    att_max_shape=0,
+    benchmark_time=True,
+):
+    """Run a regression experiment and save the results to file.
+
+    Function to run a basic regression experiment for a
+    <dataset>/<regressor>/<resample> combination and write the results to csv file(s)
+    at a given location.
+
+    Parameters
+    ----------
+    X_train : pd.DataFrame or np.array
+        The data to train the regressor.
+    y_train : np.array
+        Training data labels.
+    X_test : pd.DataFrame or np.array
+        The data used to test the trained regressor.
+    y_test : np.array
+        Testing data labels.
+    regressor : BaseRegressor
+        Regressor to be used in the experiment.
+    results_path : str
+        Location of where to write results. Any required directories will be created.
+    row_normalise : bool, default=False
+        Whether to normalise the data rows (time series) prior to fitting and
+        predicting.
+    regressor_name : str or None, default=None
+        Name of regressor used in writing results. If None, the name is taken from
+        the regressor.
+    dataset_name : str, default="N/A"
+        Name of dataset.
+    resample_id : int or None, default=None
+        Seed for resampling. If set to 0, the default train/test split from file is
+        used. Also used in output file name.
+    build_test_file : bool, default=True:
+        Whether to generate test files or not. If the regressor can generate its own
+        train predictions, the classifier will be built but no file will be output.
+    build_train_file : bool, default=False
+        Whether to generate train files or not. If true, it performs a 10-fold
+        cross-validation on the train data and saves. If the regressor can produce its
+        own estimates, those are used instead.
+    ignore_custom_train_estimate : bool, default=False
+        todo
+    attribute_file_path : str or None, default=None
+        todo (only test)
+    att_max_shape : int, default=0
+        todo
+    benchmark_time : bool, default=True
+        Whether to benchmark the hardware used with a simple function and write the
+        results. This will typically take ~2 seconds, but is hardware dependent.
+    """
+    if not build_test_file and not build_train_file:
+        raise ValueError(
+            "Both test_file and train_file are set to False. "
+            "At least one must be written."
+        )
+
+    if regressor_name is None:
+        regressor_name = type(regressor).__name__
+
+    use_fit_predict = False
+    if isinstance(regressor, BaseRegressor):
+        if not ignore_custom_train_estimate and regressor.get_tag(
+            "capability:train_estimate", False, False
+        ):
+            use_fit_predict = True
+    elif isinstance(regressor, BaseTimeSeriesEstimator) and is_regressor(regressor):
+        pass
+    elif isinstance(regressor, BaseEstimator) and is_regressor(regressor):
+        regressor = SklearnToTsmlRegressor(
+            regressor=regressor,
+            pad_unequal=True,
+            concatenate_channels=True,
+            clone_estimator=False,
+            random_state=(
+                regressor.random_state if hasattr(regressor, "random_state") else None
+            ),
+        )
+    else:
+        raise TypeError("regressor must be a tsml, aeon or sklearn regressor.")
+
+    if row_normalise:
+        scaler = TimeSeriesScaler()
+        X_train = scaler.fit_transform(X_train)
+        X_test = scaler.fit_transform(X_test)
+
+    needs_fit = True
+    fit_time = -1
+    mem_usage = -1
+    benchmark = -1
+    train_time = -1
+    fit_and_train_time = -1
+
+    if benchmark_time:
+        benchmark = timing_benchmark(random_state=resample_id)
+
+    first_comment = (
+        "Generated by run_regression_experiment on "
+        f"{datetime.now().strftime('%m/%d/%Y, %H:%M:%S')}"
+    )
+
+    second = str(regressor.get_params()).replace("\n", " ").replace("\r", " ")
+
+    if build_train_file:
+        cv_size = min(10, len(y_train))
+        start = int(round(time.time() * 1000))
+        if use_fit_predict:
+            train_preds = regressor.fit_predict(X_train, y_train)
+            needs_fit = False
+            fit_and_train_time = int(round(time.time() * 1000)) - start
+        else:
+            train_preds = cross_val_predict(regressor, X_train, y=y_train, cv=cv_size)
+            train_time = int(round(time.time() * 1000)) - start
+
+        train_mse = mean_squared_error(y_train, train_preds)
+
+        write_regression_results(
+            train_preds,
+            y_train,
+            regressor_name,
+            dataset_name,
+            results_path,
+            full_path=False,
+            split="TRAIN",
+            resample_id=resample_id,
+            time_unit="MILLISECONDS",
+            first_line_comment=first_comment,
+            parameter_info=second,
+            mse=train_mse,
+            fit_time=fit_time,
+            predict_time=-1,
+            benchmark_time=benchmark,
+            memory_usage=mem_usage,
+            train_estimate_method="Custom" if use_fit_predict else f"{cv_size}F-CV",
+            train_estimate_time=train_time,
+            fit_and_estimate_time=fit_and_train_time,
+        )
+
+    if build_test_file:
+        if needs_fit:
+            mem_usage, fit_time = record_max_memory(
+                regressor.fit,
+                args=(X_train, y_train),
+                interval=MEMRECORD_INTERVAL,
+                return_func_time=True,
+            )
+            fit_time += int(round(getattr(regressor, "_fit_time_milli", 0)))
+
+        if attribute_file_path is not None:
+            estimator_attributes_to_file(
+                regressor, attribute_file_path, max_list_shape=att_max_shape
+            )
+
+        start = int(round(time.time() * 1000))
+        test_preds = regressor.predict(X_test)
+        test_time = (int(round(time.time() * 1000)) - start) + int(
+            round(getattr(regressor, "_predict_time_milli", 0))
+        )
+
+        test_mse = mean_squared_error(y_test, test_preds)
+
+        write_regression_results(
+            test_preds,
+            y_test,
+            regressor_name,
+            dataset_name,
+            results_path,
+            full_path=False,
+            split="TEST",
+            resample_id=resample_id,
+            time_unit="MILLISECONDS",
+            first_line_comment=first_comment,
+            parameter_info=second,
+            mse=test_mse,
+            fit_time=fit_time,
+            predict_time=test_time,
+            benchmark_time=benchmark,
+            memory_usage=mem_usage,
+            train_estimate_method="N/A",
+            train_estimate_time=-1,
+            fit_and_estimate_time=fit_and_train_time,
+        )
+
+
+def load_and_run_regression_experiment(
+    problem_path,
+    results_path,
+    dataset,
+    regressor,
+    row_normalise=False,
+    regressor_name=None,
+    resample_id=0,
+    build_train_file=False,
+    write_attributes=False,
+    att_max_shape=0,
+    benchmark_time=True,
+    overwrite=False,
+    predefined_resample=False,
+):
+    """Load a dataset and run a regression experiment.
+
+    Function to load a dataset, run a basic regression experiment for a
+    <dataset>/<regressor>/<resample> combination, and write the results to csv file(s)
+    at a given location.
+
+    Parameters
+    ----------
+    problem_path : str
+        Location of problem files, full path.
+    results_path : str
+        Location of where to write results. Any required directories will be created.
+    dataset : str
+        Name of problem. Files must be <problem_path>/<dataset>/<dataset>+"_TRAIN.ts",
+        same for "_TEST.ts".
+    regressor : BaseRegressor
+        Regressor to be used in the experiment.
+    row_normalise : bool, default=False
+        Whether to normalise the data rows (time series) prior to fitting and
+        predicting.
+    regressor_name : str or None, default=None
+        Name of regressor used in writing results. If None, the name is taken from
+        the regressor.
+    resample_id : int, default=0
+        Seed for resampling. If set to 0, the default train/test split from file is
+        used. Also used in output file name.
+    build_train_file : bool, default=False
+        Whether to generate train files or not. If true, it performs a 10-fold
+        cross-validation on the train data and saves. If the regressor can produce its
+        own estimates, those are used instead.
+    benchmark_time : bool, default=True
+        Whether to benchmark the hardware used with a simple function and write the
+        results. This will typically take ~2 seconds, but is hardware dependent.
+    overwrite : bool, default=False
+        If set to False, this will only build results if there is not a result file
+        already present. If True, it will overwrite anything already there.
+    predefined_resample : bool, default=False
+        Read a predefined resample from file instead of performing a resample. If True
+        the file format must include the resample_id at the end of the dataset name i.e.
+        <problem_path>/<dataset>/<dataset>+<resample_id>+"_TRAIN.ts".
+    """
+    if regressor_name is None:
+        regressor_name = type(regressor).__name__
+
+    build_test_file, build_train_file = _check_existing_results(
+        results_path,
+        regressor_name,
+        dataset,
+        resample_id,
+        overwrite,
+        True,
+        build_train_file,
+    )
+
+    if not build_test_file and not build_train_file:
+        warnings.warn("All files exist and not overwriting, skipping.", stacklevel=1)
+        return
+
+    X_train, y_train, X_test, y_test, resample = load_experiment_data(
+        problem_path, dataset, resample_id, predefined_resample
+    )
+
+    if resample:
+        X_train, y_train, X_test, y_test = resample_data(
+            X_train, y_train, X_test, y_test, random_state=resample_id
+        )
+
+    if write_attributes:
+        attribute_file_path = f"{results_path}/{regressor_name}/Workspace/{dataset}/"
+    else:
+        attribute_file_path = None
+
+    # Ensure labels are floats
+    y_train = y_train.astype(float)
+    y_test = y_test.astype(float)
+
+    run_regression_experiment(
+        X_train,
+        y_train,
+        X_test,
+        y_test,
+        regressor,
+        results_path,
+        row_normalise=row_normalise,
+        regressor_name=regressor_name,
         dataset_name=dataset,
         resample_id=resample_id,
         build_test_file=build_test_file,
@@ -939,315 +1257,6 @@ def load_and_run_forecasting_experiment(
         forecaster_name=forecaster_name,
         dataset_name=dataset,
         random_seed=random_seed,
-        attribute_file_path=attribute_file_path,
-        att_max_shape=att_max_shape,
-        benchmark_time=benchmark_time,
-    )
-
-
-def run_regression_experiment(
-    X_train,
-    y_train,
-    X_test,
-    y_test,
-    regressor,
-    results_path,
-    row_normalise=False,
-    regressor_name=None,
-    dataset_name="",
-    resample_id=None,
-    build_test_file=True,
-    build_train_file=False,
-    ignore_custom_train_estimate=False,
-    attribute_file_path=None,
-    att_max_shape=0,
-    benchmark_time=True,
-):
-    """Run a regression experiment and save the results to file.
-
-    Function to run a basic regression experiment for a
-    <dataset>/<regressor>/<resample> combination and write the results to csv file(s)
-    at a given location.
-
-    Parameters
-    ----------
-    X_train : pd.DataFrame or np.array
-        The data to train the regressor.
-    y_train : np.array
-        Training data labels.
-    X_test : pd.DataFrame or np.array
-        The data used to test the trained regressor.
-    y_test : np.array
-        Testing data labels.
-    regressor : BaseRegressor
-        Regressor to be used in the experiment.
-    results_path : str
-        Location of where to write results. Any required directories will be created.
-    row_normalise : bool, default=False
-        Whether to normalise the data rows (time series) prior to fitting and
-        predicting.
-    regressor_name : str or None, default=None
-        Name of regressor used in writing results. If None, the name is taken from
-        the regressor.
-    dataset_name : str, default="N/A"
-        Name of dataset.
-    resample_id : int or None, default=None
-        Seed for resampling. If set to 0, the default train/test split from file is
-        used. Also used in output file name.
-    build_test_file : bool, default=True:
-        Whether to generate test files or not. If the regressor can generate its own
-        train predictions, the classifier will be built but no file will be output.
-    build_train_file : bool, default=False
-        Whether to generate train files or not. If true, it performs a 10-fold
-        cross-validation on the train data and saves. If the regressor can produce its
-        own estimates, those are used instead.
-    ignore_custom_train_estimate : bool, default=False
-        todo
-    attribute_file_path : str or None, default=None
-        todo (only test)
-    att_max_shape : int, default=0
-        todo
-    benchmark_time : bool, default=True
-        Whether to benchmark the hardware used with a simple function and write the
-        results. This will typically take ~2 seconds, but is hardware dependent.
-    """
-    if not build_test_file and not build_train_file:
-        raise ValueError(
-            "Both test_file and train_file are set to False. "
-            "At least one must be written."
-        )
-
-    if regressor_name is None:
-        regressor_name = type(regressor).__name__
-
-    use_fit_predict = False
-    if isinstance(regressor, BaseRegressor):
-        if not ignore_custom_train_estimate and regressor.get_tag(
-            "capability:train_estimate", False, False
-        ):
-            use_fit_predict = True
-    elif isinstance(regressor, BaseTimeSeriesEstimator) and is_regressor(regressor):
-        pass
-    elif isinstance(regressor, BaseEstimator) and is_regressor(regressor):
-        regressor = SklearnToTsmlRegressor(
-            regressor=regressor,
-            pad_unequal=True,
-            concatenate_channels=True,
-            clone_estimator=False,
-            random_state=(
-                regressor.random_state if hasattr(regressor, "random_state") else None
-            ),
-        )
-    else:
-        raise TypeError("regressor must be a tsml, aeon or sklearn regressor.")
-
-    if row_normalise:
-        scaler = TimeSeriesScaler()
-        X_train = scaler.fit_transform(X_train)
-        X_test = scaler.fit_transform(X_test)
-
-    needs_fit = True
-    fit_time = -1
-    mem_usage = -1
-    benchmark = -1
-    train_time = -1
-    fit_and_train_time = -1
-
-    if benchmark_time:
-        benchmark = timing_benchmark(random_state=resample_id)
-
-    first_comment = (
-        "Generated by run_regression_experiment on "
-        f"{datetime.now().strftime('%m/%d/%Y, %H:%M:%S')}"
-    )
-
-    second = str(regressor.get_params()).replace("\n", " ").replace("\r", " ")
-
-    if build_train_file:
-        cv_size = min(10, len(y_train))
-        start = int(round(time.time() * 1000))
-        if use_fit_predict:
-            train_preds = regressor.fit_predict(X_train, y_train)
-            needs_fit = False
-            fit_and_train_time = int(round(time.time() * 1000)) - start
-        else:
-            train_preds = cross_val_predict(regressor, X_train, y=y_train, cv=cv_size)
-            train_time = int(round(time.time() * 1000)) - start
-
-        train_mse = mean_squared_error(y_train, train_preds)
-
-        write_regression_results(
-            train_preds,
-            y_train,
-            regressor_name,
-            dataset_name,
-            results_path,
-            full_path=False,
-            split="TRAIN",
-            resample_id=resample_id,
-            time_unit="MILLISECONDS",
-            first_line_comment=first_comment,
-            parameter_info=second,
-            mse=train_mse,
-            fit_time=fit_time,
-            predict_time=-1,
-            benchmark_time=benchmark,
-            memory_usage=mem_usage,
-            train_estimate_method="Custom" if use_fit_predict else f"{cv_size}F-CV",
-            train_estimate_time=train_time,
-            fit_and_estimate_time=fit_and_train_time,
-        )
-
-    if build_test_file:
-        if needs_fit:
-            mem_usage, fit_time = record_max_memory(
-                regressor.fit,
-                args=(X_train, y_train),
-                interval=MEMRECORD_INTERVAL,
-                return_func_time=True,
-            )
-            fit_time += int(round(getattr(regressor, "_fit_time_milli", 0)))
-
-        if attribute_file_path is not None:
-            estimator_attributes_to_file(
-                regressor, attribute_file_path, max_list_shape=att_max_shape
-            )
-
-        start = int(round(time.time() * 1000))
-        test_preds = regressor.predict(X_test)
-        test_time = (int(round(time.time() * 1000)) - start) + int(
-            round(getattr(regressor, "_predict_time_milli", 0))
-        )
-
-        test_mse = mean_squared_error(y_test, test_preds)
-
-        write_regression_results(
-            test_preds,
-            y_test,
-            regressor_name,
-            dataset_name,
-            results_path,
-            full_path=False,
-            split="TEST",
-            resample_id=resample_id,
-            time_unit="MILLISECONDS",
-            first_line_comment=first_comment,
-            parameter_info=second,
-            mse=test_mse,
-            fit_time=fit_time,
-            predict_time=test_time,
-            benchmark_time=benchmark,
-            memory_usage=mem_usage,
-            train_estimate_method="N/A",
-            train_estimate_time=-1,
-            fit_and_estimate_time=fit_and_train_time,
-        )
-
-
-def load_and_run_regression_experiment(
-    problem_path,
-    results_path,
-    dataset,
-    regressor,
-    row_normalise=False,
-    regressor_name=None,
-    resample_id=0,
-    build_train_file=False,
-    write_attributes=False,
-    att_max_shape=0,
-    benchmark_time=True,
-    overwrite=False,
-    predefined_resample=False,
-):
-    """Load a dataset and run a regression experiment.
-
-    Function to load a dataset, run a basic regression experiment for a
-    <dataset>/<regressor>/<resample> combination, and write the results to csv file(s)
-    at a given location.
-
-    Parameters
-    ----------
-    problem_path : str
-        Location of problem files, full path.
-    results_path : str
-        Location of where to write results. Any required directories will be created.
-    dataset : str
-        Name of problem. Files must be <problem_path>/<dataset>/<dataset>+"_TRAIN.ts",
-        same for "_TEST.ts".
-    regressor : BaseRegressor
-        Regressor to be used in the experiment.
-    row_normalise : bool, default=False
-        Whether to normalise the data rows (time series) prior to fitting and
-        predicting.
-    regressor_name : str or None, default=None
-        Name of regressor used in writing results. If None, the name is taken from
-        the regressor.
-    resample_id : int, default=0
-        Seed for resampling. If set to 0, the default train/test split from file is
-        used. Also used in output file name.
-    build_train_file : bool, default=False
-        Whether to generate train files or not. If true, it performs a 10-fold
-        cross-validation on the train data and saves. If the regressor can produce its
-        own estimates, those are used instead.
-    benchmark_time : bool, default=True
-        Whether to benchmark the hardware used with a simple function and write the
-        results. This will typically take ~2 seconds, but is hardware dependent.
-    overwrite : bool, default=False
-        If set to False, this will only build results if there is not a result file
-        already present. If True, it will overwrite anything already there.
-    predefined_resample : bool, default=False
-        Read a predefined resample from file instead of performing a resample. If True
-        the file format must include the resample_id at the end of the dataset name i.e.
-        <problem_path>/<dataset>/<dataset>+<resample_id>+"_TRAIN.ts".
-    """
-    if regressor_name is None:
-        regressor_name = type(regressor).__name__
-
-    build_test_file, build_train_file = _check_existing_results(
-        results_path,
-        regressor_name,
-        dataset,
-        resample_id,
-        overwrite,
-        True,
-        build_train_file,
-    )
-
-    if not build_test_file and not build_train_file:
-        warnings.warn("All files exist and not overwriting, skipping.", stacklevel=1)
-        return
-
-    X_train, y_train, X_test, y_test, resample = load_experiment_data(
-        problem_path, dataset, resample_id, predefined_resample
-    )
-
-    if resample:
-        X_train, y_train, X_test, y_test = resample_data(
-            X_train, y_train, X_test, y_test, random_state=resample_id
-        )
-
-    if write_attributes:
-        attribute_file_path = f"{results_path}/{regressor_name}/Workspace/{dataset}/"
-    else:
-        attribute_file_path = None
-
-    # Ensure labels are floats
-    y_train = y_train.astype(float)
-    y_test = y_test.astype(float)
-
-    run_regression_experiment(
-        X_train,
-        y_train,
-        X_test,
-        y_test,
-        regressor,
-        results_path,
-        row_normalise=row_normalise,
-        regressor_name=regressor_name,
-        dataset_name=dataset,
-        resample_id=resample_id,
-        build_test_file=build_test_file,
-        build_train_file=build_train_file,
         attribute_file_path=attribute_file_path,
         att_max_shape=att_max_shape,
         benchmark_time=benchmark_time,

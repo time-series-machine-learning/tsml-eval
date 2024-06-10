@@ -75,6 +75,10 @@ Functions for running experiments.
     experiments.get_clusterer_by_name
     experiments.get_forecaster_by_name
     experiments.get_regressor_by_name
+    experiments.classification_cross_validation
+    experiments.classification_cross_validation_folds
+    experiments.regression_cross_validation
+    experiments.regression_cross_validation_folds
 ```
 
 ## Utilities: [tsml_eval.utils](https://github.com/time-series-machine-learning/tsml-eval/tree/main/tsml_eval/utils)

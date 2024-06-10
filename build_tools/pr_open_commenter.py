@@ -110,6 +110,7 @@ The [Checks](https://github.com/time-series-machine-learning/tsml-eval/pull/{pr_
 These checkboxes will add labels to enable/disable CI functionality for this PR. This may not take effect immediately, and a new commit may be required to run the new configuration.
 
 - [ ] Run `pre-commit` checks for all files
+- [ ] Run all `pytest` tests and configurations
 - [ ] Run all notebook example tests
 - [ ] Stop automatic `pre-commit` fixes (always disabled for drafts)
     """  # noqa
