@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tsml-eval"
-version = "0.2.1"
+version = "0.3.0"
 description = "A package for benchmarking time series machine learning tools."
 authors = [
     {name = "Matthew Middlehurst", email = "m.b.middlehurst@soton.ac.uk"},
@@ -38,12 +38,13 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
-requires-python = ">=3.8,<3.12"
+requires-python = ">=3.8,<3.13"
 dependencies = [
-    "aeon@git+https://github.com/aeon-toolkit/aeon.git@main#egg=aeon",
-    "tsml>=0.3.0,<0.4.0",
-    "scikit-learn>=1.0.0,<1.5.0",
+    "aeon>=0.9.0,<0.10.0",
+    "tsml>=0.4.0,<0.5.0",
+    "scikit-learn>=1.0.0,<1.6.0",
     "matplotlib",
     "gpustat",
     "psutil",
@@ -55,7 +56,6 @@ all_extras = [
     "tsml[all_extras]",
     "xgboost",
     "torch>=1.13.1",
-    "dask<2024.3.0",  # temporary for CI
 ]
 unstable_extras = [
     "aeon[unstable_extras]",
@@ -150,4 +150,15 @@ per-file-ignores = [
 [tool.pytest.ini_options]
 testpaths = "tsml_eval"
 addopts = '''
+    --ignore tsml_eval/_wip
+    --ignore tsml_eval/publications/2023
+    --doctest-modules
+    --durations 20
+    --timeout 600
+    --showlocals
+    --numprocesses logical
+    --dist worksteal
+    --reruns 2
+    --only-rerun "crashed while running"
+    --meminterval 0.1
 '''

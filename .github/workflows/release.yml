@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  check_manifest:
+  check-manifest:
     runs-on: ubuntu-20.04
 
     steps:
@@ -21,8 +21,8 @@ jobs:
         with:
           extra_args: check-manifest --hook-stage manual
 
-  build_project:
-    needs: check_manifest
+  build-project:
+    needs: check-manifest
     runs-on: ubuntu-20.04
 
     steps:
@@ -44,15 +44,15 @@ jobs:
           path: dist/*
           retention-days: 5
 
-  test_wheels:
-    needs: build_project
+  test-wheels:
+    needs: build-project
     name: Test wheels on ${{ matrix.os }} with ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
-        os: [ ubuntu-20.04, macOS-13, windows-2022 ]
-        python-version: [ "3.8", "3.9", "3.10", "3.11" ]
+        os: [ ubuntu-20.04, macos-13, windows-2022 ]
+        python-version: [ "3.8", "3.9", "3.10", "3.11", "3.12" ]
 
     steps:
       - uses: actions/checkout@v4
@@ -91,8 +91,8 @@ jobs:
       - name: Tests
         run: python -m pytest
 
-  upload_wheels:
-    needs: test_wheels
+  upload-wheels:
+    needs: test-wheels
     runs-on: ubuntu-20.04
 
     steps:

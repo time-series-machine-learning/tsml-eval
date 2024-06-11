@@ -7,7 +7,6 @@ from tsml_eval.utils.functions import str_in_nested_list
 bakeoff_classifiers = [
     # distance based
     ["KNeighborsTimeSeriesClassifier", "dtw", "1nn-dtw"],
-    "ShapeDTW",
     ["GRAILClassifier", "grail"],
     # feature based
     ["Catch22Classifier", "catch22"],
@@ -38,8 +37,8 @@ bakeoff_classifiers = [
     ["minirocket", "mini-rocket"],
     ["multirocket", "multi-rocket"],
     ["arsenalclassifier", "Arsenal"],
-    "HYDRA",
-    ["mr-hydra", "multirockethydra", "multirocket-hydra"],
+    ["hydra", "hydraclassifier"],
+    ["mr-hydra", "multirockethydra", "multirockethydraclassifier", "multirocket-hydra"],
     # deep learning
     ["CNNClassifier", "cnn"],
     ["ResNetClassifier", "resnet"],
@@ -69,12 +68,6 @@ def _set_bakeoff_classifier(
 
         return KNeighborsTimeSeriesClassifier(
             distance="dtw", n_neighbors=1, n_jobs=n_jobs, **kwargs
-        )
-    elif c == "shapedtw":
-        from aeon.classification.distance_based import ShapeDTW
-
-        return ShapeDTW(
-            **kwargs,
         )
     elif c == "grailclassifier" or c == "grail":
         from tsml.distance_based import GRAILClassifier
@@ -198,11 +191,9 @@ def _set_bakeoff_classifier(
             **kwargs,
         )
     elif c == "quantclassifier" or c == "quant":
-        from tsml_eval.estimators.classification.interval_based.quant import (
-            QuantClassifier,
-        )
+        from aeon.classification.interval_based import QUANTClassifier
 
-        return QuantClassifier(random_state=random_state, **kwargs)
+        return QUANTClassifier(random_state=random_state, **kwargs)
     elif c == "bossensemble" or c == "boss":
         from aeon.classification.dictionary_based import BOSSEnsemble
 
@@ -284,20 +275,23 @@ def _set_bakeoff_classifier(
             n_jobs=n_jobs,
             **kwargs,
         )
-    elif c == "hydra":
-        from tsml_eval.estimators.classification.convolution_based.hydra import HYDRA
+    elif c == "hydra" or c == "hydraclassifier":
+        from aeon.classification.convolution_based import HydraClassifier
 
-        return HYDRA(
+        return HydraClassifier(
             random_state=random_state,
             n_jobs=n_jobs,
             **kwargs,
         )
-    elif c == "mr-hydra" or c == "multirockethydra" or c == "multirocket-hydra":
-        from tsml_eval.estimators.classification.convolution_based.hydra import (
-            MultiRocketHydra,
-        )
+    elif (
+        c == "mr-hydra"
+        or c == "multirockethydra"
+        or c == "multirockethydraclassifier"
+        or c == "multirocket-hydra"
+    ):
+        from aeon.classification.convolution_based import MultiRocketHydraClassifier
 
-        return MultiRocketHydra(
+        return MultiRocketHydraClassifier(
             random_state=random_state,
             n_jobs=n_jobs,
             **kwargs,
@@ -350,8 +344,8 @@ def _set_bakeoff_classifier(
             **kwargs,
         )
     elif c == "ristclassifier" or c == "rist":
+        from aeon.classification.hybrid import RISTClassifier
         from sklearn.ensemble import ExtraTreesClassifier
-        from tsml.hybrid import RISTClassifier
 
         return RISTClassifier(
             random_state=random_state,

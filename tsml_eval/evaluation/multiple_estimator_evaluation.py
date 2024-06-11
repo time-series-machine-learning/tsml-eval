@@ -6,8 +6,12 @@ import warnings
 from datetime import datetime
 
 import numpy as np
-from aeon.visualisation import plot_critical_difference
-from aeon.visualisation import plot_boxplot_median, plot_pairwise_scatter
+from aeon.performance_metrics.stats import wilcoxon_test
+from aeon.visualisation import (
+    plot_boxplot_median,
+    plot_critical_difference,
+    plot_pairwise_scatter,
+)
 from matplotlib import pyplot as plt
 
 from tsml_eval.evaluation.storage import (
@@ -1303,6 +1307,14 @@ def _create_directory_for_statistic(
         for i, dataset_name in enumerate(datasets):
             file.write(f"{dataset_name},{','.join([str(n) for n in ranks[i]])}\n")
 
+    p_values = wilcoxon_test(average_stats, estimators, lower_better=not higher_better)
+    with open(
+        f"{save_path}/{statistic_name}/{statistic_name.lower()}_p_values.csv", "w"
+    ) as file:
+        file.write(f"Estimators:,{','.join(estimators)}\n")
+        for i, estimator_name in enumerate(estimators):
+            file.write(f"{estimator_name},{','.join([str(n) for n in p_values[i]])}\n")
+
     try:
         _figures_for_statistic(
             average_stats,
@@ -1318,13 +1330,6 @@ def _create_directory_for_statistic(
             stacklevel=2,
         )
 
-    # with open(
-    #     f"{save_path}/{statistic_name}/{statistic_name.lower()}_p_values.csv", "w"
-    # ) as file:
-    #     file.write(f"Estimators:,{','.join(sorted_estimators)}\n")
-    #     for i, estimator_name in enumerate(sorted_estimators):
-    #       file.write(f"{estimator_name},{','.join([str(n) for n in p_values[i]])}\n")
-
     return average_stats, ranks
 
 
@@ -1333,7 +1338,7 @@ def _figures_for_statistic(
 ):
     os.makedirs(f"{save_path}/{statistic_name}/figures/", exist_ok=True)
 
-    cd = plot_critical_difference(scores, estimators, lower_better=not higher_better)
+    cd, _ = plot_critical_difference(scores, estimators, lower_better=not higher_better)
     cd.savefig(
         f"{save_path}/{statistic_name}/figures/"
         f"{eval_name}_{statistic_name.lower()}_critical_difference.pdf",
@@ -1349,7 +1354,7 @@ def _figures_for_statistic(
     )
     plt.close()
 
-    box = plot_boxplot_median(scores, estimators)
+    box, _ = plot_boxplot_median(scores, estimators)
     box.savefig(
         f"{save_path}/{statistic_name}/figures/"
         f"{eval_name}_{statistic_name.lower()}_boxplot.pdf",
@@ -1374,7 +1379,7 @@ def _figures_for_statistic(
                 f"{save_path}/{statistic_name}/figures/scatters/{est1}/", exist_ok=True
             )
 
-            scatter = plot_pairwise_scatter(scores[:, (i, n)], est1, est2)
+            scatter, _ = plot_pairwise_scatter(scores[:, i], scores[:, n], est1, est2)
             scatter.savefig(
                 f"{save_path}/{statistic_name}/figures/scatters/{est1}/"
                 f"{eval_name}_{statistic_name.lower()}_scatter_{est1}_{est2}.pdf",

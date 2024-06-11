@@ -49,6 +49,14 @@ jobs:
         with:
           python-version: "3.10"
 
+      - name: Use numba cache to set env variables but not restore cache
+        uses: ./.github/actions/numba_cache
+        with:
+          cache_name: "run-notebook-examples"
+          runner_os: ${{ runner.os }}
+          python_version: "3.10"
+          restore_cache: "false"
+
       - name: Install
         uses: nick-fields/retry@v3
         with:
@@ -57,8 +65,14 @@ jobs:
           command: python -m pip install .[all_extras,binder,dev,unstable_extras]
 
       - name: Run example notebooks
-        run: build_tools/run_examples.sh
+        run: build_tools/run_examples.sh false
         shell: bash
+
+      - name: Save new cache
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ github.workspace }}/.numba_cache
+          key: numba-run-notebook-examples-${{ runner.os }}-3.10-${{ env.CURRENT_DATE }}
 
   pytest:
     runs-on: ${{ matrix.os }}
@@ -66,8 +80,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-20.04, macOS-13, windows-2022 ]
-        python-version: [ "3.8", "3.9", "3.10", "3.11"]
+        os: [ ubuntu-20.04, macos-13, windows-2022 ]
+        python-version: [ "3.8", "3.9", "3.10", "3.11", "3.12" ]
 
     steps:
       - uses: actions/checkout@v4
@@ -75,6 +89,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+
+      - name: Use numba cache to set env variables but not restore cache
+        uses: ./.github/actions/numba_cache
+        with:
+          cache_name: "pytest"
+          runner_os: ${{ runner.os }}
+          python_version: ${{ matrix.python-version }}
+          restore_cache: "false"
 
       - name: Install
         uses: nick-fields/retry@v3
@@ -88,6 +110,12 @@ jobs:
 
       - name: Tests
         run: python -m pytest
+
+      - name: Save new cache
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ github.workspace }}/.numba_cache
+          key: numba-pytest-${{ runner.os }}-${{ matrix.python-version}}-${{ env.CURRENT_DATE }}
 
   codecov:
     runs-on: ubuntu-20.04
@@ -113,7 +141,7 @@ jobs:
         run: python -m pip list
 
       - name: Run tests
-        run: python -m pytest --cov=aeon --cov-report=xml
+        run: python -m pytest --cov=aeon --cov-report=xml --timeout 1800
 
       - uses: codecov/codecov-action@v4
         env:

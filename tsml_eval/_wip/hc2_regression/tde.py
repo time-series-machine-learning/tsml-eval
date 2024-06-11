@@ -14,7 +14,6 @@ from collections import defaultdict
 
 import numpy as np
 from aeon.regression.base import BaseRegressor
-from aeon.utils.validation.panel import check_X_y
 from joblib import Parallel, delayed
 from numba import njit, types
 from numba.typed import Dict
@@ -422,7 +421,7 @@ class TemporalDictionaryEnsemble(BaseRegressor):
 
     def _get_train_preds(self, X, y, train_estimate_method="loocv") -> np.ndarray:
         self.check_is_fitted()
-        X, y = check_X_y(X, y, coerce_to_numpy=True)
+        # X, y = check_X_y(X, y, coerce_to_numpy=True)
 
         n_instances, n_dims, series_length = X.shape
 

@@ -155,7 +155,7 @@ def get_clusterer_by_name(
         List of arguments to load the dataset using
         `tsml_eval.utils.experiments import load_experiment_data`.
     row_normalise: bool, default=False
-        Whether to row normalise the data if it is loaded.
+        Whether to row normalise the data if it is loaded using data_vars.
 
     Return
     ------

@@ -17,13 +17,22 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ vars.PR_APP_ID }}
+          private-key: ${{ secrets.PR_APP_KEY }}
+
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ steps.app-token.outputs.token }}
 
       - uses: actions/setup-python@v5
         with:
           python-version: "3.10"
 
-      - uses: tj-actions/changed-files@v43.0.0
+      - uses: tj-actions/changed-files@v44
         id: changed-files
 
       - name: List changed files
@@ -40,5 +49,9 @@ jobs:
         with:
           extra_args: --files ${{ steps.changed-files.outputs.all_changed_files }}
 
-      - if: ${{ failure() && github.event_name == 'pull_request' && github.event.pull_request.draft == false }}
-        uses: pre-commit-ci/lite-action@v1.0.2
+      - if: ${{ failure() && github.event_name == 'pull_request' && github.event.pull_request.draft == false && !contains(github.event.pull_request.labels.*.name, 'stop pre-commit fixes')}}
+        name: Push pre-commit fixes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: Automatic `pre-commit` fixes
+          commit_user_name: tsml-actions-bot[bot]

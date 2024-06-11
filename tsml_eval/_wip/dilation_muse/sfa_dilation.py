@@ -12,7 +12,6 @@ from warnings import simplefilter
 import numpy as np
 import pandas as pd
 from aeon.transformations.base import BaseTransformer
-from aeon.utils.validation.panel import check_X
 from numba import (  # set_num_threads,
     NumbaPendingDeprecationWarning,
     NumbaTypeSafetyWarning,
@@ -242,7 +241,7 @@ class SFADilation(BaseTransformer):
         self.letter_bits = np.uint32(math.ceil(math.log2(self.alphabet_size)))
         # self.word_bits = self.word_length_actual * self.letter_bits
 
-        X = check_X(X, enforce_univariate=True, coerce_to_numpy=True)
+        # X = check_X(X, enforce_univariate=True, coerce_to_numpy=True)
         X = X.squeeze(1)
 
         X2, self.X_index = _dilation(X, self.dilation, self.first_difference)
@@ -339,7 +338,7 @@ class SFADilation(BaseTransformer):
         List of dictionaries containing SFA words
         """
         self.check_is_fitted()
-        X = check_X(X, enforce_univariate=True, coerce_to_numpy=True)
+        # X = check_X(X, enforce_univariate=True, coerce_to_numpy=True)
         X = X.squeeze(1)
 
         X2, self.X_index = _dilation(X, self.dilation, self.first_difference)
