@@ -819,8 +819,6 @@ def run_clustering_experiment(
         f"Encoder dictionary: {str(encoder_dict)}"
     )
 
-    second = str(clusterer.get_params()).replace("\n", " ").replace("\r", " ")
-
     if isinstance(n_clusters, int):
         try:
             if n_clusters == -1:
@@ -839,6 +837,8 @@ def run_clustering_experiment(
             n_clusters = None
     elif n_clusters is not None:
         raise ValueError("n_clusters must be an int or None.")
+
+    second = str(clusterer.get_params()).replace("\n", " ").replace("\r", " ")
 
     mem_usage, fit_time = record_max_memory(
         clusterer.fit,
