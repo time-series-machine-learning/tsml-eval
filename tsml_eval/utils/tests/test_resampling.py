@@ -13,13 +13,13 @@ from tsml.datasets import (
 )
 
 from tsml_eval.testing.testing_utils import _TEST_RESULTS_PATH
-from tsml_eval.utils.experiments import (
-    compare_result_file_resample,
+from tsml_eval.utils.resampling import (
     resample_data,
     resample_data_indices,
     stratified_resample_data,
     stratified_resample_data_indices,
 )
+from tsml_eval.utils.results_validation import compare_result_file_resample
 
 
 @pytest.mark.parametrize(

@@ -7,7 +7,7 @@ from tsml_eval.evaluation.storage.clusterer_results import ClustererResults
 from tsml_eval.evaluation.storage.forecaster_results import ForecasterResults
 from tsml_eval.evaluation.storage.regressor_results import RegressorResults
 from tsml_eval.testing.testing_utils import _TEST_OUTPUT_PATH, _TEST_RESULTS_PATH
-from tsml_eval.utils.validation import validate_results_file
+from tsml_eval.utils.results_validation import validate_results_file
 
 
 def test_classifier_results():

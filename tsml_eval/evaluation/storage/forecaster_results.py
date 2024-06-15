@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.metrics import mean_absolute_percentage_error
 
 from tsml_eval.evaluation.storage.estimator_results import EstimatorResults
-from tsml_eval.utils.experiments import write_forecasting_results
+from tsml_eval.utils.results_writing import write_forecasting_results
 
 
 class ForecasterResults(EstimatorResults):
