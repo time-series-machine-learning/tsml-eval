@@ -1,42 +1,10 @@
-"""Utilities for validating results and estimators."""
+"""Utilities for validating results."""
 
+__author__ = ["MatthewMiddlehurst"]
 __all__ = [
-    "is_sklearn_estimator",
-    "is_sklearn_classifier",
-    "is_sklearn_regressor",
-    "is_sklearn_clusterer",
     "validate_results_file",
+    "compare_result_file_resample",
 ]
-
-from aeon.base import BaseEstimator as AeonBaseEstimator
-from sklearn.base import BaseEstimator as SklearnBaseEstimator
-from sklearn.base import is_classifier, is_regressor
-from tsml.base import BaseTimeSeriesEstimator
-from tsml.utils.validation import is_clusterer
-
-
-def is_sklearn_estimator(estimator):
-    """Check if estimator is a scikit-learn estimator."""
-    return (
-        isinstance(estimator, SklearnBaseEstimator)
-        and not isinstance(estimator, AeonBaseEstimator)
-        and not isinstance(estimator, BaseTimeSeriesEstimator)
-    )
-
-
-def is_sklearn_classifier(classifier):
-    """Check if estimator is a scikit-learn classifier."""
-    return is_sklearn_estimator(classifier) and is_classifier(classifier)
-
-
-def is_sklearn_regressor(regressor):
-    """Check if estimator is a scikit-learn regressor."""
-    return is_sklearn_estimator(regressor) and is_regressor(regressor)
-
-
-def is_sklearn_clusterer(clusterer):
-    """Check if estimator is a scikit-learn clusterer."""
-    return is_sklearn_estimator(clusterer) and is_clusterer(clusterer)
 
 
 def validate_results_file(file_path):
@@ -188,5 +156,39 @@ def _check_results_line(line, probabilities=True, n_probas=2):
 
     if len(line) > 5 + n_probas and line[5 + n_probas] != "":
         return False
+
+    return True
+
+
+def compare_result_file_resample(file_path1, file_path2):
+    """Validate that two results files use the same data resample.
+
+    Files are deemed as having the same resample if the file length is the same and all
+    true label values are the same in both files.
+
+    Parameters
+    ----------
+    file_path1 : str
+        Path to the first results file to be compared, including the file itself.
+    file_path1 : str
+        Path to the second results file to be compared, including the file itself.
+
+    Returns
+    -------
+    same_resample : bool
+        True if the results file use the same data resample, False otherwise.
+    """
+    with open(file_path1) as f:
+        lines1 = f.readlines()
+
+    with open(file_path2) as f:
+        lines2 = f.readlines()
+
+    if len(lines1) != len(lines2):
+        raise ValueError("Input results file have different numbers of lines.")
+
+    for i in range(3, len(lines1)):
+        if lines1[i].split(",")[0] != lines2[i].split(",")[0]:
+            return False
 
     return True

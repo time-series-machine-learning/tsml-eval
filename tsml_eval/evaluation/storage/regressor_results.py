@@ -9,7 +9,7 @@ from sklearn.metrics import (
 )
 
 from tsml_eval.evaluation.storage.estimator_results import EstimatorResults
-from tsml_eval.utils.experiments import write_regression_results
+from tsml_eval.utils.results_writing import write_regression_results
 
 
 class RegressorResults(EstimatorResults):

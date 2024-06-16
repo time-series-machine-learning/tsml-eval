@@ -12,7 +12,7 @@ from sklearn.metrics import (
 )
 
 from tsml_eval.evaluation.storage.estimator_results import EstimatorResults
-from tsml_eval.utils.experiments import write_clustering_results
+from tsml_eval.utils.results_writing import write_clustering_results
 
 
 class ClustererResults(EstimatorResults):
