@@ -2,7 +2,6 @@
 
 __author__ = ["MatthewMiddlehurst"]
 __all__ = [
-    "load_experiment_data",
     "assign_gpu",
     "timing_benchmark",
     "estimator_attributes_to_file",
@@ -14,63 +13,8 @@ from collections.abc import Sequence
 
 import gpustat
 import numpy as np
-from aeon.datasets._data_loaders import load_from_tsfile
 from sklearn.base import BaseEstimator
 from sklearn.utils import check_random_state
-
-
-def load_experiment_data(
-    problem_path: str,
-    dataset: str,
-    resample_id: int,
-    predefined_resample: bool,
-):
-    """Load data for experiments.
-
-    Parameters
-    ----------
-    problem_path : str
-        Path to the problem folder.
-    dataset : str
-        Name of the dataset.
-    resample_id : int or None
-        Id of the data resample to use.
-    predefined_resample : boolean
-        If True, use the predefined resample.
-
-    Returns
-    -------
-    X_train : np.ndarray or list of np.ndarray
-        Train data in a 2d or 3d ndarray or list of arrays.
-    y_train : np.ndarray
-        Train data labels.
-    X_test : np.ndarray or list of np.ndarray
-        Test data in a 2d or 3d ndarray or list of arrays.
-    y_test : np.ndarray
-        Test data labels.
-    resample : boolean
-        If True, the data is to be resampled.
-    """
-    if resample_id is not None and predefined_resample:
-        resample_str = "" if resample_id is None else str(resample_id)
-
-        X_train, y_train = load_from_tsfile(
-            f"{problem_path}/{dataset}/{dataset}{resample_str}_TRAIN.ts"
-        )
-        X_test, y_test = load_from_tsfile(
-            f"{problem_path}/{dataset}/{dataset}{resample_str}_TEST.ts"
-        )
-
-        resample_data = False
-    else:
-        X_train, y_train = load_from_tsfile(
-            f"{problem_path}/{dataset}/{dataset}_TRAIN.ts"
-        )
-        X_test, y_test = load_from_tsfile(f"{problem_path}/{dataset}/{dataset}_TEST.ts")
-
-        resample_data = True if resample_id != 0 else False
-
-    return X_train, y_train, X_test, y_test, resample_data
 
 
 def _results_present(path, estimator, dataset, resample_id=None, split="TEST"):

@@ -5,6 +5,8 @@ functions and classes.
 
 ## Estimators: [tsml_eval.estimators](https://github.com/time-series-machine-learning/tsml-eval/tree/main/tsml_eval/estimators)
 
+Wrappers and misc estimators for use with `tsml-eval`.
+
 ```{eval-rst}
 .. currentmodule:: tsml_eval
 .. autosummary::
@@ -92,19 +94,13 @@ Public utility functions used elsewhere in the package.
     :template: function.rst
 
     utils.arguments.parse_args
+    utils.datasets.load_experiment_data
     utils.datasets.copy_dataset_ts_files
-    utils.experiments.resample_data
-    utils.experiments.resample_data_indices
-    utils.experiments.stratified_resample_data
-    utils.experiments.stratified_resample_data_indices
-    utils.experiments.load_experiment_data
-    utils.experiments.write_classification_results
-    utils.experiments.write_regression_results
-    utils.experiments.write_clustering_results
-    utils.experiments.write_forecasting_results
-    utils.experiments.write_results_to_tsml_format
-    utils.experiments.fix_broken_second_line
-    utils.experiments.compare_result_file_resample
+    utils.datasets.save_merged_dataset_splits
+    utils.estimator_validation.is_sklearn_estimator
+    utils.estimator_validation.is_sklearn_classifier
+    utils.estimator_validation.is_sklearn_regressor
+    utils.estimator_validation.is_sklearn_clusterer
     utils.experiments.assign_gpu
     utils.experiments.timing_benchmark
     utils.experiments.estimator_attributes_to_file
@@ -115,9 +111,16 @@ Public utility functions used elsewhere in the package.
     utils.memory_recorder.record_max_memory
     utils.publications.extract_publication_csv_from_evaluation
     utils.publications.parameter_table_from_estimator_selection_function
-    utils.validation.is_sklearn_estimator
-    utils.validation.is_sklearn_classifier
-    utils.validation.is_sklearn_regressor
-    utils.validation.is_sklearn_clusterer
-    utils.validation.validate_results_file
+    utils.resampling.resample_data
+    utils.resampling.resample_data_indices
+    utils.resampling.stratified_resample_data
+    utils.resampling.stratified_resample_data_indices
+    utils.results_repair.fix_broken_second_line
+    utils.results_validation.validate_results_file
+    utils.results_validation.compare_result_file_resample
+    utils.results_writing.write_classification_results
+    utils.results_writing.write_regression_results
+    utils.results_writing.write_clustering_results
+    utils.results_writing.write_forecasting_results
+    utils.results_writing.write_results_to_tsml_format
 ```

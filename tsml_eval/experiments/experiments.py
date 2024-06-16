@@ -44,10 +44,10 @@ from tsml_eval.estimators import (
     SklearnToTsmlClusterer,
     SklearnToTsmlRegressor,
 )
+from tsml_eval.utils.datasets import load_experiment_data
 from tsml_eval.utils.experiments import (
     _check_existing_results,
     estimator_attributes_to_file,
-    load_experiment_data,
     timing_benchmark,
 )
 from tsml_eval.utils.memory_recorder import record_max_memory
