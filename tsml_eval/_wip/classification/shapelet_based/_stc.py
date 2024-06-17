@@ -156,7 +156,7 @@ class ShapeletTransformClassifier(BaseClassifier):
         self.n_channels_ = 0
         self.n_timepoints_ = 0
 
-        self._transformer =  RandomShapeletTransform()
+        self._transformer = RandomShapeletTransform()
         self._estimator = estimator
         self._transform_limit_in_minutes = 0
         self._classifier_limit_in_minutes = 0
