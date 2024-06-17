@@ -110,7 +110,7 @@ Public utility functions used elsewhere in the package.
     utils.functions.rank_array
     utils.memory_recorder.record_max_memory
     utils.publications.extract_publication_csv_from_evaluation
-    utils.publications.parameter_table_from_estimator_selection_function
+    utils.publications.parameter_table_from_estimator_selector
     utils.resampling.resample_data
     utils.resampling.resample_data_indices
     utils.resampling.stratified_resample_data
