@@ -4,7 +4,7 @@ from sklearn.cluster import KMeans
 from sklearn.dummy import DummyClassifier, DummyRegressor
 from tsml.interval_based import TSFClassifier
 
-from tsml_eval.utils.validation import (
+from tsml_eval.utils.estimator_validation import (
     is_sklearn_classifier,
     is_sklearn_clusterer,
     is_sklearn_estimator,

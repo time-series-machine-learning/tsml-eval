@@ -44,18 +44,20 @@ from tsml_eval.estimators import (
     SklearnToTsmlClusterer,
     SklearnToTsmlRegressor,
 )
+from tsml_eval.utils.datasets import load_experiment_data
 from tsml_eval.utils.experiments import (
+    _check_existing_results,
     estimator_attributes_to_file,
-    load_experiment_data,
-    resample_data,
-    stratified_resample_data,
     timing_benchmark,
+)
+from tsml_eval.utils.memory_recorder import record_max_memory
+from tsml_eval.utils.resampling import resample_data, stratified_resample_data
+from tsml_eval.utils.results_writing import (
     write_classification_results,
     write_clustering_results,
     write_forecasting_results,
     write_regression_results,
 )
-from tsml_eval.utils.memory_recorder import record_max_memory
 
 if os.getenv("MEMRECORD_INTERVAL") is not None:  # pragma: no cover
     TEMP = os.getenv("MEMRECORD_INTERVAL")
@@ -1261,36 +1263,3 @@ def load_and_run_forecasting_experiment(
         att_max_shape=att_max_shape,
         benchmark_time=benchmark_time,
     )
-
-
-def _check_existing_results(
-    results_path,
-    estimator_name,
-    dataset,
-    resample_id,
-    overwrite,
-    build_test_file,
-    build_train_file,
-):
-    if not overwrite:
-        resample_str = "Result" if resample_id is None else f"Resample{resample_id}"
-
-        if build_test_file:
-            full_path = (
-                f"{results_path}/{estimator_name}/Predictions/{dataset}/"
-                f"/test{resample_str}.csv"
-            )
-
-            if os.path.exists(full_path):
-                build_test_file = False
-
-        if build_train_file:
-            full_path = (
-                f"{results_path}/{estimator_name}/Predictions/{dataset}/"
-                f"/train{resample_str}.csv"
-            )
-
-            if os.path.exists(full_path):
-                build_train_file = False
-
-    return build_test_file, build_train_file

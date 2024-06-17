@@ -59,7 +59,7 @@ jobs:
         run: python -m pip list
 
       - name: Tests
-        run: python -m pytest
+        run: python -m pytest -n logical
 
   codecov:
     runs-on: ubuntu-20.04
@@ -82,7 +82,7 @@ jobs:
           command: python -m pip install .[all_extras,dev,unstable_extras]
 
       - name: Tests
-        run: python -m pytest --cov=tsml_eval --cov-report=xml --timeout 1800
+        run: python -m pytest -n logical --cov=tsml_eval --cov-report=xml --timeout 1800
 
       - uses: codecov/codecov-action@v4
         env:

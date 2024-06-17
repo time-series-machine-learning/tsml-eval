@@ -2,7 +2,7 @@
 
 __all__ = [
     "extract_publication_csv_from_evaluation",
-    "parameter_table_from_estimator_selection_function",
+    "parameter_table_from_estimator_selector",
 ]
 
 
@@ -52,9 +52,7 @@ def extract_publication_csv_from_evaluation(stats, eval_path, write_path):
                 shutil.copy(f"{stat_dir}/{file}", f"{write_path}/{file}")
 
 
-def parameter_table_from_estimator_selection_function(
-    selection_function, estimator_names
-):
+def parameter_table_from_estimator_selector(selection_function, estimator_names):
     """Create a table of estimator names and their parameters.
 
     Parameters

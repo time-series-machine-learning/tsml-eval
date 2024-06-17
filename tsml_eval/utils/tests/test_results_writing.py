@@ -13,14 +13,7 @@ from tsml_eval.experiments.tests import (
     _FORECASTER_RESULTS_PATH,
     _REGRESSOR_RESULTS_PATH,
 )
-from tsml_eval.utils.experiments import (
-    write_classification_results,
-    write_clustering_results,
-    write_forecasting_results,
-    write_regression_results,
-    write_results_to_tsml_format,
-)
-from tsml_eval.utils.validation import (
+from tsml_eval.utils.results_validation import (
     _check_classification_third_line,
     _check_clustering_third_line,
     _check_first_line,
@@ -28,6 +21,13 @@ from tsml_eval.utils.validation import (
     _check_regression_third_line,
     _check_results_lines,
     _check_second_line,
+)
+from tsml_eval.utils.results_writing import (
+    write_classification_results,
+    write_clustering_results,
+    write_forecasting_results,
+    write_regression_results,
+    write_results_to_tsml_format,
 )
 
 

@@ -1,9 +1,73 @@
 """Utilities for datasets."""
 
+__author__ = ["MatthewMiddlehurst"]
+__all__ = [
+    "load_experiment_data",
+    "copy_dataset_ts_files",
+    "save_merged_dataset_splits",
+]
+
 import os
 import shutil
 from os.path import exists
-from typing import List, Union
+from typing import List, Optional, Union
+
+import numpy as np
+from aeon.datasets import load_from_tsfile, write_to_tsfile
+
+
+def load_experiment_data(
+    problem_path: str,
+    dataset: str,
+    resample_id: int,
+    predefined_resample: bool,
+):
+    """Load data for experiments.
+
+    Parameters
+    ----------
+    problem_path : str
+        Path to the problem folder.
+    dataset : str
+        Name of the dataset.
+    resample_id : int or None
+        Id of the data resample to use.
+    predefined_resample : boolean
+        If True, use the predefined resample.
+
+    Returns
+    -------
+    X_train : np.ndarray or list of np.ndarray
+        Train data in a 2d or 3d ndarray or list of arrays.
+    y_train : np.ndarray
+        Train data labels.
+    X_test : np.ndarray or list of np.ndarray
+        Test data in a 2d or 3d ndarray or list of arrays.
+    y_test : np.ndarray
+        Test data labels.
+    resample : boolean
+        If True, the data is to be resampled.
+    """
+    if resample_id is not None and predefined_resample:
+        resample_str = "" if resample_id is None else str(resample_id)
+
+        X_train, y_train = load_from_tsfile(
+            f"{problem_path}/{dataset}/{dataset}{resample_str}_TRAIN.ts"
+        )
+        X_test, y_test = load_from_tsfile(
+            f"{problem_path}/{dataset}/{dataset}{resample_str}_TEST.ts"
+        )
+
+        resample_data = False
+    else:
+        X_train, y_train = load_from_tsfile(
+            f"{problem_path}/{dataset}/{dataset}_TRAIN.ts"
+        )
+        X_test, y_test = load_from_tsfile(f"{problem_path}/{dataset}/{dataset}_TEST.ts")
+
+        resample_data = True if resample_id != 0 else False
+
+    return X_train, y_train, X_test, y_test, resample_data
 
 
 def copy_dataset_ts_files(
@@ -55,3 +119,36 @@ def copy_dataset_ts_files(
         if not exists(f"{data_file}_TEST.ts"):
             raise FileNotFoundError(f"File not found: {data_file}_TEST.ts")
         shutil.copy(f"{data_file}_TEST.ts", f"{destination_path}/{file}/{file}_TEST.ts")
+
+
+def save_merged_dataset_splits(
+    problem_path: str,
+    dataset: str,
+    save_path: Optional[str] = None,
+):
+    """Merge the TRAIN and TEST .ts files of a dataset and save the merged file.
+
+    Expects files to be present at {path}/{dataset}/{dataset}_TRAIN.ts and
+    {path}/{dataset}/{dataset}_TEST.ts.
+
+    Parameters
+    ----------
+    problem_path : str
+        Path to the problem folder.
+    dataset : str
+        Name of the dataset.
+    save_path : str, default=None
+        Path to save the merged dataset to. If None, the merged dataset will be saved
+        in the same folder as the original datasets.
+    """
+    if save_path is None:
+        save_path = problem_path
+
+    X_train, y_train = load_from_tsfile(f"{problem_path}/{dataset}/{dataset}_TRAIN.ts")
+    X_test, y_test = load_from_tsfile(f"{problem_path}/{dataset}/{dataset}_TEST.ts")
+
+    os.makedirs(save_path, exist_ok=True)
+    X = np.concatenate([X_train, X_test], axis=0)
+    y = np.concatenate([y_train, y_test], axis=0)
+
+    write_to_tsfile(X, f"{save_path}/{dataset}/", y=y, problem_name=dataset)

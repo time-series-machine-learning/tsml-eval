@@ -12,7 +12,7 @@ from aeon.clustering import (
 from aeon.transformations.collection import TimeSeriesScaler
 from sklearn.cluster import KMeans
 
-from tsml_eval.utils.experiments import load_experiment_data
+from tsml_eval.utils.datasets import load_experiment_data
 from tsml_eval.utils.functions import str_in_nested_list
 
 distance_based_clusterers = [
