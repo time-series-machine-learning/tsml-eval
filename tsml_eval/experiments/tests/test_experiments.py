@@ -1,3 +1,5 @@
+"""General tests for the experiments module."""
+
 import os
 
 from tsml.dummy import DummyClassifier
@@ -7,7 +9,7 @@ from tsml_eval.experiments import (
     load_and_run_classification_experiment,
 )
 from tsml_eval.experiments.tests import _CLASSIFIER_RESULTS_PATH
-from tsml_eval.testing.test_utils import _TEST_DATA_PATH, _TEST_OUTPUT_PATH
+from tsml_eval.testing.testing_utils import _TEST_DATA_PATH, _TEST_OUTPUT_PATH
 from tsml_eval.utils.tests.test_results_writing import _check_classification_file_format
 
 

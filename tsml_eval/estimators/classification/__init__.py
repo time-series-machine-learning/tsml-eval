@@ -1,4 +1,4 @@
-"""Classifiers."""
+"""Classification estimators."""
 
 __all__ = [
     "SklearnToTsmlClassifier",

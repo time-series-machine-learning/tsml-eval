@@ -21,7 +21,7 @@ from sklearn.linear_model import LogisticRegression, RidgeClassifierCV
 from sklearn.pipeline import make_pipeline
 from sklearn.utils import check_random_state
 
-from tsml_eval.estimators.classification.transformations import SFADilation
+from tsml_eval._wip.dilation_muse.sfa_dilation import SFADilation
 
 
 class MUSEDilation(BaseClassifier):
@@ -155,7 +155,7 @@ class MUSEDilation(BaseClassifier):
         self.total_features_count = 0
         self.feature_selection = feature_selection
 
-        super(MUSEDilation, self).__init__()
+        super().__init__()
 
     def _fit(self, X, y):
         """Build a WEASEL+MUSE classifiers from the training set (X, y).
@@ -240,7 +240,7 @@ class MUSEDilation(BaseClassifier):
         if type(all_words[0]) is np.ndarray:
             all_words = np.concatenate(all_words, axis=1)
         else:
-            all_words = hstack((all_words))
+            all_words = hstack(all_words)
 
         # Ridge Classifier does not give probabilities
         if not self.support_probabilities:
@@ -315,7 +315,7 @@ class MUSEDilation(BaseClassifier):
         if type(all_words[0]) is np.ndarray:
             all_words = np.concatenate(all_words, axis=1)
         else:
-            all_words = hstack((all_words))
+            all_words = hstack(all_words)
 
         return all_words
 

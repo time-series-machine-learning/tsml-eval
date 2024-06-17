@@ -1,9 +1,8 @@
+"""Simple vote ensemble for clustering using results files."""
+
 import numpy as np
 import pandas as pd
 from sklearn import preprocessing
-from sklearn.cluster import KMeans
-from sklearn.utils import check_random_state
-from tsml.base import _clone_estimator
 
 from tsml_eval.estimators.clustering.consensus.simple_vote import SimpleVote
 
@@ -44,11 +43,12 @@ class FromFileSimpleVote(SimpleVote):
         self.overwrite_y = overwrite_y
         self.skip_y_check = skip_y_check
 
-        super(FromFileSimpleVote, self).__init__(
+        super().__init__(
             clusterers=clusterers, n_clusters=n_clusters, random_state=random_state
         )
 
     def fit(self, X, y=None):
+        """Fit model to X using a simple vote ensemble."""
         if isinstance(X, np.ndarray) and len(X.shape) == 3 and X.shape[1] == 1:
             X = np.reshape(X, (X.shape[0], -1))
         elif isinstance(X, pd.DataFrame) and len(X.shape) == 2:
@@ -74,7 +74,7 @@ class FromFileSimpleVote(SimpleVote):
             (len(self.clusterers), X.shape[0]), dtype=np.int32
         )
         for i, path in enumerate(self.clusterers):
-            f = open(path + file_name, "r")
+            f = open(path + file_name)
             lines = f.readlines()
             line2 = lines[2].split(",")
 
@@ -128,6 +128,7 @@ class FromFileSimpleVote(SimpleVote):
         return self
 
     def predict_proba(self, X):
+        """Predict cluster probabilities for X."""
         if isinstance(X, np.ndarray) and len(X.shape) == 3 and X.shape[1] == 1:
             X = np.reshape(X, (X.shape[0], -1))
         elif isinstance(X, pd.DataFrame) and len(X.shape) == 2:
@@ -153,7 +154,7 @@ class FromFileSimpleVote(SimpleVote):
             (len(self.clusterers), X.shape[0]), dtype=np.int32
         )
         for i, path in enumerate(self.clusterers):
-            f = open(path + file_name, "r")
+            f = open(path + file_name)
             lines = f.readlines()
 
             # verify file matches data

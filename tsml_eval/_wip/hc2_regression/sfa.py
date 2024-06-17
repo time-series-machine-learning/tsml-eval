@@ -13,7 +13,6 @@ import warnings
 import numpy as np
 import pandas as pd
 from aeon.transformations.base import BaseTransformer
-from aeon.utils.validation.panel import check_X
 from joblib import Parallel, delayed
 from numba import NumbaTypeSafetyWarning, njit, types
 from numba.typed import Dict
@@ -187,7 +186,7 @@ class SFA(BaseTransformer):
         self.level_bits = 0
         self.level_max = 0
 
-        super(SFA, self).__init__()
+        super().__init__()
 
         if not return_pandas_data_series:
             self._output_convert = "off"
@@ -239,7 +238,7 @@ class SFA(BaseTransformer):
                 "(this is way to many anyway)."
             )
 
-        X = check_X(X, enforce_univariate=True, coerce_to_numpy=True)
+        # X = check_X(X, enforce_univariate=True, coerce_to_numpy=True)
         X = X.squeeze(1)
 
         if self.levels > 1:
@@ -976,7 +975,7 @@ class SFA(BaseTransformer):
         """Convert a bag of SFA words into a string."""
         s = "{"
         for word, value in bag.items():
-            s += "{0}: {1}, ".format(
+            s += "{}: {}, ".format(
                 self.word_list_typed(word) if self.typed_dict else self.word_list(word),
                 value,
             )

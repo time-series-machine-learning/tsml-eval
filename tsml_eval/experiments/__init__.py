@@ -13,8 +13,18 @@ __all__ = [
     "get_clusterer_by_name",
     "get_forecaster_by_name",
     "get_regressor_by_name",
+    "classification_cross_validation",
+    "classification_cross_validation_folds",
+    "regression_cross_validation",
+    "regression_cross_validation_folds",
 ]
 
+from tsml_eval.experiments.cross_validation import (
+    classification_cross_validation,
+    classification_cross_validation_folds,
+    regression_cross_validation,
+    regression_cross_validation_folds,
+)
 from tsml_eval.experiments.experiments import (
     load_and_run_classification_experiment,
     load_and_run_clustering_experiment,

@@ -20,7 +20,7 @@ from tsml_eval.publications.y2023.tser_archive_expansion.set_tser_exp_regressor 
 from tsml_eval.publications.y2023.tser_archive_expansion.tests import (
     _TSER_ARCHIVE_TEST_RESULTS_PATH,
 )
-from tsml_eval.testing.test_utils import _TEST_DATA_PATH
+from tsml_eval.testing.testing_utils import _TEST_DATA_PATH
 from tsml_eval.utils.arguments import parse_args
 from tsml_eval.utils.experiments import _results_present
 
@@ -82,14 +82,16 @@ def _run_experiment(args):
             data_path,
             results_path,
             dataset_name,
-            _set_tser_exp_regressor(
-                regressor,
-                random_state=resample_id,
-                n_jobs=n_jobs,
-                **kwargs,
-            )
-            if isinstance(regressor, str)
-            else _clone_estimator(regressor, resample_id),
+            (
+                _set_tser_exp_regressor(
+                    regressor,
+                    random_state=resample_id,
+                    n_jobs=n_jobs,
+                    **kwargs,
+                )
+                if isinstance(regressor, str)
+                else _clone_estimator(regressor, resample_id)
+            ),
             regressor_name=regressor,
             resample_id=resample_id,
             overwrite=overwrite,

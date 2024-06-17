@@ -2,11 +2,16 @@
 
 import os
 import pickle
+import warnings
 from datetime import datetime
 
 import numpy as np
-from aeon.benchmarking import plot_critical_difference
-from aeon.benchmarking.results_plotting import plot_boxplot_median, plot_scatter
+from aeon.performance_metrics.stats import wilcoxon_test
+from aeon.visualisation import (
+    plot_boxplot_median,
+    plot_critical_difference,
+    plot_pairwise_scatter,
+)
 from matplotlib import pyplot as plt
 
 from tsml_eval.evaluation.storage import (
@@ -133,6 +138,7 @@ def evaluate_classifiers_by_problem(
     error_on_missing=True,
     eval_name=None,
     verify_results=True,
+    verbose=False,
 ):
     """
     Evaluate multiple classifiers on multiple datasets from file using standard paths.
@@ -159,8 +165,10 @@ def evaluate_classifiers_by_problem(
         results in the second.
         If load_path is a list, classifier_names must be a list of lists with the same
         length as load_path.
-    dataset_names : list of str or list of list
-        The names of the datasets to evaluate.
+    dataset_names : str, list of str or list of list
+        The names of the datasets to evaluate. If a list of strings, each item is the
+        name of a dataset. If a string, it is the path to a file containing the names
+        of the datasets, one per line.
         If load_path is a list, dataset_names must be a list of lists with the same
         length as load_path.
     save_path : str
@@ -175,6 +183,8 @@ def evaluate_classifiers_by_problem(
         The name of the evaluation, used in save_path.
     verify_results : bool, default=True
         If the verification should be performed on the loaded results values.
+    verbose : bool, default=False
+        If verbose output should be printed.
     """
     load_path, classifier_names, dataset_names, resamples = _evaluate_by_problem_init(
         "classifier",
@@ -215,23 +225,41 @@ def evaluate_classifiers_by_problem(
                 for resample in resamples:
                     for split in splits:
                         try:
-                            classifier_results.append(
-                                ClassifierResults().load_from_file(
-                                    f"{path}/{classifier_name}/Predictions/"
-                                    f"{dataset_name}/{split}Resample{resample}.csv",
-                                    verify_values=verify_results,
-                                )
+                            result = ClassifierResults().load_from_file(
+                                f"{path}/{classifier_name}/Predictions/"
+                                f"{dataset_name}/{split}Resample{resample}.csv",
+                                verify_values=verify_results,
                             )
+                            classifier_results.append(result)
                             names.append(classifier_eval_name)
                             found_estimator = True
                             found_datasets[n] = True
-                        except FileNotFoundError:
-                            if error_on_missing:
-                                raise FileNotFoundError(
-                                    f"Results for {classifier_eval_name} on "
-                                    f"{dataset_name} {split} resample {resample} not "
-                                    "found."
+
+                            if verbose:
+                                print(  # noqa: T201
+                                    f"Loaded {classifier_eval_name} on {dataset_name} "
+                                    f"{split} resample {resample}."
                                 )
+
+                            if result.dataset_name != dataset_name:
+                                if verbose:
+                                    print(  # noqa: T201
+                                        f"File for {classifier_eval_name} on "
+                                        f"{dataset_name} {split} resample {resample} "
+                                        f"has a different dataset name than used to "
+                                        f"load the file. Setting dataset name to "
+                                        f"{dataset_name} from {result.dataset_name}."
+                                    )
+                                result.dataset_name = dataset_name
+                        except FileNotFoundError:
+                            msg = (
+                                f"Results for {classifier_eval_name} on {dataset_name} "
+                                f"{split} resample {resample} not found."
+                            )
+                            if error_on_missing:
+                                raise FileNotFoundError(msg)
+                            elif verbose:
+                                print(msg)  # noqa: T201
 
             if not found_estimator:
                 print(f"Classifier {classifier_eval_name} not found.")  # noqa: T201
@@ -357,6 +385,7 @@ def evaluate_clusterers_by_problem(
     error_on_missing=True,
     eval_name=None,
     verify_results=True,
+    verbose=False,
 ):
     """
     Evaluate multiple clusterers on multiple datasets from file using standard paths.
@@ -383,8 +412,10 @@ def evaluate_clusterers_by_problem(
         results in the second.
         If load_path is a list, clusterer_names must be a list of lists with the same
         length as load_path.
-    dataset_names : list of str or list of list
-        The names of the datasets to evaluate.
+    dataset_names : str, list of str or list of list
+        The names of the datasets to evaluate. If a list of strings, each item is the
+        name of a dataset. If a string, it is the path to a file containing the names
+        of the datasets, one per line.
         If load_path is a list, dataset_names must be a list of lists with the same
         length as load_path.
     save_path : str
@@ -399,6 +430,8 @@ def evaluate_clusterers_by_problem(
         The name of the evaluation, used in save_path.
     verify_results : bool, default=True
         If the verification should be performed on the loaded results values.
+    verbose : bool, default=False
+        If verbose output should be printed.
     """
     load_path, clusterer_names, dataset_names, resamples = _evaluate_by_problem_init(
         "clusterer",
@@ -439,23 +472,41 @@ def evaluate_clusterers_by_problem(
                 for resample in resamples:
                     for split in splits:
                         try:
-                            clusterer_results.append(
-                                ClustererResults().load_from_file(
-                                    f"{path}/{clusterer_name}/Predictions/"
-                                    f"{dataset_name}/{split}Resample{resample}.csv",
-                                    verify_values=verify_results,
-                                )
+                            result = ClustererResults().load_from_file(
+                                f"{path}/{clusterer_name}/Predictions/"
+                                f"{dataset_name}/{split}Resample{resample}.csv",
+                                verify_values=verify_results,
                             )
+                            clusterer_results.append(result)
                             names.append(clusterer_eval_name)
                             found_estimator = True
                             found_datasets[n] = True
-                        except FileNotFoundError:
-                            if error_on_missing:
-                                raise FileNotFoundError(
-                                    f"Results for {clusterer_eval_name} on "
-                                    f"{dataset_name} {split} resample {resample} not "
-                                    "found."
+
+                            if verbose:
+                                print(  # noqa: T201
+                                    f"Loaded {clusterer_eval_name} on {dataset_name} "
+                                    f"{split} resample {resample}."
                                 )
+
+                            if result.dataset_name != dataset_name:
+                                if verbose:
+                                    print(  # noqa: T201
+                                        f"File for {clusterer_eval_name} on "
+                                        f"{dataset_name} {split} resample {resample} "
+                                        f"has a different dataset name than used to "
+                                        f"load the file. Setting dataset name to "
+                                        f"{dataset_name} from {result.dataset_name}."
+                                    )
+                                result.dataset_name = dataset_name
+                        except FileNotFoundError:
+                            msg = (
+                                f"Results for {clusterer_eval_name} on {dataset_name} "
+                                f"{split} resample {resample} not found."
+                            )
+                            if error_on_missing:
+                                raise FileNotFoundError(msg)
+                            elif verbose:
+                                print(msg)  # noqa: T201
 
             if not found_estimator:
                 print(f"Clusterer {clusterer_eval_name} not found.")  # noqa: T201
@@ -581,6 +632,7 @@ def evaluate_regressors_by_problem(
     error_on_missing=True,
     eval_name=None,
     verify_results=True,
+    verbose=False,
 ):
     """
     Evaluate multiple regressors on multiple datasets from file using standard paths.
@@ -607,8 +659,10 @@ def evaluate_regressors_by_problem(
         results in the second.
         If load_path is a list, regressor_names must be a list of lists with the same
         length as load_path.
-    dataset_names : list of str or list of list
-        The names of the datasets to evaluate.
+    dataset_names : str, list of str or list of list
+        The names of the datasets to evaluate. If a list of strings, each item is the
+        name of a dataset. If a string, it is the path to a file containing the names
+        of the datasets, one per line.
         If load_path is a list, dataset_names must be a list of lists with the same
         length as load_path.
     save_path : str
@@ -623,6 +677,8 @@ def evaluate_regressors_by_problem(
         The name of the evaluation, used in save_path.
     verify_results : bool, default=True
         If the verification should be performed on the loaded results values.
+    verbose : bool, default=False
+        If verbose output should be printed.
     """
     load_path, regressor_names, dataset_names, resamples = _evaluate_by_problem_init(
         "regressor",
@@ -663,23 +719,41 @@ def evaluate_regressors_by_problem(
                 for resample in resamples:
                     for split in splits:
                         try:
-                            regressor_results.append(
-                                RegressorResults().load_from_file(
-                                    f"{path}/{regressor_name}/Predictions/"
-                                    f"{dataset_name}/{split}Resample{resample}.csv",
-                                    verify_values=verify_results,
-                                )
+                            result = RegressorResults().load_from_file(
+                                f"{path}/{regressor_name}/Predictions/"
+                                f"{dataset_name}/{split}Resample{resample}.csv",
+                                verify_values=verify_results,
                             )
+                            regressor_results.append(result)
                             names.append(regressor_eval_name)
                             found_estimator = True
                             found_datasets[n] = True
-                        except FileNotFoundError:
-                            if error_on_missing:
-                                raise FileNotFoundError(
-                                    f"Results for {regressor_eval_name} on "
-                                    f"{dataset_name} {split} resample {resample} not "
-                                    f"found."
+
+                            if verbose:
+                                print(  # noqa: T201
+                                    f"Loaded {regressor_eval_name} on {dataset_name} "
+                                    f"{split} resample {resample}."
                                 )
+
+                            if result.dataset_name != dataset_name:
+                                if verbose:
+                                    print(  # noqa: T201
+                                        f"File for {regressor_eval_name} on "
+                                        f"{dataset_name} {split} resample {resample} "
+                                        f"has a different dataset name than used to "
+                                        f"load the file. Setting dataset name to "
+                                        f"{dataset_name} from {result.dataset_name}."
+                                    )
+                                result.dataset_name = dataset_name
+                        except FileNotFoundError:
+                            msg = (
+                                f"Results for {regressor_eval_name} on {dataset_name} "
+                                f"{split} resample {resample} not found."
+                            )
+                            if error_on_missing:
+                                raise FileNotFoundError(msg)
+                            elif verbose:
+                                print(msg)  # noqa: T201
 
             if not found_estimator:
                 print(f"Regressor {regressor_eval_name} not found.")  # noqa: T201
@@ -804,6 +878,7 @@ def evaluate_forecasters_by_problem(
     error_on_missing=True,
     eval_name=None,
     verify_results=True,
+    verbose=False,
 ):
     """
     Evaluate multiple forecasters on multiple datasets from file using standard paths.
@@ -830,10 +905,12 @@ def evaluate_forecasters_by_problem(
         results in the second.
         If load_path is a list, regressor_names must be a list of lists with the same
         length as load_path.
-    dataset_names : list of str or list of list
-        The names of the datasets to evaluate.
+    dataset_names : str, list of str or list of list
+        The names of the datasets to evaluate. If a list of strings, each item is the
+        name of a dataset. If a string, it is the path to a file containing the names
+        of the datasets, one per line.
         If load_path is a list, dataset_names must be a list of lists with the same
-        length as load_path..
+        length as load_path.
     save_path : str
         The path to save the evaluation results to.
     resamples : int or list of int, default=None
@@ -844,6 +921,8 @@ def evaluate_forecasters_by_problem(
         The name of the evaluation, used in save_path.
     verify_results : bool, default=True
         If the verification should be performed on the loaded results values.
+    verbose : bool, default=False
+        If verbose output should be printed.
     """
     load_path, forecaster_names, dataset_names, resamples = _evaluate_by_problem_init(
         "forecaster",
@@ -878,22 +957,41 @@ def evaluate_forecasters_by_problem(
             for n, dataset_name in enumerate(dataset_names[i]):
                 for resample in resamples:
                     try:
-                        forecaster_results.append(
-                            ForecasterResults().load_from_file(
-                                f"{path}/{forecaster_name}/Predictions/"
-                                f"{dataset_name}/testResample{resample}.csv",
-                                verify_values=verify_results,
-                            )
+                        result = ForecasterResults().load_from_file(
+                            f"{path}/{forecaster_name}/Predictions/"
+                            f"{dataset_name}/testResample{resample}.csv",
+                            verify_values=verify_results,
                         )
+                        forecaster_results.append(result)
                         names.append(forecaster_eval_name)
                         found_estimator = True
                         found_datasets[n] = True
-                    except FileNotFoundError:
-                        if error_on_missing:
-                            raise FileNotFoundError(
-                                f"Results for {forecaster_eval_name} on {dataset_name} "
-                                f"resample {resample} not found."
+
+                        if verbose:
+                            print(  # noqa: T201
+                                f"Loaded {forecaster_eval_name} on {dataset_name} "
+                                f"resample {resample}."
                             )
+
+                        if result.dataset_name != dataset_name:
+                            if verbose:
+                                print(  # noqa: T201
+                                    f"File for {forecaster_eval_name} on "
+                                    f"{dataset_name} resample {resample} "
+                                    f"has a different dataset name than used to "
+                                    f"load the file. Setting dataset name to "
+                                    f"{dataset_name} from {result.dataset_name}."
+                                )
+                            result.dataset_name = dataset_name
+                    except FileNotFoundError:
+                        msg = (
+                            f"Results for {forecaster_eval_name} on {dataset_name} "
+                            f"resample {resample} not found."
+                        )
+                        if error_on_missing:
+                            raise FileNotFoundError(msg)
+                        elif verbose:
+                            print(msg)  # noqa: T201
 
             if not found_estimator:
                 print(f"Forecaster {forecaster_eval_name} not found.")  # noqa: T201
@@ -932,8 +1030,12 @@ def _evaluate_by_problem_init(
     elif not isinstance(estimator_names[0], list):
         raise TypeError(f"{type}_names must be a str, tuple or list of str or tuple.")
 
-    if isinstance(dataset_names[0], str):
-        dataset_names = [dataset_names]
+    if isinstance(dataset_names, str):
+        with open(dataset_names) as f:
+            dataset_names = f.readlines()
+            dataset_names = [[d.strip() for d in dataset_names]] * len(load_path)
+    elif isinstance(dataset_names[0], str):
+        dataset_names = [dataset_names] * len(load_path)
     elif not isinstance(dataset_names[0], list):
         raise TypeError("dataset_names must be a str or list of str.")
 
@@ -1100,6 +1202,7 @@ def _evaluate_estimators(
                 time,
                 var,
                 save_path,
+                eval_name,
             )
             stats.append((average, rank, stat, ascending, split))
 
@@ -1150,6 +1253,7 @@ def _create_directory_for_statistic(
     is_timing,
     variable_name,
     save_path,
+    eval_name,
 ):
     os.makedirs(f"{save_path}/{statistic_name}/all_resamples/", exist_ok=True)
 
@@ -1173,18 +1277,20 @@ def _create_directory_for_statistic(
             average_stats[n, i] = np.mean(est_stats[n, :])
 
         with open(
-            f"{save_path}/{statistic_name}/all_resamples/{estimator_name}_"
-            f"{statistic_name}.csv",
+            f"{save_path}/{statistic_name}/all_resamples/"
+            f"{estimator_name}_{statistic_name.lower()}.csv",
             "w",
         ) as file:
-            file.write(f",{','.join([str(j) for j in resamples])}\n")
+            file.write(f"Resamples:,{','.join([str(j) for j in resamples])}\n")
             for n, dataset_name in enumerate(datasets):
                 file.write(
                     f"{dataset_name},{','.join([str(j) for j in est_stats[n]])}\n"
                 )
 
-    with open(f"{save_path}/{statistic_name}/{statistic_name}_mean.csv", "w") as file:
-        file.write(f",{','.join(estimators)}\n")
+    with open(
+        f"{save_path}/{statistic_name}/{statistic_name.lower()}_mean.csv", "w"
+    ) as file:
+        file.write(f"Estimators:,{','.join(estimators)}\n")
         for i, dataset_name in enumerate(datasets):
             file.write(
                 f"{dataset_name},{','.join([str(n) for n in average_stats[i]])}\n"
@@ -1194,48 +1300,71 @@ def _create_directory_for_statistic(
         lambda x: rank_array(x, higher_better=higher_better), 1, average_stats
     )
 
-    with open(f"{save_path}/{statistic_name}/{statistic_name}_ranks.csv", "w") as file:
-        file.write(f",{','.join(estimators)}\n")
+    with open(
+        f"{save_path}/{statistic_name}/{statistic_name.lower()}_ranks.csv", "w"
+    ) as file:
+        file.write(f"Estimators:,{','.join(estimators)}\n")
         for i, dataset_name in enumerate(datasets):
             file.write(f"{dataset_name},{','.join([str(n) for n in ranks[i]])}\n")
 
-    _figures_for_statistic(
-        average_stats, estimators, statistic_name, higher_better, save_path
-    )
+    p_values = wilcoxon_test(average_stats, estimators, lower_better=not higher_better)
+    with open(
+        f"{save_path}/{statistic_name}/{statistic_name.lower()}_p_values.csv", "w"
+    ) as file:
+        file.write(f"Estimators:,{','.join(estimators)}\n")
+        for i, estimator_name in enumerate(estimators):
+            file.write(f"{estimator_name},{','.join([str(n) for n in p_values[i]])}\n")
+
+    try:
+        _figures_for_statistic(
+            average_stats,
+            estimators,
+            statistic_name,
+            higher_better,
+            save_path,
+            eval_name,
+        )
+    except ValueError as e:
+        warnings.warn(
+            f"Error during figure creation for {statistic_name}: {e}",
+            stacklevel=2,
+        )
 
     return average_stats, ranks
 
 
 def _figures_for_statistic(
-    scores, estimators, statistic_name, higher_better, save_path
+    scores, estimators, statistic_name, higher_better, save_path, eval_name
 ):
     os.makedirs(f"{save_path}/{statistic_name}/figures/", exist_ok=True)
 
-    cd = plot_critical_difference(scores, estimators, lower_better=not higher_better)
+    cd, _ = plot_critical_difference(scores, estimators, lower_better=not higher_better)
     cd.savefig(
         f"{save_path}/{statistic_name}/figures/"
-        f"{statistic_name}_critical_difference.pdf",
+        f"{eval_name}_{statistic_name.lower()}_critical_difference.pdf",
         bbox_inches="tight",
     )
     pickle.dump(
         cd,
         open(
             f"{save_path}/{statistic_name}/figures/"
-            f"{statistic_name}_critical_difference.pickle",
+            f"{eval_name}_{statistic_name.lower()}_critical_difference.pickle",
             "wb",
         ),
     )
     plt.close()
 
-    box = plot_boxplot_median(scores.transpose(), estimators)
+    box, _ = plot_boxplot_median(scores, estimators)
     box.savefig(
-        f"{save_path}/{statistic_name}/figures/{statistic_name}_boxplot.pdf",
+        f"{save_path}/{statistic_name}/figures/"
+        f"{eval_name}_{statistic_name.lower()}_boxplot.pdf",
         bbox_inches="tight",
     )
     pickle.dump(
         box,
         open(
-            f"{save_path}/{statistic_name}/figures/{statistic_name}_boxplot.pickle",
+            f"{save_path}/{statistic_name}/figures/"
+            f"{eval_name}_{statistic_name.lower()}_boxplot.pickle",
             "wb",
         ),
     )
@@ -1250,17 +1379,18 @@ def _figures_for_statistic(
                 f"{save_path}/{statistic_name}/figures/scatters/{est1}/", exist_ok=True
             )
 
-            scatter = plot_scatter(scores[:, (i, n)], est1, est2)
+            scatter, _ = plot_pairwise_scatter(scores[:, i], scores[:, n], est1, est2)
             scatter.savefig(
                 f"{save_path}/{statistic_name}/figures/scatters/{est1}/"
-                f"{statistic_name}_scatter_{est1}_{est2}.pdf",
+                f"{eval_name}_{statistic_name.lower()}_scatter_{est1}_{est2}.pdf",
                 bbox_inches="tight",
             )
             pickle.dump(
                 scatter,
                 open(
                     f"{save_path}/{statistic_name}/figures/scatters/{est1}/"
-                    f"{statistic_name}_scatter_{est1}_{est2}.pickle",
+                    f"{eval_name}_{statistic_name.lower()}_scatter_{est1}_{est2}"
+                    f".pickle",
                     "wb",
                 ),
             )

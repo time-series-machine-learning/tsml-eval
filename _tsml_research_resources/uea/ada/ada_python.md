@@ -137,7 +137,7 @@ Next, move to the package directory and run:
 
 # Running experiments
 
-For running jobs on ADA, we recommend using the submission scripts provided in this folder.
+For running jobs on ADA, we recommend using copies the submission scripts provided in this folder.
 
 **NOTE: Scripts will not run properly if done whilst the conda environment is active.**
 
@@ -146,10 +146,12 @@ For running jobs on ADA, we recommend using the submission scripts provided in t
 For CPU experiments start with one of the following scripts:
 
 >classification_experiments.sh
->
+
 >regression_experiments.sh
->
+
 >clustering_experiments.sh
+
+You may need to use `dos2unix` to convert the line endings to unix format.
 
 The default queue for CPU jobs is _compute-64-512_, but you may want to swap to _compute-24-128_ or _compute-24-96_
 if they have more resources available.
@@ -222,3 +224,6 @@ https://my.uea.ac.uk/divisions/it-and-computing-services/service-catalogue/resea
 
 conda cheat sheet:
 https://docs.conda.io/projects/conda/en/4.6.0/_downloads/52a95608c49671267e40c689e0bc00ca/conda-cheatsheet.pdf
+
+Reserved queue booking
+https://outlook.office365.com/owa/calendar/ITCSResearchandSpecialistComputingHPCGPUFarm@ueanorwich.onmicrosoft.com/bookings/s/XMQoaD7GQUGytUBbMMyBrg2

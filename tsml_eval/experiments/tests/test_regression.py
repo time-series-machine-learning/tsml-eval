@@ -6,6 +6,7 @@ import os
 import runpy
 
 import pytest
+from aeon.registry import all_estimators
 from tsml.dummy import DummyClassifier
 
 from tsml_eval.datasets._test_data._data_sizes import DATA_TEST_SIZES
@@ -17,7 +18,7 @@ from tsml_eval.experiments import (
     threaded_regression_experiments,
 )
 from tsml_eval.experiments.tests import _REGRESSOR_RESULTS_PATH
-from tsml_eval.testing.test_utils import (
+from tsml_eval.testing.testing_utils import (
     _TEST_DATA_PATH,
     _check_set_method,
     _check_set_method_results,
@@ -78,9 +79,11 @@ def test_run_regression_experiment_main():
     # run twice to test results present check
     for _ in range(2):
         runpy.run_path(
-            "./tsml_eval/experiments/regression_experiments.py"
-            if os.getcwd().split("\\")[-1] != "tests"
-            else "../regression_experiments.py",
+            (
+                "./tsml_eval/experiments/regression_experiments.py"
+                if os.getcwd().split("\\")[-1] != "tests"
+                else "../regression_experiments.py"
+            ),
             run_name="__main__",
         )
 
@@ -124,9 +127,11 @@ def test_run_threaded_regression_experiment():
 
     # this covers the main method and experiment function result file checking
     runpy.run_path(
-        "./tsml_eval/experiments/threaded_regression_experiments.py"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else "../threaded_regression_experiments.py",
+        (
+            "./tsml_eval/experiments/threaded_regression_experiments.py"
+            if os.getcwd().split("\\")[-1] != "tests"
+            else "../threaded_regression_experiments.py"
+        ),
         run_name="__main__",
     )
 
@@ -166,7 +171,6 @@ def test_get_regressor_by_name():
     regressor_lists = [
         set_regressor.convolution_based_regressors,
         set_regressor.deep_learning_regressors,
-        set_regressor.dictionary_based_regressors,
         set_regressor.distance_based_regressors,
         set_regressor.feature_based_regressors,
         set_regressor.hybrid_regressors,
@@ -196,3 +200,24 @@ def test_get_regressor_by_name_invalid():
     """Test get_regressor_by_name method with invalid estimator."""
     with pytest.raises(ValueError, match="UNKNOWN REGRESSOR"):
         get_regressor_by_name("invalid")
+
+
+def test_aeon_regressors_available():
+    """Test all aeon regressors are available."""
+    excluded = [
+        # composable
+        "RegressorPipeline",
+        # just missing
+        "IndividualLITERegressor",
+        "IntervalForestRegressor",
+    ]
+
+    est = [e for e, _ in all_estimators(estimator_types="regressor")]
+    for e in est:
+        if e in excluded:
+            continue
+
+        try:
+            assert get_regressor_by_name(e) is not None
+        except ModuleNotFoundError:
+            continue

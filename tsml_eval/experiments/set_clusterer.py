@@ -12,7 +12,7 @@ from aeon.clustering import (
 from aeon.transformations.collection import TimeSeriesScaler
 from sklearn.cluster import KMeans
 
-from tsml_eval.utils.experiments import load_experiment_data
+from tsml_eval.utils.datasets import load_experiment_data
 from tsml_eval.utils.functions import str_in_nested_list
 
 distance_based_clusterers = [
@@ -81,8 +81,6 @@ distance_based_clusterers = [
     "pam-msm",
     "pam-adtw",
     "pam-shape_dtw",
-    "kmeans-ba-euclidean",
-    "kmeans-ba-squared",
     "kmeans-ba-dtw",
     "kmeans-ba-ddtw",
     "kmeans-ba-wdtw",
@@ -94,6 +92,16 @@ distance_based_clusterers = [
     "kmeans-ba-msm",
     "kmeans-ba-adtw",
     "kmeans-ba-shape_dtw",
+    "kmeans-ssg-ba-dtw",
+    "kmeans-ssg-ba-ddtw",
+    "kmeans-ssg-ba-wdtw",
+    "kmeans-ssg-ba-wddtw",
+    "kmeans-ssg-ba-erp",
+    "kmeans-ssg-ba-edr",
+    "kmeans-ssg-ba-twe",
+    "kmeans-ssg-ba-msm",
+    "kmeans-ssg-ba-adtw",
+    "kmeans-ssg-ba-shape_dtw",
     "timeserieskmeans",
     "timeserieskmedoids",
     "timeseriesclarans",
@@ -147,7 +155,7 @@ def get_clusterer_by_name(
         List of arguments to load the dataset using
         `tsml_eval.utils.experiments import load_experiment_data`.
     row_normalise: bool, default=False
-        Whether to row normalise the data if it is loaded.
+        Whether to row normalise the data if it is loaded using data_vars.
 
     Return
     ------
@@ -211,7 +219,25 @@ def _set_clusterer_distance_based(
             average_params = kwargs["average_params"]
         else:
             average_params = {"distance": distance, **distance_params.copy()}
-        if "ba" in c:
+
+        if "ssg" in c:
+            # Sets to use subgradient BA
+            average_params = {
+                **average_params,
+                "method": "subgradient",
+            }
+            return TimeSeriesKMeans(
+                max_iter=50,
+                n_init=10,
+                init_algorithm=init_algorithm,
+                distance=distance,
+                distance_params=distance_params,
+                random_state=random_state,
+                averaging_method="ba",
+                average_params=average_params,
+                **kwargs,
+            )
+        elif "ba" in c:
             return TimeSeriesKMeans(
                 max_iter=50,
                 n_init=10,

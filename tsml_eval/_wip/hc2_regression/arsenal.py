@@ -18,7 +18,6 @@ from aeon.transformations.collection.convolution_based import (
     MultiRocketMultivariate,
     Rocket,
 )
-from aeon.utils.validation.panel import check_X_y
 from joblib import Parallel, delayed
 from sklearn.linear_model import RidgeCV
 from sklearn.pipeline import make_pipeline
@@ -142,7 +141,7 @@ class Arsenal(BaseRegressor):
         self._weight_sum = 0
         self._label_average = 0
 
-        super(Arsenal, self).__init__()
+        super().__init__()
 
     def _fit(self, X, y):
         """Fit Arsenal to training data.
@@ -286,7 +285,7 @@ class Arsenal(BaseRegressor):
 
     def _get_train_preds(self, X, y) -> np.ndarray:
         self.check_is_fitted()
-        X, y = check_X_y(X, y, coerce_to_numpy=True)
+        # X, y = check_X_y(X, y, coerce_to_numpy=True)
 
         n_instances, n_dims, series_length = X.shape
 

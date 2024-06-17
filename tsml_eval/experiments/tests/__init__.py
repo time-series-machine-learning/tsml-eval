@@ -7,7 +7,7 @@ __all__ = [
     "_REGRESSOR_RESULTS_PATH",
 ]
 
-from tsml_eval.testing.test_utils import _TEST_OUTPUT_PATH
+from tsml_eval.testing.testing_utils import _TEST_OUTPUT_PATH
 
 _CLASSIFIER_RESULTS_PATH = _TEST_OUTPUT_PATH + "/classification/"
 

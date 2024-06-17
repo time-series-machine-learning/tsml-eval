@@ -18,7 +18,7 @@ from tsml_eval.publications.y2023.distance_based_clustering.set_distance_cluster
 from tsml_eval.publications.y2023.distance_based_clustering.tests import (
     _DISTANCE_TEST_RESULTS_PATH,
 )
-from tsml_eval.testing.test_utils import _TEST_DATA_PATH
+from tsml_eval.testing.testing_utils import _TEST_DATA_PATH
 from tsml_eval.utils.arguments import parse_args
 from tsml_eval.utils.experiments import _results_present
 
@@ -113,13 +113,15 @@ def _run_experiment(args):
             data_path,
             results_path,
             dataset_name,
-            _set_distance_clusterer(
-                clusterer,
-                random_state=resample_id + 1,
-                **kwargs,
-            )
-            if isinstance(clusterer, str)
-            else _clone_estimator(clusterer, resample_id),
+            (
+                _set_distance_clusterer(
+                    clusterer,
+                    random_state=resample_id + 1,
+                    **kwargs,
+                )
+                if isinstance(clusterer, str)
+                else _clone_estimator(clusterer, resample_id)
+            ),
             row_normalise=normalise,
             n_clusters=-1,
             clusterer_name=clusterer,

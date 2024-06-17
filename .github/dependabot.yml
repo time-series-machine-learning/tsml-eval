@@ -10,6 +10,7 @@ updates:
       prefix: "[MNT] "
     labels:
       - "maintenance"
+      - "dependencies"
     groups:
       github-actions:
         patterns:
@@ -24,6 +25,7 @@ updates:
       prefix: "[MNT] "
     labels:
       - "maintenance"
+      - "dependencies"
     groups:
       python-packages:
         patterns:

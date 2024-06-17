@@ -6,7 +6,7 @@ from tsml_eval.publications.y2023.tsc_bakeoff import (
     _set_bakeoff_classifier,
     bakeoff_classifiers,
 )
-from tsml_eval.testing.test_utils import _check_set_method, _check_set_method_results
+from tsml_eval.testing.testing_utils import _check_set_method, _check_set_method_results
 
 
 def test_set_bakeoff_classifier():

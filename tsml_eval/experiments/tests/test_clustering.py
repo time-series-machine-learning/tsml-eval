@@ -6,6 +6,7 @@ import os
 import runpy
 
 import pytest
+from aeon.registry import all_estimators
 from tsml.dummy import DummyClassifier, DummyClusterer
 
 from tsml_eval.datasets._test_data._data_sizes import DATA_TEST_SIZES, DATA_TRAIN_SIZES
@@ -17,7 +18,7 @@ from tsml_eval.experiments import (
     threaded_clustering_experiments,
 )
 from tsml_eval.experiments.tests import _CLUSTERER_RESULTS_PATH
-from tsml_eval.testing.test_utils import (
+from tsml_eval.testing.testing_utils import (
     _TEST_DATA_PATH,
     _check_set_method,
     _check_set_method_results,
@@ -77,9 +78,11 @@ def test_run_clustering_experiment_main():
     # run twice to test results present check
     for _ in range(2):
         runpy.run_path(
-            "./tsml_eval/experiments/clustering_experiments.py"
-            if os.getcwd().split("\\")[-1] != "tests"
-            else "../clustering_experiments.py",
+            (
+                "./tsml_eval/experiments/clustering_experiments.py"
+                if os.getcwd().split("\\")[-1] != "tests"
+                else "../clustering_experiments.py"
+            ),
             run_name="__main__",
         )
 
@@ -130,9 +133,11 @@ def test_run_threaded_clustering_experiment():
 
     # this covers the main method and experiment function result file checking
     runpy.run_path(
-        "./tsml_eval/experiments/threaded_clustering_experiments.py"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else "../threaded_clustering_experiments.py",
+        (
+            "./tsml_eval/experiments/threaded_clustering_experiments.py"
+            if os.getcwd().split("\\")[-1] != "tests"
+            else "../threaded_clustering_experiments.py"
+        ),
         run_name="__main__",
     )
 
@@ -192,6 +197,29 @@ def test_get_clusterer_by_name_invalid():
     """Test get_clusterer_by_name method with invalid estimator."""
     with pytest.raises(ValueError, match="UNKNOWN CLUSTERER"):
         get_clusterer_by_name("invalid")
+
+
+def test_aeon_clusterers_available():
+    """Test all aeon clusterers are available."""
+    excluded = [
+        # composable
+        "ClustererPipeline",
+        # just missing
+        "AEFCNClusterer",
+        "AEResNetClusterer",
+        "TimeSeriesKShapes",
+        "TimeSeriesKernelKMeans",
+    ]
+
+    est = [e for e, _ in all_estimators(estimator_types="clusterer")]
+    for e in est:
+        if e in excluded:
+            continue
+
+        try:
+            assert get_clusterer_by_name(e) is not None
+        except ModuleNotFoundError:
+            continue
 
 
 @pytest.mark.parametrize("n_clusters", ["4", "-1"])
@@ -266,7 +294,7 @@ def test_combined_train_test(dataset):
 
 
 def _check_clustering_file_n_clusters(file_path, expected):
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         lines = f.readlines()
 
     line = lines[2].split(",")
@@ -274,6 +302,7 @@ def _check_clustering_file_n_clusters(file_path, expected):
 
 
 def test_invalid_n_clusters():
+    """Test invalid n_clusters parameter."""
     with pytest.raises(ValueError, match="n_clusters must be a"):
         run_clustering_experiment(
             [],
@@ -285,6 +314,7 @@ def test_invalid_n_clusters():
 
 
 def test_invalid_test_settings():
+    """Test build_test_file without test data."""
     with pytest.raises(ValueError, match="Test data and labels not provided"):
         run_clustering_experiment(
             [],

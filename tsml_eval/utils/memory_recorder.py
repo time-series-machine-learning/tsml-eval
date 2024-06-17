@@ -53,7 +53,10 @@ def record_max_memory(
         if mem > max_memory:
             max_memory = mem
 
-        if thread.has_shutdown:
+        if not thread.is_alive():
+            if thread.exception is not None:
+                raise thread.exception
+
             if return_func_time:
                 return max_memory - start_memory, thread.function_time
             else:
@@ -69,14 +72,16 @@ class _FunctionThread(Thread):
         self.kwargs = kwargs if kwargs is not None else {}
 
         self.function_time = -1
-        self.has_shutdown = False
+        self.exception = None
 
-        super(_FunctionThread, self).__init__(daemon=True)
+        super().__init__(daemon=True)
 
     def run(self):
         """Overloads the threading.Thread.run."""
         start = int(round(time.time() * 1000))
-        self.function(*self.args, **self.kwargs)
+        try:
+            self.function(*self.args, **self.kwargs)
+        except Exception as e:
+            self.exception = e
         end = int(round(time.time() * 1000))
         self.function_time = end - start
-        self.has_shutdown = True

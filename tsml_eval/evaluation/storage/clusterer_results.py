@@ -1,6 +1,8 @@
 """Class for storing and loading results from a clustering experiment."""
 
 import numpy as np
+from aeon.performance_metrics.clustering import clustering_accuracy_score
+from numpy.testing import assert_allclose
 from sklearn.metrics import (
     adjusted_mutual_info_score,
     adjusted_rand_score,
@@ -9,9 +11,8 @@ from sklearn.metrics import (
     rand_score,
 )
 
-from tsml_eval.evaluation.metrics import clustering_accuracy_score
 from tsml_eval.evaluation.storage.estimator_results import EstimatorResults
-from tsml_eval.utils.experiments import write_clustering_results
+from tsml_eval.utils.results_writing import write_clustering_results
 
 
 class ClustererResults(EstimatorResults):
@@ -85,7 +86,7 @@ class ClustererResults(EstimatorResults):
     Examples
     --------
     >>> from tsml_eval.evaluation.storage import ClustererResults
-    >>> from tsml_eval.testing.test_utils import _TEST_RESULTS_PATH
+    >>> from tsml_eval.testing.testing_utils import _TEST_RESULTS_PATH
     >>> cr = ClustererResults().load_from_file(
     ...     _TEST_RESULTS_PATH +
     ...     "/clustering/KMeans/Predictions/Trace/trainResample0.csv"
@@ -139,7 +140,7 @@ class ClustererResults(EstimatorResults):
         self.adjusted_mutual_information = None
         self.normalised_mutual_information = None
 
-        super(ClustererResults, self).__init__(
+        super().__init__(
             dataset_name=dataset_name,
             estimator_name=clusterer_name,
             split=split,
@@ -312,7 +313,7 @@ def load_clusterer_results(file_path, calculate_stats=True, verify_values=True):
     cr : ClustererResults
         A ClustererResults object containing the results loaded from the file.
     """
-    with open(file_path, "r") as file:
+    with open(file_path) as file:
         lines = file.readlines()
 
         line1 = lines[0].split(",")
@@ -327,7 +328,7 @@ def load_clusterer_results(file_path, calculate_stats=True, verify_values=True):
         cluster = np.zeros(n_cases)
         probabilities = np.zeros((n_cases, n_clusters))
 
-        if line_size > 3 + n_clusters:
+        if line_size > 4 + n_clusters:
             pred_times = np.zeros(n_cases)
         else:
             pred_times = None
@@ -346,7 +347,7 @@ def load_clusterer_results(file_path, calculate_stats=True, verify_values=True):
                 probabilities[i, j] = float(line[3 + j])
 
             if pred_times is not None:
-                pred_times[i] = float(line[5 + n_clusters])
+                pred_times[i] = float(line[4 + n_clusters])
 
             if pred_descriptions is not None:
                 pred_descriptions.append(",".join(line[6 + n_clusters :]).strip())
@@ -379,6 +380,8 @@ def load_clusterer_results(file_path, calculate_stats=True, verify_values=True):
         cr.infer_size(overwrite=True)
         assert cr.n_cases == n_cases
         assert cr.n_clusters == n_clusters
+
+        assert_allclose(probabilities.sum(axis=1), 1, rtol=1e-6)
 
         if calculate_stats:
             assert cr.clustering_accuracy == cl_acc

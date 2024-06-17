@@ -1,3 +1,5 @@
+"""IVC consensus clustering algorithm."""
+
 import numpy as np
 import pandas as pd
 from scipy.optimize import linear_sum_assignment
@@ -15,8 +17,8 @@ class IterativeVotingClustering(BaseEstimator, ClusterMixin):
     base clusterers to find a consensus clustering. It iteratively refines cluster
     assignments based on a majority voting scheme.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     clusterers : list of clusterers, default=None
         A list of clusterers to use in the ensemble. If None, defaults to 5
         KMeans clusterers.
@@ -49,7 +51,7 @@ class IterativeVotingClustering(BaseEstimator, ClusterMixin):
     >>> ivc.fit(iris.data)
     IterativeVotingClustering(...)
     >>> rand_score(iris.target, ivc.labels_)
-    0.8797315436241611
+    0.8737360178970918
     """
 
     def __init__(
@@ -67,6 +69,7 @@ class IterativeVotingClustering(BaseEstimator, ClusterMixin):
         self.random_state = random_state
 
     def fit(self, X, y=None):
+        """Fit model to X using IVC."""
         if isinstance(X, np.ndarray) and len(X.shape) == 3 and X.shape[1] == 1:
             X = np.reshape(X, (X.shape[0], -1))
         elif isinstance(X, pd.DataFrame) and len(X.shape) == 2:
@@ -119,6 +122,7 @@ class IterativeVotingClustering(BaseEstimator, ClusterMixin):
         return self
 
     def predict(self, X):
+        """Predict cluster labels for X."""
         if isinstance(X, np.ndarray) and len(X.shape) == 3 and X.shape[1] == 1:
             X = np.reshape(X, (X.shape[0], -1))
         elif isinstance(X, pd.DataFrame) and len(X.shape) == 2:
@@ -164,18 +168,7 @@ class IterativeVotingClustering(BaseEstimator, ClusterMixin):
                 self._select_cluster_centers(cluster_assignments, rng)
 
             labels = self._calculate_cluster_membership(cluster_assignments, rng)
-
-            unique = np.unique(labels)
-            if unique.shape[0] != self.n_clusters:
-                for i in range(self.n_clusters):
-                    if i not in unique:
-                        x = np.concatenate(
-                            [
-                                np.where(labels == unique[i])[0]
-                                for i in range(unique.shape[0])
-                            ]
-                        )
-                        labels[rng.choice(x)] = i
+            labels = self._ensure_all_clusters_in_labels(labels, rng)
 
             if (labels == self.labels_).all():
                 break
@@ -203,6 +196,8 @@ class IterativeVotingClustering(BaseEstimator, ClusterMixin):
 
     def _initial_cluster_centers_random(self, cluster_assignments, rng):
         self.labels_ = rng.randint(self.n_clusters, size=cluster_assignments.shape[1])
+        self.labels_ = self._ensure_all_clusters_in_labels(self.labels_, rng)
+
         self._select_cluster_centers(cluster_assignments, rng)
 
     def _initial_cluster_centers_aligned(self, cluster_assignments, rng):
@@ -227,18 +222,7 @@ class IterativeVotingClustering(BaseEstimator, ClusterMixin):
         self.labels_ = np.array(
             [rng.choice(np.flatnonzero(v == v.max())) for v in votes]
         )
-
-        unique = np.unique(self.labels_)
-        if unique.shape[0] != self.n_clusters:
-            for i in range(self.n_clusters):
-                if i not in unique:
-                    x = np.concatenate(
-                        [
-                            np.where(self.labels_ == unique[i])[0]
-                            for i in range(unique.shape[0])
-                        ]
-                    )
-                    self.labels_[rng.choice(x)] = i
+        self.labels_ = self._ensure_all_clusters_in_labels(self.labels_, rng)
 
         self._select_cluster_centers(cluster_assignments, rng)
 
@@ -276,5 +260,20 @@ class IterativeVotingClustering(BaseEstimator, ClusterMixin):
                 labels[i] = rng.choice(min_indices)
             else:
                 labels[i] = min_indices[0]
+
+        return labels
+
+    def _ensure_all_clusters_in_labels(self, labels, rng):
+        unique = np.unique(labels)
+        if unique.shape[0] != self.n_clusters:
+            for i in range(self.n_clusters):
+                if i not in unique:
+                    x = np.concatenate(
+                        [
+                            np.where(labels == unique[i])[0]
+                            for i in range(unique.shape[0])
+                        ]
+                    )
+                    labels[rng.choice(x)] = i
 
         return labels

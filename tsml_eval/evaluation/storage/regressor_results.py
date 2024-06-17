@@ -9,7 +9,7 @@ from sklearn.metrics import (
 )
 
 from tsml_eval.evaluation.storage.estimator_results import EstimatorResults
-from tsml_eval.utils.experiments import write_regression_results
+from tsml_eval.utils.results_writing import write_regression_results
 
 
 class RegressorResults(EstimatorResults):
@@ -83,7 +83,7 @@ class RegressorResults(EstimatorResults):
     Examples
     --------
     >>> from tsml_eval.evaluation.storage import RegressorResults
-    >>> from tsml_eval.testing.test_utils import _TEST_RESULTS_PATH
+    >>> from tsml_eval.testing.testing_utils import _TEST_RESULTS_PATH
     >>> rr = RegressorResults().load_from_file(
     ...     _TEST_RESULTS_PATH +
     ...     "/regression/ROCKET/Predictions/Covid3Month/testResample0.csv"
@@ -137,7 +137,7 @@ class RegressorResults(EstimatorResults):
         self.r2_score = None
         self.mean_absolute_percentage_error = None
 
-        super(RegressorResults, self).__init__(
+        super().__init__(
             dataset_name=dataset_name,
             estimator_name=regressor_name,
             split=split,
@@ -301,7 +301,7 @@ def load_regressor_results(file_path, calculate_stats=True, verify_values=True):
     rr : RegressorResults
         A RegressorResults object containing the results loaded from the file.
     """
-    with open(file_path, "r") as file:
+    with open(file_path) as file:
         lines = file.readlines()
 
         line1 = lines[0].split(",")
@@ -330,10 +330,10 @@ def load_regressor_results(file_path, calculate_stats=True, verify_values=True):
             predictions[i] = float(line[1])
 
             if pred_times is not None:
-                pred_times[i] = float(line[4])
+                pred_times[i] = float(line[3])
 
             if pred_descriptions is not None:
-                pred_descriptions.append(",".join(line[6]).strip())
+                pred_descriptions.append(",".join(line[5]).strip())
 
     rr = RegressorResults(
         dataset_name=line1[0],

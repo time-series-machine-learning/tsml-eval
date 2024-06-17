@@ -12,7 +12,7 @@ import sys
 from tsml_eval.experiments import load_and_run_regression_experiment
 from tsml_eval.experiments.set_regressor import get_regressor_by_name
 from tsml_eval.experiments.tests import _REGRESSOR_RESULTS_PATH
-from tsml_eval.testing.test_utils import _TEST_DATA_PATH
+from tsml_eval.testing.testing_utils import _TEST_DATA_PATH
 from tsml_eval.utils.arguments import parse_args
 from tsml_eval.utils.experiments import _results_present
 
@@ -48,11 +48,12 @@ def run_experiment(args):
                 args.dataset_name,
                 get_regressor_by_name(
                     args.estimator_name,
-                    random_state=args.resample_id
-                    if args.random_seed is None
-                    else args.random_seed,
+                    random_state=(
+                        args.resample_id
+                        if args.random_seed is None
+                        else args.random_seed
+                    ),
                     n_jobs=args.n_jobs,
-                    build_train_file=args.train_fold,
                     fit_contract=args.fit_contract,
                     checkpoint=args.checkpoint,
                     **args.kwargs,
@@ -92,7 +93,6 @@ def run_experiment(args):
             estimator_name,
             random_state=resample_id,
             n_jobs=n_jobs,
-            build_train_file=train_fold,
             fit_contract=fit_contract,
             checkpoint=checkpoint,
             **kwargs,

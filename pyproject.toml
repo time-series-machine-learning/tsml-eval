@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tsml-eval"
-version = "0.2.0"
+version = "0.3.0"
 description = "A package for benchmarking time series machine learning tools."
 authors = [
     {name = "Matthew Middlehurst", email = "m.b.middlehurst@soton.ac.uk"},
@@ -38,12 +38,13 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
-requires-python = ">=3.8,<3.12"
+requires-python = ">=3.8,<3.13"
 dependencies = [
-    "aeon>=0.6.0,<0.7.0",
-    "scikit-learn>=1.0.2,<=1.3.2",
-    "tsml>=0.2.1,<0.3.0",
+    "aeon>=0.9.0,<0.10.0",
+    "tsml>=0.4.0,<0.5.0",
+    "scikit-learn>=1.0.0,<1.6.0",
     "matplotlib",
     "gpustat",
     "psutil",
@@ -52,12 +53,9 @@ dependencies = [
 [project.optional-dependencies]
 all_extras = [
     "aeon[all_extras,dl]",
-    "tsml[extras]",
+    "tsml[all_extras]",
     "xgboost",
     "torch>=1.13.1",
-    # temp
-    "grailts",
-    "fdasrsf<=2.5.2",
 ]
 unstable_extras = [
     "aeon[unstable_extras]",
@@ -72,8 +70,9 @@ dev = [
     "pytest",
     "pytest-randomly",
     "pytest-timeout",
-    "pytest-xdist",
+    "pytest-xdist[psutil]",
     "pytest-cov",
+    "pytest-rerunfailures",
 ]
 binder = [
     "notebook",
@@ -110,6 +109,7 @@ ignore = [
     "venv/**",
     # Ignore local files
     "local/**",
+    "examples/generated_results/**",
     # Ignore the publications symlinks and its contents
     "tsml_eval/publications/2023",
     "tsml_eval/publications/2023/**",
@@ -119,6 +119,17 @@ ignore = [
     "docs/publications",
     "docs/publications/**",
 ]
+
+[tool.ruff]
+extend-exclude = [
+    "tsml_eval/_wip/*",
+]
+
+[tool.ruff.lint]
+select = ["D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
 
 [tool.flake8]
 exclude = [
@@ -141,10 +152,12 @@ testpaths = "tsml_eval"
 addopts = '''
     --ignore tsml_eval/_wip
     --ignore tsml_eval/publications/2023
+    --doctest-modules
     --durations 20
     --timeout 600
     --showlocals
-    --doctest-modules
-    --numprocesses auto
+    --dist worksteal
+    --reruns 2
+    --only-rerun "crashed while running"
     --meminterval 0.1
 '''

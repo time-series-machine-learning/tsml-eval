@@ -15,11 +15,14 @@ from github import Github
 context_dict = json.loads(os.getenv("CONTEXT_GITHUB"))
 
 repo = context_dict["repository"]
-g = Github(sys.argv[1])
+g = Github(os.getenv("GITHUB_TOKEN"))
 repo = g.get_repo(repo)
 pr_number = context_dict["event"]["number"]
 pr = repo.get_pull(number=pr_number)
 labels = [label.name for label in pr.get_labels()]
+
+if "[bot]" in pr.user.login:
+    sys.exit(0)
 
 # title labels
 title = pr.title
@@ -30,6 +33,7 @@ title_regex_to_labels = [
     (r"\bBUG\b", "bug"),
     (r"\bDOC\b", "documentation"),
     (r"\bREF\b", "refactor"),
+    (r"\bDEP\b", "dependencies"),
 ]
 
 title_labels = [

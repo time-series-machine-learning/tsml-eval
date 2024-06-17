@@ -26,7 +26,7 @@ class SklearnToTsmlRegressor(RegressorMixin, BaseTimeSeriesEstimator):
         self.clone_estimator = clone_estimator
         self.random_state = random_state
 
-        super(SklearnToTsmlRegressor, self).__init__()
+        super().__init__()
 
     def fit(self, X, y):
         """Wrap fit."""
@@ -65,7 +65,7 @@ class SklearnToTsmlRegressor(RegressorMixin, BaseTimeSeriesEstimator):
     def _more_tags(self):
         return {
             "X_types": ["2darray"],
-            "equal_length_only": False
-            if self.pad_unequal or self.concatenate_channels
-            else True,
+            "equal_length_only": (
+                False if self.pad_unequal or self.concatenate_channels else True
+            ),
         }

@@ -1,11 +1,13 @@
+"""Tests for the results IO functionality."""
+
 import os
 
 from tsml_eval.evaluation.storage.classifier_results import ClassifierResults
 from tsml_eval.evaluation.storage.clusterer_results import ClustererResults
 from tsml_eval.evaluation.storage.forecaster_results import ForecasterResults
 from tsml_eval.evaluation.storage.regressor_results import RegressorResults
-from tsml_eval.testing.test_utils import _TEST_OUTPUT_PATH, _TEST_RESULTS_PATH
-from tsml_eval.utils.validation import validate_results_file
+from tsml_eval.testing.testing_utils import _TEST_OUTPUT_PATH, _TEST_RESULTS_PATH
+from tsml_eval.utils.results_validation import validate_results_file
 
 
 def test_classifier_results():
@@ -21,6 +23,20 @@ def test_classifier_results():
     )
 
     os.remove(_TEST_OUTPUT_PATH + "/classification/results_io/testResample0.csv")
+
+
+def test_java_classifier_results():
+    """Test ClassifierResults loading and saving."""
+    cr = ClassifierResults().load_from_file(
+        _TEST_RESULTS_PATH + "/classification/javaResultsFile.csv"
+    )
+    cr.save_to_file(_TEST_OUTPUT_PATH + "/classification/results_io/java/")
+
+    assert validate_results_file(
+        _TEST_OUTPUT_PATH + "/classification/results_io/java/testResample0.csv"
+    )
+
+    os.remove(_TEST_OUTPUT_PATH + "/classification/results_io/java/testResample0.csv")
 
 
 def test_clusterer_results():
