@@ -15,7 +15,8 @@ Nixtla hove python versions which are straight copies
 
 https://github.com/Nixtla/statsforecast/blob/main/statsforecast/ets.py
 
-completely undocumented
+completely undocumented. We need to verify what each of the parameters mean,
+and check translation.
 """
 
 def fit_ets(y, n, x, m, error, trend, season, alpha, beta, gamma, phi, e, amse, nmse):
