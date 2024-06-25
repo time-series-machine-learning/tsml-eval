@@ -1,5 +1,4 @@
-"""Working area for implementing Hyndman C functions for exponential smoothing in
-Numba.
+"""Implementation of Hyndman C functions for exponential smoothing in numba.
 
 Three functions from here
 https://github.com/robjhyndman/forecast/blob/master/src/etscalc.c
@@ -15,5 +14,19 @@ void etsforecast(double *, int *, int *, int *, double *, int *, double *);
 Nixtla hove python versions which are straight copies
 
 https://github.com/Nixtla/statsforecast/blob/main/statsforecast/ets.py
+
+completely undocumented
 """
 
+def fit_ets(y, n, x, m, error, trend, season, alpha, beta, gamma, phi, e, amse, nmse):
+    """Exponential smooting (fit?)
+
+    Do parameters map to Hyndman?? Why 14 not 15?
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+    """
+    pass
