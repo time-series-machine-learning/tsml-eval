@@ -71,8 +71,6 @@ class KSpectralCentroid(TimeSeriesKMeans):
                         X, cluster_centres, curr_pw, curr_labels, curr_inertia
                     )
                 )
-            if prev_labels is not None and np.array_equal(curr_labels, prev_labels):
-                break
             if self.verbose:
                 print("%.3f" % curr_inertia, end=" --> ")  # noqa: T001, T201
 
