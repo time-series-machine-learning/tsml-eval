@@ -14,8 +14,12 @@ from sklearn.cluster import KMeans
 
 from tsml_eval.utils.datasets import load_experiment_data
 from tsml_eval.utils.functions import str_in_nested_list
+from tsml_eval.estimators.clustering import (
+    KSC
+)
 
 distance_based_clusterers = [
+    "ksc",
     "kmeans-euclidean",
     "kmeans-squared",
     "kmeans-dtw",
@@ -300,6 +304,16 @@ def _set_clusterer_distance_based(
             random_state=random_state,
             **kwargs,
         )
+    elif "ksc" in c:
+        return KSC(
+            # Max shift set to n_timepoints when None
+            max_shift=None,
+            max_iter=50,
+            init_algorithm=init_algorithm,
+            random_state=random_state,
+            **kwargs,
+        )
+
     return None
 
 

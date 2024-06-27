@@ -100,17 +100,19 @@ class KSC(TimeSeriesKMeans):
             X,
             max_shift=self._max_shift
         )
-        return pairwise_matrix.argmin(axis=1)
+        return pairwise_matrix.argmin(axis=0)
 
-
-if __name__ == "__main__":
-    np.random.seed(42)
-    ts = np.random.rand(100, 1, 200)
-    ksc = KSC(
-        n_clusters=2,
-    )
-    ksc.fit(ts)
-    hi = ksc.labels_
-    centers = ksc.cluster_centers_
-    temp = ""
-
+    def predict_proba(self, X):
+        """Predict cluster probabilities for X."""
+        preds = self.predict(X)
+        unique = np.unique(preds)
+        for i, u in enumerate(unique):
+            preds[preds == u] = i
+        n_cases = len(preds)
+        n_clusters = self.n_clusters
+        if n_clusters is None:
+            n_clusters = int(max(preds)) + 1
+        dists = np.zeros((X.shape[0], n_clusters))
+        for i in range(n_cases):
+            dists[i, preds[i]] = 1
+        return dists
