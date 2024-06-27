@@ -17,6 +17,7 @@ from tsml_eval.utils.datasets import load_experiment_data
 from tsml_eval.utils.functions import str_in_nested_list
 
 distance_based_clusterers = [
+    "kspectralcentroid",
     "ksc",
     "kspectral-centroid",
     "kmeans-euclidean",
@@ -303,7 +304,7 @@ def _set_clusterer_distance_based(
             random_state=random_state,
             **kwargs,
         )
-    elif "ksc" in c or "kspectral-centroid" in c:
+    elif "ksc" in c or "kspectral-centroid" in c or "kspectralcentroid" in c:
         return KSpectralCentroid(
             # Max shift set to n_timepoints when max_shift is None
             max_shift=None,
