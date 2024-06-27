@@ -12,11 +12,9 @@ from aeon.clustering import (
 from aeon.transformations.collection import TimeSeriesScaler
 from sklearn.cluster import KMeans
 
+from tsml_eval.estimators.clustering import KSC
 from tsml_eval.utils.datasets import load_experiment_data
 from tsml_eval.utils.functions import str_in_nested_list
-from tsml_eval.estimators.clustering import (
-    KSC
-)
 
 distance_based_clusterers = [
     "ksc",
@@ -306,7 +304,7 @@ def _set_clusterer_distance_based(
         )
     elif "ksc" in c:
         return KSC(
-            # Max shift set to n_timepoints when None
+            # Max shift set to n_timepoints when max_shift is None
             max_shift=None,
             max_iter=50,
             init_algorithm=init_algorithm,

@@ -2,7 +2,7 @@
 
 __all__ = [
     "SklearnToTsmlClusterer",
-    "KSC"
+    "KSC",
 ]
 
 from tsml_eval.estimators.clustering._sklearn_clusterer import SklearnToTsmlClusterer
