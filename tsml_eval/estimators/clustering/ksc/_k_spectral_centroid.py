@@ -15,7 +15,7 @@ from tsml_eval.estimators.clustering.ksc._shift_invariant_distance import (
 )
 
 
-class KSC(TimeSeriesKMeans):
+class KSpectralCentroid(TimeSeriesKMeans):
 
     def __init__(
         self,

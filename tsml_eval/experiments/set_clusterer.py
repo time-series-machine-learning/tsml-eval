@@ -12,12 +12,13 @@ from aeon.clustering import (
 from aeon.transformations.collection import TimeSeriesScaler
 from sklearn.cluster import KMeans
 
-from tsml_eval.estimators.clustering import KSC
+from tsml_eval.estimators.clustering import KSpectralCentroid
 from tsml_eval.utils.datasets import load_experiment_data
 from tsml_eval.utils.functions import str_in_nested_list
 
 distance_based_clusterers = [
     "ksc",
+    "kspectral-centroid",
     "kmeans-euclidean",
     "kmeans-squared",
     "kmeans-dtw",
@@ -302,8 +303,8 @@ def _set_clusterer_distance_based(
             random_state=random_state,
             **kwargs,
         )
-    elif "ksc" in c:
-        return KSC(
+    elif "ksc" in c or "kspectral-centroid" in c:
+        return KSpectralCentroid(
             # Max shift set to n_timepoints when max_shift is None
             max_shift=None,
             max_iter=50,
