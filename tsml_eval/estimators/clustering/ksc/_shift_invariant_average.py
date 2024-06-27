@@ -1,11 +1,15 @@
+"""Shift-invariant average."""
+
 import numpy as np
-from tsml_eval.estimators.clustering.ksc._shift_invariant_distance import \
-    shift_invariant_best_shift
-from numpy.linalg import norm, eigh
+from numpy.linalg import eigh, norm
+
+from tsml_eval.estimators.clustering.ksc._shift_invariant_distance import (
+    shift_invariant_best_shift,
+)
 
 
 def shift_invariant_average(
-        X: np.ndarray, initial_center: np.ndarray, max_shift: int = 2
+    X: np.ndarray, initial_center: np.ndarray, max_shift: int = 2
 ):
     optimal_shifts = np.zeros_like(X)
 

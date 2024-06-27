@@ -1,28 +1,32 @@
-"""KSC clusterer."""
-from typing import Union, Callable
+"""KSC clusterer implementation."""
+
+from typing import Callable, Union
+
 import numpy as np
-from numpy.random import RandomState
 from aeon.clustering import TimeSeriesKMeans
-from tsml_eval.estimators.clustering.ksc._shift_invariant_distance import (
-    shift_invariant_pairwise_distance, shift_invariant_distance
-)
+from numpy.random import RandomState
+
 from tsml_eval.estimators.clustering.ksc._shift_invariant_average import (
-    shift_invariant_average
+    shift_invariant_average,
+)
+from tsml_eval.estimators.clustering.ksc._shift_invariant_distance import (
+    shift_invariant_distance,
+    shift_invariant_pairwise_distance,
 )
 
 
 class KSC(TimeSeriesKMeans):
 
     def __init__(
-            self,
-            n_clusters: int = 8,
-            max_shift: Union[int, None] = None,
-            init_algorithm: Union[str, np.ndarray] = "random",
-            n_init: int = 10,
-            max_iter: int = 300,
-            tol: float = 1e-6,
-            verbose: bool = False,
-            random_state: Union[int, RandomState] = None,
+        self,
+        n_clusters: int = 8,
+        max_shift: Union[int, None] = None,
+        init_algorithm: Union[str, np.ndarray] = "random",
+        n_init: int = 10,
+        max_iter: int = 300,
+        tol: float = 1e-6,
+        verbose: bool = False,
+        random_state: Union[int, RandomState] = None,
     ):
         self.max_shift = max_shift
         self._max_shift = max_shift
@@ -36,9 +40,7 @@ class KSC(TimeSeriesKMeans):
             verbose=verbose,
             random_state=random_state,
             distance=shift_invariant_distance,
-            distance_params={
-                "max_shift": max_shift
-            }
+            distance_params={"max_shift": max_shift},
         )
 
     def _check_params(self, X: np.ndarray) -> None:
@@ -87,7 +89,7 @@ class KSC(TimeSeriesKMeans):
                 cluster_centres[j] = shift_invariant_average(
                     X[curr_labels == j],
                     initial_center=cluster_centres[j],
-                    max_shift=self._max_shift
+                    max_shift=self._max_shift,
                 )
 
             if self.verbose is True:
@@ -97,9 +99,7 @@ class KSC(TimeSeriesKMeans):
 
     def _predict(self, X: np.ndarray, y=None) -> np.ndarray:
         pairwise_matrix = shift_invariant_pairwise_distance(
-            self.cluster_centers_,
-            X,
-            max_shift=self._max_shift
+            self.cluster_centers_, X, max_shift=self._max_shift
         )
         return pairwise_matrix.argmin(axis=0)
 

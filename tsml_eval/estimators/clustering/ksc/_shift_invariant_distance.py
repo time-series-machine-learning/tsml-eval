@@ -1,10 +1,11 @@
+"""Shift-invariant distance."""
+
 from typing import List, Optional, Union
 
 import numpy as np
+from aeon.distances._utils import _convert_to_list, _is_multivariate
 from numba import njit
 from numba.typed import List as NumbaList
-
-from aeon.distances._utils import _convert_to_list, _is_multivariate
 
 
 @njit(cache=True, fastmath=True)
