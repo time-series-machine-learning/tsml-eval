@@ -1,3 +1,4 @@
+"""KSC implementation"""
 from typing import Union, Callable
 import numpy as np
 from numpy.random import RandomState
