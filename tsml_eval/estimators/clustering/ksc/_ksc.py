@@ -1,6 +1,6 @@
 """KSC clusterer implementation."""
 
-from typing import Callable, Union
+from typing import Union
 
 import numpy as np
 from aeon.clustering import TimeSeriesKMeans
@@ -29,7 +29,7 @@ class KSC(TimeSeriesKMeans):
         random_state: Union[int, RandomState] = None,
     ):
         self.max_shift = max_shift
-        self._max_shift = max_shift
+        self._max_shift = -1
 
         super().__init__(
             n_clusters=n_clusters,
@@ -50,10 +50,10 @@ class KSC(TimeSeriesKMeans):
         super()._check_params(X)
 
     def _fit_one_init(self, X: np.ndarray) -> tuple:
-        if isinstance(self._init_algorithm, Callable):
-            cluster_centres = self._init_algorithm(X)
-        else:
+        if isinstance(self._init_algorithm, np.ndarray):
             cluster_centres = self._init_algorithm
+        else:
+            cluster_centres = self._init_algorithm(X)
         prev_inertia = np.inf
         prev_labels = None
 

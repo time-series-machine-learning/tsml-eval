@@ -1,6 +1,6 @@
 """Shift-invariant distance."""
 
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 from aeon.distances._utils import _convert_to_list, _is_multivariate
@@ -47,7 +47,7 @@ def shift_invariant_pairwise_distance(
 # @njit(cache=True, fastmath=True)
 def shift_invariant_best_shift(
     x: np.ndarray, y: np.ndarray, max_shift: int = 2
-) -> Union[float, np.ndarray]:
+) -> Tuple[float, np.ndarray]:
     if x.ndim == 1 and y.ndim == 1:
         return _univariate_shift_invariant_distance(x, y, max_shift)
     if x.ndim == 2 and y.ndim == 2:
@@ -125,7 +125,7 @@ def _scale_distance(x, y, n_instances):
 @njit(cache=True, fastmath=True)
 def _univariate_shift_invariant_distance(
     x: np.ndarray, y: np.ndarray, max_shift: int
-) -> Union[float, np.ndarray]:
+) -> Tuple[float, np.ndarray]:
     n_timepoints = min(len(x), len(y))
     min_dist = _scale_distance(x, y, n_timepoints)
     best_shift = y
