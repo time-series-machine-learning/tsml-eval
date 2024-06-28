@@ -1,7 +1,4 @@
-"""Catch22 Clusterer.
-
-Pipeline clusterer using the Catch22 transformer and an estimator.
-"""
+""""R-Clustering."""
 
 __maintainer__ = ["chrisholder"]
 __all__ = ["RClustering"]
@@ -28,7 +25,6 @@ class RClustering(BaseClusterer):
 
     def __init__(
         self,
-        n_clusters: int = 8,
         num_features: int = 500,
         max_dilations_per_kernel: int = 32,
         estimator=None,
@@ -43,17 +39,18 @@ class RClustering(BaseClusterer):
 
         self.labels_ = None
 
-        super().__init__(n_clusters=n_clusters)
+        super().__init__()
 
     def _fit(self, X, y=None):
         self._transformer = RClusteringTransformer(
             num_features=self.num_features,
             max_dilations_per_kernel=self.max_dilations_per_kernel,
+            random_state=self.random_state,
         )
 
         self._estimator = _clone_estimator(
             (
-                KMeans(n_clusters=self.n_clusters, n_init=10)
+                KMeans(random_state=self.random_state)
                 if self.estimator is None
                 else self.estimator
             ),
