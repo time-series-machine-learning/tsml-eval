@@ -55,3 +55,21 @@ def binary_information_gain(orderline, c1, c2):
         bsf_ig = max(ig, bsf_ig)
 
     return bsf_ig
+
+def f_stat(c1, c2):
+    """Calculate the F-statistic for two classes.
+
+    Parameters
+    ----------
+    c1 : np.ndarray
+        Distance values for class 1
+    c2 : np.ndarray
+        Distance values for class 2
+
+    Returns
+    -------
+    float
+        F-statistic value
+    """
+    return 0.0
+

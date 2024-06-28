@@ -1,6 +1,9 @@
 """Shapelet transform.
 
 A transformer from the time domain into the shapelet domain.
+
+
+This is the development version
 """
 
 __all__ = ["RandomShapeletTransform"]
@@ -175,6 +178,7 @@ class RandomShapeletTransform(BaseCollectionTransformer):
         self.parallel_backend = parallel_backend
         self.batch_size = batch_size
         self.random_state = random_state
+        self.shapelet_quality = "INFO_GAIN"
 
         # The following set in method fit
         self.n_classes_ = 0
@@ -441,26 +445,42 @@ class RandomShapeletTransform(BaseCollectionTransformer):
         sorted_indicies = np.array(
             sorted(range(length), reverse=True, key=lambda j: sabs[j])
         )
-
-        quality = self._find_shapelet_quality(
-            X,
-            y,
-            shapelet,
-            sorted_indicies,
-            position,
-            length,
-            channel,
-            inst_idx,
-            self._class_counts[cls_idx],
-            self.n_cases_ - self._class_counts[cls_idx],
-            worst_quality,
-        )
+        if self.shapelet_quality == "INFO_GAIN":
+            quality = self._info_gain_shapelet_quality(
+                X,
+                y,
+                shapelet,
+                sorted_indicies,
+                position,
+                length,
+                channel,
+                inst_idx,
+                self._class_counts[cls_idx],
+                self.n_cases_ - self._class_counts[cls_idx],
+                worst_quality,
+            )
+        elif self.shapelet_quality == "F_STAT":
+            quality = self._f_stat_shapelet_quality(
+                X,
+                y,
+                shapelet,
+                sorted_indicies,
+                position,
+                length,
+                channel,
+                inst_idx,
+                self._class_counts[cls_idx],
+                self.n_cases_ - self._class_counts[cls_idx],
+                worst_quality,
+            )
+        else:
+            raise ValueError("Unknown shapelet quality measure")
 
         return np.round(quality, 8), length, position, channel, inst_idx, cls_idx
 
     @staticmethod
     @njit(fastmath=True, cache=True)
-    def _find_shapelet_quality(
+    def _info_gain_shapelet_quality(
         X,
         y,
         shapelet,
@@ -512,6 +532,45 @@ class RandomShapeletTransform(BaseCollectionTransformer):
         quality = _calc_binary_ig(orderline, this_cls_count, other_cls_count)
 
         return round(quality, 12)
+
+
+
+    @staticmethod
+    @njit(fastmath=True, cache=True)
+    def _f_stat_shapelet_quality(
+        X,
+        y,
+        shapelet,
+        sorted_indicies,
+        position,
+        length,
+        dim,
+        inst_idx,
+        this_cls_count,
+        other_cls_count,
+        worst_quality,
+    ):
+        distances1 = np.zeros(this_cls_count-1)
+        distances2 = np.zeros(other_cls_count)
+        c1=0
+        c2=0
+        for i, series in enumerate(X):
+            if i != inst_idx:
+                distance = _online_shapelet_distance(
+                    series[dim], shapelet, sorted_indicies, position, length
+                )
+            if y[i] == y[inst_idx]:
+                distances1[c1]= distance
+                c1=c1+1
+            else:
+                distances1[c2]= distance
+                c2=c2+1
+
+        quality = f_stat(distances1, distances2)
+
+        return round(quality, 12)
+
+
 
     @staticmethod
     @njit(fastmath=True, cache=True)
