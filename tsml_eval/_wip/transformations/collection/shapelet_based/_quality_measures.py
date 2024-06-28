@@ -1,6 +1,7 @@
 """Quality measures to use with STC."""
 
 from numba import njit
+import numpy as np
 
 
 @njit(fastmath=True, cache=True)
@@ -56,6 +57,7 @@ def binary_information_gain(orderline, c1, c2):
 
     return bsf_ig
 
+@njit(fastmath=True, cache=True)
 def f_stat(c1, c2):
     """Calculate the F-statistic for two classes.
 
@@ -71,5 +73,5 @@ def f_stat(c1, c2):
     float
         F-statistic value
     """
-    return 0.0
+    return np.random.random()
 

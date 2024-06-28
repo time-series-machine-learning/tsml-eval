@@ -22,7 +22,7 @@ from sklearn.utils._random import check_random_state
 from aeon.transformations.collection.base import BaseCollectionTransformer
 from aeon.utils.numba.general import AEON_NUMBA_STD_THRESHOLD, z_normalise_series
 from aeon.utils.validation import check_n_jobs
-
+from tsml_eval._wip.transformations.collection.shapelet_based._quality_measures import f_stat
 
 class RandomShapeletTransform(BaseCollectionTransformer):
     """Random Shapelet Transform.
@@ -164,6 +164,7 @@ class RandomShapeletTransform(BaseCollectionTransformer):
         parallel_backend=None,
         batch_size=100,
         random_state=None,
+        shapelet_quality = "INFO_GAIN",
     ):
         self.n_shapelet_samples = n_shapelet_samples
         self.max_shapelets = max_shapelets
@@ -178,7 +179,7 @@ class RandomShapeletTransform(BaseCollectionTransformer):
         self.parallel_backend = parallel_backend
         self.batch_size = batch_size
         self.random_state = random_state
-        self.shapelet_quality = "INFO_GAIN"
+        self.shapelet_quality = shapelet_quality
 
         # The following set in method fit
         self.n_classes_ = 0
@@ -536,7 +537,6 @@ class RandomShapeletTransform(BaseCollectionTransformer):
 
 
     @staticmethod
-    @njit(fastmath=True, cache=True)
     def _f_stat_shapelet_quality(
         X,
         y,
@@ -559,13 +559,12 @@ class RandomShapeletTransform(BaseCollectionTransformer):
                 distance = _online_shapelet_distance(
                     series[dim], shapelet, sorted_indicies, position, length
                 )
-            if y[i] == y[inst_idx]:
-                distances1[c1]= distance
-                c1=c1+1
-            else:
-                distances1[c2]= distance
-                c2=c2+1
-
+                if y[i] == y[inst_idx]:
+                    distances1[c1]= distance
+                    c1=c1+1
+                else:
+                    distances2[c2]= distance
+                    c2=c2+1
         quality = f_stat(distances1, distances2)
 
         return round(quality, 12)

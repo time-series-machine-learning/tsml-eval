@@ -19,12 +19,16 @@ def compare_outputs():
     testX, testY = load_unit_test(split="TEST")
     stc = STC(random_state=0)
     wip_stc = WIP_STC(random_state=0)
+    wip2_stc = WIP_STC(random_state=0, shapelet_quality="F_STAT")
     stc.fit(trainX, trainY)
     wip_stc.fit(trainX, trainY)
+    wip2_stc.fit(trainX, trainY)
     st_preds = stc.predict(testX)
     wip_st_preds = wip_stc.predict(testX)
+    wip2_st_preds = wip2_stc.predict(testX)
     print(st_preds)
     print(wip_st_preds)
+    print(wip2_st_preds)
 
 
 
