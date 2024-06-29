@@ -30,12 +30,14 @@ class RClustering(BaseClusterer):
         self,
         num_features: int = 500,
         max_dilations_per_kernel: int = 32,
+        pca_result: bool = False,
         estimator=None,
         random_state=None,
         n_jobs=1,
     ):
         self.num_features = num_features
         self.max_dilations_per_kernel = max_dilations_per_kernel
+        self.pca_result = pca_result
         self.estimator = estimator
         self.random_state = random_state
         self.n_jobs = n_jobs
@@ -49,6 +51,7 @@ class RClustering(BaseClusterer):
             num_features=self.num_features,
             max_dilations_per_kernel=self.max_dilations_per_kernel,
             random_state=self.random_state,
+            pca_result=self.pca_result,
         )
 
         self._estimator = _clone_estimator(
