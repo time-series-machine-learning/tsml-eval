@@ -8,29 +8,10 @@ import numpy as np
 
 
 ts, period_size, true_cps = load_electric_devices_segmentation()
+ts = ts[0:20]
 ts = ts.values
-sw = SlidingWindow(100)
-results = sw.sliding_window(ts)
+sw = TopDown(100)
+results = sw.topDown(ts)
 print(len(results))
 
-plt.figure()
-plt.plot(np.arange(len(ts)), ts)
-plt.title('original')
-plt.xlabel('x')
-plt.ylabel('y')
-
-flattened_arr = [item for sublist in results for item in sublist]
-plt.figure()
-plt.plot(np.arange(len(flattened_arr)), flattened_arr)
-plt.title('pla')
-plt.xlabel('x')
-plt.ylabel('y')
-
-for i in range(len(results)):
-    plt.figure()
-    plt.plot(np.arange(len(results[i])), results[i])
-    plt.title(i)
-    plt.xlabel('x')
-    plt.ylabel('y')
-
-plt.show()
+print(results)

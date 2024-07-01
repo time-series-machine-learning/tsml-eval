@@ -19,7 +19,8 @@ class BasePLA():
         X = np.arange(n).reshape(-1 , 1)
         linearRegression = LinearRegression()
         linearRegression.fit(X, Y)
-        return linearRegression.predict(X)
+        regression_line = np.array(linearRegression.predict(X))
+        return regression_line
     
     def sum_squared_error(self, time_series, linear_regression_time_series):
         "formula: sse = the sum of the differences of the original series against the predicted series squared"
