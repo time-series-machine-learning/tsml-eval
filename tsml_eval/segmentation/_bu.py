@@ -48,7 +48,7 @@ class BottomUp(BasePLA):
 
         merge_cost = np.array(merge_cost)
 
-        while len(merge_cost != 0) and min(merge_cost) < self.max_error:
+        while len(merge_cost) != 0 and min(merge_cost) < self.max_error:
             if(len(merge_cost) == len(seg_ts)):
                 print("error")
             pos = np.argmin(merge_cost)

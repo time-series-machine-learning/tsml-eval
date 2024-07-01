@@ -53,12 +53,12 @@ class TopDown(BasePLA):
         right_segment = time_series[breakpoint:]
 
         if self.calculate_error(left_segment) > self.max_error:
-            seg_ts.append(self.topDown(left_segment))
+            seg_ts.append(self.segment(left_segment))
         else:
             seg_ts.extend([left_segment])
 
         if self.calculate_error(right_segment) > self.max_error:
-            seg_ts.append(self.topDown(right_segment))
+            seg_ts.append(self.segment(right_segment))
         else:
             seg_ts.extend([right_segment])
 
