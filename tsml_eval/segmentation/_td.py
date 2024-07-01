@@ -12,7 +12,7 @@ class TopDown(BasePLA):
         
     #Implement a cache system for this
     def topDown(self, time_series):
-       seg_ts = []
+        seg_ts = []
         best_so_far = sys.float_info.max
         breakpoint = None
         for i in range(2, len(time_series -2)):
@@ -45,4 +45,10 @@ class TopDown(BasePLA):
         left_segment = time_series[:breakpoint]
         right_segment = time_series[breakpoint:]
         return self.calculate_error(left_segment) + self.calculate_error(right_segment)
-        
+    
+    def dense(self, time_series):
+        results = self.topDown(time_series)
+        dense_array = np.zeros(len(results) - 1)
+        for i in range(results - 1):
+            dense_array[i] = len(results[i])
+        return dense_array    

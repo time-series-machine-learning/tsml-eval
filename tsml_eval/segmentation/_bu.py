@@ -39,3 +39,11 @@ class BottomUp(BasePLA):
 
 
         return seg_ts
+    
+    
+    def dense(self, time_series):
+        results = self.bottomUp(time_series)
+        dense_array = np.zeros(len(results) - 1)
+        for i in range(results - 1):
+            dense_array[i] = len(results[i])
+        return dense_array    

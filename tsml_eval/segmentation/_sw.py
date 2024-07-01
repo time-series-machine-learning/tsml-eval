@@ -33,8 +33,11 @@ class SlidingWindow(BasePLA):
             anchor = anchor + i - 1
         return seg_ts
     
-    def segment(time_series):
-        return None
+    def dense(self, time_series):
+        results = self.sliding_window(time_series)
+        dense_array = np.zeros(len(results) - 1)
+        for i in range(results - 1):
+            dense_array[i] = len(results[i])
+        return dense_array            
+        
     
-    def pla(time_series):
-        return None

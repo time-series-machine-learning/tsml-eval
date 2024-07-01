@@ -1,7 +1,7 @@
 from base import BasePLA
 import numpy as np
 import sys
-import BottomUp
+from _bu import BottomUp
 
 __maintainer__ = []
 __all__ = ["SWAB"]
@@ -16,23 +16,33 @@ class SWAB(BasePLA):
 
     def swab(self, time_series):
         seg_ts = []
-        buffer = np.empty(self.seg_num, dtype=object)
-        sw_lower_bound = len(buffer) / 2
-        sw_upper_bound = len(buffer) * 2
-        while len(buffer) < 3:
-            t = self.bottomup(time_series)
+        seg = self.best_line(time_series, 0)
+        current_data_point = len(seg)
+        buffer = np.array(seg)
+        while len(buffer) > 0:
+            t = self.bottomup.bottomUp(time_series)
             seg_ts.append(t[0])
-            buffer = buffer[len(t) - 1:]
-        return None
+            buffer = buffer[len(t[0]):]
+            if(current_data_point != len(time_series)):
+                seg = self.best_line(time_series, current_data_point)
+                current_data_point = current_data_point + len(seg)
+                buffer = np.append(buffer, seg)
+        return seg_ts
     
     
     #finds the next potential segment
-    def best_line(self, time_series, current_data_point, sw_lower_bound, sw_upper_bound):
-        seg_ts = []
+    def best_line(self, time_series, current_data_point):
+        seg_ts = np.array([])
         error = 0
-        while error < self.max_error:
-            seg_ts.append = time_series[current_data_point]
+        while current_data_point < len(time_series) and error < self.max_error:
+            seg_ts = np.append(seg_ts, time_series[current_data_point])
             error = self.calculate_error(seg_ts)
             current_data_point = current_data_point + 1
         return seg_ts
     
+    def dense(self, time_series):
+        results = self.swab(time_series)
+        dense_array = np.zeros(len(results) - 1)
+        for i in range(results - 1):
+            dense_array[i] = len(results[i])
+        return dense_array    
