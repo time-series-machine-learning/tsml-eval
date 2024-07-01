@@ -9,9 +9,8 @@ import numpy as np
 
 
 ts, period_size, true_cps = load_electric_devices_segmentation()
-ts = ts[:4500]
-ts = ts.values
-sw = BottomUp(45)
-results = sw.dense(ts)
+ts = ts[:1000]
+pla = TopDown(100)
+results = pla.dense(ts)
 print(len(results))
 print(results)

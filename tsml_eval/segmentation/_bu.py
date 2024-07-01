@@ -5,12 +5,40 @@ __maintainer__ = []
 __all__ = ["BottomUp"]
 
 class BottomUp(BasePLA):
+    """
+        Bottom-Up Segmentation.
+
+        Uses a bottom-up algorithm to traverse the dataset in an online manner.
+
+        Parameters
+        ----------
+        max_error: float
+            The maximum error valuefor the function to find before segmenting the dataset
+
+        References
+        ----------
+        .. [1] Keogh, E., Chu, S., Hart, D. and Pazzani, M., 2001, November. 
+        An online algorithm for segmenting time series. (pp. 289-296).
+    """
     
     def __init__(self, max_error):
         super().__init__(max_error)
     
     #clean the code
-    def bottomUp(self, time_series):
+    def segment(self, time_series):
+        """Segment a time series
+
+        Parameters
+        ----------
+        time_series : np.array
+            1D time series to be segmented.
+
+        Returns
+        -------
+        list
+            List of segmentations
+        """
+        
         seg_ts = []
         merge_cost = []
         for i in range(0, len(time_series), 2):
@@ -42,7 +70,20 @@ class BottomUp(BasePLA):
     
     
     def dense(self, time_series):
-        results = self.bottomUp(time_series)
+        """Return the dense values of a segmented time series
+
+        Parameters
+        ----------
+        time_series : np.array
+            1D time series to be segmented.
+
+        Returns
+        -------
+        list
+            dense values of a segmentation
+        """
+        
+        results = self.segment(time_series)
         dense_array = np.zeros(len(results) - 1)
         segmentation_point = 0
         for i in range(len(results) - 1):
