@@ -23,12 +23,12 @@ class SlidingWindow(BasePLA):
         
     #! clean this up, the while loops are not done in a good manner. This is from the pseudocode
     def sliding_window(self, time_series):
-        seg_ts = []
+        seg_ts = np.array([])
         anchor = 0
         while anchor < len(time_series): 
             i = 2
             while anchor + i -1 < len(time_series) and self.calculate_error(time_series[anchor:anchor + i]) < self.max_error:
                 i = i + 1
-            seg_ts.append(self.create_segment(time_series[anchor:anchor + i - 1]))
+            seg_ts = np.append(seg_ts, self.create_segment(time_series[anchor:anchor + i - 1]))
             anchor = anchor + i - 1
         return seg_ts
