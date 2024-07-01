@@ -12,7 +12,7 @@ class TopDown(BasePLA):
         
     #Implement a cache system for this
     def topDown(self, time_series):
-        seg_ts = []
+        seg_ts = np.array([])
         best_so_far = sys.float_info.max
         breakpoint = None
         for i in range(2, len(time_series -2)):
@@ -22,21 +22,21 @@ class TopDown(BasePLA):
                 best_so_far = improvement_in_approximation
         
         if breakpoint == None:
-            return [time_series]
+            return np.array([time_series])
         
         left_segment = time_series[:breakpoint]
         right_segment = time_series[breakpoint:]
         
         if self.calculate_error(left_segment) > self.max_error:
-            seg_ts.extend(self.topDown(left_segment))
+            seg_ts = np.concatenate(seg_ts, self.topDown(left_segment))
         else:
-            seg_ts.append(left_segment)
+            seg_ts = np.append(seg_ts, left_segment)
         
             
         if self.calculate_error(right_segment) > self.max_error:
-            seg_ts.extend(self.topDown(right_segment))
+            seg_ts = np.concatenate(seg_ts, self.topDown(right_segment))
         else:
-            seg_ts.append(right_segment)
+            seg_ts = np.append(seg_ts, right_segment)
             
         return seg_ts
     
