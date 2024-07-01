@@ -9,9 +9,9 @@ import numpy as np
 
 
 ts, period_size, true_cps = load_electric_devices_segmentation()
+ts = ts[:4500]
 ts = ts.values
-sw = SWAB(100)
-results = sw.swab(ts)
+sw = BottomUp(45)
+results = sw.dense(ts)
 print(len(results))
-
 print(results)

@@ -49,6 +49,8 @@ class TopDown(BasePLA):
     def dense(self, time_series):
         results = self.topDown(time_series)
         dense_array = np.zeros(len(results) - 1)
-        for i in range(results - 1):
-            dense_array[i] = len(results[i])
-        return dense_array    
+        segmentation_point = 0
+        for i in range(len(results) - 1):
+            segmentation_point = segmentation_point + len(results[i])
+            dense_array[i] = segmentation_point
+        return dense_array        
