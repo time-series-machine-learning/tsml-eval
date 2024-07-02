@@ -148,13 +148,4 @@ per-file-ignores = [
 testpaths = "tsml_eval"
 addopts = '''
     --ignore tsml_eval/_wip
-    --ignore tsml_eval/publications/2023
-    --doctest-modules
-    --durations 20
-    --timeout 600
-    --showlocals
-    --dist worksteal
-    --reruns 2
-    --only-rerun "crashed while running"
-    --meminterval 0.1
 '''

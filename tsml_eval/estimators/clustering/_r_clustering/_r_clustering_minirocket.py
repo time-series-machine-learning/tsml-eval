@@ -37,6 +37,7 @@ class RClusteringTransformer(BaseCollectionTransformer):
 
         self.n_jobs = n_jobs
         self.random_state = random_state
+        self._dim_reduction_transformer = None
         super().__init__()
 
     def _fit(self, X, y=None):
@@ -74,10 +75,12 @@ class RClusteringTransformer(BaseCollectionTransformer):
             sc = StandardScaler()
             X_std = sc.fit_transform(X_)
 
-            pca = PCA(random_state=self.random_state).fit(X_std)
-            optimal_dimensions = np.argmax(pca.explained_variance_ratio_ < 0.01)
-            pca_optimal = PCA(n_components=optimal_dimensions)
-            X_t = pca_optimal.fit_transform(X_std)
+            if self._dim_reduction_transformer is None:
+                pca = PCA(random_state=self.random_state).fit(X_std)
+                optimal_dimensions = np.argmax(pca.explained_variance_ratio_ < 0.01)
+                pca_optimal = PCA(n_components=optimal_dimensions)
+                self._dim_reduction_transformer = pca_optimal
+            X_t = self._dim_reduction_transformer.fit_transform(X_std)
         else:
             X_t = X_
 
