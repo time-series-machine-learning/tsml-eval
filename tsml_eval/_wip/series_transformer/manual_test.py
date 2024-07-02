@@ -16,7 +16,7 @@ ts = ts.values
 
 ts = np.array([573.0,375.0,301.0,212.0,55.0,34.0,25.0,33.0,113.0,143.0,303.0,615.0,1226.0,1281.0,1221.0,1081.0,866.0,1096.0,1039.0,975.0,746.0,581.0,409.0,182.0])
 
-pla = TopDown(40)
+pla = TopDown(1)
 results = pla.transform_flatten(ts)
 
 print("Original: ", ts)

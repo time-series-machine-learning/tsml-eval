@@ -49,10 +49,8 @@ class BottomUp(BasePLA):
         merge_cost = np.array(merge_cost)
 
         while len(merge_cost) != 0 and min(merge_cost) < self.max_error:
-            if(len(merge_cost) == len(seg_ts)):
-                print("error")
             pos = np.argmin(merge_cost)
-            seg_ts[pos] = np.concatenate((seg_ts[pos], seg_ts[pos + 1]))
+            seg_ts[pos] = self.create_segment(np.concatenate((seg_ts[pos], seg_ts[pos + 1])))
             seg_ts.pop(pos + 1)
             if (pos + 1) < len(merge_cost):
                 merge_cost = np.delete(merge_cost, pos + 1)
@@ -65,7 +63,7 @@ class BottomUp(BasePLA):
             if((pos + 1) < len(seg_ts)):
                 merge_cost[pos] = self.calculate_error(np.concatenate((seg_ts[pos], seg_ts[pos + 1])))
 
-
+    
         return seg_ts
     
     
