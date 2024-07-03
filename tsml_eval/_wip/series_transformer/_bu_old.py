@@ -67,6 +67,7 @@ class BottomUp(BasePLA):
         return seg_ts
     
     
+    
     def transform_flatten(self, time_series):
         """Transform a time series and return a 1d array
 
