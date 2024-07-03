@@ -30,7 +30,7 @@ class RClustering(BaseClusterer):
         self,
         num_features: int = 500,
         max_dilations_per_kernel: int = 32,
-        pca_result: bool = False,
+        pca_result: bool = True,
         estimator=None,
         random_state=None,
         n_jobs=1,
