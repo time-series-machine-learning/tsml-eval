@@ -117,7 +117,7 @@ distance_based_clusterers = [
     "som-erp",
     "som-msm",
     "som-twe",
-    "som-shape-dtw",
+    "som-shape_dtw",
 ]
 
 other_clusterers = [
