@@ -9,6 +9,7 @@ from aeon.clustering import (
     TimeSeriesKMeans,
     TimeSeriesKMedoids,
 )
+from aeon.distances._distance import DISTANCES_DICT
 from aeon.transformations.collection import TimeSeriesScaler
 from sklearn.cluster import KMeans
 
@@ -107,6 +108,7 @@ distance_based_clusterers = [
     "timeserieskmedoids",
     "timeseriesclarans",
     "timeseriesclara",
+    "elasticsom",
     "som-euclidean",
     "som-squared",
     "som-adtw",
@@ -218,6 +220,9 @@ def _set_clusterer_distance_based(
         distance = kwargs["distance"]
     else:
         distance = c.split("-")[-1]
+
+    if distance not in DISTANCES_DICT:
+        distance = "dtw"
 
     if "distance_params" in kwargs:
         distance_params = kwargs["distance_params"]
