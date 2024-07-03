@@ -19,7 +19,7 @@ class ElasticSOM(BaseClusterer):
 
     def __init__(
         self,
-        n_clusters,
+        n_clusters: int = 8,
         distance="dtw",
         sigma=1.0,
         learning_rate=0.5,
