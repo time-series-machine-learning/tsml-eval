@@ -69,11 +69,12 @@ class PiecewiseLinearApproximation(BaseSeriesTransformer):
         else:
             raise RuntimeError("No transformer was called.")
         
-        segment_dense = np.zeros([len(results) - 1])
-        segment_dense[0] = len(results[0])
-        for i in range(1, len(results) - 1):
-            segment_dense[i] = segment_dense[i - 1] + len(results[i])
-        self.segment_dense = segment_dense
+        if(len(results) > 1):
+            segment_dense = np.zeros([len(results) - 1])
+            segment_dense[0] = len(results[0])
+            for i in range(1, len(results) - 1):
+                segment_dense[i] = segment_dense[i - 1] + len(results[i])
+            self.segment_dense = segment_dense
         
         return np.concatenate(results)
     
@@ -133,12 +134,12 @@ class PiecewiseLinearApproximation(BaseSeriesTransformer):
         right_segment = None
 
         if self._calculate_error(left_found_segment) > self.max_error:
-            left_segment = self.transform(left_found_segment)
+            left_segment = self._top_down(left_found_segment)
         else:
             left_segment = [self._create_segment(left_found_segment)]
 
         if self._calculate_error(right_found_segment) > self.max_error:
-            right_segment = self.transform(right_found_segment)
+            right_segment = self._top_down(right_found_segment)
         else:
             right_segment = [self._create_segment(right_found_segment)]
 
@@ -218,7 +219,7 @@ class PiecewiseLinearApproximation(BaseSeriesTransformer):
         """
         seg_ts = []
         if(self.buffer_size == None):
-            self.buffer_size == int(len(X) ** 0.5)
+            self.buffer_size = int(len(X) ** 0.5)
         
         lower_boundary_window = int(self.buffer_size  / 2)
         upper_boundary_window = int(self.buffer_size * 2)
