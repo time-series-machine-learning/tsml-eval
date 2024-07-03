@@ -1,4 +1,4 @@
-from typing import Callable, Union
+from typing import Callable, Dict, Union
 from warnings import warn
 
 import numpy as np
@@ -27,6 +27,7 @@ class ElasticSOM(BaseClusterer):
         custom_sigma_decay_function: Union[Callable, None] = None,
         custom_neighborhood_function: Union[Callable, None] = None,
         num_iterations=30,
+        distance_params=None,
         random_state=None,
     ):
         self.sigma = sigma
@@ -37,6 +38,7 @@ class ElasticSOM(BaseClusterer):
         self.distance = distance
         self.num_iterations = num_iterations
         self.random_state = random_state
+        self.distance_params = distance_params
 
         self._random_state = None
         self._weights = None
@@ -47,6 +49,9 @@ class ElasticSOM(BaseClusterer):
         self._sigma_decay_function = None
         self._learning_rate_decay_function = None
         self._neighborhood = None
+        self._distance_params: Dict = {}
+
+        self.labels_ = None
         super().__init__(n_clusters=n_clusters)
 
     @staticmethod
@@ -61,14 +66,16 @@ class ElasticSOM(BaseClusterer):
 
     def winner(self, x):
         self._activation_map = pairwise_distance(
-            x, self._weights[0], metric=self.distance
+            x, self._weights[0], metric=self.distance, **self._distance_params
         )
         return np.unravel_index(
             self._activation_map.argmin(), self._activation_map.shape
         )
 
     def _elastic_update(self, x, y, w):
-        best_path, distance = self._alignment_path_callable(x, y)
+        best_path, distance = self._alignment_path_callable(
+            x, y, **self._distance_params
+        )
         x_cords = []
         y_cords = []
         for i in best_path:
@@ -112,6 +119,8 @@ class ElasticSOM(BaseClusterer):
             self.update(
                 X[iteration], self.winner(X[iteration]), decay_rate, self.num_iterations
             )
+        winner_coordinates = np.array([self.winner(x) for x in X]).T
+        self.labels_ = np.ravel_multi_index(winner_coordinates, (1, self.n_clusters))
 
     def _check_params(self, X):
         self._random_state = check_random_state(self.random_state)
@@ -150,6 +159,9 @@ class ElasticSOM(BaseClusterer):
             self._alignment_path_callable = get_alignment_path_function(self.distance)
         except ValueError:
             self._alignment_path_callable = None
+
+        if self.distance_params is not None:
+            self._distance_params = self.distance_params
 
     def _score(self, X, y=None):
         raise NotImplementedError("TimeSeriesSOM does not support scoring")
