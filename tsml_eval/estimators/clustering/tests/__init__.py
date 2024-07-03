@@ -1,1 +1,1 @@
-"""Tests for RClustering."""
+"""Tests clusterer."""

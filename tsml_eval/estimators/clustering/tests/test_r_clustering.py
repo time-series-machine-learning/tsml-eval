@@ -1,8 +1,10 @@
-"""Tests for RClustering"""
+"""Tests for RClustering."""
+
 import numpy as np
 from aeon.testing.utils.data_gen import make_example_3d_numpy
-from tsml_eval.estimators.clustering import RClustering
 from sklearn.cluster import KMeans
+
+from tsml_eval.estimators.clustering import RClustering
 
 
 def test_r_clustering():
