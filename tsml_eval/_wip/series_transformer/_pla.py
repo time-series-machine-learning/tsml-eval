@@ -31,12 +31,12 @@ class PiecewiseLinearApproximation(BaseSeriesTransformer):
     }
     
     
-    def __init__(self, transformer, max_error, buffer_size):
+    def __init__(self, transformer, max_error, buffer_size = None):
         if not isinstance(transformer, self.Transformer):
             raise ValueError("Invalid status")
         self.transformer = transformer
         self.max_error = max_error
-        self.buffer_size = int(buffer_size)
+        self.buffer_size = buffer_size
         self.segment_dense = np.array([])
         super().__init__(axis=0)
         
@@ -69,10 +69,10 @@ class PiecewiseLinearApproximation(BaseSeriesTransformer):
         else:
             raise RuntimeError("No transformer was called.")
         
-        segment_dense = np.zeros[len(results) - 1]
-        segment_dense[0] = results[0]
-        for i in range(1, results):
-            segment_dense[i] = len(results) + []
+        segment_dense = np.zeros([len(results) - 1])
+        segment_dense[0] = len(results[0])
+        for i in range(1, len(results) - 1):
+            segment_dense[i] = segment_dense[i - 1] + len(results[i])
         self.segment_dense = segment_dense
         
         return np.concatenate(results)
@@ -221,7 +221,7 @@ class PiecewiseLinearApproximation(BaseSeriesTransformer):
             self.buffer_size == int(len(X) ** 0.5)
         
         lower_boundary_window = int(self.buffer_size  / 2)
-        upper_boundary_window = self.buffer_size * 2
+        upper_boundary_window = int(self.buffer_size * 2)
         
         seg = self._best_line(X, 0, lower_boundary_window, upper_boundary_window)
         current_data_point = len(seg)
