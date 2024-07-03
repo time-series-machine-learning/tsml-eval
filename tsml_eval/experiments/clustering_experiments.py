@@ -107,7 +107,7 @@ def run_experiment(args):
         # If threading is required, see the threaded version of this file
         data_path = _TEST_DATA_PATH
         results_path = _CLUSTERER_RESULTS_PATH
-        estimator_name = "som-adtw"
+        estimator_name = "KMeans"
         dataset_name = "MinimalChinatown"
         row_normalise = False
         n_clusters = -1
