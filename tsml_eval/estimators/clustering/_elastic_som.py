@@ -165,30 +165,3 @@ class ElasticSOM(BaseClusterer):
 
     def _score(self, X, y=None):
         raise NotImplementedError("TimeSeriesSOM does not support scoring")
-
-
-# if __name__ == "__main__":
-#     import os
-#     from sklearn.metrics.cluster import rand_score
-#     from aeon.datasets import load_from_tsfile as load_data
-#
-#     PATH = "/home/chris/Documents/Univariate_ts/"
-#     DATASET = "GunPoint"
-#     train_path = os.path.join(PATH, f"{DATASET}/{DATASET}_TRAIN.ts")
-#     test_path = os.path.join(PATH, f"{DATASET}/{DATASET}_TEST.ts")
-#
-#     X_train, y_train = load_data(train_path)
-#     X_test, y_test = load_data(test_path)
-#     n_clusters = np.unique(y_train).shape[0]
-#
-#     som = ElasticSOM(n_clusters=n_clusters, distance='euclidean')
-#
-#     fit_preds = som.fit_predict(X_train)
-#     test_preds = som.predict(X_test)
-#
-#     train_score = rand_score(y_train, fit_preds)
-#     test_score = rand_score(y_test, test_preds)
-#
-#     print(f"Train score: {train_score}")
-#     print(f"Test score: {test_score}")
-#     stop = ""
