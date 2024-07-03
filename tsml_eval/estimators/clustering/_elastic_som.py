@@ -1,10 +1,13 @@
-from typing import Callable
+from typing import Callable, Union
 from warnings import warn
+
 import numpy as np
 from aeon.clustering import BaseClusterer
+from aeon.distances import get_alignment_path_function, pairwise_distance
 from sklearn.utils.random import check_random_state
-from aeon.distances import pairwise_distance
-from aeon.distances import get_alignment_path_function
+
+# Minisom adapted from https://github.com/JustGlowing/minisom/tree/master
+# Alignment path part adapted from https://github.com/Kenan-Li/dtwsom/tree/master
 
 
 class ElasticSOM(BaseClusterer):
@@ -15,16 +18,16 @@ class ElasticSOM(BaseClusterer):
     }
 
     def __init__(
-            self,
-            n_clusters,
-            distance='dtw',
-            sigma=1.0,
-            learning_rate=0.5,
-            custom_lr_decay_function: Callable = None,
-            custom_sigma_decay_function: Callable = None,
-            custom_neighborhood_function: Callable = None,
-            num_iterations=30,
-            random_state=None,
+        self,
+        n_clusters,
+        distance="dtw",
+        sigma=1.0,
+        learning_rate=0.5,
+        custom_lr_decay_function: Union[Callable, None] = None,
+        custom_sigma_decay_function: Union[Callable, None] = None,
+        custom_neighborhood_function: Union[Callable, None] = None,
+        num_iterations=30,
+        random_state=None,
     ):
         self.sigma = sigma
         self.learning_rate = learning_rate
@@ -57,10 +60,12 @@ class ElasticSOM(BaseClusterer):
         return (ax * ay).T
 
     def winner(self, x):
-        self._activation_map = pairwise_distance(x, self._weights[0],
-                                                 metric=self.distance)
-        return np.unravel_index(self._activation_map.argmin(),
-                                self._activation_map.shape)
+        self._activation_map = pairwise_distance(
+            x, self._weights[0], metric=self.distance
+        )
+        return np.unravel_index(
+            self._activation_map.argmin(), self._activation_map.shape
+        )
 
     def _elastic_update(self, x, y, w):
         best_path, distance = self._alignment_path_callable(x, y)
@@ -79,26 +84,24 @@ class ElasticSOM(BaseClusterer):
         return s3
 
     def update(self, x, win, t, max_iteration):
-        eta = self._learning_rate_decay_function(self.learning_rate,
-                                                 t, max_iteration)
+        eta = self._learning_rate_decay_function(self.learning_rate, t, max_iteration)
         sig = self._sigma_decay_function(self.sigma, t, max_iteration)
         g = self._neighborhood(win, sig) * eta
 
         if self._alignment_path_callable is not None:
-            it = np.nditer(g, flags=['multi_index'])
+            it = np.nditer(g, flags=["multi_index"])
 
             while not it.finished:
                 temp = self._weights[it.multi_index].reshape(1, -1)
-                self._weights[it.multi_index] = \
-                    self._elastic_update(x, temp, g[it.multi_index])[
-                        0]
+                self._weights[it.multi_index] = self._elastic_update(
+                    x, temp, g[it.multi_index]
+                )[0]
                 it.iternext()
         else:
-            self._weights += np.einsum('ij, ijk->ijk', g, x - self._weights)
+            self._weights += np.einsum("ij, ijk->ijk", g, x - self._weights)
 
     def _predict(self, X, y=None):
-        """Assigns a code book vector to each sample in X."""
-        winner_coordinates = np.array([som.winner(x) for x in X]).T
+        winner_coordinates = np.array([self.winner(x) for x in X]).T
         return np.ravel_multi_index(winner_coordinates, (1, self.n_clusters))
 
     def _fit(self, X, y=None):
@@ -106,24 +109,24 @@ class ElasticSOM(BaseClusterer):
         iterations = np.arange(self.num_iterations) % len(X)
         for t, iteration in enumerate(iterations):
             decay_rate = int(t)
-            self.update(X[iteration], self.winner(X[iteration]),
-                        decay_rate, self.num_iterations)
+            self.update(
+                X[iteration], self.winner(X[iteration]), decay_rate, self.num_iterations
+            )
 
     def _check_params(self, X):
         self._random_state = check_random_state(self.random_state)
         input_len = X.shape[-1]
         # random initialization
-        self._weights = self._random_state.rand(1, self.n_clusters,
-                                                input_len) * 2 - 1
+        self._weights = self._random_state.rand(1, self.n_clusters, input_len) * 2 - 1
         self._weights /= np.linalg.norm(self._weights, axis=-1, keepdims=True)
 
         self._activation_map = np.zeros((1, self.n_clusters))
         _neigx = np.arange(1)
         _neigy = np.arange(
-            self.n_clusters)  # used to evaluate the neighborhood function
+            self.n_clusters
+        )  # used to evaluate the neighborhood function
         if self.sigma > np.sqrt(1 + self.n_clusters * self.n_clusters):
-            warn('Warning: sigma might be too high ' +
-                 'for the dimension of the map.')
+            warn("Warning: sigma might be too high " + "for the dimension of the map.")
         self._xx, self._yy = np.meshgrid(_neigx, _neigy)
         self._xx = self._xx.astype(float)
         self._yy = self._yy.astype(float)
