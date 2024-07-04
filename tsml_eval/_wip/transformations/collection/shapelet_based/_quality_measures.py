@@ -58,6 +58,7 @@ def binary_information_gain(orderline, c1, c2):
     return bsf_ig
 
 
+# F_stat implementation with orderline datatype
 # def calculate_f_statistic(orderline):
 #     """
 #     Calculate the F-statistic for shapelet quality based on a list of tuples containing distances and class labels.
@@ -191,9 +192,36 @@ def f_stat(class0, class1):
     return F_stat
 
 
-# Example usage
-class0 = np.array([0.5, 1.5, 2.2])
-class1 = np.array([1.2, 1.8, 2.5])
+@njit(fastmath=True, cache=True)
+def kruskal_wallis_test(class0, class1):
+    # Combine and sort
+    combined_array = np.concatenate([class0, class1])
+    ranks = np.argsort(np.argsort(combined_array)) + 1  # Compute ranks
 
-f_statistic = calculate_f_statistic(class0, class1)
-print(f"F-statistic: {f_statistic}")
+    # observation count per group
+    n1 = len(class0)
+    n2 = len(class1)
+    n = len(combined_array)  # Total
+
+    # Sum of ranks
+    R1 = np.sum(ranks[:n1])
+    R2 = np.sum(ranks[n1:])
+
+    # Mean ranks
+    mean_rank1 = R1 / n1
+    mean_rank2 = R2 / n2
+
+    # Global mean rank
+    mean_rank = np.mean(ranks)
+
+    # Kruskal-Wallis
+    K = (12 / (n * (n + 1))) * (
+        np.sum([R1 * (mean_rank1 - mean_rank) ** 2, R2 * (mean_rank2 - mean_rank) ** 2])
+    )
+
+    # tie_correction = 1 - ((np.sum((np.bincount(combined_array.astype(int)) - 1) ** 3) - np.sum(np.bincount(combined_data.astype(int)) ** 3)) / ((n ** 3) - n))
+    unique, counts = np.unique(combined_array, return_counts=True)
+    tie_correction = 1 - (np.sum(counts**3 - counts) / ((n**3) - n))
+    K /= tie_correction
+
+    return K
