@@ -2,6 +2,7 @@
 
 import numpy as np
 from numba import njit
+import numpy as np
 
 
 @njit(fastmath=True, cache=True)
@@ -100,50 +101,6 @@ def binary_information_gain(orderline, c1, c2):
 
 #     return F_stat
 
-
-# @njit(fastmath=True, cache=True)
-# def _moods_median(class0, class1):
-#     """
-#     calculate Mood's Median test statistic
-
-#     Parameters:
-#     - class0 (np.array): Array of distances for the first class.
-#     - class1 (np.array): Array of distances for the second class.
-
-#     Returns:
-#     - float value
-#     """
-#     combined = np.concatenate([class0, class1])
-#     median_value = np.median(combined)
-
-#     above0 = np.sum(class0 > median_value)
-#     below0 = len(class0) - above0
-#     above1 = np.sum(class1 > median_value)
-#     below1 = len(class1) - above1
-
-#     contingency_table = np.array([[above0, below0], [above1, below1]])
-
-#     total_above = contingency_table[:, 0].sum()
-#     total_below = contingency_table[:, 1].sum()
-
-#     total = total_above + total_below
-#     expected = np.array(
-#         [
-#             [
-#                 total_above * (above0 + below0) / total,
-#                 total_below * (above0 + below0) / total,
-#             ],
-#             [
-#                 total_above * (above1 + below1) / total,
-#                 total_below * (above1 + below1) / total,
-#             ],
-#         ]
-#     )
-
-#     # Compute the chi-square statistic
-#     chi_squared_stat = np.sum((contingency_table - expected) ** 2 / expected)
-
-#     return chi_squared_stat
 
 
 @njit(fastmath=True, cache=True)
@@ -267,3 +224,4 @@ def kruskal_wallis_test(ranks, n1, n2, n, tie_correction):
 
     K /= tie_correction
     return K
+

@@ -138,6 +138,7 @@ class ShapeletTransformClassifier(BaseClassifier):
         n_jobs: int = 1,
         batch_size: Union[int, None] = 100,
         random_state: Union[int, Type[np.random.RandomState], None] = None,
+        shapelet_quality = "INFO_GAIN",
     ) -> None:
         self.n_shapelet_samples = n_shapelet_samples
         self.max_shapelets = max_shapelets
@@ -155,8 +156,8 @@ class ShapeletTransformClassifier(BaseClassifier):
         self.n_cases_ = 0
         self.n_channels_ = 0
         self.n_timepoints_ = 0
-
-        self._transformer = RandomShapeletTransform()
+        self.shapelet_quality = shapelet_quality
+        self._transformer = RandomShapeletTransform(shapelet_quality=shapelet_quality)
         self._estimator = estimator
         self._transform_limit_in_minutes = 0
         self._classifier_limit_in_minutes = 0
@@ -295,6 +296,7 @@ class ShapeletTransformClassifier(BaseClassifier):
             n_jobs=self.n_jobs,
             batch_size=self.batch_size,
             random_state=self.random_state,
+            shapelet_quality=self.shapelet_quality,
         )
 
         self._estimator = _clone_estimator(
