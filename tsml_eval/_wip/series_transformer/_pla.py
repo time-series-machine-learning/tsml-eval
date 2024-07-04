@@ -33,7 +33,11 @@ class PiecewiseLinearApproximation(BaseSeriesTransformer):
     
     def __init__(self, transformer, max_error, buffer_size = None):
         if not isinstance(transformer, self.Transformer):
-            raise ValueError("Invalid status")
+            raise ValueError("Invalid transformer: please use Transformer class.")
+        if not isinstance(max_error, (int, float, complex)):
+            raise ValueError("Invalid max_error: it has to be a number.")
+        if not (buffer_size == None or isinstance(buffer_size, (int, float, complex))):
+            raise ValueError("Invalid buffer_size: use a number only or keep empty.")
         self.transformer = transformer
         self.max_error = max_error
         self.buffer_size = buffer_size
@@ -370,6 +374,7 @@ class PiecewiseLinearApproximation(BaseSeriesTransformer):
             `create_test_instance` uses the first (or only) dictionary in `params`
         """
         params = {
+            "transformer": PiecewiseLinearApproximation.Transformer.SWAB,
             "max_error": 0.95,
         }
         

@@ -1,7 +1,7 @@
 """Piecewise Linear Approximation."""
 
 __all__ = [
-    "_pla",
+    "PiecewiseLinearApproximation",
 ]
 
 from _pla import PiecewiseLinearApproximation
