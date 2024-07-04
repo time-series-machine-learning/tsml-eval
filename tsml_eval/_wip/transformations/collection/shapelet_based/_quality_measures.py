@@ -184,9 +184,8 @@ def f_stat(class0, class1):
 
     # Avoid division by zero
     if df_within <= 0:
-        return np.inf  # Directly use np.inf
+        return np.inf  
 
-    # Calculate F-statistic
     F_stat = (ssb / df_between) / (ssw / df_within)
     return F_stat
 
