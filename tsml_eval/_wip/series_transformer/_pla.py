@@ -7,19 +7,36 @@ from sklearn.linear_model import LinearRegression
 from aeon.transformations.series.base import BaseSeriesTransformer
 
 class PiecewiseLinearApproximation(BaseSeriesTransformer):
-    """PLA (Piecewise Linear Approximation) for series transformation.
+    """Piecewise Linear Approximation (PLA) for time series transformation.
+    
+    Takes a univariate time series as input. Approximates a time series using 
+    linear regression and the sum of squares error (SSE) through an algorithm. 
+    The algorithms available are two offline algorithms: TopDown and BottomUp 
+    and two online algorithms: SlidingWindow and SWAB (Sliding Window and Bottom Up).
 
-        Parameters
-        ----------
-        transformer: enum
-            The transformer to be used
-        max_error: float
-            The maximum error valuefor the function to find before segmenting the dataset
-        buffer_size: int
-            The buffer size, used only for SWAB
+    Parameters
+    ----------
+    transformer: enum
+        The transformer to be used
+    max_error: float
+        The maximum error valuefor the function to find before segmenting the dataset
+    buffer_size: int
+        The buffer size, used only for SWAB
+        
+    Attributes
+    ----------
+    segment_dense : np.array
+        The endpoints of each found segment of the series for transformation
+        
+    References
+    ----------
+    .. [1] Keogh, E., Chu, S., Hart, D. and Pazzani, M., 2001, November. 
+    An online algorithm for segmenting time series. (pp. 289-296).
     """
     
     class Transformer(Enum):
+        """An enum class specifically for PLA."""
+        
         SlidingWindow = "SlidingWindow"
         TopDown = "TopDown"
         BottomUp = "BottomUp"
@@ -59,7 +76,7 @@ class PiecewiseLinearApproximation(BaseSeriesTransformer):
         Returns
         -------
         np.ndarray
-            1D transformed version of X
+            1D transform of X
         """
         results = None
         if(self.transformer == self.Transformer.SlidingWindow):
@@ -83,11 +100,11 @@ class PiecewiseLinearApproximation(BaseSeriesTransformer):
         return np.concatenate(results)
     
     def _sliding_window(self, X):
-        """Transform a time series
+        """Transform a time series using the sliding window algorithm. (Online)
 
         Parameters
         ----------
-        time_series : np.array
+        X : np.ndarray
             1D time series to be transformed.
 
         Returns
@@ -106,11 +123,11 @@ class PiecewiseLinearApproximation(BaseSeriesTransformer):
         return seg_ts
     
     def _top_down(self, X):
-        """Transform a time series
+        """Transform a time series using the top down algorithm (Offline)
 
         Parameters
         ----------
-        time_series : np.array
+        X : np.ndarray
             1D time series to be transformed.
 
         Returns
@@ -149,32 +166,32 @@ class PiecewiseLinearApproximation(BaseSeriesTransformer):
 
         return left_segment + right_segment
     
-    def improvement_splitting_here(self, time_series, breakpoint):
-        """Returns the squared sum error of the left and right segment
-        splitted off at a particual point in a time series
+    def improvement_splitting_here(self, X, breakpoint):
+        """Returns the SSE of the left and right segmennts split 
+        at a particual point in a time series
 
         Parameters
         ----------
-        time_series : np.array
+        X : np.array
             1D time series.
         breakpoint : int
             the break point within the time series array
 
         Returns
         -------
-        error
+        error: float
             the squared sum error of the split segmentations
         """
-        left_segment = time_series[:breakpoint]
-        right_segment = time_series[breakpoint:]
+        left_segment = X[:breakpoint]
+        right_segment = X[breakpoint:]
         return self._calculate_error(left_segment) + self._calculate_error(right_segment)
     
     def _bottom_up(self, X):
-        """Transform a time series
+        """Transform a time series using the bottom up algorithm (Offline)
 
         Parameters
         ----------
-        time_series : np.array
+        X : np.ndarray
             1D time series to be transformed.
 
         Returns
@@ -209,11 +226,11 @@ class PiecewiseLinearApproximation(BaseSeriesTransformer):
         return seg_ts
     
     def _SWAB(self, X):
-        """Transform a time series
+        """Transform a time series using the SWAB algorithm (Online)
 
         Parameters
         ----------
-        time_series : np.array
+        X : np.array
             1D time series to be transformed.
 
         Returns
@@ -248,12 +265,13 @@ class PiecewiseLinearApproximation(BaseSeriesTransformer):
         return seg_ts
     
     
-    def _best_line(self, time_series, current_data_point, lower_boundary_window, upper_boundary_window):
-        """Uses sliding window to find the next best segmentation candidate, used for SWAB
+    def _best_line(self, X, current_data_point, lower_boundary_window, upper_boundary_window):
+        """Uses sliding window to find the next best segmentation candidate.
+        Used inside of the SWAB algorithm.
 
         Parameters
         ----------
-        time_series : np.array
+        X : np.array
             1D time series to be segmented.
         current_data_point : int
             the current_data_point we are observing
@@ -269,18 +287,19 @@ class PiecewiseLinearApproximation(BaseSeriesTransformer):
         """
         
         max_window_length = current_data_point + upper_boundary_window
-        seg_ts = np.array(time_series[current_data_point: current_data_point + lower_boundary_window])
+        seg_ts = np.array(X[current_data_point: current_data_point + lower_boundary_window])
         current_data_point = current_data_point + lower_boundary_window
         error = 0
-        while current_data_point < max_window_length and current_data_point < len(time_series) and error < self.max_error:
-            seg_ts = np.append(seg_ts, time_series[current_data_point])
+        while current_data_point < max_window_length and current_data_point < len(X) and error < self.max_error:
+            seg_ts = np.append(seg_ts, X[current_data_point])
             error = self._calculate_error(seg_ts)
             current_data_point = current_data_point + 1
         return seg_ts
     
     #Create own linear regression, inefficient to use sklearns
     def _linear_regression(self, time_series):
-        """Transform a time series
+        """Creates a new time series using linear regression based 
+        on the given time series.
 
         Parameters
         ----------
@@ -301,52 +320,51 @@ class PiecewiseLinearApproximation(BaseSeriesTransformer):
         regression_line = np.array(linearRegression.predict(X))
         return regression_line
     
-    def _sum_squared_error(self, time_series, linear_regression_time_series):
-        """Returns the squared sum error time series and its linear regression
+    def _sum_squared_error(self, X, p_X):
+        """Returns the SSE of a value and its predicted value
         
-        formula: sse = the sum of the differences of the original series
-        against the predicted series squared
+        formula: SSE = ∑i (Xi - p_Xi)^2
 
         Parameters
         ----------
-        time_series : np.array
+        X : np.array
             1D time series.
-        linear_regression_time_series: np.array
+        p_X: np.array
             1D linear time series formatted using linear regression
 
         Returns
         -------
-        error
-            the squared sum error of the split segmentations
+        error: float
+            the SSE
         """
         
-        error = np.sum((time_series - linear_regression_time_series) ** 2)
+        error = np.sum((X - p_X) ** 2)
         return error
     
-    def _calculate_error(self, time_series):
-        """Returns the squared sum error of a time series and its linear regression
+    def _calculate_error(self, X):
+        """Returns the SEE of a time series and its linear regression
 
         Parameters
         ----------
-        time_series : np.array
+        X : np.array
             1D time series.
 
         Returns
         -------
-        error
-            the squared sum error of a time series and it's linear regression
+        error: float
+            the SSE
         """
         
-        lrts = self._linear_regression(time_series)
-        sse = self._sum_squared_error(time_series, lrts)
+        lrts = self._linear_regression(X)
+        sse = self._sum_squared_error(X, lrts)
         return sse
     
-    def _create_segment(self, time_series):
-        """create a linear segment of a given time series.
+    def _create_segment(self, X):
+        """Create a linear segment of a given time series.
 
         Parameters
         ----------
-        time_series : np.array
+        X : np.array
             1D time series.
 
         Returns
@@ -354,12 +372,11 @@ class PiecewiseLinearApproximation(BaseSeriesTransformer):
         np.array
             the linear regression of the time series.
         """
-        return self._linear_regression(time_series)
+        return self._linear_regression(X)
     
     @classmethod
     def get_test_params(cls, parameter_set="default"):
-        """
-        Return testing parameter settings for the estimator.
+        """Return testing parameter settings for the estimator.
 
         Parameters
         ----------
@@ -375,7 +392,7 @@ class PiecewiseLinearApproximation(BaseSeriesTransformer):
         """
         params = {
             "transformer": PiecewiseLinearApproximation.Transformer.SWAB,
-            "max_error": 0.95,
+            "max_error": 5,
         }
         
         return params
