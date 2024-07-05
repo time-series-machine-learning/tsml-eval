@@ -64,7 +64,7 @@ features_names_pycatch22 = [
 
 # Numba Disabled Switcher 0 = off, 1 = on
 os.environ['NUMBA_DISABLE_JIT'] = '0'
-print("Numba: ",os.environ['NUMBA_DISABLE_JIT'])
+print("Numba Off: ",os.environ['NUMBA_DISABLE_JIT'])
 
 aeon_file_name = ""
 if os.environ['NUMBA_DISABLE_JIT'] == '0':
