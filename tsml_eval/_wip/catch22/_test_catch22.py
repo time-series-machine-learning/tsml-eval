@@ -6,6 +6,9 @@ from openpyxl import Workbook
 from openpyxl.styles import PatternFill
 from decimal import Decimal, ROUND_HALF_UP
 import csv
+import os
+
+
 
 IPD_X_train, IPD_y_train = load_italy_power_demand(split="train")
 
@@ -59,7 +62,15 @@ features_names_pycatch22 = [
         'FC_LocalSimple_mean3_stderr'
     ]
 
+# Numba Disabled Switcher 0 = off, 1 = on
+os.environ['NUMBA_DISABLE_JIT'] = '0'
+print("Numba: ",os.environ['NUMBA_DISABLE_JIT'])
 
+aeon_file_name = ""
+if os.environ['NUMBA_DISABLE_JIT'] == '0':
+    aeon_file_name = "aeon_catch22_with_numba"
+else:
+    aeon_file_name = "aeon_catch22_no_numba"
 
 #aeon
 aeon_c22 = Catch22(replace_nans=True)
@@ -97,7 +108,8 @@ for i in range(len(results_aeon)):
                                                                                 rounding=ROUND_HALF_UP)
             if rounded_aeon_results != rounded_pycatch22_results:
                 cell.fill = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
-wb.save("aeon_catch22_ipd.xlsx")
+
+wb.save(aeon_file_name + ".xlsx")
 
 
 #pycatch xlsx
@@ -110,7 +122,7 @@ wb.save("pycatch22_catch22_ipd.xlsx")
 
 
 #aeon.csv
-with open('aeon_catch22_ipd.csv', mode='w', newline='') as file:
+with open(aeon_file_name + ".csv", mode='w', newline='') as file:
     writer = csv.writer(file)
     for data in results_aeon:
         writer.writerow(data)
