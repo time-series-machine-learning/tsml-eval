@@ -1,4 +1,4 @@
-from aeon.transformations.collection.feature_based import Catch22
+from _catch22 import Catch22
 import pycatch22
 import numpy as np
 from aeon.datasets import tsc_datasets, load_italy_power_demand
@@ -62,7 +62,11 @@ features_names_pycatch22 = [
         'FC_LocalSimple_mean3_stderr'
     ]
 
+# $env:NUMBA_DISABLE_JIT = "0"
+# echo $env:NUMBA_DISABLE_JIT
 # Numba Disabled Switcher 0 = off, 1 = on
+
+
 os.environ['NUMBA_DISABLE_JIT'] = '0'
 print("Numba Off: ",os.environ['NUMBA_DISABLE_JIT'])
 
@@ -75,6 +79,7 @@ else:
 #aeon
 aeon_c22 = Catch22(replace_nans=True)
 _ = aeon_c22.fit_transform(IPD_X_train)
+
 results_aeon = [features_names_pycatch22]
 for i in range(len(_)):
     #formatting it to pycatch22 format
