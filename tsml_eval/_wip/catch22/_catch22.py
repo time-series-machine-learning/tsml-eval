@@ -10,9 +10,8 @@ import math
 
 import numpy as np
 from joblib import Parallel, delayed
-from numba import njit, complex128
+from numba import njit
 import cmath
-import copy
 
 from aeon.transformations.collection.base import BaseCollectionTransformer
 from aeon.utils.numba.general import z_normalise_series, z_normalise_series_with_mean
@@ -432,22 +431,22 @@ class Catch22(BaseCollectionTransformer):
         return _outlier_include(-X)
 
     @staticmethod
-    @njit(fastmath=True, cache=True)
+    #@njit(fastmath=True, cache=True)
     def _CO_f1ecac(X_ac):
         
         #check fo NaN
         for i in range(len(X_ac)):
             if X_ac[i] == None:
                 return 0
-               
-        autocorrelation = compute_autocorrelations(X_ac)    
+       
+        autocorrelation = compute_autocorrelations(X_ac)
         # First 1/e crossing of autocorrelation function.
         threshold = 0.36787944117144233  # 1 / np.exp(1)
         for i in range(len(X_ac) - 2):
             if(autocorrelation[i + 1] < threshold):
-                m = autocorrelation[i + 1] - autocorrelation[i]
-                dy = threshold - autocorrelation[i]
-                dx = dy/m
+                m = float(autocorrelation[i + 1]) - float(autocorrelation[i])
+                dy = float(threshold) - float(autocorrelation[i])
+                dx = float(dy/m)
                 out = float(i) + dx
                 return out
         
@@ -1333,28 +1332,24 @@ def _verify_features(features, catch24):
 @njit()
 def compute_autocorrelations(X):
     mean = np.mean(X)
-    nFFT = nearestPowerOf2(len(X))
+    nFFT = nearestPowerOf2(len(X)) * 2
         
-    F = np.zeros(nFFT * 2, dtype=complex128)
+    F = np.zeros(nFFT * 2, dtype=np.complex128)
     for i in range(len(X)):
         F[i] = complex(X[i] - mean, 0.0)
          
     for i in range(len(X), nFFT):
         F[i] = complex(0.0, 0.0)
         
-    tw = np.zeros(nFFT * 2, dtype=complex128)
+    tw = np.zeros(nFFT * 2, dtype=np.complex128)
     twiddles(tw, nFFT)
     fft(F, nFFT, tw)
     #dot multiply
-    for i in range(nFFT):
-        F[i] = F[i] * F[i].conjugate()
+    F = np.multiply(F, np.conj(F))
     fft(F, nFFT, tw)
     divisor = F[0]
-    for i in range(nFFT):
-        F[i] = F[i] / divisor
-    out = np.zeros(nFFT * 2)
-    for i in range(nFFT):
-        out[i] = F[i].real
+    F = F / divisor
+    out = np.real(F)
     return out
 
 @njit()
@@ -1368,7 +1363,7 @@ def nearestPowerOf2(N):
 
 @njit()
 def twiddles(a, size):
-    PI = 3.14159265359
+    PI = np.pi
     
     for i in range(size):
         tmp = 0.0 - PI * i / size * 1j 
