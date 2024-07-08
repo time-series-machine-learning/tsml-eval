@@ -1,5 +1,6 @@
 """Quality measures to use with STC."""
 
+import numpy as np
 from numba import njit
 import numpy as np
 
@@ -57,21 +58,169 @@ def binary_information_gain(orderline, c1, c2):
 
     return bsf_ig
 
+
+# F_stat implementation with orderline datatype
+# def calculate_f_statistic(orderline):
+#     """
+#     Calculate the F-statistic for shapelet quality based on a list of tuples containing distances and class labels.
+
+#     Parameters:
+#     - orderline (list of tuples): Each tuple contains (distance, class_label).
+
+#     Returns:
+#     - float: The computed F-statistic.
+#     """
+
+#     class_distances = {}
+#     for distance, label in orderline:
+#         if label not in class_distances:
+#             class_distances[label] = []
+#         class_distances[label].append(distance)
+
+#     #F-stat Calc
+#     class_means = {cls: np.mean(dists) for cls, dists in class_distances.items()} # each key = class label,  each value = mean distance for that class
+#     all_distances = [dist for dists in class_distances.values() for dist in dists]
+#     overall_mean = np.mean(all_distances)
+#     n = len(all_distances)  # Total number of distance measurements
+#     C = len(class_distances)  # Number of classes
+
+
+#     between_class_sum_of_squares = sum(len(dists) * (class_mean - overall_mean) ** 2
+#                                        for cls, class_mean in class_means.items())
+#     within_class_sum_of_squares = sum((distance - class_means[label]) ** 2
+#                                       for distance, label in orderline)
+
+#     # degrees of freedom
+#     df_between = C - 1
+#     df_within = n - C
+
+#     #  F-stat
+#     if df_within == 0:
+#         return float('inf')
+#     F_stat = (between_class_sum_of_squares / df_between) / (within_class_sum_of_squares / df_within)
+
+#     return F_stat
+
+
+
 @njit(fastmath=True, cache=True)
-def f_stat(c1, c2):
-    """Calculate the F-statistic for two classes.
-
-    Parameters
-    ----------
-    c1 : np.ndarray
-        Distance values for class 1
-    c2 : np.ndarray
-        Distance values for class 2
-
-    Returns
-    -------
-    float
-        F-statistic value
+def _moods_median(class0, class1):
     """
-    return np.random.random()
+    calculate Mood's Median test statistic
+
+    Parameters:
+    - class0 (np.array): Array of distances for the first class.
+    - class1 (np.array): Array of distances for the second class.
+
+    Returns:
+    - float value
+
+    """
+    combined = np.concatenate((class0, class1))
+    median_value = np.median(
+        combined
+    )  # np.median is supported in recent Numba releases
+
+    above0 = np.sum(class0 > median_value)
+    below0 = len(class0) - above0
+    above1 = np.sum(class1 > median_value)
+    below1 = len(class1) - above1
+
+    total_above = above0 + above1
+    total_below = below0 + below1
+
+    total = total_above + total_below
+
+    expected0_above = total_above * (above0 + below0) / total
+    expected0_below = total_below * (above0 + below0) / total
+    expected1_above = total_above * (above1 + below1) / total
+    expected1_below = total_below * (above1 + below1) / total
+
+    chi_squared_stat = (
+        ((above0 - expected0_above) ** 2 / expected0_above)
+        + ((below0 - expected0_below) ** 2 / expected0_below)
+        + ((above1 - expected1_above) ** 2 / expected1_above)
+        + ((below1 - expected1_below) ** 2 / expected1_below)
+    )
+
+    return chi_squared_stat
+
+
+@njit(fastmath=True, cache=True)
+def f_stat(class0, class1):
+    """
+    Calculate the F-statistic for shapelet quality based on two numpy arrays of distances for two classes.
+    Parameters:
+    - class0 (np.array): Array of distances for the first class.
+    - class1 (np.array): Array of distances for the second class.
+    Returns:
+    - float: The computed F-statistic.
+    """
+
+    if len(class0) == 0 or len(class1) == 0:
+        return np.inf  # Use NumPy's inf representation
+
+    # Calculate means
+    mean_class0 = np.mean(class0)
+    mean_class1 = np.mean(class1)
+    all_distances = np.concatenate((class0, class1))
+    overall_mean = np.mean(all_distances)
+
+    n0 = len(class0)
+    n1 = len(class1)
+    total_n = n0 + n1
+
+    # Between-class sum of squares
+    ssb = (
+        n0 * (mean_class0 - overall_mean) ** 2 + n1 * (mean_class1 - overall_mean) ** 2
+    )
+
+    # Within-class sum of squares
+    ssw = np.sum((class0 - mean_class0) ** 2) + np.sum((class1 - mean_class1) ** 2)
+
+    # Degrees of freedom
+    df_between = 1
+    df_within = total_n - 2
+
+    # Avoid division by zero
+    if df_within <= 0:
+        return np.inf  
+
+    F_stat = (ssb / df_between) / (ssw / df_within)
+    return F_stat
+
+
+"""
+Kruskal Wallis pre stat uses some methods not compatible with numba
+The Kruskal Wallis is calculated using 2 functions:
+one for the pre_stats values such as unique values, ranks, tie_correction, len(class0), len(class1)..this doesnt invoke the njit as it uses some functions that are incompatible with njit
+another for the actual calculation, compatible with numba, and uses the return values from the pre_stat function
+"""
+
+
+def compute_pre_stats(class0, class1):
+    combined_array = np.concatenate((class0, class1))
+    ranks = np.argsort(np.argsort(combined_array)) + 1
+    unique, counts = np.unique(combined_array, return_counts=True)
+    tie_correction = 1 - (
+        np.sum(counts**3 - counts) / ((len(combined_array) ** 3) - len(combined_array))
+    )
+    return ranks, tie_correction, len(class0), len(class1), len(combined_array)
+
+
+@njit(fastmath=True, cache=True)
+def kruskal_wallis_test(ranks, n1, n2, n, tie_correction):
+    R1 = np.sum(ranks[:n1])
+    R2 = np.sum(ranks[n1:])
+
+    mean_rank1 = R1 / n1
+    mean_rank2 = R2 / n2
+    mean_rank = np.mean(ranks)
+
+    K = (12 / (n * (n + 1))) * (
+        R1 * (mean_rank1 - mean_rank) ** 2 + R2 * (mean_rank2 - mean_rank) ** 2
+    )
+
+    K /= tie_correction
+    return K
 

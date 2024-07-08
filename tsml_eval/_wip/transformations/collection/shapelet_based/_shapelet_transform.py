@@ -516,7 +516,6 @@ class RandomShapeletTransform(BaseCollectionTransformer):
 
             orderline.append((distance, cls))
             orderline.sort()
-
             if worst_quality > 0:
                 quality = _calc_early_binary_ig(
                     orderline,
