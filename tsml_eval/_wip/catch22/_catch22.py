@@ -1329,7 +1329,7 @@ def _verify_features(features, catch24):
 
     return f_idx
 
-@njit()
+@njit(fastmath=True, cache=True)
 def compute_autocorrelations(X):
     mean = np.mean(X)
     nFFT = nearestPowerOf2(len(X)) * 2
@@ -1352,7 +1352,7 @@ def compute_autocorrelations(X):
     out = np.real(F)
     return out
 
-@njit()
+@njit(fastmath=True, cache=True)
 def nearestPowerOf2(N):
     a = int(np.log2(N))
     
@@ -1361,7 +1361,7 @@ def nearestPowerOf2(N):
         
     return 2**(a + 1)
 
-@njit()
+@njit(fastmath=True, cache=True)
 def twiddles(a, size):
     PI = np.pi
     
