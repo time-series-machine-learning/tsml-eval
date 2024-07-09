@@ -411,12 +411,12 @@ class Catch22(BaseCollectionTransformer):
     @njit(fastmath=True, cache=True)
     def _SB_BinaryStats_diff_longstretch0(X):
         # Longest period of successive incremental decreases.
-        mean_binary = np.zeros(len(X) - 1)
+        diff_binary = np.zeros(len(X) - 1)
         for i in range(len(X)):
             if X[i + 1] - X[i] >= 0:
-                mean_binary[i] = 1
+                diff_binary[i] = 1
 
-        return _long_stretch(mean_binary, 0)
+        return _long_stretch(diff_binary, 0)
 
     @staticmethod
     def _DN_OutlierInclude_p_001_mdrmd(X):
@@ -549,12 +549,12 @@ class Catch22(BaseCollectionTransformer):
     @njit(fastmath=True, cache=True)
     def _SB_BinaryStats_mean_longstretch1(X, smean):
         # Longest period of consecutive values above the mean.
-        diff_binary = np.zeros(len(X) - 1)
-        for i in range(len(diff_binary)):
+        mean_binary = np.zeros(len(X) - 1)
+        for i in range(len(mean_binary)):
             if X[i] - smean > 0:
-                diff_binary[i] = 1
+                mean_binary[i] = 1
 
-        return _long_stretch(diff_binary, 1)
+        return _long_stretch(mean_binary, 1)
 
     @staticmethod
     @njit(fastmath=True, cache=True)
