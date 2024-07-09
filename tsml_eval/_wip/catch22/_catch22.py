@@ -163,7 +163,6 @@ class Catch22(BaseCollectionTransformer):
         super().__init__()
 
     def _transform(self, X, y=None):
-  
         """Transform X into the catch22 features.
 
         Parameters
@@ -431,25 +430,18 @@ class Catch22(BaseCollectionTransformer):
         return _outlier_include(-X)
 
     @staticmethod
-    #@njit(fastmath=True, cache=True)
+    @njit(fastmath=True, cache=True)
     def _CO_f1ecac(X_ac):
-        
-        #check fo NaN
+          #check fo NaN
         for i in range(len(X_ac)):
             if X_ac[i] == None:
                 return 0
-       
-        autocorrelation = compute_autocorrelations(X_ac)
+            
         # First 1/e crossing of autocorrelation function.
         threshold = 0.36787944117144233  # 1 / np.exp(1)
-        for i in range(len(X_ac) - 2):
-            if(autocorrelation[i + 1] < threshold):
-                m = float(autocorrelation[i + 1]) - float(autocorrelation[i])
-                dy = float(threshold) - float(autocorrelation[i])
-                dx = float(dy/m)
-                out = float(i) + dx
-                return out
-        
+        for i in range(1, len(X_ac)):
+            if (X_ac[i - 1] - threshold) * (X_ac[i] - threshold) < 0:
+                return i
         return len(X_ac)
 
     @staticmethod
@@ -478,7 +470,7 @@ class Catch22(BaseCollectionTransformer):
         if len(X) - 3 < 3:
             return 0
         res = _local_simple_mean(X, 3)
-        return np.std(res)
+        return stddev(res, len(X) - 3)
 
     @staticmethod
     @njit(fastmath=True, cache=True)
@@ -1275,6 +1267,7 @@ def _spline_fit(X):
 
     return y_out
 
+
 def _verify_features(features, catch24):
     if isinstance(features, str):
         if features == "all":
@@ -1329,7 +1322,7 @@ def _verify_features(features, catch24):
 
     return f_idx
 
-@njit(fastmath=True, cache=True)
+@njit()
 def compute_autocorrelations(X):
     mean = np.mean(X)
     nFFT = nearestPowerOf2(len(X)) * 2
@@ -1352,7 +1345,7 @@ def compute_autocorrelations(X):
     out = np.real(F)
     return out
 
-@njit(fastmath=True, cache=True)
+@njit()
 def nearestPowerOf2(N):
     a = int(np.log2(N))
     
@@ -1361,7 +1354,7 @@ def nearestPowerOf2(N):
         
     return 2**(a + 1)
 
-@njit(fastmath=True, cache=True)
+@njit()
 def twiddles(a, size):
     PI = np.pi
     
@@ -1384,4 +1377,9 @@ def _fft(a, out, size, step, tw):
             t = tw[i] * out[i + step]
             a[int(i / 2)] = out[i] + t
             a[int((i + size) / 2)] = out[i] - t
-    
+
+@njit()
+def stddev(a, size):
+    m = np.mean(a[:size])
+    sd = np.sqrt(np.sum((a[:size] - m) ** 2) / (size - 1))
+    return sd

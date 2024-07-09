@@ -75,30 +75,26 @@ if os.environ['NUMBA_DISABLE_JIT'] == '0':
     aeon_file_name = "aeon_catch22_with_numba"
 else:
     aeon_file_name = "aeon_catch22_no_numba"
-
 #aeon
 aeon_c22 = Catch22(replace_nans=True)
 _ = aeon_c22.fit_transform(IPD_X_train)
-
-results_aeon = [features_names_pycatch22]
-for i in range(len(_)):
-    #formatting it to pycatch22 format
-    results_aeon.append([
-            _[i][0],_[i][1],_[i][5],_[i][6],
-            _[i][11],_[i][10],_[i][13],_[i][14],
-            _[i][20],_[i][21],_[i][17],_[i][12],
-            _[i][16],_[i][3],_[i][4],_[i][7],
-            _[i][2],_[i][15],_[i][19],_[i][18],
-            _[i][8],_[i][9]
-              ])
-
-
 #pycatch
 results_pycatch22 = [features_names_pycatch22]
 for i in range(len(IPD_X_train)):
     results = pycatch22.catch22_all(IPD_X_train[i][0])
     results_pycatch22.append(results['values'])
 
+results_aeon = [features_names_pycatch22]
+for i in range(len(_)):
+    #formatting it to pycatch22 format
+    results_aeon.append([
+            _[i][0],_[i][1],_[i][5],_[i][6],
+            _[i][11],_[i][10],_[i][13],_[i][2],
+            _[i][20],_[i][21],_[i][17],_[i][12],
+            _[i][16],_[i][3],_[i][4],_[i][7],
+            _[i][14],_[i][15],_[i][19],_[i][18],
+            _[i][8],_[i][9]
+              ])
 
 #aeon xlsx
 wb = Workbook()
@@ -107,9 +103,9 @@ for i in range(len(results_aeon)):
     for j in range(len(results_aeon[i])):
         cell = ws.cell(row=i + 1, column=j + 1, value=results_aeon[i][j])
         if(i != 0):
-            rounded_aeon_results = Decimal(results_aeon[i][j]).quantize(Decimal('.000000'), 
+            rounded_aeon_results = Decimal(results_aeon[i][j]).quantize(Decimal('.0000'), 
                                                                     rounding=ROUND_HALF_UP)
-            rounded_pycatch22_results = Decimal(results_pycatch22[i][j]).quantize(Decimal('.000000'), 
+            rounded_pycatch22_results = Decimal(results_pycatch22[i][j]).quantize(Decimal('.0000'), 
                                                                                 rounding=ROUND_HALF_UP)
             if rounded_aeon_results != rounded_pycatch22_results:
                 cell.fill = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
@@ -137,3 +133,5 @@ with open('pycatch22_catch22_ipd.csv', mode='w', newline='') as file:
     writer = csv.writer(file)
     for data in results_pycatch22:
         writer.writerow(data)
+
+print("Finished writing data")
