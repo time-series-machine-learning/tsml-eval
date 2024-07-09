@@ -827,6 +827,7 @@ def _histogram_mode(X, num_bins, smin, smax):
 
 @njit(fastmath=True, cache=True)
 def _long_stretch(X_binary, val):
+    #look for the longest consecutive given value in an array
     last_val = 0
     max_stretch = 0
     for i in range(len(X_binary)):
