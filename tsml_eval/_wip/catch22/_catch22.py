@@ -21,7 +21,7 @@ from aeon.utils.validation import check_n_jobs
 feature_names = [
     "DN_HistogramMode_5",
     "DN_HistogramMode_10",
-    "SB_BinaryStats_diff_longstretch0",
+    "SB_BinaryStats_mean_longstretch1",
     "DN_OutlierInclude_p_001_mdrmd",
     "DN_OutlierInclude_n_001_mdrmd",
     "CO_f1ecac",
@@ -33,7 +33,7 @@ feature_names = [
     "CO_HistogramAMI_even_2_5",
     "IN_AutoMutualInfoStats_40_gaussian_fmmi",
     "MD_hrv_classic_pnn40",
-    "SB_BinaryStats_mean_longstretch1",
+    "SB_BinaryStats_diff_longstretch0",
     "SB_MotifThree_quantile_hh",
     "FC_LocalSimple_mean1_tauresrat",
     "CO_Embed2_Dist_tau_d_expfit_meandiff",
@@ -215,7 +215,7 @@ class Catch22(BaseCollectionTransformer):
             features = [
                 Catch22._DN_HistogramMode_5,
                 Catch22._DN_HistogramMode_10,
-                Catch22._SB_BinaryStats_diff_longstretch0,
+                Catch22._SB_BinaryStats_mean_longstretch1,
                 Catch22._DN_OutlierInclude_p_001_mdrmd,
                 Catch22._DN_OutlierInclude_n_001_mdrmd,
                 Catch22._CO_f1ecac,
@@ -227,7 +227,7 @@ class Catch22(BaseCollectionTransformer):
                 Catch22._CO_HistogramAMI_even_2_5,
                 Catch22._IN_AutoMutualInfoStats_40_gaussian_fmmi,
                 Catch22._MD_hrv_classic_pnn40,
-                Catch22._SB_BinaryStats_mean_longstretch1,
+                Catch22._SB_BinaryStats_diff_longstretch0,
                 Catch22._SB_MotifThree_quantile_hh,
                 Catch22._FC_LocalSimple_mean1_tauresrat,
                 Catch22._CO_Embed2_Dist_tau_d_expfit_meandiff,
@@ -409,14 +409,14 @@ class Catch22(BaseCollectionTransformer):
 
     @staticmethod
     @njit(fastmath=True, cache=True)
-    def _SB_BinaryStats_diff_longstretch0(X, smean):
-        # Longest period of consecutive values above the mean.
-        mean_binary = np.zeros(len(X))
+    def _SB_BinaryStats_diff_longstretch0(X):
+        # Longest period of successive incremental decreases.
+        mean_binary = np.zeros(len(X) - 1)
         for i in range(len(X)):
-            if X[i] - smean > 0:
+            if X[i + 1] - X[i] >= 0:
                 mean_binary[i] = 1
 
-        return _long_stretch(mean_binary, 1)
+        return _long_stretch(mean_binary, 0)
 
     @staticmethod
     def _DN_OutlierInclude_p_001_mdrmd(X):
@@ -547,14 +547,14 @@ class Catch22(BaseCollectionTransformer):
 
     @staticmethod
     @njit(fastmath=True, cache=True)
-    def _SB_BinaryStats_mean_longstretch1(X):
-        # Longest period of successive incremental decreases.
+    def _SB_BinaryStats_mean_longstretch1(X, smean):
+        # Longest period of consecutive values above the mean.
         diff_binary = np.zeros(len(X) - 1)
         for i in range(len(diff_binary)):
-            if X[i + 1] - X[i] >= 0:
+            if X[i] - smean > 0:
                 diff_binary[i] = 1
 
-        return _long_stretch(diff_binary, 0)
+        return _long_stretch(diff_binary, 1)
 
     @staticmethod
     @njit(fastmath=True, cache=True)
@@ -702,6 +702,7 @@ class Catch22(BaseCollectionTransformer):
     @staticmethod
     @njit(fastmath=True, cache=True)
     def _SB_TransitionMatrix_3ac_sumdiagcov(X, acfz):
+        
         # Trace of covariance of transition matrix between symbols in 3-letter
         # alphabet.
         ds = np.zeros(int((len(X) - 1) / acfz + 1))
