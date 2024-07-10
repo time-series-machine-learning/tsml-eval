@@ -432,16 +432,19 @@ class Catch22(BaseCollectionTransformer):
     @staticmethod
     @njit(fastmath=True, cache=True)
     def _CO_f1ecac(X_ac):
-          #check fo NaN
-        for i in range(len(X_ac)):
-            if X_ac[i] == None:
-                return 0
-            
+
+        autocorrs = compute_autocorrelations(X_ac)
+        
         # First 1/e crossing of autocorrelation function.
         threshold = 0.36787944117144233  # 1 / np.exp(1)
-        for i in range(1, len(X_ac)):
-            if (X_ac[i - 1] - threshold) * (X_ac[i] - threshold) < 0:
-                return i
+        for i in range(len(X_ac) - 2):
+            if autocorrs[i + 1] < threshold:
+                m = autocorrs[i + 1] - autocorrs[i]
+                dy = threshold - autocorrs[i]
+                dx = dy/m
+                out = np.float64(i) + dx
+                return out
+            
         return len(X_ac)
 
     @staticmethod
@@ -516,18 +519,16 @@ class Catch22(BaseCollectionTransformer):
     def _IN_AutoMutualInfoStats_40_gaussian_fmmi(X_ac):
         # First minimum of the automutual information function.
         tau = int(min(40, np.ceil(len(X_ac) / 2)))
+        
+        ami = np.zeros(len(X_ac), dtype=np.float64)
 
-        diffs = np.zeros(tau - 1)
-        prev = -0.5 * np.log(1 - np.power(X_ac[1], 2))
-        for i in range(len(diffs)):
-            corr = -0.5 * np.log(1 - np.power(X_ac[i + 2], 2))
-            diffs[i] = corr - prev
-            prev = corr
-
-        for i in range(len(diffs) - 1):
-            if diffs[i] * diffs[i + 1] < 0 and diffs[i] < 0:
-                return i + 1
-
+        for i in range(tau):
+            ac = autocorr_lag(X_ac, len(X_ac), i + 1)
+            ami[i]= -0.5 * np.log(1 - np.power(ac, 2))
+        
+        for i in range(1, tau - 1):
+            if ami[i] < ami[i - 1] and ami[i] < ami[i + 1]:
+                return i
         return tau
 
     @staticmethod
@@ -559,7 +560,52 @@ class Catch22(BaseCollectionTransformer):
     @staticmethod
     @njit(fastmath=True, cache=True)
     def _SB_MotifThree_quantile_hh(X, indices):
-        # Shannon entropy of two successive letters in equiprobable 3-letter
+        alphabet_size = 3
+        
+        yt = np.zeros(len(X), dtype=np.int32)
+        sb_coarsegrain(X, 3, yt)
+        r1 = [np.zeros(len(X), np.int32) for i in range(alphabet_size)]
+        sizes_r1 = np.zeros(alphabet_size, np.int32)
+        for i in range(alphabet_size):
+            r_idx = 0
+            sizes_r1[i] = 0
+            for j in range(len(X)):
+                if yt[j] == i + 1:
+                    r1[i][r_idx] = j
+                    r_idx += 1
+                    sizes_r1[i] += 1
+        
+        for i in range(alphabet_size):
+            if sizes_r1[i] != 0 and r1[i][sizes_r1[i] - 1] == len(X) - 1:
+                tmp_ar = np.zeros(sizes_r1[i], np.int32)
+                #isn't this doing the same thing?
+                for x in range(sizes_r1[i]):
+                    tmp_ar[x] = r1[i][x] 
+                for y in range(sizes_r1[i] - 1):
+                    r1[i][y] = tmp_ar[y]
+                sizes_r1[i] -= 1
+
+        r2 = [[np.zeros(len(X),np.int32) for j in range(alphabet_size)] for i in range(alphabet_size)]
+        sizes_r2 = [np.zeros(alphabet_size, np.int32) for i in range(alphabet_size)] 
+        out2 = [np.zeros(alphabet_size, np.float64) for i in range(alphabet_size)]
+        
+        for i in range(alphabet_size):
+            for j in range(alphabet_size):
+                sizes_r2[i][j] = 0
+                dynamic_idx = 0
+                for k in range(sizes_r1[i]):
+                    tmp_idx = yt[r1[i][k] + 1]
+                    if tmp_idx == j + 1:
+                        r2[i][j][dynamic_idx] = r1[i][k]
+                        dynamic_idx += 1
+                        sizes_r2[i][j] += 1
+                tmp = np.float64(sizes_r2[i][j]) / (np.float64(len(X)) - 1.0)
+                out2[i][j] = tmp
+        hh = 0.0
+        for i in range(alphabet_size):
+            hh += f_entropy(out2[i], alphabet_size)
+        return hh
+        '''# Shannon entropy of two successive letters in equiprobable 3-letter
         # symbolization.
         bins = np.zeros(len(X))
         q1 = int(len(X) / 3)
@@ -607,7 +653,7 @@ class Catch22(BaseCollectionTransformer):
                     nsum2 /= len(X) - 1
                     nsum += nsum2 * np.log(nsum2)
 
-        return -nsum
+        return -nsum'''
 
     @staticmethod
     def _FC_LocalSimple_mean1_tauresrat(X, acfz):
@@ -1328,14 +1374,11 @@ def _verify_features(features, catch24):
 def compute_autocorrelations(X):
     mean = np.mean(X)
     nFFT = nearestPowerOf2(len(X)) * 2
-        
     F = np.zeros(nFFT * 2, dtype=np.complex128)
     for i in range(len(X)):
         F[i] = complex(X[i] - mean, 0.0)
-         
     for i in range(len(X), nFFT):
         F[i] = complex(0.0, 0.0)
-        
     tw = np.zeros(nFFT * 2, dtype=np.complex128)
     twiddles(tw, nFFT)
     fft(F, nFFT, tw)
@@ -1369,19 +1412,68 @@ def fft(a, size, tw):
     out = a.copy()
     _fft(a, out, size, 1, tw)
 
+
 @njit()
 def _fft(a, out, size, step, tw):
     if(step < size):
         _fft(out, a, size, step * 2, tw)
         _fft(out[step:], a[step:], size, step * 2, tw)   
-         
         for i in range(0, size, 2 * step):
             t = tw[i] * out[i + step]
             a[int(i / 2)] = out[i] + t
             a[int((i + size) / 2)] = out[i] - t
+       
 
 @njit()
 def stddev(a, size):
     m = np.mean(a[:size])
     sd = np.sqrt(np.sum((a[:size] - m) ** 2) / (size - 1))
     return sd
+
+@njit()
+def autocorr_lag(x, size, lag):
+    return corr(x, x[lag:], size - lag)
+    
+@njit()
+def corr(x, y, size):
+    nom = 0.0
+    denomX = 0.0
+    denomY = 0.0
+    meanX = 0.0
+    for i in range(size):
+        meanX += x[i]
+    meanX = meanX / size
+    meanY = np.mean(y)
+    
+    for i in range(size):
+        nom += (x[i] - meanX) * (y[i] - meanY)
+        denomX += (x[i] - meanX) * (x[i] - meanX)
+        denomY += (y[i] - meanY) * (y[i] - meanY)
+        
+    return nom/np.sqrt(denomX * denomY)
+    
+@njit()
+def sb_coarsegrain(y, num_groups, labels):
+    th = np.zeros((num_groups + 1) * 2 ,dtype=np.float64)
+    ls = np.zeros((num_groups + 1) * 2 ,dtype=np.float64)
+    #linspace
+    step_size = 1 / (num_groups)
+    start = 0
+    for i in range(num_groups + 1):
+        ls[i] = start
+        start += step_size
+    for i in range(num_groups + 1):
+        th[i] = np.quantile(y, ls[i])
+    th[0] -= 1
+    for i in range(num_groups):
+        for j in range(len(y)):
+            if y[j] > th[i] and y[j] <= th[i + 1]:
+                labels[j] = i + 1
+
+@njit()
+def f_entropy(a, size):
+    f = 0.0
+    for i in range(size):
+        if(a[i] > 0):
+            f += a[i] * np.log(a[i])
+    return -1 * f
