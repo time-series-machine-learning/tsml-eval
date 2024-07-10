@@ -432,17 +432,16 @@ class Catch22(BaseCollectionTransformer):
     @staticmethod
     @njit(fastmath=True, cache=True)
     def _CO_f1ecac(X_ac):
-
-        autocorrs = compute_autocorrelations(X_ac)
-        
+        # Parameter has already been transformed using _autocorr
         # First 1/e crossing of autocorrelation function.
         threshold = 0.36787944117144233  # 1 / np.exp(1)
         for i in range(len(X_ac) - 2):
-            if autocorrs[i + 1] < threshold:
-                m = autocorrs[i + 1] - autocorrs[i]
-                dy = threshold - autocorrs[i]
+            if X_ac[i + 1] < threshold:
+                m = X_ac[i + 1] - X_ac[i]
+                dy = threshold - X_ac[i]
                 dx = dy/m
                 out = np.float64(i) + dx
+                print("Result: ", out)
                 return out
             
         return len(X_ac)
