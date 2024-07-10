@@ -313,7 +313,7 @@ class Catch22(BaseCollectionTransformer):
                         )
                         fft = np.fft.fft(series - smean, n=nfft)
                     args = [series, fft]
-                elif feature == 5 or feature == 6 or feature == 12:
+                elif feature == 5 or feature == 6:
                     if smean is None:
                         smean = mean(series)
                     if fft is None:
@@ -441,7 +441,6 @@ class Catch22(BaseCollectionTransformer):
                 dy = threshold - X_ac[i]
                 dx = dy/m
                 out = np.float64(i) + dx
-                print("Result: ", out)
                 return out
             
         return len(X_ac)
