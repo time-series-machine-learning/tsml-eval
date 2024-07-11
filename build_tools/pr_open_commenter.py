@@ -113,5 +113,6 @@ These checkboxes will add labels to enable/disable CI functionality for this PR.
 - [ ] Run all `pytest` tests and configurations
 - [ ] Run all notebook example tests
 - [ ] Stop automatic `pre-commit` fixes (always disabled for drafts)
+- [ ] Push an empty commit to re-run CI checks
     """  # noqa
 )
