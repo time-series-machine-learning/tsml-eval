@@ -340,7 +340,6 @@ class Catch22(BaseCollectionTransformer):
                     if acfz is None:
                         acfz = _ac_first_zero(ac)
                     args = [series, acfz]
-
                 if feature == 22:
                     c22[dim + n] = smean
                 elif feature == 23:
@@ -448,6 +447,7 @@ class Catch22(BaseCollectionTransformer):
     @staticmethod
     @njit(fastmath=True, cache=True)
     def _CO_FirstMin_ac(X_ac):
+        #X_ac = compute_autocorrelations(X_ac)
         # First minimum of autocorrelation function.
         for i in range(1, len(X_ac) - 1):
             if X_ac[i] < X_ac[i - 1] and X_ac[i] < X_ac[i + 1]:
@@ -670,54 +670,63 @@ class Catch22(BaseCollectionTransformer):
     @staticmethod
     @njit(fastmath=True, cache=True)
     def _CO_Embed2_Dist_tau_d_expfit_meandiff(X, acfz):
+        # acfz = 0
+        # while(X_ac[acfz] > 0 and acfz < len(X)):
+        #     acfz += 1
+
         # Exponential fit to successive distances in 2-d embedding space.
         tau = acfz
         if tau > len(X) / 10:
             tau = int(len(X) / 10)
-
         d = np.zeros(len(X) - tau - 1)
         d_mean = 0
         for i in range(len(d)):
             n = np.sqrt(
-                np.power(X[i + 1] - X[i], 2) + np.power(X[i + tau + 1] - X[i + tau], 2)
+                np.power(X[i + 1] - X[i], 2) + 
+                np.power(X[i + tau] - X[i + tau + 1], 2)
             )
             d[i] = n
             d_mean += n
-        d_mean /= len(X) - tau - 1
-
+        d_mean /= len(d)
         smin = np.min(d)
         smax = np.max(d)
         srange = smax - smin
         std = np.std(d)
-
-        if std == 0:
-            return np.nan
-
+        if std < 0.001:
+            return 0
         num_bins = int(
-            np.ceil(srange / (3.5 * np.std(d) / np.power(len(d), 0.3333333333333333)))
+            np.ceil(srange / (3.5 * stddev(d, len(d)) / np.power(len(d), 0.3333333333333333)))
         )
-
         if num_bins == 0:
-            return np.nan
+            return 0
         bin_width = srange / num_bins
 
-        histogram = np.zeros(num_bins)
+        histogram = np.zeros(num_bins, dtype=np.int32)
+        binEdges = np.zeros(num_bins + 1, dtype=np.float64)
         for val in d:
             idx = int((val - smin) / bin_width)
+            if idx < 0:
+                idx = 0
             if idx >= num_bins:
                 idx = num_bins - 1
             histogram[idx] += 1
-
-        sum = 0
+        
+        for i in range(num_bins + 1):
+            binEdges[i] = i * bin_width + smin
+        
+        histogramNormalise = np.zeros(num_bins, dtype=np.float64)
+        for i in range(len(histogramNormalise)):
+            histogramNormalise[i] = histogram[i] / len(d)
+        
+        d_exp_fit = np.zeros(num_bins,dtype=np.float64)
         for i in range(num_bins):
-            center = ((smin + bin_width * i) * 2 + bin_width) / 2
-            n = np.exp(-center / d_mean) / d_mean
-            if n < 0:
-                n = 0
+            expf = np.exp(-(binEdges[i] + binEdges[i + 1]) * 0.5 / d_mean)/d_mean
+            if expf < 0:
+                expf = 0
 
-            sum += np.abs(histogram[i] / len(d) - n)
+            d_exp_fit[i] = np.abs(histogramNormalise[i] - expf)
 
-        return sum / num_bins
+        return np.mean(d_exp_fit)
 
     @staticmethod
     @njit(fastmath=True, cache=True)
