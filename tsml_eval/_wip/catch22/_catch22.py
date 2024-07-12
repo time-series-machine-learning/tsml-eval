@@ -11,7 +11,6 @@ import math
 import numpy as np
 from joblib import Parallel, delayed
 from numba import njit
-import cmath
 
 from aeon.transformations.collection.base import BaseCollectionTransformer
 from aeon.utils.numba.general import z_normalise_series, z_normalise_series_with_mean
@@ -215,26 +214,26 @@ class Catch22(BaseCollectionTransformer):
             features = [
                 Catch22._DN_HistogramMode_5,
                 Catch22._DN_HistogramMode_10,
-                Catch22._SB_BinaryStats_mean_longstretch1,
-                Catch22._DN_OutlierInclude_p_001_mdrmd,
-                Catch22._DN_OutlierInclude_n_001_mdrmd,
                 Catch22._CO_f1ecac,
                 Catch22._CO_FirstMin_ac,
-                Catch22._SP_Summaries_welch_rect_area_5_1,
-                Catch22._SP_Summaries_welch_rect_centroid,
-                Catch22._FC_LocalSimple_mean3_stderr,
-                Catch22._CO_trev_1_num,
                 Catch22._CO_HistogramAMI_even_2_5,
-                Catch22._IN_AutoMutualInfoStats_40_gaussian_fmmi,
+                Catch22._CO_trev_1_num,
                 Catch22._MD_hrv_classic_pnn40,
-                Catch22._SB_BinaryStats_diff_longstretch0,
-                Catch22._SB_MotifThree_quantile_hh,
-                Catch22._FC_LocalSimple_mean1_tauresrat,
-                Catch22._CO_Embed2_Dist_tau_d_expfit_meandiff,
-                Catch22._SC_FluctAnal_2_dfa_50_1_2_logi_prop_r1,
-                Catch22._SC_FluctAnal_2_rsrangefit_50_1_logi_prop_r1,
+                Catch22._SB_BinaryStats_mean_longstretch1,
                 Catch22._SB_TransitionMatrix_3ac_sumdiagcov,
                 Catch22._PD_PeriodicityWang_th0_01,
+                Catch22._CO_Embed2_Dist_tau_d_expfit_meandiff,
+                Catch22._IN_AutoMutualInfoStats_40_gaussian_fmmi,
+                Catch22._FC_LocalSimple_mean1_tauresrat,
+                Catch22._DN_OutlierInclude_p_001_mdrmd,
+                Catch22._DN_OutlierInclude_n_001_mdrmd,
+                Catch22._SP_Summaries_welch_rect_area_5_1,
+                Catch22._SB_BinaryStats_diff_longstretch0,
+                Catch22._SB_MotifThree_quantile_hh,
+                Catch22._SC_FluctAnal_2_rsrangefit_50_1_logi_prop_r1,
+                Catch22._SC_FluctAnal_2_dfa_50_1_2_logi_prop_r1,
+                Catch22._SP_Summaries_welch_rect_centroid,
+                Catch22._FC_LocalSimple_mean3_stderr
             ]
 
         c22_list = Parallel(
@@ -285,17 +284,17 @@ class Catch22(BaseCollectionTransformer):
 
                 args = [series]
 
-                if feature == 0 or feature == 1 or feature == 11:
+                if feature == 0 or feature == 1 or feature == 4:
                     if smin is None:
                         smin = numba_min(series)
                     if smax is None:
                         smax = numba_max(series)
                     args = [series, smin, smax]
-                elif feature == 2 or feature == 22:
+                elif feature == 7 or feature == 22:
                     if smean is None:
                         smean = mean(series)
                     args = [series, smean]
-                elif feature == 3 or feature == 4:
+                elif feature == 13 or feature == 14:
                     if self.outlier_norm:
                         if smean is None:
                             smean = mean(series)
@@ -304,7 +303,7 @@ class Catch22(BaseCollectionTransformer):
                         args = [outlier_series]
                     else:
                         args = [series]
-                elif feature == 7 or feature == 8:
+                elif feature == 15 or feature == 20:
                     if smean is None:
                         smean = mean(series)
                     if fft is None:
@@ -313,7 +312,7 @@ class Catch22(BaseCollectionTransformer):
                         )
                         fft = np.fft.fft(series - smean, n=nfft)
                     args = [series, fft]
-                elif feature == 5:
+                elif feature == 2:
                     if smean is None:
                         smean = mean(series)
                     if fft is None:
@@ -324,10 +323,7 @@ class Catch22(BaseCollectionTransformer):
                     if ac is None:
                         ac = _autocorr(series, fft)
                     args = [ac]
-                elif feature == 15:
-                    indices = np.argsort(series)
-                    args = [series, indices]
-                elif feature == 16 or feature == 17 or feature == 20:
+                elif feature == 12 or feature == 10 or feature == 8:
                     if smean is None:
                         smean = mean(series)
                     if fft is None:
@@ -557,7 +553,7 @@ class Catch22(BaseCollectionTransformer):
 
     @staticmethod
     @njit(fastmath=True, cache=True)
-    def _SB_MotifThree_quantile_hh(X, indices):
+    def _SB_MotifThree_quantile_hh(X):
         alphabet_size = 3
         yt = np.zeros(len(X), dtype=np.int32)
         sb_coarsegrain(X, 3, yt)
@@ -748,40 +744,6 @@ class Catch22(BaseCollectionTransformer):
             sum_of_diagonal_cov += cov_array[i][i]
         
         return sum_of_diagonal_cov
-        '''
-        bins = np.zeros(len(ds), dtype=np.int32)
-        q1 = int(len(ds) / 3)
-        q2 = q1 * 2
-        for i in range(q1 + 1, q2 + 1):
-            bins[indicies[i]] = 1
-        for i in range(q2 + 1, len(indicies)):
-            bins[indicies[i]] = 2
-
-        t = np.zeros((3, 3))
-        for i in range(len(ds) - 1):
-            t[bins[i + 1]][bins[i]] += 1
-        t /= len(ds) - 1
-
-        means = np.zeros(3)
-        for i in range(3):
-            means[i] = np.mean(t[i])
-
-        cov = np.zeros((3, 3))
-        for i in range(3):
-            for n in range(3):
-                covariance = 0
-                for j in range(3):
-                    covariance += (t[i][j] - means[i]) * (t[n][j] - means[n])
-                covariance /= 2
-
-                cov[i][n] = covariance
-                cov[n][i] = covariance
-
-        ssum = 0
-        for i in range(3):
-            ssum += cov[i][i]
-        '''
-        return ssum
 
     @staticmethod
     @njit(fastmath=True, cache=True)
@@ -1398,7 +1360,7 @@ def twiddles(a, size):
     
     for i in range(size):
         tmp = 0.0 - PI * i / size * 1j 
-        a[i] = cmath.exp(tmp)
+        a[i] = np.exp(tmp)
 
 @njit()
 def fft(a, tw):

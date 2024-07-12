@@ -62,7 +62,7 @@ features_names_pycatch22 = [
 # echo $env:NUMBA_DISABLE_JIT
 # Numba Disabled Switcher 0 = off, 1 = on
 
-IPD_X_train, IPD_y_train = load_italy_power_demand(split="train")
+IPD_X_train, IPD_y_train = load_italy_power_demand(split="test")
 #IPD_X_train = [IPD_X_train[0]]
 #print("Training Data: ", IPD_X_train)
 os.environ['NUMBA_DISABLE_JIT'] = '0'
@@ -76,23 +76,19 @@ else:
 #aeon
 aeon_c22 = Catch22(replace_nans=True)
 _ = aeon_c22.fit_transform(IPD_X_train)
+
+results_aeon = [features_names_pycatch22]
+for i in range(len(_)):
+    #formatting it to pycatch22 format
+    results_aeon.append(_[i])
+
+
 #pycatch
 results_pycatch22 = [features_names_pycatch22]
 for i in range(len(IPD_X_train)):
     results = pycatch22.catch22_all(IPD_X_train[i][0])
     results_pycatch22.append(results['values'])
 
-results_aeon = [features_names_pycatch22]
-for i in range(len(_)):
-    #formatting it to pycatch22 format
-    results_aeon.append([
-            _[i][0],_[i][1],_[i][5],_[i][6],
-            _[i][11],_[i][10],_[i][13],_[i][2],
-            _[i][20],_[i][21],_[i][17],_[i][12],
-            _[i][16],_[i][3],_[i][4],_[i][7],
-            _[i][14],_[i][15],_[i][19],_[i][18],
-            _[i][8],_[i][9]
-              ])
 
 #aeon xlsx
 wb = Workbook()
