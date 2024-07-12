@@ -443,7 +443,7 @@ class Catch22(BaseCollectionTransformer):
     @staticmethod
     @njit(fastmath=True, cache=True)
     def _CO_FirstMin_ac(X_ac):
-        X_ac = compute_autocorrelations(X_ac)
+        X_ac = _compute_autocorrelations(X_ac)
         # First minimum of autocorrelation function.
         for i in range(1, len(X_ac) - 1):
             if X_ac[i] < X_ac[i - 1] and X_ac[i] < X_ac[i + 1]:
@@ -467,7 +467,7 @@ class Catch22(BaseCollectionTransformer):
         if len(X) - 3 < 3:
             return 0
         res = _local_simple_mean(X, 3)
-        return stddev(res, len(X) - 3)
+        return _stddev(res, len(X) - 3)
 
     @staticmethod
     @njit(fastmath=True, cache=True)
@@ -517,7 +517,7 @@ class Catch22(BaseCollectionTransformer):
         ami = np.zeros(len(X_ac), dtype=np.float64)
 
         for i in range(tau):
-            ac = autocorr_lag(X_ac, len(X_ac), i + 1)
+            ac = _autocorr_lag(X_ac, len(X_ac), i + 1)
             ami[i]= -0.5 * np.log(1 - np.power(ac, 2))
         
         for i in range(1, tau - 1):
@@ -556,7 +556,7 @@ class Catch22(BaseCollectionTransformer):
     def _SB_MotifThree_quantile_hh(X):
         alphabet_size = 3
         yt = np.zeros(len(X), dtype=np.int32)
-        sb_coarsegrain(X, 3, yt)
+        _sb_coarsegrain(X, 3, yt)
         r1 = [np.zeros(len(X), np.int32) for i in range(alphabet_size)]
         sizes_r1 = np.zeros(alphabet_size, np.int32)
         for i in range(alphabet_size):
@@ -596,7 +596,7 @@ class Catch22(BaseCollectionTransformer):
                 out2[i][j] = tmp
         hh = 0.0
         for i in range(alphabet_size):
-            hh += f_entropy(out2[i], alphabet_size)
+            hh += _f_entropy(out2[i], alphabet_size)
         return hh
 
     @staticmethod
@@ -616,10 +616,6 @@ class Catch22(BaseCollectionTransformer):
     @staticmethod
     @njit(fastmath=True, cache=True)
     def _CO_Embed2_Dist_tau_d_expfit_meandiff(X, acfz):
-        # acfz = 0
-        # while(X_ac[acfz] > 0 and acfz < len(X)):
-        #     acfz += 1
-
         # Exponential fit to successive distances in 2-d embedding space.
         tau = acfz
         if tau > len(X) / 10:
@@ -641,7 +637,7 @@ class Catch22(BaseCollectionTransformer):
         if std < 0.001:
             return 0
         num_bins = int(
-            np.ceil(srange / (3.5 * stddev(d, len(d)) / np.power(len(d), 0.3333333333333333)))
+            np.ceil(srange / (3.5 * _stddev(d, len(d)) / np.power(len(d), 0.3333333333333333)))
         )
         if num_bins == 0:
             return 0
@@ -708,7 +704,7 @@ class Catch22(BaseCollectionTransformer):
             ds[i] = X[i * acfz]
         #swap to alphabet:
         yCG = np.zeros(len(ds), dtype=np.int32)
-        sb_coarsegrain(ds, 3, yCG)
+        _sb_coarsegrain(ds, 3, yCG)
         
         T = np.zeros((3,3), dtype=np.float64)
         for i in range(len(ds) - 1):
@@ -735,7 +731,7 @@ class Catch22(BaseCollectionTransformer):
         covTemp = 0.0
         for i in range(3):
             for j in range(3):
-                covTemp = covariance(columns[i], columns[j], 3)
+                covTemp = _covariance(columns[i], columns[j], 3)
                 cov_array[i][j] = covTemp
                 cov_array[j][i] = covTemp
     
@@ -795,21 +791,30 @@ class Catch22(BaseCollectionTransformer):
 
 @njit(fastmath=True, cache=True)
 def _histogram_mode(X, num_bins, smin, smax):
+    srange = smax - smin
+    
+    bin_width = srange / num_bins
+    if bin_width == 0:
+        return np.nan
+    
+    histogram = np.zeros(num_bins, dtype=np.int32)
+    edges = np.zeros(num_bins + 1, dtype=np.float64)
+    for val in X:
+        idx = int((val - smin) / bin_width)
+        if idx < 0:
+            idx = 0
+        if idx >= num_bins:
+            idx = num_bins - 1
+        histogram[idx] += 1
+        
+    for i in range(num_bins + 1):
+        edges[i] = i * bin_width + smin
+    
     bin_width = (smax - smin) / num_bins
 
     if bin_width == 0:
         return np.nan
-
-    histogram = np.zeros(num_bins)
-    for val in X:
-        idx = int((val - smin) / bin_width)
-        idx = num_bins - 1 if idx >= num_bins else idx
-        histogram[idx] += 1
-
-    edges = np.zeros(num_bins + 1, dtype=np.float32)
-    for i in range(len(edges)):
-        edges[i] = i * bin_width + smin
-
+    
     max_count = 0
     num_maxs = 1
     max_sum = 0
@@ -824,6 +829,7 @@ def _histogram_mode(X, num_bins, smin, smax):
             max_sum += v
 
     return max_sum / num_maxs
+
 
 
 @njit(fastmath=True, cache=True)
@@ -1325,28 +1331,28 @@ def _verify_features(features, catch24):
 
     return f_idx
 
-@njit()
-def compute_autocorrelations(X):
+@njit(fastmath=True, cache=True)
+def _compute_autocorrelations(X):
     mean = np.mean(X)
-    nFFT = nearestPowerOf2(len(X)) * 2
+    nFFT = _nearestPowerOf2(len(X)) * 2
     F = np.zeros(nFFT * 2, dtype=np.complex128)
     for i in range(len(X)):
         F[i] = complex(X[i] - mean, 0.0)
     for i in range(len(X), nFFT):
         F[i] = complex(0.0, 0.0)
     tw = np.zeros(nFFT * 2, dtype=np.complex128)
-    twiddles(tw, nFFT)
-    F = fft(F, tw)
+    _twiddles(tw, nFFT)
+    F = _fft(F, tw)
     #dot multiply
     F = np.multiply(F, np.conj(F))
-    F = fft(F, tw)
+    F = _fft(F, tw)
     divisor = F[0]
     F = F / divisor
     out = np.real(F)
     return out
 
-@njit()
-def nearestPowerOf2(N):
+@njit(fastmath=True, cache=True)
+def _nearestPowerOf2(N):
     a = int(np.log2(N))
     
     if 2**a == N:
@@ -1354,16 +1360,16 @@ def nearestPowerOf2(N):
         
     return 2**(a + 1)
 
-@njit()
-def twiddles(a, size):
+@njit(fastmath=True, cache=True)
+def _twiddles(a, size):
     PI = np.pi
     
     for i in range(size):
         tmp = 0.0 - PI * i / size * 1j 
         a[i] = np.exp(tmp)
 
-@njit()
-def fft(a, tw):
+@njit(fastmath=True, cache=True)
+def _fft(a, tw):
     n = a.shape[0]
     log_n = int(np.log2(n))
     out = np.empty_like(a)
@@ -1390,18 +1396,18 @@ def fft(a, tw):
     return out
        
 
-@njit()
-def stddev(a, size):
+@njit(fastmath=True, cache=True)
+def _stddev(a, size):
     m = np.mean(a[:size])
     sd = np.sqrt(np.sum((a[:size] - m) ** 2) / (size - 1))
     return sd
 
-@njit()
-def autocorr_lag(x, size, lag):
-    return corr(x, x[lag:], size - lag)
+@njit(fastmath=True, cache=True)
+def _autocorr_lag(x, size, lag):
+    return _corr(x, x[lag:], size - lag)
     
-@njit()
-def corr(x, y, size):
+@njit(fastmath=True, cache=True)
+def _corr(x, y, size):
     nom = 0.0
     denomX = 0.0
     denomY = 0.0
@@ -1418,8 +1424,8 @@ def corr(x, y, size):
         
     return nom/np.sqrt(denomX * denomY)
     
-@njit()
-def sb_coarsegrain(y, num_groups, labels):
+@njit(fastmath=True, cache=True)
+def _sb_coarsegrain(y, num_groups, labels):
     th = np.zeros((num_groups + 1),dtype=np.float64)
     ls = np.zeros((num_groups + 1),dtype=np.float64)
     #linspace
@@ -1429,15 +1435,15 @@ def sb_coarsegrain(y, num_groups, labels):
         ls[i] = start
         start += step_size
     for i in range(num_groups + 1):
-        th[i] = quantile(y, ls[i])
+        th[i] = _quantile(y, ls[i])
     th[0] -= 1
     for i in range(num_groups):
         for j in range(len(y)):
             if y[j] > th[i] and y[j] <= th[i + 1]:
                 labels[j] = i + 1
 
-@njit()
-def quantile(X, quant):
+@njit(fastmath=True, cache=True)
+def _quantile(X, quant):
     tmp = np.sort(X)
     q = 0.5 / len(X)
     if(quant < q):
@@ -1454,16 +1460,16 @@ def quantile(X, quant):
     return value
     
 
-@njit()
-def f_entropy(a, size):
+@njit(fastmath=True, cache=True)
+def _f_entropy(a, size):
     f = 0.0
     for i in range(size):
         if(a[i] > 0):
             f += a[i] * np.log(a[i])
     return -1 * f
 
-@njit()
-def covariance(X, Y, size):
+@njit(fastmath=True, cache=True)
+def _covariance(X, Y, size):
     val = 0
     meanX = np.mean(X)
     meanY = np.mean(Y)
