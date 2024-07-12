@@ -12,8 +12,8 @@ def binary_information_gain(orderline, c1, c2):
     Parameters
     ----------
 
-    orderline: 2D np.array (?) of what?
-        Orderline for a given shapelet
+    orderline: np.array
+        Sorted array of tuples (check).
     c1: int
         Number of cases of the class of interest
     c2: int
@@ -59,58 +59,19 @@ def binary_information_gain(orderline, c1, c2):
     return bsf_ig
 
 
-# F_stat implementation with orderline datatype
-# def calculate_f_statistic(orderline):
-#     """
-#     Calculate the F-statistic for shapelet quality based on a list of tuples containing distances and class labels.
-
-#     Parameters:
-#     - orderline (list of tuples): Each tuple contains (distance, class_label).
-
-#     Returns:
-#     - float: The computed F-statistic.
-#     """
-
-#     class_distances = {}
-#     for distance, label in orderline:
-#         if label not in class_distances:
-#             class_distances[label] = []
-#         class_distances[label].append(distance)
-
-#     #F-stat Calc
-#     class_means = {cls: np.mean(dists) for cls, dists in class_distances.items()} # each key = class label,  each value = mean distance for that class
-#     all_distances = [dist for dists in class_distances.values() for dist in dists]
-#     overall_mean = np.mean(all_distances)
-#     n = len(all_distances)  # Total number of distance measurements
-#     C = len(class_distances)  # Number of classes
-
-
-#     between_class_sum_of_squares = sum(len(dists) * (class_mean - overall_mean) ** 2
-#                                        for cls, class_mean in class_means.items())
-#     within_class_sum_of_squares = sum((distance - class_means[label]) ** 2
-#                                       for distance, label in orderline)
-
-#     # degrees of freedom
-#     df_between = C - 1
-#     df_within = n - C
-
-#     #  F-stat
-#     if df_within == 0:
-#         return float('inf')
-#     F_stat = (between_class_sum_of_squares / df_between) / (within_class_sum_of_squares / df_within)
-
-#     return F_stat
-
-
 
 @njit(fastmath=True, cache=True)
 def _moods_median(class0, class1):
-    """
-    calculate Mood's Median test statistic
+    """Calculate Mood's Median test statistic for two treatment levels.
 
-    Parameters:
-    - class0 (np.array): Array of distances for the first class.
-    - class1 (np.array): Array of distances for the second class.
+    Mood's median is a non-parameteric test for diffence in medians between
+    samples of groups. This version is for two group tests only.
+
+    Parameters
+    ----------
+    class0: np.ndarray
+            Array of distances to the first class.
+    class1 (np.array): Array of distances for the second class.
 
     Returns:
     - float value
@@ -184,7 +145,7 @@ def f_stat(class0, class1):
 
     # Avoid division by zero
     if df_within <= 0:
-        return np.inf  
+        return np.inf
 
     F_stat = (ssb / df_between) / (ssw / df_within)
     return F_stat

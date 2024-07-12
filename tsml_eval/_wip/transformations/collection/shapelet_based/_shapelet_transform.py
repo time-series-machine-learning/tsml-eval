@@ -22,7 +22,8 @@ from sklearn.utils._random import check_random_state
 from aeon.transformations.collection.base import BaseCollectionTransformer
 from aeon.utils.numba.general import AEON_NUMBA_STD_THRESHOLD, z_normalise_series
 from aeon.utils.validation import check_n_jobs
-from tsml_eval._wip.transformations.collection.shapelet_based._quality_measures import f_stat
+import _quality_measures as qm
+
 
 class RandomShapeletTransform(BaseCollectionTransformer):
     """Random Shapelet Transform.
@@ -536,6 +537,7 @@ class RandomShapeletTransform(BaseCollectionTransformer):
 
 
     @staticmethod
+    @njit(fastmath=True, cache=True)
     def _f_stat_shapelet_quality(
         X,
         y,
@@ -547,7 +549,6 @@ class RandomShapeletTransform(BaseCollectionTransformer):
         inst_idx,
         this_cls_count,
         other_cls_count,
-        worst_quality,
     ):
         distances1 = np.zeros(this_cls_count-1)
         distances2 = np.zeros(other_cls_count)
@@ -564,7 +565,7 @@ class RandomShapeletTransform(BaseCollectionTransformer):
                 else:
                     distances2[c2]= distance
                     c2=c2+1
-        quality = f_stat(distances1, distances2)
+        quality = qm.f_stat(distances1, distances2)
 
         return round(quality, 12)
 
