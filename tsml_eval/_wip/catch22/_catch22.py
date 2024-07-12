@@ -313,7 +313,7 @@ class Catch22(BaseCollectionTransformer):
                         )
                         fft = np.fft.fft(series - smean, n=nfft)
                     args = [series, fft]
-                elif feature == 5 or feature == 6:
+                elif feature == 5:
                     if smean is None:
                         smean = mean(series)
                     if fft is None:
@@ -447,7 +447,7 @@ class Catch22(BaseCollectionTransformer):
     @staticmethod
     @njit(fastmath=True, cache=True)
     def _CO_FirstMin_ac(X_ac):
-        #X_ac = compute_autocorrelations(X_ac)
+        X_ac = compute_autocorrelations(X_ac)
         # First minimum of autocorrelation function.
         for i in range(1, len(X_ac) - 1):
             if X_ac[i] < X_ac[i - 1] and X_ac[i] < X_ac[i + 1]:
@@ -559,7 +559,6 @@ class Catch22(BaseCollectionTransformer):
     @njit(fastmath=True, cache=True)
     def _SB_MotifThree_quantile_hh(X, indices):
         alphabet_size = 3
-        
         yt = np.zeros(len(X), dtype=np.int32)
         sb_coarsegrain(X, 3, yt)
         r1 = [np.zeros(len(X), np.int32) for i in range(alphabet_size)]
@@ -603,55 +602,6 @@ class Catch22(BaseCollectionTransformer):
         for i in range(alphabet_size):
             hh += f_entropy(out2[i], alphabet_size)
         return hh
-        '''# Shannon entropy of two successive letters in equiprobable 3-letter
-        # symbolization.
-        bins = np.zeros(len(X))
-        q1 = int(len(X) / 3)
-        q2 = q1 * 2
-        l1 = np.zeros(q1, dtype=np.int_)
-        for i in range(q1):
-            l1[i] = indices[i]
-        l2 = np.zeros(q1, dtype=np.int_)
-        c1 = 0
-        for i in range(q1, q2):
-            bins[indices[i]] = 1
-            l2[c1] = indices[i]
-            c1 += 1
-        l3 = np.zeros(len(indices) - q2, dtype=np.int_)
-        c2 = 0
-        for i in range(q2, len(indices)):
-            bins[indices[i]] = 2
-            l3[c2] = indices[i]
-            c2 += 1
-
-        found_last = False
-        nsum = 0
-        for i in range(3):
-            if i == 0:
-                o = l1
-            elif i == 1:
-                o = l2
-            else:
-                o = l3
-
-            if not found_last:
-                for n in range(len(o)):
-                    if o[n] == len(X) - 1:
-                        o = np.delete(o, n)
-                        break
-
-            for n in range(3):
-                nsum2 = 0
-
-                for v in o:
-                    if bins[v + 1] == n:
-                        nsum2 += 1
-
-                if nsum2 > 0:
-                    nsum2 /= len(X) - 1
-                    nsum += nsum2 * np.log(nsum2)
-
-        return -nsum'''
 
     @staticmethod
     def _FC_LocalSimple_mean1_tauresrat(X, acfz):
@@ -756,13 +706,49 @@ class Catch22(BaseCollectionTransformer):
     @njit(fastmath=True, cache=True)
     def _SB_TransitionMatrix_3ac_sumdiagcov(X, acfz):
         
-        # Trace of covariance of transition matrix between symbols in 3-letter
-        # alphabet.
-        ds = np.zeros(int((len(X) - 1) / acfz + 1))
+        # Trace of covariance of transition matrix between symbols in 3-letter alphabet.
+        ds = np.zeros(int(((len(X) - 1) / acfz) + 1), dtype=np.float64)
         for i in range(len(ds)):
             ds[i] = X[i * acfz]
-        indicies = np.argsort(ds)
+        #swap to alphabet:
+        yCG = np.zeros(len(ds), dtype=np.int32)
+        sb_coarsegrain(ds, 3, yCG)
+        
+        T = np.zeros((3,3), dtype=np.float64)
+        for i in range(len(ds) - 1):
+            T[yCG[i]-1][yCG[i+1]-1] += 1
+        for i in range(3):
+            for j in range(3):
+                T[i][j] /= (len(ds)-1)
+                
+        column1 = np.zeros(3, dtype=np.float64)
+        column2 = np.zeros(3, dtype=np.float64)
+        column3 = np.zeros(3, dtype=np.float64)
 
+        for i in range(3):
+            column1[i] = T[i][0]
+            column2[i] = T[i][1]
+            column3[i] = T[i][2]
+        columns = np.zeros((3,3), dtype=np.float64)
+        columns[0] = column1
+        columns[1] = column2
+        columns[2] = column3
+        
+        #columns = [column1, column2, column3]
+        cov_array = np.zeros((3,3), dtype=np.float64)
+        covTemp = 0.0
+        for i in range(3):
+            for j in range(3):
+                covTemp = covariance(columns[i], columns[j], 3)
+                cov_array[i][j] = covTemp
+                cov_array[j][i] = covTemp
+    
+        sum_of_diagonal_cov = 0.0
+        for i in range(3):
+            sum_of_diagonal_cov += cov_array[i][i]
+        
+        return sum_of_diagonal_cov
+        '''
         bins = np.zeros(len(ds), dtype=np.int32)
         q1 = int(len(ds) / 3)
         q2 = q1 * 2
@@ -794,7 +780,7 @@ class Catch22(BaseCollectionTransformer):
         ssum = 0
         for i in range(3):
             ssum += cov[i][i]
-
+        '''
         return ssum
 
     @staticmethod
@@ -1388,10 +1374,10 @@ def compute_autocorrelations(X):
         F[i] = complex(0.0, 0.0)
     tw = np.zeros(nFFT * 2, dtype=np.complex128)
     twiddles(tw, nFFT)
-    fft(F, nFFT, tw)
+    F = fft(F, tw)
     #dot multiply
     F = np.multiply(F, np.conj(F))
-    fft(F, nFFT, tw)
+    F = fft(F, tw)
     divisor = F[0]
     F = F / divisor
     out = np.real(F)
@@ -1415,20 +1401,31 @@ def twiddles(a, size):
         a[i] = cmath.exp(tmp)
 
 @njit()
-def fft(a, size, tw):
-    out = a.copy()
-    _fft(a, out, size, 1, tw)
+def fft(a, tw):
+    n = a.shape[0]
+    log_n = int(np.log2(n))
+    out = np.empty_like(a)
+    
+    # Bit-reversed addressing permutation
+    for i in range(n):
+        j = 0
+        for k in range(log_n):
+            j = (j << 1) | ((i >> k) & 1)
+        out[j] = a[i]
 
+    # Iterative FFT computation
+    step = 1
+    while step < n:
+        halfstep = step
+        step = 2 * step
+        for i in range(0, n, step):
+            for j in range(halfstep):
+                t = tw[j * (n // step)] * out[i + j + halfstep]
+                u = out[i + j]
+                out[i + j] = u + t
+                out[i + j + halfstep] = u - t
 
-@njit()
-def _fft(a, out, size, step, tw):
-    if(step < size):
-        _fft(out, a, size, step * 2, tw)
-        _fft(out[step:], a[step:], size, step * 2, tw)   
-        for i in range(0, size, 2 * step):
-            t = tw[i] * out[i + step]
-            a[int(i / 2)] = out[i] + t
-            a[int((i + size) / 2)] = out[i] - t
+    return out
        
 
 @njit()
@@ -1461,8 +1458,8 @@ def corr(x, y, size):
     
 @njit()
 def sb_coarsegrain(y, num_groups, labels):
-    th = np.zeros((num_groups + 1) * 2 ,dtype=np.float64)
-    ls = np.zeros((num_groups + 1) * 2 ,dtype=np.float64)
+    th = np.zeros((num_groups + 1),dtype=np.float64)
+    ls = np.zeros((num_groups + 1),dtype=np.float64)
     #linspace
     step_size = 1 / (num_groups)
     start = 0
@@ -1470,12 +1467,30 @@ def sb_coarsegrain(y, num_groups, labels):
         ls[i] = start
         start += step_size
     for i in range(num_groups + 1):
-        th[i] = np.quantile(y, ls[i])
+        th[i] = quantile(y, ls[i])
     th[0] -= 1
     for i in range(num_groups):
         for j in range(len(y)):
             if y[j] > th[i] and y[j] <= th[i + 1]:
                 labels[j] = i + 1
+
+@njit()
+def quantile(X, quant):
+    tmp = np.sort(X)
+    q = 0.5 / len(X)
+    if(quant < q):
+        value = tmp[0]
+        return value
+    elif(quant > (1 - q)):
+        value = tmp[len(X) - 1]
+        return value
+    
+    quant_idx = len(X) * quant - 0.5
+    idx_left = int(np.floor(quant_idx))
+    idx_right = int(np.ceil(quant_idx))
+    value = tmp[idx_left] + (quant_idx - idx_left) * (tmp[idx_right] - tmp[idx_left]) / (idx_right - idx_left)
+    return value
+    
 
 @njit()
 def f_entropy(a, size):
@@ -1484,3 +1499,14 @@ def f_entropy(a, size):
         if(a[i] > 0):
             f += a[i] * np.log(a[i])
     return -1 * f
+
+@njit()
+def covariance(X, Y, size):
+    val = 0
+    meanX = np.mean(X)
+    meanY = np.mean(Y)
+    for i in range(size):
+        val += (X[i] - meanX) * (Y[i] - meanY)
+        
+    return val / (size - 1)
+    
