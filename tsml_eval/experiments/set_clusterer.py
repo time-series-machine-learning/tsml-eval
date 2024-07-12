@@ -108,6 +108,12 @@ distance_based_clusterers = [
     "timeseriesclara",
 ]
 
+feature_based_clusterers = [
+    ["catch22", "catch22clusterer"],
+    ["tsfresh", "tsfreshclusterer"],
+    ["summary", "summaryclusterer"],
+]
+
 other_clusterers = [
     ["dummyclusterer", "dummy", "dummyclusterer-tsml"],
     "dummyclusterer-aeon",
@@ -174,6 +180,10 @@ def get_clusterer_by_name(
             data_vars,
             row_normalise,
             kwargs,
+        )
+    elif str_in_nested_list(feature_based_clusterers, c):
+        return _set_clusterer_feature_based(
+            c, random_state, n_jobs, fit_contract, checkpoint, kwargs
         )
     elif str_in_nested_list(other_clusterers, c):
         return _set_clusterer_other(
@@ -338,6 +348,23 @@ def _get_distance_default_params(
     if dist_name == "shape_dtw":
         return {"descriptor": "identity", "reach": 30}
     return {}
+
+
+def _set_clusterer_feature_based(
+    c, random_state, n_jobs, fit_contract, checkpoint, kwargs
+):
+    if c == "catch22" or c == "catch22clusterer":
+        from aeon.clustering.feature_based import Catch22Clusterer
+
+        return Catch22Clusterer(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "tsfresh" or c == "tsfreshclusterer":
+        from aeon.clustering.feature_based import TSFreshClusterer
+
+        return TSFreshClusterer(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "summary" or c == "summaryclusterer":
+        from aeon.clustering.feature_based import SummaryClusterer
+
+        return SummaryClusterer(random_state=random_state, n_jobs=n_jobs, **kwargs)
 
 
 def _set_clusterer_other(c, random_state, n_jobs, fit_contract, checkpoint, kwargs):

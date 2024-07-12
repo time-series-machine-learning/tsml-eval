@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tsml-eval"
-version = "0.3.0"
+version = "0.4.0"
 description = "A package for benchmarking time series machine learning tools."
 authors = [
     {name = "Matthew Middlehurst", email = "m.b.middlehurst@soton.ac.uk"},
@@ -34,15 +34,14 @@ classifiers = [
     "Operating System :: Unix",
     "Operating System :: MacOS",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
-requires-python = ">=3.8,<3.13"
+requires-python = ">=3.9,<3.13"
 dependencies = [
-    "aeon>=0.9.0,<0.10.0",
+    "aeon>=0.10.0,<0.11.0",
     "tsml>=0.4.0,<0.5.0",
     "scikit-learn>=1.0.0,<1.6.0",
     "matplotlib",
@@ -55,7 +54,6 @@ all_extras = [
     "aeon[all_extras,dl]",
     "tsml[all_extras]",
     "xgboost",
-    "torch>=1.13.1",
 ]
 unstable_extras = [
     "aeon[unstable_extras]",
@@ -63,7 +61,6 @@ unstable_extras = [
 ]
 deep_learning = [
     "aeon[dl]",
-    "torch>=1.13.1",
 ]
 dev = [
     "pre-commit",
@@ -79,7 +76,7 @@ binder = [
     "jupyterlab",
 ]
 docs = [
-    "sphinx<8.0.0",
+    "sphinx<7.4.0",
     "sphinx-design",
     "sphinx-version-warning",
     "sphinx_issues",

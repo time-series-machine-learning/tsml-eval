@@ -4,6 +4,7 @@
 [![docs-release](https://img.shields.io/readthedocs/tsml-eval/stable?logo=readthedocs&label=docs%20%28stable%29)](https://tsml-eval.readthedocs.io/en/stable/)
 [![docs-main](https://img.shields.io/readthedocs/tsml-eval/latest?logo=readthedocs&label=docs%20%28latest%29)](https://tsml-eval.readthedocs.io/en/latest/)
 [![codecov](https://img.shields.io/codecov/c/github/time-series-machine-learning/tsml-eval?label=codecov&logo=codecov)](https://codecov.io/gh/time-series-machine-learning/tsml-eval)
+[![openssf-scorecard](https://img.shields.io/ossf-scorecard/github.com/time-series-machine-learning/tsml-eval?label=openssf%20scorecard&style=flat)](https://scorecard.dev/viewer/?uri=github.com/time-series-machine-learning/tsml-eval)
 [![pypi](https://img.shields.io/pypi/v/tsml-eval?logo=pypi&color=blue)](https://pypi.org/project/tsml-eval/)
 [![!conda](https://img.shields.io/conda/vn/conda-forge/tsml-eval?logo=anaconda&color=blue)](https://anaconda.org/conda-forge/tsml-eval)
 [![python-versions](https://img.shields.io/pypi/pyversions/tsml-eval?logo=python)](https://www.python.org/)
@@ -16,7 +17,7 @@
 `tsml-eval` contains benchmarking and evaluation tools for time series machine learning
 algorithms.
 
-The current release of `tsml-eval` is v0.3.0.
+The current release of `tsml-eval` is v0.4.0.
 
 ## Installation
 
