@@ -357,7 +357,7 @@ def _set_clusterer_feature_based(
         from aeon.clustering.feature_based import Catch22Clusterer
 
         return Catch22Clusterer(random_state=random_state, n_jobs=n_jobs, **kwargs)
-    elif c == "tsfresh" or c == "tsfresjclusterer":
+    elif c == "tsfresh" or c == "tsfreshclusterer":
         from aeon.clustering.feature_based import TSFreshClusterer
 
         return TSFreshClusterer(random_state=random_state, n_jobs=n_jobs, **kwargs)
