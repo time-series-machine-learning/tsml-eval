@@ -12,8 +12,10 @@ def binary_information_gain(orderline, c1, c2):
     Parameters
     ----------
 
+
     orderline: np.array
         Sorted array of tuples (check).
+
     c1: int
         Number of cases of the class of interest
     c2: int
@@ -145,7 +147,9 @@ def f_stat(class0, class1):
 
     # Avoid division by zero
     if df_within <= 0:
+
         return np.inf
+
 
     F_stat = (ssb / df_between) / (ssw / df_within)
     return F_stat

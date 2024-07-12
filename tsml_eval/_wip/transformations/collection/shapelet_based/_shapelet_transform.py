@@ -537,7 +537,9 @@ class RandomShapeletTransform(BaseCollectionTransformer):
 
 
     @staticmethod
+
     @njit(fastmath=True, cache=True)
+
     def _f_stat_shapelet_quality(
         X,
         y,
@@ -549,6 +551,7 @@ class RandomShapeletTransform(BaseCollectionTransformer):
         inst_idx,
         this_cls_count,
         other_cls_count,
+
     ):
         distances1 = np.zeros(this_cls_count-1)
         distances2 = np.zeros(other_cls_count)
@@ -565,7 +568,9 @@ class RandomShapeletTransform(BaseCollectionTransformer):
                 else:
                     distances2[c2]= distance
                     c2=c2+1
+
         quality = qm.f_stat(distances1, distances2)
+
 
         return round(quality, 12)
 
