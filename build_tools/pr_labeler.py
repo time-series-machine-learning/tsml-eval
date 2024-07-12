@@ -28,16 +28,16 @@ if "[bot]" in pr.user.login:
 title = pr.title
 
 title_regex_to_labels = [
-    (r"\bENH\b", "enhancement"),
-    (r"\bMNT\b", "maintenance"),
-    (r"\bBUG\b", "bug"),
-    (r"\bDOC\b", "documentation"),
-    (r"\bREF\b", "refactor"),
-    (r"\bDEP\b", "dependencies"),
+    (r"\benh\b", "enhancement"),
+    (r"\bmnt\b", "maintenance"),
+    (r"\bbug\b", "bug"),
+    (r"\bdoc\b", "documentation"),
+    (r"\bref\b", "refactor"),
+    (r"\bdep\b", "deprecation"),
 ]
 
 title_labels = [
-    label for regex, label in title_regex_to_labels if re.search(regex, title)
+    label for regex, label in title_regex_to_labels if re.search(regex, title.lower())
 ]
 title_labels_to_add = list(set(title_labels) - set(labels))
 
