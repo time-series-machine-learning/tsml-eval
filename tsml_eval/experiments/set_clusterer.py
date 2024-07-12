@@ -110,7 +110,7 @@ distance_based_clusterers = [
 
 feature_based_clusterers = [
     ["catch22", "catch22clusterer"],
-    ["tsfresh", "tsfresjclusterer"],
+    ["tsfresh", "tsfreshclusterer"],
     ["summary", "summaryclusterer"],
 ]
 
