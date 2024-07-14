@@ -144,6 +144,10 @@ per-file-ignores = [
     "tsml_eval/publications/*:E402,T201",
 ]
 
+[tool.mypy]
+files = "tsml_eval/"
+exclude = ["_wip"]
+
 [tool.pytest.ini_options]
 testpaths = "tsml_eval"
 addopts = '''

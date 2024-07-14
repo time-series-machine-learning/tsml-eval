@@ -52,8 +52,10 @@ repos:
     rev: v1.10.1
     hooks:
       - id: mypy
-        files: tsml_eval/
+        files: "tsml_eval/"
         additional_dependencies: [ pytest ]
+        exclude: "_wip"
+
 
   - repo: https://github.com/pycqa/flake8
     rev: 7.1.0

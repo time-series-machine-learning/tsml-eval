@@ -49,6 +49,7 @@ distance_based_classifiers = [
     ["elasticensemble", "ee"],
     ["grailclassifier", "grail"],
     ["proximitytree", "proximitytreeclassifier"],
+    ["proximityforest", "pf"],
 ]
 feature_based_classifiers = [
     "summary-500",
@@ -443,6 +444,11 @@ def _set_classifier_distance_based(
         from aeon.classification.distance_based import ProximityTree
 
         return ProximityTree(random_state=random_state, n_jobs=n_jobs, **kwargs)
+
+    elif c == "proximityforest" or c == "pf":
+        from tsml_eval._wip.pf.pf import ProximityForest
+
+        return ProximityForest(random_state=random_state, n_jobs=n_jobs, **kwargs)
 
 
 def _set_classifier_feature_based(
