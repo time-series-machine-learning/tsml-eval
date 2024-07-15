@@ -20,15 +20,15 @@ and check translation.
 """
 import math
 
+from numba import njit
 import numpy as np
 
-TOL = 1.0e-10
-HUGEN = 1.0e10
+
 NA = -99999.0
 MAX_NMSE = 30
 MAX_SEASONAL_PERIOD = 24
 
-
+@njit
 def fit_ets(y, n, x, m, error, trend, season, alpha, beta, gamma, phi, e, lik, amse, nmse):
     """Exponential smooting (fit?)
 
@@ -36,6 +36,39 @@ def fit_ets(y, n, x, m, error, trend, season, alpha, beta, gamma, phi, e, lik, a
 
     Parameters
     ----------
+    y : np.ndarray
+        Time series data.
+    n : int
+        The length of the time series.
+    x : np.ndarray
+        Initial states of the ETS model. Starting values for the level, trend, and seasonal
+        components. This variable evolves during execution to store the states at each time
+        step (i.e., the state space matrix).
+    m : int
+        The period of the seasonality (e.g., for quaterly data m = 4)
+    error : int
+        The type of error model (0 -> None, 1 -> additive, 2 -> multiplicative).
+    trend : int
+        The type of trend model (0 -> None, 1 -> additive, 2 -> multiplicative).
+    season : int
+        The type of seasonality model (0 -> None, 1 -> additive, 2 -> multiplicative).
+    alpha : float
+        Smoothing parameter for the level.
+    beta : float
+        Smoothing parameter for the trend.
+    gamma : float
+        Smoothing parameter for the seasonality.
+    phi : float
+        Damping parameter.
+    e : np.ndarray
+        Residuals of the fitted model.
+    lik : np.ndarray
+        Likelihood measure.
+    amse : np.ndarray
+        Empty array for storing the Average Mean Squared Error.
+    nmse : int
+        The number of steps ahead to be considered for the calculation of AMSE. Determines
+        the forcasting horizon.
     y : np.ndarray
         Time series data.
     n : int
@@ -79,6 +112,7 @@ def fit_ets(y, n, x, m, error, trend, season, alpha, beta, gamma, phi, e, lik, a
     if nmse > MAX_NMSE:
         nmse = MAX_NMSE
 
+    oldb = 0.0
     olds = np.zeros(MAX_SEASONAL_PERIOD)
     s = np.zeros(MAX_SEASONAL_PERIOD)
     f = np.zeros(MAX_NMSE)
@@ -108,7 +142,7 @@ def fit_ets(y, n, x, m, error, trend, season, alpha, beta, gamma, phi, e, lik, a
 
         # One step forecast.
         forecast(oldl, oldb, olds, m, trend, season, phi, f, nmse)
-        if(math.fabs(f[0] - NA) < TOL):
+        if(math.fabs(f[0] - NA) < 1.0e-10):  # TOL
             lik[0] = NA
             return
 
@@ -141,6 +175,8 @@ def fit_ets(y, n, x, m, error, trend, season, alpha, beta, gamma, phi, e, lik, a
         lik[0] = lik[0] + 2*lik2
 
 
+
+@njit
 def forecast(l, b, s, m, trend, season, phi, f, h):
     """Performs forcasting.
 
@@ -189,12 +225,13 @@ def forecast(l, b, s, m, trend, season, phi, f, h):
         elif season == 2:  # Multiplicative seasonal component.
             f[i] = f[i] * s[j]
         if i < (h-1):
-            if math.fabs(phi-1) < TOL:
+            if math.fabs(phi-1) < 1.0e-10:  # TOL
                 phistar = phistar + 1
             else:
                 phistar = phistar + phi**(i+1)
 
 
+@njit
 def update(oldl, l, oldb, b, olds, s, m, trend, season, alpha, beta, gamma, phi, y):
     """Updates states.
 
@@ -247,7 +284,7 @@ def update(oldl, l, oldb, b, olds, s, m, trend, season, alpha, beta, gamma, phi,
     elif trend == 1:  # Additive trend component.
         phib = phi*(oldb)
         q = oldl + phib   # l(t-1) + phi*b(t-1)
-    elif math.fabs(phi-1) < TOL:
+    elif math.fabs(phi-1) < 1.0e-10:  # TOL
         phib = oldb
         q = oldl * oldb   # l(t-1) * b(t-1)
     else:
@@ -259,8 +296,8 @@ def update(oldl, l, oldb, b, olds, s, m, trend, season, alpha, beta, gamma, phi,
     elif season == 1:  # Additive seasonal component.
         p = y - olds[m-1]   # y[t] - s[t-m]
     else:
-        if math.fabs(olds[m-1]) < TOL:
-            p = HUGEN
+        if math.fabs(olds[m-1]) < 1.0e-10:  # TOL
+            p = 1.0e10  # HUGEN
         else:
             p = y / olds[m-1]   # y[t] / s[t-m]
     l = q + alpha*(p-q)
@@ -270,8 +307,8 @@ def update(oldl, l, oldb, b, olds, s, m, trend, season, alpha, beta, gamma, phi,
         if trend == 1:  # Additive trend component.
             r = l - oldl   # l[t] - l[t-1]
         else:  # Multiplicative trend component.
-            if math.fabs(oldl) < TOL:
-                r = HUGEN
+            if math.fabs(oldl) < 1.0e-10:  # TOL
+                r = 1.0e10  # HUGEN
             else:
                 r = l / oldl   # l[t] / l[t-1]
         b = phib + (beta / alpha)*(r - phib)   # b[t] = phi*b[t-1] + beta*(r - phi*b[t-1])
@@ -282,8 +319,8 @@ def update(oldl, l, oldb, b, olds, s, m, trend, season, alpha, beta, gamma, phi,
         if season == 1:  # Additive seasonal component.
             t = y - q
         else:  # Multiplicative seasonal compoenent.
-            if math.fabs(q) < TOL:
-                t = HUGEN
+            if math.fabs(q) < 1.0e-10:
+                t = 1.0e10
             else:
                 t = y / q
         s[0] = olds[m-1] + gamma*(t - olds[m-1])  # s[t] = s[t-m] + gamma*(t - s[t-m])
@@ -291,38 +328,3 @@ def update(oldl, l, oldb, b, olds, s, m, trend, season, alpha, beta, gamma, phi,
             s[j] = olds[j-1]   # s[t] = s[t]
 
     return l, b, s
-
-
-if __name__ == "__main__":
-    # Example
-    y = np.random.randint(10, 15, size=10)
-    n = len(y)
-    m = 4
-    error = 1
-    trend = 1
-    season = 1
-    alpha = 0.2
-    beta = 0.1
-    gamma = 0.1
-    phi = 0.98
-    e = np.zeros(n)
-    lik = np.zeros(1)
-    amse = np.zeros(MAX_NMSE)
-    nmse = 3
-
-    # Initial states
-    l0 = y[0]
-    b0 = (y[1] - y[0]) / 2
-    s0 = [y[i] - l0 for i in range(m)]
-    x = np.array([l0, b0] + s0, dtype=float)
-
-    # Expand x to hold the states for each time step
-    nstates = 1 + (trend > 0) + m * (season > 0)
-    x = np.concatenate([x, np.zeros(n * nstates)]).flatten()  # fit_ets expects 'x' to be a one dimensional array
-
-    fit_ets(y, n, x, m, error, trend, season, alpha, beta, gamma, phi, e, lik, amse, nmse)
-
-    print("Residuals (e):", e)
-    print("Likelihood (lik):", lik)
-    print("AMSE:", amse)
-    print("State matrix (x):", x.reshape(-1, nstates))
