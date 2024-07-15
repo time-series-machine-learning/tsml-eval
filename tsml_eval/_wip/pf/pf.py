@@ -95,7 +95,6 @@ class ProximityForest(BaseClassifier):
         super().__init__()
 
     def _fit(self, X, y):
-        self.classes_ = list(np.unique(y))
         self.trees_ = Parallel(n_jobs=self._n_jobs, prefer="threads")(
             delayed(_fit_tree)(
                 X,
