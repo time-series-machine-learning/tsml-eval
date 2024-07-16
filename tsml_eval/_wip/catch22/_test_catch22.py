@@ -8,6 +8,31 @@ from decimal import Decimal, ROUND_HALF_UP
 import csv
 import os
 
+features_test =  [
+        "mode_5",
+        "mode_10",
+        "stretch_high",
+        "outlier_timing_pos",
+        "outlier_timing_neg",
+        "acf_timescale",
+        "acf_first_min",
+        "centroid_freq",
+        "low_freq_power",
+        "forecast_error",
+        "trev",
+        "ami2",
+        "ami_timescale",
+        "high_fluctuation",
+        "stretch_decreasing",
+        "entropy_pairs",
+        "whiten_timescale",
+        "periodicity",
+        "dfa",
+        "rs_range",
+        "transition_matrix",
+        "periodicity",
+    ]
+
 feature_names_aeon = [
     "DN_HistogramMode_5",
     "DN_HistogramMode_10",
@@ -74,10 +99,10 @@ if os.environ['NUMBA_DISABLE_JIT'] == '0':
 else:
     aeon_file_name = "aeon_catch22_no_numba"
 #aeon
-aeon_c22 = Catch22(replace_nans=True)
+aeon_c22 = Catch22(features=features_test,replace_nans=True)
 _ = aeon_c22.fit_transform(IPD_X_train)
 
-results_aeon = [features_names_pycatch22]
+results_aeon = [features_test]
 for i in range(len(_)):
     #formatting it to pycatch22 format
     results_aeon.append(_[i])
@@ -103,6 +128,7 @@ for i in range(len(results_aeon)):
                                                                                 rounding=ROUND_HALF_UP)
             if rounded_aeon_results != rounded_pycatch22_results:
                 cell.fill = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
+    
 
 wb.save(aeon_file_name + ".xlsx")
 

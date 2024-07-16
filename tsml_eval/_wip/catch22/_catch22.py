@@ -42,6 +42,31 @@ feature_names = [
     "PD_PeriodicityWang_th0_01",
 ]
 
+feature_names_short = [
+    "mode_5",
+    "mode_10",
+    "stretch_high",
+    "outlier_timing_pos",
+    "outlier_timing_neg",
+    "acf_timescale",
+    "acf_first_min",
+    "centroid_freq",
+    "low_freq_power",
+    "forecast_error",
+    "trev",
+    "ami2",
+    "ami_timescale",
+    "high_fluctuation",
+    "stretch_decreasing",
+    "entropy_pairs",
+    "whiten_timescale",
+    "periodicity",
+    "dfa",
+    "rs_range",
+    "transition_matrix",
+    "periodicity",
+]
+
 
 class Catch22(BaseCollectionTransformer):
     """Canonical Time-series Characteristics (Catch22).
@@ -68,6 +93,14 @@ class Catch22(BaseCollectionTransformer):
             "SC_FluctAnal_2_dfa_50_1_2_logi_prop_r1",
             "SC_FluctAnal_2_rsrangefit_50_1_logi_prop_r1",
             "SB_TransitionMatrix_3ac_sumdiagcov", "PD_PeriodicityWang_th0_01"]
+        Shortened:
+            ["mode_5","mode_10","stretch_high","outlier_timing_pos",
+            "outlier_timing_neg","acf_timescale","acf_first_min","centroid_freq",
+            "low_freq_power","forecast_error","trev","ami2","ami_timescale",
+            "high_fluctuation","stretch_decreasing","entropy_pairs",
+            "whiten_timescale","periodicity","dfa","rs_range",
+            "transition_matrix","periodicity"]
+
     catch24 : bool, default=False
         Extract the mean and standard deviation as well as the 22 Catch22 features if
         true. If a List of specific features to extract is provided, "Mean" and/or
@@ -233,7 +266,7 @@ class Catch22(BaseCollectionTransformer):
                 Catch22._SC_FluctAnal_2_rsrangefit_50_1_logi_prop_r1,
                 Catch22._SC_FluctAnal_2_dfa_50_1_2_logi_prop_r1,
                 Catch22._SP_Summaries_welch_rect_centroid,
-                Catch22._FC_LocalSimple_mean3_stderr
+                Catch22._FC_LocalSimple_mean3_stderr,
             ]
 
         c22_list = Parallel(
@@ -434,10 +467,10 @@ class Catch22(BaseCollectionTransformer):
             if X_ac[i + 1] < threshold:
                 m = X_ac[i + 1] - X_ac[i]
                 dy = threshold - X_ac[i]
-                dx = dy/m
+                dx = dy / m
                 out = np.float64(i) + dx
                 return out
-            
+
         return len(X_ac)
 
     @staticmethod
@@ -513,13 +546,13 @@ class Catch22(BaseCollectionTransformer):
     def _IN_AutoMutualInfoStats_40_gaussian_fmmi(X_ac):
         # First minimum of the automutual information function.
         tau = int(min(40, np.ceil(len(X_ac) / 2)))
-        
+
         ami = np.zeros(len(X_ac), dtype=np.float64)
 
         for i in range(tau):
             ac = _autocorr_lag(X_ac, len(X_ac), i + 1)
-            ami[i]= -0.5 * np.log(1 - np.power(ac, 2))
-        
+            ami[i] = -0.5 * np.log(1 - np.power(ac, 2))
+
         for i in range(1, tau - 1):
             if ami[i] < ami[i - 1] and ami[i] < ami[i + 1]:
                 return i
@@ -567,21 +600,24 @@ class Catch22(BaseCollectionTransformer):
                     r1[i][r_idx] = j
                     r_idx += 1
                     sizes_r1[i] += 1
-        
+
         for i in range(alphabet_size):
             if sizes_r1[i] != 0 and r1[i][sizes_r1[i] - 1] == len(X) - 1:
                 tmp_ar = np.zeros(sizes_r1[i], np.int32)
-                #isn't this doing the same thing?
+                # isn't this doing the same thing?
                 for x in range(sizes_r1[i]):
-                    tmp_ar[x] = r1[i][x] 
+                    tmp_ar[x] = r1[i][x]
                 for y in range(sizes_r1[i] - 1):
                     r1[i][y] = tmp_ar[y]
                 sizes_r1[i] -= 1
 
-        r2 = [[np.zeros(len(X),np.int32) for j in range(alphabet_size)] for i in range(alphabet_size)]
-        sizes_r2 = [np.zeros(alphabet_size, np.int32) for i in range(alphabet_size)] 
+        r2 = [
+            [np.zeros(len(X), np.int32) for j in range(alphabet_size)]
+            for i in range(alphabet_size)
+        ]
+        sizes_r2 = [np.zeros(alphabet_size, np.int32) for i in range(alphabet_size)]
         out2 = [np.zeros(alphabet_size, np.float64) for i in range(alphabet_size)]
-        
+
         for i in range(alphabet_size):
             for j in range(alphabet_size):
                 sizes_r2[i][j] = 0
@@ -624,8 +660,7 @@ class Catch22(BaseCollectionTransformer):
         d_mean = 0
         for i in range(len(d)):
             n = np.sqrt(
-                np.power(X[i + 1] - X[i], 2) + 
-                np.power(X[i + tau] - X[i + tau + 1], 2)
+                np.power(X[i + 1] - X[i], 2) + np.power(X[i + tau] - X[i + tau + 1], 2)
             )
             d[i] = n
             d_mean += n
@@ -637,7 +672,10 @@ class Catch22(BaseCollectionTransformer):
         if std < 0.001:
             return 0
         num_bins = int(
-            np.ceil(srange / (3.5 * _stddev(d, len(d)) / np.power(len(d), 0.3333333333333333)))
+            np.ceil(
+                srange
+                / (3.5 * _stddev(d, len(d)) / np.power(len(d), 0.3333333333333333))
+            )
         )
         if num_bins == 0:
             return 0
@@ -652,17 +690,17 @@ class Catch22(BaseCollectionTransformer):
             if idx >= num_bins:
                 idx = num_bins - 1
             histogram[idx] += 1
-        
+
         for i in range(num_bins + 1):
             binEdges[i] = i * bin_width + smin
-        
+
         histogramNormalise = np.zeros(num_bins, dtype=np.float64)
         for i in range(len(histogramNormalise)):
             histogramNormalise[i] = histogram[i] / len(d)
-        
-        d_exp_fit = np.zeros(num_bins,dtype=np.float64)
+
+        d_exp_fit = np.zeros(num_bins, dtype=np.float64)
         for i in range(num_bins):
-            expf = np.exp(-(binEdges[i] + binEdges[i + 1]) * 0.5 / d_mean)/d_mean
+            expf = np.exp(-(binEdges[i] + binEdges[i + 1]) * 0.5 / d_mean) / d_mean
             if expf < 0:
                 expf = 0
 
@@ -697,22 +735,22 @@ class Catch22(BaseCollectionTransformer):
     @staticmethod
     @njit(fastmath=True, cache=True)
     def _SB_TransitionMatrix_3ac_sumdiagcov(X, acfz):
-        
+
         # Trace of covariance of transition matrix between symbols in 3-letter alphabet.
         ds = np.zeros(int(((len(X) - 1) / acfz) + 1), dtype=np.float64)
         for i in range(len(ds)):
             ds[i] = X[i * acfz]
-        #swap to alphabet:
+        # swap to alphabet:
         yCG = np.zeros(len(ds), dtype=np.int32)
         _sb_coarsegrain(ds, 3, yCG)
-        
-        T = np.zeros((3,3), dtype=np.float64)
+
+        T = np.zeros((3, 3), dtype=np.float64)
         for i in range(len(ds) - 1):
-            T[yCG[i]-1][yCG[i+1]-1] += 1
+            T[yCG[i] - 1][yCG[i + 1] - 1] += 1
         for i in range(3):
             for j in range(3):
-                T[i][j] /= (len(ds)-1)
-                
+                T[i][j] /= len(ds) - 1
+
         column1 = np.zeros(3, dtype=np.float64)
         column2 = np.zeros(3, dtype=np.float64)
         column3 = np.zeros(3, dtype=np.float64)
@@ -721,24 +759,24 @@ class Catch22(BaseCollectionTransformer):
             column1[i] = T[i][0]
             column2[i] = T[i][1]
             column3[i] = T[i][2]
-        columns = np.zeros((3,3), dtype=np.float64)
+        columns = np.zeros((3, 3), dtype=np.float64)
         columns[0] = column1
         columns[1] = column2
         columns[2] = column3
-        
-        #columns = [column1, column2, column3]
-        cov_array = np.zeros((3,3), dtype=np.float64)
+
+        # columns = [column1, column2, column3]
+        cov_array = np.zeros((3, 3), dtype=np.float64)
         covTemp = 0.0
         for i in range(3):
             for j in range(3):
                 covTemp = _covariance(columns[i], columns[j], 3)
                 cov_array[i][j] = covTemp
                 cov_array[j][i] = covTemp
-    
+
         sum_of_diagonal_cov = 0.0
         for i in range(3):
             sum_of_diagonal_cov += cov_array[i][i]
-        
+
         return sum_of_diagonal_cov
 
     @staticmethod
@@ -792,11 +830,11 @@ class Catch22(BaseCollectionTransformer):
 @njit(fastmath=True, cache=True)
 def _histogram_mode(X, num_bins, smin, smax):
     srange = smax - smin
-    
+
     bin_width = srange / num_bins
     if bin_width == 0:
         return np.nan
-    
+
     histogram = np.zeros(num_bins, dtype=np.int32)
     edges = np.zeros(num_bins + 1, dtype=np.float64)
     for val in X:
@@ -806,15 +844,15 @@ def _histogram_mode(X, num_bins, smin, smax):
         if idx >= num_bins:
             idx = num_bins - 1
         histogram[idx] += 1
-        
+
     for i in range(num_bins + 1):
         edges[i] = i * bin_width + smin
-    
+
     bin_width = (smax - smin) / num_bins
 
     if bin_width == 0:
         return np.nan
-    
+
     max_count = 0
     num_maxs = 1
     max_sum = 0
@@ -831,10 +869,9 @@ def _histogram_mode(X, num_bins, smin, smax):
     return max_sum / num_maxs
 
 
-
 @njit(fastmath=True, cache=True)
 def _long_stretch(X_binary, val):
-    #look for the longest consecutive given value in an array
+    # look for the longest consecutive given value in an array
     last_val = 0
     max_stretch = 0
     for i in range(len(X_binary)):
@@ -1283,6 +1320,8 @@ def _verify_features(features, catch24):
             f_idx = [i for i in range(22)]
             if catch24:
                 f_idx += [22, 23]
+        elif features in feature_names_short:
+            f_idx = [feature_names_short.index(features)]
         elif features in feature_names:
             f_idx = [feature_names.index(features)]
         elif catch24 and features == "Mean":
@@ -1305,7 +1344,9 @@ def _verify_features(features, catch24):
             f_idx = []
             for f in features:
                 if isinstance(f, str):
-                    if f in feature_names:
+                    if f in feature_names_short:
+                        f_idx.append(feature_names_short.index(f))
+                    elif f in feature_names:
                         f_idx.append(feature_names.index(f))
                     elif catch24 and f == "Mean":
                         f_idx.append(22)
@@ -1331,6 +1372,7 @@ def _verify_features(features, catch24):
 
     return f_idx
 
+
 @njit(fastmath=True, cache=True)
 def _compute_autocorrelations(X):
     mean = np.mean(X)
@@ -1343,7 +1385,7 @@ def _compute_autocorrelations(X):
     tw = np.zeros(nFFT * 2, dtype=np.complex128)
     _twiddles(tw, nFFT)
     F = _fft(F, tw)
-    #dot multiply
+    # dot multiply
     F = np.multiply(F, np.conj(F))
     F = _fft(F, tw)
     divisor = F[0]
@@ -1351,29 +1393,32 @@ def _compute_autocorrelations(X):
     out = np.real(F)
     return out
 
+
 @njit(fastmath=True, cache=True)
 def _nearestPowerOf2(N):
     a = int(np.log2(N))
-    
+
     if 2**a == N:
         return N
-        
-    return 2**(a + 1)
+
+    return 2 ** (a + 1)
+
 
 @njit(fastmath=True, cache=True)
 def _twiddles(a, size):
     PI = np.pi
-    
+
     for i in range(size):
-        tmp = 0.0 - PI * i / size * 1j 
+        tmp = 0.0 - PI * i / size * 1j
         a[i] = np.exp(tmp)
+
 
 @njit(fastmath=True, cache=True)
 def _fft(a, tw):
     n = a.shape[0]
     log_n = int(np.log2(n))
     out = np.empty_like(a)
-    
+
     # Bit-reversed addressing permutation
     for i in range(n):
         j = 0
@@ -1394,7 +1439,7 @@ def _fft(a, tw):
                 out[i + j + halfstep] = u - t
 
     return out
-       
+
 
 @njit(fastmath=True, cache=True)
 def _stddev(a, size):
@@ -1402,10 +1447,12 @@ def _stddev(a, size):
     sd = np.sqrt(np.sum((a[:size] - m) ** 2) / (size - 1))
     return sd
 
+
 @njit(fastmath=True, cache=True)
 def _autocorr_lag(x, size, lag):
     return _corr(x, x[lag:], size - lag)
-    
+
+
 @njit(fastmath=True, cache=True)
 def _corr(x, y, size):
     nom = 0.0
@@ -1416,19 +1463,20 @@ def _corr(x, y, size):
         meanX += x[i]
     meanX = meanX / size
     meanY = np.mean(y)
-    
+
     for i in range(size):
         nom += (x[i] - meanX) * (y[i] - meanY)
         denomX += (x[i] - meanX) * (x[i] - meanX)
         denomY += (y[i] - meanY) * (y[i] - meanY)
-        
-    return nom/np.sqrt(denomX * denomY)
-    
+
+    return nom / np.sqrt(denomX * denomY)
+
+
 @njit(fastmath=True, cache=True)
 def _sb_coarsegrain(y, num_groups, labels):
-    th = np.zeros((num_groups + 1),dtype=np.float64)
-    ls = np.zeros((num_groups + 1),dtype=np.float64)
-    #linspace
+    th = np.zeros((num_groups + 1), dtype=np.float64)
+    ls = np.zeros((num_groups + 1), dtype=np.float64)
+    # linspace
     step_size = 1 / (num_groups)
     start = 0
     for i in range(num_groups + 1):
@@ -1442,31 +1490,35 @@ def _sb_coarsegrain(y, num_groups, labels):
             if y[j] > th[i] and y[j] <= th[i + 1]:
                 labels[j] = i + 1
 
+
 @njit(fastmath=True, cache=True)
 def _quantile(X, quant):
     tmp = np.sort(X)
     q = 0.5 / len(X)
-    if(quant < q):
+    if quant < q:
         value = tmp[0]
         return value
-    elif(quant > (1 - q)):
+    elif quant > (1 - q):
         value = tmp[len(X) - 1]
         return value
-    
+
     quant_idx = len(X) * quant - 0.5
     idx_left = int(np.floor(quant_idx))
     idx_right = int(np.ceil(quant_idx))
-    value = tmp[idx_left] + (quant_idx - idx_left) * (tmp[idx_right] - tmp[idx_left]) / (idx_right - idx_left)
+    value = tmp[idx_left] + (quant_idx - idx_left) * (
+        tmp[idx_right] - tmp[idx_left]
+    ) / (idx_right - idx_left)
     return value
-    
+
 
 @njit(fastmath=True, cache=True)
 def _f_entropy(a, size):
     f = 0.0
     for i in range(size):
-        if(a[i] > 0):
+        if a[i] > 0:
             f += a[i] * np.log(a[i])
     return -1 * f
+
 
 @njit(fastmath=True, cache=True)
 def _covariance(X, Y, size):
@@ -1475,6 +1527,5 @@ def _covariance(X, Y, size):
     meanY = np.mean(Y)
     for i in range(size):
         val += (X[i] - meanX) * (Y[i] - meanY)
-        
+
     return val / (size - 1)
-    
