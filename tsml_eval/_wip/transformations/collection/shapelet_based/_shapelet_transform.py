@@ -165,7 +165,7 @@ class RandomShapeletTransform(BaseCollectionTransformer):
         parallel_backend=None,
         batch_size=100,
         random_state=None,
-        shapelet_quality = "INFO_GAIN",
+        shapelet_quality="INFO_GAIN",
     ):
         self.n_shapelet_samples = n_shapelet_samples
         self.max_shapelets = max_shapelets
@@ -475,6 +475,35 @@ class RandomShapeletTransform(BaseCollectionTransformer):
                 self.n_cases_ - self._class_counts[cls_idx],
                 worst_quality,
             )
+
+        elif self.shapelet_quality == "Kruskal_Wallis":
+            quality = self._f_stat_shapelet_quality(
+                X,
+                y,
+                shapelet,
+                sorted_indicies,
+                position,
+                length,
+                channel,
+                inst_idx,
+                self._class_counts[cls_idx],
+                self.n_cases_ - self._class_counts[cls_idx],
+                worst_quality,
+            )
+        elif self.shapelet_quality == "Moods_Median":
+            quality = self._f_stat_shapelet_quality(
+                X,
+                y,
+                shapelet,
+                sorted_indicies,
+                position,
+                length,
+                channel,
+                inst_idx,
+                self._class_counts[cls_idx],
+                self.n_cases_ - self._class_counts[cls_idx],
+                worst_quality,
+            )
         else:
             raise ValueError("Unknown shapelet quality measure")
 
@@ -534,12 +563,8 @@ class RandomShapeletTransform(BaseCollectionTransformer):
 
         return round(quality, 12)
 
-
-
     @staticmethod
-
     @njit(fastmath=True, cache=True)
-
     def _f_stat_shapelet_quality(
         X,
         y,
@@ -551,30 +576,26 @@ class RandomShapeletTransform(BaseCollectionTransformer):
         inst_idx,
         this_cls_count,
         other_cls_count,
-
     ):
-        distances1 = np.zeros(this_cls_count-1)
+        distances1 = np.zeros(this_cls_count - 1)
         distances2 = np.zeros(other_cls_count)
-        c1=0
-        c2=0
+        c1 = 0
+        c2 = 0
         for i, series in enumerate(X):
             if i != inst_idx:
                 distance = _online_shapelet_distance(
                     series[dim], shapelet, sorted_indicies, position, length
                 )
                 if y[i] == y[inst_idx]:
-                    distances1[c1]= distance
-                    c1=c1+1
+                    distances1[c1] = distance
+                    c1 = c1 + 1
                 else:
-                    distances2[c2]= distance
-                    c2=c2+1
+                    distances2[c2] = distance
+                    c2 = c2 + 1
 
         quality = qm.f_stat(distances1, distances2)
 
-
         return round(quality, 12)
-
-
 
     @staticmethod
     @njit(fastmath=True, cache=True)
