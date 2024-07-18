@@ -4,8 +4,7 @@ import os
 def run_experiment(dataset_name, data_path, results_path, resample_id):
     command = [
         "python3",
-        # "/Users/abhashshrestha/Documents/tsml-eval/publications/y2023/tsc_bakeoff/run_experiments.py",
-        "/lyceum/as14n23/my_tsml/tsml-eval/tsml_eval/publications/y2023/tsc_bakeoff/run_experiments.py",
+        "/lyceum/as14n23/my_tsml/tsml-eval/tsml_eval/publications/y2023/tsc_bakeoff/run_experiments.py",  # REPLACE WITH THE PATH TO YOUR SCRIPT THE RUNS BAKEOFF
         data_path,
         results_path,
         classifier,
@@ -22,8 +21,10 @@ def run_experiment(dataset_name, data_path, results_path, resample_id):
 
 
 # Parameters
-data_base_path = "/lyceum/as14n23/test_Dataset"
-results_base_path = "/lyceum/as14n23/HPC_slurm_op"
+data_base_path = "/lyceum/as14n23/test_Dataset"  # Replace with path to your dataset folder in the HPC
+results_base_path = (
+    "/lyceum/as14n23/HPC_slurm_op"  # Replace with path to your output folder in the HPC
+)
 classifier = "STC"
 n_jobs = 1
 overwrite = True
@@ -36,4 +37,3 @@ for dataset in univariate_datasets:
         data_path = data_base_path
         results_path = results_base_path
         run_experiment(dataset, data_path, results_path, resample_id)
-

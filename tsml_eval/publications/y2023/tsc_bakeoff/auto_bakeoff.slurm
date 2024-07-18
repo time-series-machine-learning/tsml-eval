@@ -12,11 +12,14 @@
 #SBATCH --mail-user=as14n23@soton.ac.uk  # Email address for notifications
 
 # Load Miniconda and activate the environment
-source /lyceum/as14n23/miniconda3/etc/profile.d/conda.sh
-conda activate conda_aeon_env
+source /path/to/your/python/environment #REPLACE WITH THE APPROPRIATE LOCATION OF YOUR ENVIRONMENT
+#example: source /lyceum/as14n23/miniconda3/etc/profile.d/conda.sh
 
-# Change to the directory where the script is located
-cd /lyceum/as14n23/my_tsml/tsml-eval/tsml_eval/publications/y2023/tsc_bakeoff
+conda activate your_python_environment # ACTIVATE THE ENVIRONMENT 
+
+# Change to the directory where the automated bakeoff script is located
+cd /path/to/bakeoff/script
+#example: cd /lyceum/as14n23/my_tsml/tsml-eval/tsml_eval/publications/y2023/tsc_bakeoff
 
 # Run the Python script
 python auto_bakeoff.py
