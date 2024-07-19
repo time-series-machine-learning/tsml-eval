@@ -506,7 +506,7 @@ class RandomShapeletTransform(BaseCollectionTransformer):
             )
 
         elif self.shapelet_quality == "Kruskal_Wallis":
-            quality = self._f_stat_shapelet_quality(
+            quality = self._kruskal_wallis_shapelet_quality(
                 X,
                 y,
                 shapelet,
@@ -520,7 +520,7 @@ class RandomShapeletTransform(BaseCollectionTransformer):
                 worst_quality,
             )
         elif self.shapelet_quality == "Moods_Median":
-            quality = self._f_stat_shapelet_quality(
+            quality = self._moods_median_shapelet_quality(
                 X,
                 y,
                 shapelet,
@@ -623,6 +623,75 @@ class RandomShapeletTransform(BaseCollectionTransformer):
                     c2 = c2 + 1
 
         quality = qm.f_stat(distances1, distances2)
+
+        return round(quality, 12)
+
+    @staticmethod
+    @njit(fastmath=True, cache=True)
+    def _moods_median_shapelet_quality(
+        X,
+        y,
+        shapelet,
+        sorted_indicies,
+        position,
+        length,
+        dim,
+        inst_idx,
+        this_cls_count,
+        other_cls_count,
+    ):
+        distances1 = np.zeros(this_cls_count - 1)
+        distances2 = np.zeros(other_cls_count)
+        c1 = 0
+        c2 = 0
+        for i, series in enumerate(X):
+            if i != inst_idx:
+                distance = _online_shapelet_distance(
+                    series[dim], shapelet, sorted_indicies, position, length
+                )
+                if y[i] == y[inst_idx]:
+                    distances1[c1] = distance
+                    c1 += 1
+                else:
+                    distances2[c2] = distance
+                    c2 += 1
+
+        quality = qm._moods_median(distances1, distances2)
+
+        return round(quality, 12)
+
+    @staticmethod
+    @njit(fastmath=True, cache=True)
+    def _kruskal_wallis_shapelet_quality(
+        X,
+        y,
+        shapelet,
+        sorted_indicies,
+        position,
+        length,
+        dim,
+        inst_idx,
+        this_cls_count,
+        other_cls_count,
+    ):
+        distances1 = np.zeros(this_cls_count - 1)
+        distances2 = np.zeros(other_cls_count)
+        c1 = 0
+        c2 = 0
+        for i, series in enumerate(X):
+            if i != inst_idx:
+                distance = _online_shapelet_distance(
+                    series[dim], shapelet, sorted_indicies, position, length
+                )
+                if y[i] == y[inst_idx]:
+                    distances1[c1] = distance
+                    c1 += 1
+                else:
+                    distances2[c2] = distance
+                    c2 += 1
+
+        ranks, tie_correction, n1, n2, n = qm.compute_pre_stats(distances1, distances2)
+        quality = qm.kruskal_wallis_test(ranks, n1, n2, n, tie_correction)
 
         return round(quality, 12)
 
