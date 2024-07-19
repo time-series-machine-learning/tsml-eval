@@ -165,7 +165,7 @@ class RandomShapeletTransform(BaseCollectionTransformer):
         parallel_backend=None,
         batch_size=100,
         random_state=None,
-        shapelet_quality="INFO_GAIN",
+        shapelet_quality="F_STAT",
     ):
         self.n_shapelet_samples = n_shapelet_samples
         self.max_shapelets = max_shapelets
