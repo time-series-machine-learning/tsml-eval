@@ -477,35 +477,6 @@ class RandomShapeletTransform(BaseCollectionTransformer):
             )
 
         elif self.shapelet_quality == "Kruskal_Wallis":
-            quality = self._f_stat_shapelet_quality(
-                X,
-                y,
-                shapelet,
-                sorted_indicies,
-                position,
-                length,
-                channel,
-                inst_idx,
-                self._class_counts[cls_idx],
-                self.n_cases_ - self._class_counts[cls_idx],
-                worst_quality,
-            )
-        elif self.shapelet_quality == "Moods_Median":
-            quality = self._f_stat_shapelet_quality(
-                X,
-                y,
-                shapelet,
-                sorted_indicies,
-                position,
-                length,
-                channel,
-                inst_idx,
-                self._class_counts[cls_idx],
-                self.n_cases_ - self._class_counts[cls_idx],
-                worst_quality,
-            )
-
-        elif self.shapelet_quality == "Kruskal_Wallis":
             quality = self._kruskal_wallis_shapelet_quality(
                 X,
                 y,
