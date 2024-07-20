@@ -15,7 +15,9 @@ from sklearn.utils import check_random_state
 from aeon.base._base import _clone_estimator
 from aeon.classification.base import BaseClassifier
 from aeon.classification.sklearn import RotationForestClassifier
-from tsml_eval._wip.transformations.collection.shapelet_based import RandomShapeletTransform
+from tsml_eval._wip.transformations.collection.shapelet_based import (
+    RandomShapeletTransform,
+)
 
 
 class ShapeletTransformClassifier(BaseClassifier):
@@ -138,7 +140,7 @@ class ShapeletTransformClassifier(BaseClassifier):
         n_jobs: int = 1,
         batch_size: Union[int, None] = 100,
         random_state: Union[int, Type[np.random.RandomState], None] = None,
-        shapelet_quality = "INFO_GAIN",
+        shapelet_quality="F_STAT",
     ) -> None:
         self.n_shapelet_samples = n_shapelet_samples
         self.max_shapelets = max_shapelets

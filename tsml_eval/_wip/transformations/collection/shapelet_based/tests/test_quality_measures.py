@@ -7,9 +7,13 @@ import os
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(parent_dir)
 
+
 # sys.path.append("tsml_eval/_wip/transformations/collection/shapelet_based")
 
-import _quality_measures as qm
+from tsml_eval._wip.transformations.collection.shapelet_based import (
+    _quality_measures as qm,
+)
+
 
 import numpy as np
 

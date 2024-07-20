@@ -11,7 +11,8 @@ __all__ = ["RandomShapeletTransform"]
 import heapq
 import math
 import time
-
+import os
+import sys
 import numpy as np
 from joblib import Parallel, delayed
 from numba import njit
@@ -22,7 +23,14 @@ from sklearn.utils._random import check_random_state
 from aeon.transformations.collection.base import BaseCollectionTransformer
 from aeon.utils.numba.general import AEON_NUMBA_STD_THRESHOLD, z_normalise_series
 from aeon.utils.validation import check_n_jobs
-import _quality_measures as qm
+
+
+# from tsml_eval._wip.transformations.collection.shapelet_based import (
+#     _quality_measures as qm,
+# )
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__)))
+sys.path.append(parent_dir)
+import tsml_eval._wip.transformations.collection.shapelet_based._quality_measures as qm
 
 
 class RandomShapeletTransform(BaseCollectionTransformer):
@@ -165,7 +173,7 @@ class RandomShapeletTransform(BaseCollectionTransformer):
         parallel_backend=None,
         batch_size=100,
         random_state=None,
-        shapelet_quality="F_STAT",
+        shapelet_quality="Moods_Median",
     ):
         self.n_shapelet_samples = n_shapelet_samples
         self.max_shapelets = max_shapelets
@@ -576,6 +584,7 @@ class RandomShapeletTransform(BaseCollectionTransformer):
         inst_idx,
         this_cls_count,
         other_cls_count,
+        worst_quality,
     ):
         distances1 = np.zeros(this_cls_count - 1)
         distances2 = np.zeros(other_cls_count)
@@ -610,6 +619,7 @@ class RandomShapeletTransform(BaseCollectionTransformer):
         inst_idx,
         this_cls_count,
         other_cls_count,
+        worst_quality,
     ):
         distances1 = np.zeros(this_cls_count - 1)
         distances2 = np.zeros(other_cls_count)
@@ -644,6 +654,7 @@ class RandomShapeletTransform(BaseCollectionTransformer):
         inst_idx,
         this_cls_count,
         other_cls_count,
+        worst_quality,
     ):
         distances1 = np.zeros(this_cls_count - 1)
         distances2 = np.zeros(other_cls_count)
@@ -907,3 +918,48 @@ def _is_self_similar(s1, s2):
             return True
 
     return False
+
+
+@njit(fastmath=True, cache=True)
+def f_stat(class0, class1):
+    """
+    Calculate the F-statistic for shapelet quality based on two numpy arrays of distances for two classes.
+    Parameters:
+    - class0 (np.array): Array of distances for the first class.
+    - class1 (np.array): Array of distances for the second class.
+    Returns:
+    - float: The computed F-statistic.
+    """
+
+    if len(class0) == 0 or len(class1) == 0:
+        return np.inf  # Use NumPy's inf representation
+
+    # Calculate means
+    mean_class0 = np.mean(class0)
+    mean_class1 = np.mean(class1)
+    all_distances = np.concatenate((class0, class1))
+    overall_mean = np.mean(all_distances)
+
+    n0 = len(class0)
+    n1 = len(class1)
+    total_n = n0 + n1
+
+    # Between-class sum of squares
+    ssb = (
+        n0 * (mean_class0 - overall_mean) ** 2 + n1 * (mean_class1 - overall_mean) ** 2
+    )
+
+    # Within-class sum of squares
+    ssw = np.sum((class0 - mean_class0) ** 2) + np.sum((class1 - mean_class1) ** 2)
+
+    # Degrees of freedom
+    df_between = 1
+    df_within = total_n - 2
+
+    # Avoid division by zero
+    if df_within <= 0:
+
+        return np.inf
+
+    F_stat = (ssb / df_between) / (ssw / df_within)
+    return F_stat
