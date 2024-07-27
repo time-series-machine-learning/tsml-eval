@@ -173,7 +173,7 @@ class RandomShapeletTransform(BaseCollectionTransformer):
         parallel_backend=None,
         batch_size=100,
         random_state=None,
-        shapelet_quality="Moods_Median",
+        shapelet_quality="INFO_GAIN",
     ):
         self.n_shapelet_samples = n_shapelet_samples
         self.max_shapelets = max_shapelets
@@ -469,6 +469,7 @@ class RandomShapeletTransform(BaseCollectionTransformer):
                 self.n_cases_ - self._class_counts[cls_idx],
                 worst_quality,
             )
+
         elif self.shapelet_quality == "F_STAT":
             quality = self._f_stat_shapelet_quality(
                 X,
@@ -485,6 +486,28 @@ class RandomShapeletTransform(BaseCollectionTransformer):
             )
 
         elif self.shapelet_quality == "Kruskal_Wallis":
+            distances1 = np.zeros(self._class_counts[cls_idx] - 1)
+            distances2 = np.zeros(self.n_cases_ - self._class_counts[cls_idx])
+            c1 = 0
+            c2 = 0
+            for j, series in enumerate(X):
+                if j != inst_idx:
+                    distance = _online_shapelet_distance(
+                        series[channel], shapelet, sorted_indicies, position, length
+                    )
+                    if y[j] == y[inst_idx]:
+                        if c1 < len(distances1):  # Protect against overflow
+                            distances1[c1] = distance
+                            c1 += 1
+                    else:
+                        if c2 < len(distances2):  # Protect against overflow
+                            distances2[c2] = distance
+                            c2 += 1
+
+                ranks, tie_correction, n1, n2, n = qm.compute_pre_stats(
+                    distances1, distances2
+                )
+
             quality = self._kruskal_wallis_shapelet_quality(
                 X,
                 y,
@@ -497,6 +520,11 @@ class RandomShapeletTransform(BaseCollectionTransformer):
                 self._class_counts[cls_idx],
                 self.n_cases_ - self._class_counts[cls_idx],
                 worst_quality,
+                ranks,
+                tie_correction,
+                n1,
+                n2,
+                n,
             )
         elif self.shapelet_quality == "Moods_Median":
             quality = self._moods_median_shapelet_quality(
@@ -655,6 +683,11 @@ class RandomShapeletTransform(BaseCollectionTransformer):
         this_cls_count,
         other_cls_count,
         worst_quality,
+        ranks,
+        tie_correction,
+        n1,
+        n2,
+        n,
     ):
         distances1 = np.zeros(this_cls_count - 1)
         distances2 = np.zeros(other_cls_count)
@@ -672,7 +705,7 @@ class RandomShapeletTransform(BaseCollectionTransformer):
                     distances2[c2] = distance
                     c2 += 1
 
-        ranks, tie_correction, n1, n2, n = qm.compute_pre_stats(distances1, distances2)
+        # ranks, tie_correction, n1, n2, n = compute_pre_stats(distances1, distances2)
         quality = qm.kruskal_wallis_test(ranks, n1, n2, n, tie_correction)
 
         return round(quality, 12)
@@ -963,3 +996,13 @@ def f_stat(class0, class1):
 
     F_stat = (ssb / df_between) / (ssw / df_within)
     return F_stat
+
+
+# def compute_pre_stats(class0, class1):
+#     combined_array = np.concatenate((class0, class1))
+#     ranks = np.argsort(np.argsort(combined_array)) + 1
+#     unique, counts = np.unique(combined_array, return_counts=True)
+#     tie_correction = 1 - (
+#         np.sum(counts**3 - counts) / ((len(combined_array) ** 3) - len(combined_array))
+#     )
+#     return ranks, tie_correction, len(class0), len(class1), len(combined_array)
