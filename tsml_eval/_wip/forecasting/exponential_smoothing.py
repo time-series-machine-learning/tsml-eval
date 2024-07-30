@@ -28,7 +28,7 @@ NA = -99999.0
 MAX_NMSE = 30
 MAX_SEASONAL_PERIOD = 24
 
-@njit
+@njit(cache=True, fastmath=True)
 def fit_ets(y, n, x, m, error, trend, season, alpha, beta, gamma, phi, e, lik, amse, nmse):
     """Exponential smooting (fit?)
 
@@ -176,7 +176,7 @@ def fit_ets(y, n, x, m, error, trend, season, alpha, beta, gamma, phi, e, lik, a
 
 
 
-@njit
+@njit(cache=True, fastmath=True)
 def forecast(l, b, s, m, trend, season, phi, f, h):
     """Performs forcasting.
 
@@ -231,7 +231,7 @@ def forecast(l, b, s, m, trend, season, phi, f, h):
                 phistar = phistar + phi**(i+1)
 
 
-@njit
+@njit(cache=True, fastmath=True)
 def update(oldl, l, oldb, b, olds, s, m, trend, season, alpha, beta, gamma, phi, y):
     """Updates states.
 
