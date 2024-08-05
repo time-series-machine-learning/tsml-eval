@@ -46,6 +46,8 @@ class KSpectralCentroid(TimeSeriesKMeans):
         if self.max_shift is None:
             # set max_shift to the length of the time series
             self._max_shift = X.shape[-1]
+        else:
+            self._max_shift = self.max_shift
         super()._check_params(X)
 
     def _fit_one_init(self, X: np.ndarray) -> tuple:
