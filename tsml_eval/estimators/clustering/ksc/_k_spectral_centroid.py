@@ -29,7 +29,7 @@ class KSpectralCentroid(TimeSeriesKMeans):
         random_state: Union[int, RandomState] = None,
     ):
         self.max_shift = max_shift
-        self._max_shift = -1
+        self._max_shift = 0
 
         super().__init__(
             n_clusters=n_clusters,
@@ -40,11 +40,10 @@ class KSpectralCentroid(TimeSeriesKMeans):
             verbose=verbose,
             random_state=random_state,
             distance=shift_invariant_distance,
-            distance_params={"max_shift": max_shift},
         )
 
     def _check_params(self, X: np.ndarray) -> None:
-        if self._max_shift is None:
+        if self.max_shift is None:
             # set max_shift to the length of the time series
             self._max_shift = X.shape[-1]
         super()._check_params(X)
