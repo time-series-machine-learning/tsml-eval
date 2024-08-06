@@ -10,4 +10,3 @@ naive = NaiveForecaster()
 naive.fit(y)
 print(naive.predict())
 
-
