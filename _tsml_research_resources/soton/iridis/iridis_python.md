@@ -2,7 +2,7 @@
 
 Installation guide for Python packages on Iridis and useful slurm commands.
 
-The Iridis wiki provides a lot of useful information and getting started guides for using ADA.
+The Iridis wiki provides a lot of useful information and getting started guides for using Iridis.
 https://sotonac.sharepoint.com/teams/HPCCommunityWiki
 
 Server address: iridis5.soton.ac.uk
@@ -15,7 +15,7 @@ Alternatively, you can connect to one of the specific login nodes:
 
 There is a Microsoft Teams group called "HPC Community" where you can ask questions.
 
-## Windows interaction with ADA
+## Windows interaction with Iridis
 
 You need to be on a Soton network machine or have the VPN running to connect to Iridis. Connect to one of the adresses listed above.
 
@@ -152,7 +152,7 @@ the CPU resources allocated to others. The default python file in the scripts at
 
 Requesting memory for a job will allocate it all on the jobs assigned node. New jobs will not be submitted to a node if the total allocated memory exceeds the amount available for the node. As such, requesting too much memory can block new jobs from using the node. This is ok if the memory is actually being used, but large amounts of memory should not be requested unless you know it will be required for the jobs you are submitting. ADA is a shared resource, and instantly requesting hundreds of GB will hurt the overall efficiency of the cluster.
 
-## Monitoring jobs on ADA
+## Monitoring jobs on Iridis
 
 list processes for user (mind that the quotes may not be the correct ones)
 
