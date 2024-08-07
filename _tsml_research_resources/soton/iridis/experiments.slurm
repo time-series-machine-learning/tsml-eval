@@ -9,12 +9,5 @@
 #SBATCH --error=classification_experiments.err
 #SBATCH --partition=batch   # Default partition
 
-# Ensure single-threaded execution to avoid resource conflicts
-export OMP_NUM_THREADS=1
-export MKL_NUM_THREADS=1
-export NUMEXPR_NUM_THREADS=1
-export VECLIB_MAXIMUM_THREADS=1
-export OPENBLAS_NUM_THREADS=1
-
 # For example run the classification experiments
 ./classification_experiments.sh
