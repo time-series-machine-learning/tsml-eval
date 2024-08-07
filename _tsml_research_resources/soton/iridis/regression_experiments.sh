@@ -20,7 +20,7 @@ queue="batch"
 queue_alias=$queue
 
 # Enter your username and email here
-username="ajb2u23"
+username="ajb2u23" #Edit
 mail="NONE"
 mailto="$username@soton.ac.uk"
 
@@ -34,11 +34,12 @@ max_time="60:00:00"
 start_point=1
 
 # Put your home directory here
-local_path="/mainfs/home/$username/"
+local_path="/mainfs/lyceum/$username/"
 
-# Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
-data_dir="$local_path/Data/"
-datasets="$local_path/DataSetLists/Regression.txt"
+# Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. 
+# Change this, if you want to use different data or lists, to "$local_path/..."
+data_dir="/mainfs/home/ajb2u23/Data"
+datasets="/mainfs/home/ajb2u23/DataSetLists/Regression.txt" # This file doesn't exist currently.
 
 # Results and output file write location. Change these to reflect your own file structure
 results_dir="$local_path/RegressionResults/results/"
@@ -47,11 +48,12 @@ out_dir="$local_path/RegressionResults/output/"
 # The python script we are running
 script_file_path="$local_path/tsml-eval/tsml_eval/experiments/regression_experiments.py"
 
-# Environment name, change accordingly, for set up, see https://github.com/time-series-machine-learning/tsml-eval/blob/main/_tsml_research_resources/soton/iridis/iridis_python.md
+# Environment name, for set up, see https://github.com/time-series-machine-learning/tsml-eval/blob/main/_tsml_research_resources/soton/iridis/iridis_python.md
 # Separate environments for GPU and CPU are recommended
-env_name="tsml-eval"
+env_name="tsml-eval" #Edit this to be your conda enviroment
 
-# Regressors to loop over. Must be seperated by a space
+# Regressors to loop over, for getting started it is recommended to only run one regressor
+# Must be seperated by a space
 # See list of potential regressors in set_regressor
 regressors_to_run="RocketRegressor TimeSeriesForestRegressor"
 
