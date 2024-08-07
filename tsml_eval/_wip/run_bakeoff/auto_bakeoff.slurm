@@ -13,7 +13,7 @@
 
 # Load Miniconda and activate the environment
 source /path/to/your/python/environment #REPLACE WITH THE APPROPRIATE LOCATION OF YOUR ENVIRONMENT
-#example: source /lyceum/as14n23/miniconda3/etc/profile.d/conda.sh
+#example:/lyceum/as14n23/.conda/envs/classification_env
 
 conda activate your_python_environment # ACTIVATE THE ENVIRONMENT 
 
