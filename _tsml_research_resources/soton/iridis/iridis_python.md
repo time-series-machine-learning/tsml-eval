@@ -13,7 +13,7 @@ Alternatively, you can connect to one of the specific login nodes:
 - iridis5_c.soton.ac.uk
 - iridis5_d.soton.ac.uk (AMD CPU architecture)
 
-There is a Microsoft Teams group called "HPC Community" where you can ask questions.
+There is a Microsoft Teams group called ["HPC Community"](https://teams.microsoft.com/l/team/19%3a18c8baa70f8540d78455babffe11ad9c%40thread.tacv2/conversations?groupId=a0a40f99-c620-425f-8c12-a1216cf64cce&tenantId=4a5378f9-29f4-4d3e-be89-669d03ada9d8) where you can ask questions.
 
 ## Windows interaction with Iridis
 
@@ -151,7 +151,7 @@ You may need to use `dos2unix` to convert the line endings to unix format.
 
 The default queue for CPU jobs is _batch_.
 
-You can simply run `sh classification_experiments.sh` or alternativley write a SLURM script to request the job. An example SLURM script is found in this directory for running classification_experiments.sh.
+You can simply run `sh classification_experiments.sh` or alternativley write a slurm script to request the job. An example slurm script is found in this directory for running classification_experiments.sh.
 
 **NOTE: Ensure that anything you run has execution permissions with** `chmod +x SCRIPT_NAME`.
 
@@ -191,7 +191,7 @@ To delete one job it’s:
 
 >chmod +x EXAMPLE_EXPERIMENT.sh
 
->write SLURM script for requesting jobs
+>write slurm script for requesting jobs
 
 >chmod +x EXAMPLE_SLURM.slurm
 
