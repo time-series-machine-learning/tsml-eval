@@ -34,4 +34,4 @@ jobs:
           branch: pre-commit-hooks-update
           title: "[MNT] Automated `pre-commit` hook update"
           body: "Automated weekly update to `.pre-commit-config.yaml` hook versions."
-          labels: maintenance, full pre-commit, no changelog
+          labels: maintenance, full pre-commit
