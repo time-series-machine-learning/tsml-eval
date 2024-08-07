@@ -2,8 +2,8 @@
 
 Installation guide for Python packages on Iridis and useful slurm commands.
 
-The Iridis wiki provides a lot of useful information and getting started guides for using ADA.
-https://sotonac.sharepoint.com/teams/HPCCommunityWiki
+The [Iridis wiki](https://sotonac.sharepoint.com/teams/HPCCommunityWiki) provides a lot of useful information and getting started guides for using Iridis.
+
 
 Server address: iridis5.soton.ac.uk
 
@@ -13,13 +13,13 @@ Alternatively, you can connect to one of the specific login nodes:
 - iridis5_c.soton.ac.uk
 - iridis5_d.soton.ac.uk (AMD CPU architecture)
 
-There is a Microsoft Teams group called "HPC Community" where you can ask questions.
+There is a Microsoft Teams group called ["HPC Community"](https://teams.microsoft.com/l/team/19%3a18c8baa70f8540d78455babffe11ad9c%40thread.tacv2/conversations?groupId=a0a40f99-c620-425f-8c12-a1216cf64cce&tenantId=4a5378f9-29f4-4d3e-be89-669d03ada9d8) where you can ask questions.
 
-## Windows interaction with ADA
+## Windows interaction with Iridis
 
-You need to be on a Soton network machine or have the VPN running to connect to Iridis. Connect to one of the adresses listed above.
+You need to be on a Soton network machine or have the [VPN running](https://amionvpn.soton.ac.uk/) to connect to Iridis. Connect to one of the adresses listed above.
 
-The recommended way of connecting to Iridis is using Putty as a command-line interface and WinSCP for file management.
+The recommended way of connecting to Iridis is using MobaXterm, or Putty as a command-line interface and WinSCP for file management.
 
 Copies of data files used in experiments must be stored on the cluster, the best place to put these files is on your user area scratch storage. It is a good idea to create shortcuts to and from your scratch drive.
 
@@ -33,7 +33,7 @@ By default, commands will be run on the login node. Beyond simple commands or sc
 
 >sinteractive
 
-DO NOT enter interactive mode for commands that require an internet connection (i.e. steps 1-4), as only the login nodes have one.
+**DO NOT** enter interactive mode for commands that require an internet connection (i.e. steps 1-4), as only the login nodes have one.
 
 ### 1. Clone the code from GitHub
 
@@ -133,6 +133,8 @@ Prior to running the script, you should activate an interactive session to preve
 
 >sinteractive
 
+>cd WORKING_DIR
+
 ## Running `tsml-eval` CPU experiments
 
 For CPU experiments start with one of the following scripts:
@@ -143,16 +145,22 @@ For CPU experiments start with one of the following scripts:
 
 >clustering_experiments.sh
 
+Within the above scripts you will need to adjust the top half section to work for your account. All the steps are described as comments within the script.
+
 You may need to use `dos2unix` to convert the line endings to unix format.
 
 The default queue for CPU jobs is _batch_.
 
+You can simply run `sh classification_experiments.sh` or alternativley write a slurm script to request the job. An example slurm script is found in this directory for running classification_experiments.sh.
+
+**NOTE: Ensure that anything you run has execution permissions with** `chmod +x SCRIPT_NAME`.
+
 Do not run threaded code on the cluster without reserving whole nodes, as there is nothing to stop the job from using
 the CPU resources allocated to others. The default python file in the scripts attempts to avoid threading as much as possible. You should ensure processes are not intentionally using multiple threads if you change it.
 
-Requesting memory for a job will allocate it all on the jobs assigned node. New jobs will not be submitted to a node if the total allocated memory exceeds the amount available for the node. As such, requesting too much memory can block new jobs from using the node. This is ok if the memory is actually being used, but large amounts of memory should not be requested unless you know it will be required for the jobs you are submitting. ADA is a shared resource, and instantly requesting hundreds of GB will hurt the overall efficiency of the cluster.
+Requesting memory for a job will allocate it all on the jobs assigned node. New jobs will not be submitted to a node if the total allocated memory exceeds the amount available for the node. As such, requesting too much memory can block new jobs from using the node. This is ok if the memory is actually being used, but large amounts of memory should not be requested unless you know it will be required for the jobs you are submitting. Iridis is a shared resource, and instantly requesting hundreds of GB will hurt the overall efficiency of the cluster.
 
-## Monitoring jobs on ADA
+## Monitoring jobs on Iridis
 
 list processes for user (mind that the quotes may not be the correct ones)
 
@@ -173,6 +181,23 @@ To delete all jobs on a queue it’s:
 To delete one job it’s:
 
 >scancel 11133013_1
+
+## An example workflow
+>sinteractive
+
+>cd tsml-eval/_tsml_research_resources/soton/iridis/
+
+>select & modify one of the experiment shell scripts to run
+
+>chmod +x EXAMPLE_EXPERIMENT.sh
+
+>write slurm script for requesting jobs
+
+>chmod +x EXAMPLE_SLURM.slurm
+
+>sbatch EXAMPLE_SLURM.slurm
+
+>squeue -u USERNAME –format="%12i %15P %20j %10u %10t %10M %10D %20R" -r
 
 ## Helpful links
 
