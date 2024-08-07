@@ -2,8 +2,8 @@
 
 Installation guide for Python packages on Iridis and useful slurm commands.
 
-The Iridis wiki provides a lot of useful information and getting started guides for using Iridis.
-https://sotonac.sharepoint.com/teams/HPCCommunityWiki
+The [Iridis wiki](https://sotonac.sharepoint.com/teams/HPCCommunityWiki) provides a lot of useful information and getting started guides for using Iridis.
+
 
 Server address: iridis5.soton.ac.uk
 
@@ -132,6 +132,7 @@ For running jobs on Iridis, we recommend using copies of the submission scripts 
 Prior to running the script, you should activate an interactive session to prevent using resourses on the login nodes.
 
 >sinteractive
+
 >cd WORKING_DIR
 
 ## Running `tsml-eval` CPU experiments
@@ -152,7 +153,7 @@ The default queue for CPU jobs is _batch_.
 
 You can simply run `sh classification_experiments.sh` or alternativley write a SLURM script to request the job. An example SLURM script is found in this directory for running classification_experiments.sh.
 
-**NOTE: Ensure that anything you run has execution permissions with** `chmod +x SCRIPT_NAME.
+**NOTE: Ensure that anything you run has execution permissions with** `chmod +x SCRIPT_NAME`.
 
 Do not run threaded code on the cluster without reserving whole nodes, as there is nothing to stop the job from using
 the CPU resources allocated to others. The default python file in the scripts attempts to avoid threading as much as possible. You should ensure processes are not intentionally using multiple threads if you change it.
@@ -183,12 +184,19 @@ To delete one job it’s:
 
 ## An example workflow
 >sinteractive
+
 >cd tsml-eval/_tsml_research_resources/soton/iridis/
+
 >select & modify one of the experiment shell scripts to run
+
 >chmod +x EXAMPLE_EXPERIMENT.sh
+
 >write SLURM script for requesting jobs
+
 >chmod +x EXAMPLE_SLURM.slurm
+
 >sbatch EXAMPLE_SLURM.slurm
+
 >squeue -u USERNAME –format="%12i %15P %20j %10u %10t %10M %10D %20R" -r
 
 ## Helpful links
