@@ -150,7 +150,7 @@ You may need to use `dos2unix` to convert the line endings to unix format.
 
 The default queue for CPU jobs is _batch_.
 
-You can simply run `sh classification_experiments.sh` or alternativley write a SLURM script to request the job. An example slurm script is found in this directory for running classification_experiments.sh.
+You can simply run `sh classification_experiments.sh` or alternativley write a SLURM script to request the job. An example SLURM script is found in this directory for running classification_experiments.sh.
 
 **NOTE: Ensure that anything you run has execution permissions with** `chmod +x SCRIPT_NAME.
 
@@ -180,6 +180,16 @@ To delete all jobs on a queue it’s:
 To delete one job it’s:
 
 >scancel 11133013_1
+
+## An example workflow
+>sinteractive
+>cd tsml-eval/_tsml_research_resources/soton/iridis/
+>select & modify one of the experiment shell scripts to run
+>chmod +x EXAMPLE_EXPERIMENT.sh
+>write SLURM script for requesting jobs
+>chmod +x EXAMPLE_SLURM.slurm
+>sbatch EXAMPLE_SLURM.slurm
+>squeue -u USERNAME –format="%12i %15P %20j %10u %10t %10M %10D %20R" -r
 
 ## Helpful links
 
