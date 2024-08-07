@@ -5,7 +5,7 @@
 #   classifiers_to_run (list of classifiers to run)
 # While reading is fine, please dont write anything to the default directories in this script
 
-# Start and end for resamples
+# Start and end for resamples, for getting started it is recommended to set max_folds to 5.
 max_folds=30
 start_fold=1
 
@@ -20,8 +20,8 @@ queue="batch"
 queue_alias=$queue
 
 # Enter your username and email here
-username="ajb2u23"
-mail="NONE"
+username="ajb2u23" #Edit
+mail="NONE" #Edit
 mailto="$username@soton.ac.uk"
 
 # MB for jobs, increase incrementally and try not to use more than you need. If you need hundreds of GB consider the huge memory queue.
@@ -38,7 +38,7 @@ local_path="/mainfs/home/$username/"
 
 # Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
 data_dir="$local_path/Data/"
-datasets="$local_path/DataSetLists/Classification.txt"
+datasets="$local_path/DataSetLists/TSC_112_2019.txt"
 
 # Results and output file write location. Change these to reflect your own file structure
 results_dir="$local_path/ClassificationResults/results/"
