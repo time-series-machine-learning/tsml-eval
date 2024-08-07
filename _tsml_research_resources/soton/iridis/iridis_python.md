@@ -17,9 +17,9 @@ There is a Microsoft Teams group called "HPC Community" where you can ask questi
 
 ## Windows interaction with Iridis
 
-You need to be on a Soton network machine or have the VPN running to connect to Iridis. Connect to one of the adresses listed above.
+You need to be on a Soton network machine or have the [VPN running](https://amionvpn.soton.ac.uk/) to connect to Iridis. Connect to one of the adresses listed above.
 
-The recommended way of connecting to Iridis is using Putty as a command-line interface and WinSCP for file management.
+The recommended way of connecting to Iridis is using MobaXterm, or Putty as a command-line interface and WinSCP for file management.
 
 Copies of data files used in experiments must be stored on the cluster, the best place to put these files is on your user area scratch storage. It is a good idea to create shortcuts to and from your scratch drive.
 
@@ -33,7 +33,7 @@ By default, commands will be run on the login node. Beyond simple commands or sc
 
 >sinteractive
 
-DO NOT enter interactive mode for commands that require an internet connection (i.e. steps 1-4), as only the login nodes have one.
+**DO NOT** enter interactive mode for commands that require an internet connection (i.e. steps 1-4), as only the login nodes have one.
 
 ### 1. Clone the code from GitHub
 
@@ -132,6 +132,7 @@ For running jobs on Iridis, we recommend using copies of the submission scripts 
 Prior to running the script, you should activate an interactive session to prevent using resourses on the login nodes.
 
 >sinteractive
+>cd WORKING_DIR
 
 ## Running `tsml-eval` CPU experiments
 
@@ -143,14 +144,20 @@ For CPU experiments start with one of the following scripts:
 
 >clustering_experiments.sh
 
+Within the above scripts you will need to adjust the top half section to work for your account. All the steps are described as comments within the script.
+
 You may need to use `dos2unix` to convert the line endings to unix format.
 
 The default queue for CPU jobs is _batch_.
 
+You can simply run `sh classification_experiments.sh` or alternativley write a SLURM script to request the job. An example slurm script is found in this directory for running classification_experiments.sh.
+
+**NOTE: Ensure that anything you run has execution permissions with** `chmod +x SCRIPT_NAME.
+
 Do not run threaded code on the cluster without reserving whole nodes, as there is nothing to stop the job from using
 the CPU resources allocated to others. The default python file in the scripts attempts to avoid threading as much as possible. You should ensure processes are not intentionally using multiple threads if you change it.
 
-Requesting memory for a job will allocate it all on the jobs assigned node. New jobs will not be submitted to a node if the total allocated memory exceeds the amount available for the node. As such, requesting too much memory can block new jobs from using the node. This is ok if the memory is actually being used, but large amounts of memory should not be requested unless you know it will be required for the jobs you are submitting. ADA is a shared resource, and instantly requesting hundreds of GB will hurt the overall efficiency of the cluster.
+Requesting memory for a job will allocate it all on the jobs assigned node. New jobs will not be submitted to a node if the total allocated memory exceeds the amount available for the node. As such, requesting too much memory can block new jobs from using the node. This is ok if the memory is actually being used, but large amounts of memory should not be requested unless you know it will be required for the jobs you are submitting. Iridis is a shared resource, and instantly requesting hundreds of GB will hurt the overall efficiency of the cluster.
 
 ## Monitoring jobs on Iridis
 
