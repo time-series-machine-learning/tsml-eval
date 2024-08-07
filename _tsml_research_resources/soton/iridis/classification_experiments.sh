@@ -5,7 +5,7 @@
 #   classifiers_to_run (list of classifiers to run)
 # While reading is fine, please dont write anything to the default directories in this script
 
-# Start and end for resamples, for getting started it is recommended to set max_folds to 5.
+# Start and end for resamples, for getting started it is recommended to set max_folds to 5
 max_folds=30
 start_fold=1
 
@@ -21,10 +21,10 @@ queue_alias=$queue
 
 # Enter your username and email here
 username="ajb2u23" #Edit
-mail="NONE" #Edit
+mail="NONE"
 mailto="$username@soton.ac.uk"
 
-# MB for jobs, increase incrementally and try not to use more than you need. If you need hundreds of GB consider the huge memory queue.
+# MB for jobs, increase incrementally and try not to use more than you need. If you need hundreds of GB consider the huge memory queue
 max_memory=8000
 
 # Max allowable is 60 hours
@@ -34,11 +34,12 @@ max_time="60:00:00"
 start_point=1
 
 # Put your home directory here
-local_path="/mainfs/home/$username/"
+local_path="/mainfs/lyceum/$username/"
 
-# Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
-data_dir="$local_path/Data/"
-datasets="$local_path/DataSetLists/TSC_112_2019.txt"
+# Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. 
+# Change this, if you want to use different data or lists, to "$local_path/..."
+data_dir="/mainfs/home/ajb2u23/Data"
+datasets="/mainfs/home/ajb2u23/DataSetLists/TSC_112_2019.txt"
 
 # Results and output file write location. Change these to reflect your own file structure
 results_dir="$local_path/ClassificationResults/results/"
@@ -47,13 +48,14 @@ out_dir="$local_path/ClassificationResults/output/"
 # The python script we are running
 script_file_path="$local_path/tsml-eval/tsml_eval/experiments/classification_experiments.py"
 
-# Environment name, change accordingly, for set up, see https://github.com/time-series-machine-learning/tsml-eval/blob/main/_tsml_research_resources/soton/iridis/iridis_python.md
+# Environment name, for set up, see https://github.com/time-series-machine-learning/tsml-eval/blob/main/_tsml_research_resources/soton/iridis/iridis_python.md
 # Separate environments for GPU and CPU are recommended
-env_name="tsml-eval"
+env_name="tsml-eval" #Edit this to be your conda enviroment
 
-# Classifiers to loop over. Must be seperated by a space
+# Classifiers to loop over, for getting started it is recommended to only run one classifier
+# They must be seperated by a space
 # See list of potential classifiers in set_classifier
-classifiers_to_run="ROCKET DrCIF"
+classifiers_to_run="ROCKET DrCIF" 
 
 # You can add extra arguments here. See tsml_eval/utils/arguments.py parse_args
 # You will have to add any variable to the python call close to the bottom of the script
