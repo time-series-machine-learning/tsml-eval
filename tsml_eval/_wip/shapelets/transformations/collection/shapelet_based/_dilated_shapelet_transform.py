@@ -435,11 +435,11 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
         )
         if self.length_selector == "RANDOM":
             length, position = self._random_location()
-
+        # HERE ADD OPTION FOR FIXED LENGTH
         channel = rng.randint(0, self.n_channels_)
 
         shapelet = z_normalise_series(
-            X[inst_idx][channel][position : position + length]
+            X[inst_idx][channel][position: position + length]
         )
         sabs = np.abs(shapelet)
         sorted_indicies = np.array(
