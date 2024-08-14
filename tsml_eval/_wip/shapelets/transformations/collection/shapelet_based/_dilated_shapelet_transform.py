@@ -84,6 +84,11 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
         shapelets.
     random_state : int or None, default=None
         Seed for random number generation.
+    shapelet_quality : str, default "INFO_GAIN"
+        The quality measure used to assess viable shapelet candidates. Currently, this can
+        be "INFO_GAIN" or "F_STAT".
+    length_selector: str, default "RANDOM"
+
 
     Attributes
     ----------
