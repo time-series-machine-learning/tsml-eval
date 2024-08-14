@@ -430,27 +430,47 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
 
     def _extract_random_shapelet(
         self, X, y, i, shapelets, max_shapelets_per_class, rng
-    ):
+    ):  # i is the shapelet number currently being extracted i.e the 5th shapelet
+        # Determine the index of the time seires the shapelet will come from
         inst_idx = i % self.n_cases_
+        
+        # Determine the class index of the shapelet's time series
         cls_idx = int(y[inst_idx])
+        
+        # Get the worst quality score for this class so far
         worst_quality = (
-            shapelets[cls_idx][0][0]
+            # each shapelet's content: quality, length, position, channel, inst_idx, cls_idx
+            shapelets[cls_idx][0][0] # quality of first shapelet candidate in this shapelet's class
             if len(shapelets[cls_idx]) == max_shapelets_per_class
             else -1
         )
+        
+        # Determine the length and position of the shapelet to be extracted.
+        # The length and position are randomly selected when "RANDOM" length_selector is used.
         if self.length_selector == "RANDOM":
             length, position = self._random_location()
-        # HERE ADD OPTION FOR FIXED LENGTH
-        channel = rng.randint(0, self.n_channels_)
+        
+        # TODO: Add an option for fixed length shapelets, position still will be random
 
+        # Randomly select a channel from which to extract the shapelet
+        channel = rng.randint(0, self.n_channels_)
+        
+        # Extract the shapelet candidate prior and normalize it prior to dilating
         shapelet = z_normalise_series(
             X[inst_idx][channel][position: position + length]
         )
+        
+        # Calculate the absolute values of the shapelet to sort by magnitude
         sabs = np.abs(shapelet)
+        
+        # Get indices that would sort the shapelet values in descending order
         sorted_indicies = np.array(
             sorted(range(length), reverse=True, key=lambda j: sabs[j])
         )
+        
+        # Calculate the quality of the shapelet based on the selected quality measure
         if self.shapelet_quality == "INFO_GAIN":
+            # Calculate quality using information gain
             quality = self._info_gain_shapelet_quality(
                 X,
                 y,
@@ -465,6 +485,7 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
                 worst_quality,
             )
         elif self.shapelet_quality == "F_STAT":
+            # Calculate quality using F-statistic
             quality = self._f_stat_shapelet_quality(
                 X,
                 y,
@@ -479,16 +500,20 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
                 worst_quality,
             )
         else:
-            raise ValueError("Unknown shapelet quality measure")
+            # Raise an error if an unknown shapelet quality measure is specified
+            raise ValueError("Unknown shapelet quality measure, must be INFO_GAIN or F_STAT")
 
+        # Return the shapelet - rounding the quality to 8 dp
         return np.round(quality, 8), length, position, channel, inst_idx, cls_idx
+
 
     def _random_location(self):
         length = (
-            rng.randint(0, self._max_shapelet_length - self.min_shapelet_length)
-            + self.min_shapelet_length
+            # I assume this is a more computationally efficient way than randint(min len, max len)
+            rng.randint(0, self._max_shapelet_length - self.min_shapelet_length) 
+            + self.min_shapelet_length 
         )
-        position = rng.randint(0, self.min_n_timepoints_ - length)
+        position = rng.randint(0, self.min_n_timepoints_ - length) #rng is random state check
         return length, position
 
     @staticmethod
