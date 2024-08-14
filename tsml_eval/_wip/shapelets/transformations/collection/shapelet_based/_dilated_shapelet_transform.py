@@ -40,13 +40,13 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
         For each candidate shapelet:
             - Extract a shapelet from an instance with random length, position and
               dimension and find its distance to each train case.
-            - Calculate the shapelet's information gain using the ordered list of
+            - Calculate the shapelet's quality using the ordered list of
               distances and train data class labels.
             - Abandon evaluating the shapelet if it is impossible to obtain a higher
-              information gain than the current worst.
+              discriminative ability than the current worst.
         For each shapelet batch:
             - Add each candidate to its classes shapelet heap, removing the lowest
-              information gain shapelet if the max number of shapelets has been met.
+              least discriminative shapelet if the max number of shapelets has been met.
             - Remove self-similar shapelets from the heap.
     Using the final set of filtered shapelets, transform the data into a vector of
     of distances from a series to each shapelet.
@@ -55,7 +55,7 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
     ----------
     n_shapelet_samples : int, default=10000
         The number of candidate shapelets to be evaluated. Filtered down to
-        <= max_shapelets, keeping the shapelets with the most information gain.
+        <= max_shapelets, keeping the most discriminative shapelets.
     max_shapelets : int or None, default=None
         Max number of shapelets to keep for the final transform. Each class value will
         have its own max, set to n_classes / max_shapelets. If None uses the min between
@@ -108,7 +108,7 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
         The stored shapelets and relating information after a dataset has been
         processed.
         Each item in the list is a tuple containing the following 7 items:
-        (shapelet information gain, shapelet length, start position the shapelet was
+        (shapelet quality, shapelet length, start position the shapelet was
         extracted from, shapelet dimension, index of the instance the shapelet was
         extracted from in fit, class value of the shapelet, The z-normalised shapelet
         array)
