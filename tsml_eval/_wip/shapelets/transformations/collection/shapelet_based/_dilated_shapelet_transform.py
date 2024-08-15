@@ -108,10 +108,14 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
         The stored shapelets and relating information after a dataset has been
         processed.
         Each item in the list is a tuple containing the following 7 items:
-        (shapelet quality, shapelet length, start position the shapelet was
-        extracted from, shapelet dimension, index of the instance the shapelet was
-        extracted from in fit, class value of the shapelet, The z-normalised shapelet
-        array)
+        - shapelet quality, 
+        - shapelet length, 
+        - start position the shapelet was extracted from, 
+        - shapelet dimension, 
+        - dilation of the shapelet, 
+        - index of the instance the shapelet was extracted from in fit,
+        - class value of the shapelet, 
+        - the z-normalised shapelet array
 
     See Also
     --------
@@ -254,9 +258,9 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
         max_shapelets_per_class = int(self._max_shapelets / self.n_classes_)
         if max_shapelets_per_class < 1:
             max_shapelets_per_class = 1
-        # shapelet list content: quality, length, position, channel, inst_idx, cls_idx
+        # shapelet list content: quality, length, position, channel, dilation, inst_idx, cls_idx
         shapelets = List(
-            [List([(-1.0, -1, -1, -1, -1, -1)]) for _ in range(self.n_classes_)]
+            [List([(-1.0, -1, -1, -1, -1, -1, -1)]) for _ in range(self.n_classes_)]
         )
         n_shapelets_extracted = 0
 
@@ -341,21 +345,22 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
                 s[2],
                 s[3],
                 s[4],
-                self.classes_[s[5]],
-                z_normalise_series(X[s[4]][s[3]][s[2] : s[2] + s[1]]),
+                s[5],
+                self.classes_[s[6]],
+                z_normalise_series(X[s[5]][s[3]][s[2] : s[2] + s[1]]),
             )
             for class_shapelets in shapelets
             for s in class_shapelets
             if s[0] > 0
         ]
-        self.shapelets.sort(reverse=True, key=lambda s: (s[0], -s[1], s[2], s[3], s[4]))
+        self.shapelets.sort(reverse=True, key=lambda s: (s[0], -s[1], s[2], s[3], s[5]))
 
         to_keep = self._remove_identical_shapelets(List(self.shapelets))
         self.shapelets = [n for (n, b) in zip(self.shapelets, to_keep) if b]
 
         self._sorted_indicies = []
         for s in self.shapelets:
-            sabs = np.abs(s[6])
+            sabs = np.abs(s[7])
             self._sorted_indicies.append(
                 np.array(
                     sorted(range(s[1]), reverse=True, key=lambda j, sabs=sabs: sabs[j])
@@ -393,7 +398,7 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
             )(
                 delayed(_online_shapelet_distance)(
                     series[shapelet[3]],
-                    shapelet[6],
+                    shapelet[7],
                     self._sorted_indicies[n],
                     shapelet[2],
                     shapelet[1],
@@ -613,7 +618,7 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
         shapelet_heap, candidate_shapelets, max_shapelets_per_class, cls_idx
     ):
         for shapelet in candidate_shapelets:
-            if shapelet[5] == cls_idx and shapelet[0] > 0:
+            if shapelet[6] == cls_idx and shapelet[0] > 0:
                 if (
                     len(shapelet_heap) == max_shapelets_per_class
                     and shapelet[0] < shapelet_heap[0][0]
@@ -660,7 +665,7 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
                 if (
                     to_keep[n]
                     and shapelets[i][1] == shapelets[n][1]
-                    and np.array_equal(shapelets[i][6], shapelets[n][6])
+                    and np.array_equal(shapelets[i][7], shapelets[n][7])
                 ):
                     to_keep[n] = False
 
@@ -841,7 +846,7 @@ def _binary_entropy(c1, c2):
 @njit(fastmath=True, cache=True)
 def _is_self_similar(s1, s2):
     # not self similar if from different series or dimension
-    if s1[4] == s2[4] and s1[3] == s2[3]:
+    if s1[5] == s2[5] and s1[3] == s2[3]:
         if s2[2] <= s1[2] <= s2[2] + s2[1]:
             return True
         if s1[2] <= s2[2] <= s1[2] + s1[1]:
