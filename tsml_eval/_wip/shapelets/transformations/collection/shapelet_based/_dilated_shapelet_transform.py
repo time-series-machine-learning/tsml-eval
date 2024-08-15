@@ -64,6 +64,10 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
         Lower bound on candidate shapelet lengths.
     max_shapelet_length : int or None, default= None
         Upper bound on candidate shapelet lengths. If None no max length is used.
+    shapelet_pos : int or None, default=None.
+        An option to set the location of shapelet candidates. Must be less than the 
+        shortest time series minus the shapelet's length. A value of None genegerates 
+        random positions for each shapelet candidate.
     remove_self_similar : boolean, default=True
         Remove overlapping "self-similar" shapelets when merging candidate shapelets.
     time_limit_in_minutes : int, default=0
@@ -167,6 +171,7 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
         max_shapelets=None,
         min_shapelet_length=3,
         max_shapelet_length=None,
+        shapelet_pos = None,
         remove_self_similar=True,
         time_limit_in_minutes=0.0,
         contract_max_n_shapelet_samples=np.inf,
@@ -181,6 +186,7 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
         self.max_shapelets = max_shapelets
         self.min_shapelet_length = min_shapelet_length
         self.max_shapelet_length = max_shapelet_length
+        self.shapelet_pos = shapelet_pos
         self.remove_self_similar = remove_self_similar
 
         self.time_limit_in_minutes = time_limit_in_minutes
@@ -203,6 +209,7 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
         # Protected attributes
         self._max_shapelets = max_shapelets
         self._max_shapelet_length = max_shapelet_length
+        self.shapelet_pos = shapelet_pos
         self._n_jobs = n_jobs
         self._batch_size = batch_size
         self._class_counts = []
@@ -449,15 +456,19 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
             if len(shapelets[cls_idx]) == max_shapelets_per_class
             else -1
         )
+        # TODO: add a conditional for making the position
+        #if self.shapelet_pos == None:
+        #
+        #else:
+        #   try catch if pos is within range 
         
-        # Determine the length and position of the shapelet to be extracted.
         # The length and position are randomly selected when "RANDOM" length_selector is used.
         if self.length_selector == "RANDOM":
             length, position = self._random_location()
         
-        # TODO: Add an option for fixed length shapelets, position still will be random
+        # Add an option for fixed length shapelets, position still will be random
         if self.length_selector == "FIXED":
-            length, position = self._fixed_location()
+            length, position = self._fixed_length()
 
         # Randomly select a channel from which to extract the shapelet
         channel = rng.randint(0, self.n_channels_)
@@ -523,7 +534,7 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
         position = rng.randint(0, self.min_n_timepoints_ - length) #rng is random state check
         return length, position
     
-    def _fixed_location(self):
+    def _fixed_length(self):
         length = rng.rand(9, 11, 13) # I have understood the task to give a fixed length out of these three options
         position = rng.randint(0, self.min_n_timepoints_ - length) 
         return length, position

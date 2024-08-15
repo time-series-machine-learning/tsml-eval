@@ -37,8 +37,12 @@ class ShapeletTransformClassifier(BaseClassifier):
         have its own max, set to ``n_classes_ / max_shapelets``. If `None`, uses the
         minimum between ``10 * n_cases_`` and `1000`.
     max_shapelet_length : int or None, default=None
-        Lower bound on candidate shapelet lengths for the transform. If ``None``, no
+        Upper bound on candidate shapelet lengths for the transform. If ``None``, no
         max length is used
+    shapelet_pos : int or None, default=None
+        An option to set the location of shapelet candidates. Must be less than the 
+        shortest time series minus the shapelet's length. A value of None genegerates 
+        random positions for each shapelet candidate.    
     estimator : BaseEstimator or None, default=None
         Base estimator for the ensemble, can be supplied a sklearn `BaseEstimator`. If
         `None` a default `RotationForestClassifier` classifier is used.
@@ -131,6 +135,7 @@ class ShapeletTransformClassifier(BaseClassifier):
         n_shapelet_samples: int = 10000,
         max_shapelets: Union[int, None] = None,
         max_shapelet_length: Union[int, None] = None,
+        shapelet_pos: Union[int, None] = None,
         estimator=None,
         transform_limit_in_minutes: int = 0,
         time_limit_in_minutes: int = 0,
@@ -143,6 +148,7 @@ class ShapeletTransformClassifier(BaseClassifier):
         self.n_shapelet_samples = n_shapelet_samples
         self.max_shapelets = max_shapelets
         self.max_shapelet_length = max_shapelet_length
+        self.shapelet_pos = shapelet_pos
         self.estimator = estimator
 
         self.transform_limit_in_minutes = transform_limit_in_minutes
@@ -291,6 +297,7 @@ class ShapeletTransformClassifier(BaseClassifier):
             n_shapelet_samples=self.n_shapelet_samples,
             max_shapelets=self.max_shapelets,
             max_shapelet_length=self.max_shapelet_length,
+            shapelet_pos = self.shapelet_pos,
             time_limit_in_minutes=self._transform_limit_in_minutes,
             contract_max_n_shapelet_samples=self.contract_max_n_shapelet_samples,
             n_jobs=self.n_jobs,
