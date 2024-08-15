@@ -95,6 +95,7 @@ shapelet_based_classifiers = [
     ["shapelettransformclassifier", "stc"],
     ["rdstclassifier", "rdst"],
     ["randomshapeletforestclassifier", "randomshapeletforest", "rsf"],
+    "fixedlengthshapelettransformclassifier",
     ["mrsqmclassifier", "mrsqm"],
     ["sastclassifier", "sast"],
     ["rsastclassifier", "rsast"],
@@ -731,6 +732,16 @@ def _set_classifier_shapelet_based(
         return RandomShapeletForestClassifier(
             random_state=random_state, n_jobs=n_jobs, **kwargs
         )
+    elif  c == "fixedlengthshapelettransformclassifier":
+        from aeon.classification.shapelet_based import ShapeletTransformClassifier
+
+        return ShapeletTransformClassifier(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    
     elif c == "mrsqmclassifier" or c == "mrsqm":
         from aeon.classification.shapelet_based import MrSQMClassifier
 
