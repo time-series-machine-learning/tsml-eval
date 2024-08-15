@@ -340,13 +340,13 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
 
         self.shapelets = [
             (
-                s[0],
-                s[1],
-                s[2],
-                s[3],
-                s[4],
-                s[5],
-                self.classes_[s[6]],
+                s[0], # shapelet quality 
+                s[1], # shapelet length
+                s[2], # start pos
+                s[3], # dilation
+                s[4], # channel
+                s[5], # source time series index
+                self.classes_[s[6]], # class val
                 z_normalise_series(X[s[5]][s[4]][s[2] : s[2] + s[1]]),
             )
             for class_shapelets in shapelets
@@ -360,7 +360,7 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
 
         self._sorted_indicies = []
         for s in self.shapelets:
-            sabs = np.abs(s[7])
+            sabs = np.abs(s[7]) # [7] = z norm
             self._sorted_indicies.append(
                 np.array(
                     sorted(range(s[1]), reverse=True, key=lambda j, sabs=sabs: sabs[j])
@@ -397,11 +397,11 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
                 n_jobs=self._n_jobs, backend=self.parallel_backend, prefer="threads"
             )(
                 delayed(_online_shapelet_distance)(
-                    series[shapelet[4]],
-                    shapelet[7],
+                    series[shapelet[4]], # [4] = channel
+                    shapelet[7], # [7] = z norm
                     self._sorted_indicies[n],
-                    shapelet[2],
-                    shapelet[1],
+                    shapelet[2], # [2] = start pos
+                    shapelet[1], # [1] = length
                 )
                 for n, shapelet in enumerate(self.shapelets)
             )
@@ -617,8 +617,8 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
     def _merge_shapelets(
         shapelet_heap, candidate_shapelets, max_shapelets_per_class, cls_idx
     ):
-        for shapelet in candidate_shapelets:
-            if shapelet[6] == cls_idx and shapelet[0] > 0:
+        for shapelet in candidate_shapelets: # [0] = shapelet quality, [6] = class val
+            if shapelet[6] == cls_idx and shapelet[0] > 0: 
                 if (
                     len(shapelet_heap) == max_shapelets_per_class
                     and shapelet[0] < shapelet_heap[0][0]
@@ -641,7 +641,7 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
 
             for n in range(i + 1, len(shapelet_heap)):
                 if to_keep[n] and _is_self_similar(shapelet_heap[i], shapelet_heap[n]):
-                    if (shapelet_heap[i][0], -shapelet_heap[i][1]) >= (
+                    if (shapelet_heap[i][0], -shapelet_heap[i][1]) >= ( # [1] = length
                         shapelet_heap[n][0],
                         -shapelet_heap[n][1],
                     ):
@@ -664,8 +664,8 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
             for n in range(i + 1, len(shapelets)):
                 if (
                     to_keep[n]
-                    and shapelets[i][1] == shapelets[n][1]
-                    and np.array_equal(shapelets[i][7], shapelets[n][7])
+                    and shapelets[i][1] == shapelets[n][1] # [1] = length
+                    and np.array_equal(shapelets[i][7], shapelets[n][7]) # [7] = z norm
                 ):
                     to_keep[n] = False
 
@@ -846,8 +846,8 @@ def _binary_entropy(c1, c2):
 @njit(fastmath=True, cache=True)
 def _is_self_similar(s1, s2):
     # not self similar if from different series or dimension
-    if s1[5] == s2[5] and s1[4] == s2[4]:
-        if s2[2] <= s1[2] <= s2[2] + s2[1]:
+    if s1[5] == s2[5] and s1[4] == s2[4]: # [4] = channel, [5] = index of source
+        if s2[2] <= s1[2] <= s2[2] + s2[1]: # [1] = length, [2] = start pos 
             return True
         if s1[2] <= s2[2] <= s1[2] + s1[1]:
             return True
