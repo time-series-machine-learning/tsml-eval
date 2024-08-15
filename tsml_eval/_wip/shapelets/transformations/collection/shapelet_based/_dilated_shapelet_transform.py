@@ -458,20 +458,13 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
             if len(shapelets[cls_idx]) == max_shapelets_per_class
             else -1
         )
-        # TODO: add a conditional for making the position
-        # The length and position are randomly selected when "RANDOM" length_selector is used.
-        if self.length_selector == "RANDOM":
-            length = self._random_location()
-        # Add an option for fixed length shapelets, position still will be random
-        if self.length_selector == "FIXED":
-            length = self._fixed_length()
+
+        length = self._get_length()
 
         if self.shapelet_pos == None:
             position = rng.randint(0, self.min_n_timepoints_ - length) #rng is random state check
-
         else:
             position = self._fixed_pos()
-        
         
         # Randomly select a channel from which to extract the shapelet
         channel = rng.randint(0, self.n_channels_)
@@ -528,17 +521,17 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
         return np.round(quality, 8), length, position, channel, inst_idx, cls_idx
 
 
-    def _random_location(self):
-        length = (
-            # I assume this is a more computationally efficient way than randint(min len, max len)
-            rng.randint(0, self._max_shapelet_length - self.min_shapelet_length) 
-            + self.min_shapelet_length 
-        )
+    def _get_length(self):
+        if self.length_selector == "RANDOM":
+            length = (
+                # I assume this is a more computationally efficient way than randint(min len, max len)
+                rng.randint(0, self._max_shapelet_length - self.min_shapelet_length) 
+                + self.min_shapelet_length 
+            )
+        if self.length_selector == "FIXED":
+            length = rng.rand(9, 11, 13) # I have understood the task to give a fixed length out of these three options
         return length
-    
-    def _fixed_length(self):
-        length = rng.rand(9, 11, 13) # I have understood the task to give a fixed length out of these three options
-        return length
+
     
     def fixed_pos(self):
         if self.shapelet_pos <= self.min_timepoints - self.length:
