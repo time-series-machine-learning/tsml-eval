@@ -92,6 +92,8 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
         The quality measure used to assess viable shapelet candidates. Currently, this can
         be "INFO_GAIN" or "F_STAT".
     length_selector: str, default "RANDOM"
+        This can be "FIXED" of "RANDOM", random selects a value within given range, fixed 
+        randomly selects either 9,11, or 13.
 
 
     Attributes
@@ -457,19 +459,20 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
             else -1
         )
         # TODO: add a conditional for making the position
-        #if self.shapelet_pos == None:
-        #
-        #else:
-        #   try catch if pos is within range 
-        
         # The length and position are randomly selected when "RANDOM" length_selector is used.
         if self.length_selector == "RANDOM":
-            length, position = self._random_location()
-        
+            length = self._random_location()
         # Add an option for fixed length shapelets, position still will be random
         if self.length_selector == "FIXED":
-            length, position = self._fixed_length()
+            length = self._fixed_length()
 
+        if self.shapelet_pos == None:
+            position = rng.randint(0, self.min_n_timepoints_ - length) #rng is random state check
+
+        else:
+            position = self._fixed_pos()
+        
+        
         # Randomly select a channel from which to extract the shapelet
         channel = rng.randint(0, self.n_channels_)
         
@@ -531,13 +534,19 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
             rng.randint(0, self._max_shapelet_length - self.min_shapelet_length) 
             + self.min_shapelet_length 
         )
-        position = rng.randint(0, self.min_n_timepoints_ - length) #rng is random state check
-        return length, position
+        return length
     
     def _fixed_length(self):
         length = rng.rand(9, 11, 13) # I have understood the task to give a fixed length out of these three options
-        position = rng.randint(0, self.min_n_timepoints_ - length) 
-        return length, position
+        return length
+    
+    def fixed_pos(self):
+        if self.shapelet_pos <= self.min_timepoints - self.length:
+            return self.shapelet_pos
+        else:
+            raise ValueError(
+                f"This position is not within valid range, start pos must be between 0 and 
+                {self.min_timepoints - self.length}")
 
     @staticmethod
     @njit(fastmath=True, cache=True)
