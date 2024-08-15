@@ -45,8 +45,8 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
             - Abandon evaluating the shapelet if it is impossible to obtain a higher
               discriminative ability than the current worst.
         For each shapelet batch:
-            - Add each candidate to its classes shapelet heap, removing the lowest
-              least discriminative shapelet if the max number of shapelets has been met.
+            - Add each candidate to its classes shapelet heap, removing thecleast
+              discriminative shapelet if the max number of shapelets has been met.
             - Remove self-similar shapelets from the heap.
     Using the final set of filtered shapelets, transform the data into a vector of
     of distances from a series to each shapelet.
