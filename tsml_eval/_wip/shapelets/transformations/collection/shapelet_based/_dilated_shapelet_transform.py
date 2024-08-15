@@ -456,6 +456,8 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
             length, position = self._random_location()
         
         # TODO: Add an option for fixed length shapelets, position still will be random
+        if self.length_selector == "FIXED":
+            length, position = self._fixed_location()
 
         # Randomly select a channel from which to extract the shapelet
         channel = rng.randint(0, self.n_channels_)
@@ -519,6 +521,11 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
             + self.min_shapelet_length 
         )
         position = rng.randint(0, self.min_n_timepoints_ - length) #rng is random state check
+        return length, position
+    
+    def _fixed_location(self):
+        length = rng.rand(9, 11, 13) # I have understood the task to give a fixed length out of these three options
+        position = rng.randint(0, self.min_n_timepoints_ - length) 
         return length, position
 
     @staticmethod
