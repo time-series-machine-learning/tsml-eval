@@ -110,9 +110,9 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
         Each item in the list is a tuple containing the following 7 items:
         - shapelet quality, 
         - shapelet length, 
-        - start position the shapelet was extracted from, 
-        - shapelet dimension, 
+        - start position the shapelet was extracted from,  
         - dilation of the shapelet, 
+        - shapelet dimension,
         - index of the instance the shapelet was extracted from in fit,
         - class value of the shapelet, 
         - the z-normalised shapelet array
@@ -347,13 +347,13 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
                 s[4],
                 s[5],
                 self.classes_[s[6]],
-                z_normalise_series(X[s[5]][s[3]][s[2] : s[2] + s[1]]),
+                z_normalise_series(X[s[5]][s[4]][s[2] : s[2] + s[1]]),
             )
             for class_shapelets in shapelets
             for s in class_shapelets
             if s[0] > 0
         ]
-        self.shapelets.sort(reverse=True, key=lambda s: (s[0], -s[1], s[2], s[3], s[5]))
+        self.shapelets.sort(reverse=True, key=lambda s: (s[0], -s[1], s[2], s[4], s[5]))
 
         to_keep = self._remove_identical_shapelets(List(self.shapelets))
         self.shapelets = [n for (n, b) in zip(self.shapelets, to_keep) if b]
@@ -397,7 +397,7 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
                 n_jobs=self._n_jobs, backend=self.parallel_backend, prefer="threads"
             )(
                 delayed(_online_shapelet_distance)(
-                    series[shapelet[3]],
+                    series[shapelet[4]],
                     shapelet[7],
                     self._sorted_indicies[n],
                     shapelet[2],
@@ -846,7 +846,7 @@ def _binary_entropy(c1, c2):
 @njit(fastmath=True, cache=True)
 def _is_self_similar(s1, s2):
     # not self similar if from different series or dimension
-    if s1[5] == s2[5] and s1[3] == s2[3]:
+    if s1[5] == s2[5] and s1[4] == s2[4]:
         if s2[2] <= s1[2] <= s2[2] + s2[1]:
             return True
         if s1[2] <= s2[2] <= s1[2] + s1[1]:
