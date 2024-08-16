@@ -1,2 +1,2 @@
 """Shapelet based transformers."""
-__all__ = ["RandomShapeletTransform"]
+__all__ = ["RandomShapeletTransform","RandomDilatedShapeletTransform"]

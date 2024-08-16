@@ -1,2 +1,2 @@
 """Shapelet based classifiers."""
-__all__ = ["ShapeletTransformClassifier"]
+__all__ = ["ShapeletTransformClassifier","DilatedShapeletTransformClassifier"]
