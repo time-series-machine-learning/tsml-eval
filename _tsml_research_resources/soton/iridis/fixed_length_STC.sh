@@ -69,7 +69,7 @@ predefined_folds="false"
 normalise_data="false"
 
 #Enforcing fixed length through kwarg
-length_selector="--length_selector FIXED"
+length_selector="--kwargs length_selector FIXED str"
 
 # ======================================================================================
 # ======================================================================================
