@@ -6,7 +6,7 @@
 # While reading is fine, please dont write anything to the default directories in this script
 
 # Start and end for resamples
-max_folds=30
+max_folds=1 # Changed from 30 to single resample for fixed length experiment
 start_fold=1
 
 # To avoid dumping 1000s of jobs in the queue we have a higher level queue
@@ -37,7 +37,7 @@ start_point=1
 local_path="/mainfs/home/$username/"
 
 # Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
-data_dir="$local_path/Data/"
+data_dir="$local_path/Data/" # Path to 112 univariate data and possibly 26 multivariate
 datasets="$local_path/DataSetLists/Classification.txt"
 
 # Results and output file write location. Change these to reflect your own file structure
@@ -53,7 +53,7 @@ env_name="tsml-eval"
 
 # Classifiers to loop over. Must be seperated by a space
 # See list of potential classifiers in set_classifier
-classifiers_to_run="ROCKET DrCIF"
+classifiers_to_run="fixedlengthshapelettransformclassifier" # Fixed length experiment
 
 # You can add extra arguments here. See tsml_eval/utils/arguments.py parse_args
 # You will have to add any variable to the python call close to the bottom of the script
