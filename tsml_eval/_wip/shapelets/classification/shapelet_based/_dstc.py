@@ -4,7 +4,7 @@ Shapelet transform classifier pipeline that simply performs a (configurable) sha
 transform then builds (by default) a rotation forest classifier on the output.
 """
 
-__all__ = ["ShapeletTransformClassifier"]
+__all__ = ["DilatedShapeletTransformClassifier"]
 
 from typing import List, Type, Union
 
