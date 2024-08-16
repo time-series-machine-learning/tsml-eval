@@ -539,8 +539,8 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
             return self.shapelet_pos
         else:
             raise ValueError(
-                f"This position is not within valid range, start pos must be between 0 and 
-                {self.min_timepoints - self.length}")
+                f"This position is not within valid range, start pos must be between 0 and "
+                f"{self.min_timepoints - self.length}")
 
     @staticmethod
     @njit(fastmath=True, cache=True)
