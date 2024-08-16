@@ -45,7 +45,7 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
             - Abandon evaluating the shapelet if it is impossible to obtain a higher
               discriminative ability than the current worst.
         For each shapelet batch:
-            - Add each candidate to its classes shapelet heap, removing thecleast
+            - Add each candidate to its classes shapelet heap, removing the least
               discriminative shapelet if the max number of shapelets has been met.
             - Remove self-similar shapelets from the heap.
     Using the final set of filtered shapelets, transform the data into a vector of
@@ -92,8 +92,9 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
         The quality measure used to assess viable shapelet candidates. Currently, this can
         be "INFO_GAIN" or "F_STAT".
     length_selector: str, default "RANDOM"
-        This can be "FIXED" of "RANDOM", random selects a value within given range, fixed 
-        randomly selects either 9,11, or 13.
+        This can be "FIXED" of "RANDOM", the latter selects a random value within given
+        range for each shapelet candidate, the former randomly selects either 9,11, or 
+        13 and will be the same for all candidate shapelets.
 
 
     Attributes
