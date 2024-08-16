@@ -34,11 +34,11 @@ max_time="60:00:00"
 start_point=1
 
 # Put your home directory here
-local_path="/mainfs/home/$username/"
+local_path="/mainfs/lyceum/$username/"
 
 # Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
-data_dir="$local_path/Data/" # Path to 112 univariate data and possibly 26 multivariate
-datasets="$local_path/DataSetLists/Classification.txt"
+data_dir="/mainfs/home/ajb2u23/Data" # Path to 112 univariate data and possibly 26 multivariate
+datasets="/mainfs/home/ajb2u23/DataSetLists/TSC_112_2019.txt" 
 
 # Results and output file write location. Change these to reflect your own file structure
 results_dir="$local_path/ClassificationResults/results/"
