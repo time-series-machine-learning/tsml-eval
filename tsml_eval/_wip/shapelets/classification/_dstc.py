@@ -1,4 +1,4 @@
-"""A shapelet transform classifier (STC).
+"""WIP dilated shapelet transform classifier (DSTC).
 
 Shapelet transform classifier pipeline that simply performs a (configurable) shapelet
 transform then builds (by default) a rotation forest classifier on the output.
@@ -15,12 +15,12 @@ from sklearn.utils import check_random_state
 from aeon.base._base import _clone_estimator
 from aeon.classification.base import BaseClassifier
 from aeon.classification.sklearn import RotationForestClassifier
-from tsml_eval._wip.shapelets.transformations.collection.shapelet_based import RandomShapeletTransform
+from tsml_eval._wip.shapelets.transformations.collection.shapelet_based import RandomDilatedShapeletTransform
 
 
-class ShapeletTransformClassifier(BaseClassifier):
+class DilatedShapeletTransformClassifier(BaseClassifier):
     """
-    A shapelet transform classifier (STC).
+    A dilated shapelet transform classifier (STC).
 
 
     As some implementations and applications contract the transformation solely,
@@ -69,6 +69,8 @@ class ShapeletTransformClassifier(BaseClassifier):
         If `RandomState` instance, random_state is the random number generator;
         If `None`, the random number generator is the `RandomState` instance used
         by `np.random`.
+    length_selector : str, default="RANDOM"
+        #TODO: write docstring
 
     Attributes
     ----------
@@ -87,7 +89,7 @@ class ShapeletTransformClassifier(BaseClassifier):
 
     See Also
     --------
-    RandomShapeletTransform : The randomly sampled shapelet transform.
+    RandomDilatedShapeletTransform : The randomly sampled shapelet transform.
     RotationForestClassifier : The default rotation forest classifier used.
 
     Notes
@@ -106,19 +108,19 @@ class ShapeletTransformClassifier(BaseClassifier):
 
     Examples
     --------
-    >>> from aeon.classification.shapelet_based import ShapeletTransformClassifier
+    >>> from aeon.classification.shapelet_based import DilatedShapeletTransformClassifier
     >>> from aeon.classification.sklearn import RotationForestClassifier
     >>> from aeon.datasets import load_unit_test
     >>> X_train, y_train = load_unit_test(split="train", return_X_y=True)
     >>> X_test, y_test = load_unit_test(split="test", return_X_y=True)
-    >>> clf = ShapeletTransformClassifier(
+    >>> clf = DilatedShapeletTransformClassifier(
     ...     estimator=RotationForestClassifier(n_estimators=3),
     ...     n_shapelet_samples=100,
     ...     max_shapelets=10,
     ...     batch_size=20,
     ... )
     >>> clf.fit(X_train, y_train)
-    ShapeletTransformClassifier(...)
+    DilatedShapeletTransformClassifier(...)
     >>> y_pred = clf.predict(X_test)
     """
 
@@ -144,6 +146,7 @@ class ShapeletTransformClassifier(BaseClassifier):
         batch_size: Union[int, None] = 100,
         random_state: Union[int, Type[np.random.RandomState], None] = None,
         shapelet_quality = "INFO_GAIN",
+        length_selector = "RANDOM",
     ) -> None:
         self.n_shapelet_samples = n_shapelet_samples
         self.max_shapelets = max_shapelets
@@ -163,7 +166,8 @@ class ShapeletTransformClassifier(BaseClassifier):
         self.n_channels_ = 0
         self.n_timepoints_ = 0
         self.shapelet_quality = shapelet_quality
-        self._transformer = RandomShapeletTransform(shapelet_quality=shapelet_quality)
+        self.length_selector = length_selector
+        self._transformer = RandomDilatedShapeletTransform(shapelet_quality=shapelet_quality)
         self._estimator = estimator
         self._transform_limit_in_minutes = 0
         self._classifier_limit_in_minutes = 0
@@ -293,7 +297,7 @@ class ShapeletTransformClassifier(BaseClassifier):
         elif self.transform_limit_in_minutes > 0:
             self._transform_limit_in_minutes = self.transform_limit_in_minutes
 
-        self._transformer = RandomShapeletTransform(
+        self._transformer = RandomDilatedShapeletTransform(
             n_shapelet_samples=self.n_shapelet_samples,
             max_shapelets=self.max_shapelets,
             max_shapelet_length=self.max_shapelet_length,
@@ -304,6 +308,7 @@ class ShapeletTransformClassifier(BaseClassifier):
             batch_size=self.batch_size,
             random_state=self.random_state,
             shapelet_quality=self.shapelet_quality,
+            length_selector=self.length_selector,
         )
 
         self._estimator = _clone_estimator(
@@ -330,7 +335,7 @@ class ShapeletTransformClassifier(BaseClassifier):
         parameter_set : str, default="default"
             Name of the set of test parameters to return, for use in tests. If no
             special parameters are defined for a value, will return `"default"` set.
-            ShapeletTransformClassifier provides the following special sets:
+            DilatedShapeletTransformClassifier provides the following special sets:
                  "results_comparison" - used in some classifiers to compare against
                     previously generated results where the default set of parameters
                     cannot produce suitable probability estimates
