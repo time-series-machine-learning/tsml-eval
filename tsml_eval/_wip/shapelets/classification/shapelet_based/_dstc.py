@@ -15,7 +15,7 @@ from sklearn.utils import check_random_state
 from aeon.base._base import _clone_estimator
 from aeon.classification.base import BaseClassifier
 from aeon.classification.sklearn import RotationForestClassifier
-from tsml_eval._wip.shapelets.transformations.collection.shapelet_based import RandomDilatedShapeletTransform
+from tsml_eval._wip.shapelets.transformations.collection.shapelet_based._dilated_shapelet_transform import RandomDilatedShapeletTransform
 
 
 class DilatedShapeletTransformClassifier(BaseClassifier):

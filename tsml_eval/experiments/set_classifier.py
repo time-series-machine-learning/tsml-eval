@@ -733,7 +733,7 @@ def _set_classifier_shapelet_based(
             random_state=random_state, n_jobs=n_jobs, **kwargs
         )
     elif  c == "fixedlengthshapelettransformclassifier":
-        from tsml_eval._wip.shapelets.classification.shapelet_based import DilatedShapeletTransformClassifier
+        from tsml_eval._wip.shapelets.classification.shapelet_based._dstc import DilatedShapeletTransformClassifier
 
         return DilatedShapeletTransformClassifier(
             random_state=random_state,
