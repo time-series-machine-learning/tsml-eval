@@ -20,7 +20,7 @@ queue="batch"
 queue_alias=$queue
 
 # Enter your username and email here
-username="ajb2u23"
+username="ik2g21"
 mail="NONE"
 mailto="$username@soton.ac.uk"
 
@@ -34,7 +34,7 @@ max_time="60:00:00"
 start_point=1
 
 # Put your home directory here
-local_path="/mainfs/lyceum/$username/"
+local_path="/mainfs/lyceum/$username/aeon"
 
 # Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
 data_dir="/mainfs/home/ajb2u23/Data" # Path to 112 univariate data and possibly 26 multivariate
