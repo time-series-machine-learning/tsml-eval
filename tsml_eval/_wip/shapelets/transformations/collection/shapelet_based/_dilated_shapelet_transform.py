@@ -461,7 +461,7 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
             else -1
         )
 
-        length = self._get_length()
+        length = self._get_length(rng)
 
         if self.shapelet_pos == None:
             position = rng.randint(0, self.min_n_timepoints_ - length) #rng is random state check
@@ -523,7 +523,7 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
         return np.round(quality, 8), length, position, channel, inst_idx, cls_idx
 
 
-    def _get_length(self):
+    def _get_length(self,rng):
         if self.length_selector == "RANDOM":
             length = (
                 # I assume this is a more computationally efficient way than randint(min len, max len)
