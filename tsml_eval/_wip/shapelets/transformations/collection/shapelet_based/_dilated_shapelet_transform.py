@@ -448,7 +448,7 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
         self, X, y, i, shapelets, max_shapelets_per_class, rng
     ):  # i is the shapelet number currently being extracted i.e the 5th shapelet
         # Determine the index of the time seires the shapelet will come from
-        inst_idx = i % self.n_cases_
+        inst_idx = i % self.n_cases_ 
         
         # Determine the class index of the shapelet's time series
         cls_idx = int(y[inst_idx])
@@ -468,6 +468,9 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
         else:
             position = self._fixed_pos()
         
+        #TODO: Add dilation implementation
+        dilation = 1
+
         # Randomly select a channel from which to extract the shapelet
         channel = rng.randint(0, self.n_channels_)
         
@@ -520,7 +523,7 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
             raise ValueError("Unknown shapelet quality measure, must be INFO_GAIN or F_STAT")
 
         # Return the shapelet - rounding the quality to 8 dp
-        return np.round(quality, 8), length, position, channel, inst_idx, cls_idx
+        return np.round(quality, 8), length, position, dilation, channel, inst_idx, cls_idx
 
 
     def _get_length(self,rng):
@@ -531,11 +534,11 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
                 + self.min_shapelet_length 
             )
         if self.length_selector == "FIXED":
-            length = rng.rand(9, 11, 13) # I have understood the task to give a fixed length out of these three options
+            length = rng.choice([9, 11, 13]) # I have understood the task to give a fixed length out of these three options
         return length
 
     
-    def fixed_pos(self):
+    def _fixed_pos(self):
         if self.shapelet_pos <= self.min_timepoints - self.length:
             return self.shapelet_pos
         else:
