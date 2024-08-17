@@ -22,7 +22,8 @@ from sklearn.utils._random import check_random_state
 from aeon.transformations.collection.base import BaseCollectionTransformer
 from aeon.utils.numba.general import AEON_NUMBA_STD_THRESHOLD, z_normalise_series
 from aeon.utils.validation import check_n_jobs
-import _quality_measures as qm
+
+from tsml_eval._wip.shapelets.transformations.collection.shapelet_based import _quality_measures as qm
 
 
 class RandomDilatedShapeletTransform(BaseCollectionTransformer):
