@@ -46,7 +46,7 @@ out_dir="$local_path/ClassificationResults/output/"
 
 # The python script we are running
 script_file_path="$local_path/tsml-eval/tsml_eval/experiments/classification_experiments.py"
-second_script_file_path="$local_path/tsml_eval\_wip\shapelets\fixed_length_STC_eval.py"
+second_script_file_path="$local_path\tsml-eval\tsml_eval\_wip\shapelets\fixed_length_STC_eval.py"
 # Environment name, change accordingly, for set up, see https://github.com/time-series-machine-learning/tsml-eval/blob/main/_tsml_research_resources/soton/iridis/iridis_python.md
 # Separate environments for GPU and CPU are recommended
 env_name="tsml-eval"
