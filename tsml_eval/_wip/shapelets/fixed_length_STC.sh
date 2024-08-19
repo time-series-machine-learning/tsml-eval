@@ -161,15 +161,15 @@ done < ${datasets}
 echo Finished submitting jobs
 
 # Wait for all jobs to finish
-# echo "Waiting for all jobs to complete..."
-# while squeue -u ${username} | grep -q .; do
-#     echo "Some jobs are still running:"
-#     squeue -u ${username}
-#     echo "Waiting for jobs to complete..."
-#     sleep 120
-# done
+echo "Waiting for all jobs to complete..."
+while squeue -u ${username} | grep -q .; do
+    echo "Some jobs are still running:"
+    squeue -u ${username}
+    echo "Waiting for jobs to complete..."
+    sleep 120
+done
 
-# echo "All jobs completed."
+echo "All jobs completed."
 
 # Run the second Python script
 echo "Running second Python script..."
