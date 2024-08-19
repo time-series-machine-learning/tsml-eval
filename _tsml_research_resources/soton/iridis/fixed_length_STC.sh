@@ -53,7 +53,7 @@ env_name="tsml-eval"
 
 # Classifiers to loop over. Must be seperated by a space
 # See list of potential classifiers in set_classifier
-classifiers_to_run="fixedlengthshapelettransformclassifier" # Fixed length experiment
+classifiers_to_run="stc fixedlengthshapelettransformclassifier" # Fixed length experiment
 
 # You can add extra arguments here. See tsml_eval/utils/arguments.py parse_args
 # You will have to add any variable to the python call close to the bottom of the script
@@ -67,9 +67,6 @@ predefined_folds="false"
 
 # Normalise data before fit/predict
 normalise_data="false"
-
-#Enforcing fixed length through kwarg
-length_selector="--kwargs length_selector FIXED str"
 
 # ======================================================================================
 # ======================================================================================
@@ -121,6 +118,12 @@ done
 
 if [ "${array_jobs}" != "" ]; then
 
+ # Determine if length_selector argument should be included
+if [ "$classifier" == "fixedlengthshapelettransformclassifier" ]; then
+    length_selector="--kwargs length_selector FIXED str"
+else
+    length_selector=""
+fi
 # This creates the scrip to run the job based on the info above
 echo "#!/bin/bash
 #SBATCH --mail-type=${mail}
@@ -141,7 +144,7 @@ source activate $env_name
 
 # Input args to the default classification_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/classification_experiments.py
-python -u ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_train_files} ${predefined_folds} ${normalise_data} ${length_selector}"  > generatedFile.sub
+python -u ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_train_files} ${predefined_folds} ${normalise_data} ${length_selector}" > generatedFile.sub
 
 echo "${count} ${classifier}/${dataset}"
 
