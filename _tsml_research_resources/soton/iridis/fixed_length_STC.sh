@@ -46,7 +46,7 @@ out_dir="$local_path/ClassificationResults/output/"
 
 # The python script we are running
 script_file_path="$local_path/tsml-eval/tsml_eval/experiments/classification_experiments.py"
-
+second_script_file_path="$local_path/tsml_eval\_wip\shapelets\fixed_length_STC_eval.py"
 # Environment name, change accordingly, for set up, see https://github.com/time-series-machine-learning/tsml-eval/blob/main/_tsml_research_resources/soton/iridis/iridis_python.md
 # Separate environments for GPU and CPU are recommended
 env_name="tsml-eval"
@@ -159,3 +159,20 @@ done
 done < ${datasets}
 
 echo Finished submitting jobs
+
+# Wait for all jobs to finish
+echo "Waiting for all jobs to complete..."
+while squeue -u ${username} | grep -q .; do
+    echo "Some jobs are still running:"
+    squeue -u ${username}
+    echo "Waiting for jobs to complete..."
+    sleep 120
+done
+
+echo "All jobs completed."
+
+# Run the second Python script
+echo "Running second Python script..."
+python -u ${second_script_file_path}
+
+echo "Second Python script finished."
