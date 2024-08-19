@@ -466,7 +466,7 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
         if self.shapelet_pos == None:
             position = rng.randint(0, self.min_n_timepoints_ - length) #rng is random state check
         else:
-            position = self._fixed_pos()
+            position = self._fixed_pos(length)
         
         #TODO: Add dilation implementation
         dilation = 1
@@ -538,13 +538,13 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
         return length
 
     
-    def _fixed_pos(self):
-        if self.shapelet_pos <= self.min_timepoints - self.length:
+    def _fixed_pos(self, length):
+        if self.shapelet_pos <= (self.min_n_timepoints_ - length):
             return self.shapelet_pos
         else:
             raise ValueError(
                 f"This position is not within valid range, start pos must be between 0 and "
-                f"{self.min_timepoints - self.length}")
+                f"{self.min_n_timepoints_ - length}")
 
     @staticmethod
     @njit(fastmath=True, cache=True)
