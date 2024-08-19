@@ -459,6 +459,7 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
             if len(shapelets[cls_idx]) == max_shapelets_per_class
             else -1
         )
+        rng = check_random_state(self.random_state)
         if self.shapelet_pos is None:
             length = self._get_length(rng, None)
             position = rng.randint(0, self.min_n_timepoints_ - length) #rng is random state check
@@ -540,9 +541,13 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
                 rng.randint(0, self._max_shapelet_length - self.min_shapelet_length - position) 
                 + self.min_shapelet_length
             )
+        # I have understood the task to give a fixed length out of these three options
         if self.length_selector == "FIXED":
-            # I have understood the task to give a fixed length out of these three options
-            length = int(rng.choice([9, 11, 13]) - position)
+            if self.random_state is None:
+                rng_len = check_random_state(0)
+                length = int(rng_len.choice([9, 11, 13]) - position)
+            else:
+                length = int(rng.choice([9, 11, 13]) - position)
         if length < 1:
             raise ValueError(
                f"The input position is too big, it must be a value less than "
