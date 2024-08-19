@@ -254,7 +254,6 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
         for i in range(1, self.n_cases_):
             if X[i].shape[1] < self.min_n_timepoints_:
                 self.min_n_timepoints_ = X[i].shape[1]
-
         if self.max_shapelets is None:
             self._max_shapelets = min(10 * self.n_cases_, 1000)
         if self._max_shapelets < self.n_classes_:
@@ -460,14 +459,13 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
             if len(shapelets[cls_idx]) == max_shapelets_per_class
             else -1
         )
-
-        length = self._get_length(rng)
-
-        if self.shapelet_pos == None:
+        if self.shapelet_pos is None:
+            length = self._get_length(rng, None)
             position = rng.randint(0, self.min_n_timepoints_ - length) #rng is random state check
         else:
-            position = self._fixed_pos(length)
-        
+            position = self._fixed_pos()
+            length = self._get_length(rng, position)
+
         #TODO: Add dilation implementation
         dilation = 1
 
@@ -526,25 +524,32 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
         return np.round(quality, 8), length, position, dilation, channel, inst_idx, cls_idx
 
 
-    def _get_length(self,rng):
-        if self.length_selector == "RANDOM":
-            length = (
-                # I assume this is a more computationally efficient way than randint(min len, max len)
-                rng.randint(0, self._max_shapelet_length - self.min_shapelet_length) 
-                + self.min_shapelet_length 
-            )
-        if self.length_selector == "FIXED":
-            length = rng.choice([9, 11, 13]) # I have understood the task to give a fixed length out of these three options
-        return length
-
-    
-    def _fixed_pos(self, length):
-        if self.shapelet_pos <= (self.min_n_timepoints_ - length):
+    def _fixed_pos(self):
+        if self.shapelet_pos < self.min_n_timepoints_ and self.shapelet_pos >= 0:
             return self.shapelet_pos
         else:
             raise ValueError(
-                f"This position is not within valid range, start pos must be between 0 and "
-                f"{self.min_n_timepoints_ - length}")
+                f"This position is not within valid range, start pos must be within 0 and "
+                f"{self.min_n_timepoints_ - self.min_shapelet_length}")
+        
+    def _get_length(self, rng, position):
+        if position is None:
+            position = 0
+        if self.length_selector == "RANDOM":
+            length = (
+                rng.randint(0, self._max_shapelet_length - self.min_shapelet_length - position) 
+                + self.min_shapelet_length
+            )
+        if self.length_selector == "FIXED":
+            # I have understood the task to give a fixed length out of these three options
+            length = int(rng.choice([9, 11, 13]) - position)
+        if length < 1:
+            raise ValueError(
+               f"The input position is too big, it must be a value less than "
+               f"{self.min_n_timepoints_ - length}"
+            )
+        return length
+
 
     @staticmethod
     @njit(fastmath=True, cache=True)
