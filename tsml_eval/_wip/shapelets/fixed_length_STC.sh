@@ -46,7 +46,7 @@ out_dir="$local_path/ClassificationResults/output/"
 
 # The python script we are running
 script_file_path="$local_path/tsml-eval/tsml_eval/experiments/classification_experiments.py"
-second_script_file_path="$local_path\tsml-eval\tsml_eval\_wip\shapelets\fixed_length_STC_eval.py"
+second_script_file_path="$local_path/tsml-eval/tsml_eval/_wip/shapelets/fixed_length_STC_eval.py"
 # Environment name, change accordingly, for set up, see https://github.com/time-series-machine-learning/tsml-eval/blob/main/_tsml_research_resources/soton/iridis/iridis_python.md
 # Separate environments for GPU and CPU are recommended
 env_name="tsml-eval"
@@ -161,18 +161,38 @@ done < ${datasets}
 echo Finished submitting jobs
 
 # Wait for all jobs to finish
-echo "Waiting for all jobs to complete..."
-while squeue -u ${username} | grep -q .; do
-    echo "Some jobs are still running:"
-    squeue -u ${username}
-    echo "Waiting for jobs to complete..."
-    sleep 120
-done
+# echo "Waiting for all jobs to complete..."
+# while squeue -u ${username} | grep -q .; do
+#     echo "Some jobs are still running:"
+#     squeue -u ${username}
+#     echo "Waiting for jobs to complete..."
+#     sleep 120
+# done
 
-echo "All jobs completed."
+# echo "All jobs completed."
 
 # Run the second Python script
 echo "Running second Python script..."
-python -u ${second_script_file_path}
+mkdir -p "${local_path}/ClassificationResults/evaluated_results/bashoutput"
+        # This creates the script to run the job based on the info above
+        echo "#!/bin/bash
+#SBATCH --mail-type=${mail}
+#SBATCH --mail-user=${mailto}
+#SBATCH -p ${queue}
+#SBATCH -t ${max_time}
+#SBATCH --job-name=result_eval
+#SBATCH --mem=${max_memory}M
+#SBATCH -o ${local_path}/ClassificationResults/evaluated_results/bashoutput/%A-%a.out
+#SBATCH -e ${local_path}/ClassificationResults/evaluated_results/bashoutput/%A-%a.err
+#SBATCH --nodes=1
 
+. /etc/profile
+
+module load anaconda/py3.10
+source activate $env_name
+
+# Input args to the default classification_experiments are in main method of
+# https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/classification_experiments.py
+python -u ${second_script_file_path}" > generatedFile2.sub
+sbatch < generatedFile2.sub
 echo "Second Python script finished."
