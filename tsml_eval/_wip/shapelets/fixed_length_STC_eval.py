@@ -1,11 +1,11 @@
 from tsml_eval.evaluation import evaluate_classifiers_by_problem
 import os
 
-classifiers = ["stc", "fixedlengthshapelettransformclassifier"]
+classifiers = ["stc", "fixedlengthshapelettransformclassifier", "notfixedlengthshapelettransformclassifier"]
 
 flstc_dir = "/mainfs/lyceum/ik2g21/aeon/ClassificationResults/results/fixedlengthshapelettransformclassifier/Predictions/"
 stc_dir = "/mainfs/lyceum/ik2g21/aeon/ClassificationResults/results/stc/Predictions/"
-
+nflstc_dir = "/mainfs/lyceum/ik2g21/aeon/ClassificationResults/results/notfixedlengthshapelettransformclassifier/Predictions/"
 def find_common_folders(directory1, directory2):
 
     folders1 = set(get_folder_names(directory1))
@@ -22,7 +22,7 @@ def get_folder_names(directory):
     return folders
    
 if __name__ == "__main__":
-        datasets = find_common_folders(stc_dir,flstc_dir)
+        datasets = find_common_folders(nflstc_dir,find_common_folders(stc_dir,flstc_dir))
 
         evaluate_classifiers_by_problem(
     "/mainfs/lyceum/ik2g21/aeon/ClassificationResults/results/",
