@@ -1,37 +1,42 @@
-from tsml_eval.evaluation import evaluate_classifiers_by_problem
 import os
+from tsml_eval.evaluation import evaluate_classifiers_by_problem
 
-classifiers = ["stc", "fixedlengthshapelettransformclassifier", "notfixedlengthshapelettransformclassifier"]
+classifiers = [
+    "stc", 
+    "fixedlengthshapelettransformclassifier", 
+    "notfixedlengthshapelettransformclassifier"
+]
 
 flstc_dir = "/mainfs/lyceum/ik2g21/aeon/ClassificationResults/results/fixedlengthshapelettransformclassifier/Predictions/"
 stc_dir = "/mainfs/lyceum/ik2g21/aeon/ClassificationResults/results/stc/Predictions/"
 nflstc_dir = "/mainfs/lyceum/ik2g21/aeon/ClassificationResults/results/notfixedlengthshapelettransformclassifier/Predictions/"
-def find_common_folders(directory1, directory2):
-
-    folders1 = set(get_folder_names(directory1))
-    folders2 = set(get_folder_names(directory2))
-    # Find the common datasets
-    common_folders = folders1.intersection(folders2)
-    return list(common_folders) 
 
 def get_folder_names(directory):
-
     items = os.listdir(directory)
-    # Filter the list to include dataset names
+    # Filter the list to include dataset names (directories only)
     folders = [item for item in items if os.path.isdir(os.path.join(directory, item))]
     return folders
 
+def find_common_folders(*directories):
+    # Start with folder names in the first directory
+    common_folders = set(get_folder_names(directories[0]))
+    # Intersect with folders in all other directories
+    for directory in directories[1:]:
+        common_folders.intersection_update(get_folder_names(directory))
+    return list(common_folders) 
+
 def main():
-    datasets = find_common_folders(nflstc_dir,find_common_folders(stc_dir,flstc_dir))
+    # Find datasets that are common across all directories
+    datasets = find_common_folders(stc_dir, flstc_dir, nflstc_dir)
 
     evaluate_classifiers_by_problem(
-    "/mainfs/lyceum/ik2g21/aeon/ClassificationResults/results/",
-    classifiers,
-    datasets,
-    "/mainfs/lyceum/ik2g21/aeon/ClassificationResults/evaluated_results/",
-    resamples=1,
-    eval_name="FixedLengthEval",
-)
+        "/mainfs/lyceum/ik2g21/aeon/ClassificationResults/results/",
+        classifiers,
+        datasets,
+        "/mainfs/lyceum/ik2g21/aeon/ClassificationResults/evaluated_results/",
+        resamples=1,
+        eval_name="FixedLengthEval",
+    )
     
 if __name__ == "__main__":
     main()
