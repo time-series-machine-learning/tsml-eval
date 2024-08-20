@@ -20,11 +20,11 @@ def get_folder_names(directory):
     # Filter the list to include dataset names
     folders = [item for item in items if os.path.isdir(os.path.join(directory, item))]
     return folders
-   
-if __name__ == "__main__":
-        datasets = find_common_folders(nflstc_dir,find_common_folders(stc_dir,flstc_dir))
 
-        evaluate_classifiers_by_problem(
+def main():
+    datasets = find_common_folders(nflstc_dir,find_common_folders(stc_dir,flstc_dir))
+
+    evaluate_classifiers_by_problem(
     "/mainfs/lyceum/ik2g21/aeon/ClassificationResults/results/",
     classifiers,
     datasets,
@@ -32,3 +32,6 @@ if __name__ == "__main__":
     resamples=1,
     eval_name="FixedLengthEval",
 )
+    
+if __name__ == "__main__":
+    main()
