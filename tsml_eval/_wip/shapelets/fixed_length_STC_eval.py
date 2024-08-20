@@ -3,7 +3,8 @@ from tsml_eval.evaluation import evaluate_classifiers_by_problem
 classifiers = ["stc", "fixedlengthshapelettransformclassifier"]
 datasets = "/mainfs/home/ajb2u23/DataSetLists/TSC_112_2019.txt" 
 
-evaluate_classifiers_by_problem(
+def main():
+    evaluate_classifiers_by_problem(
     "/mainfs/lyceum/ik2g21/aeon/ClassificationResults/results/",
     classifiers,
     datasets,
@@ -11,3 +12,6 @@ evaluate_classifiers_by_problem(
     resamples=1,
     eval_name="FixedLengthEval",
 )
+
+if __name__ == "__main__":
+    main()
