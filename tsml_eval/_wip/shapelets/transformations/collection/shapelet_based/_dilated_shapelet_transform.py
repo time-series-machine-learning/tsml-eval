@@ -459,7 +459,7 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
             if len(shapelets[cls_idx]) == max_shapelets_per_class
             else -1
         )
-        rng = check_random_state(self.random_state)
+        #rng = check_random_state(self.random_state)
         if self.shapelet_pos is None:
             length = self._get_length(rng, None)
             position = rng.randint(0, self.min_n_timepoints_ - length) #rng is random state check
@@ -468,7 +468,7 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
             length = self._get_length(rng, position)
 
         #TODO: Add dilation implementation
-        dilation = 1
+        dilation = -1
 
         # Randomly select a channel from which to extract the shapelet
         channel = rng.randint(0, self.n_channels_)
@@ -547,7 +547,8 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
                 rng_len = check_random_state(0)
                 length = int(rng_len.choice([9, 11, 13]) - position)
             else:
-                length = int(rng.choice([9, 11, 13]) - position)
+                rng_len = check_random_state(self.random_state)
+                length = int(rng_len.choice([9, 11, 13]) - position)
         if length < 1:
             raise ValueError(
                f"The input position is too big, it must be a value less than "
