@@ -93,9 +93,10 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
         The quality measure used to assess viable shapelet candidates. Currently, this can
         be "INFO_GAIN" or "F_STAT".
     length_selector: str, default "RANDOM"
-        This can be "FIXED" of "RANDOM", the latter selects a random value within given
-        range for each shapelet candidate, the former randomly selects either 9,11, or 
-        13 and will be the same for all candidate shapelets.
+        This can be "FIXED" or "RANDOM" or 'Dilated'. Random selects a random value within given
+        range for each shapelet candidate. Fixed randomly selects either 9,11, or 
+        13 and will be the same for all candidate shapelets. Dilated finds the range of possible
+        dilations for the dataset and scale the fixed lengths by each of these.
 
 
     Attributes
@@ -541,14 +542,15 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
                 rng.randint(0, self._max_shapelet_length - self.min_shapelet_length - position) 
                 + self.min_shapelet_length
             )
-            print("Random len", length)
         # I have understood the task to give a fixed length out of these three options
-        if self.length_selector == "FIXED":
+        if self.length_selector == "FIXED" or self.length_selector == "DILATED":
             if self.random_state is None:
                 length = int(rng.choice([9, 11, 13]) - position)
             else:
                 length = int(rng.choice([9, 11, 13]) - position)
-            print("Fixed len", length)
+        if self.length_selector == "DILATED":
+            dilation = self._find_possible_dilation(length)
+            length = 1 + (length - 1) * dilation
         if length < 1:
             raise ValueError(
                f"The input position is too big, it must be a value less than "
@@ -556,7 +558,15 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
             )
         return length
 
-
+    def _find_possible_dilation(self, length):
+        # x is uniformly drawn from the range [0, log_2(m/l)] 
+        # where m is time series length and l is shapelet length
+        upper_bound = np.log2(self.min_n_timepoints_ / length)    
+        x = np.random.uniform(0, upper_bound)
+        # d = [2^x] where [] is floor
+        dilation = int(np.floor(2 ** x))
+        return dilation
+    
     @staticmethod
     @njit(fastmath=True, cache=True)
     def _info_gain_shapelet_quality(
