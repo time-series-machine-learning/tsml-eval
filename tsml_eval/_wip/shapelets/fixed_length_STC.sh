@@ -10,7 +10,7 @@ max_folds=1 # Changed from 30 to single resample for fixed length experiment
 start_fold=1
 
 # To avoid dumping 1000s of jobs in the queue we have a higher level queue
-max_num_submitted=350
+max_num_submitted=500
 
 # Queue options are https://sotonac.sharepoint.com/teams/HPCCommunityWiki/SitePages/Iridis%205%20Job-submission-and-Limits-Quotas.aspx
 queue="batch"
@@ -54,7 +54,7 @@ env_name="tsml-eval"
 
 # Classifiers to loop over. Must be separated by a space
 # See list of potential classifiers in set_classifier
-classifiers_to_run="stc fixedlengthshapelettransformclassifier notfixedlengthshapelettransformclassifier dilatedshapelettransformclassifier" # Fixed length experiment
+classifiers_to_run="stc fixedlengthshapelettransformclassifier dilatedlengthshapelettransformclassifier rdst" # Fixed length experiment
 
 # You can add extra arguments here. See tsml_eval/utils/arguments.py parse_args
 # You will have to add any variable to the python call close to the bottom of the script
@@ -122,7 +122,7 @@ if [ "${array_jobs}" != "" ]; then
                 # Determine if length_selector argument should be included
                 if [ "$classifier" == "fixedlengthshapelettransformclassifier" ]; then
                     length_selector="--kwargs length_selector FIXED str"
-                elif [ "$classifier" == "dilatedshapelettransformclassifier" ]; then
+                elif [ "$classifier" == "dilatedlengthshapelettransformclassifier" ]; then
                     length_selector="--kwargs length_selector DILATED str"
                 else
                     length_selector=""

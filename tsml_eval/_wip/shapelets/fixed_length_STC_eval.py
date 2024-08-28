@@ -4,15 +4,16 @@ from tsml_eval.evaluation import evaluate_classifiers_by_problem
 classifiers = [
     "stc", 
     "fixedlengthshapelettransformclassifier", 
-    "notfixedlengthshapelettransformclassifier",
-    "dilatedshapelettransformclassifier"
+    #"notfixedlengthshapelettransformclassifier",
+    "rdst",
+    "dilatedlengthshapelettransformclassifier"
 ]
 
 flstc_dir = "/mainfs/lyceum/ik2g21/aeon/ClassificationResults/results/fixedlengthshapelettransformclassifier/Predictions/"
-dstc_dir = "/mainfs/lyceum/ik2g21/aeon/ClassificationResults/results/dilatedshapelettransformclassifier/Predictions/"
+dlstc_dir = "/mainfs/lyceum/ik2g21/aeon/ClassificationResults/results/dilatedlengthshapelettransformclassifier/Predictions/"
 stc_dir = "/mainfs/lyceum/ik2g21/aeon/ClassificationResults/results/stc/Predictions/"
-nflstc_dir = "/mainfs/lyceum/ik2g21/aeon/ClassificationResults/results/notfixedlengthshapelettransformclassifier/Predictions/"
-
+#nflstc_dir = "/mainfs/lyceum/ik2g21/aeon/ClassificationResults/results/notfixedlengthshapelettransformclassifier/Predictions/"
+rdst_dir =  "/mainfs/lyceum/ik2g21/aeon/ClassificationResults/results/rdst/Predictions/"
 def get_folder_names(directory):
     items = os.listdir(directory)
     # Filter the list to include dataset names (directories only)
@@ -29,7 +30,7 @@ def find_common_folders(*directories):
 
 def main():
     # Find datasets that are common across all directories
-    datasets = find_common_folders(stc_dir, flstc_dir, nflstc_dir,dstc_dir)
+    datasets = find_common_folders(stc_dir, flstc_dir, rdst_dir, dlstc_dir) # nflstc_dir
 
     evaluate_classifiers_by_problem(
         "/mainfs/lyceum/ik2g21/aeon/ClassificationResults/results/",

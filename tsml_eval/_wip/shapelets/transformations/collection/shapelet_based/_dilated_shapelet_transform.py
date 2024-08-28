@@ -538,7 +538,7 @@ class RandomDilatedShapeletTransform(BaseCollectionTransformer):
         # I have understood the task to give a random length out of these three options
         if self.length_selector == "FIXED" or self.length_selector == "DILATED":
                 length = int(rng.choice([9, 11, 13]) )
-                self.max_shapelet_length = 13
+                #TODO: implement max shapelet length assignment
         if self.length_selector == "DILATED":
             dilation = self._find_possible_dilation(length)
             length = 1 + (length - 1) * dilation

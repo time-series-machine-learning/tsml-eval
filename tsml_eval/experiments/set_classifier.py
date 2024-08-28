@@ -95,7 +95,7 @@ shapelet_based_classifiers = [
     ["shapelettransformclassifier", "stc"],
     ["rdstclassifier", "rdst"],
     ["randomshapeletforestclassifier", "randomshapeletforest", "rsf"],
-    ["fixedlengthshapelettransformclassifier","notfixedlengthshapelettransformclassifier","dilatedshapelettransformclassifier"],
+    ["fixedlengthshapelettransformclassifier","dilatedlengthshapelettransformclassifier"],
     ["mrsqmclassifier", "mrsqm"],
     ["sastclassifier", "sast"],
     ["rsastclassifier", "rsast"],
@@ -732,7 +732,7 @@ def _set_classifier_shapelet_based(
         return RandomShapeletForestClassifier(
             random_state=random_state, n_jobs=n_jobs, **kwargs
         )
-    elif  c == "fixedlengthshapelettransformclassifier" or c =="notfixedlengthshapelettransformclassifier" or c == "dilatedshapelettransformclassifier":
+    elif  c == "fixedlengthshapelettransformclassifier" or c == "dilatedlengthshapelettransformclassifier":
         from tsml_eval._wip.shapelets.classification.shapelet_based._dstc import DilatedShapeletTransformClassifier
 
         return DilatedShapeletTransformClassifier(
