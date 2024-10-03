@@ -1,7 +1,8 @@
 import numpy as np
 from tsml_eval._wip.forecasting.base import BaseForecaster
+from abc import ABC, abstractmethod
+from typing import final
 from sklearn.linear_model import LinearRegression
-
 class BaseWindowForecaster(BaseForecaster):
     def __init__(self, window, horizon=1, regressor=LinearRegression()):
         self.regressor = regressor

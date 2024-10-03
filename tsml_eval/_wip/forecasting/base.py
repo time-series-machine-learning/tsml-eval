@@ -45,9 +45,9 @@ class BaseForecaster(BaseSeriesEstimator, ABC):
         self.horizon = horizon
         self.window = window
         self._is_fitted = False
-        super().__init__()
+        super().__init__(axis=1)
 
-    @abstract
+    @abstractmethod
     def fit(self, X):
         """Fit forecaster to series X.
 
@@ -58,7 +58,7 @@ class BaseForecaster(BaseSeriesEstimator, ABC):
         """
         ...
 
-    @abstract
+    @abstractmethod
     def predict(self, X):
         """
 
