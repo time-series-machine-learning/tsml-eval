@@ -13,17 +13,18 @@ MAX_SEASONAL_PERIOD = 24
 def setup():
     y = ap
     n = len(ap)
-    init_states = np.zeros(len(ap) * (2 + 1))
-    init_states[0] = y[0]
-    init_states[1] = (y[1]-y[0]) / 2
     m = 12
     error = 1
     trend = 1
-    season = 0
+    season = 1
+    nstates = 1 + (trend > 0) + m * (season > 0)
+    init_states = np.zeros(n * (nstates + 1))
+    init_states[0] = y[0]
+    init_states[1] = (y[1]-y[0]) / 2
     alpha = 0.016763333
     beta = 0.001766333
     gamma = 0.
-    phi = 0.
+    phi = 0.1
     e = np.zeros(n)
     lik_fitets = np.zeros(1)
     amse = np.zeros(MAX_NMSE)
@@ -36,7 +37,7 @@ def test_ets_comparison(setup):
 
     # tsml-eval implementation
     start = time.time()
-    fit_ets(y, n, init_states, m,
+    f1=fit_ets(y, n, init_states, m,
             error, trend, season,
             alpha, beta, gamma, phi,
             e, lik_fitets, amse, nmse)
@@ -75,7 +76,7 @@ def test_ets_comparison(setup):
 
     print(time_fitets)
     print(time_etscalc)
-
+    print(f1)
     return
 
 
