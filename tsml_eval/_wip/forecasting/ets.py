@@ -9,4 +9,3 @@ def ETSForecaster(BaseForecaster):
         self.window = window
         self._is_fitted = False
         super().__init__()
-
