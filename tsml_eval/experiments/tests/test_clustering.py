@@ -208,6 +208,7 @@ def test_aeon_clusterers_available():
         "AEFCNClusterer",
         "AEResNetClusterer",
         "TimeSeriesKShapes",
+        "TimeSeriesKShape",
         "TimeSeriesKernelKMeans",
     ]
 

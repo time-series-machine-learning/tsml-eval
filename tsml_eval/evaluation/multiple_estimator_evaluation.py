@@ -8,7 +8,7 @@ from datetime import datetime
 import numpy as np
 from aeon.performance_metrics.stats import wilcoxon_test
 from aeon.visualisation import (
-    plot_boxplot_median,
+    plot_boxplot,
     plot_critical_difference,
     plot_pairwise_scatter,
 )
@@ -1354,7 +1354,7 @@ def _figures_for_statistic(
     )
     plt.close()
 
-    box, _ = plot_boxplot_median(scores, estimators)
+    box, _ = plot_boxplot(scores, estimators, plot_type="boxplot")
     box.savefig(
         f"{save_path}/{statistic_name}/figures/"
         f"{eval_name}_{statistic_name.lower()}_boxplot.pdf",
@@ -1365,6 +1365,22 @@ def _figures_for_statistic(
         open(
             f"{save_path}/{statistic_name}/figures/"
             f"{eval_name}_{statistic_name.lower()}_boxplot.pickle",
+            "wb",
+        ),
+    )
+    plt.close()
+
+    boxr, _ = plot_boxplot(scores, estimators, relative=True, plot_type="boxplot")
+    boxr.savefig(
+        f"{save_path}/{statistic_name}/figures/"
+        f"{eval_name}_{statistic_name.lower()}_boxplot_relative.pdf",
+        bbox_inches="tight",
+    )
+    pickle.dump(
+        boxr,
+        open(
+            f"{save_path}/{statistic_name}/figures/"
+            f"{eval_name}_{statistic_name.lower()}_boxplot_relative.pickle",
             "wb",
         ),
     )
