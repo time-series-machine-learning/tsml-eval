@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.metrics import mean_absolute_percentage_error
 
 from tsml_eval.evaluation.storage.estimator_results import EstimatorResults
-from tsml_eval.utils.experiments import write_forecasting_results
+from tsml_eval.utils.results_writing import write_forecasting_results
 
 
 class ForecasterResults(EstimatorResults):
@@ -60,7 +60,7 @@ class ForecasterResults(EstimatorResults):
     Examples
     --------
     >>> from tsml_eval.evaluation.storage import ForecasterResults
-    >>> from tsml_eval.testing.test_utils import _TEST_RESULTS_PATH
+    >>> from tsml_eval.testing.testing_utils import _TEST_RESULTS_PATH
     >>> fr = ForecasterResults().load_from_file(
     ...     _TEST_RESULTS_PATH +
     ...     "/forecasting/NaiveForecaster/Predictions/Airline/testResample0.csv"
@@ -102,7 +102,7 @@ class ForecasterResults(EstimatorResults):
 
         self.mean_absolute_percentage_error = None
 
-        super(ForecasterResults, self).__init__(
+        super().__init__(
             dataset_name=dataset_name,
             estimator_name=forecaster_name,
             split=split,
@@ -245,7 +245,7 @@ def load_forecaster_results(file_path, calculate_stats=True, verify_values=True)
     fr : ForecasterResults
         A ForecasterResults object containing the results loaded from the file.
     """
-    with open(file_path, "r") as file:
+    with open(file_path) as file:
         lines = file.readlines()
 
         line1 = lines[0].split(",")

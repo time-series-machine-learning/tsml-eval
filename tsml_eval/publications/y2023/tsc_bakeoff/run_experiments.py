@@ -18,15 +18,15 @@ from tsml_eval.publications.y2023.tsc_bakeoff.set_bakeoff_classifier import (
     _set_bakeoff_classifier,
 )
 from tsml_eval.publications.y2023.tsc_bakeoff.tests import _BAKEOFF_TEST_RESULTS_PATH
-from tsml_eval.testing.test_utils import _TEST_DATA_PATH
+from tsml_eval.testing.testing_utils import _TEST_DATA_PATH
 from tsml_eval.utils.arguments import parse_args
 from tsml_eval.utils.experiments import _results_present
 
 # all classifiers ran without duplicates
-distance_based = ["1NN-DTW", "ShapeDTW"]
+distance_based = ["1NN-DTW", "GRAIL"]
 feature_based = ["Catch22", "FreshPRINCE", "TSFresh", "Signatures"]
 shapelet_based = ["STC", "RDST", "RSF", "MrSQM"]
-interval_based = ["R-STSF", "RISE", "TSF", "CIF", "STSF", "DrCIF"]
+interval_based = ["R-STSF", "RISE", "TSF", "CIF", "STSF", "DrCIF", "QUANT"]
 dictionary_based = ["BOSS", "cBOSS", "TDE", "WEASEL", "WEASEL-D"]
 convolution_based = [
     "ROCKET",
@@ -36,16 +36,16 @@ convolution_based = [
     "Hydra",
     "Hydra-MultiROCKET",
 ]
-deep_learning = ["CNN", "ResNet", "InceptionTime"]
-hybrid = ["HC1", "HC2"]
+deep_learning = ["CNN", "ResNet", "InceptionTime", "H-InceptionTime", "LITETime"]
+hybrid = ["HC1", "HC2", "RIST"]
 # top performing classifiers
 top_classifiers = [
     "FreshPRINCE",
     "RDST",
-    "R-STSF",
+    "QUANT",
     "WEASEL-D",
     "Hydra-MultiROCKET",
-    "InceptionTime",
+    "H-InceptionTime",
     "HC2",
 ]
 
@@ -89,14 +89,16 @@ def _run_experiment(args, predefined_resample):
             data_path,
             results_path,
             dataset_name,
-            _set_bakeoff_classifier(
-                classifier,
-                random_state=resample_id,
-                n_jobs=n_jobs,
-                **kwargs,
-            )
-            if isinstance(classifier, str)
-            else _clone_estimator(classifier, resample_id),
+            (
+                _set_bakeoff_classifier(
+                    classifier,
+                    random_state=resample_id,
+                    n_jobs=n_jobs,
+                    **kwargs,
+                )
+                if isinstance(classifier, str)
+                else _clone_estimator(classifier, resample_id)
+            ),
             classifier_name=classifier,
             resample_id=resample_id,
             overwrite=overwrite,

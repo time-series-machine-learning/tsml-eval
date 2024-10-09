@@ -2,11 +2,16 @@
 
 import os
 import pickle
+import warnings
 from datetime import datetime
 
 import numpy as np
-from aeon.benchmarking import plot_critical_difference
-from aeon.benchmarking.results_plotting import plot_boxplot_median, plot_scatter
+from aeon.performance_metrics.stats import wilcoxon_test
+from aeon.visualisation import (
+    plot_boxplot,
+    plot_critical_difference,
+    plot_pairwise_scatter,
+)
 from matplotlib import pyplot as plt
 
 from tsml_eval.evaluation.storage import (
@@ -160,8 +165,10 @@ def evaluate_classifiers_by_problem(
         results in the second.
         If load_path is a list, classifier_names must be a list of lists with the same
         length as load_path.
-    dataset_names : list of str or list of list
-        The names of the datasets to evaluate.
+    dataset_names : str, list of str or list of list
+        The names of the datasets to evaluate. If a list of strings, each item is the
+        name of a dataset. If a string, it is the path to a file containing the names
+        of the datasets, one per line.
         If load_path is a list, dataset_names must be a list of lists with the same
         length as load_path.
     save_path : str
@@ -405,8 +412,10 @@ def evaluate_clusterers_by_problem(
         results in the second.
         If load_path is a list, clusterer_names must be a list of lists with the same
         length as load_path.
-    dataset_names : list of str or list of list
-        The names of the datasets to evaluate.
+    dataset_names : str, list of str or list of list
+        The names of the datasets to evaluate. If a list of strings, each item is the
+        name of a dataset. If a string, it is the path to a file containing the names
+        of the datasets, one per line.
         If load_path is a list, dataset_names must be a list of lists with the same
         length as load_path.
     save_path : str
@@ -650,8 +659,10 @@ def evaluate_regressors_by_problem(
         results in the second.
         If load_path is a list, regressor_names must be a list of lists with the same
         length as load_path.
-    dataset_names : list of str or list of list
-        The names of the datasets to evaluate.
+    dataset_names : str, list of str or list of list
+        The names of the datasets to evaluate. If a list of strings, each item is the
+        name of a dataset. If a string, it is the path to a file containing the names
+        of the datasets, one per line.
         If load_path is a list, dataset_names must be a list of lists with the same
         length as load_path.
     save_path : str
@@ -894,10 +905,12 @@ def evaluate_forecasters_by_problem(
         results in the second.
         If load_path is a list, regressor_names must be a list of lists with the same
         length as load_path.
-    dataset_names : list of str or list of list
-        The names of the datasets to evaluate.
+    dataset_names : str, list of str or list of list
+        The names of the datasets to evaluate. If a list of strings, each item is the
+        name of a dataset. If a string, it is the path to a file containing the names
+        of the datasets, one per line.
         If load_path is a list, dataset_names must be a list of lists with the same
-        length as load_path..
+        length as load_path.
     save_path : str
         The path to save the evaluation results to.
     resamples : int or list of int, default=None
@@ -1017,8 +1030,12 @@ def _evaluate_by_problem_init(
     elif not isinstance(estimator_names[0], list):
         raise TypeError(f"{type}_names must be a str, tuple or list of str or tuple.")
 
-    if isinstance(dataset_names[0], str):
-        dataset_names = [dataset_names]
+    if isinstance(dataset_names, str):
+        with open(dataset_names) as f:
+            dataset_names = f.readlines()
+            dataset_names = [[d.strip() for d in dataset_names]] * len(load_path)
+    elif isinstance(dataset_names[0], str):
+        dataset_names = [dataset_names] * len(load_path)
     elif not isinstance(dataset_names[0], list):
         raise TypeError("dataset_names must be a str or list of str.")
 
@@ -1290,9 +1307,28 @@ def _create_directory_for_statistic(
         for i, dataset_name in enumerate(datasets):
             file.write(f"{dataset_name},{','.join([str(n) for n in ranks[i]])}\n")
 
-    _figures_for_statistic(
-        average_stats, estimators, statistic_name, higher_better, save_path, eval_name
-    )
+    p_values = wilcoxon_test(average_stats, estimators, lower_better=not higher_better)
+    with open(
+        f"{save_path}/{statistic_name}/{statistic_name.lower()}_p_values.csv", "w"
+    ) as file:
+        file.write(f"Estimators:,{','.join(estimators)}\n")
+        for i, estimator_name in enumerate(estimators):
+            file.write(f"{estimator_name},{','.join([str(n) for n in p_values[i]])}\n")
+
+    try:
+        _figures_for_statistic(
+            average_stats,
+            estimators,
+            statistic_name,
+            higher_better,
+            save_path,
+            eval_name,
+        )
+    except ValueError as e:
+        warnings.warn(
+            f"Error during figure creation for {statistic_name}: {e}",
+            stacklevel=2,
+        )
 
     return average_stats, ranks
 
@@ -1302,7 +1338,7 @@ def _figures_for_statistic(
 ):
     os.makedirs(f"{save_path}/{statistic_name}/figures/", exist_ok=True)
 
-    cd = plot_critical_difference(scores, estimators, lower_better=not higher_better)
+    cd, _ = plot_critical_difference(scores, estimators, lower_better=not higher_better)
     cd.savefig(
         f"{save_path}/{statistic_name}/figures/"
         f"{eval_name}_{statistic_name.lower()}_critical_difference.pdf",
@@ -1318,7 +1354,7 @@ def _figures_for_statistic(
     )
     plt.close()
 
-    box = plot_boxplot_median(scores, estimators)
+    box, _ = plot_boxplot(scores, estimators, plot_type="boxplot")
     box.savefig(
         f"{save_path}/{statistic_name}/figures/"
         f"{eval_name}_{statistic_name.lower()}_boxplot.pdf",
@@ -1334,6 +1370,22 @@ def _figures_for_statistic(
     )
     plt.close()
 
+    boxr, _ = plot_boxplot(scores, estimators, relative=True, plot_type="boxplot")
+    boxr.savefig(
+        f"{save_path}/{statistic_name}/figures/"
+        f"{eval_name}_{statistic_name.lower()}_boxplot_relative.pdf",
+        bbox_inches="tight",
+    )
+    pickle.dump(
+        boxr,
+        open(
+            f"{save_path}/{statistic_name}/figures/"
+            f"{eval_name}_{statistic_name.lower()}_boxplot_relative.pickle",
+            "wb",
+        ),
+    )
+    plt.close()
+
     for i, est1 in enumerate(estimators):
         for n, est2 in enumerate(estimators):
             if i == n:
@@ -1343,7 +1395,7 @@ def _figures_for_statistic(
                 f"{save_path}/{statistic_name}/figures/scatters/{est1}/", exist_ok=True
             )
 
-            scatter = plot_scatter(scores[:, (i, n)], est1, est2)
+            scatter, _ = plot_pairwise_scatter(scores[:, i], scores[:, n], est1, est2)
             scatter.savefig(
                 f"{save_path}/{statistic_name}/figures/scatters/{est1}/"
                 f"{eval_name}_{statistic_name.lower()}_scatter_{est1}_{est2}.pdf",

@@ -5,7 +5,7 @@ import runpy
 
 from tsml_eval.publications.y2023.tsc_bakeoff.run_experiments import _run_experiment
 from tsml_eval.publications.y2023.tsc_bakeoff.tests import _BAKEOFF_TEST_RESULTS_PATH
-from tsml_eval.testing.test_utils import _TEST_DATA_PATH
+from tsml_eval.testing.testing_utils import _TEST_DATA_PATH
 from tsml_eval.utils.tests.test_results_writing import _check_classification_file_format
 
 
@@ -35,9 +35,11 @@ def test_run_tsc_bakeoff_experiment():
 
     # this covers both the main method and present result file checking
     runpy.run_path(
-        "./tsml_eval/publications/y2023/tsc_bakeoff/run_experiments.py"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else "../run_experiments.py",
+        (
+            "./tsml_eval/publications/y2023/tsc_bakeoff/run_experiments.py"
+            if os.getcwd().split("\\")[-1] != "tests"
+            else "../run_experiments.py"
+        ),
         run_name="__main__",
     )
 

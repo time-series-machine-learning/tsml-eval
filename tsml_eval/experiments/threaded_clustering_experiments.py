@@ -12,7 +12,7 @@ import sys
 from tsml_eval.experiments import load_and_run_clustering_experiment
 from tsml_eval.experiments.set_clusterer import get_clusterer_by_name
 from tsml_eval.experiments.tests import _CLUSTERER_RESULTS_PATH
-from tsml_eval.testing.test_utils import _TEST_DATA_PATH
+from tsml_eval.testing.testing_utils import _TEST_DATA_PATH
 from tsml_eval.utils.arguments import parse_args
 from tsml_eval.utils.experiments import _results_present
 
@@ -48,9 +48,11 @@ def run_experiment(args):
                 args.dataset_name,
                 get_clusterer_by_name(
                     args.estimator_name,
-                    random_state=args.resample_id
-                    if args.random_seed is None
-                    else args.random_seed,
+                    random_state=(
+                        args.resample_id
+                        if args.random_seed is None
+                        else args.random_seed
+                    ),
                     n_jobs=args.n_jobs,
                     fit_contract=args.fit_contract,
                     checkpoint=args.checkpoint,

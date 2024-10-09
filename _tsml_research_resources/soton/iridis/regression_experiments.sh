@@ -1,7 +1,7 @@
 #!/bin/bash
 # CHECK before each new run:
 #   datasets (list of problems)
-#   results_dir (where to check/write results),
+#   results_dir (where to check/write results)
 #   regressors_to_run (list of regressors to run)
 # While reading is fine, please dont write anything to the default directories in this script
 
@@ -24,7 +24,7 @@ username="ajb2u23"
 mail="NONE"
 mailto="$username@soton.ac.uk"
 
-# MB for jobs, increase incrementally and try not to use more than you need. If you need hundreds of GB consider the huge memory queue.
+# MB for jobs, increase incrementally and try not to use more than you need. If you need hundreds of GB consider the huge memory queue
 max_memory=8000
 
 # Max allowable is 60 hours
@@ -60,13 +60,13 @@ regressors_to_run="RocketRegressor TimeSeriesForestRegressor"
 # and possibly to the options handling below
 
 # generate a results file for the train data as well as test, usually slower
-generate_train_files="true"
+generate_train_files="false"
 
 # If set for true, looks for <problem><fold>_TRAIN.ts file. This is useful for running tsml-java resamples
 predefined_folds="false"
 
 # Normalise data before fit/predict
-normalise_data="true"
+normalise_data="false"
 
 # ======================================================================================
 # ======================================================================================

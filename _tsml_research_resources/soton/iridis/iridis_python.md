@@ -2,8 +2,7 @@
 
 Installation guide for Python packages on Iridis and useful slurm commands.
 
-The Iridis wiki provides a lot of useful information and getting started guides for using ADA.
-https://sotonac.sharepoint.com/teams/HPCCommunityWiki
+The [Iridis wiki](https://sotonac.sharepoint.com/teams/HPCCommunityWiki) provides a lot of useful information and getting started guides for using Iridis.
 
 Server address: iridis5.soton.ac.uk
 
@@ -13,27 +12,27 @@ Alternatively, you can connect to one of the specific login nodes:
 - iridis5_c.soton.ac.uk
 - iridis5_d.soton.ac.uk (AMD CPU architecture)
 
-There is a Microsoft Teams group called "HPC Community" where you can ask questions.
+This guide only covers Iridis 5 cureently, not Iridis 6 or X.
 
-## Windows interaction with ADA
+There is a Southampton Microsoft Teams group called "HPC Community" where you can ask questions if needed.
 
-You need to be on a Soton network machine or have the VPN running to connect to Iridis. Connect to one of the adresses listed above.
+## Windows interaction with Iridis
+
+You need to be on a Soton network machine or have the VPN running to connect to Iridis. Connect to one of the addresses listed above.
 
 The recommended way of connecting to Iridis is using Putty as a command-line interface and WinSCP for file management.
 
-Copies of data files used in experiments must be stored on the cluster, the best place to put these files is on your user area scratch storage. It is a good idea to create shortcuts to and from your scratch drive.
-
-Alternatively, you can read from someone else's directory (i.e. `/mainfs/scratch/mbm1g23/`).
+Copies of data files used in experiments must be stored on the cluster, the best place to put these files is on your user area scratch storage. It is a good idea to create shortcuts to and from your scratch drive. Alternatively, you can read from someone else's directory (i.e. `/mainfs/scratch/mbm1g23/`).
 
 ## Installing on the cluster
 
 Complete these steps sequentially for a fresh installation.
 
-By default, commands will be run on the login node. Beyond simple commands or scripts, an interactive session should be started.
+By default, commands will be run on the login node. Beyond simple commands or scripts, an interactive session should be started. For most usage here you will not require one.
 
 >sinteractive
 
-DO NOT enter interactive mode for commands that require an internet connection (i.e. steps 1-4), as only the login nodes have one.
+__DO NOT__ enter interactive mode for commands that require an internet connection (i.e. steps 1-4), as only the login nodes have one.
 
 ### 1. Clone the code from GitHub
 
@@ -60,6 +59,20 @@ You can check the current version using:
 >python --version
 
 ### 3. Create a conda environment
+
+#### 3.1. Set up scratch symbolic link for conda
+
+Installing complex conda packages on your main home drive will quickly see you hitting the limit on the number of files you can store. To avoid this, it is recommended you create a symbolic link to your scratch storage.
+
+>mkdir /scratch/<username>/.conda
+
+>ln -s /scratch/<username>/.conda ~/.conda
+
+Hitting this limit is very annoying, as it will prevent you from creating new conda environments or installing new packages (or doing anything really).
+
+For conda related storage guidance, see the [related HPC webpage](https://sotonac.sharepoint.com/teams/HPCCommunityWiki/SitePages/Conda.aspx#conda-and-inodes)
+
+### 3.2. Create environment
 
 Create a new environment with a name of your choice. Replace PYTHON_VERSION with 3.10.
 
@@ -123,15 +136,25 @@ If any a dependency install is "Killed", it is likely the interactive session ha
 
 >pip install PACKAGE_NAME --no-cache-dir
 
+#### 5.1. tsml-eval GPU
+
+For GPU jobs we require an additional Iridis module in CUDA:
+
+>module add cuda/12.3
+
+A specific Tensorflow version is required to match the available CUDA install.
+
+>pip install tensorflow==2.17.0
+
+Next, move to the package directory and run:
+
+>pip install --editable .
+
 # Running experiments
 
 For running jobs on Iridis, we recommend using copies of the submission scripts provided in this folder.
 
 **NOTE: Scripts will not run properly if done whilst the conda environment is active.**
-
-Prior to running the script, you should activate an interactive session to prevent using resourses on the login nodes.
-
->sinteractive
 
 ## Running `tsml-eval` CPU experiments
 
@@ -145,14 +168,18 @@ For CPU experiments start with one of the following scripts:
 
 You may need to use `dos2unix` to convert the line endings to unix format.
 
-The default queue for CPU jobs is _batch_.
+The default queue for CPU jobs is _batch_. Be sure to swap the _queue_alias_ to _serial_ in the script if you want to use this, as the number of jobs submitted won't be tracked properly otherwise.
 
 Do not run threaded code on the cluster without reserving whole nodes, as there is nothing to stop the job from using
 the CPU resources allocated to others. The default python file in the scripts attempts to avoid threading as much as possible. You should ensure processes are not intentionally using multiple threads if you change it.
 
 Requesting memory for a job will allocate it all on the jobs assigned node. New jobs will not be submitted to a node if the total allocated memory exceeds the amount available for the node. As such, requesting too much memory can block new jobs from using the node. This is ok if the memory is actually being used, but large amounts of memory should not be requested unless you know it will be required for the jobs you are submitting. ADA is a shared resource, and instantly requesting hundreds of GB will hurt the overall efficiency of the cluster.
 
-## Monitoring jobs on ADA
+## Running `tsml-eval` GPU experiments
+
+todo
+
+## Monitoring jobs on Iridis
 
 list processes for user (mind that the quotes may not be the correct ones)
 

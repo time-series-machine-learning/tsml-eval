@@ -6,6 +6,7 @@ import os
 import runpy
 
 import pytest
+from aeon.registry import all_estimators
 from tsml.dummy import DummyRegressor
 
 from tsml_eval.datasets._test_data._data_sizes import DATA_TEST_SIZES
@@ -17,7 +18,7 @@ from tsml_eval.experiments import (
     threaded_classification_experiments,
 )
 from tsml_eval.experiments.tests import _CLASSIFIER_RESULTS_PATH
-from tsml_eval.testing.test_utils import (
+from tsml_eval.testing.testing_utils import (
     _TEST_DATA_PATH,
     _check_set_method,
     _check_set_method_results,
@@ -79,9 +80,11 @@ def test_run_classification_experiment_main():
     # run twice to test results present check
     for _ in range(2):
         runpy.run_path(
-            "./tsml_eval/experiments/classification_experiments.py"
-            if os.getcwd().split("\\")[-1] != "tests"
-            else "../classification_experiments.py",
+            (
+                "./tsml_eval/experiments/classification_experiments.py"
+                if os.getcwd().split("\\")[-1] != "tests"
+                else "../classification_experiments.py"
+            ),
             run_name="__main__",
         )
 
@@ -127,9 +130,11 @@ def test_run_threaded_classification_experiment():
 
     # this covers the main method and experiment function result file checking
     runpy.run_path(
-        "./tsml_eval/experiments/threaded_classification_experiments.py"
-        if os.getcwd().split("\\")[-1] != "tests"
-        else "../threaded_classification_experiments.py",
+        (
+            "./tsml_eval/experiments/threaded_classification_experiments.py"
+            if os.getcwd().split("\\")[-1] != "tests"
+            else "../threaded_classification_experiments.py"
+        ),
         run_name="__main__",
     )
 
@@ -199,3 +204,30 @@ def test_get_classifier_by_name_invalid():
     """Test get_classifier_by_name method with invalid estimator."""
     with pytest.raises(ValueError, match="UNKNOWN CLASSIFIER"):
         get_classifier_by_name("invalid")
+
+
+def test_aeon_classifiers_available():
+    """Test all aeon classifiers are available."""
+    excluded = [
+        # composable
+        "ChannelEnsembleClassifier",
+        "ClassifierPipeline",
+        "WeightedEnsembleClassifier",
+        # just missing
+        "IndividualLITEClassifier",
+        "OrdinalTDE",
+        "IndividualOrdinalTDE",
+        "IntervalForestClassifier",
+        "SupervisedIntervalClassifier",
+        "LearningShapeletClassifier",
+    ]
+
+    est = [e for e, _ in all_estimators(estimator_types="classifier")]
+    for e in est:
+        if e in excluded:
+            continue
+
+        try:
+            assert get_classifier_by_name(e) is not None
+        except ModuleNotFoundError:
+            continue

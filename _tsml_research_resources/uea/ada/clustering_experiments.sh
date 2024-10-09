@@ -1,7 +1,7 @@
 #!/bin/bash
 # CHECK before each new run:
 #   datasets (list of problems)
-#   results_dir (where to check/write results),
+#   results_dir (where to check/write results)
 #   clusterers_to_run (list of clusterers to run)
 # While reading is fine, please dont write anything to the default directories in this script
 
@@ -20,7 +20,7 @@ username="ajb"
 mail="NONE"
 mailto="$username@uea.ac.uk"
 
-# MB for jobs, increase incrementally and try not to use more than you need. If you need hundreds of GB consider the huge memory queue.
+# MB for jobs, increase incrementally and try not to use more than you need. If you need hundreds of GB consider the huge memory queue
 max_memory=8000
 
 # Max allowable is 7 days - 168 hours

@@ -12,9 +12,13 @@ from aeon.clustering import (
 from aeon.transformations.collection import TimeSeriesScaler
 from sklearn.cluster import KMeans
 
-from tsml_eval.utils.experiments import load_experiment_data
+from tsml_eval.utils.datasets import load_experiment_data
 from tsml_eval.utils.functions import str_in_nested_list
 
+deep_learning_clusterers = [
+    ["aefcnclusterer", "aefcn"],
+    ["aeresnetclusterer", "aeresnet"],
+]
 distance_based_clusterers = [
     "kmeans-euclidean",
     "kmeans-squared",
@@ -81,8 +85,6 @@ distance_based_clusterers = [
     "pam-msm",
     "pam-adtw",
     "pam-shape_dtw",
-    "kmeans-ba-euclidean",
-    "kmeans-ba-squared",
     "kmeans-ba-dtw",
     "kmeans-ba-ddtw",
     "kmeans-ba-wdtw",
@@ -94,10 +96,26 @@ distance_based_clusterers = [
     "kmeans-ba-msm",
     "kmeans-ba-adtw",
     "kmeans-ba-shape_dtw",
+    "kmeans-ssg-ba-dtw",
+    "kmeans-ssg-ba-ddtw",
+    "kmeans-ssg-ba-wdtw",
+    "kmeans-ssg-ba-wddtw",
+    "kmeans-ssg-ba-erp",
+    "kmeans-ssg-ba-edr",
+    "kmeans-ssg-ba-twe",
+    "kmeans-ssg-ba-msm",
+    "kmeans-ssg-ba-adtw",
+    "kmeans-ssg-ba-shape_dtw",
     "timeserieskmeans",
     "timeserieskmedoids",
     "timeseriesclarans",
     "timeseriesclara",
+]
+
+feature_based_clusterers = [
+    ["catch22", "catch22clusterer"],
+    ["tsfresh", "tsfreshclusterer"],
+    ["summary", "summaryclusterer"],
 ]
 
 other_clusterers = [
@@ -147,7 +165,7 @@ def get_clusterer_by_name(
         List of arguments to load the dataset using
         `tsml_eval.utils.experiments import load_experiment_data`.
     row_normalise: bool, default=False
-        Whether to row normalise the data if it is loaded.
+        Whether to row normalise the data if it is loaded using data_vars.
 
     Return
     ------
@@ -156,7 +174,11 @@ def get_clusterer_by_name(
     """
     c = clusterer_name.lower()
 
-    if str_in_nested_list(distance_based_clusterers, c):
+    if str_in_nested_list(deep_learning_clusterers, c):
+        return _set_clusterer_deep_learning(
+            c, random_state, n_jobs, fit_contract, checkpoint, kwargs
+        )
+    elif str_in_nested_list(distance_based_clusterers, c):
         return _set_clusterer_distance_based(
             c,
             random_state,
@@ -166,6 +188,10 @@ def get_clusterer_by_name(
             data_vars,
             row_normalise,
             kwargs,
+        )
+    elif str_in_nested_list(feature_based_clusterers, c):
+        return _set_clusterer_feature_based(
+            c, random_state, n_jobs, fit_contract, checkpoint, kwargs
         )
     elif str_in_nested_list(other_clusterers, c):
         return _set_clusterer_other(
@@ -177,6 +203,19 @@ def get_clusterer_by_name(
         )
     else:
         raise ValueError(f"UNKNOWN CLUSTERER: {c} in set_clusterer")
+
+
+def _set_clusterer_deep_learning(
+    c, random_state, n_jobs, fit_contract, checkpoint, kwargs
+):
+    if c == "aefcnclusterer" or c == "aefcn":
+        from aeon.clustering.deep_learning import AEFCNClusterer
+
+        return AEFCNClusterer(n_clusters=-1, random_state=random_state, **kwargs)
+    elif c == "aeresnetclusterer" or c == "aeresnet":
+        from aeon.clustering.deep_learning import AEResNetClusterer
+
+        return AEResNetClusterer(n_clusters=-1, random_state=random_state, **kwargs)
 
 
 def _set_clusterer_distance_based(
@@ -211,7 +250,25 @@ def _set_clusterer_distance_based(
             average_params = kwargs["average_params"]
         else:
             average_params = {"distance": distance, **distance_params.copy()}
-        if "ba" in c:
+
+        if "ssg" in c:
+            # Sets to use subgradient BA
+            average_params = {
+                **average_params,
+                "method": "subgradient",
+            }
+            return TimeSeriesKMeans(
+                max_iter=50,
+                n_init=10,
+                init_algorithm=init_algorithm,
+                distance=distance,
+                distance_params=distance_params,
+                random_state=random_state,
+                averaging_method="ba",
+                average_params=average_params,
+                **kwargs,
+            )
+        elif "ba" in c:
             return TimeSeriesKMeans(
                 max_iter=50,
                 n_init=10,
@@ -312,6 +369,23 @@ def _get_distance_default_params(
     if dist_name == "shape_dtw":
         return {"descriptor": "identity", "reach": 30}
     return {}
+
+
+def _set_clusterer_feature_based(
+    c, random_state, n_jobs, fit_contract, checkpoint, kwargs
+):
+    if c == "catch22" or c == "catch22clusterer":
+        from aeon.clustering.feature_based import Catch22Clusterer
+
+        return Catch22Clusterer(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "tsfresh" or c == "tsfreshclusterer":
+        from aeon.clustering.feature_based import TSFreshClusterer
+
+        return TSFreshClusterer(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "summary" or c == "summaryclusterer":
+        from aeon.clustering.feature_based import SummaryClusterer
+
+        return SummaryClusterer(random_state=random_state, n_jobs=n_jobs, **kwargs)
 
 
 def _set_clusterer_other(c, random_state, n_jobs, fit_contract, checkpoint, kwargs):

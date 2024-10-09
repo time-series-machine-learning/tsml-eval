@@ -1,6 +1,7 @@
 """Class for storing and loading results from a classification experiment."""
 
 import numpy as np
+from numpy.testing import assert_allclose
 from sklearn.metrics import (
     accuracy_score,
     balanced_accuracy_score,
@@ -10,7 +11,7 @@ from sklearn.metrics import (
 )
 
 from tsml_eval.evaluation.storage.estimator_results import EstimatorResults
-from tsml_eval.utils.experiments import write_classification_results
+from tsml_eval.utils.results_writing import write_classification_results
 
 
 class ClassifierResults(EstimatorResults):
@@ -88,7 +89,7 @@ class ClassifierResults(EstimatorResults):
     Examples
     --------
     >>> from tsml_eval.evaluation.storage import ClassifierResults
-    >>> from tsml_eval.testing.test_utils import _TEST_RESULTS_PATH
+    >>> from tsml_eval.testing.testing_utils import _TEST_RESULTS_PATH
     >>> cr = ClassifierResults().load_from_file(
     ...     _TEST_RESULTS_PATH +
     ...     "/classification/ROCKET/Predictions/Chinatown/testResample0.csv"
@@ -145,7 +146,7 @@ class ClassifierResults(EstimatorResults):
         self.log_loss = None
         self.f1_score = None
 
-        super(ClassifierResults, self).__init__(
+        super().__init__(
             dataset_name=dataset_name,
             estimator_name=classifier_name,
             split=split,
@@ -258,10 +259,16 @@ class ClassifierResults(EstimatorResults):
                 self.class_labels, self.predictions
             )
         if self.log_loss is None or overwrite:
+            import warnings
+
+            warnings.filterwarnings(
+                "ignore",
+                message="The y_pred values do not sum to one. Starting from 1.5 "
+                "thiswill result in an error.",
+            )
             self.log_loss = log_loss(
                 self.class_labels,
                 self.probabilities,
-                eps=0.01,
             )
         if self.auroc_score is None or overwrite:
             self.auroc_score = roc_auc_score(
@@ -316,7 +323,7 @@ def load_classifier_results(file_path, calculate_stats=True, verify_values=True)
     cr : ClassifierResults
         A ClassifierResults object containing the results loaded from the file.
     """
-    with open(file_path, "r") as file:
+    with open(file_path) as file:
         lines = file.readlines()
 
         line1 = lines[0].split(",")
@@ -395,6 +402,8 @@ def load_classifier_results(file_path, calculate_stats=True, verify_values=True)
         cr.infer_size(overwrite=True)
         assert cr.n_cases == n_cases
         assert cr.n_classes == n_classes
+
+        assert_allclose(probabilities.sum(axis=1), 1, rtol=1e-5)
 
         if calculate_stats:
             assert cr.accuracy == acc

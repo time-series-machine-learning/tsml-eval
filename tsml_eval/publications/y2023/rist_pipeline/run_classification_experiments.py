@@ -16,7 +16,7 @@ from tsml_eval.publications.y2023.rist_pipeline.set_rist_classifier import (
     _set_rist_classifier,
 )
 from tsml_eval.publications.y2023.rist_pipeline.tests import _RIST_TEST_RESULTS_PATH
-from tsml_eval.testing.test_utils import _TEST_DATA_PATH
+from tsml_eval.testing.testing_utils import _TEST_DATA_PATH
 from tsml_eval.utils.arguments import parse_args
 from tsml_eval.utils.experiments import _results_present
 
@@ -73,14 +73,16 @@ def _run_classification_experiment(args):
             data_path,
             results_path,
             dataset_name,
-            _set_rist_classifier(
-                classifier,
-                random_state=resample_id,
-                n_jobs=n_jobs,
-                **kwargs,
-            )
-            if isinstance(classifier, str)
-            else _clone_estimator(classifier, resample_id),
+            (
+                _set_rist_classifier(
+                    classifier,
+                    random_state=resample_id,
+                    n_jobs=n_jobs,
+                    **kwargs,
+                )
+                if isinstance(classifier, str)
+                else _clone_estimator(classifier, resample_id)
+            ),
             classifier_name=classifier,
             resample_id=resample_id,
             overwrite=overwrite,

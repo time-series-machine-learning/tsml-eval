@@ -13,14 +13,7 @@ from tsml_eval.experiments.tests import (
     _FORECASTER_RESULTS_PATH,
     _REGRESSOR_RESULTS_PATH,
 )
-from tsml_eval.utils.experiments import (
-    write_classification_results,
-    write_clustering_results,
-    write_forecasting_results,
-    write_regression_results,
-    write_results_to_tsml_format,
-)
-from tsml_eval.utils.validation import (
+from tsml_eval.utils.results_validation import (
     _check_classification_third_line,
     _check_clustering_third_line,
     _check_first_line,
@@ -28,6 +21,13 @@ from tsml_eval.utils.validation import (
     _check_regression_third_line,
     _check_results_lines,
     _check_second_line,
+)
+from tsml_eval.utils.results_writing import (
+    write_classification_results,
+    write_clustering_results,
+    write_forecasting_results,
+    write_regression_results,
+    write_results_to_tsml_format,
 )
 
 
@@ -55,7 +55,7 @@ def test_write_classification_results():
 
 
 def _check_classification_file_format(file_path, num_results_lines=None):
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         lines = f.readlines()
 
     assert _check_first_line(lines[0])
@@ -112,7 +112,7 @@ def test_write_regression_results():
 
 
 def _check_regression_file_format(file_path, num_results_lines=None):
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         lines = f.readlines()
 
     assert _check_first_line(lines[0])
@@ -146,7 +146,7 @@ def test_write_forecasting_results():
 
 
 def _check_forecasting_file_format(file_path, num_results_lines=None):
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         lines = f.readlines()
 
     assert _check_first_line(lines[0])
@@ -186,7 +186,7 @@ def test_write_clustering_results():
 
 
 def _check_clustering_file_format(file_path, num_results_lines=None):
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         lines = f.readlines()
 
     assert _check_first_line(lines[0])

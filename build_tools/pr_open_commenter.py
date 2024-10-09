@@ -12,16 +12,18 @@ from github import Github
 context_dict = json.loads(os.getenv("CONTEXT_GITHUB"))
 
 repo = context_dict["repository"]
-g = Github(sys.argv[1])
+g = Github(os.getenv("GITHUB_TOKEN"))
 repo = g.get_repo(repo)
 pr_number = context_dict["event"]["number"]
 pr = repo.get_pull(number=pr_number)
 
-print(sys.argv[2:])  # noqa
-title_labels = sys.argv[2][1:-1].split(",")
-title_labels_new = sys.argv[3][1:-1].split(",")
-content_labels = sys.argv[4][1:-1].split(",")
-content_labels_status = sys.argv[5]
+if "[bot]" in pr.user.login:
+    sys.exit(0)
+
+title_labels = os.getenv("TITLE_LABELS")[1:-1].replace("'", "").split(",")
+title_labels_new = os.getenv("TITLE_LABELS_NEW")[1:-1].replace("'", "").split(",")
+content_labels = os.getenv("CONTENT_LABELS")[1:-1].replace("'", "").split(",")
+content_labels_status = os.getenv("CONTENT_LABELS_STATUS")
 
 replacement_labels = [
     ("tsmlresearchresources", "tsml research resources"),
@@ -33,17 +35,17 @@ for i, label in enumerate(content_labels):
 
 labels = [(label.name, label.color) for label in repo.get_labels()]
 title_labels = [
-    "$\\color{#%s}{\\textsf{%s}}$" % (color, label)
+    f"$\\color{{#{color}}}{{\\textsf{{{label}}}}}$"
     for label, color in labels
     if label in title_labels
 ]
 title_labels_new = [
-    "$\\color{#%s}{\\textsf{%s}}$" % (color, label)
+    f"$\\color{{#{color}}}{{\\textsf{{{label}}}}}$"
     for label, color in labels
     if label in title_labels_new
 ]
 content_labels = [
-    "$\\color{#%s}{\\textsf{%s}}$" % (color, label)
+    f"$\\color{{#{color}}}{{\\textsf{{{label}}}}}$"
     for label, color in labels
     if label in content_labels
 ]
@@ -102,5 +104,15 @@ pr.create_issue_comment(
 {content_labels_str}
 
 The [Checks](https://github.com/time-series-machine-learning/tsml-eval/pull/{pr_number}/checks) tab will show the status of our automated tests. You can click on individual test runs in the tab or "Details" in the panel below to see more information if there is a failure.
+
+### PR CI actions
+
+These checkboxes will add labels to enable/disable CI functionality for this PR. This may not take effect immediately, and a new commit may be required to run the new configuration.
+
+- [ ] Run `pre-commit` checks for all files
+- [ ] Run all `pytest` tests and configurations
+- [ ] Run all notebook example tests
+- [ ] Stop automatic `pre-commit` fixes (always disabled for drafts)
+- [ ] Push an empty commit to re-run CI checks
     """  # noqa
 )

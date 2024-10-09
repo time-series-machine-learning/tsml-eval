@@ -7,8 +7,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  check_manifest:
-    runs-on: ubuntu-22.04
+  check-manifest:
+    runs-on: ubuntu-20.04
 
     steps:
       - uses: actions/checkout@v4
@@ -17,13 +17,13 @@ jobs:
         with:
           python-version: "3.10"
 
-      - uses: pre-commit/action@v3.0.0
+      - uses: pre-commit/action@v3.0.1
         with:
           extra_args: check-manifest --hook-stage manual
 
-  build_project:
-    needs: check_manifest
-    runs-on: ubuntu-22.04
+  build-project:
+    needs: check-manifest
+    runs-on: ubuntu-20.04
 
     steps:
       - uses: actions/checkout@v4
@@ -44,15 +44,15 @@ jobs:
           path: dist/*
           retention-days: 5
 
-  test_wheels:
-    needs: build_project
+  test-wheels:
+    needs: build-project
     name: Test wheels on ${{ matrix.os }} with ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
-        os: [ ubuntu-22.04, macOS-12, windows-2022 ]
-        python-version: [ "3.8", "3.9", "3.10", "3.11" ]
+        os: [ ubuntu-20.04, macos-14, windows-2022 ]
+        python-version: [ "3.9", "3.10", "3.11", "3.12" ]
 
     steps:
       - uses: actions/checkout@v4
@@ -75,25 +75,25 @@ jobs:
 
       - if: matrix.os == 'windows-2022'
         name: Windows install
-        uses: nick-fields/retry@v2
+        uses: nick-fields/retry@v3
         with:
           timeout_minutes: 30
           max_attempts: 3
-          command: python -m pip install "${env:WHEELNAME}[dev,all_extras,unstable_extras,deep_learning]"
+          command: python -m pip install "${env:WHEELNAME}[dev,all_extras,unstable_extras]"
       - if: matrix.os != 'windows-2022'
         name: Unix install
-        uses: nick-fields/retry@v2
+        uses: nick-fields/retry@v3
         with:
           timeout_minutes: 30
           max_attempts: 3
-          command: python -m pip install "${{ env.WHEELNAME }}[dev,all_extras,unstable_extras,deep_learning]"
+          command: python -m pip install "${{ env.WHEELNAME }}[dev,all_extras,unstable_extras]"
 
       - name: Tests
-        run: python -m pytest
+        run: python -m pytest -n logical
 
-  upload_wheels:
-    needs: test_wheels
-    runs-on: ubuntu-22.04
+  upload-wheels:
+    needs: test-wheels
+    runs-on: ubuntu-20.04
 
     steps:
       - uses: actions/download-artifact@v4
