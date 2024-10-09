@@ -47,14 +47,12 @@ class CondenserClassifier(BaseClassifier):
                 ClusteringCondenser,
             )
 
-            self.condenser = (
-                ClusteringCondenser(
-                    clustering_approach="kmeans",
-                    distance=self.distance,
-                    distance_params=self.distance_params,
-                    num_instances_per_class=self.num_instances,
-                    random_state=self.random_state,
-                ),
+            self.condenser = ClusteringCondenser(
+                clustering_approach="kmeans",
+                distance=self.distance,
+                distance_params=self.distance_params,
+                num_instances_per_class=self.num_instances,
+                random_state=self.random_state,
             )
 
         self.classifier = classifier
@@ -69,7 +67,7 @@ class CondenserClassifier(BaseClassifier):
                 distance_params=self.distance_params,
                 n_neighbors=1,
             )
-        super(CondenserClassifier, self).__init__()
+        super().__init__()
 
     def _fit(self, X, y):
         condensed_X, condensed_y = self.condenser.fit_transform(X, y)

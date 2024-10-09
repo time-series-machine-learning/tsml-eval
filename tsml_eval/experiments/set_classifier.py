@@ -48,6 +48,7 @@ distance_based_classifiers = [
     ["msm", "1nn-msm"],
     ["twe", "1nn-twe"],
     "1nn-dtw-cv",
+    "condenserclassifier",
     "kMeansCondenser-dtw-1",
     "kMeansCondenser-dtw-2",
     "kMeansCondenser-dtw-3",
@@ -462,6 +463,10 @@ def _set_classifier_distance_based(
         return KNeighborsTimeSeriesClassifier(
             distance="twe", distance_params={"nu": 0.001}, n_jobs=n_jobs, **kwargs
         )
+    elif c == "condenserclassifier":
+        from tsml_eval._wip.condensing.condensing_classifier import CondenserClassifier
+
+        return CondenserClassifier(**kwargs)
     elif c == "simplerankcondenser":
         from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
 
