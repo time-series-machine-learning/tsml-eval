@@ -128,11 +128,7 @@ For GPU jobs we require two additional ADA modules, CUDA and cuDNN:
 
 A specific Tensorflow version is required to match the available CUDA install.
 
->pip install tensorflow==2.3.0
-
-Next, move to the package directory and run:
-
->pip install --editable .
+>pip install --editable . tensorflow==2.3.0
 
 # Running experiments
 
@@ -165,9 +161,9 @@ Requesting memory for a job will allocate it all on the jobs assigned node. New 
 For GPU experiments use one of the following scripts:
 
 >gpu_classification_experiments.sh
->
+
 >gpu_regression_experiments.sh
->
+
 >gpu_clustering_experiments.sh
 
 It is recommended you use different environments for CPU and GPU jobs.
