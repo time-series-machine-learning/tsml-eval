@@ -63,13 +63,13 @@ class ClusteringCondenser(BaseCollectionTransformer):
             from aeon.clustering import TimeSeriesKMeans
 
             self.average_params = {
-                "metric": self.distance,
+                "distance": self.distance,
                 **self.distance_params.copy(),
             }
 
             self.clusterer = TimeSeriesKMeans(
                 n_clusters=self.num_instances_per_class,
-                metric=self.distance,
+                distance=self.distance,
                 distance_params=self.distance_params,
                 averaging_method="ba",
                 average_params=self.average_params,
@@ -89,24 +89,22 @@ class ClusteringCondenser(BaseCollectionTransformer):
             # the approaches.
             if self.num_instances_per_class == 1:
                 if self.clustering_approach == "pam":
-                    from aeon.clustering.metrics.medoids import medoids
+                    from aeon.clustering.averaging._ba_utils import _medoids
 
                     averaged_series_class_i = [
-                        medoids(
+                        _medoids(
                             X_i,
                             distance=self.distance,
                             **self.distance_params,
                         )
                     ]
                 elif self.clustering_approach == "kmeans":
-                    from aeon.clustering.metrics.averaging import (
-                        elastic_barycenter_average,
-                    )
+                    from aeon.clustering.averaging import elastic_barycenter_average
 
                     averaged_series_class_i = [
                         elastic_barycenter_average(
                             X_i,
-                            metric=self.distance,
+                            distance=self.distance,
                             **self.distance_params,
                         )
                     ]
