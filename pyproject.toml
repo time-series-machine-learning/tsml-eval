@@ -4,14 +4,17 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tsml-eval"
-version = "0.1.0"
+version = "0.2.0"
 description = "A package for benchmarking time series machine learning tools."
 authors = [
-    {name = "Matthew Middlehurst", email = "m.middlehurst@uea.ac.uk"},
-    {name = "Tony Bagnall", email = "ajb@uea.ac.uk"},
+    {name = "Matthew Middlehurst", email = "m.b.middlehurst@soton.ac.uk"},
+    {name = "Tony Bagnall", email = "a.j.bagnall@soton.ac.uk"},
+]
+maintainers = [
+    {name = "Matthew Middlehurst", email = "m.b.middlehurst@soton.ac.uk"},
+    {name = "Tony Bagnall", email = "a.j.bagnall@soton.ac.uk"},
 ]
 readme = "README.md"
-requires-python = ">=3.8,<3.12"
 keywords = [
     "data-science",
     "machine-learning",
@@ -36,10 +39,12 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
 ]
+requires-python = ">=3.8,<3.12"
 dependencies = [
-    "aeon>=0.3.0,<0.4.0",
-    "scikit-learn>=1.0.2,<=1.2.2",
-    "tsml>=0.2.0,<0.3.0",
+    "aeon>=0.6.0,<0.7.0",
+    "tsml>=0.3.0,<0.4.0",
+    "scikit-learn>=1.0.0,<1.5.0",
+    "matplotlib",
     "gpustat",
     "psutil",
 ]
@@ -47,9 +52,8 @@ dependencies = [
 [project.optional-dependencies]
 all_extras = [
     "aeon[all_extras,dl]",
-    "tsml[extras]",
-    "xgboost<=1.7.5",
-    "convst>=0.3.0,<=0.4.0; python_version < '3.11'",
+    "tsml[all_extras]",
+    "xgboost",
     "torch>=1.13.1",
 ]
 unstable_extras = [
@@ -67,21 +71,25 @@ dev = [
     "pytest-timeout",
     "pytest-xdist",
     "pytest-cov",
+    "pytest-rerunfailures",
 ]
 binder = [
     "notebook",
     "jupyterlab",
 ]
 docs = [
-    "sphinx",
+    "sphinx<8.0.0",
     "sphinx-design",
+    "sphinx-version-warning",
+    "sphinx_issues",
+    "sphinx-copybutton",
+    "sphinx-remove-toctrees",
+    "sphinxext-opengraph",
     "nbsphinx",
     "numpydoc",
+    "myst-parser",
     "jupyter",
     "furo",
-    "sphinx_issues",
-    "myst-parser",
-    "sphinx-copybutton",
 ]
 
 [project.urls]
@@ -113,7 +121,6 @@ ignore = [
 [tool.flake8]
 exclude = [
     "tsml_eval/_wip/*",
-    "examples/_wip/*",
 ]
 per-file-ignores = [
     "tsml_eval/experiments/classification_experiments.py:E402,T201",
@@ -122,21 +129,22 @@ per-file-ignores = [
     "tsml_eval/experiments/threaded_regression_experiments.py:T201",
     "tsml_eval/experiments/clustering_experiments.py:E402,T201",
     "tsml_eval/experiments/threaded_clustering_experiments.py:T201",
+    "tsml_eval/experiments/forecasting_experiments.py:E402,T201",
+    "tsml_eval/experiments/threaded_forecasting_experiments.py:T201",
     "tsml_eval/publications/*:E402,T201",
 ]
-
-[tool.nbqa.exclude]
-black = "examples/_wip/"
-flake8 = "examples/_wip/"
-isort = "examples/_wip/"
 
 [tool.pytest.ini_options]
 testpaths = "tsml_eval"
 addopts = '''
     --ignore tsml_eval/_wip
+    --ignore tsml_eval/publications/2023
     --durations 20
     --timeout 600
     --showlocals
     --doctest-modules
     --numprocesses auto
+    --reruns 2
+    --only-rerun "crashed while running"
+    --meminterval 0.1
 '''

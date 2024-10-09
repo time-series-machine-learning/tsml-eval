@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """A tsml wrapper for sklearn clusterers."""
 
 __author__ = ["MatthewMiddlehurst"]
@@ -11,23 +10,26 @@ from tsml.base import BaseTimeSeriesEstimator, _clone_estimator
 
 
 class SklearnToTsmlClusterer(ClusterMixin, BaseTimeSeriesEstimator):
-    """Wrapper for sklearn estimators."""
+    """Wrapper for sklearn estimators to use the tsml base class."""
 
     def __init__(
         self,
         clusterer=None,
         pad_unequal=False,
         concatenate_channels=False,
+        clone_estimator=True,
         random_state=None,
     ):
         self.clusterer = clusterer
         self.pad_unequal = pad_unequal
         self.concatenate_channels = concatenate_channels
+        self.clone_estimator = clone_estimator
         self.random_state = random_state
 
         super(SklearnToTsmlClusterer, self).__init__()
 
     def fit(self, X, y=None):
+        """Wrap fit."""
         if self.clusterer is None:
             raise ValueError("Clusterer not set")
 
@@ -38,7 +40,11 @@ class SklearnToTsmlClusterer(ClusterMixin, BaseTimeSeriesEstimator):
             concatenate_channels=self.concatenate_channels,
         )
 
-        self._clusterer = _clone_estimator(self.clusterer, self.random_state)
+        self._clusterer = (
+            _clone_estimator(self.clusterer, self.random_state)
+            if self.clone_estimator
+            else self.clusterer
+        )
         self._clusterer.fit(X, y)
 
         self.labels_ = self._clusterer.labels_
@@ -46,6 +52,7 @@ class SklearnToTsmlClusterer(ClusterMixin, BaseTimeSeriesEstimator):
         return self
 
     def predict(self, X) -> np.ndarray:
+        """Wrap predict."""
         check_is_fitted(self)
 
         X = self._validate_data(X=X, reset=False)

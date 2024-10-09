@@ -11,7 +11,7 @@ rist_classifiers = [
     ["ShapeletTransformClassifier", "stc", "stc-2hour"],
     ["RDSTClassifier", "rdst"],
     ["RSTSFClassifier", "rstsf", "r-stsf"],
-    "DrCIF",
+    ["drcif", "DrCIFClassifier"],
     ["RocketClassifier", "rocket"],
     ["HIVECOTEV2", "hc2"],
     ["RISTClassifier", "rist", "rist-extrat"],
@@ -25,27 +25,25 @@ def _set_rist_classifier(
     classifier_name,
     random_state=None,
     n_jobs=1,
+    **kwargs,
 ):
     c = classifier_name.lower()
 
     if not str_in_nested_list(rist_classifiers, c):
-        raise Exception("UNKNOWN CLASSIFIER ", c, " in set_rist_classifier")
+        raise ValueError(f"UNKNOWN CLASSIFIER: {c} in _set_rist_classifier")
 
     if c == "freshprinceclassifier" or c == "freshprince":
-        from tsml_eval.estimators.classification.feature_based import (
-            FreshPRINCEClassifier,
-        )
+        from aeon.classification.feature_based import FreshPRINCEClassifier
 
-        return FreshPRINCEClassifier(random_state=random_state, n_jobs=n_jobs)
+        return FreshPRINCEClassifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "shapelettransformclassifier" or c == "stc" or c == "stc-2hour":
-        from tsml_eval.estimators.classification.shapelet_based import (
-            ShapeletTransformClassifier,
-        )
+        from aeon.classification.shapelet_based import ShapeletTransformClassifier
 
         return ShapeletTransformClassifier(
             transform_limit_in_minutes=120,
             random_state=random_state,
             n_jobs=n_jobs,
+            **kwargs,
         )
     elif c == "rdstclassifier" or c == "rdst":
         from tsml.shapelet_based import RDSTClassifier
@@ -55,27 +53,25 @@ def _set_rist_classifier(
         from tsml.interval_based import RSTSFClassifier
 
         return RSTSFClassifier(
-            n_estimators=500, random_state=random_state, n_jobs=n_jobs
+            n_estimators=500, random_state=random_state, n_jobs=n_jobs, **kwargs
         )
-    elif c == "drcif":
-        from aeon.classification.interval_based import DrCIF
+    elif c == "drcif" or c == "drcifclassifier":
+        from aeon.classification.interval_based import DrCIFClassifier
 
-        return DrCIF(
+        return DrCIFClassifier(
             n_estimators=500,
             random_state=random_state,
             n_jobs=n_jobs,
+            **kwargs,
         )
     elif c == "rocketclassifier" or c == "rocket":
         from aeon.classification.convolution_based import RocketClassifier
 
-        return RocketClassifier(random_state=random_state, n_jobs=n_jobs)
+        return RocketClassifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "hivecotev2" or c == "hc2":
         from aeon.classification.hybrid import HIVECOTEV2
 
-        return HIVECOTEV2(
-            random_state=random_state,
-            n_jobs=n_jobs,
-        )
+        return HIVECOTEV2(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "ristclassifier" or c == "rist" or c == "rist-extrat":
         from sklearn.ensemble import ExtraTreesClassifier
         from tsml.hybrid import RISTClassifier
@@ -84,6 +80,7 @@ def _set_rist_classifier(
             random_state=random_state,
             n_jobs=n_jobs,
             estimator=ExtraTreesClassifier(n_estimators=500, criterion="entropy"),
+            **kwargs,
         )
     elif c == "rist-rf":
         from sklearn.ensemble import RandomForestClassifier
@@ -93,6 +90,7 @@ def _set_rist_classifier(
             random_state=random_state,
             n_jobs=n_jobs,
             estimator=RandomForestClassifier(n_estimators=500, criterion="entropy"),
+            **kwargs,
         )
     elif c == "rist-ridgecv":
         from sklearn.linear_model import RidgeClassifierCV
@@ -107,6 +105,7 @@ def _set_rist_classifier(
                 StandardScaler(with_mean=False),
                 RidgeClassifierCV(alphas=np.logspace(-4, 4, 20)),
             ),
+            **kwargs,
         )
     elif (
         c == "randomintervalclassifier" or c == "intervalpipeline" or c == "i-pipeline"
@@ -132,7 +131,9 @@ def _set_rist_classifier(
         )
 
         def sqrt_times_15_plus_5_mv(X):
-            return int(np.sqrt(X.shape[2]) * np.sqrt(X.shape[1]) * 15 + 5)
+            return int(
+                np.sqrt(X.shape[2]) * np.sqrt(X.shape[1]) * 15 + 5
+            )  # pragma: no cover
 
         interval_features = [
             Catch22Transformer(outlier_norm=True, replace_nans=True),
@@ -159,4 +160,5 @@ def _set_rist_classifier(
             features=interval_features,
             series_transformers=series_transformers,
             estimator=ExtraTreesClassifier(n_estimators=500, criterion="entropy"),
+            **kwargs,
         )

@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-"""Estimators not present in tsml or aeon."""
+"""Estimators that are not present in tsml or aeon."""
 
 __all__ = [
     "SklearnToTsmlClassifier",

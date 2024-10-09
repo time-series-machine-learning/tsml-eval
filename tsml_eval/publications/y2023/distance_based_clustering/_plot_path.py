@@ -1,11 +1,12 @@
 """Alignment path plotting utilities."""
 
 import numpy as np
+from aeon.distances import cost_matrix as compute_cost_matrix
 from aeon.distances._distance import alignment_path, pairwise_distance
 from aeon.utils.validation._dependencies import _check_soft_dependencies
 
 
-def _path_mask(cost_matrix, path, ax, theme=None):
+def _path_mask(cost_matrix, path, ax, theme=None):  # pragma: no cover
     _check_soft_dependencies("matplotlib")
 
     import matplotlib.colors as colorplt
@@ -33,7 +34,7 @@ def _path_mask(cost_matrix, path, ax, theme=None):
     ax.matshow(plot_matrix, cmap=theme)
 
 
-def _pairwise_path(x, y, metric):
+def _pairwise_path(x, y, metric):  # pragma: no cover
     pw_matrix = pairwise_distance(x, y, metric=metric)
     path = []
     for i in range(pw_matrix.shape[0]):
@@ -50,17 +51,16 @@ def _plot_path(
     dist_kwargs: dict = None,
     title: str = "",
     plot_over_pw: bool = False,
-):
+):  # pragma: no cover
     _check_soft_dependencies("matplotlib")
 
-    import matplotlib as plt
+    import matplotlib.pyplot as plt
 
     if dist_kwargs is None:
         dist_kwargs = {}
     try:
-        path, dist, cost_matrix = alignment_path(
-            x, y, metric=metric, return_cost_matrix=True, **dist_kwargs
-        )
+        path, dist = alignment_path(x, y, metric=metric, **dist_kwargs)
+        cost_matrix = compute_cost_matrix(x, y, metric=metric, **dist_kwargs)
 
         if metric == "lcss":
             _path = []
@@ -116,17 +116,17 @@ def _plot_path(
     return plt
 
 
-def _plot_alignment(x, y, metric, dist_kwargs: dict = None, title: str = ""):
+def _plot_alignment(
+    x, y, metric, dist_kwargs: dict = None, title: str = ""
+):  # pragma: no cover
     _check_soft_dependencies("matplotlib")
 
-    import matplotlib as plt
+    import matplotlib.pyplot as plt
 
     if dist_kwargs is None:
         dist_kwargs = {}
     try:
-        path, dist, cost_matrix = alignment_path(
-            x, y, metric=metric, return_cost_matrix=True, **dist_kwargs
-        )
+        path, dist = alignment_path(x, y, metric=metric, **dist_kwargs)
     except NotImplementedError:
         path, dist, cost_matrix = _pairwise_path(x, y, metric)
 

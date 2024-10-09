@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """A tsml wrapper for sklearn classifiers."""
 
 __author__ = ["MatthewMiddlehurst"]
@@ -12,23 +11,26 @@ from tsml.base import BaseTimeSeriesEstimator, _clone_estimator
 
 
 class SklearnToTsmlClassifier(ClassifierMixin, BaseTimeSeriesEstimator):
-    """Wrapper for sklearn estimators."""
+    """Wrapper for sklearn estimators to use the tsml base class."""
 
     def __init__(
         self,
         classifier=None,
         pad_unequal=False,
         concatenate_channels=False,
+        clone_estimator=True,
         random_state=None,
     ):
         self.classifier = classifier
         self.pad_unequal = pad_unequal
         self.concatenate_channels = concatenate_channels
+        self.clone_estimator = clone_estimator
         self.random_state = random_state
 
         super(SklearnToTsmlClassifier, self).__init__()
 
     def fit(self, X, y):
+        """Wrap fit."""
         if self.classifier is None:
             raise ValueError("Classifier not set")
 
@@ -42,12 +44,17 @@ class SklearnToTsmlClassifier(ClassifierMixin, BaseTimeSeriesEstimator):
         check_classification_targets(y)
         self.classes_ = np.unique(y)
 
-        self._classifier = _clone_estimator(self.classifier, self.random_state)
+        self._classifier = (
+            _clone_estimator(self.classifier, self.random_state)
+            if self.clone_estimator
+            else self.classifier
+        )
         self._classifier.fit(X, y)
 
         return self
 
     def predict(self, X) -> np.ndarray:
+        """Wrap predict."""
         check_is_fitted(self)
 
         X = self._validate_data(X=X, reset=False)
@@ -60,6 +67,7 @@ class SklearnToTsmlClassifier(ClassifierMixin, BaseTimeSeriesEstimator):
         return self._classifier.predict(X)
 
     def predict_proba(self, X) -> np.ndarray:
+        """Wrap predict_proba."""
         check_is_fitted(self)
 
         X = self._validate_data(X=X, reset=False)

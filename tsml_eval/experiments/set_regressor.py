@@ -8,72 +8,74 @@ from sklearn.pipeline import make_pipeline
 from tsml_eval.utils.functions import str_in_nested_list
 
 convolution_based_regressors = [
-    ["RocketRegressor", "rocket"],
+    ["rocketregressor", "rocket"],
     ["minirocket", "minirocketregressor"],
     ["multirocket", "multirocketregressor"],
-    ["HydraRegressor", "hydra"],
-    ["Arsenal", "arsenalregressor"],
+    ["hydraregressor", "hydra"],
+    ["arsenal", "arsenalregressor"],
 ]
 deep_learning_regressors = [
-    ["CNNRegressor", "cnn"],
-    ["TapNetRegressor", "tapnet"],
-    ["ResNetRegressor", "resnet"],
-    ["InceptionTimeRegressor", "inception", "inceptiontime"],
-    ["IndividualInceptionRegressor", "singleinception", "individualinception"],
-    ["FCNRegressor", "fcnn", "fcn"],
+    ["cnnregressor", "cnn"],
+    ["tapnetregressor", "tapnet"],
+    ["resnetregressor", "resnet"],
+    ["inceptiontimeregressor", "inception", "inceptiontime"],
+    ["individualinceptionregressor", "singleinception", "individualinception"],
+    ["fcnregressor", "fcnn", "fcn"],
 ]
 dictionary_based_regressors = [
-    ["TemporalDictionaryEnsemble", "tde"],
+    ["temporaldictionaryensemble", "tde"],
 ]
 distance_based_regressors = [
     "1nn-ed",
     "5nn-ed",
-    ["KNeighborsTimeSeriesRegressor", "1nn-dtw"],
+    ["kneighborstimeseriesregressor", "1nn-dtw"],
     "5nn-dtw",
+    "1nn-msm",
+    "5nn-msm",
 ]
 feature_based_regressors = [
-    ["FreshPRINCERegressor", "fresh-prince", "freshprince"],
+    ["freshprinceregressor", "fresh-prince", "freshprince"],
     "freshprince-500",
-    ["FPCARegressor", "fpcregressor", "fpcr"],
+    ["fpcaregressor", "fpcregressor", "fpcr"],
     ["fpcar-b-spline", "fpcr-b-spline", "fpcr-bs"],
 ]
 hybrid_regressors = [
-    ["HIVECOTEV2", "hc2"],
+    ["hivecotev2", "hc2"],
+    ["ristregressor", "rist", "rist-extrat"],
 ]
 interval_based_regressors = [
-    ["TimeSeriesForestRegressor", "tsf"],
+    ["timeseriesforestregressor", "tsf"],
     "tsf-i",
     "tsf-500",
-    "DrCIF",
+    ["drcif", "drcifregressor"],
     "drcif-500",
 ]
 other_regressors = [
-    ["DummyRegressor", "dummy", "dummyregressor-tsml"],
+    ["dummyregressor", "dummy", "dummyregressor-tsml"],
     "dummyregressor-aeon",
-    "dummyregressor-sklearn",
-    ["MeanPredictorRegressor", "dummymeanpred"],
-    ["MedianPredictorRegressor", "dummymedianpred"],
+    ["dummyregressor-sklearn", "meanpredictorregressor", "dummymeanpred"],
+    ["medianpredictorregressor", "dummymedianpred"],
 ]
 shapelet_based_regressors = [
     "str-2hour",
-    ["ShapeletTransformRegressor", "str", "stc"],
+    ["shapelettransformregressor", "str", "stc"],
     "str-2hour-ridge",
 ]
 vector_regressors = [
-    ["RotationForestRegressor", "rotf", "rotationforest"],
-    ["LinearRegression", "lr"],
-    ["RidgeCV", "ridge"],
-    ["SVR", "svm", "supportvectorregressor"],
+    ["rotationforestregressor", "rotf", "rotationforest"],
+    ["linearregression", "lr"],
+    ["ridgecv", "ridge"],
+    ["svr", "svm", "supportvectorregressor"],
     ["grid-svr", "grid-svm", "grid-supportvectorregressor"],
-    ["RandomForestRegressor", "rf", "randomforest"],
+    ["randomforestregressor", "rf", "randomforest"],
     ["randomforest-500", "rf-500"],
-    ["XGBRegressor", "xgboost"],
+    ["xgbregressor", "xgboost"],
     ["xgb-100", "xgboost-100"],
     ["xgb-500", "xgboost-500"],
 ]
 
 
-def set_regressor(
+def get_regressor_by_name(
     regressor_name,
     random_state=None,
     n_jobs=1,
@@ -154,7 +156,7 @@ def set_regressor(
             r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
         )
     else:
-        raise ValueError(f"UNKNOWN REGRESSOR {r} in set_regressor")
+        raise ValueError(f"UNKNOWN REGRESSOR: {r} in set_regressor")
 
 
 def _set_regressor_convolution_based(
@@ -187,7 +189,7 @@ def _set_regressor_convolution_based(
 
         return HydraRegressor(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif r == "arsenal" or r == "arsenalregressor":
-        from tsml_eval.estimators.regression.convolution_based import Arsenal
+        from tsml_eval._wip.hc2_regression.arsenal import Arsenal
 
         return Arsenal(
             random_state=random_state,
@@ -202,19 +204,19 @@ def _set_regressor_deep_learning(
     r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
     if r == "cnnregressor" or r == "cnn":
-        from aeon.regression.deep_learning.cnn import CNNRegressor
+        from aeon.regression.deep_learning import CNNRegressor
 
         return CNNRegressor(random_state=random_state, **kwargs)
     elif r == "tapnetregressor" or r == "tapnet":
-        from aeon.regression.deep_learning.tapnet import TapNetRegressor
+        from aeon.regression.deep_learning import TapNetRegressor
 
         return TapNetRegressor(random_state=random_state, **kwargs)
     elif r == "resnetregressor" or r == "resnet":
-        from tsml_eval.estimators.regression.deep_learning import ResNetRegressor
+        from aeon.regression.deep_learning import ResNetRegressor
 
         return ResNetRegressor(random_state=random_state, **kwargs)
     elif r == "inceptiontimeregressor" or r == "inception" or r == "inceptiontime":
-        from aeon.regression.deep_learning.inception_time import InceptionTimeRegressor
+        from aeon.regression.deep_learning import InceptionTimeRegressor
 
         return InceptionTimeRegressor(random_state=random_state, **kwargs)
     elif (
@@ -222,13 +224,11 @@ def _set_regressor_deep_learning(
         or r == "singleinception"
         or r == "individualinception"
     ):
-        from aeon.regression.deep_learning.inception_time import (
-            IndividualInceptionRegressor,
-        )
+        from aeon.regression.deep_learning import IndividualInceptionRegressor
 
         return IndividualInceptionRegressor(random_state=random_state, **kwargs)
     elif r == "fcnregressor" or r == "fcnn" or r == "fcn":
-        from tsml_eval.estimators.regression.deep_learning import FCNRegressor
+        from aeon.regression.deep_learning import FCNRegressor
 
         return FCNRegressor(random_state=random_state, **kwargs)
 
@@ -237,9 +237,7 @@ def _set_regressor_dictionary_based(
     r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
     if r == "temporaldictionaryensemble" or r == "tde":
-        from tsml_eval.estimators.regression.dictionary_based import (
-            TemporalDictionaryEnsemble,
-        )
+        from tsml_eval._wip.hc2_regression.tde import TemporalDictionaryEnsemble
 
         return TemporalDictionaryEnsemble(
             random_state=random_state,
@@ -327,12 +325,22 @@ def _set_regressor_hybrid(
     r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
     if r == "hivecotev2" or r == "hc2":
-        from tsml_eval.estimators.regression.hybrid import HIVECOTEV2
+        from tsml_eval._wip.hc2_regression.hivecote_v2 import HIVECOTEV2
 
         return HIVECOTEV2(
             random_state=random_state,
             n_jobs=n_jobs,
             time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif r == "ristregressor" or r == "rist" or r == "rist-extrat":
+        from sklearn.ensemble import ExtraTreesRegressor
+        from tsml.hybrid import RISTRegressor
+
+        return RISTRegressor(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            estimator=ExtraTreesRegressor(n_estimators=500),
             **kwargs,
         )
 
@@ -344,34 +352,42 @@ def _set_regressor_interval_based(
         from aeon.regression.interval_based import TimeSeriesForestRegressor
 
         return TimeSeriesForestRegressor(
-            random_state=random_state, n_jobs=n_jobs, **kwargs
+            random_state=random_state,
+            n_jobs=n_jobs,
+            save_transformed_data=build_train_file,
+            **kwargs,
         )
     elif r == "tsf-i":
         from aeon.regression.interval_based import TimeSeriesForestRegressor
-
-        from tsml_eval.estimators.regression.column_ensemble import (
-            ColumnEnsembleRegressor,
-        )
+        from tsml.compose import ChannelEnsembleRegressor
 
         estimators = [
             (
                 "tsf",
-                TimeSeriesForestRegressor(random_state=random_state, n_jobs=n_jobs),
-                None,
+                TimeSeriesForestRegressor(
+                    random_state=random_state,
+                    n_jobs=n_jobs,
+                    save_transformed_data=build_train_file,
+                ),
+                "all-split",
             )
         ]
 
-        return ColumnEnsembleRegressor(estimators, **kwargs)
+        return ChannelEnsembleRegressor(estimators, **kwargs)
     elif r == "tsf-500":
         from aeon.regression.interval_based import TimeSeriesForestRegressor
 
         return TimeSeriesForestRegressor(
-            n_estimators=500, random_state=random_state, n_jobs=n_jobs, **kwargs
+            n_estimators=500,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            save_transformed_data=build_train_file,
+            **kwargs,
         )
-    elif r == "drcif":
-        from tsml_eval.estimators.regression.interval_based import DrCIF
+    elif r == "drcif" or r == "drcifregressor":
+        from aeon.regression.interval_based import DrCIFRegressor
 
-        return DrCIF(
+        return DrCIFRegressor(
             random_state=random_state,
             n_jobs=n_jobs,
             save_transformed_data=build_train_file,
@@ -379,9 +395,9 @@ def _set_regressor_interval_based(
             **kwargs,
         )
     elif r == "drcif-500":
-        from tsml_eval.estimators.regression.interval_based import DrCIF
+        from aeon.regression.interval_based import DrCIFRegressor
 
-        return DrCIF(
+        return DrCIFRegressor(
             n_estimators=500,
             random_state=random_state,
             n_jobs=n_jobs,
@@ -399,32 +415,28 @@ def _set_regressor_other(
 
         return DummyRegressor(**kwargs)
     elif r == "dummyregressor-aeon":
-        from aeon.regression.dummy import DummyRegressor
+        from aeon.regression import DummyRegressor
 
         return DummyRegressor(**kwargs)
-    elif r == "dummyregressor-sklearn":
+    elif (
+        r == "dummyregressor-sklearn"
+        or r == "meanpredictorregressor"
+        or r == "dummymeanpred"
+    ):
         from sklearn.dummy import DummyRegressor
 
         return DummyRegressor(**kwargs)
-    elif r == "meanpredictorregressor" or r == "dummymeanpred":
-        # the dummy regressor is to predict the mean value of the output.
-        from tsml_eval.estimators.regression.dummy import MeanPredictorRegressor
-
-        return MeanPredictorRegressor(**kwargs)
     elif r == "medianpredictorregressor" or r == "dummymedianpred":
-        # the dummy regressor is to predict the mean value of the output.
-        from tsml_eval.estimators.regression.dummy import MedianPredictorRegressor
+        from sklearn.dummy import DummyRegressor
 
-        return MedianPredictorRegressor(**kwargs)
+        return DummyRegressor(strategy="median", **kwargs)
 
 
 def _set_regressor_shapelet_based(
     r, random_state, n_jobs, build_train_file, fit_contract, checkpoint, kwargs
 ):
     if r == "str-2hour":
-        from tsml_eval.estimators.regression.shapelet_based import (
-            ShapeletTransformRegressor,
-        )
+        from tsml_eval._wip.hc2_regression.str import ShapeletTransformRegressor
 
         return ShapeletTransformRegressor(
             transform_limit_in_minutes=120,
@@ -435,9 +447,7 @@ def _set_regressor_shapelet_based(
             **kwargs,
         )
     elif r == "shapelettransformregressor" or r == "str" or r == "stc":
-        from tsml_eval.estimators.regression.shapelet_based import (
-            ShapeletTransformRegressor,
-        )
+        from tsml_eval._wip.hc2_regression.str import ShapeletTransformRegressor
 
         return ShapeletTransformRegressor(
             random_state=random_state,
@@ -450,9 +460,7 @@ def _set_regressor_shapelet_based(
         from sklearn.linear_model import RidgeCV
         from sklearn.preprocessing import StandardScaler
 
-        from tsml_eval.estimators.regression.shapelet_based import (
-            ShapeletTransformRegressor,
-        )
+        from tsml_eval._wip.hc2_regression.str import ShapeletTransformRegressor
 
         return ShapeletTransformRegressor(
             estimator=make_pipeline(

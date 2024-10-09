@@ -1,26 +1,40 @@
-# -*- coding: utf-8 -*-
 """Utility functions for experiments."""
 
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 __all__ = [
     "resample_data",
+    "resample_data_indices",
     "stratified_resample_data",
+    "stratified_resample_data_indices",
+    "load_experiment_data",
     "write_classification_results",
     "write_regression_results",
     "write_clustering_results",
+    "write_forecasting_results",
     "write_results_to_tsml_format",
-    "validate_results_file",
     "fix_broken_second_line",
     "compare_result_file_resample",
     "assign_gpu",
+    "timing_benchmark",
+    "estimator_attributes_to_file",
 ]
 
 import os
+import time
+from collections.abc import Sequence
 
 import gpustat
 import numpy as np
+from aeon.datasets._data_loaders import load_from_tsfile
+from sklearn.base import BaseEstimator
 from sklearn.utils import check_random_state
+
+from tsml_eval.utils.validation import (
+    _check_classification_third_line,
+    _check_clustering_third_line,
+    _check_regression_third_line,
+)
 
 
 def resample_data(X_train, y_train, X_test, y_test, random_state=None):
@@ -76,9 +90,8 @@ def resample_data(X_train, y_train, X_test, y_test, random_state=None):
     indices = np.arange(len(all_data), dtype=int)
     rng.shuffle(indices)
 
-    train_cases = y_train.size
-    train_indices = indices[:train_cases]
-    test_indices = indices[train_cases:]
+    train_indices = indices[: len(X_train)]
+    test_indices = indices[len(X_train) :]
 
     # split the shuffled data into train and test
     X_train = (
@@ -89,6 +102,44 @@ def resample_data(X_train, y_train, X_test, y_test, random_state=None):
     y_test = all_labels[test_indices]
 
     return X_train, y_train, X_test, y_test
+
+
+def resample_data_indices(y_train, y_test, random_state=None):
+    """Return data resample indices without replacement using a random state.
+
+    Reproducible resampling. Combines train and test, randomly resamples, then returns
+    the new position for both the train and test set. Uses indices for a combined train
+    and test set, with test indices appearing after train indices.
+
+    Parameters
+    ----------
+    y_train : np.ndarray
+        Train data labels.
+    y_test : np.ndarray
+        Test data labels.
+    random_state : int, RandomState instance or None, default=None
+        If `int`, random_state is the seed used by the random number generator;
+        If `RandomState` instance, random_state is the random number generator;
+        If `None`, the random number generator is the `RandomState` instance used
+        by `np.random`.
+
+    Returns
+    -------
+    train_indices : np.ndarray
+        The index of cases to use in the train set from the combined train and test
+        data.
+    test_indices : np.ndarray
+        The index of cases to use in the test set from the combined train and test data.
+    """
+    # shuffle data indices
+    rng = check_random_state(random_state)
+    indices = np.arange(len(y_train) + len(y_test), dtype=int)
+    rng.shuffle(indices)
+
+    train_indices = indices[: len(y_train)]
+    test_indices = indices[len(y_train) :]
+
+    return train_indices, test_indices
 
 
 def stratified_resample_data(X_train, y_train, X_test, y_test, random_state=None):
@@ -165,9 +216,8 @@ def stratified_resample_data(X_train, y_train, X_test, y_test, random_state=None
         indices = np.where(all_labels == label)[0]
         rng.shuffle(indices)
 
-        train_cases = counts_train[label_index]
-        train_indices = indices[:train_cases]
-        test_indices = indices[train_cases:]
+        train_indices = indices[: counts_train[label_index]]
+        test_indices = indices[counts_train[label_index] :]
 
         # extract data from corresponding indices
         train_cases = (
@@ -198,17 +248,132 @@ def stratified_resample_data(X_train, y_train, X_test, y_test, random_state=None
     return X_train, y_train, X_test, y_test
 
 
+def stratified_resample_data_indices(y_train, y_test, random_state=None):
+    """Return stratified data resample indices without replacement using a random state.
+
+    Reproducible resampling. Combines train and test, resamples to get the same class
+    distribution, then returns the new position for both the train and test set.
+    Uses indices for a combined train and test set, with test indices appearing after
+    train indices.
+
+    Parameters
+    ----------
+    y_train : np.ndarray
+        Train data labels.
+    y_test : np.ndarray
+        Test data labels.
+    random_state : int, RandomState instance or None, default=None
+        If `int`, random_state is the seed used by the random number generator;
+        If `RandomState` instance, random_state is the random number generator;
+        If `None`, the random number generator is the `RandomState` instance used
+        by `np.random`.
+
+    Returns
+    -------
+    train_indices : np.ndarray
+        The index of cases to use in the train set from the combined train and test
+        data.
+    test_indices : np.ndarray
+        The index of cases to use in the test set from the combined train and test data.
+    """
+    # add both train and test to a single dataset
+    all_labels = np.concatenate((y_train, y_test), axis=None)
+
+    # shuffle data indices
+    rng = check_random_state(random_state)
+
+    # count class occurrences
+    unique_train, counts_train = np.unique(y_train, return_counts=True)
+    unique_test, counts_test = np.unique(y_test, return_counts=True)
+
+    # ensure same classes exist in both train and test
+    assert list(unique_train) == list(unique_test)
+
+    train_indices = np.zeros(0, dtype=int)
+    test_indices = np.zeros(0, dtype=int)
+
+    # for each class
+    for label_index in range(len(unique_train)):
+        # get the indices of all instances with this class label and shuffle them
+        label = unique_train[label_index]
+        indices = np.where(all_labels == label)[0]
+        rng.shuffle(indices)
+
+        train_indices = np.concatenate(
+            [train_indices, indices[: counts_train[label_index]]], axis=None
+        )
+        test_indices = np.concatenate(
+            [test_indices, indices[counts_train[label_index] :]], axis=None
+        )
+
+    return train_indices, test_indices
+
+
+def load_experiment_data(
+    problem_path: str,
+    dataset: str,
+    resample_id: int,
+    predefined_resample: bool,
+):
+    """Load data for experiments.
+
+    Parameters
+    ----------
+    problem_path : str
+        Path to the problem folder.
+    dataset : str
+        Name of the dataset.
+    resample_id : int or None
+        Id of the data resample to use.
+    predefined_resample : boolean
+        If True, use the predefined resample.
+
+    Returns
+    -------
+    X_train : np.ndarray or list of np.ndarray
+        Train data in a 2d or 3d ndarray or list of arrays.
+    y_train : np.ndarray
+        Train data labels.
+    X_test : np.ndarray or list of np.ndarray
+        Test data in a 2d or 3d ndarray or list of arrays.
+    y_test : np.ndarray
+        Test data labels.
+    resample : boolean
+        If True, the data is to be resampled.
+    """
+    if resample_id is not None and predefined_resample:
+        resample_str = "" if resample_id is None else str(resample_id)
+
+        X_train, y_train = load_from_tsfile(
+            f"{problem_path}/{dataset}/{dataset}{resample_str}_TRAIN.ts"
+        )
+        X_test, y_test = load_from_tsfile(
+            f"{problem_path}/{dataset}/{dataset}{resample_str}_TEST.ts"
+        )
+
+        resample_data = False
+    else:
+        X_train, y_train = load_from_tsfile(
+            f"{problem_path}/{dataset}/{dataset}_TRAIN.ts"
+        )
+        X_test, y_test = load_from_tsfile(f"{problem_path}/{dataset}/{dataset}_TEST.ts")
+
+        resample_data = True if resample_id != 0 else False
+
+    return X_train, y_train, X_test, y_test, resample_data
+
+
 def write_classification_results(
     predictions,
     probabilities,
     class_labels,
     classifier_name,
     dataset_name,
-    output_path,
+    file_path,
     full_path=True,
     split=None,
     resample_id=None,
-    timing_type="N/A",
+    time_unit="N/A",
     first_line_comment=None,
     parameter_info="No Parameter Info",
     accuracy=-1,
@@ -237,11 +402,11 @@ def write_classification_results(
         determine file structure if full_path is False.
     dataset_name : str
         Name of the problem the classifier was built on.
-    output_path : str
+    file_path : str
         Path to write the results file to or the directory to build the default file
         structure if full_path is False.
     full_path : boolean, default=True
-        If True, results are written directly to the directory passed in output_path.
+        If True, results are written directly to the directory passed in file_path.
         If False, then a standard file structure using the classifier and dataset names
         is created and used to write the results file.
     split : str or None, default=None
@@ -250,7 +415,7 @@ def write_classification_results(
     resample_id : int or None, default=None
         Indicates what random seed was used to resample the data or used as a
         random_state for the classifier.
-    timing_type : str, default="N/A"
+    time_unit : str, default="N/A"
         The format used for timings in the file, i.e. 'Seconds', 'Milliseconds',
         'Nanoseconds'
     first_line_comment : str or None, default=None
@@ -284,7 +449,7 @@ def write_classification_results(
         included in the train_estimate_time value. In this case fit_time +
         train_estimate_time would time fitting the model twice.
     """
-    if len(predictions) != len(probabilities) != len(class_labels):
+    if len(predictions) != probabilities.shape[0] != len(class_labels):
         raise IndexError(
             "The number of predicted values is not the same as the number of actual "
             "class values."
@@ -313,12 +478,12 @@ def write_classification_results(
         class_labels,
         classifier_name,
         dataset_name,
-        output_path,
+        file_path,
         predicted_probabilities=probabilities,
         full_path=full_path,
         split=split,
         resample_id=resample_id,
-        timing_type=timing_type,
+        time_unit=time_unit,
         first_line_comment=first_line_comment,
         second_line=parameter_info,
         third_line=third_line,
@@ -330,11 +495,11 @@ def write_regression_results(
     labels,
     regressor_name,
     dataset_name,
-    output_path,
+    file_path,
     full_path=True,
     split=None,
     resample_id=None,
-    timing_type="N/A",
+    time_unit="N/A",
     first_line_comment=None,
     parameter_info="No Parameter Info",
     mse=-1,
@@ -359,11 +524,11 @@ def write_regression_results(
         determine file structure if full_path is False.
     dataset_name : str
         Name of the problem the regressor was built on.
-    output_path : str
+    file_path : str
         Path to write the results file to or the directory to build the default file
         structure if full_path is False.
     full_path : boolean, default=True
-        If True, results are written directly to the directory passed in output_path.
+        If True, results are written directly to the directory passed in file_path.
         If False, then a standard file structure using the regressor and dataset names
         is created and used to write the results file.
     split : str or None, default=None
@@ -372,7 +537,7 @@ def write_regression_results(
     resample_id : int or None, default=None
         Indicates what random seed was used to resample the data or used as a
         random_state for the regressor.
-    timing_type : str, default="N/A"
+    time_unit : str, default="N/A"
         The format used for timings in the file, i.e. 'Seconds', 'Milliseconds',
         'Nanoseconds'
     first_line_comment : str or None, default=None
@@ -420,11 +585,11 @@ def write_regression_results(
         labels,
         regressor_name,
         dataset_name,
-        output_path,
+        file_path,
         full_path=full_path,
         split=split,
         resample_id=resample_id,
-        timing_type=timing_type,
+        time_unit=time_unit,
         first_line_comment=first_line_comment,
         second_line=parameter_info,
         third_line=third_line,
@@ -437,11 +602,11 @@ def write_clustering_results(
     class_labels,
     clusterer_name,
     dataset_name,
-    output_path,
+    file_path,
     full_path=True,
     split=None,
     resample_id=None,
-    timing_type="N/A",
+    time_unit="N/A",
     first_line_comment=None,
     parameter_info="No Parameter Info",
     clustering_accuracy=-1,
@@ -469,11 +634,11 @@ def write_clustering_results(
         determine file structure if full_path is False.
     dataset_name : str
         Name of the problem the clusterer was built on.
-    output_path : str
+    file_path : str
         Path to write the results file to or the directory to build the default file
         structure if full_path is False.
     full_path : boolean, default=True
-        If True, results are written directly to the directory passed in output_path.
+        If True, results are written directly to the directory passed in file_path.
         If False, then a standard file structure using the clusterer and dataset names
         is created and used to write the results file.
     split : str or None, default=None
@@ -482,7 +647,7 @@ def write_clustering_results(
     resample_id : int or None, default=None
         Indicates what random seed was used to resample the data or used as a
         random_state for the clusterer.
-    timing_type : str, default="N/A"
+    time_unit : str, default="N/A"
         The format used for timings in the file, i.e. 'Seconds', 'Milliseconds',
         'Nanoseconds'
     first_line_comment : str or None, default=None
@@ -533,12 +698,99 @@ def write_clustering_results(
         class_labels,
         clusterer_name,
         dataset_name,
-        output_path,
+        file_path,
         predicted_probabilities=cluster_probabilities,
         full_path=full_path,
         split=split,
         resample_id=resample_id,
-        timing_type=timing_type,
+        time_unit=time_unit,
+        first_line_comment=first_line_comment,
+        second_line=parameter_info,
+        third_line=third_line,
+    )
+
+
+def write_forecasting_results(
+    predictions,
+    labels,
+    forecaster_name,
+    dataset_name,
+    file_path,
+    full_path=True,
+    split=None,
+    random_seed=None,
+    time_unit="N/A",
+    first_line_comment=None,
+    parameter_info="No Parameter Info",
+    mape=-1,
+    fit_time=-1,
+    predict_time=-1,
+    benchmark_time=-1,
+    memory_usage=-1,
+):
+    """Write the predictions for a forecasting experiment in the format used by tsml.
+
+    Parameters
+    ----------
+    predictions : np.array
+        The predicted values to write to file. Must be the same length as labels.
+    labels : np.array
+        The actual label values written to file with the predicted values.
+    forecaster_name : str
+        Name of the forecaster that made the predictions. Written to file and can
+        determine file structure if full_path is False.
+    dataset_name : str
+        Name of the problem the forecaster was built on.
+    file_path : str
+        Path to write the results file to or the directory to build the default file
+        structure if full_path is False.
+    full_path : boolean, default=True
+        If True, results are written directly to the directory passed in file_path.
+        If False, then a standard file structure using the forecaster and dataset names
+        is created and used to write the results file.
+    split : str or None, default=None
+        Either None, 'TRAIN' or 'TEST'. Influences the result file name and first line
+        of the file.
+    random_seed : int or None, default=None
+        Indicates what random seed was used as a random_state for the forecaster.
+    time_unit : str, default="N/A"
+        The format used for timings in the file, i.e. 'Seconds', 'Milliseconds',
+        'Nanoseconds'
+    first_line_comment : str or None, default=None
+        Optional comment appended to the end of the first line, i.e. the file used to
+        generate the results.
+    parameter_info : str, default="No Parameter Info"
+        Unstructured estimator dependant information, i.e. estimator parameters or
+        values from the model build.
+    mape: float, default=-1
+        The mean absolute percentage error of the predictions.
+    fit_time : int, default=-1
+        The time taken to fit the forecaster.
+    predict_time : int, default=-1
+        The time taken to predict the forecasting labels.
+    benchmark_time : int, default=-1
+        A benchmark time for the hardware used to scale other timings.
+    memory_usage : int, default=-1
+        The memory usage of the forecaster.
+    """
+    third_line = (
+        f"{mape},"
+        f"{fit_time},"
+        f"{predict_time},"
+        f"{benchmark_time},"
+        f"{memory_usage}"
+    )
+
+    write_results_to_tsml_format(
+        predictions,
+        labels,
+        forecaster_name,
+        dataset_name,
+        file_path,
+        full_path=full_path,
+        split=split,
+        resample_id=random_seed,
+        time_unit=time_unit,
         first_line_comment=first_line_comment,
         second_line=parameter_info,
         third_line=third_line,
@@ -550,12 +802,12 @@ def write_results_to_tsml_format(
     labels,
     estimator_name,
     dataset_name,
-    output_path,
+    file_path,
     predicted_probabilities=None,
     full_path=True,
     split=None,
     resample_id=None,
-    timing_type="N/A",
+    time_unit="N/A",
     first_line_comment=None,
     second_line="No Parameter Info",
     third_line="N/A",
@@ -574,14 +826,14 @@ def write_results_to_tsml_format(
         determine file structure if full_path is False.
     dataset_name : str
         Name of the problem the estimator was built on.
-    output_path : str
+    file_path : str
         Path to write the results file to or the directory to build the default file
         structure if full_path is False.
     predicted_probabilities : np.ndarray, default=None
         Estimated label probabilities. If passed, these are written after the
         predicted values for each case.
     full_path : boolean, default=True
-        If True, results are written directly to the directory passed in output_path.
+        If True, results are written directly to the directory passed in file_path.
         If False, then a standard file structure using the estimator and dataset names
         is created and used to write the results file.
     split : str or None, default=None
@@ -590,7 +842,7 @@ def write_results_to_tsml_format(
     resample_id : int or None, default=None
         Indicates what random seed was used to resample the data or used as a
         random_state for the estimator.
-    timing_type : str, default="N/A"
+    time_unit : str, default="N/A"
         The format used for timings in the file, i.e. 'Seconds', 'Milliseconds',
         'Nanoseconds'
     first_line_comment : str or None, default=None
@@ -610,20 +862,13 @@ def write_results_to_tsml_format(
 
     # If the full directory path is not passed, make the standard structure
     if not full_path:
-        output_path = f"{output_path}/{estimator_name}/Predictions/{dataset_name}/"
+        file_path = f"{file_path}/{estimator_name}/Predictions/{dataset_name}/"
 
-    try:
-        os.makedirs(output_path)
-    except os.error:
-        pass  # raises os.error if path already exists, so just ignore this
+    os.makedirs(file_path, exist_ok=True)
 
     if split is None:
         split = ""
-    elif split.lower() == "train":
-        split = "TRAIN"
-    elif split.lower() == "test":
-        split = "TEST"
-    else:
+    elif split.lower() != "train" and split.lower() != "test":
         raise ValueError("Unknown 'split' value - should be 'TRAIN', 'TEST' or None")
 
     fname = (
@@ -633,52 +878,51 @@ def write_results_to_tsml_format(
     )
     fname = fname.lower() if split == "" else fname
 
-    file = open(f"{output_path}/{fname}.csv", "w")
+    with open(f"{file_path}/{fname}.csv", "w") as file:
+        # the first line of the output file is in the form of:
+        first_line = (
+            f"{dataset_name},"
+            f"{estimator_name},"
+            f"{'No split' if split == '' else split.upper()},"
+            f"{'None' if resample_id is None else resample_id},"
+            f"{time_unit.upper()},"
+            f"{'' if first_line_comment is None else first_line_comment}"
+        )
+        file.write(first_line + "\n")
 
-    # the first line of the output file is in the form of:
-    first_line = (
-        f"{dataset_name},"
-        f"{estimator_name},"
-        f"{'No split' if split == '' else split},"
-        f"{'None' if resample_id is None else resample_id},"
-        f"{timing_type},"
-        f"{'' if first_line_comment is None else first_line_comment}"
-    )
-    file.write(first_line + "\n")
+        # the second line of the output is free form and estimator-specific; usually
+        # this will record info such as paramater options used, any constituent model
+        # names for ensembles, etc.
+        file.write(str(second_line) + "\n")
 
-    # the second line of the output is free form and estimator-specific; usually this
-    # will record info such as paramater options used, any constituent model
-    # names for ensembles, etc.
-    file.write(str(second_line) + "\n")
+        # the third line of the file depends on the task i.e. classification or
+        # regression
+        file.write(str(third_line) + "\n")
 
-    # the third line of the file depends on the task i.e. classification or regression
-    file.write(str(third_line) + "\n")
+        # from line 4 onwards each line should include the actual and predicted class
+        # labels (comma-separated). If present, for each case, the probabilities of
+        # predicting every class value for this case should also be appended to the
+        # line (a space is also included between the predicted value and the
+        # predict_proba). E.g.:
+        #
+        # if predict_proba data IS provided for case i:
+        #   labels[i], preds[i],,prob_class_0[i],
+        #   prob_class_1[i],...,prob_class_c[i]
+        #
+        # if predict_proba data IS NOT provided for case i:
+        #   labels[i], preds[i]
+        #
+        # If labels[i] is NaN (if clustering), labels[i] is replaced with ? to indicate
+        # missing
+        for i in range(0, len(predictions)):
+            label = "?" if np.isnan(labels[i]) else labels[i]
+            file.write(f"{label},{predictions[i]}")
 
-    # from line 4 onwards each line should include the actual and predicted class
-    # labels (comma-separated). If present, for each case, the probabilities of
-    # predicting every class value for this case should also be appended to the line (
-    # a space is also included between the predicted value and the predict_proba). E.g.:
-    #
-    # if predict_proba data IS provided for case i:
-    #   labels[i], preds[i],,prob_class_0[i],
-    #   prob_class_1[i],...,prob_class_c[i]
-    #
-    # if predict_proba data IS NOT provided for case i:
-    #   labels[i], predd[i]
-    #
-    # If labels[i] is NaN (if clustering), labels[i] is replaced with ? to indicate
-    # missing
-    for i in range(0, len(predictions)):
-        label = "?" if np.isnan(labels[i]) else labels[i]
-        file.write(f"{label},{predictions[i]}")
-
-        if predicted_probabilities is not None:
-            file.write(",")
-            for j in predicted_probabilities[i]:
-                file.write(f",{j}")
-        file.write("\n")
-
-    file.close()
+            if predicted_probabilities is not None:
+                file.write(",")
+                for j in predicted_probabilities[i]:
+                    file.write(f",{j}")
+            file.write("\n")
 
 
 def _results_present(path, estimator, dataset, resample_id=None, split="TEST"):
@@ -708,52 +952,6 @@ def _results_present(path, estimator, dataset, resample_id=None, split="TEST"):
     return False
 
 
-def _results_present_full_path(path, dataset, resample_id=None, split="TEST"):
-    """Duplicate: check if results are present already without an estimator input."""
-    return _results_present(path, "", dataset, resample_id, split)
-
-
-def validate_results_file(file_path):
-    """Validate that a results file is in the correct format.
-
-    Validates that the first, second, third and results lines follow the expected
-    format. This does not verify that the actual contents of the results file make
-    sense.
-
-    Works for classification, regression and clustering results files.
-
-    Parameters
-    ----------
-    file_path : str
-        Path to the results file to be validated, including the file itself.
-
-    Returns
-    -------
-    valid_file : bool
-        True if the results file is valid, False otherwise.
-    """
-    with open(file_path, "r") as f:
-        lines = f.readlines()
-
-    if not _check_first_line(lines[0]) or not _check_second_line(lines[1]):
-        return False
-
-    if _check_classification_third_line(lines[2]) or _check_clustering_third_line(
-        lines[2]
-    ):
-        probabilities = True
-    elif _check_regression_third_line(lines[2]):
-        probabilities = False
-    else:
-        return False
-
-    for i in range(3, len(lines)):
-        if not _check_results_line(lines[i], probabilities=probabilities):
-            return False
-
-    return True
-
-
 def fix_broken_second_line(file_path, save_path=None):
     """Fix a results while where the written second line has line breaks.
 
@@ -777,7 +975,7 @@ def fix_broken_second_line(file_path, save_path=None):
         and not _check_regression_third_line(lines[line_count])
         and not _check_clustering_third_line(lines[line_count])
     ):
-        if line_count == len(lines):
+        if line_count == len(lines) - 1:
             raise ValueError("No valid third line found in input results file.")
         line_count += 1
 
@@ -792,82 +990,10 @@ def fix_broken_second_line(file_path, save_path=None):
         if save_path is None:
             save_path = file_path
 
-        try:
-            os.makedirs(os.path.dirname(save_path))
-        except os.error:
-            pass  # raises os.error if path already exists, so just ignore this
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
         with open(save_path, "w") as f:
             f.writelines(lines)
-
-
-def _check_first_line(line):
-    line = line.split(",")
-    return len(line) >= 5
-
-
-def _check_second_line(line):
-    line = line.split(",")
-    return len(line) >= 1
-
-
-def _check_classification_third_line(line):
-    line = line.split(",")
-    floats = [0, 1, 2, 3, 4, 5, 7, 8]
-    return _check_line_length_and_floats(line, 9, floats)
-
-
-def _check_regression_third_line(line):
-    line = line.split(",")
-    floats = [0, 1, 2, 3, 4, 6, 7]
-    return _check_line_length_and_floats(line, 8, floats)
-
-
-def _check_clustering_third_line(line):
-    line = line.split(",")
-    floats = [0, 1, 2, 3, 4, 5, 6]
-    return _check_line_length_and_floats(line, 7, floats)
-
-
-def _check_line_length_and_floats(line, length, floats):
-    if len(line) != length:
-        return False
-
-    for i in floats:
-        try:
-            float(line[i])
-        except ValueError:
-            return False
-
-    return True
-
-
-def _check_results_line(line, probabilities=True, n_probas=1):
-    line = line.split(",")
-
-    if len(line) < 2:
-        return False
-
-    try:
-        float(line[0])
-        float(line[1])
-    except ValueError:
-        return False
-
-    if probabilities:
-        if len(line) < 3 + n_probas or line[2] != "":
-            return False
-
-        try:
-            for i in range(n_probas):
-                float(line[3 + i])
-        except ValueError:
-            return False
-    else:
-        if len(line) != 2:
-            return False
-
-    return True
 
 
 def compare_result_file_resample(file_path1, file_path2):
@@ -904,10 +1030,16 @@ def compare_result_file_resample(file_path1, file_path2):
     return True
 
 
-def assign_gpu():
+def assign_gpu(set_environ=False):  # pragma: no cover
     """Assign a GPU to the current process.
 
     Looks at the available Nvidia GPUs and assigns the GPU with the lowest used memory.
+
+    Parameters
+    ----------
+    set_environ : bool
+        Set the CUDA_DEVICE_ORDER environment variable to "PCI_BUS_ID" anf the
+        CUDA_VISIBLE_DEVICES environment variable to the assigned GPU.
 
     Returns
     -------
@@ -922,4 +1054,157 @@ def assign_gpu():
         ]
         for gpu in stats
     ]
-    return min(pairs, key=lambda x: x[1])[0]
+
+    gpu = min(pairs, key=lambda x: x[1])[0]
+
+    if set_environ:
+        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+        os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
+
+    return gpu
+
+
+def timing_benchmark(num_arrays=1000, array_size=20000, random_state=None):
+    """
+    Measures the time taken to sort a given number of numpy arrays of a specified size.
+
+    Returns the time taken in milliseconds.
+
+    Parameters
+    ----------
+    num_arrays: int, default=1000
+        Number of arrays to generate and sort.
+    array_size: int, default=20000
+        Size of each numpy array to be sorted.
+    random_state: int, RandomState instance or None, default=None
+        If `int`, random_state is the seed used by the random number generator;
+        If `RandomState` instance, random_state is the random number generator;
+        If `None`, the random number generator is the `RandomState` instance used
+        by `np.random`.
+
+    Returns
+    -------
+    time_taken: int
+        Time taken to sort the arrays in milliseconds.
+    """
+    if random_state is None:
+        random_state = check_random_state(0)
+    elif isinstance(random_state, (int, np.random.RandomState)):
+        random_state = check_random_state(random_state)
+    else:
+        raise ValueError("random_state must be an int, RandomState instance or None")
+
+    total_time = 0
+    for _ in range(num_arrays):
+        array = random_state.rand(array_size)
+        start_time = time.time()
+        np.sort(array)
+        end_time = time.time()
+        total_time += end_time - start_time
+
+    return int(round(total_time * 1000))
+
+
+def estimator_attributes_to_file(
+    estimator, dir_path, estimator_name=None, max_depth=np.inf, max_list_shape=np.inf
+):
+    """Write the attributes of an estimator to file(s).
+
+    Write the attributes of an estimator to file at a given directory. The function
+    will recursively write the attributes of any estimators or non-string sequences
+    containing estimators found in the attributes of the input estimator to spearate
+    files.
+
+    Parameters
+    ----------
+    estimator : estimator instance
+        The estimator to write the attributes of.
+    dir_path : str
+        The directory to write the attribute files to.
+    estimator_name : str or None, default=None
+        The name of the estimator. If None, the name of the estimator class will be
+        used.
+    max_depth : int, default=np.inf
+        The maximum depth to go when recursively writing attributes of estimators.
+    max_list_shape : int, default=np.inf
+        The maximum shape of a list to write when recursively writing attributes of
+        contained estimators. i.e. for 0, no estimators contained in lists will be
+        written, for 1, only estimators contained in 1-dimensional lists or the top
+        level of a list will be written.
+    """
+    estimator_name = (
+        estimator.__class__.__name__ if estimator_name is None else estimator_name
+    )
+    _write_estimator_attributes_recursive(
+        estimator, dir_path, estimator_name, 0, max_depth, max_list_shape
+    )
+
+
+def _write_estimator_attributes_recursive(
+    estimator, dir_path, file_name, depth, max_depth, max_list_shape
+):
+    if depth > max_depth:
+        return
+
+    path = f"{dir_path}/{file_name}.txt"
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as file:
+        for attr in estimator.__dict__:
+            value = getattr(estimator, attr)
+            file.write(f"{attr}: {value}\n")
+
+            if depth + 1 <= max_depth:
+                if isinstance(value, BaseEstimator):
+                    new_dir_path = f"{dir_path}/{attr}/"
+                    file.write(f"    See {new_dir_path}{attr}.txt for more details\n")
+                    _write_estimator_attributes_recursive(
+                        value, new_dir_path, attr, depth + 1, max_depth, max_list_shape
+                    )
+                elif _is_non_string_sequence(value):
+                    _write_list_attributes_recursive(
+                        value,
+                        file,
+                        dir_path,
+                        attr,
+                        depth + 1,
+                        max_depth,
+                        1,
+                        max_list_shape,
+                    )
+
+
+def _write_list_attributes_recursive(
+    it, file, dir_path, file_name, depth, max_depth, shape, max_list_shape
+):
+    if shape > max_list_shape:
+        return
+
+    for idx, item in enumerate(it):
+        if isinstance(item, BaseEstimator):
+            new_dir_path = f"{dir_path}/{file_name}_{idx}/"
+            file.write(
+                f"    See {new_dir_path}{file_name}_{idx}.txt for more details\n"
+            )
+            _write_estimator_attributes_recursive(
+                item,
+                new_dir_path,
+                f"{file_name}_{idx}",
+                depth,
+                max_depth,
+                max_list_shape,
+            )
+        elif _is_non_string_sequence(item):
+            _write_list_attributes_recursive(
+                item,
+                file,
+                dir_path,
+                f"{file_name}_{idx}",
+                depth,
+                max_depth,
+                shape + 1,
+                max_list_shape,
+            )
+
+
+def _is_non_string_sequence(obj):
+    return isinstance(obj, Sequence) and not isinstance(obj, (str, bytes, bytearray))

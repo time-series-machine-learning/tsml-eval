@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 """Tests for dataset resampling functions."""
 
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
-import os
 
 import numpy as np
+import pandas as pd
 import pytest
 from tsml.datasets import (
     load_equal_minimal_japanese_vowels,
@@ -13,10 +12,13 @@ from tsml.datasets import (
     load_unequal_minimal_chinatown,
 )
 
+from tsml_eval.testing.test_utils import _TEST_RESULTS_PATH
 from tsml_eval.utils.experiments import (
     compare_result_file_resample,
     resample_data,
+    resample_data_indices,
     stratified_resample_data,
+    stratified_resample_data_indices,
 )
 
 
@@ -61,6 +63,37 @@ def test_resample_data_unequal():
 
     assert len(X_train) == train_size
     assert len(X_test) == test_size
+
+
+def test_resample_data_invalid():
+    """Test resampling raises an error with invalid input."""
+    X = pd.DataFrame(np.random.random((10, 10)))
+    y = pd.Series(np.zeros(10))
+
+    with pytest.raises(ValueError, match="X_train must be a"):
+        resample_data(X, y, X, y)
+
+
+def test_resample_data_indices():
+    """Test resampling returns valid indices."""
+    X_train, y_train = load_minimal_chinatown(split="TRAIN")
+    X_test, y_test = load_minimal_chinatown(split="TEST")
+
+    new_X_train, _, new_X_test, _ = resample_data(
+        X_train, y_train, X_test, y_test, random_state=0
+    )
+    train_indices, test_indices = resample_data_indices(y_train, y_test, random_state=0)
+    X = np.concatenate((X_train, X_test), axis=0)
+
+    assert isinstance(train_indices, np.ndarray)
+    assert isinstance(test_indices, np.ndarray)
+    assert len(train_indices) == len(new_X_train)
+    assert len(test_indices) == len(new_X_test)
+    assert len(np.unique(np.concatenate((train_indices, test_indices), axis=0))) == len(
+        X
+    )
+    assert (new_X_train[0] == X[train_indices[0]]).all()
+    assert (new_X_test[0] == X[test_indices[0]]).all()
 
 
 @pytest.mark.parametrize(
@@ -126,25 +159,63 @@ def test_stratified_resample_data_unequal():
     assert list(counts_test_new) == list(counts_test)
 
 
+def test_stratified_resample_data_invalid():
+    """Test stratified resampling raises an error with invalid input."""
+    X = pd.DataFrame(np.random.random((10, 10)))
+    y = pd.Series(np.zeros(10))
+
+    with pytest.raises(ValueError, match="X_train must be a"):
+        stratified_resample_data(X, y, X, y)
+
+
+def test_stratified_resample_data_indices():
+    """Test stratified resampling returns valid indices."""
+    X_train, y_train = load_minimal_chinatown(split="TRAIN")
+    X_test, y_test = load_minimal_chinatown(split="TEST")
+
+    new_X_train, _, new_X_test, _ = stratified_resample_data(
+        X_train, y_train, X_test, y_test, random_state=0
+    )
+    train_indices, test_indices = stratified_resample_data_indices(
+        y_train, y_test, random_state=0
+    )
+    X = np.concatenate((X_train, X_test), axis=0)
+
+    assert isinstance(train_indices, np.ndarray)
+    assert isinstance(test_indices, np.ndarray)
+    assert len(train_indices) == len(new_X_train)
+    assert len(test_indices) == len(new_X_test)
+    assert len(np.unique(np.concatenate((train_indices, test_indices), axis=0))) == len(
+        X
+    )
+    assert (new_X_train[0] == X[train_indices[0]]).all()
+    assert (new_X_test[0] == X[test_indices[0]]).all()
+
+
 @pytest.mark.parametrize(
     "paths",
     [
         [
-            "test_files/classificationResultsFile1.csv",
-            "test_files/classificationResultsFile1.csv",
+            _TEST_RESULTS_PATH + "/classification/classificationResultsFile1.csv",
+            _TEST_RESULTS_PATH + "/classification/classificationResultsFile1.csv",
             True,
         ],
         [
-            "test_files/classificationResultsFile1.csv",
-            "test_files/classificationResultsFile2.csv",
+            _TEST_RESULTS_PATH + "/classification/classificationResultsFile1.csv",
+            _TEST_RESULTS_PATH + "/classification/classificationResultsFile2.csv",
             False,
         ],
     ],
 )
 def test_compare_result_file_resample(paths):
     """Test compare result file resample function."""
-    if os.getcwd().split("\\")[-1] != "tests":
-        paths[0] = f"tsml_eval/utils/tests/{paths[0]}"
-        paths[1] = f"tsml_eval/utils/tests/{paths[1]}"
-
     assert compare_result_file_resample(paths[0], paths[1]) == paths[2]
+
+
+def test_compare_result_file_resample_invalid():
+    """Test compare result file resample function with invalid input."""
+    p1 = _TEST_RESULTS_PATH + "/classification/classificationResultsFile1.csv"
+    p3 = _TEST_RESULTS_PATH + "/classification/classificationResultsFile3.csv"
+
+    with pytest.raises(ValueError, match="Input results file have different"):
+        compare_result_file_resample(p1, p3)

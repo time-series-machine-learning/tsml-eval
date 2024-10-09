@@ -9,7 +9,7 @@ from tsml_eval.utils.functions import str_in_nested_list
 rist_regressors = [
     ["inceptione", "inception-e", "inceptiontime", "InceptionTimeRegressor"],
     ["rocket", "RocketRegressor"],
-    ["DrCIF", "drcifregressor"],
+    ["drcif", "DrCIFRegressor"],
     ["fresh-prince", "freshprince", "FreshPRINCERegressor"],
     ["RDSTRegressor", "rdst"],
     ["RISTRegressor", "rist", "rist-extrat"],
@@ -22,11 +22,12 @@ def _set_rist_regressor(
     regressor_name,
     random_state=None,
     n_jobs=1,
+    **kwargs,
 ):
     r = regressor_name.lower()
 
     if not str_in_nested_list(rist_regressors, r):
-        raise Exception("UNKNOWN CLASSIFIER ", r, " in set_rist_regressor")
+        raise ValueError(f"UNKNOWN REGRESSOR: {r} in _set_rist_regressor")
 
     if (
         r == "inceptione"
@@ -34,23 +35,18 @@ def _set_rist_regressor(
         or r == "inceptiontime"
         or r == "inceptiontimeregressor"
     ):
-        from tsml_eval.estimators.regression.deep_learning import InceptionTimeRegressor
+        from aeon.regression.deep_learning import InceptionTimeRegressor
 
-        return InceptionTimeRegressor(random_state=random_state)
+        return InceptionTimeRegressor(random_state=random_state, **kwargs)
     elif r == "rocket" or r == "rocketregressor":
         from aeon.regression.convolution_based import RocketRegressor
 
-        return RocketRegressor(
-            random_state=random_state,
-            n_jobs=n_jobs,
-        )
+        return RocketRegressor(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif r == "drcif" or r == "drcifregressor":
-        from tsml_eval.estimators.regression.interval_based import DrCIF
+        from aeon.regression.interval_based import DrCIFRegressor
 
-        return DrCIF(
-            n_estimators=500,
-            random_state=random_state,
-            n_jobs=n_jobs,
+        return DrCIFRegressor(
+            n_estimators=500, random_state=random_state, n_jobs=n_jobs, **kwargs
         )
     elif r == "fresh-prince" or r == "freshprince" or r == "freshprinceregressor":
         from aeon.regression.feature_based import FreshPRINCERegressor
@@ -59,11 +55,12 @@ def _set_rist_regressor(
             n_estimators=500,
             random_state=random_state,
             n_jobs=n_jobs,
+            **kwargs,
         )
     elif r == "rdstregressor" or r == "rdst":
         from tsml.shapelet_based import RDSTRegressor
 
-        return RDSTRegressor(random_state=random_state, n_jobs=n_jobs)
+        return RDSTRegressor(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif r == "ristregressor" or r == "rist" or r == "rist-extrat":
         from sklearn.ensemble import ExtraTreesRegressor
         from tsml.hybrid import RISTRegressor
@@ -72,6 +69,7 @@ def _set_rist_regressor(
             random_state=random_state,
             n_jobs=n_jobs,
             estimator=ExtraTreesRegressor(n_estimators=500),
+            **kwargs,
         )
     elif r == "rist-rf":
         from sklearn.ensemble import RandomForestRegressor
@@ -81,6 +79,7 @@ def _set_rist_regressor(
             random_state=random_state,
             n_jobs=n_jobs,
             estimator=RandomForestRegressor(n_estimators=500),
+            **kwargs,
         )
     elif r == "rist-ridgecv":
         from sklearn.linear_model import RidgeCV
@@ -92,6 +91,8 @@ def _set_rist_regressor(
             random_state=random_state,
             n_jobs=n_jobs,
             estimator=make_pipeline(
-                StandardScaler(with_mean=False), RidgeCV(alphas=np.logspace(-4, 4, 20))
+                StandardScaler(with_mean=False),
+                RidgeCV(alphas=np.logspace(-4, 4, 20)),
             ),
+            **kwargs,
         )

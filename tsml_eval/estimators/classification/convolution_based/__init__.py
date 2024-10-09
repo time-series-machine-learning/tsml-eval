@@ -1,8 +1,8 @@
-# -*- coding: utf-8 -*-
-""""""
-__all__ = ["HYDRA", "HydraMultiRocket"]
+"""Convolution estimators."""
+
+__all__ = ["HYDRA", "MultiRocketHydra"]
 
 from tsml_eval.estimators.classification.convolution_based.hydra import (
     HYDRA,
-    HydraMultiRocket,
+    MultiRocketHydra,
 )
