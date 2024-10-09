@@ -69,39 +69,6 @@ def fit_ets(y, n, x, m, error, trend, season, alpha, beta, gamma, phi, e, lik, a
     nmse : int
         The number of steps ahead to be considered for the calculation of AMSE. Determines
         the forcasting horizon.
-    y : np.ndarray
-        Time series data.
-    n : int
-        The length of the time series.
-    x : np.ndarray
-        Initial states of the ETS model. Starting values for the level, trend, and seasonal
-        components. This variable evolves during execution to store the states at each time
-        step (i.e., the state space matrix).
-    m : int
-        The period of the seasonality (e.g., for quaterly data m = 4)
-    error : int
-        The type of error model (0 -> None, 1 -> additive, 2 -> multiplicative).
-    trend : int
-        The type of trend model (0 -> None, 1 -> additive, 2 -> multiplicative).
-    season : int
-        The type of seasonality model (0 -> None, 1 -> additive, 2 -> multiplicative).
-    alpha : float
-        Smoothing parameter for the level.
-    beta : float
-        Smoothing parameter for the trend.
-    gamma : float
-        Smoothing parameter for the seasonality.
-    phi : float
-        Damping parameter.
-    e : np.ndarray
-        Residuals of the fitted model.
-    lik : np.ndarray
-        Likelihood measure.
-    amse : np.ndarray
-        Empty array for storing the Average Mean Squared Error.
-    nmse : int
-        The number of steps ahead to be considered for the calculation of AMSE. Determines
-        the forcasting horizon.
 
     Returns
     -------
