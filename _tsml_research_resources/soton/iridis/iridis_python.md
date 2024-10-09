@@ -74,7 +74,7 @@ For conda related storage guidance, see the [related HPC webpage](https://sotona
 
 ### 3.2. Create environment
 
-Create a new environment with a name of your choice. Replace PYTHON_VERSION with 3.10.
+Create a new environment with a name of your choice. Replace PYTHON_VERSION with 3.11.
 
 >conda create -n ENV_NAME python=PYTHON_VERSION
 
@@ -144,11 +144,7 @@ For GPU jobs we require an additional Iridis module in CUDA:
 
 A specific Tensorflow version is required to match the available CUDA install.
 
->pip install tensorflow==2.17.0
-
-Next, move to the package directory and run:
-
->pip install --editable .
+>pip install --editable . tensorflow==2.17.0
 
 # Running experiments
 

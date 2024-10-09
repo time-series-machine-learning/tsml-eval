@@ -51,17 +51,20 @@ dependencies = [
 
 [project.optional-dependencies]
 all_extras = [
-    "aeon[all_extras,dl]",
+    "aeon[all_extras]",
     "tsml[all_extras]",
     "xgboost",
 ]
+all-extras = ["tsml-eval[all_extras]"]
 unstable_extras = [
     "aeon[unstable_extras]",
     "tsml[unstable_extras]",
 ]
+unstable-extras = ["tsml-eval[unstable_extras]"]
 deep_learning = [
     "aeon[dl]",
 ]
+deep-learning = ["tsml-eval[deep_learning]"]
 dev = [
     "pre-commit",
     "pytest",
@@ -146,7 +149,7 @@ per-file-ignores = [
 ]
 
 [tool.mypy]
-files = "tsml_eval/"
+mypy_path = "tsml_eval/"
 exclude = ["_wip"]
 
 [tool.pytest.ini_options]
