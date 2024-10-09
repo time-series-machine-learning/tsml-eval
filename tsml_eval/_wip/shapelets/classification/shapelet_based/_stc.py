@@ -137,7 +137,7 @@ class ShapeletTransformClassifier(BaseClassifier):
         contract_max_n_shapelet_samples: int = np.inf,
         n_jobs: int = 1,
         batch_size: Union[int, None] = 100,
-        random_state: Union[int, Type[np.random.RandomState], None] = None,
+        random_state: Union[int, type[np.random.RandomState], None] = None,
         shapelet_quality = "INFO_GAIN",
     ) -> None:
         self.n_shapelet_samples = n_shapelet_samples
@@ -315,7 +315,7 @@ class ShapeletTransformClassifier(BaseClassifier):
         return self._transformer.fit_transform(X, y)
 
     @classmethod
-    def get_test_params(cls, parameter_set: str = "default") -> Union[dict, List[dict]]:
+    def get_test_params(cls, parameter_set: str = "default") -> Union[dict, list[dict]]:
         """Return testing parameter settings for the estimator.
 
         Parameters
