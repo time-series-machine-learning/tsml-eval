@@ -15,6 +15,10 @@ from sklearn.cluster import KMeans
 from tsml_eval.utils.datasets import load_experiment_data
 from tsml_eval.utils.functions import str_in_nested_list
 
+deep_learning_clusterers = [
+    ["aefcnclusterer", "aefcn"],
+    ["aeresnetclusterer", "aeresnet"],
+]
 distance_based_clusterers = [
     "kmeans-euclidean",
     "kmeans-squared",
@@ -170,7 +174,11 @@ def get_clusterer_by_name(
     """
     c = clusterer_name.lower()
 
-    if str_in_nested_list(distance_based_clusterers, c):
+    if str_in_nested_list(deep_learning_clusterers, c):
+        return _set_clusterer_deep_learning(
+            c, random_state, n_jobs, fit_contract, checkpoint, kwargs
+        )
+    elif str_in_nested_list(distance_based_clusterers, c):
         return _set_clusterer_distance_based(
             c,
             random_state,
@@ -195,6 +203,19 @@ def get_clusterer_by_name(
         )
     else:
         raise ValueError(f"UNKNOWN CLUSTERER: {c} in set_clusterer")
+
+
+def _set_clusterer_deep_learning(
+    c, random_state, n_jobs, fit_contract, checkpoint, kwargs
+):
+    if c == "aefcnclusterer" or c == "aefcn":
+        from aeon.clustering.deep_learning import AEFCNClusterer
+
+        return AEFCNClusterer(n_clusters=-1, random_state=random_state, **kwargs)
+    elif c == "aeresnetclusterer" or c == "aeresnet":
+        from aeon.clustering.deep_learning import AEResNetClusterer
+
+        return AEResNetClusterer(n_clusters=-1, random_state=random_state, **kwargs)
 
 
 def _set_clusterer_distance_based(

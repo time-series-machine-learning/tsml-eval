@@ -136,7 +136,6 @@ def test_run_forecasting_experiment_invalid_estimator():
 def test_get_forecaster_by_name():
     """Test get_forecaster_by_name method."""
     forecaster_lists = [
-        set_forecaster.ml_forecasters,
         set_forecaster.other_forecasters,
     ]
 

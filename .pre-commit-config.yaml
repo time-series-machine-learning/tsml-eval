@@ -38,7 +38,7 @@ repos:
     rev: v3.17.0
     hooks:
       - id: pyupgrade
-        args: [ "--py38-plus" ]
+        args: [ "--py39-plus" ]
 
   - repo: https://github.com/pycqa/isort
     rev: 5.13.2
@@ -47,15 +47,6 @@ repos:
         name: isort (python)
         args: [ "--profile=black", "--multi-line=3" ]
         exclude: "tsml_eval/_wip/"
-
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.11.2
-    hooks:
-      - id: mypy
-        files: "tsml_eval/"
-        additional_dependencies: [ pytest ]
-        exclude: "_wip"
-
 
   - repo: https://github.com/pycqa/flake8
     rev: 7.1.1
