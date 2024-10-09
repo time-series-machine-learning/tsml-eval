@@ -48,7 +48,7 @@ class ClusteringCondenser(BaseCollectionTransformer):
 
         self.clustering_approach = clustering_approach
         if self.clustering_approach == "pam":
-            from aeon.clustering.k_medoids import TimeSeriesKMedoids
+            from aeon.clustering import TimeSeriesKMedoids
 
             self.clusterer = TimeSeriesKMedoids(
                 n_clusters=self.num_instances_per_class,
@@ -60,7 +60,7 @@ class ClusteringCondenser(BaseCollectionTransformer):
             )
 
         elif self.clustering_approach == "kmeans" or self.clustering_approach is None:
-            from aeon.clustering.k_means import TimeSeriesKMeans
+            from aeon.clustering import TimeSeriesKMeans
 
             self.average_params = {
                 "metric": self.distance,
@@ -76,7 +76,7 @@ class ClusteringCondenser(BaseCollectionTransformer):
                 random_state=self.random_state,
             )
 
-        super(ClusteringCondenser, self).__init__()
+        super().__init__()
 
     def _transform(self, X, y):
         self.selected_series = self.selected_series.reshape(0, *X.shape[1:])

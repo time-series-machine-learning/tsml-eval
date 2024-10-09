@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
 import numpy as np
 from aeon.classification.base import BaseClassifier
 from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
-from aeon.clustering.k_means import TimeSeriesKMeans
+from aeon.clustering import TimeSeriesKMeans
 
 
 class WrapperBA(BaseClassifier):
@@ -60,7 +59,7 @@ class WrapperBA(BaseClassifier):
             average_params=self.metric_params,
         )
 
-        super(WrapperBA, self).__init__()
+        super().__init__()
 
     def _fit(self, X, y):
         for i in np.unique(y):
