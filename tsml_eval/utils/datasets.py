@@ -10,7 +10,7 @@ __all__ = [
 import os
 import shutil
 from os.path import exists
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import numpy as np
 from aeon.datasets import load_from_tsfile, write_to_tsfile
@@ -71,7 +71,7 @@ def load_experiment_data(
 
 
 def copy_dataset_ts_files(
-    datasets: Union[List[str], str],
+    datasets: Union[list[str], str],
     source_path: str,
     destination_path: str,
 ):

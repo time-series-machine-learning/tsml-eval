@@ -122,13 +122,13 @@ for i in range(len(results_aeon)):
     for j in range(len(results_aeon[i])):
         cell = ws.cell(row=i + 1, column=j + 1, value=results_aeon[i][j])
         if(i != 0):
-            rounded_aeon_results = Decimal(results_aeon[i][j]).quantize(Decimal('.0000'), 
+            rounded_aeon_results = Decimal(results_aeon[i][j]).quantize(Decimal('.0000'),
                                                                     rounding=ROUND_HALF_UP)
-            rounded_pycatch22_results = Decimal(results_pycatch22[i][j]).quantize(Decimal('.0000'), 
+            rounded_pycatch22_results = Decimal(results_pycatch22[i][j]).quantize(Decimal('.0000'),
                                                                                 rounding=ROUND_HALF_UP)
             if rounded_aeon_results != rounded_pycatch22_results:
                 cell.fill = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
-    
+
 
 wb.save(aeon_file_name + ".xlsx")
 
@@ -148,7 +148,7 @@ with open(aeon_file_name + ".csv", mode='w', newline='') as file:
     for data in results_aeon:
         writer.writerow(data)
 
-#pycatch.csv  
+#pycatch.csv
 with open('pycatch22_catch22_ipd.csv', mode='w', newline='') as file:
     writer = csv.writer(file)
     for data in results_pycatch22:
