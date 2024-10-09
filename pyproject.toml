@@ -150,7 +150,9 @@ per-file-ignores = [
 
 [tool.mypy]
 mypy_path = "tsml_eval/"
+ignore_missing_imports = true
 exclude = ["_wip"]
+
 
 [tool.pytest.ini_options]
 testpaths = "tsml_eval"
