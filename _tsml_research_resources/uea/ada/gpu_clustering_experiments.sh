@@ -1,7 +1,7 @@
 #!/bin/bash
 # CHECK before each new run:
 #   datasets (list of problems)
-#   results_dir (where to check/write results),
+#   results_dir (where to check/write results)
 #   clusterers_to_run (list of clusterers to run)
 # While reading is fine, please dont write anything to the default directories in this script
 
@@ -24,7 +24,7 @@ username="ajb"
 mail="NONE"
 mailto="$username@uea.ac.uk"
 
-# MB for jobs, this is less important for GPU jobs but if you swap nodes check how much is available and how many jobs can be submitted.
+# MB for jobs, this is less important for GPU jobs but if you swap nodes check how much is available and how many jobs can be submitted
 max_memory=90000
 
 # Max allowable is 7 days - 168 hours

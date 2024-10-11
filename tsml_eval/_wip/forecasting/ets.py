@@ -1,42 +1,9 @@
 from tsml_eval._wip.forecasting.base import BaseForecaster
-from numba import njit
-import numpy as np
-
-NA = -99999.0
-MAX_NMSE = 30
-MAX_SEASONAL_PERIOD = 24
 
 
 def ETSForecaster(BaseForecaster):
-    """
-        Parameters
-        ----------
-        period : int
-            The period of the seasonality (e.g., for quaterly data m = 4)
-        error : int
-            The type of error model (0 -> None, 1 -> additive, 2 -> multiplicative).
-        trend : int
-            The type of trend model (0 -> None, 1 -> additive, 2 -> multiplicative).
-        season : int
-            The type of seasonality model (0 -> None, 1 -> additive, 2 -> multiplicative).
-        alpha : float
-            Smoothing parameter for the level.
-        beta : float
-            Smoothing parameter for the trend.
-        gamma : float
-            Smoothing parameter for the seasonality.
-        phi : float
-            Damping parameter.
-        e : np.ndarray
-            Residuals of the fitted model.
-        lik : np.ndarray
-            Likelihood measure.
-        amse : np.ndarray
-            Empty array for storing the Average Mean Squared Error.
-        nmse : int
-            The number of steps ahead to be considered for the calculation of AMSE. Determines
-            the forcasting horizon.
-        """
+
+
     def __init__(self, horizon=1, window=None):
         self.horizon = horizon
         self.window = window

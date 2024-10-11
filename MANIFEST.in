@@ -1,4 +1,5 @@
 recursive-include tsml_eval *.py
+recursive-include tsml_eval/_wip *.csv *.xlsx
 recursive-include tsml_eval/datasets *.ts *.csv *.txt
 recursive-include tsml_eval/publications *.csv *.txt *.ipynb
 recursive-include tsml_eval/testing/_test_eval_files *.csv *.pdf *.pickle
@@ -11,7 +12,6 @@ include README.md
 recursive-exclude .binder *
 recursive-exclude .github *
 recursive-exclude _tsml_research_resources *
-recursive-exclude build_tools *
 recursive-exclude docs *
 recursive-exclude examples *
 recursive-exclude results *

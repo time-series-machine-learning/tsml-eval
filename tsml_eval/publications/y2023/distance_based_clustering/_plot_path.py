@@ -91,9 +91,9 @@ def _plot_path(
     width = height = 0.65
     bottom_h = bottom + height + 0.02
 
-    rect_s_y = [left, bottom, w_ts, height]
-    rect_gram = [left_h, bottom, width, height]
-    rect_s_x = [left_h, bottom_h, width, h_ts]
+    rect_s_y = (left, bottom, w_ts, height)
+    rect_gram = (left_h, bottom, width, height)
+    rect_s_x = (left_h, bottom_h, width, h_ts)
 
     ax_gram = plt.axes(rect_gram)
     ax_s_x = plt.axes(rect_s_x)

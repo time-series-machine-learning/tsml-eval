@@ -1,7 +1,7 @@
 #!/bin/bash
 # CHECK before each new run:
 #   datasets (list of problems)
-#   results_dir (where to check/write results),
+#   results_dir (where to check/write results)
 #   classifiers_to_run (list of classifiers to run)
 # While reading is fine, please dont write anything to the default directories in this script
 
@@ -24,7 +24,7 @@ username="ajb"
 mail="NONE"
 mailto="$username@uea.ac.uk"
 
-# MB for jobs, this is less important for GPU jobs but if you swap nodes check how much is available and how many jobs can be submitted.
+# MB for jobs, this is less important for GPU jobs but if you swap nodes check how much is available and how many jobs can be submitted
 max_memory=90000
 
 # Max allowable is 7 days - 168 hours
@@ -61,13 +61,13 @@ classifiers_to_run="CNNClassifier FCNClassifier"
 # and possibly to the options handling below
 
 # generate a results file for the train data as well as test, usually slower
-generate_train_files="true"
+generate_train_files="false"
 
 # If set for true, looks for <problem><fold>_TRAIN.ts file. This is useful for running tsml-java resamples
 predefined_folds="false"
 
 # Normalise data before fit/predict
-normalise_data="true"
+normalise_data="false"
 
 # ======================================================================================
 # ======================================================================================
