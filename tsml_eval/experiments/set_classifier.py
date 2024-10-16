@@ -25,6 +25,7 @@ deep_learning_classifiers = [
     ["inceptiontimeclassifier", "inceptiontime"],
     ["h-inceptiontimeclassifier", "h-inceptiontime"],
     ["litetimeclassifier", "litetime"],
+    ["timecnnclassifier", "timecnn"],
 ]
 dictionary_based_classifiers = [
     ["bossensemble", "boss"],
@@ -39,6 +40,7 @@ dictionary_based_classifiers = [
     ["weasel_v2", "weaseldilation", "weasel-dilation", "weasel-d"],
     "redcomets",
     "redcomets-500",
+    ["mrsqmclassifier", "mrsqm"],
 ]
 distance_based_classifiers = [
     ["kneighborstimeseriesclassifier", "dtw", "1nn-dtw"],
@@ -49,6 +51,7 @@ distance_based_classifiers = [
     ["elasticensemble", "ee"],
     ["grailclassifier", "grail"],
     ["proximitytree", "proximitytreeclassifier"],
+    ["proximityforest", "pf"],
 ]
 feature_based_classifiers = [
     "summary-500",
@@ -94,7 +97,6 @@ shapelet_based_classifiers = [
     ["shapelettransformclassifier", "stc"],
     ["rdstclassifier", "rdst"],
     ["randomshapeletforestclassifier", "randomshapeletforest", "rsf"],
-    ["mrsqmclassifier", "mrsqm"],
     ["sastclassifier", "sast"],
     ["rsastclassifier", "rsast"],
     ["rstc"],
@@ -306,6 +308,10 @@ def _set_classifier_deep_learning(
         from aeon.classification.deep_learning import LITETimeClassifier
 
         return LITETimeClassifier(random_state=random_state, **kwargs)
+    elif c == "timecnnclassifier" or c == "timecnn":
+        from aeon.classification.deep_learning import TimeCNNClassifier
+
+        return TimeCNNClassifier(random_state=random_state, **kwargs)
 
 
 def _set_classifier_dictionary_based(
@@ -398,6 +404,10 @@ def _set_classifier_dictionary_based(
         return REDCOMETS(
             n_trees=500, random_state=random_state, n_jobs=n_jobs, **kwargs
         )
+    elif c == "mrsqmclassifier" or c == "mrsqm":
+        from aeon.classification.dictionary_based import MrSQMClassifier
+
+        return MrSQMClassifier(random_state=random_state, **kwargs)
 
 
 def _set_classifier_distance_based(
@@ -443,7 +453,12 @@ def _set_classifier_distance_based(
     elif c == "proximitytree" or c == "proximitytreeclassifier":
         from aeon.classification.distance_based import ProximityTree
 
-        return ProximityTree(random_state=random_state, n_jobs=n_jobs, **kwargs)
+        return ProximityTree(random_state=random_state, **kwargs)
+
+    elif c == "proximityforest" or c == "pf":
+        from aeon.classification.distance_based import ProximityForest
+
+        return ProximityForest(random_state=random_state, n_jobs=n_jobs, **kwargs)
 
 
 def _set_classifier_feature_based(
@@ -727,10 +742,6 @@ def _set_classifier_shapelet_based(
         return RandomShapeletForestClassifier(
             random_state=random_state, n_jobs=n_jobs, **kwargs
         )
-    elif c == "mrsqmclassifier" or c == "mrsqm":
-        from aeon.classification.shapelet_based import MrSQMClassifier
-
-        return MrSQMClassifier(random_state=random_state, **kwargs)
     elif c == "sastclassifier" or c == "sast":
         from aeon.classification.shapelet_based import SASTClassifier
 

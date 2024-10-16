@@ -23,8 +23,7 @@ github_checks:
 # ignore files
 ignore:
   - ".github/"
-  - "build_tools/"
-  - "_uea_experiments/"
+  - "_tsml_research_resources/"
   - "docs/"
   - "examples/"
   - "results/"

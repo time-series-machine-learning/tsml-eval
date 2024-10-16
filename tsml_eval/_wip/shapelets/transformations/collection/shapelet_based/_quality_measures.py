@@ -12,10 +12,8 @@ def binary_information_gain(orderline, c1, c2):
     Parameters
     ----------
 
-
     orderline: np.array
         Sorted array of tuples (check).
-
     c1: int
         Number of cases of the class of interest
     c2: int
@@ -146,20 +144,16 @@ def f_stat(class0, class1):
 
     # Avoid division by zero
     if df_within <= 0:
-
         return np.inf
 
     F_stat = (ssb / df_between) / (ssw / df_within)
     return F_stat
 
 
-"""
-Kruskal Wallis pre stat uses some methods not compatible with numba
-The Kruskal Wallis is calculated using 2 functions:
-one for the pre_stats values such as unique values, ranks, tie_correction, len(class0), len(class1)..this doesnt invoke the njit as it uses some functions that are incompatible with njit
-another for the actual calculation, compatible with numba, and uses the return values from the pre_stat function
-"""
-
+# Kruskal Wallis pre stat uses some methods not compatible with numba
+# The Kruskal Wallis is calculated using 2 functions:
+# one for the pre_stats values such as unique values, ranks, tie_correction, len(class0), len(class1)..this doesnt invoke the njit as it uses some functions that are incompatible with njit
+# another for the actual calculation, compatible with numba, and uses the return values from the pre_stat function
 
 def compute_pre_stats(class0, class1):
     combined_array = np.concatenate((class0, class1))

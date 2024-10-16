@@ -2,8 +2,7 @@
 
 Installation guide for Python packages on ADA and useful slurm commands.
 
-The HPC webpage provides a lot of useful information and getting started guides for using ADA.
-https://my.uea.ac.uk/divisions/it-and-computing-services/service-catalogue/research-it-services/hpc/ada-cluster
+The [HPC webpage](https://my.uea.ac.uk/divisions/it-and-computing-services/service-catalogue/research-it-services/hpc/ada-cluster) provides a lot of useful information and getting started guides for using ADA.
 
 Server address: ada.uea.ac.uk
 
@@ -129,11 +128,7 @@ For GPU jobs we require two additional ADA modules, CUDA and cuDNN:
 
 A specific Tensorflow version is required to match the available CUDA install.
 
->pip install tensorflow==2.3.0 tensorflow_probability==0.11.1
-
-Next, move to the package directory and run:
-
->pip install --editable .[dl]
+>pip install --editable . tensorflow==2.3.0
 
 # Running experiments
 
@@ -166,9 +161,9 @@ Requesting memory for a job will allocate it all on the jobs assigned node. New 
 For GPU experiments use one of the following scripts:
 
 >gpu_classification_experiments.sh
->
+
 >gpu_regression_experiments.sh
->
+
 >gpu_clustering_experiments.sh
 
 It is recommended you use different environments for CPU and GPU jobs.
@@ -178,7 +173,7 @@ The default queue for GPU jobs is _gpu-rtx_.
 If you will be running a lot of jobs, it may be worth booking out the reserved gpu qos (_gpu-rtx-reserved_).
 https://outlook.office365.com/owa/calendar/ITCSResearchandSpecialistComputingHPCGPUFarm@ueanorwich.onmicrosoft.com/bookings/
 
-Not that if you get the messsage
+Note that if you get the message
 
 "sbatch: error: Batch job submission failed: Invalid qos specification"
 

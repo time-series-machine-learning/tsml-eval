@@ -27,11 +27,11 @@ jobs:
           private-key: ${{ secrets.PR_APP_KEY }}
 
       - if: always()
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ steps.app-token.outputs.token }}
           commit-message: "Automated `pre-commit` hook update"
           branch: pre-commit-hooks-update
           title: "[MNT] Automated `pre-commit` hook update"
           body: "Automated weekly update to `.pre-commit-config.yaml` hook versions."
-          labels: maintenance, full pre-commit, no changelog
+          labels: maintenance, full pre-commit
