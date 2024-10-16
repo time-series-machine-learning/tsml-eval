@@ -28,10 +28,10 @@ def test_r_clustering():
 
 
 @parametrize_with_checks([RClustering])
-def test_r_clustering_parametrized(estimator, check):
+def test_r_clustering_parametrized(check):
     """Test RClustering on aeon tests."""
     try:
         # some of these break, needs investigation
-        check(estimator)
+        check()
     except Exception:
         pass

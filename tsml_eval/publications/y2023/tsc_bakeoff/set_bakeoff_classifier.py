@@ -17,7 +17,7 @@ bakeoff_classifiers = [
     ["ShapeletTransformClassifier", "stc", "stc-2hour"],
     ["RDSTClassifier", "rdst"],
     ["RandomShapeletForestClassifier", "randomshapeletforest", "rsf"],
-    ["MrSQMClassifier", "mrsqm"],
+    ["MrSQMClassifier", "mrsqm"],  # changed to dictionary based after bakeoff
     # interval based
     ["RSTSFClassifier", "rstsf", "r-stsf"],
     ["RandomIntervalSpectralEnsembleClassifier", "rise"],
@@ -128,7 +128,7 @@ def _set_bakeoff_classifier(
             **kwargs,
         )
     elif c == "mrsqmclassifier" or c == "mrsqm":
-        from aeon.classification.shapelet_based import MrSQMClassifier
+        from aeon.classification.dictionary_based import MrSQMClassifier
 
         return MrSQMClassifier(
             random_state=random_state,
