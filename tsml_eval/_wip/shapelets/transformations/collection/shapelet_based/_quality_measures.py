@@ -151,13 +151,10 @@ def f_stat(class0, class1):
     return F_stat
 
 
-
 # Kruskal Wallis pre stat uses some methods not compatible with numba
 # The Kruskal Wallis is calculated using 2 functions:
 # one for the pre_stats values such as unique values, ranks, tie_correction, len(class0), len(class1)..this doesnt invoke the njit as it uses some functions that are incompatible with njit
 # another for the actual calculation, compatible with numba, and uses the return values from the pre_stat function
-
-
 
 def compute_pre_stats(class0, class1):
     combined_array = np.concatenate((class0, class1))

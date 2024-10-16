@@ -25,6 +25,5 @@ def compare_outputs():
     print(wip2_st_preds)
 
 
-
 if __name__ == "__main__":
     compare_outputs()
