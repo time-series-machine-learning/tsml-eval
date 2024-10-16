@@ -58,7 +58,6 @@ with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
     print(f"branch={branch_name}", file=fh)  # noqa: T201
 
 if "- [x] Push an empty commit to re-run CI checks" in comment_body:
-    print("Pushing an empty commit to re-run CI checks")  # noqa: T201
     for comment in pr.get_comments():
         print(comment_user)  # noqa: T201
         print(comment.user.login)  # noqa: T201
@@ -81,6 +80,5 @@ if "- [x] Push an empty commit to re-run CI checks" in comment_body:
     with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
         print("empty_commit=true", file=fh)  # noqa: T201
 else:
-    print("Not pushing an empty commit")  # noqa: T201
     with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
         print("empty_commit=false", file=fh)  # noqa: T201
