@@ -99,7 +99,6 @@ shapelet_based_classifiers = [
     ["randomshapeletforestclassifier", "randomshapeletforest", "rsf"],
     ["sastclassifier", "sast"],
     ["rsastclassifier", "rsast"],
-    ["rstc"],
 ]
 vector_classifiers = [
     ["rotationforestclassifier", "rotationforest", "rotf"],
@@ -727,7 +726,6 @@ def _set_classifier_shapelet_based(
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
-
     elif c == "rdstclassifier" or c == "rdst":
         from aeon.classification.shapelet_based import RDSTClassifier
 
@@ -746,35 +744,10 @@ def _set_classifier_shapelet_based(
         from aeon.classification.shapelet_based import SASTClassifier
 
         return SASTClassifier(seed=random_state, n_jobs=n_jobs, **kwargs)
-
     elif c == "rsastclassifier" or c == "rsast":
         from aeon.classification.shapelet_based import RSASTClassifier
 
         return RSASTClassifier(seed=random_state, n_jobs=n_jobs, **kwargs)
-
-    # elif c == "rstc":
-    #     from tsml_eval._wip.classification.shapelet_based._stc import (
-    #         RandomShapeletTransform,
-    #     )
-
-    #     return RandomShapeletTransform(
-    #         random_state=random_state,
-    #         n_jobs=n_jobs,
-    #         time_limit_in_minutes=fit_contract,
-    #         **kwargs,
-    #     )
-
-    elif c == "rstc":
-        from tsml_eval._wip.classification.shapelet_based import (
-            ShapeletTransformClassifier,
-        )
-
-        return ShapeletTransformClassifier(
-            random_state=random_state,
-            n_jobs=n_jobs,
-            time_limit_in_minutes=fit_contract,
-            **kwargs,
-        )
 
 
 def _set_classifier_vector(c, random_state, n_jobs, fit_contract, checkpoint, kwargs):

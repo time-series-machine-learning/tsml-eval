@@ -101,7 +101,7 @@ def test_run_classification_experiment_main():
 def test_run_threaded_classification_experiment():
     """Test threaded classification experiments with test data and classifier."""
     classifier = "ROCKET"
-    dataset = "ArticularyWordRecognition"
+    dataset = "MinimalChinatown"
 
     args = [
         _TEST_DATA_PATH,
