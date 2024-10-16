@@ -11,7 +11,8 @@ __all__ = ["RandomShapeletTransform"]
 import heapq
 import math
 import time
-
+import os
+import sys
 import numpy as np
 from joblib import Parallel, delayed
 from numba import njit
@@ -22,7 +23,14 @@ from sklearn.utils._random import check_random_state
 from aeon.transformations.collection.base import BaseCollectionTransformer
 from aeon.utils.numba.general import AEON_NUMBA_STD_THRESHOLD, z_normalise_series
 from aeon.utils.validation import check_n_jobs
-import _quality_measures as qm
+
+
+# from tsml_eval._wip.transformations.collection.shapelet_based import (
+#     _quality_measures as qm,
+# )
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__)))
+sys.path.append(parent_dir)
+import tsml_eval._wip.transformations.collection.shapelet_based._quality_measures as qm
 
 
 class RandomShapeletTransform(BaseCollectionTransformer):
@@ -165,7 +173,7 @@ class RandomShapeletTransform(BaseCollectionTransformer):
         parallel_backend=None,
         batch_size=100,
         random_state=None,
-        shapelet_quality = "INFO_GAIN",
+        shapelet_quality="INFO_GAIN",
     ):
         self.n_shapelet_samples = n_shapelet_samples
         self.max_shapelets = max_shapelets
@@ -461,6 +469,7 @@ class RandomShapeletTransform(BaseCollectionTransformer):
                 self.n_cases_ - self._class_counts[cls_idx],
                 worst_quality,
             )
+
         elif self.shapelet_quality == "F_STAT":
             quality = self._f_stat_shapelet_quality(
                 X,
@@ -475,6 +484,133 @@ class RandomShapeletTransform(BaseCollectionTransformer):
                 self.n_cases_ - self._class_counts[cls_idx],
                 worst_quality,
             )
+
+        elif self.shapelet_quality == "Kruskal_Wallis":
+            distances1 = np.zeros(self._class_counts[cls_idx] - 1)
+            distances2 = np.zeros(self.n_cases_ - self._class_counts[cls_idx])
+            c1 = 0
+            c2 = 0
+            for j, series in enumerate(X):
+                if j != inst_idx:
+                    distance = _online_shapelet_distance(
+                        series[channel], shapelet, sorted_indicies, position, length
+                    )
+                    if y[j] == y[inst_idx]:
+                        if c1 < len(distances1):  # Protect against overflow
+                            distances1[c1] = distance
+                            c1 += 1
+                    else:
+                        if c2 < len(distances2):  # Protect against overflow
+                            distances2[c2] = distance
+                            c2 += 1
+
+            ranks, tie_correction, n1, n2, n = qm.compute_pre_stats(
+                distances1, distances2
+            )
+
+            quality = self._kruskal_wallis_shapelet_quality(
+                X,
+                y,
+                shapelet,
+                sorted_indicies,
+                position,
+                length,
+                channel,
+                inst_idx,
+                self._class_counts[cls_idx],
+                self.n_cases_ - self._class_counts[cls_idx],
+                worst_quality,
+                ranks,
+                tie_correction,
+                n1,
+                n2,
+                n,
+            )
+
+        elif self.shapelet_quality == "Wasser_emp":
+            quality = self._wasser_emp_shapelet_quality(
+                X,
+                y,
+                shapelet,
+                sorted_indicies,
+                position,
+                length,
+                channel,
+                inst_idx,
+                self._class_counts[cls_idx],
+                self.n_cases_ - self._class_counts[cls_idx],
+                worst_quality,
+            )
+        elif self.shapelet_quality == "Kolmogorov":
+            quality = self._kolmogorov_shapelet_quality(
+                X,
+                y,
+                shapelet,
+                sorted_indicies,
+                position,
+                length,
+                channel,
+                inst_idx,
+                self._class_counts[cls_idx],
+                self.n_cases_ - self._class_counts[cls_idx],
+                worst_quality,
+            )
+        elif self.shapelet_quality == "Moods_Median":
+            quality = self._moods_median_shapelet_quality(
+                X,
+                y,
+                shapelet,
+                sorted_indicies,
+                position,
+                length,
+                channel,
+                inst_idx,
+                self._class_counts[cls_idx],
+                self.n_cases_ - self._class_counts[cls_idx],
+                worst_quality,
+            )
+
+        elif self.shapelet_quality == "Wasser1":
+
+            distances1 = np.zeros(self._class_counts[cls_idx] - 1)
+            distances2 = np.zeros(self.n_cases_ - self._class_counts[cls_idx])
+            c1 = 0
+            c2 = 0
+            for j, series in enumerate(X):
+                if j != inst_idx:
+                    distance = _online_shapelet_distance(
+                        series[channel], shapelet, sorted_indicies, position, length
+                    )
+                    if y[j] == y[inst_idx]:
+                        if c1 < len(distances1):  # Protect against overflow
+                            distances1[c1] = distance
+                            c1 += 1
+                    else:
+                        if c2 < len(distances2):  # Protect against overflow
+                            distances2[c2] = distance
+                            c2 += 1
+
+            mu1, Sigma1 = qm.estimate_parameters(distances1)
+            mu2, Sigma2 = qm.estimate_parameters(distances2)
+
+            quality = self._wasserstein_shapelet_quality(
+                X,
+                y,
+                shapelet,
+                sorted_indicies,
+                position,
+                length,
+                channel,
+                inst_idx,
+                self._class_counts[cls_idx],
+                self.n_cases_ - self._class_counts[cls_idx],
+                worst_quality,
+                mu1,
+                Sigma1,
+                mu2,
+                Sigma2,
+            )
+
         else:
             raise ValueError("Unknown shapelet quality measure")
 
@@ -534,8 +670,6 @@ class RandomShapeletTransform(BaseCollectionTransformer):
 
         return round(quality, 12)
 
-
-
     @staticmethod
     @njit(fastmath=True, cache=True)
     def _f_stat_shapelet_quality(
@@ -549,27 +683,181 @@ class RandomShapeletTransform(BaseCollectionTransformer):
         inst_idx,
         this_cls_count,
         other_cls_count,
+        worst_quality,
     ):
-        distances1 = np.zeros(this_cls_count-1)
+        distances1 = np.zeros(this_cls_count - 1)
         distances2 = np.zeros(other_cls_count)
-        c1=0
-        c2=0
+        c1 = 0
+        c2 = 0
         for i, series in enumerate(X):
             if i != inst_idx:
                 distance = _online_shapelet_distance(
                     series[dim], shapelet, sorted_indicies, position, length
                 )
                 if y[i] == y[inst_idx]:
-                    distances1[c1]= distance
-                    c1=c1+1
+                    distances1[c1] = distance
+                    c1 = c1 + 1
                 else:
-                    distances2[c2]= distance
-                    c2=c2+1
+                    distances2[c2] = distance
+                    c2 = c2 + 1
+
         quality = qm.f_stat(distances1, distances2)
 
         return round(quality, 12)
 
+    @staticmethod
+    @njit(fastmath=True, cache=True)
+    def _moods_median_shapelet_quality(
+        X,
+        y,
+        shapelet,
+        sorted_indicies,
+        position,
+        length,
+        dim,
+        inst_idx,
+        this_cls_count,
+        other_cls_count,
+        worst_quality,
+    ):
+        distances1 = np.zeros(this_cls_count - 1)
+        distances2 = np.zeros(other_cls_count)
+        c1 = 0
+        c2 = 0
+        for i, series in enumerate(X):
+            if i != inst_idx:
+                distance = _online_shapelet_distance(
+                    series[dim], shapelet, sorted_indicies, position, length
+                )
+                if y[i] == y[inst_idx]:
+                    distances1[c1] = distance
+                    c1 += 1
+                else:
+                    distances2[c2] = distance
+                    c2 += 1
 
+        quality = qm._moods_median(distances1, distances2)
+
+        return round(quality, 12)
+
+    @staticmethod
+    @njit(fastmath=True, cache=True)
+    def _kruskal_wallis_shapelet_quality(
+        X,
+        y,
+        shapelet,
+        sorted_indicies,
+        position,
+        length,
+        dim,
+        inst_idx,
+        this_cls_count,
+        other_cls_count,
+        worst_quality,
+        ranks,
+        tie_correction,
+        n1,
+        n2,
+        n,
+    ):
+
+        quality = qm.kruskal_wallis_test(ranks, n1, n2, n, tie_correction)
+
+        return round(quality, 12)
+
+    @staticmethod
+    @njit(fastmath=True, cache=True)
+    def _wasserstein_shapelet_quality(
+        X,
+        y,
+        shapelet,
+        sorted_indicies,
+        position,
+        length,
+        dim,
+        inst_idx,
+        this_cls_count,
+        other_cls_count,
+        worst_quality,
+        mu1,
+        Sigma1,
+        mu2,
+        Sigma2,
+    ):
+
+        mu1 = np.array([mu1])  # Make sure it's an array if it's not
+        mu2 = np.array([mu2])
+        quality = qm.wasserstein_distance_gaussian(mu1, Sigma1, mu2, Sigma2)
+
+        return round(quality, 12)
+
+    def _wasser_emp_shapelet_quality(
+        self,
+        X,
+        y,
+        shapelet,
+        sorted_indicies,
+        position,
+        length,
+        dim,
+        inst_idx,
+        this_cls_count,
+        other_cls_count,
+        worst_quality,
+    ):
+        distances1 = np.zeros(this_cls_count - 1)
+        distances2 = np.zeros(other_cls_count)
+        c1 = 0
+        c2 = 0
+        for i, series in enumerate(X):
+            if i != inst_idx:
+                distance = _online_shapelet_distance(
+                    series[dim], shapelet, sorted_indicies, position, length
+                )
+                if y[i] == y[inst_idx]:
+                    distances1[c1] = distance
+                    c1 = c1 + 1
+                else:
+                    distances2[c2] = distance
+                    c2 = c2 + 1
+
+        quality = qm.wasserstein_distance_empirical(distances1, distances2)
+
+        return round(quality, 12)
+
+    def _kolmogorov_shapelet_quality(
+        self,
+        X,
+        y,
+        shapelet,
+        sorted_indicies,
+        position,
+        length,
+        dim,
+        inst_idx,
+        this_cls_count,
+        other_cls_count,
+        worst_quality,
+    ):
+        distances1 = np.zeros(this_cls_count - 1)
+        distances2 = np.zeros(other_cls_count)
+        c1 = 0
+        c2 = 0
+        for i, series in enumerate(X):
+            if i != inst_idx:
+                distance = _online_shapelet_distance(
+                    series[dim], shapelet, sorted_indicies, position, length
+                )
+                if y[i] == y[inst_idx]:
+                    distances1[c1] = distance
+                    c1 = c1 + 1
+                else:
+                    distances2[c2] = distance
+                    c2 = c2 + 1
+
+        quality = qm.kolmogorov_test(distances1, distances2)
+
+        return round(quality, 12)
 
     @staticmethod
     @njit(fastmath=True, cache=True)
@@ -812,3 +1100,48 @@ def _is_self_similar(s1, s2):
             return True
 
     return False
+
+
+@njit(fastmath=True, cache=True)
+def f_stat(class0, class1):
+    """
+    Calculate the F-statistic for shapelet quality based on two numpy arrays of distances for two classes.
+    Parameters:
+    - class0 (np.array): Array of distances for the first class.
+    - class1 (np.array): Array of distances for the second class.
+    Returns:
+    - float: The computed F-statistic.
+    """
+
+    if len(class0) == 0 or len(class1) == 0:
+        return np.inf  # Use NumPy's inf representation
+
+    # Calculate means
+    mean_class0 = np.mean(class0)
+    mean_class1 = np.mean(class1)
+    all_distances = np.concatenate((class0, class1))
+    overall_mean = np.mean(all_distances)
+
+    n0 = len(class0)
+    n1 = len(class1)
+    total_n = n0 + n1
+
+    # Between-class sum of squares
+    ssb = (
+        n0 * (mean_class0 - overall_mean) ** 2 + n1 * (mean_class1 - overall_mean) ** 2
+    )
+
+    # Within-class sum of squares
+    ssw = np.sum((class0 - mean_class0) ** 2) + np.sum((class1 - mean_class1) ** 2)
+
+    # Degrees of freedom
+    df_between = 1
+    df_within = total_n - 2
+
+    # Avoid division by zero
+    if df_within <= 0:
+
+        return np.inf
+
+    F_stat = (ssb / df_between) / (ssw / df_within)
+    return F_stat
