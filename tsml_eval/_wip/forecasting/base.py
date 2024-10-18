@@ -38,40 +38,71 @@ class BaseForecaster(BaseSeriesEstimator, ABC):
         predict value $window+i$. If horizon is 4, forecaster will used points $i$
         to $window+i-1$ to predict value $window+i+3$. If None, the algorithm will
         internally determine what data to use to predict `horizon` steps ahead.
-
-    To Do
-    -----
-    axis
     """
 
-    def __init__(self, horizon=1, window=None):
+    # TODO: add any forecasting specific tags
+    _tags = {
+        "capability:univariate": True,
+        "capability:multivariate": False,
+        "capability:missing_values": False,
+        "X_inner_type": "np.ndarray",  # one of VALID_INNER_TYPES
+    }
+    def __init__(self, horizon=1, window=None, axis=1):
         self.horizon = horizon
         self.window = window
         self._is_fitted = False
-        super().__init__(axis=1)
+        super().__init__(axis)
 
     @abstractmethod
-    def fit(self, X):
+    def fit(self, y, X=None):
         """Fit forecaster to series X.
+        TODO: passing series as X makes sense in machine learning, but not in
+        forecasting
 
         Parameters
         -------
-        X : np.ndarray
-            A time Time series on which to learn a forecaster
+        y : np.ndarray
+            A time series on which to learn a forecaster to predict horizon ahead
+        X : np.ndarray, default =None
+            Optional exogenous time series data assumed to be aligned with y
+
         Returns
         -------
         self
-            Fitted estimator
+            Fitted BaseForecaster.
         """
         ...
 
     @abstractmethod
-    def predict(self, X):
+    def predict(self, y=None, X=None):
         """
+
+        Parameters
+        -------
+        Parameters
+        -------
+        y : np.ndarray, default = None
+            A time series to predict the next horizon value for. If None,
+            predict the next horizon value after series seen in fit.
+        X : np.ndarray, default =None
+            Optional exogenous time series data assumed to be aligned with y
 
         Returns
         -------
         float
             single prediction.
+        """
+        ...
+
+    @abstractmethod
+    def forecast(self, y, X=None):
+        """
+
+        basically fit_predict.
+
+        Returns
+        -------
+        np.ndarray
+            single prediction directly after the last point in X.
         """
         ...
