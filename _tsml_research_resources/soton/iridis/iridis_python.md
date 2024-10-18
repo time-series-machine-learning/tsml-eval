@@ -138,13 +138,9 @@ If any a dependency install is "Killed", it is likely the interactive session ha
 
 #### 5.1. tsml-eval GPU
 
-For GPU jobs we require an additional Iridis module in CUDA:
+It is recommended to use a different environment for GPU jobs. Move to the package directory and install the required packages for GPU jobs:
 
->module add cuda/12.3
-
-A specific Tensorflow version is required to match the available CUDA install.
-
->pip install --editable . tensorflow==2.17.0
+>pip install --editable . tensorflow[and-cuda] tensorrt
 
 # Running experiments
 
@@ -169,11 +165,21 @@ The default queue for CPU jobs is _batch_. Be sure to swap the _queue_alias_ to 
 Do not run threaded code on the cluster without reserving whole nodes, as there is nothing to stop the job from using
 the CPU resources allocated to others. The default python file in the scripts attempts to avoid threading as much as possible. You should ensure processes are not intentionally using multiple threads if you change it.
 
-Requesting memory for a job will allocate it all on the jobs assigned node. New jobs will not be submitted to a node if the total allocated memory exceeds the amount available for the node. As such, requesting too much memory can block new jobs from using the node. This is ok if the memory is actually being used, but large amounts of memory should not be requested unless you know it will be required for the jobs you are submitting. ADA is a shared resource, and instantly requesting hundreds of GB will hurt the overall efficiency of the cluster.
+Requesting memory for a job will allocate it all on the jobs assigned node. New jobs will not be submitted to a node if the total allocated memory exceeds the amount available for the node. As such, requesting too much memory can block new jobs from using the node. This is ok if the memory is actually being used, but large amounts of memory should not be requested unless you know it will be required for the jobs you are submitting. Iridis is a shared resource, and instantly requesting hundreds of GB will hurt the overall efficiency of the cluster.
 
 ## Running `tsml-eval` GPU experiments
 
-todo
+For GPU experiments use one of the following scripts:
+
+>gpu_classification_experiments.sh
+
+>gpu_regression_experiments.sh
+
+>gpu_clustering_experiments.sh
+
+It is recommended you use different environments for CPU and GPU jobs.
+
+The default queue for GPU jobs is _gpu_.
 
 ## Monitoring jobs on Iridis
 
