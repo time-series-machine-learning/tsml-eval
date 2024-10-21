@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import numpy as np
 from aeon.distances import get_distance_function
 from aeon.transformations.collection.base import BaseCollectionTransformer
@@ -51,7 +50,7 @@ class Drop2Condenser(BaseCollectionTransformer):
 
         self.selected_indices = []
 
-        super(Drop2Condenser, self).__init__()
+        super().__init__()
 
     def _fit(self, X, y):
         n_classes = len(np.unique(y))

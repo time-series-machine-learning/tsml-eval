@@ -1,10 +1,7 @@
 import numpy as np
+from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
 from aeon.distances import get_distance_function
 from aeon.transformations.collection.base import BaseCollectionTransformer
-
-from aeon.classification.distance_based import (
-    KNeighborsTimeSeriesClassifier,
-)
 
 
 class SimpleRankCondenser(BaseCollectionTransformer):
@@ -56,7 +53,7 @@ class SimpleRankCondenser(BaseCollectionTransformer):
 
         self.selected_indices = []
 
-        super(SimpleRankCondenser, self).__init__()
+        super().__init__()
 
     def _fit(self, X, y):
         # As SR do not separate prototypes per class, the number should be multiplied by
