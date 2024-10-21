@@ -8,10 +8,11 @@ class BaseWindowForecaster(BaseForecaster):
         self.regressor = regressor
         super().__init__(horizon, window)
 
-    def fit(self, X):
-        """Fit forecaster to y, optionally using exogenous data X.
+    def fit(self, y, X=None):
+        """Fit forecaster to time series.
 
-        Split y into windows of length window and train the forecaster on each window
+        Split X into windows of length window and train the forecaster on each window
+        to predict the horizon ahead.
 
         Parameters
         ----------
@@ -23,17 +24,26 @@ class BaseWindowForecaster(BaseForecaster):
             Fitted estimator
         """
         # Window data
-        X2=np.lib.stride_tricks.sliding_window_view(X, window_shape=self.window)
-        X2=X2[:-self.horizon]
+        y2=np.lib.stride_tricks.sliding_window_view(y, window_shape=self.window)
+        # Ignore the final horizon values: need to store these for pred with empty y
+        y2=y2[:-self.horizon]
         # Extract y
         y=X[self.window+self.horizon-1:]
         self.regressor.fit(X2,y)
         return self
 
-    def predict(self, X):
+    def predict(self, y=None, X=None):
         """Predict values for time series X.
 
         NOTE: will not be able to predict the first
         """
-        X2 = np.lib.stride_tricks.sliding_window_view(X, window_shape=self.window)
-        return self.regressor.predict(X2[self.horizon:])
+        # TODO deal with case y =None
+        return self.regressor.predict(y[-self.window:])
+
+    def forecast(self, y, X=None):
+        """Forecast values for time series X.
+
+        NOTE: deal with horizons
+        """
+        self.fit(y,X)
+        return self.predict(y[:self.window])

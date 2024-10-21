@@ -59,7 +59,6 @@ def binary_information_gain(orderline, c1, c2):
     return bsf_ig
 
 
-
 @njit(fastmath=True, cache=True)
 def _moods_median(class0, class1):
     """Calculate Mood's Median test statistic for two treatment levels.
@@ -151,13 +150,10 @@ def f_stat(class0, class1):
     return F_stat
 
 
-
 # Kruskal Wallis pre stat uses some methods not compatible with numba
 # The Kruskal Wallis is calculated using 2 functions:
 # one for the pre_stats values such as unique values, ranks, tie_correction, len(class0), len(class1)..this doesnt invoke the njit as it uses some functions that are incompatible with njit
 # another for the actual calculation, compatible with numba, and uses the return values from the pre_stat function
-
-
 
 def compute_pre_stats(class0, class1):
     combined_array = np.concatenate((class0, class1))
@@ -171,6 +167,9 @@ def compute_pre_stats(class0, class1):
 
 @njit(fastmath=True, cache=True)
 def kruskal_wallis_test(ranks, n1, n2, n, tie_correction):
+    if n1 == 0 or n2 == 0:
+        return -1  # Return a default value indicating an invalid test scenario
+
     R1 = np.sum(ranks[:n1])
     R2 = np.sum(ranks[n1:])
 
@@ -181,6 +180,99 @@ def kruskal_wallis_test(ranks, n1, n2, n, tie_correction):
     K = (12 / (n * (n + 1))) * (
         R1 * (mean_rank1 - mean_rank) ** 2 + R2 * (mean_rank2 - mean_rank) ** 2
     )
+    if tie_correction != 0:
+        K /= tie_correction
+    else:
+        return -1  # Return a default value if tie_correction is zero
 
-    K /= tie_correction
     return K
+
+
+@njit(nopython=True)
+def matrix_sqrt(mat):
+    """Compute the square root of a matrix using eigenvalue decomposition."""
+    eigenvalues, eigenvectors = np.linalg.eigh(mat)
+    sqrt_eigenvalues = np.sqrt(eigenvalues)
+    return eigenvectors @ np.diag(sqrt_eigenvalues) @ eigenvectors.T
+
+
+@njit(nopython=True)
+def squared_euclidean_distance(vec1, vec2):
+    """Calculate the squared Euclidean distance between two vectors."""
+    result = 0.0
+    for i in range(vec1.size):  # Using .size to safely handle dimensionality
+        result += (vec1[i] - vec2[i]) ** 2
+    return result
+
+
+def estimate_parameters(data):
+    """Estimate the mean and covariance matrix of a dataset."""
+    mu = np.mean(data, axis=0)  # Ensure mean is computed over an axis for array result
+    centered_data = data - mu  # Broadcasting subtraction to center data
+    covariance = np.cov(centered_data, rowvar=False)
+    return mu, np.atleast_2d(covariance)  # Ensure covariance is 2D
+
+
+@njit(fastmath=True, cache=True)
+def wasserstein_distance_gaussian(mu1, Sigma1, mu2, Sigma2):
+    """Compute the Wasserstein distance between two Gaussian distributions."""
+    mean_diff = squared_euclidean_distance(mu1, mu2)
+    trace_Sigma1 = np.trace(Sigma1)
+    trace_Sigma2 = np.trace(Sigma2)
+    root_Sigma1 = matrix_sqrt(Sigma1)
+    product_matrix = np.dot(root_Sigma1, np.dot(Sigma2, root_Sigma1))
+    root_product = matrix_sqrt(product_matrix)
+    trace_root_product = np.trace(root_product)
+    B_squared = trace_Sigma1 + trace_Sigma2 - 2 * trace_root_product
+    Wasserstein_dist_squared = mean_diff + B_squared
+    return np.sqrt(Wasserstein_dist_squared)
+
+
+#     return float(w_distance)
+@njit(fastmath=True, cache=True)
+def wasserstein_distance_empirical(dist1, dist2):
+    # Convert lists to numpy arrays if they are not already (Numba requires explicit array type)
+    dist1 = np.asarray(dist1, dtype=np.float64)
+    dist2 = np.asarray(dist2, dtype=np.float64)
+
+    # Check which list is shorter and pad it with its mean value to match the lengths
+    if len(dist1) < len(dist2):
+        pad_length = len(dist2) - len(dist1)
+        padding = np.full(pad_length, np.mean(dist1))
+        dist1 = np.concatenate((dist1, padding))
+    elif len(dist2) < len(dist1):
+        pad_length = len(dist1) - len(dist2)
+        padding = np.full(pad_length, np.mean(dist2))
+        dist2 = np.concatenate((dist2, padding))
+
+    # Sort both lists
+    sorted_dist1 = np.sort(dist1)
+    sorted_dist2 = np.sort(dist2)
+
+    # Calculate the average of the absolute differences
+    total_diff = 0.0
+    for i in range(len(sorted_dist1)):
+        total_diff += np.abs(sorted_dist1[i] - sorted_dist2[i])
+
+    # Calculate mean by dividing the total_diff by the number of elements
+    w_distance = total_diff / len(sorted_dist1)
+
+    return float(w_distance)
+
+
+@njit(fastmath=True, cache=True)
+def kolmogorov_test(distance1, distance2):
+
+    # Combine and sort the data
+    all_data = np.sort(np.concatenate((distance1, distance2)))
+    n1 = len(distance1)
+    n2 = len(distance2)
+
+    # Compute EDFs
+    edf1 = np.array([np.sum(distance1 <= x) / n1 for x in all_data])
+    edf2 = np.array([np.sum(distance2 <= x) / n2 for x in all_data])
+
+    # Calculate KS Statistic
+    ks_statistic = np.max(np.abs(edf1 - edf2))
+
+    return ks_statistic
