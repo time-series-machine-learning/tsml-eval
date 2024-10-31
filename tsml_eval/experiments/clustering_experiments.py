@@ -105,53 +105,67 @@ def run_experiment(args):
         # These are example parameters, change as required for local runs
         # Do not include paths to your local directories here in PRs
         # If threading is required, see the threaded version of this file
-        data_path = _TEST_DATA_PATH
-        results_path = _CLUSTERER_RESULTS_PATH
-        estimator_name = "KMeans"
-        dataset_name = "MinimalChinatown"
-        row_normalise = False
-        n_clusters = -1
-        resample_id = 0
-        test_fold = False
-        write_attributes = True
-        att_max_shape = 0
-        benchmark_time = True
-        overwrite = False
-        predefined_resample = False
-        fit_contract = 0
-        checkpoint = None
-        combine_test_train_split = True
-        kwargs = {}
+        estimators = [
+            "kesba-barycentre-msm",
+            "kesba-barycentre-twe",
+            "kesba-ssg-msm",
+            "kesba-ssg-twe",
+            "kesba-random-subset-ssg-msm",
+            "kesba-random-subset-ssg-twe",
+            "kesba-lloyds-barycentre-msm",
+            "kesba-lloyds-barycentre-twe",
+            "kesba-lloyds-ssg-msm",
+            "kesba-lloyds-ssg-twe",
+            "kesba-lloyds-random-subset-ssg-msm",
+            "kesba-lloyds-random-subset-ssg-twe",
+        ]
+        for estimator_name in estimators:
+            data_path = _TEST_DATA_PATH
+            results_path = _CLUSTERER_RESULTS_PATH
+            dataset_name = "MinimalChinatown"
+            row_normalise = False
+            n_clusters = -1
+            resample_id = 0
+            test_fold = False
+            write_attributes = True
+            att_max_shape = 0
+            benchmark_time = True
+            overwrite = False
+            predefined_resample = False
+            fit_contract = 0
+            checkpoint = None
+            combine_test_train_split = True
+            kwargs = {}
 
-        clusterer = get_clusterer_by_name(
-            estimator_name,
-            random_state=resample_id,
-            n_jobs=1,
-            fit_contract=fit_contract,
-            checkpoint=checkpoint,
-            data_vars=[data_path, dataset_name, resample_id, predefined_resample],
-            row_normalise=row_normalise,
-            **kwargs,
-        )
-        print(f"Local Run of {estimator_name} ({clusterer.__class__.__name__}).")
+            clusterer = get_clusterer_by_name(
+                estimator_name,
+                random_state=resample_id,
+                n_jobs=1,
+                fit_contract=fit_contract,
+                checkpoint=checkpoint,
+                data_vars=[data_path, dataset_name, resample_id, predefined_resample],
+                row_normalise=row_normalise,
+                **kwargs,
+            )
+            print(f"Local Run of {estimator_name} ({clusterer.__class__.__name__}).")
 
-        load_and_run_clustering_experiment(
-            data_path,
-            results_path,
-            dataset_name,
-            clusterer,
-            row_normalise=row_normalise,
-            n_clusters=n_clusters,
-            clusterer_name=estimator_name,
-            resample_id=resample_id,
-            build_test_file=test_fold,
-            write_attributes=write_attributes,
-            att_max_shape=att_max_shape,
-            benchmark_time=benchmark_time,
-            overwrite=overwrite,
-            predefined_resample=predefined_resample,
-            combine_train_test_split=combine_test_train_split,
-        )
+            load_and_run_clustering_experiment(
+                data_path,
+                results_path,
+                dataset_name,
+                clusterer,
+                row_normalise=row_normalise,
+                n_clusters=n_clusters,
+                clusterer_name=estimator_name,
+                resample_id=resample_id,
+                build_test_file=test_fold,
+                write_attributes=write_attributes,
+                att_max_shape=att_max_shape,
+                benchmark_time=benchmark_time,
+                overwrite=overwrite,
+                predefined_resample=predefined_resample,
+                combine_train_test_split=combine_test_train_split,
+            )
 
 
 if __name__ == "__main__":

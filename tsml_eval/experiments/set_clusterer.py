@@ -4,6 +4,7 @@ __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 import numpy as np
 from aeon.clustering import (
+    KESBA,
     TimeSeriesCLARA,
     TimeSeriesCLARANS,
     TimeSeriesKMeans,
@@ -110,6 +111,18 @@ distance_based_clusterers = [
     "timeserieskmedoids",
     "timeseriesclarans",
     "timeseriesclara",
+    "kesba-barycentre-msm",
+    "kesba-barycentre-twe",
+    "kesba-ssg-msm",
+    "kesba-ssg-twe",
+    "kesba-random-subset-ssg-msm",
+    "kesba-random-subset-ssg-twe",
+    "kesba-lloyds-barycentre-msm",
+    "kesba-lloyds-barycentre-twe",
+    "kesba-lloyds-ssg-msm",
+    "kesba-lloyds-ssg-twe",
+    "kesba-lloyds-random-subset-ssg-msm",
+    "kesba-lloyds-random-subset-ssg-twe",
 ]
 
 feature_based_clusterers = [
@@ -205,6 +218,59 @@ def get_clusterer_by_name(
         raise ValueError(f"UNKNOWN CLUSTERER: {c} in set_clusterer")
 
 
+def _set_kesba_clusterer(
+    c,
+    random_state,
+    n_jobs,
+    fit_contract,
+    checkpoint,
+    data_vars,
+    row_normalise,
+    kwargs,
+):
+    # kebsa-lloyds-subgradient-dtw
+    split_str = c.split("-")
+    distance_measure = split_str[-1]
+    if "distance_params" in kwargs:
+        distance_params = kwargs["distance_params"]
+    else:
+        distance_params = _get_distance_default_params(
+            distance_measure, data_vars, row_normalise
+        )
+
+    rest_of_str = "-".join(split_str[1:-1])
+    use_lloyds = False
+
+    if "lloyds" in c:
+        use_lloyds = True
+        rest_of_str = rest_of_str.replace("lloyds-", "")
+
+    if rest_of_str == "barycentre":
+        average_method = "petitjean"
+    elif rest_of_str == "ssg":
+        average_method = "subgradient"
+    elif rest_of_str == "random-subset-ssg":
+        average_method = "random_subset_ssg"
+    else:
+        raise ValueError(f"Unknown average method {rest_of_str}")
+
+    return KESBA(
+        distance=distance_measure,
+        ba_subset_size=0.5,
+        initial_step_size=0.05,
+        final_step_size=0.005,
+        window=0.5,
+        max_iter=300,
+        tol=1e-6,
+        verbose=True,
+        random_state=random_state,
+        distance_params=distance_params,
+        average_method=average_method,
+        use_lloyds=use_lloyds,
+        count_distance_calls=True,
+    )
+
+
 def _set_clusterer_deep_learning(
     c, random_state, n_jobs, fit_contract, checkpoint, kwargs
 ):
@@ -228,6 +294,17 @@ def _set_clusterer_distance_based(
     row_normalise,
     kwargs,
 ):
+    if "kesba" in c:
+        return _set_kesba_clusterer(
+            c,
+            random_state,
+            n_jobs,
+            fit_contract,
+            checkpoint,
+            data_vars,
+            row_normalise,
+            kwargs,
+        )
     if "init_algorithm" in kwargs:
         init_algorithm = kwargs["init_algorithm"]
     else:
@@ -338,7 +415,7 @@ def _get_distance_default_params(
     dist_name: str, data_vars: list, row_normalise: bool
 ) -> dict:
     if dist_name == "dtw" or dist_name == "ddtw":
-        return {"window": 0.2}
+        return {}
     if dist_name == "lcss":
         return {"epsilon": 1.0}
     if dist_name == "erp":

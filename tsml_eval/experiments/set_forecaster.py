@@ -2,7 +2,6 @@
 
 __author__ = ["MatthewMiddlehurst"]
 
-from aeon.forecasting.naive import NaiveForecaster
 
 from tsml_eval.utils.functions import str_in_nested_list
 
@@ -54,5 +53,4 @@ def get_forecaster_by_name(forecaster_name, random_state=None, n_jobs=1, **kwarg
 
 
 def _set_forecaster_other(f, random_state, n_jobs, kwargs):
-    if f == "naiveforecaster" or f == "naive":
-        return NaiveForecaster(**kwargs)
+    return None

@@ -24,7 +24,6 @@ import numpy as np
 import pandas as pd
 from aeon.classification import BaseClassifier
 from aeon.clustering import BaseClusterer
-from aeon.forecasting.base import BaseForecaster
 from aeon.performance_metrics.clustering import clustering_accuracy_score
 from aeon.regression.base import BaseRegressor
 from aeon.transformations.collection import TimeSeriesScaler
@@ -1117,9 +1116,6 @@ def run_forecasting_experiment(
         Whether to benchmark the hardware used with a simple function and write the
         results. This will typically take ~2 seconds, but is hardware dependent.
     """
-    if not isinstance(forecaster, BaseForecaster):
-        raise TypeError("forecaster must be an aeon forecaster.")
-
     if forecaster_name is None:
         forecaster_name = type(forecaster).__name__
 
