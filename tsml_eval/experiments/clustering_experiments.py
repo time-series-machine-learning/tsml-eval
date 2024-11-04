@@ -105,20 +105,7 @@ def run_experiment(args):
         # These are example parameters, change as required for local runs
         # Do not include paths to your local directories here in PRs
         # If threading is required, see the threaded version of this file
-        estimators = [
-            "som-dtw",
-            "som-ddtw",
-            "som-wdtw",
-            "som-wddtw",
-            "som-lcss",
-            "som-erp",
-            "som-edr",
-            "som-twe",
-            "som-msm",
-            "som-adtw",
-            "som-shape_dtw",
-            "som-soft_dtw",
-        ]
+        estimators = ["kesba-ba-init-msm", "kesba-ba-init-twe"]
         for estimator_name in estimators:
             data_path = _TEST_DATA_PATH
             results_path = _CLUSTERER_RESULTS_PATH

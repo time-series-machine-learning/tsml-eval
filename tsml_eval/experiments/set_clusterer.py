@@ -136,6 +136,9 @@ distance_based_clusterers = [
     "kesba-lloyds-ssg-twe",
     "kesba-lloyds-random-subset-ssg-msm",
     "kesba-lloyds-random-subset-ssg-twe",
+    "dba-plus-plus-dtw",
+    "kesba-ba-init-msm",
+    "kesba-ba-init-twe",
 ]
 
 feature_based_clusterers = [
@@ -262,10 +265,14 @@ def _set_kesba_clusterer(
         average_method = "petitjean"
     elif rest_of_str == "ssg":
         average_method = "subgradient"
-    elif rest_of_str == "random-subset-ssg":
+    elif rest_of_str == "random-subset-ssg" or rest_of_str == "ba-init":
         average_method = "random_subset_ssg"
     else:
         raise ValueError(f"Unknown average method {rest_of_str}")
+
+    use_mean_as_init = True
+    if "ba-init" in c:
+        use_mean_as_init = False
 
     return KESBA(
         distance=distance_measure,
@@ -280,7 +287,7 @@ def _set_kesba_clusterer(
         distance_params=distance_params,
         average_method=average_method,
         use_lloyds=use_lloyds,
-        count_distance_calls=True,
+        use_mean_as_init=use_mean_as_init,
     )
 
 
@@ -381,6 +388,17 @@ def _set_clusterer_distance_based(
                 averaging_method="mean",
                 **kwargs,
             )
+    elif "dba-plus-plus-dtw" in c:
+        return TimeSeriesKMeans(
+            max_iter=300,
+            n_init=1,
+            init_algorithm="kmeans++",
+            distance="dtw",
+            distance_params=distance_params,
+            random_state=random_state,
+            averaging_method="ba",
+            **kwargs,
+        )
     elif "kmedoids" in c or "timeserieskmedoids" in c:
         return TimeSeriesKMedoids(
             max_iter=50,
