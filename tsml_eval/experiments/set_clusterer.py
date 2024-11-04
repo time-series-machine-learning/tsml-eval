@@ -5,6 +5,7 @@ __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 import numpy as np
 from aeon.clustering import (
     KESBA,
+    ElasticSOM,
     TimeSeriesCLARA,
     TimeSeriesCLARANS,
     TimeSeriesKMeans,
@@ -111,6 +112,18 @@ distance_based_clusterers = [
     "timeserieskmedoids",
     "timeseriesclarans",
     "timeseriesclara",
+    "som-dtw",
+    "som-ddtw",
+    "som-wdtw",
+    "som-wddtw",
+    "som-lcss",
+    "som-erp",
+    "som-edr",
+    "som-twe",
+    "som-msm",
+    "som-adtw",
+    "som-shape_dtw",
+    "som-soft_dtw",
     "kesba-barycentre-msm",
     "kesba-barycentre-twe",
     "kesba-ssg-msm",
@@ -408,6 +421,20 @@ def _set_clusterer_distance_based(
             random_state=random_state,
             **kwargs,
         )
+    elif "som" in c:
+        return ElasticSOM(
+            distance=distance,
+            init="random",
+            sigma=1.0,
+            learning_rate=0.5,
+            decay_function="asymptotic_decay",
+            neighborhood_function="gaussian",
+            sigma_decay_function="asymptotic_decay",
+            num_iterations=500,
+            distance_params=distance_params,
+            random_state=random_state,
+            verbose=False,
+        )
     return None
 
 
@@ -444,7 +471,7 @@ def _get_distance_default_params(
     if dist_name == "adtw":
         return {"warp_penalty": 1.0}
     if dist_name == "shape_dtw":
-        return {"descriptor": "identity", "reach": 30}
+        return {"descriptor": "identity", "reach": 15}
     return {}
 
 

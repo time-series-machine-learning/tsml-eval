@@ -106,18 +106,18 @@ def run_experiment(args):
         # Do not include paths to your local directories here in PRs
         # If threading is required, see the threaded version of this file
         estimators = [
-            "kesba-barycentre-msm",
-            "kesba-barycentre-twe",
-            "kesba-ssg-msm",
-            "kesba-ssg-twe",
-            "kesba-random-subset-ssg-msm",
-            "kesba-random-subset-ssg-twe",
-            "kesba-lloyds-barycentre-msm",
-            "kesba-lloyds-barycentre-twe",
-            "kesba-lloyds-ssg-msm",
-            "kesba-lloyds-ssg-twe",
-            "kesba-lloyds-random-subset-ssg-msm",
-            "kesba-lloyds-random-subset-ssg-twe",
+            "som-dtw",
+            "som-ddtw",
+            "som-wdtw",
+            "som-wddtw",
+            "som-lcss",
+            "som-erp",
+            "som-edr",
+            "som-twe",
+            "som-msm",
+            "som-adtw",
+            "som-shape_dtw",
+            "som-soft_dtw",
         ]
         for estimator_name in estimators:
             data_path = _TEST_DATA_PATH
