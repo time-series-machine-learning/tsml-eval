@@ -2,9 +2,11 @@ import time
 
 import numba
 import numpy as np
-from tsml_eval._wip.forecasting.exponential_smoothing import fit_ets
+from tsml_eval._wip.forecasting.exponential_smoothing import ExponentialSmoothingForecaster, ModelType, ModelParameters
 from statsforecast.ets import etscalc
 from statsforecast.utils import AirPassengers as ap
+
+# Requires statsforecast@1.7.6 to be installed additionally
 
 NA = -99999.0
 MAX_NMSE = 30
@@ -27,26 +29,27 @@ def setup():
     phi = 0.1
     e = np.zeros(n)
     lik_fitets = np.zeros(1)
-    amse = np.zeros(MAX_NMSE)
-    nmse = 3
+    nmse = 1
+    amse = np.zeros(nmse)
     return y, n, init_states, m, error, trend, season, alpha, beta, gamma, phi, e, lik_fitets, amse, nmse
 
 
 def test_ets_comparison(setup):
     y, n, init_states, m, error, trend, season, alpha, beta, gamma, phi, e, lik_fitets, amse, nmse = setup
-
     # tsml-eval implementation
     start = time.time()
-    f1=fit_ets(y, n, init_states, m,
-            error, trend, season,
-            alpha, beta, gamma, phi,
-            e, lik_fitets, amse, nmse)
+    f1=ExponentialSmoothingForecaster(1,
+                                      ModelParameters(alpha, beta, gamma, phi),
+                                      init_states[0], init_states[1], init_states[2:],
+                                      ModelType(error, trend, season, m))
+    f1.fit(y)
+    f1.predict()
     end = time.time()
     time_fitets = end - start
 
-    init_states_fitets = init_states.copy()
-    e_fitets = e.copy()
-    amse_fitets = amse.copy()
+    e_fitets = f1._residuals
+    amse_fitets = np.array([f1._avg_mean_sq_err])
+    lik_fitets = f1._liklihood
 
     # Reinitialise arrays
     init_states.fill(0)
@@ -64,12 +67,10 @@ def test_ets_comparison(setup):
     end = time.time()
     time_etscalc = end - start
 
-    init_states_etscalc = init_states.copy()
     e_etscalc = e.copy()
     amse_etscalc = amse.copy()
 
     # Comparing outputs and runtime
-    assert np.allclose(init_states_fitets, init_states_etscalc)
     assert np.allclose(e_fitets, e_etscalc)
     assert np.allclose(amse_fitets, amse_etscalc)
     assert np.isclose(lik_fitets, lik_etscalc)
@@ -77,7 +78,6 @@ def test_ets_comparison(setup):
     print(time_fitets)
     print(time_etscalc)
     print(f1)
-    return
 
 
 if __name__ == "__main__":
