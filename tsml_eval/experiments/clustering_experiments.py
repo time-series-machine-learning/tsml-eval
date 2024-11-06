@@ -106,13 +106,13 @@ def run_experiment(args):
         # Do not include paths to your local directories here in PRs
         # If threading is required, see the threaded version of this file
         estimators = [
-            "kesba-final-twe",
-            "kesba-final-msm",
-            "kesba-final-lloyds-msm",
-            "kesba-final-petitjean-msm",
-            "kesba-final-lloyds-petitjean-msm",
-            "kesba-final-petitjean-no-window-msm",
-            "kesba-final-lloyds-petitjean-no-window-msm",
+            "kesba-ba-init-final-twe",
+            "kesba-ba-init-final-msm",
+            "kesba-ba-init-final-lloyds-msm",
+            "kesba-ba-init-final-petitjean-msm",
+            "kesba-ba-init-final-lloyds-petitjean-msm",
+            "kesba-ba-init-final-petitjean-no-window-msm",
+            "kesba-ba-init-final-lloyds-petitjean-no-window-msm",
         ]
         for estimator_name in estimators:
             data_path = _TEST_DATA_PATH
