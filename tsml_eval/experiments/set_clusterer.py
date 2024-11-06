@@ -137,8 +137,24 @@ distance_based_clusterers = [
     "kesba-lloyds-random-subset-ssg-msm",
     "kesba-lloyds-random-subset-ssg-twe",
     "dba-plus-plus-dtw",
-    "kesba-ba-init-msm",
-    "kesba-ba-init-twe",
+    "kesba-final-twe",
+    "kesba-final-msm",
+    "kesba-final-lloyds-msm",
+    "kesba-final-petitjean-msm",
+    "kesba-final-lloyds-petitjean-msm",
+    "kesba-final-petitjean-no-window-msm",
+    "kesba-final-lloyds-petitjean-no-window-msm",
+    "soft-dba-first",
+    "soft-dba-second",
+    "soft-dba-third",
+    "soft-dba-fourth",
+    "soft-dba-fifth",
+    "soft-dba-sixth",
+    "soft-dba-seventh",
+    "soft-dba-eighth",
+    "soft-dba-ninth",
+    "soft-dba-tenth",
+    "soft-dba-kmeans++",
 ]
 
 feature_based_clusterers = [
@@ -261,14 +277,24 @@ def _set_kesba_clusterer(
         use_lloyds = True
         rest_of_str = rest_of_str.replace("lloyds-", "")
 
-    if rest_of_str == "barycentre":
-        average_method = "petitjean"
-    elif rest_of_str == "ssg":
-        average_method = "subgradient"
-    elif rest_of_str == "random-subset-ssg" or rest_of_str == "ba-init":
-        average_method = "random_subset_ssg"
+    if "final" in c:
+        if "petitjean" in rest_of_str:
+            average_method = "petitjean"
+        else:
+            average_method = "random_subset_ssg"
     else:
-        raise ValueError(f"Unknown average method {rest_of_str}")
+        if rest_of_str == "barycentre":
+            average_method = "petitjean"
+        elif rest_of_str == "ssg":
+            average_method = "subgradient"
+        elif rest_of_str == "random-subset-ssg" or rest_of_str == "ba-init":
+            average_method = "random_subset_ssg"
+        else:
+            raise ValueError(f"Unknown average method {rest_of_str}")
+
+    window = 0.5
+    if "no-window" in c:
+        window = 1.0
 
     use_mean_as_init = True
     if "ba-init" in c:
@@ -279,7 +305,7 @@ def _set_kesba_clusterer(
         ba_subset_size=0.5,
         initial_step_size=0.05,
         final_step_size=0.005,
-        window=0.5,
+        window=window,
         max_iter=300,
         tol=1e-6,
         verbose=True,

@@ -105,7 +105,15 @@ def run_experiment(args):
         # These are example parameters, change as required for local runs
         # Do not include paths to your local directories here in PRs
         # If threading is required, see the threaded version of this file
-        estimators = ["kesba-ba-init-msm", "kesba-ba-init-twe"]
+        estimators = [
+            "kesba-final-twe",
+            "kesba-final-msm",
+            "kesba-final-lloyds-msm",
+            "kesba-final-petitjean-msm",
+            "kesba-final-lloyds-petitjean-msm",
+            "kesba-final-petitjean-no-window-msm",
+            "kesba-final-lloyds-petitjean-no-window-msm",
+        ]
         for estimator_name in estimators:
             data_path = _TEST_DATA_PATH
             results_path = _CLUSTERER_RESULTS_PATH
