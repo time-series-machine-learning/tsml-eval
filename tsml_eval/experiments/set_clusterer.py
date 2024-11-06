@@ -151,6 +151,8 @@ distance_based_clusterers = [
     "kesba-ba-init-final-lloyds-petitjean-msm",
     "kesba-ba-init-final-petitjean-no-window-msm",
     "kesba-ba-init-final-lloyds-petitjean-no-window-msm",
+    "kesba-ba-init-pass-cost-final-twe",
+    "kesba-ba-init-pass-cost-final-msm",
     "soft-dba-first",
     "soft-dba-second",
     "soft-dba-third",
@@ -303,6 +305,10 @@ def _set_kesba_clusterer(
     if "no-window" in c:
         window = 1.0
 
+    use_previous_cost = False
+    if "pass-cost" in c:
+        use_previous_cost = True
+
     return KESBA(
         distance=distance_measure,
         ba_subset_size=0.5,
@@ -318,6 +324,7 @@ def _set_kesba_clusterer(
         use_lloyds=use_lloyds,
         use_mean_as_init=False,
         count_distance_calls=True,
+        use_previous_cost=use_previous_cost,
     )
 
 

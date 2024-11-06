@@ -113,6 +113,8 @@ def run_experiment(args):
             "kesba-ba-init-final-lloyds-petitjean-msm",
             "kesba-ba-init-final-petitjean-no-window-msm",
             "kesba-ba-init-final-lloyds-petitjean-no-window-msm",
+            "kesba-ba-init-pass-cost-final-twe",
+            "kesba-ba-init-pass-cost-final-msm",
         ]
         for estimator_name in estimators:
             data_path = _TEST_DATA_PATH
