@@ -155,6 +155,18 @@ distance_based_clusterers = [
     "kesba-ba-init-pass-cost-final-msm",
     "kesba-final-pass-cost-use-all-first-iter-msm",
     "kesba-final-pass-cost-use-all-first-iter-twe",
+    "kesba-final-pass-cost-use-all-first-iter-lr-iterative-msm",
+    "kesba-final-pass-cost-use-all-first-iter-lr-linear-msm",
+    "kesba-final-pass-cost-use-all-first-iter-lr-quadratic-msm",
+    "kesba-final-pass-cost-use-all-first-iter-lr-exponential-msm",
+    "kesba-final-pass-cost-use-all-first-iter-lr-cosine-annealing-msm",
+    "kesba-final-pass-cost-use-all-first-iter-lr-inverse-time-msm",
+    "kesba-final-pass-cost-lr-iterative-msm",
+    "kesba-final-pass-cost-lr-linear-msm",
+    "kesba-final-pass-cost-lr-quadratic-msm",
+    "kesba-final-pass-cost-lr-exponential-msm",
+    "kesba-final-pass-cost-lr-cosine-annealing-msm",
+    "kesba-final-pass-cost-lr-inverse-time-msm",
     "soft-dba-first",
     "soft-dba-second",
     "soft-dba-third",
@@ -315,6 +327,23 @@ def _set_kesba_clusterer(
     if "use-all-first-iter" in c:
         use_all_first_iter = True
 
+    lr_algo = None
+    if "lr-iterative" in c:
+        lr_algo = "iterative"
+    elif "lr-linear" in c:
+        lr_algo = "linear"
+    elif "lr-quadratic" in c:
+        lr_algo = "quadratic"
+    elif "lr-exponential" in c:
+        lr_algo = "exponential"
+    elif "lr-cosine-annealing" in c:
+        lr_algo = "cosine-annealing"
+    elif "lr-inverse-time" in c:
+        lr_algo = "inverse-time"
+
+    if lr_algo is not None:
+        average_method = "lr_random_subset_ssg"
+
     return KESBA(
         distance=distance_measure,
         ba_subset_size=0.5,
@@ -332,6 +361,8 @@ def _set_kesba_clusterer(
         count_distance_calls=True,
         use_previous_cost=use_previous_cost,
         use_all_first_subset_ba_iteration=use_all_first_iter,
+        ba_lr_func=lr_algo,
+        decay_rate=0.1,
     )
 
 
