@@ -106,12 +106,9 @@ def run_experiment(args):
         # Do not include paths to your local directories here in PRs
         # If threading is required, see the threaded version of this file
         estimators = [
-            "kesba-final-pass-cost-use-all-first-iter-lr-iterative-msm",
-            "kesba-final-pass-cost-use-all-first-iter-lr-linear-msm",
-            "kesba-final-pass-cost-use-all-first-iter-lr-quadratic-msm",
-            "kesba-final-pass-cost-use-all-first-iter-lr-exponential-msm",
-            "kesba-final-pass-cost-use-all-first-iter-lr-cosine-annealing-msm",
-            "kesba-final-pass-cost-use-all-first-iter-lr-inverse-time-msm",
+            "kmeans++-msm",
+            "kmeans++-dtw",
+            "kmeans++-twe",
         ]
         for estimator_name in estimators:
             data_path = _TEST_DATA_PATH

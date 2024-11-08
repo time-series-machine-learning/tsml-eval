@@ -178,6 +178,9 @@ distance_based_clusterers = [
     "soft-dba-ninth",
     "soft-dba-tenth",
     "soft-dba-kmeans++",
+    "kmeans++-msm",
+    "kmeans++-twe",
+    "kmeans++-dtw",
 ]
 
 feature_based_clusterers = [
@@ -399,6 +402,23 @@ def _set_clusterer_distance_based(
             data_vars,
             row_normalise,
             kwargs,
+        )
+    if c == "kmeans++-msm" or c == "kmeans++-twe" or c == "kmeans++-dtw":
+        distance_str = c.split("-")[-1]
+        distance_params = _get_distance_default_params(
+            distance_str, data_vars, row_normalise
+        )
+        return KESBA(
+            distance=distance_str,
+            max_iter=0,
+            verbose=True,
+            random_state=random_state,
+            distance_params=distance_params,
+            use_lloyds=False,
+            use_mean_as_init=False,
+            count_distance_calls=True,
+            use_previous_cost=True,
+            use_all_first_subset_ba_iteration=True,
         )
     if "init_algorithm" in kwargs:
         init_algorithm = kwargs["init_algorithm"]
