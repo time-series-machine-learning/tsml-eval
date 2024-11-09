@@ -136,7 +136,6 @@ distance_based_clusterers = [
     "kesba-lloyds-ssg-twe",
     "kesba-lloyds-random-subset-ssg-msm",
     "kesba-lloyds-random-subset-ssg-twe",
-    "dba-plus-plus-dtw",
     "kesba-final-twe",
     "kesba-final-msm",
     "kesba-final-lloyds-msm",
@@ -167,6 +166,22 @@ distance_based_clusterers = [
     "kesba-final-pass-cost-lr-exponential-msm",
     "kesba-final-pass-cost-lr-cosine-annealing-msm",
     "kesba-final-pass-cost-lr-inverse-time-msm",
+    # Dynamic learning rate
+    "kesba-final-pass-cost-use-all-first-iter-lr-dynamic-iterative-msm",
+    "kesba-final-pass-cost-use-all-first-iter-lr-dynamic-linear-msm",
+    "kesba-final-pass-cost-use-all-first-iter-lr-dynamic-exponential-msm",
+    # No subsample
+    "kesba-final-no-subsample-pass-cost-use-all-first-iter-lr-dynamic-iterative-msm",
+    "kesba-final-no-subsample-pass-cost-use-all-first-iter-lr-dynamic-linear-msm",
+    "kesba-final-no-subsample-pass-cost-use-all-first-iter-lr-dynamic-exponential-msm",
+    "kesba-final-no-subsample-pass-cost-use-all-first-iter-lr-iterative-msm",
+    "kesba-final-no-subsample-pass-cost-use-all-first-iter-lr-linear-msm",
+    "kesba-final-no-subsample-pass-cost-use-all-first-iter-lr-exponential-msm",
+    "kesba-ba-init-no-subsample-pass-cost-final-msm",
+    # Plus plus
+    "dba-plus-plus-dtw",
+    "shape-dba-plus-plus-shape_dtw",
+    "soft-dba-plus-plus-soft_dtw",
     "soft-dba-first",
     "soft-dba-second",
     "soft-dba-third",
@@ -331,7 +346,13 @@ def _set_kesba_clusterer(
         use_all_first_iter = True
 
     lr_algo = None
-    if "lr-iterative" in c:
+    if "lr-dynamic-iterative" in c:
+        lr_algo = "dynamic-iterative"
+    elif "lr-dynamic-linear" in c:
+        lr_algo = "dynamic-linear"
+    elif "lr-dynamic-exponential" in c:
+        lr_algo = "dynamic-exponential"
+    elif "lr-iterative" in c:
         lr_algo = "iterative"
     elif "lr-linear" in c:
         lr_algo = "linear"
@@ -339,17 +360,17 @@ def _set_kesba_clusterer(
         lr_algo = "quadratic"
     elif "lr-exponential" in c:
         lr_algo = "exponential"
-    elif "lr-cosine-annealing" in c:
-        lr_algo = "cosine-annealing"
-    elif "lr-inverse-time" in c:
-        lr_algo = "inverse-time"
 
     if lr_algo is not None:
         average_method = "lr_random_subset_ssg"
 
+    ba_subset_size = 0.5
+    if "no-subsample" in c:
+        ba_subset_size = 1.0
+
     return KESBA(
         distance=distance_measure,
-        ba_subset_size=0.5,
+        ba_subset_size=ba_subset_size,
         initial_step_size=0.05,
         final_step_size=0.005,
         window=window,
@@ -483,6 +504,9 @@ def _set_clusterer_distance_based(
                 averaging_method="mean",
                 **kwargs,
             )
+    # "dba-plus-plus-dtw",
+    # "shape-dba-plus-plus-shape_dtw",
+    # "soft-dba-plus-plus-soft_dtw",
     elif "dba-plus-plus-dtw" in c:
         return TimeSeriesKMeans(
             max_iter=300,
@@ -494,6 +518,63 @@ def _set_clusterer_distance_based(
             averaging_method="ba",
             **kwargs,
         )
+    elif "shape-dba-plus-plus-shape_dtw" in c:
+        if "average_params" in kwargs:
+            average_params = kwargs["average_params"]
+        else:
+            average_params = {"distance": distance, **distance_params.copy()}
+        return TimeSeriesKMeans(
+            max_iter=300,
+            n_init=1,
+            init_algorithm="kmeans++",
+            distance="shape_dtw",
+            distance_params=distance_params,
+            average_params=average_params,
+            random_state=random_state,
+            averaging_method="ba",
+            **kwargs,
+        )
+    elif "soft-dba-plus-plus-soft_dtw" in c:
+        if "average_params" in kwargs:
+            average_params = kwargs["average_params"]
+        else:
+            average_params = {"distance": distance, **distance_params.copy()}
+        average_params = {
+            **average_params,
+            "method": "soft_dba",
+        }
+        return TimeSeriesKMeans(
+            max_iter=300,
+            n_init=1,
+            init_algorithm="kmeans++",
+            distance="soft_dtw",
+            distance_params=distance_params,
+            random_state=random_state,
+            averaging_method="ba",
+            average_params=average_params,
+            **kwargs,
+        )
+    elif "soft-dba-plus-plus-soft_dtw" in c:
+        if "average_params" in kwargs:
+            average_params = kwargs["average_params"]
+        else:
+            average_params = {"distance": distance, **distance_params.copy()}
+        average_params = {
+            **average_params,
+            "method": "soft_dba",
+        }
+        return TimeSeriesKMeans(
+            max_iter=300,
+            n_init=1,
+            init_algorithm="kmeans++",
+            distance="soft_dtw",
+            distance_params=distance_params,
+            random_state=random_state,
+            averaging_method="ba",
+            average_params=average_params,
+            **kwargs,
+        )
+
     elif "kmedoids" in c or "timeserieskmedoids" in c:
         return TimeSeriesKMedoids(
             max_iter=50,
@@ -585,6 +666,8 @@ def _get_distance_default_params(
         return {"warp_penalty": 1.0}
     if dist_name == "shape_dtw":
         return {"descriptor": "identity", "reach": 15}
+    if dist_name == "soft_dtw":
+        return {"gamma": 1.0}
     return {}
 
 
