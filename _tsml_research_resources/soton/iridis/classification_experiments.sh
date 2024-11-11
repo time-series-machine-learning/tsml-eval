@@ -6,7 +6,7 @@
 # While reading is fine, please dont write anything to the default directories in this script
 
 # Start and end for resamples
-max_folds=30
+max_folds=1
 start_fold=1
 
 # To avoid dumping 1000s of jobs in the queue we have a higher level queue
@@ -20,7 +20,7 @@ queue="batch"
 queue_alias=$queue
 
 # Enter your username and email here
-username="ajb2u23"
+username="cq2u24"
 mail="NONE"
 mailto="$username@soton.ac.uk"
 
@@ -34,14 +34,14 @@ max_time="60:00:00"
 start_point=1
 
 # Put your home directory here
-local_path="/mainfs/home/$username/"
-
+local_path="/home/$username/"
+data_path="/scratch/$username/"
 # Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
-data_dir="$local_path/Data/"
-datasets="$local_path/DataSetLists/Classification.txt"
+data_dir="$data_path/Data/"
+datasets="$local_path/DataSetLists/classification.txt"
 
 # Results and output file write location. Change these to reflect your own file structure
-results_dir="$local_path/ClassificationResults/results/"
+results_dir="$local_path/Classifi[Cry]cationResults/results/"
 out_dir="$local_path/ClassificationResults/output/"
 
 # The python script we are running
@@ -53,7 +53,7 @@ env_name="tsml-eval"
 
 # Classifiers to loop over. Must be seperated by a space
 # See list of potential classifiers in set_classifier
-classifiers_to_run="ROCKET DrCIF"
+classifiers_to_run="ROCKET multirockethydra"
 
 # You can add extra arguments here. See tsml_eval/utils/arguments.py parse_args
 # You will have to add any variable to the python call close to the bottom of the script
