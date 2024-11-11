@@ -53,7 +53,7 @@ env_name="tsml-eval"
 
 # Classifiers to loop over. Must be seperated by a space
 # See list of potential classifiers in set_classifier
-classifiers_to_run="ROCKET multirockethydra"
+classifiers_to_run="multirockethydra"
 
 # You can add extra arguments here. See tsml_eval/utils/arguments.py parse_args
 # You will have to add any variable to the python call close to the bottom of the script
