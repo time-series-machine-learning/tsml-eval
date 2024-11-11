@@ -38,7 +38,7 @@ local_path="/home/$username/"
 data_path="/scratch/$username/"
 # Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
 data_dir="$data_path/Data/"
-datasets="$local_path/DataSetLists/classification.txt"
+datasets="$data_path/DataSetLists/classification.txt"
 
 # Results and output file write location. Change these to reflect your own file structure
 results_dir="$local_path/Classifi[Cry]cationResults/results/"
