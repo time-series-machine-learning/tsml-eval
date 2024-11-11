@@ -122,6 +122,7 @@ if [ "${array_jobs}" != "" ]; then
 echo "#!/bin/bash
 #SBATCH --mail-type=${mail}
 #SBATCH --mail-user=${mailto}
+#SBATCH --partition=a100
 #SBATCH -p ${queue}
 #SBATCH -t ${max_time}
 #SBATCH --job-name=${classifier}${dataset}
