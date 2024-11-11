@@ -10,7 +10,7 @@ max_folds=1
 start_fold=1
 
 # To avoid dumping 1000s of jobs in the queue we have a higher level queue
-max_num_submitted=1
+max_num_submitted=100
 
 # Queue options are https://sotonac.sharepoint.com/teams/HPCCommunityWiki/SitePages/Iridis%205%20Job-submission-and-Limits-Quotas.aspx
 queue="amd"
@@ -133,7 +133,7 @@ echo "#!/bin/bash
 
 . /etc/profile
 
-module load anaconda/py3.10
+module load conda/py3-latest
 source activate $env_name
 
 # Input args to the default classification_experiments are in main method of
