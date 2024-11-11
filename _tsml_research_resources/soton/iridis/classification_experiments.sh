@@ -13,7 +13,7 @@ start_fold=1
 max_num_submitted=100
 
 # Queue options are https://sotonac.sharepoint.com/teams/HPCCommunityWiki/SitePages/Iridis%205%20Job-submission-and-Limits-Quotas.aspx
-queue="batch"
+queue="amd"
 
 # The partition name may not always be the same as the queue name, i.e. batch is the queue, serial is the partition
 # This is used for the script job limit queue
@@ -122,7 +122,6 @@ if [ "${array_jobs}" != "" ]; then
 echo "#!/bin/bash
 #SBATCH --mail-type=${mail}
 #SBATCH --mail-user=${mailto}
-#SBATCH --partition=a100
 #SBATCH -p ${queue}
 #SBATCH -t ${max_time}
 #SBATCH --job-name=${classifier}${dataset}
