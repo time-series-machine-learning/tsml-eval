@@ -106,8 +106,9 @@ def run_experiment(args):
         # Do not include paths to your local directories here in PRs
         # If threading is required, see the threaded version of this file
         estimators = [
-            "shape-dba-plus-plus-shape_dtw",
-            "soft-dba-plus-plus-soft_dtw",
+            "kesba-final-pass-cost-use-all-first-iter-lr-linear-twe",
+            "kesba-final-pass-cost-use-all-first-iter-lr-quadratic-twe",
+            "kesba-final-pass-cost-use-all-first-iter-lr-exponential-twe",
         ]
         for estimator_name in estimators:
             data_path = _TEST_DATA_PATH

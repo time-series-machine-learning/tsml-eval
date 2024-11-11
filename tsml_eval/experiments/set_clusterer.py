@@ -196,6 +196,9 @@ distance_based_clusterers = [
     "kmeans++-msm",
     "kmeans++-twe",
     "kmeans++-dtw",
+    "kesba-final-pass-cost-use-all-first-iter-lr-linear-twe",
+    "kesba-final-pass-cost-use-all-first-iter-lr-quadratic-twe",
+    "kesba-final-pass-cost-use-all-first-iter-lr-exponential-twe",
 ]
 
 feature_based_clusterers = [
