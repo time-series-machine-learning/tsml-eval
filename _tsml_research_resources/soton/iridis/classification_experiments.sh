@@ -135,6 +135,7 @@ echo "#!/bin/bash
 
 module load conda
 source activate $env_name
+export PYTHONPATH="$local_path/tsml-eval:$PYTHONPATH"
 
 # Input args to the default classification_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/classification_experiments.py
