@@ -199,6 +199,19 @@ distance_based_clusterers = [
     "kesba-final-pass-cost-use-all-first-iter-lr-linear-twe",
     "kesba-final-pass-cost-use-all-first-iter-lr-quadratic-twe",
     "kesba-final-pass-cost-use-all-first-iter-lr-exponential-twe",
+    # Final version of kesba
+    "kesba-final-pass-cost-use-all-first-iter-lr-exponential-msm",
+    "kesba-final-pass-cost-use-all-first-iter-lr-exponential-twe",
+    # Final version tests
+    "kesbaf-no-window",
+    "kesbaf-use-mean-as-init",
+    "kesbaf-do-not-pass-cost-to-ba",
+    "kesbaf-use-lloyds",
+    "kesbaf-no-window-or-subsample",
+    "kesbaf-random-init-10-restarts",
+    "kesbaf-kmeans++-init-10-restarts",
+    "kesbaf-mba",
+    "kesbaf-twe",
 ]
 
 feature_based_clusterers = [
@@ -292,6 +305,92 @@ def get_clusterer_by_name(
         )
     else:
         raise ValueError(f"UNKNOWN CLUSTERER: {c} in set_clusterer")
+
+def _set_kesbaf_clusterer(
+    c,
+    random_state,
+    n_jobs,
+    fit_contract,
+    checkpoint,
+    data_vars,
+    row_normalise,
+    kwargs,
+):
+    # All the default parameters
+    window = 0.5
+    distance = "msm"
+    ba_subset_size = 0.5
+    average_method = "lr_random_subset_ssg"
+    use_lloyds = False
+    use_mean_as_init = False
+    use_previous_cost = True
+    use_all_first_subset_ba_iteration = True
+    use_ten_restarts = False
+    use_random_init = False
+
+    if c == "kesbaf-no-window":
+        window = 1.0
+    elif c == "kesbaf-use-mean-as-init":
+        use_mean_as_init = True
+    elif c == "kesbaf-do-not-pass-cost-to-ba":
+        use_previous_cost = False
+    elif c == "kesbaf-use-lloyds":
+        use_lloyds = True
+    elif c == "kesbaf-no-window-or-subsample":
+        window = 1.0
+        ba_subset_size = 1.0
+    elif c == "kesbaf-random-init-10-restarts":
+        use_ten_restarts = True
+        use_random_init = True
+    elif c == "kesbaf-kmeans++-init-10-restarts":
+        use_ten_restarts = True
+    elif c == "kesbaf-mba":
+        use_lloyds = True
+        average_method = "petitjean"
+        window = 1.0
+        ba_subset_size = 1.0
+        use_mean_as_init = True
+        use_previous_cost = False
+        use_all_first_subset_ba_iteration = False
+    elif c == "kesbaf-twe":
+        distance = "twe"
+        use_lloyds = True
+        average_method = "petitjean"
+        window = 1.0
+        ba_subset_size = 1.0
+        use_mean_as_init = True
+        use_previous_cost = False
+        use_all_first_subset_ba_iteration = False
+    else:
+        raise ValueError(f"Unknown kesbaf clusterer {c}")
+
+    distance_params = _get_distance_default_params(
+        distance, data_vars, row_normalise
+    )
+
+    return KESBA(
+        distance=distance,
+        ba_subset_size=ba_subset_size,
+        initial_step_size=0.05,
+        final_step_size=0.005,
+        window=window,
+        max_iter=300,
+        tol=1e-6,
+        verbose=True,
+        random_state=random_state,
+        distance_params=distance_params,
+        average_method=average_method,
+        use_lloyds=use_lloyds,
+        use_mean_as_init=use_mean_as_init,
+        count_distance_calls=True,
+        use_previous_cost=use_previous_cost,
+        use_all_first_subset_ba_iteration=use_all_first_subset_ba_iteration,
+        ba_lr_func="exponential",
+        decay_rate=0.1,
+        use_random_init=use_random_init,
+        use_ten_restarts=use_ten_restarts,
+    )
+
 
 
 def _set_kesba_clusterer(
@@ -416,6 +515,17 @@ def _set_clusterer_distance_based(
     row_normalise,
     kwargs,
 ):
+    if "kesbaf" in c:
+        return _set_kesbaf_clusterer(
+            c,
+            random_state,
+            n_jobs,
+            fit_contract,
+            checkpoint,
+            data_vars,
+            row_normalise,
+            kwargs,
+        )
     if "kesba" in c:
         return _set_kesba_clusterer(
             c,

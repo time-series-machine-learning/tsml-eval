@@ -106,9 +106,15 @@ def run_experiment(args):
         # Do not include paths to your local directories here in PRs
         # If threading is required, see the threaded version of this file
         estimators = [
-            "kesba-final-pass-cost-use-all-first-iter-lr-linear-twe",
-            "kesba-final-pass-cost-use-all-first-iter-lr-quadratic-twe",
-            "kesba-final-pass-cost-use-all-first-iter-lr-exponential-twe",
+            "kesbaf-no-window",
+            "kesbaf-use-mean-as-init",
+            "kesbaf-do-not-pass-cost-to-ba",
+            "kesbaf-use-lloyds",
+            "kesbaf-no-window-or-subsample",
+            "kesbaf-random-init-10-restarts",
+            "kesbaf-kmeans++-init-10-restarts",
+            "kesbaf-mba",
+            "kesbaf-twe",
         ]
         for estimator_name in estimators:
             data_path = _TEST_DATA_PATH
