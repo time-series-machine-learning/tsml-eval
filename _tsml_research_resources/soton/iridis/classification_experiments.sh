@@ -134,7 +134,7 @@ echo "#!/bin/bash
 . /etc/profile
 
 module load conda
-conda activate $env_name
+source activate $env_name
 
 # Input args to the default classification_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/classification_experiments.py
