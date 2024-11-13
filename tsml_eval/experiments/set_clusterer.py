@@ -212,6 +212,7 @@ distance_based_clusterers = [
     "kesbaf-kmeans++-init-10-restarts",
     "kesbaf-mba",
     "kesbaf-twe",
+    "kesbaf-twe-no-window",
 ]
 
 feature_based_clusterers = [
@@ -361,6 +362,9 @@ def _set_kesbaf_clusterer(
         use_mean_as_init = True
         use_previous_cost = False
         use_all_first_subset_ba_iteration = False
+    elif c == "kesbaf-twe-no-window":
+        distance = "twe"
+        window = 1.0
     else:
         raise ValueError(f"Unknown kesbaf clusterer {c}")
 

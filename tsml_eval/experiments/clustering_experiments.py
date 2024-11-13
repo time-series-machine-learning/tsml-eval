@@ -106,15 +106,7 @@ def run_experiment(args):
         # Do not include paths to your local directories here in PRs
         # If threading is required, see the threaded version of this file
         estimators = [
-            "kesbaf-no-window",
-            "kesbaf-use-mean-as-init",
-            "kesbaf-do-not-pass-cost-to-ba",
-            "kesbaf-use-lloyds",
-            "kesbaf-no-window-or-subsample",
-            "kesbaf-random-init-10-restarts",
-            "kesbaf-kmeans++-init-10-restarts",
-            "kesbaf-mba",
-            "kesbaf-twe",
+            "kesbaf-twe-no-window",
         ]
         for estimator_name in estimators:
             data_path = _TEST_DATA_PATH
