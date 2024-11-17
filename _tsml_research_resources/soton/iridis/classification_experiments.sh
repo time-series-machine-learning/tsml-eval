@@ -38,7 +38,7 @@ local_path="/home/$username/"
 data_path="/scratch/$username/"
 # Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
 data_dir="$data_path/Data19_1/"
-datasets="$data_path/DataSetLists/classification.txt"
+datasets="$data_path/DataSetLists/classification19_1_plenty.txt"
 
 # Results and output file write location. Change these to reflect your own file structure
 results_dir="$local_path/Classifi[Cry]cationResults/results/"
@@ -58,6 +58,13 @@ classifiers_to_run="multirockethydra"
 # You can add extra arguments here. See tsml_eval/utils/arguments.py parse_args
 # You will have to add any variable to the python call close to the bottom of the script
 # and possibly to the options handling below
+
+# Set to the oversampling methods you want to test
+toms="smote"
+results_dir="${results_dir}${toms}/"
+results_dir=$(echo "$results_dir" | sed 's#//*#/#g')
+out_dir="${out_dir}${toms}/"
+out_dir=$(echo "$out_dir" | sed 's#//*#/#g')
 
 # generate a results file for the train data as well as test, usually slower
 generate_train_files="false"
@@ -83,6 +90,9 @@ predefined_folds=$([ "${predefined_folds,,}" == "true" ] && echo "-pr" || echo "
 
 # Set to -rn to normalise data
 normalise_data=$([ "${normalise_data,,}" == "true" ] && echo "-rn" || echo "")
+
+# Set to --test_oversampling_methods to specify the oversampling method
+test_oversampling_methods=$([ -n "${toms}" ] && echo "--test_oversampling_methods ${toms}" || echo "")
 
 count=0
 while read dataset; do
@@ -139,7 +149,7 @@ export PYTHONPATH="$local_path/tsml-eval:$PYTHONPATH"
 
 # Input args to the default classification_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/classification_experiments.py
-python -u ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_train_files} ${predefined_folds} ${normalise_data}"  > generatedFile.sub
+python -u ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_train_files} ${predefined_folds} ${normalise_data} ${test_oversampling_option}"  > generatedFile.sub
 
 echo "${count} ${classifier}/${dataset}"
 

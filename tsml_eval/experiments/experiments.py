@@ -59,6 +59,8 @@ from tsml_eval.utils.results_writing import (
     write_regression_results,
 )
 
+from tsml_eval.utils.oversampling_methods import SMOTE_FAMILY
+
 if os.getenv("MEMRECORD_INTERVAL") is not None:  # pragma: no cover
     TEMP = os.getenv("MEMRECORD_INTERVAL")
     MEMRECORD_INTERVAL = float(TEMP) if isinstance(TEMP, str) else 5.0
@@ -302,6 +304,7 @@ def load_and_run_classification_experiment(
     benchmark_time=True,
     overwrite=False,
     predefined_resample=False,
+    test_oversampling_methods=None,
 ):
     """Load a dataset and run a classification experiment.
 
@@ -343,6 +346,7 @@ def load_and_run_classification_experiment(
         Read a predefined resample from file instead of performing a resample. If True
         the file format must include the resample_id at the end of the dataset name i.e.
         <problem_path>/<dataset>/<dataset>+<resample_id>+"_TRAIN.ts".
+    test_smote_family_resample : bool, default=False
     """
     if classifier_name is None:
         classifier_name = type(classifier).__name__
@@ -374,6 +378,16 @@ def load_and_run_classification_experiment(
         attribute_file_path = f"{results_path}/{classifier_name}/Workspace/{dataset}/"
     else:
         attribute_file_path = None
+
+    if test_oversampling_methods:
+        oversampler = getattr(SMOTE_FAMILY(), test_oversampling_methods)(seed=resample_id+2024)
+        try:
+            X_train, y_train = oversampler.fit_resample(np.squeeze(X_train), y_train)
+            X_train = np.expand_dims(X_train, axis=1)
+        except ValueError as e:
+            print(f"Skipping test_oversampling_methods of {test_oversampling_methods} due to error: {e}")
+        except RuntimeError as e:
+            print(f"Skipping test_oversampling_methods of {test_oversampling_methods}due to error: {e}")
 
     run_classification_experiment(
         X_train,

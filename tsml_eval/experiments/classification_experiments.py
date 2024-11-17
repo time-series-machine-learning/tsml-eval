@@ -90,6 +90,7 @@ def run_experiment(args):
                 benchmark_time=args.benchmark_time,
                 overwrite=args.overwrite,
                 predefined_resample=args.predefined_resample,
+                test_oversampling_methods=args.test_oversampling_methods,
             )
     # local run (no args)
     else:
