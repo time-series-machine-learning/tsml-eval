@@ -99,6 +99,9 @@ def parse_args(args):
                             the over-sampling methods to deal with imbalance classification problems.
                             If None, no over-sampling method is used.
                             (default: None).
+      -imb_ratio, --imbalance_ratio,
+                            the ratio of the majority class to the minority class in the training set.
+                            (default: 19 i.e. 95% majority data).
 
     Parameters
     ----------
@@ -267,6 +270,15 @@ def parse_args(args):
         default=None,
         help="the over-sampling methods to deal with imbalance classification problems. "
              "If None, no over-sampling method is used. (default: %(default)s).",
+    )
+
+    parser.add_argument(
+        "-imb_ratio",
+        "--imbalance_ratio",
+        type=int,
+        default=19,
+        help="the ratio of the majority class to the minority class in the training set. "
+             "(default: %(default)s).",
     )
     args = parser.parse_args(args=args)
 

@@ -37,7 +37,7 @@ start_point=1
 local_path="/home/$username/"
 data_path="/scratch/$username/"
 # Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
-data_dir="$data_path/Data19_1/"
+data_dir="$data_path/Data/"
 datasets="$data_path/DataSetLists/classification19_1_plenty.txt"
 
 # Results and output file write location. Change these to reflect your own file structure
@@ -59,6 +59,8 @@ classifiers_to_run="multirockethydra"
 # You will have to add any variable to the python call close to the bottom of the script
 # and possibly to the options handling below
 
+# set the imbalance ration to create the imbalance data
+imbalance_ratio=19
 # Set to the oversampling methods you want to test
 toms="rose"
 results_dir="${results_dir}${toms}/"
@@ -94,6 +96,8 @@ normalise_data=$([ "${normalise_data,,}" == "true" ] && echo "-rn" || echo "")
 # Set to --test_oversampling_methods to specify the oversampling method
 test_oversampling_methods=$([ -n "${toms}" ] && echo "--test_oversampling_methods ${toms}" || echo "")
 
+# Set to --imbalance_ratio to specify the imbalance ratio
+imbalance_ratio=$([ -n "${imbalance_ratio}" ] && echo "--imbalance_ratio ${imbalance_ratio}" || echo "")
 count=0
 while read dataset; do
 for classifier in $classifiers_to_run; do
@@ -149,7 +153,7 @@ export PYTHONPATH="$local_path/tsml-eval:$PYTHONPATH"
 
 # Input args to the default classification_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/classification_experiments.py
-python -u ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_train_files} ${predefined_folds} ${normalise_data} ${test_oversampling_option}"  > generatedFile.sub
+python -u ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_train_files} ${predefined_folds} ${normalise_data} ${test_oversampling_option} ${imbalance_ratio}"  > generatedFile.sub
 
 echo "${count} ${classifier}/${dataset}"
 
