@@ -19,7 +19,7 @@ queue="amd"
 # This is used for the script job limit queue
 queue_alias=$queue
 
-# Enter your username and email herec
+# Enter your username and email here
 username="cq2u24"
 mail="NONE"
 mailto="$username@soton.ac.uk"
