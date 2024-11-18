@@ -60,7 +60,7 @@ classifiers_to_run="multirockethydra"
 # and possibly to the options handling below
 
 # Set to the oversampling methods you want to test
-toms="ros"
+toms="rose"
 results_dir="${results_dir}${toms}/"
 results_dir=$(echo "$results_dir" | sed 's#//*#/#g')
 out_dir="${out_dir}${toms}/"
