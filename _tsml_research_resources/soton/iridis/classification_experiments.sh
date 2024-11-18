@@ -6,7 +6,7 @@
 # While reading is fine, please dont write anything to the default directories in this script
 
 # Start and end for resamples
-max_folds=5
+max_folds=10
 start_fold=1
 
 # To avoid dumping 1000s of jobs in the queue we have a higher level queue
@@ -38,7 +38,7 @@ local_path="/home/$username/"
 data_path="/scratch/$username/"
 # Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
 data_dir="$data_path/Data/"
-datasets="$data_path/DataSetLists/classification_demo.txt"
+datasets="$data_path/DataSetLists/classification19_1_plenty.txt"
 
 # Results and output file write location. Change these to reflect your own file structure
 results_dir="$local_path/Classifi[Cry]cationResults/results/"

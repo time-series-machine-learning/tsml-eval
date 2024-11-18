@@ -384,11 +384,8 @@ def load_and_run_classification_experiment(
         attribute_file_path = None
 
     if imbalance_ratio:
-        print(f'X_train shape is {X_train.shape}, y_train shape is {y_train.shape}, X_test shape is {X_test.shape}, y_test shape is {y_test.shape}')
-        print(y_train)
         X_train, y_train = make_imbalance(X_train, y_train, sampling_ratio=imbalance_ratio,random_state=resample_id)
         X_test, y_test = make_imbalance(X_test, y_test, sampling_ratio=imbalance_ratio,random_state=resample_id)
-        print(f'X_train shape is {X_train.shape}, y_train shape is {y_train.shape}, X_test shape is {X_test.shape}, y_test shape is {y_test.shape}')
 
     if test_oversampling_methods:
         oversampler = getattr(SMOTE_FAMILY(), test_oversampling_methods)(seed=resample_id+2024)
