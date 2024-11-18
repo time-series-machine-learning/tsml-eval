@@ -372,6 +372,8 @@ def load_and_run_classification_experiment(
     X_train, y_train, X_test, y_test, resample = load_experiment_data(
         problem_path, dataset, resample_id, predefined_resample
     )
+    print(
+        f'X_train shape is {X_train.shape}, y_train shape is {y_train.shape}, X_test shape is {X_test.shape}, y_test shape is {y_test.shape}')
 
     if resample:
         X_train, y_train, X_test, y_test = stratified_resample_data(
