@@ -51,15 +51,18 @@ from tsml_eval.utils.experiments import (
     timing_benchmark,
 )
 from tsml_eval.utils.memory_recorder import record_max_memory
-from tsml_eval.utils.resampling import resample_data, stratified_resample_data, make_imbalance
+from tsml_eval.utils.oversampling_methods import SMOTE_FAMILY
+from tsml_eval.utils.resampling import (
+    make_imbalance,
+    resample_data,
+    stratified_resample_data,
+)
 from tsml_eval.utils.results_writing import (
     write_classification_results,
     write_clustering_results,
     write_forecasting_results,
     write_regression_results,
 )
-
-from tsml_eval.utils.oversampling_methods import SMOTE_FAMILY
 
 if os.getenv("MEMRECORD_INTERVAL") is not None:  # pragma: no cover
     TEMP = os.getenv("MEMRECORD_INTERVAL")
@@ -306,7 +309,6 @@ def load_and_run_classification_experiment(
     predefined_resample=False,
     test_oversampling_methods=None,
     imbalance_ratio=None,
-
 ):
     """Load a dataset and run a classification experiment.
 
@@ -384,18 +386,28 @@ def load_and_run_classification_experiment(
         attribute_file_path = None
 
     if imbalance_ratio:
-        X_train, y_train = make_imbalance(X_train, y_train, sampling_ratio=imbalance_ratio,random_state=resample_id)
-        X_test, y_test = make_imbalance(X_test, y_test, sampling_ratio=imbalance_ratio,random_state=resample_id)
+        X_train, y_train = make_imbalance(
+            X_train, y_train, sampling_ratio=imbalance_ratio, random_state=resample_id
+        )
+        X_test, y_test = make_imbalance(
+            X_test, y_test, sampling_ratio=imbalance_ratio, random_state=resample_id
+        )
 
     if test_oversampling_methods:
-        oversampler = getattr(SMOTE_FAMILY(), test_oversampling_methods)(seed=resample_id+2024)
+        oversampler = getattr(SMOTE_FAMILY(), test_oversampling_methods)(
+            seed=resample_id + 2024
+        )
         try:
             X_train, y_train = oversampler.fit_resample(np.squeeze(X_train), y_train)
             X_train = np.expand_dims(X_train, axis=1)
         except ValueError as e:
-            print(f"Skipping test_oversampling_methods of {test_oversampling_methods} due to error: {e}")
+            print(
+                f"Skipping test_oversampling_methods of {test_oversampling_methods} due to error: {e}"
+            )
         except RuntimeError as e:
-            print(f"Skipping test_oversampling_methods of {test_oversampling_methods}due to error: {e}")
+            print(
+                f"Skipping test_oversampling_methods of {test_oversampling_methods}due to error: {e}"
+            )
 
     run_classification_experiment(
         X_train,

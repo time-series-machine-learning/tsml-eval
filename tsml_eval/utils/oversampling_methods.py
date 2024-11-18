@@ -8,6 +8,7 @@ __all__ = [
 
 from imblearn.over_sampling import *
 
+
 class SMOTE_FAMILY:
     """
     over-sampling methods include 'ADASYN', 'RandomOverSampler', 'KMeansSMOTE', 'SMOTE',
@@ -18,7 +19,7 @@ class SMOTE_FAMILY:
         return RandomOverSampler(random_state=seed)
 
     def rose(self, seed):
-        return RandomOverSampler(random_state=seed, shrinkage={1: 2.})
+        return RandomOverSampler(random_state=seed, shrinkage={1: 2.0})
 
     def adasyn(self, seed):
         return ADASYN(random_state=seed, n_neighbors=5)
@@ -30,5 +31,4 @@ class SMOTE_FAMILY:
         return KMeansSMOTE(random_state=seed)
 
     def borderline_smote(self, seed):
-        return BorderlineSMOTE(random_state=seed, kind='borderline-1')
-
+        return BorderlineSMOTE(random_state=seed, kind="borderline-1")

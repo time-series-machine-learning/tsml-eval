@@ -295,15 +295,15 @@ def make_imbalance(X, y, sampling_ratio=None, random_state=0):
     :param sampling_ratio: the sampling ratio
     """
 
-    x_minority = X[y == '1']  # Minority class
-    x_majority = X[y == '0']  # Majority class
+    x_minority = X[y == "1"]  # Minority class
+    x_majority = X[y == "0"]  # Majority class
     rng = check_random_state(random_state)
     labels, counts = np.unique(y, return_counts=True)
     imbalance_ratio = counts[0] / counts[1]
     if imbalance_ratio > sampling_ratio:
         indices = np.arange(len(x_majority))  # 创建索引数组
         rng.shuffle(indices)
-        x_majority = x_majority[indices][:int(len(x_minority) * sampling_ratio)]
+        x_majority = x_majority[indices][: int(len(x_minority) * sampling_ratio)]
 
     else:
         indices = np.arange(len(x_minority))
