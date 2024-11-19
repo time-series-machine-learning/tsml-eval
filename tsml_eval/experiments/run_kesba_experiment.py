@@ -1,13 +1,17 @@
 from tsml_eval.experiments.clustering_experiments import run_experiment
 
 TSML_EVAL_PATH = "/Users/chrisholder/projects/tsml-eval"
-DATASET_LIST_PATH = f"{TSML_EVAL_PATH}/_tsml_research_resources/dataset_lists/Univariate112Datasets.txt"
+DATASET_LIST_PATH = (
+    f"{TSML_EVAL_PATH}/_tsml_research_resources/dataset_lists/Univariate112Datasets.txt"
+)
 DATASET_PATH = "/Users/chrisholder/Documents/Research/datasets/UCR/Univariate_ts"
-RESULT_PATH = "/Users/chrisholder/Documents/Research/SOTON/local-run-mac-results/test-train-split"
+RESULT_PATH = (
+    "/Users/chrisholder/Documents/Research/SOTON/local-run-mac-results/test-train-split"
+)
 
 if __name__ == "__main__":
     # Load the dataset list
-    with open(DATASET_LIST_PATH, "r") as f:
+    with open(DATASET_LIST_PATH) as f:
         dataset_list = f.read().splitlines()
 
     print("Running test data to ensure caches are built")
@@ -17,12 +21,14 @@ if __name__ == "__main__":
         dataset_name = dataset_list[i]
         print(f"{i+1}/112: Running {dataset_name}")
 
-        run_experiment([
-            DATASET_PATH,
-            RESULT_PATH,
-            "kesbaf-no-window",
-            dataset_name,
-            "0",
-            "-te",
-            "-rn"
-        ])
+        run_experiment(
+            [
+                DATASET_PATH,
+                RESULT_PATH,
+                "kesbaf-no-window",
+                dataset_name,
+                "0",
+                "-te",
+                "-rn",
+            ]
+        )

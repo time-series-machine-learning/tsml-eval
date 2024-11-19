@@ -307,6 +307,7 @@ def get_clusterer_by_name(
     else:
         raise ValueError(f"UNKNOWN CLUSTERER: {c} in set_clusterer")
 
+
 def _set_kesbaf_clusterer(
     c,
     random_state,
@@ -368,9 +369,7 @@ def _set_kesbaf_clusterer(
     else:
         raise ValueError(f"Unknown kesbaf clusterer {c}")
 
-    distance_params = _get_distance_default_params(
-        distance, data_vars, row_normalise
-    )
+    distance_params = _get_distance_default_params(distance, data_vars, row_normalise)
 
     return KESBA(
         distance=distance,
@@ -394,7 +393,6 @@ def _set_kesbaf_clusterer(
         use_random_init=use_random_init,
         use_ten_restarts=use_ten_restarts,
     )
-
 
 
 def _set_kesba_clusterer(
