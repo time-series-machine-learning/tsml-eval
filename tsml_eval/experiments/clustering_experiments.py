@@ -92,7 +92,8 @@ def run_experiment(args):
                 n_clusters=args.n_clusters,
                 clusterer_name=args.estimator_name,
                 resample_id=args.resample_id,
-                build_test_file=args.test_fold,
+                # build_test_file=args.test_fold,
+                build_test_file=False,
                 write_attributes=args.write_attributes,
                 att_max_shape=args.att_max_shape,
                 benchmark_time=args.benchmark_time,
@@ -106,7 +107,7 @@ def run_experiment(args):
         # Do not include paths to your local directories here in PRs
         # If threading is required, see the threaded version of this file
         estimators = [
-            "kesbaf-twe-no-window",
+            "kesbaf-no-window",
         ]
         for estimator_name in estimators:
             data_path = _TEST_DATA_PATH

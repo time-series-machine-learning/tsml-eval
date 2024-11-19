@@ -380,7 +380,7 @@ def _set_kesbaf_clusterer(
         window=window,
         max_iter=300,
         tol=1e-6,
-        verbose=True,
+        verbose=False,
         random_state=random_state,
         distance_params=distance_params,
         average_method=average_method,

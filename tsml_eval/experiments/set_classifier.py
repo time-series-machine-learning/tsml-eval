@@ -200,10 +200,9 @@ def _set_classifier_convolution_based(
 
         return RocketClassifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "minirocket" or c == "mini-rocket":
-        from aeon.classification.convolution_based import RocketClassifier
+        from aeon.classification.convolution_based import MiniRocketClassifier
 
-        return RocketClassifier(
-            rocket_transform="minirocket",
+        return MiniRocketClassifier(
             random_state=random_state,
             n_jobs=n_jobs,
             **kwargs,
