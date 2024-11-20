@@ -28,7 +28,7 @@ mailto="$username@soton.ac.uk"
 max_memory=8000
 
 # Max allowable is 60 hours
-max_time me="60:00:00"
+max_time="60:00:00"
 
 # Start point for the script i.e. 3 datasets, 3 classifiers = 9 jobs to submit, start_point=5 will skip to job 5
 start_point=1
