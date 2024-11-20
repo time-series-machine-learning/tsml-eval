@@ -28,7 +28,7 @@ mailto="$username@soton.ac.uk"
 max_memory=8000
 
 # Max allowable is 60 hours
-max_time="60:00:00"
+max_ti me="60:00:00"
 
 # Start point for the script i.e. 3 datasets, 3 classifiers = 9 jobs to submit, start_point=5 will skip to job 5
 start_point=1
@@ -53,7 +53,7 @@ env_name="tsml-eval"
 
 # Classifiers to loop over. Must be seperated by a space
 # See list of potential classifiers in set_classifier
-classifiers_to_run="multirockethydra"
+classifiers_to_run="hc2"
 
 # You can add extra arguments here. See tsml_eval/utils/arguments.py parse_args
 # You will have to add any variable to the python call close to the bottom of the script
