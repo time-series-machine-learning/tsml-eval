@@ -10,7 +10,7 @@ max_folds=10
 start_fold=1
 
 # To avoid dumping 1000s of jobs in the queue we have a higher level queue
-max_num_submitted=100
+max_num_submitted=1000
 
 # Queue options are https://sotonac.sharepoint.com/teams/HPCCommunityWiki/SitePages/Iridis%205%20Job-submission-and-Limits-Quotas.aspx
 queue="amd"
@@ -62,7 +62,7 @@ classifiers_to_run="hc2"
 # set the imbalance ration to create the imbalance data
 imbalance_ratio=19
 # Set to the oversampling methods you want to test \smote \adasyn
-toms="rose"
+toms="smote"
 results_dir="${results_dir}${toms}/"
 results_dir=$(echo "$results_dir" | sed 's#//*#/#g')
 out_dir="${out_dir}${toms}/"
