@@ -352,7 +352,8 @@ def load_and_run_classification_experiment(
         <problem_path>/<dataset>/<dataset>+<resample_id>+"_TRAIN.ts".
     test_smote_family_resample : bool, default=False
     imbalance_ratio : int, default=None
-        used to create imbalance data, the value is the ratio of the majority class to the minority class
+        used to create imbalance data, the value is the ratio of the majority class to
+        the minority class
     """
     if classifier_name is None:
         classifier_name = type(classifier).__name__
@@ -397,17 +398,9 @@ def load_and_run_classification_experiment(
         oversampler = getattr(SMOTE_FAMILY(), test_oversampling_methods)(
             seed=resample_id + 2024
         )
-        try:
-            X_train, y_train = oversampler.fit_resample(np.squeeze(X_train), y_train)
-            X_train = np.expand_dims(X_train, axis=1)
-        except ValueError as e:
-            print(
-                f"Skipping test_oversampling_methods of {test_oversampling_methods} due to error: {e}"
-            )
-        except RuntimeError as e:
-            print(
-                f"Skipping test_oversampling_methods of {test_oversampling_methods}due to error: {e}"
-            )
+
+        X_train, y_train = oversampler.fit_resample(np.squeeze(X_train), y_train)
+        X_train = np.expand_dims(X_train, axis=1)
 
     run_classification_experiment(
         X_train,
