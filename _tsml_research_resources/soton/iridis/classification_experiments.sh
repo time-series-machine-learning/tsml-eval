@@ -153,7 +153,7 @@ export PYTHONPATH="$local_path/tsml-eval:$PYTHONPATH"
 
 # Input args to the default classification_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/classification_experiments.py
-python -u ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_train_files} ${predefined_folds} ${normalise_data} ${test_oversampling_option} ${imbalance_ratio}"  > generatedFile.sub
+python -u ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_train_files} ${predefined_folds} ${normalise_data} ${test_oversampling_methods} ${imbalance_ratio}"  > generatedFile.sub
 
 echo "${count} ${classifier}/${dataset}"
 
