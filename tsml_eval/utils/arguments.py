@@ -276,7 +276,8 @@ def parse_args(args):
         "-imb_ratio",
         "--imbalance_ratio",
         type=int,
-        default=19,
+        nargs="+",
+        default=[95, 5],
         help="the ratio of the majority class to the minority class in the training set. "
         "(default: %(default)s).",
     )

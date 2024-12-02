@@ -6,8 +6,7 @@ __all__ = [
     "SMOTE_FAMILY",
 ]
 
-from imblearn.over_sampling import *
-
+from imblearn.over_sampling import ADASYN, RandomOverSampler, SMOTE
 
 class SMOTE_FAMILY:
     """
@@ -22,13 +21,13 @@ class SMOTE_FAMILY:
         return RandomOverSampler(random_state=seed, shrinkage={1: 2.0})
 
     def adasyn(self, seed):
-        return ADASYN(random_state=seed, n_neighbors=5)
+        return ADASYN(random_state=seed, n_neighbors=3)
 
     def smote(self, seed):
-        return SMOTE(random_state=seed, k_neighbors=5)
+        return SMOTE(random_state=seed, k_neighbors=3)
 
-    def kmeans_smote(self, seed):
-        return KMeansSMOTE(random_state=seed)
-
-    def borderline_smote(self, seed):
-        return BorderlineSMOTE(random_state=seed, kind="borderline-1")
+    # def kmeans_smote(self, seed):
+    #     return KMeansSMOTE(random_state=seed)
+    #
+    # def borderline_smote(self, seed):
+    #     return BorderlineSMOTE(random_state=seed, kind="borderline-1")

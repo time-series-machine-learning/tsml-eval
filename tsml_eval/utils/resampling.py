@@ -68,7 +68,7 @@ def resample_data(X_train, y_train, X_test, y_test, random_state=None):
     rng.shuffle(indices)
 
     train_indices = indices[: len(X_train)]
-    test_indices = indices[len(X_train) :]
+    test_indices = indices[len(X_train):]
 
     # split the shuffled data into train and test
     X_train = (
@@ -114,7 +114,7 @@ def resample_data_indices(y_train, y_test, random_state=None):
     rng.shuffle(indices)
 
     train_indices = indices[: len(y_train)]
-    test_indices = indices[len(y_train) :]
+    test_indices = indices[len(y_train):]
 
     return train_indices, test_indices
 
@@ -194,7 +194,7 @@ def stratified_resample_data(X_train, y_train, X_test, y_test, random_state=None
         rng.shuffle(indices)
 
         train_indices = indices[: counts_train[label_index]]
-        test_indices = indices[counts_train[label_index] :]
+        test_indices = indices[counts_train[label_index]:]
 
         # extract data from corresponding indices
         train_cases = (
@@ -280,7 +280,7 @@ def stratified_resample_data_indices(y_train, y_test, random_state=None):
             [train_indices, indices[: counts_train[label_index]]], axis=None
         )
         test_indices = np.concatenate(
-            [test_indices, indices[counts_train[label_index] :]], axis=None
+            [test_indices, indices[counts_train[label_index]:]], axis=None
         )
 
     return train_indices, test_indices
@@ -292,26 +292,26 @@ def make_imbalance(X, y, sampling_ratio=None, random_state=0):
     Make the data imbalanced
     :param X: the data
     :param y: the target
-    :param sampling_ratio: the sampling ratio
+    :param sampling_ratio: the sampling rate [majority, minority]
     """
 
     x_minority = X[y == "1"]  # Minority class
     x_majority = X[y == "0"]  # Majority class
     rng = check_random_state(random_state)
     labels, counts = np.unique(y, return_counts=True)
-    imbalance_ratio = counts[0] / counts[1]
-    if imbalance_ratio > sampling_ratio:
+
+    assert len(sampling_ratio) == 2
+    assert sampling_ratio[1] <= counts[1]
+
+    if sampling_ratio[0] < counts[0]:
         indices = np.arange(len(x_majority))  # 创建索引数组
         rng.shuffle(indices)
-        x_majority = x_majority[indices][: int(len(x_minority) * sampling_ratio)]
+        x_majority = x_majority[indices][: sampling_ratio[0]]
 
-    else:
+    if sampling_ratio[1] < counts[1]:
         indices = np.arange(len(x_minority))
         rng.shuffle(indices)
-        minority_num = int(len(x_majority) // sampling_ratio)
-        if minority_num <= 1:
-            minority_num = 1
-        x_minority = x_minority[indices][:minority_num]
+        x_minority = x_minority[indices][: sampling_ratio[1]]
 
     y_majority = np.zeros(len(x_majority))
     y_minority = np.ones(len(x_minority))
@@ -319,7 +319,7 @@ def make_imbalance(X, y, sampling_ratio=None, random_state=0):
     y_imbalanced = np.hstack((y_majority, y_minority))
 
     index_shuffle = np.arange(len(x_imbalanced))
-    rng.shuffle(indices)
+    rng.shuffle(index_shuffle)
     x_imbalanced = x_imbalanced[index_shuffle]
     y_imbalanced = y_imbalanced[index_shuffle]
 

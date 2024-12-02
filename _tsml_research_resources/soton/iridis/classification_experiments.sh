@@ -38,7 +38,7 @@ local_path="/home/$username/"
 data_path="/scratch/$username/"
 # Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
 data_dir="$data_path/Data/"
-datasets="$data_path/DataSetLists/classification19_1_plenty.txt"
+datasets="$data_path/DataSetLists/classification5.txt"
 
 # Results and output file write location. Change these to reflect your own file structure
 results_dir="$local_path/Classifi[Cry]cationResults/results/"
@@ -60,9 +60,9 @@ classifiers_to_run="multirockethydra"
 # and possibly to the options handling below
 
 # set the imbalance ration to create the imbalance data
-imbalance_ratio=19
+imbalance_ratio="95, 5"
 # Set to the oversampling methods you want to test \smote \adasyn
-toms="ros"
+toms=""
 results_dir="${results_dir}${toms}/"
 results_dir=$(echo "$results_dir" | sed 's#//*#/#g')
 out_dir="${out_dir}${toms}/"
