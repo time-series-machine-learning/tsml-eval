@@ -25,7 +25,7 @@ mail="NONE"
 mailto="$username@soton.ac.uk"
 
 # MB for jobs, increase incrementally and try not to use more than you need. If you need hundreds of GB consider the huge memory queue
-max_memory=16000
+max_memory=32000
 
 # Max allowable is 60 hours
 max_time="60:00:00"
