@@ -60,7 +60,7 @@ classifiers_to_run="multirockethydra"
 # and possibly to the options handling below
 
 # set the imbalance ration to create the imbalance data
-imbalance_ratio="95, 5"
+imbalance_ratio="95 5"
 # Set to the oversampling methods you want to test \smote \adasyn
 toms=""
 results_dir="${results_dir}${toms}/"
