@@ -398,10 +398,8 @@ def load_and_run_classification_experiment(
         oversampler = getattr(SMOTE_FAMILY(), test_oversampling_methods)(
             seed=resample_id + 2024
         )
-        print(f"original x_train {X_train.shape}.")
         X_train, y_train = oversampler.fit_resample(np.squeeze(X_train), y_train)
         X_train = np.expand_dims(X_train, axis=1)
-        print(f"test_oversampling method to make x_train {X_train.shape}.")
     run_classification_experiment(
         X_train,
         y_train,
