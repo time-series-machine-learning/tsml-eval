@@ -390,9 +390,9 @@ def load_and_run_classification_experiment(
         X_train, y_train = make_imbalance(
             X_train, y_train, sampling_ratio=imbalance_ratio, random_state=resample_id
         )
-        # X_test, y_test = make_imbalance(
-        #     X_test, y_test, sampling_ratio=imbalance_ratio, random_state=resample_id
-        # )
+        X_test, y_test = make_imbalance(
+            X_test, y_test, sampling_ratio=imbalance_ratio, random_state=resample_id
+        )
 
     if test_oversampling_methods:
         oversampler = getattr(SMOTE_FAMILY(), test_oversampling_methods)(
