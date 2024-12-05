@@ -9,6 +9,7 @@ ALL_TSML_EVAL_MODULES = pkgutil.walk_packages(
     tsml_eval.__path__, tsml_eval.__name__ + "."
 )
 ALL_TSML_EVAL_MODULES = [x[1] for x in ALL_TSML_EVAL_MODULES]
+ALL_TSML_EVAL_MODULES = [x for x in ALL_TSML_EVAL_MODULES if "_wip" not in x]
 
 ALL_TSML_EVAL_MODULES_NO_TESTS = [
     x
