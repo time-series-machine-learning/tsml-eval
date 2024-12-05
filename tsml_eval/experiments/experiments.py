@@ -22,12 +22,12 @@ from datetime import datetime
 
 import numpy as np
 import pandas as pd
+from aeon.benchmarking.metrics.clustering import clustering_accuracy_score
 from aeon.classification import BaseClassifier
 from aeon.clustering import BaseClusterer
-from aeon.forecasting.base import BaseForecaster
-from aeon.performance_metrics.clustering import clustering_accuracy_score
+from aeon.forecasting import BaseForecaster
 from aeon.regression.base import BaseRegressor
-from aeon.transformations.collection import TimeSeriesScaler
+from aeon.transformations.collection import Normalizer
 from sklearn import preprocessing
 from sklearn.base import BaseEstimator, is_classifier, is_regressor
 from sklearn.metrics import (
@@ -163,7 +163,7 @@ def run_classification_experiment(
         raise TypeError("classifier must be a tsml, aeon or sklearn classifier.")
 
     if row_normalise:
-        scaler = TimeSeriesScaler()
+        scaler = Normalizer()
         X_train = scaler.fit_transform(X_train)
         X_test = scaler.fit_transform(X_test)
 
@@ -491,7 +491,7 @@ def run_regression_experiment(
         raise TypeError("regressor must be a tsml, aeon or sklearn regressor.")
 
     if row_normalise:
-        scaler = TimeSeriesScaler()
+        scaler = Normalizer()
         X_train = scaler.fit_transform(X_train)
         X_test = scaler.fit_transform(X_test)
 
@@ -798,7 +798,7 @@ def run_clustering_experiment(
         raise ValueError("Test data and labels not provided, cannot build test file.")
 
     if row_normalise:
-        scaler = TimeSeriesScaler()
+        scaler = Normalizer()
         X_train = scaler.fit_transform(X_train)
         if build_test_file:
             X_test = scaler.fit_transform(X_test)

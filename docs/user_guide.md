@@ -144,29 +144,6 @@ TSCL
 
 :::
 
-:::{grid-item-card}
-:img-top: examples/images/forecasting.png
-:class-img-top: tsml-card-image
-:text-align: center
-
-Time Series Forecasting
-
-^^^
-
-Run basic forecasting experiments using `tsml-eval`.
-
-+++
-
-```{button-ref} /examples/forecasting_experiments.ipynb
-:color: primary
-:click-parent:
-:expand:
-
-Forecasting
-```
-
-:::
-
 ::::
 
 ```{toctree}
@@ -178,5 +155,4 @@ Forecasting
 ./examples/classification_experiments.ipynb
 ./examples/regression_experiments.ipynb
 ./examples/clustering_experiments.ipynb
-./examples/forecasting_experiments.ipynb
 ```

@@ -6,8 +6,8 @@ from tsml_eval.utils.functions import str_in_nested_list
 
 convolution_based_classifiers = [
     ["rocketclassifier", "rocket"],
-    ["minirocket", "mini-rocket"],
-    ["multirocket", "multi-rocket"],
+    ["minirocket", "mini-rocket", "minirocketclassifier"],
+    ["multirocket", "multi-rocket", "multirocketclassifier"],
     ["arsenalclassifier", "arsenal"],
     ["miniarsenal", "mini-arsenal"],
     ["multiarsenal", "multi-arsenal"],
@@ -15,17 +15,15 @@ convolution_based_classifiers = [
     ["multirockethydraclassifier", "multirockethydra", "multirocket-hydra"],
 ]
 deep_learning_classifiers = [
-    ["cnnclassifier", "cnn"],
+    ["timecnnclassifier", "timecnn", "cnnclassifier", "cnn"],
     ["fcnclassifier", "fcnn"],
     ["mlpclassifier", "mlp"],
     ["encoderclassifier", "encoder"],
-    ["tapnetclassifier", "tapnet"],
     ["resnetclassifier", "resnet"],
     ["individualinceptionclassifier", "singleinception"],
     ["inceptiontimeclassifier", "inceptiontime"],
     ["h-inceptiontimeclassifier", "h-inceptiontime"],
     ["litetimeclassifier", "litetime"],
-    ["timecnnclassifier", "timecnn"],
 ]
 dictionary_based_classifiers = [
     ["bossensemble", "boss"],
@@ -199,20 +197,18 @@ def _set_classifier_convolution_based(
         from aeon.classification.convolution_based import RocketClassifier
 
         return RocketClassifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
-    elif c == "minirocket" or c == "mini-rocket":
-        from aeon.classification.convolution_based import RocketClassifier
+    elif c == "minirocket" or c == "mini-rocket" or "minirocketclassifier":
+        from aeon.classification.convolution_based import MiniRocketClassifier
 
-        return RocketClassifier(
-            rocket_transform="minirocket",
+        return MiniRocketClassifier(
             random_state=random_state,
             n_jobs=n_jobs,
             **kwargs,
         )
-    elif c == "multirocket" or c == "multi-rocket":
-        from aeon.classification.convolution_based import RocketClassifier
+    elif c == "multirocket" or c == "multi-rocket" or "multirocketclassifier":
+        from aeon.classification.convolution_based import MultiRocketClassifier
 
-        return RocketClassifier(
-            rocket_transform="multirocket",
+        return MultiRocketClassifier(
             random_state=random_state,
             n_jobs=n_jobs,
             **kwargs,
@@ -265,10 +261,10 @@ def _set_classifier_convolution_based(
 def _set_classifier_deep_learning(
     c, random_state, n_jobs, fit_contract, checkpoint, kwargs
 ):
-    if c == "cnnclassifier" or c == "cnn":
-        from aeon.classification.deep_learning import CNNClassifier
+    if c == "timecnnclassifier" or c == "timecnn" or c == "cnnclassifier" or c == "cnn":
+        from aeon.classification.deep_learning import TimeCNNClassifier
 
-        return CNNClassifier(random_state=random_state, **kwargs)
+        return TimeCNNClassifier(random_state=random_state, **kwargs)
     elif c == "fcnclassifier" or c == "fcnn":
         from aeon.classification.deep_learning import FCNClassifier
 
@@ -281,10 +277,6 @@ def _set_classifier_deep_learning(
         from aeon.classification.deep_learning import EncoderClassifier
 
         return EncoderClassifier(random_state=random_state, **kwargs)
-    elif c == "tapnetclassifier" or c == "tapnet":
-        from aeon.classification.deep_learning import TapNetClassifier
-
-        return TapNetClassifier(random_state=random_state, **kwargs)
     elif c == "resnetclassifier" or c == "resnet":
         from aeon.classification.deep_learning import ResNetClassifier
 
@@ -307,10 +299,6 @@ def _set_classifier_deep_learning(
         from aeon.classification.deep_learning import LITETimeClassifier
 
         return LITETimeClassifier(random_state=random_state, **kwargs)
-    elif c == "timecnnclassifier" or c == "timecnn":
-        from aeon.classification.deep_learning import TimeCNNClassifier
-
-        return TimeCNNClassifier(random_state=random_state, **kwargs)
 
 
 def _set_classifier_dictionary_based(
@@ -652,13 +640,11 @@ def _set_classifier_interval_based(
         )
     elif c == "summary-intervals":
         from aeon.classification.interval_based import RandomIntervalClassifier
-        from aeon.transformations.collection.feature_based import (
-            SevenNumberSummaryTransformer,
-        )
+        from aeon.transformations.collection.feature_based import SevenNumberSummary
         from sklearn.ensemble import RandomForestClassifier
 
         return RandomIntervalClassifier(
-            features=SevenNumberSummaryTransformer(),
+            features=SevenNumberSummary(),
             estimator=RandomForestClassifier(n_estimators=500),
             random_state=random_state,
             n_jobs=n_jobs,

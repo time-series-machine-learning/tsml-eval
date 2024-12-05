@@ -6,7 +6,7 @@ import os
 import runpy
 
 import pytest
-from aeon.registry import all_estimators
+from aeon.utils.discovery import all_estimators
 from tsml.dummy import DummyClassifier, DummyClusterer
 
 from tsml_eval.datasets._test_data._data_sizes import DATA_TEST_SIZES, DATA_TRAIN_SIZES
@@ -202,17 +202,20 @@ def test_get_clusterer_by_name_invalid():
 def test_aeon_clusterers_available():
     """Test all aeon clusterers are available."""
     excluded = [
-        # composable
+        # composable/wrapper
         "ClustererPipeline",
+        "SklearnClustererWrapper"
         # just missing
         "AEFCNClusterer",
         "AEResNetClusterer",
-        "TimeSeriesKShapes",
-        "TimeSeriesKShape",
+        "AEAttentionBiGRUClusterer",
+        "AEBiGRUClusterer",
         "TimeSeriesKernelKMeans",
+        "AEDCNNClusterer",
+        "AEDRNNClusterer",
     ]
 
-    est = [e for e, _ in all_estimators(estimator_types="clusterer")]
+    est = [e for e, _ in all_estimators(type_filter="clusterer")]
     for e in est:
         if e in excluded:
             continue

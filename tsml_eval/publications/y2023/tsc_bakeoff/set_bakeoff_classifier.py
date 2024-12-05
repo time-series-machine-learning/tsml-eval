@@ -34,13 +34,13 @@ bakeoff_classifiers = [
     ["weasel_v2", "weasel v2", "weasel v2.0", "weasel-dilation", "weasel-d"],
     # convolution based
     ["RocketClassifier", "rocket"],
-    ["minirocket", "mini-rocket"],
-    ["multirocket", "multi-rocket"],
+    ["MiniRocketClassifier", "minirocket", "mini-rocket"],
+    ["MultiRocketClassifier", "multirocket", "multi-rocket"],
     ["arsenalclassifier", "Arsenal"],
     ["hydra", "hydraclassifier"],
     ["mr-hydra", "multirockethydra", "multirockethydraclassifier", "multirocket-hydra"],
     # deep learning
-    ["CNNClassifier", "cnn"],
+    ["TimeCNNClassifier", "cnnclassifier", "cnn", "timecnn"],
     ["ResNetClassifier", "resnet"],
     ["InceptionTimeClassifier", "inceptiontime"],
     ["h-inceptiontimeclassifier", "h-inceptiontime"],
@@ -135,9 +135,9 @@ def _set_bakeoff_classifier(
             **kwargs,
         )
     elif c == c == "rstsfclassifier" or c == "rstsf" or c == "r-stsf":
-        from tsml.interval_based import RSTSFClassifier
+        from aeon.classification.interval_based import RSTSF
 
-        return RSTSFClassifier(
+        return RSTSF(
             n_estimators=500,
             random_state=random_state,
             n_jobs=n_jobs,
@@ -249,20 +249,18 @@ def _set_bakeoff_classifier(
             n_jobs=n_jobs,
             **kwargs,
         )
-    elif c == "minirocket" or c == "mini-rocket":
-        from aeon.classification.convolution_based import RocketClassifier
+    elif c == "minirocketclassifier" or c == "minirocket" or c == "mini-rocket":
+        from aeon.classification.convolution_based import MiniRocketClassifier
 
-        return RocketClassifier(
-            rocket_transform="minirocket",
+        return MiniRocketClassifier(
             random_state=random_state,
             n_jobs=n_jobs,
             **kwargs,
         )
-    elif c == "multirocket" or c == "multi-rocket":
-        from aeon.classification.convolution_based import RocketClassifier
+    elif c == "multirocketclassifier" or c == "multirocket" or c == "multi-rocket":
+        from aeon.classification.convolution_based import MultiRocketClassifier
 
-        return RocketClassifier(
-            rocket_transform="multirocket",
+        return MultiRocketClassifier(
             random_state=random_state,
             n_jobs=n_jobs,
             **kwargs,
@@ -296,10 +294,12 @@ def _set_bakeoff_classifier(
             n_jobs=n_jobs,
             **kwargs,
         )
-    elif c == "cnnclassifier" or c == "cnn":
-        from aeon.classification.deep_learning import CNNClassifier
+    elif (
+        c == "timecnnclassifier" or c == "cnnclassifier" or c == "cnn" or c == "timecnn"
+    ):
+        from aeon.classification.deep_learning import TimeCNNClassifier
 
-        return CNNClassifier(
+        return TimeCNNClassifier(
             random_state=random_state,
             **kwargs,
         )
