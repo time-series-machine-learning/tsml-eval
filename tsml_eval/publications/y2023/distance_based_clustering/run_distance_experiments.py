@@ -85,10 +85,7 @@ def _run_experiment(args):
     elif distance == "erp":
         distance_params = {"g": 0.05}
     elif distance == "msm":
-        distance_params = {
-            "c": 1.0,
-            "independent": True
-        }
+        distance_params = {"c": 1.0, "independent": True}
     elif distance == "twe":
         distance_params = {
             "nu": 0.05,
