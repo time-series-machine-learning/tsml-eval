@@ -257,7 +257,7 @@ def _set_clusterer_distance_based(
         distance = kwargs["distance"]
     else:
         if "-" not in c:
-            print("No distance metric specified, using default DTW")  # noqa: T001
+            print("No distance metric specified, using default DTW")  # noqa: T201
             distance = "dtw"
         else:
             distance = c.split("-")[-1]
