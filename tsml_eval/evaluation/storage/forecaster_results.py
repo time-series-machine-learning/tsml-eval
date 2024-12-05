@@ -277,7 +277,7 @@ def load_forecaster_results(file_path, calculate_stats=True, verify_values=True)
                 pred_times[i] = float(line[3])
 
             if pred_descriptions is not None:
-                pred_descriptions.append(",".join(line[5]).strip())
+                pred_descriptions.append(",".join(line[5:]).strip())
 
     fr = ForecasterResults(
         dataset_name=line1[0],

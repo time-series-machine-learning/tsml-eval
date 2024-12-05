@@ -4,12 +4,15 @@ __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 import numpy as np
 from aeon.clustering import (
+    ElasticSOM,
+    KSpectralCentroid,
     TimeSeriesCLARA,
     TimeSeriesCLARANS,
     TimeSeriesKMeans,
     TimeSeriesKMedoids,
+    TimeSeriesKShape,
 )
-from aeon.transformations.collection import TimeSeriesScaler
+from aeon.transformations.collection import Normalizer
 from sklearn.cluster import KMeans
 
 from tsml_eval.utils.datasets import load_experiment_data
@@ -106,10 +109,27 @@ distance_based_clusterers = [
     "kmeans-ssg-ba-msm",
     "kmeans-ssg-ba-adtw",
     "kmeans-ssg-ba-shape_dtw",
+    "som-dtw",
+    "som-ddtw",
+    "som-wdtw",
+    "som-wddtw",
+    "som-lcss",
+    "som-erp",
+    "som-edr",
+    "som-twe",
+    "som-msm",
+    "som-adtw",
+    "som-shape_dtw",
+    "som-soft_dtw",
+    "ksc",
+    "kshape",
     "timeserieskmeans",
     "timeserieskmedoids",
     "timeseriesclarans",
     "timeseriesclara",
+    "elasticsom",
+    "kspectralcentroid",
+    "timeserieskshape",
 ]
 
 feature_based_clusterers = [
@@ -211,11 +231,11 @@ def _set_clusterer_deep_learning(
     if c == "aefcnclusterer" or c == "aefcn":
         from aeon.clustering.deep_learning import AEFCNClusterer
 
-        return AEFCNClusterer(n_clusters=-1, random_state=random_state, **kwargs)
+        return AEFCNClusterer(random_state=random_state, **kwargs)
     elif c == "aeresnetclusterer" or c == "aeresnet":
         from aeon.clustering.deep_learning import AEResNetClusterer
 
-        return AEResNetClusterer(n_clusters=-1, random_state=random_state, **kwargs)
+        return AEResNetClusterer(random_state=random_state, **kwargs)
 
 
 def _set_clusterer_distance_based(
@@ -236,7 +256,11 @@ def _set_clusterer_distance_based(
     if "distance" in kwargs:
         distance = kwargs["distance"]
     else:
-        distance = c.split("-")[-1]
+        if "-" not in c:
+            print("No distance metric specified, using default DTW")  # noqa: T201
+            distance = "dtw"
+        else:
+            distance = c.split("-")[-1]
 
     if "distance_params" in kwargs:
         distance_params = kwargs["distance_params"]
@@ -260,7 +284,7 @@ def _set_clusterer_distance_based(
             return TimeSeriesKMeans(
                 max_iter=50,
                 n_init=10,
-                init_algorithm=init_algorithm,
+                init=init_algorithm,
                 distance=distance,
                 distance_params=distance_params,
                 random_state=random_state,
@@ -272,7 +296,7 @@ def _set_clusterer_distance_based(
             return TimeSeriesKMeans(
                 max_iter=50,
                 n_init=10,
-                init_algorithm=init_algorithm,
+                init=init_algorithm,
                 distance=distance,
                 distance_params=distance_params,
                 random_state=random_state,
@@ -284,7 +308,7 @@ def _set_clusterer_distance_based(
             return TimeSeriesKMeans(
                 max_iter=50,
                 n_init=10,
-                init_algorithm=init_algorithm,
+                init=init_algorithm,
                 distance=distance,
                 distance_params=distance_params,
                 random_state=random_state,
@@ -295,7 +319,7 @@ def _set_clusterer_distance_based(
         return TimeSeriesKMedoids(
             max_iter=50,
             n_init=10,
-            init_algorithm=init_algorithm,
+            init=init_algorithm,
             distance=distance,
             distance_params=distance_params,
             random_state=random_state,
@@ -306,7 +330,7 @@ def _set_clusterer_distance_based(
         return TimeSeriesKMedoids(
             max_iter=50,
             n_init=10,
-            init_algorithm=init_algorithm,
+            init=init_algorithm,
             distance=distance,
             distance_params=distance_params,
             random_state=random_state,
@@ -316,7 +340,7 @@ def _set_clusterer_distance_based(
     elif "clarans" in c or "timeseriesclarans" in c:
         return TimeSeriesCLARANS(
             n_init=10,
-            init_algorithm=init_algorithm,
+            init=init_algorithm,
             distance=distance,
             distance_params=distance_params,
             random_state=random_state,
@@ -325,13 +349,45 @@ def _set_clusterer_distance_based(
     elif "clara" in c or "timeseriesclara" in c:
         return TimeSeriesCLARA(
             max_iter=50,
-            init_algorithm=init_algorithm,
+            init=init_algorithm,
             distance=distance,
             distance_params=distance_params,
             random_state=random_state,
             **kwargs,
         )
-    return None
+    elif "som" in c or "elasticsom" in c:
+        return ElasticSOM(
+            distance=distance,
+            init="random",
+            sigma=1.0,
+            learning_rate=0.5,
+            decay_function="asymptotic_decay",
+            neighborhood_function="gaussian",
+            sigma_decay_function="asymptotic_decay",
+            num_iterations=500,
+            distance_params=distance_params,
+            random_state=random_state,
+            verbose=False,
+        )
+    elif "ksc" in c or "kspectralcentroid" in c:
+        return KSpectralCentroid(
+            # Max shift set to n_timepoints when max_shift is None
+            max_shift=None,
+            max_iter=50,
+            init=init_algorithm,
+            tol=1e-06,
+            random_state=random_state,
+            **kwargs,
+        )
+    elif "kshape" in c or "timeserieskshape" in c:
+        return TimeSeriesKShape(
+            init=init_algorithm,
+            max_iter=50,
+            n_init=10,
+            tol=1e-06,
+            random_state=random_state,
+            **kwargs,
+        )
 
 
 def _get_distance_default_params(
@@ -349,7 +405,7 @@ def _get_distance_default_params(
             # cant handle unequal length series
             if isinstance(X_train, np.ndarray):
                 if row_normalise:
-                    scaler = TimeSeriesScaler()
+                    scaler = Normalizer()
                     X_train = scaler.fit_transform(X_train)
 
                 return {"g": X_train.std(axis=0).sum()}
@@ -392,14 +448,12 @@ def _set_clusterer_other(c, random_state, n_jobs, fit_contract, checkpoint, kwar
     if c == "dummyclusterer" or c == "dummy" or c == "dummyclusterer-tsml":
         from tsml.dummy import DummyClusterer
 
-        return DummyClusterer(
-            strategy="random", n_clusters=1, random_state=random_state, **kwargs
-        )
+        return DummyClusterer(strategy="random", random_state=random_state, **kwargs)
     elif c == "dummyclusterer-aeon":
         return TimeSeriesKMeans(
             n_clusters=1,
             n_init=1,
-            init_algorithm="random",
+            init="random",
             distance="euclidean",
             max_iter=1,
             random_state=random_state,
@@ -407,7 +461,6 @@ def _set_clusterer_other(c, random_state, n_jobs, fit_contract, checkpoint, kwar
         )
     elif c == "dummyclusterer-sklearn":
         return KMeans(
-            n_clusters=1,
             n_init=1,
             init="random",
             max_iter=1,
