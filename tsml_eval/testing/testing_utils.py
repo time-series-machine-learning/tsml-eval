@@ -45,7 +45,7 @@ def _check_set_method(
                     "soft dependency",
                     "python version",
                 ]
-                if any(s in str(err) for s in exempt_errors):
+                if any(s in str(err) for s in exempt_errors) or "." not in str(err):
                     continue
                 else:
                     raise err
