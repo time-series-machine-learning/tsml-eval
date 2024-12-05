@@ -107,6 +107,11 @@ Public utility functions used elsewhere in the package.
     utils.resampling.resample_data_indices
     utils.resampling.stratified_resample_data
     utils.resampling.stratified_resample_data_indices
+    utils.results_loading.load_estimator_results
+    utils.results_loading.estimator_results_to_dict
+    utils.results_loading.load_estimator_results_to_dict
+    utils.results_loading.estimator_results_to_array
+    utils.results_loading.load_estimator_results_to_array
     utils.results_repair.fix_broken_second_line
     utils.results_validation.validate_results_file
     utils.results_validation.compare_result_file_resample
