@@ -109,10 +109,6 @@ distance_based_clusterers = [
     "kmeans-ssg-ba-msm",
     "kmeans-ssg-ba-adtw",
     "kmeans-ssg-ba-shape_dtw",
-    "timeserieskmeans",
-    "timeserieskmedoids",
-    "timeseriesclarans",
-    "timeseriesclara",
     "som-dtw",
     "som-ddtw",
     "som-wdtw",
@@ -127,6 +123,10 @@ distance_based_clusterers = [
     "som-soft_dtw",
     "ksc",
     "kshape",
+    "timeserieskmeans",
+    "timeserieskmedoids",
+    "timeseriesclarans",
+    "timeseriesclara",
     "elasticsom",
     "kspectralcentroid",
     "timeserieskshape",
@@ -355,7 +355,7 @@ def _set_clusterer_distance_based(
             random_state=random_state,
             **kwargs,
         )
-    elif "som" in c:
+    elif "som" in c or "elasticsom" in c:
         return ElasticSOM(
             distance=distance,
             init="random",
@@ -369,7 +369,7 @@ def _set_clusterer_distance_based(
             random_state=random_state,
             verbose=False,
         )
-    elif "ksc" in c:
+    elif "ksc" in c or "kspectralcentroid" in c:
         return KSpectralCentroid(
             # Max shift set to n_timepoints when max_shift is None
             max_shift=None,
@@ -379,7 +379,7 @@ def _set_clusterer_distance_based(
             random_state=random_state,
             **kwargs,
         )
-    elif "kshape" in c:
+    elif "kshape" in c or "timeserieskshape" in c:
         return TimeSeriesKShape(
             init=init_algorithm,
             max_iter=50,
@@ -388,8 +388,6 @@ def _set_clusterer_distance_based(
             random_state=random_state,
             **kwargs,
         )
-
-    return None
 
 
 def _get_distance_default_params(
