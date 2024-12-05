@@ -42,16 +42,11 @@ Functions for evaluating the performance of a model.
     evaluation.evaluate_regressors
     evaluation.evaluate_regressors_from_file
     evaluation.evaluate_regressors_by_problem
-    evaluation.evaluate_forecasters
-    evaluation.evaluate_forecasters_from_file
-    evaluation.evaluate_forecasters_by_problem
     evaluation.storage.ClassifierResults
     evaluation.storage.ClustererResults
-    evaluation.storage.ForecasterResults
     evaluation.storage.RegressorResults
     evaluation.storage.load_classifier_results
     evaluation.storage.load_clusterer_results
-    evaluation.storage.load_forecaster_results
     evaluation.storage.load_regressor_results
 ```
 
@@ -69,13 +64,10 @@ Functions for running experiments.
     experiments.load_and_run_classification_experiment
     experiments.run_clustering_experiment
     experiments.load_and_run_clustering_experiment
-    experiments.run_forecasting_experiment
-    experiments.load_and_run_forecasting_experiment
     experiments.run_regression_experiment
     experiments.load_and_run_regression_experiment
     experiments.get_classifier_by_name
     experiments.get_clusterer_by_name
-    experiments.get_forecaster_by_name
     experiments.get_regressor_by_name
     experiments.classification_cross_validation
     experiments.classification_cross_validation_folds
@@ -121,6 +113,5 @@ Public utility functions used elsewhere in the package.
     utils.results_writing.write_classification_results
     utils.results_writing.write_regression_results
     utils.results_writing.write_clustering_results
-    utils.results_writing.write_forecasting_results
     utils.results_writing.write_results_to_tsml_format
 ```

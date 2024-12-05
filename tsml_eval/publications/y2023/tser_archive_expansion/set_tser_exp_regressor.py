@@ -25,9 +25,9 @@ expansion_regressors = [
     ["rf", "randf", "randomforest", "RandomForestRegressor"],
     ["resnet", "ResNetRegressor"],
     ["rocket", "RocketRegressor"],
-    ["multirocket", "multirocketregressor"],
+    ["MultiRocketRegressor", "multirocket"],
     ["xgb", "xgboost", "xgboostregressor", "XGBRegressor"],
-    ["cnn", "CNNRegressor"],
+    ["TimeCNNRegressor", "cnnregressor", "cnn", "timecnn"],
     ["RidgeCV", "ridge"],
     ["RotationForestRegressor", "rotf", "rotationforest"],
     ["tsf", "timeseriesforestregressor"],
@@ -176,11 +176,10 @@ def _set_tser_exp_regressor(
             n_jobs=n_jobs,
             **kwargs,
         )
-    elif r == "multirocket" or r == "multirocketregressor":
-        from aeon.regression.convolution_based import RocketRegressor
+    elif r == "multirocketregressor" or r == "multirocket":
+        from aeon.regression.convolution_based import MultiRocketRegressor
 
-        return RocketRegressor(
-            rocket_transform="multirocket",
+        return MultiRocketRegressor(
             random_state=random_state,
             n_jobs=n_jobs,
             **kwargs,
@@ -195,10 +194,10 @@ def _set_tser_exp_regressor(
             random_state=random_state,
             **kwargs,
         )
-    elif r == "cnn" or r == "cnnregressor":
-        from aeon.regression.deep_learning import CNNRegressor
+    elif r == "timecnnregressor" or r == "cnnregressor" or r == "cnn" or r == "timecnn":
+        from aeon.regression.deep_learning import TimeCNNRegressor
 
-        return CNNRegressor(
+        return TimeCNNRegressor(
             random_state=random_state,
             **kwargs,
         )

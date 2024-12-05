@@ -72,7 +72,7 @@ def _run_experiment(args):
 
     # further default parameterisation for clusterers and distances.
     # feel free to change
-    kwargs["init_algorithm"] = "random"
+    kwargs["init"] = "random"
     kwargs["max_iter"] = 30
     kwargs["n_init"] = 10
 
