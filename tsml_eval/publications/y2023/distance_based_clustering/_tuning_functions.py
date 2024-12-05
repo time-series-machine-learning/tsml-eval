@@ -8,12 +8,12 @@ from sklearn.metrics import davies_bouldin_score
 
 
 # used for dtw and wdtw primarily
-def _tune_window(metric, train_X, n_clusters):  # pragma: no cover
+def _tune_window(method, train_X, n_clusters):  # pragma: no cover
     best_w = 0
     best_score = sys.float_info.max
     for w in np.arange(0.0, 0.2, 0.01):
         cls = TimeSeriesKMeans(
-            metric=metric, distance_params={"window": w}, n_clusters=n_clusters
+            distance=method, distance_params={"window": w}, n_clusters=n_clusters
         )
         cls.fit(train_X)
         preds = cls.predict(train_X)
@@ -35,7 +35,7 @@ def _tune_msm(train_X, n_clusters):  # pragma: no cover
     best_score = sys.float_info.max
     for c in np.arange(0.0, 5.0, 0.25):
         cls = TimeSeriesKMeans(
-            metric="msm", distance_params={"c": c}, n_clusters=n_clusters
+            distance="msm", distance_params={"c": c}, n_clusters=n_clusters
         )
         cls.fit(train_X)
         preds = cls.predict(train_X)
@@ -57,7 +57,7 @@ def _tune_wdtw(train_X, n_clusters):  # pragma: no cover
     best_score = sys.float_info.max
     for g in np.arange(0.0, 1.0, 0.05):
         cls = TimeSeriesKMeans(
-            metric="wdtw", distance_params={"g": g}, n_clusters=n_clusters
+            distance="wdtw", distance_params={"g": g}, n_clusters=n_clusters
         )
         cls.fit(train_X)
         preds = cls.predict(train_X)
@@ -81,7 +81,7 @@ def _tune_twe(train_X, n_clusters):  # pragma: no cover
     for nu in np.arange(0.0, 1.0, 0.25):
         for lam in np.arange(0.0, 1.0, 0.2):
             cls = TimeSeriesKMeans(
-                metric="twe",
+                distance="twe",
                 distance_params={"nu": nu, "lmbda": lam},
                 n_clusters=n_clusters,
             )
@@ -110,7 +110,7 @@ def _tune_erp(train_X, n_clusters):  # pragma: no cover
     best_score = sys.float_info.max
     for g in np.arange(0.0, 2.0, 0.2):
         cls = TimeSeriesKMeans(
-            metric="erp", distance_params={"g": g}, n_clusters=n_clusters
+            distance="erp", distance_params={"g": g}, n_clusters=n_clusters
         )
         cls.fit(train_X)
         preds = cls.predict(train_X)
@@ -132,7 +132,7 @@ def _tune_edr(train_X, n_clusters):  # pragma: no cover
     best_score = sys.float_info.max
     for e in np.arange(0.0, 0.2, 0.01):
         cls = TimeSeriesKMeans(
-            metric="edr", distance_params={"epsilon": e}, n_clusters=n_clusters
+            distance="edr", distance_params={"epsilon": e}, n_clusters=n_clusters
         )
         cls.fit(train_X)
         preds = cls.predict(train_X)
@@ -156,7 +156,7 @@ def _tune_lcss(train_X, n_clusters):  # pragma: no cover
     best_score = sys.float_info.max
     for e in np.arange(0.0, 0.2, 0.01):
         cls = TimeSeriesKMeans(
-            metric="lcss", distance_params={"epsilon": e}, n_clusters=n_clusters
+            distance="lcss", distance_params={"epsilon": e}, n_clusters=n_clusters
         )
         cls.fit(train_X)
         preds = cls.predict(train_X)

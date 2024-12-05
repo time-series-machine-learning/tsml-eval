@@ -135,6 +135,6 @@ jobs:
       - name: Tests
         run: python -m pytest -n logical --cov=tsml_eval --cov-report=xml --timeout 1800
 
-      - uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@v5
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

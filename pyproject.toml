@@ -41,9 +41,9 @@ classifiers = [
 ]
 requires-python = ">=3.9,<3.13"
 dependencies = [
-    "aeon>=0.11.0,<1.0.0",
-    "tsml>=0.4.0,<0.5.0",
-    "scikit-learn>=1.0.0,<1.5.0",
+    "aeon>=1.0.0,<1.1.0",
+    "tsml>=0.5.0,<0.6.0",
+    "scikit-learn>=1.0.0,<1.6.0",
     "matplotlib",
     "seaborn",
     "gpustat",
@@ -56,16 +56,14 @@ all_extras = [
     "tsml[all_extras]",
     "xgboost",
 ]
-all-extras = ["tsml-eval[all_extras]"]
 unstable_extras = [
     "aeon[unstable_extras]",
     "tsml[unstable_extras]",
 ]
-unstable-extras = ["tsml-eval[unstable_extras]"]
 deep_learning = [
     "aeon[dl]",
 ]
-deep-learning = ["tsml-eval[deep_learning]"]
+
 dev = [
     "pre-commit",
     "pytest",
@@ -80,7 +78,7 @@ binder = [
     "jupyterlab",
 ]
 docs = [
-    "sphinx<8.1.0",
+    "sphinx<8.2.0",
     "sphinx-design",
     "sphinx-version-warning",
     "sphinx_issues",
