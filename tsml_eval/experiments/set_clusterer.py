@@ -127,6 +127,9 @@ distance_based_clusterers = [
     "som-soft_dtw",
     "ksc",
     "kshape",
+    "elasticsom",
+    "kspectralcentroid",
+    "timeserieskshape",
 ]
 
 feature_based_clusterers = [
@@ -253,7 +256,11 @@ def _set_clusterer_distance_based(
     if "distance" in kwargs:
         distance = kwargs["distance"]
     else:
-        distance = c.split("-")[-1]
+        if "-" not in c:
+            print("No distance metric specified, using default DTW")   # noqa: T001
+            distance = "dtw"
+        else:
+            distance = c.split("-")[-1]
 
     if "distance_params" in kwargs:
         distance_params = kwargs["distance_params"]
