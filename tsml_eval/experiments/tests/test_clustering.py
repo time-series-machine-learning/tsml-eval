@@ -214,7 +214,7 @@ def test_aeon_clusterers_available():
         "TimeSeriesKernelKMeans",
         "AEDCNNClusterer",
         "AEDRNNClusterer",
-        "ElasticSOM"
+        "ElasticSOM",
     ]
 
     est = [e for e, _ in all_estimators(type_filter="clusterer")]

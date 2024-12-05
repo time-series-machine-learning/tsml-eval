@@ -4,12 +4,12 @@ __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 import numpy as np
 from aeon.clustering import (
+    ElasticSOM,
+    KSpectralCentroid,
     TimeSeriesCLARA,
     TimeSeriesCLARANS,
     TimeSeriesKMeans,
     TimeSeriesKMedoids,
-    ElasticSOM,
-    KSpectralCentroid,
     TimeSeriesKShape,
 )
 from aeon.transformations.collection import Normalizer
