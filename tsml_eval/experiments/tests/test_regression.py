@@ -6,7 +6,7 @@ import os
 import runpy
 
 import pytest
-from aeon.registry import all_estimators
+from aeon.utils.discovery import all_estimators
 from tsml.dummy import DummyClassifier
 
 from tsml_eval.datasets._test_data._data_sizes import DATA_TEST_SIZES
@@ -205,14 +205,17 @@ def test_get_regressor_by_name_invalid():
 def test_aeon_regressors_available():
     """Test all aeon regressors are available."""
     excluded = [
-        # composable
+        # composable/wrapper
         "RegressorPipeline",
+        "RegressorEnsemble",
+        "SklearnRegressorWrapper",
         # just missing
         "IndividualLITERegressor",
         "IntervalForestRegressor",
+        "DisjointCNNRegressor",
     ]
 
-    est = [e for e, _ in all_estimators(estimator_types="regressor")]
+    est = [e for e, _ in all_estimators(type_filter="regressor")]
     for e in est:
         if e in excluded:
             continue

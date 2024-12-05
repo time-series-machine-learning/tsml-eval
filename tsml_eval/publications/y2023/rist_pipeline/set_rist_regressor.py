@@ -58,12 +58,12 @@ def _set_rist_regressor(
             **kwargs,
         )
     elif r == "rdstregressor" or r == "rdst":
-        from tsml.shapelet_based import RDSTRegressor
+        from aeon.regression.shapelet_based import RDSTRegressor
 
         return RDSTRegressor(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif r == "ristregressor" or r == "rist" or r == "rist-extrat":
+        from aeon.regression.hybrid import RISTRegressor
         from sklearn.ensemble import ExtraTreesRegressor
-        from tsml.hybrid import RISTRegressor
 
         return RISTRegressor(
             random_state=random_state,
@@ -72,8 +72,8 @@ def _set_rist_regressor(
             **kwargs,
         )
     elif r == "rist-rf":
+        from aeon.regression.hybrid import RISTRegressor
         from sklearn.ensemble import RandomForestRegressor
-        from tsml.hybrid import RISTRegressor
 
         return RISTRegressor(
             random_state=random_state,
@@ -82,10 +82,10 @@ def _set_rist_regressor(
             **kwargs,
         )
     elif r == "rist-ridgecv":
+        from aeon.regression.hybrid import RISTRegressor
         from sklearn.linear_model import RidgeCV
         from sklearn.pipeline import make_pipeline
         from sklearn.preprocessing import StandardScaler
-        from tsml.hybrid import RISTRegressor
 
         return RISTRegressor(
             random_state=random_state,
