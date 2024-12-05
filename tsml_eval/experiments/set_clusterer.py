@@ -8,6 +8,9 @@ from aeon.clustering import (
     TimeSeriesCLARANS,
     TimeSeriesKMeans,
     TimeSeriesKMedoids,
+    ElasticSOM,
+    KSpectralCentroid,
+    TimeSeriesKShape,
 )
 from aeon.transformations.collection import Normalizer
 from sklearn.cluster import KMeans
@@ -110,6 +113,20 @@ distance_based_clusterers = [
     "timeserieskmedoids",
     "timeseriesclarans",
     "timeseriesclara",
+    "som-dtw",
+    "som-ddtw",
+    "som-wdtw",
+    "som-wddtw",
+    "som-lcss",
+    "som-erp",
+    "som-edr",
+    "som-twe",
+    "som-msm",
+    "som-adtw",
+    "som-shape_dtw",
+    "som-soft_dtw",
+    "ksc",
+    "kshape",
 ]
 
 feature_based_clusterers = [
@@ -331,6 +348,40 @@ def _set_clusterer_distance_based(
             random_state=random_state,
             **kwargs,
         )
+    elif "som" in c:
+        return ElasticSOM(
+            distance=distance,
+            init="random",
+            sigma=1.0,
+            learning_rate=0.5,
+            decay_function="asymptotic_decay",
+            neighborhood_function="gaussian",
+            sigma_decay_function="asymptotic_decay",
+            num_iterations=500,
+            distance_params=distance_params,
+            random_state=random_state,
+            verbose=False,
+        )
+    elif "ksc" in c:
+        return KSpectralCentroid(
+            # Max shift set to n_timepoints when max_shift is None
+            max_shift=None,
+            max_iter=50,
+            init=init_algorithm,
+            tol=1e-06,
+            random_state=random_state,
+            **kwargs,
+        )
+    elif "kshape" in c:
+        return TimeSeriesKShape(
+            init=init_algorithm,
+            max_iter=50,
+            n_init=10,
+            tol=1e-06,
+            random_state=random_state,
+            **kwargs,
+        )
+
     return None
 
 

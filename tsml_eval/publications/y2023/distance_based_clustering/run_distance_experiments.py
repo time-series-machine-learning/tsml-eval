@@ -76,15 +76,28 @@ def _run_experiment(args):
     kwargs["max_iter"] = 30
     kwargs["n_init"] = 10
 
-    distance_params = {
-        "window": 0.2 if distance == "dtw" or distance == "wdtw" else 1.0,
-        "epsilon": 0.05,
-        "g": 0.05,
-        "c": 1.0,
-        "nu": 0.05,
-        "lmbda": 1.0,
-        "strategy": "independent",
-    }
+    if distance == "dtw" or distance == "ddtw":
+        distance_params = {"window": 0.2}
+    elif distance == "wdtw" or distance == "wddtw":
+        distance_params = {"g": 0.05}
+    elif distance == "lcss" or distance == "edr":
+        distance_params = {"epsilon": 0.05}
+    elif distance == "erp":
+        distance_params = {"g": 0.05}
+    elif distance == "msm":
+        distance_params = {
+            "c": 1.0,
+            "independent": True
+        }
+    elif distance == "twe":
+        distance_params = {
+            "nu": 0.05,
+            "lmbda": 1.0,
+        }
+    else:
+        distance_params = {}
+        print("Unknown distance metric, using defaults")  # noqa: T001
+
     kwargs["distance_params"] = distance_params
 
     cnl = clusterer.lower()
