@@ -1,7 +1,5 @@
 """Main configuration file for pytest."""
 
-__author__ = ["MatthewMiddlehurst"]
-
 import shutil
 
 from tsml_eval.experiments import experiments
