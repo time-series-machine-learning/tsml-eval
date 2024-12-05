@@ -168,6 +168,6 @@ jobs:
       - name: Run tests
         run: python -m pytest -n logical --cov=aeon --cov-report=xml --timeout 1800
 
-      - uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@v5
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
