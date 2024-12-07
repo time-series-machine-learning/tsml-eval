@@ -69,6 +69,7 @@ Functions for running experiments.
     experiments.get_classifier_by_name
     experiments.get_clusterer_by_name
     experiments.get_regressor_by_name
+    experiments.run_timing_experiment
     experiments.classification_cross_validation
     experiments.classification_cross_validation_folds
     experiments.regression_cross_validation

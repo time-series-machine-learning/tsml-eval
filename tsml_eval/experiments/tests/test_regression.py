@@ -209,10 +209,8 @@ def test_aeon_regressors_available():
         "RegressorPipeline",
         "RegressorEnsemble",
         "SklearnRegressorWrapper",
-        # just missing
-        "IndividualLITERegressor",
         "IntervalForestRegressor",
-        "DisjointCNNRegressor",
+        # just missing
     ]
 
     est = [e for e, _ in all_estimators(type_filter="regressor")]
