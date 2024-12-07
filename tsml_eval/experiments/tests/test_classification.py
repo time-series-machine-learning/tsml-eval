@@ -212,15 +212,11 @@ def test_aeon_classifiers_available():
         "ClassifierPipeline",
         "ClassifierEnsemble",
         "SklearnClassifierWrapper",
-        # just missing
-        "IndividualLITEClassifier",
+        "IntervalForestClassifier",
+        # ordinal
         "OrdinalTDE",
         "IndividualOrdinalTDE",
-        "IntervalForestClassifier",
-        "SupervisedIntervalClassifier",
-        "LearningShapeletClassifier",
-        "DisjointCNNClassifier",
-        "MrSEQLClassifier",
+        # just missing
     ]
 
     est = [e for e, _ in all_estimators(type_filter="classifier")]

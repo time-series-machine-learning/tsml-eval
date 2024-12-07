@@ -14,7 +14,7 @@ convolution_based_regressors = [
     ["multirockethydraregressor", "multirockethydra", "multirocket-hydra"],
 ]
 deep_learning_regressors = [
-    ["cnnregressor", "cnn"],
+    ["timecnnregressor", "timecnn", "cnnregressor", "cnn"],
     ["fcnregressor", "fcnn", "fcn"],
     ["mlpregressor", "mlp"],
     ["encoderregressor", "encoder"],
@@ -23,7 +23,8 @@ deep_learning_regressors = [
     ["inceptiontimeregressor", "inception", "inceptiontime"],
     ["h-inceptiontimeregressor", "h-inceptiontime"],
     ["litetimeregressor", "litetime"],
-    ["timecnnregressor", "timecnn"],
+    ["individualliteregressor", "individuallite"],
+    ["disjointcnnregressor", "disjointcnn"],
 ]
 distance_based_regressors = [
     "1nn-ed",
@@ -252,6 +253,14 @@ def _set_regressor_deep_learning(
         from aeon.regression.deep_learning import LITETimeRegressor
 
         return LITETimeRegressor(random_state=random_state, **kwargs)
+    elif r == "individualliteregressor" or r == "individuallite":
+        from aeon.regression.deep_learning import IndividualLITERegressor
+
+        return IndividualLITERegressor(random_state=random_state, **kwargs)
+    elif r == "disjointcnnregressor" or r == "disjointcnn":
+        from aeon.regression.deep_learning import DisjointCNNRegressor
+
+        return DisjointCNNRegressor(random_state=random_state, **kwargs)
 
 
 def _set_regressor_distance_based(
