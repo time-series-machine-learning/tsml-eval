@@ -38,7 +38,7 @@ local_path="/home/$username/"
 data_path="/scratch/$username/"
 # Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
 data_dir="$data_path/Data/"
-datasets="$data_path/DataSetLists/classification5.txt"
+datasets="$data_path/DataSetLists/classification10.txt"
 
 # Results and output file write location. Change these to reflect your own file structure
 results_dir="$local_path/Classifi[Cry]cationResults/results/"
@@ -60,7 +60,7 @@ classifiers_to_run="dummy"
 # and possibly to the options handling below
 
 # set the imbalance ration to create the imbalance data
-imbalance_ratio="95 5"
+imbalance_ratio="90 10"
 # Set to the oversampling methods you want to test \smote \adasyn
 toms=""
 results_dir="${results_dir}${toms}/"
