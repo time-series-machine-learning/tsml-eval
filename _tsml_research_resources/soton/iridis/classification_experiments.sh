@@ -53,7 +53,7 @@ env_name="tsml-eval"
 
 # Classifiers to loop over. Must be seperated by a space
 # See list of potential classifiers in set_classifier hc2, dummy, multirockethydra
-classifiers_to_run="multirockethydra"
+classifiers_to_run="hc2"
 
 # You can add extra arguments here. See tsml_eval/utils/arguments.py parse_args
 # You will have to add any variable to the python call close to the bottom of the script
@@ -62,7 +62,7 @@ classifiers_to_run="multirockethydra"
 # set the imbalance ration to create the imbalance data
 imbalance_ratio="90 10"
 # Set to the oversampling methods you want to test \smote \adasyn
-toms="ros"
+toms="smote"
 results_dir="${results_dir}${toms}/"
 results_dir=$(echo "$results_dir" | sed 's#//*#/#g')
 out_dir="${out_dir}${toms}/"
