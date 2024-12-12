@@ -1,6 +1,6 @@
 """Utility functions for results writing."""
 
-__author__ = ["TonyBagnall", "MatthewMiddlehurst"]
+__maintainer__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 __all__ = [
     "write_classification_results",

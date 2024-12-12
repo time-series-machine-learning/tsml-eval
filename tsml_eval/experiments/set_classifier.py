@@ -1,6 +1,6 @@
 """Set classifier function."""
 
-__author__ = ["TonyBagnall", "MatthewMiddlehurst"]
+__maintainer__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 from tsml_eval.utils.functions import str_in_nested_list
 

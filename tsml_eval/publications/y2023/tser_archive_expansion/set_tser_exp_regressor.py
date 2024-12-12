@@ -1,6 +1,6 @@
 """Regressors used in the publication."""
 
-__author__ = ["TonyBagnall", "MatthewMiddlehurst", "dguijo"]
+__maintainer__ = ["TonyBagnall", "MatthewMiddlehurst", "dguijo"]
 
 import numpy as np
 

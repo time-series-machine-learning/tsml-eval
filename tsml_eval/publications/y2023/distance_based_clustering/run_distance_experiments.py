@@ -1,6 +1,6 @@
 """Experiment runner for distance clustering publication."""
 
-__author__ = ["MatthewMiddlehurst"]
+__maintainer__ = ["MatthewMiddlehurst"]
 
 import os
 import sys

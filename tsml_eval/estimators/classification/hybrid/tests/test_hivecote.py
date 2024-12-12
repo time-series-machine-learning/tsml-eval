@@ -1,6 +1,6 @@
 """Tests for building HIVE-COTE from file."""
 
-__author__ = ["MatthewMiddlehurst"]
+__maintainer__ = ["MatthewMiddlehurst"]
 
 
 import numpy as np

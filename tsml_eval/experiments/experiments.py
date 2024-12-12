@@ -3,7 +3,7 @@
 Results are saved a standardised format used by tsml.
 """
 
-__author__ = ["TonyBagnall", "MatthewMiddlehurst"]
+__maintainer__ = ["TonyBagnall", "MatthewMiddlehurst"]
 __all__ = [
     "run_classification_experiment",
     "load_and_run_classification_experiment",
