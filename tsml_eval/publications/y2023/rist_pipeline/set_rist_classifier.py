@@ -1,6 +1,6 @@
 """Classifiers used in the publication."""
 
-__author__ = ["MatthewMiddlehurst"]
+__maintainer__ = ["MatthewMiddlehurst"]
 
 import numpy as np
 

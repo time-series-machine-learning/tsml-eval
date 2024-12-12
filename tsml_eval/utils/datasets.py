@@ -1,6 +1,6 @@
 """Utilities for datasets."""
 
-__author__ = ["MatthewMiddlehurst"]
+__maintainer__ = ["MatthewMiddlehurst"]
 __all__ = [
     "load_experiment_data",
     "copy_dataset_ts_files",

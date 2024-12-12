@@ -1,6 +1,6 @@
 """tsml-eval command line argument parser."""
 
-__author__ = ["MatthewMiddlehurst"]
+__maintainer__ = ["MatthewMiddlehurst"]
 
 __all__ = [
     "parse_args",

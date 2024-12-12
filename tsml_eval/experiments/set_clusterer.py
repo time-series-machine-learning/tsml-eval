@@ -1,6 +1,6 @@
 """Set classifier function."""
 
-__author__ = ["TonyBagnall", "MatthewMiddlehurst"]
+__maintainer__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 import numpy as np
 from aeon.clustering import (

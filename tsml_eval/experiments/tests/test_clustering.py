@@ -1,6 +1,6 @@
 """Tests for clustering experiments."""
 
-__author__ = ["MatthewMiddlehurst"]
+__maintainer__ = ["MatthewMiddlehurst"]
 
 import os
 import runpy
