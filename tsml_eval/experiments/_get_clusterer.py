@@ -1,4 +1,4 @@
-"""Set classifier function."""
+"""Get clusterer function."""
 
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
@@ -222,7 +222,7 @@ def get_clusterer_by_name(
             c, random_state, n_jobs, fit_contract, checkpoint, kwargs
         )
     else:
-        raise ValueError(f"UNKNOWN CLUSTERER: {c} in set_clusterer")
+        raise ValueError(f"UNKNOWN CLUSTERER: {c} in get_clusterer_by_name")
 
 
 def _set_clusterer_deep_learning(

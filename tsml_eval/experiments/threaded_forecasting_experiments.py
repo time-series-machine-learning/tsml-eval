@@ -10,7 +10,7 @@ import sys
 
 # todo replace when added back to init
 from tsml_eval.experiments.experiments import load_and_run_forecasting_experiment
-from tsml_eval.experiments.set_forecaster import get_forecaster_by_name
+from tsml_eval.experiments._get_forecaster import get_forecaster_by_name
 from tsml_eval.experiments.tests import _FORECASTER_RESULTS_PATH
 from tsml_eval.testing.testing_utils import _TEST_DATA_PATH
 from tsml_eval.utils.arguments import parse_args

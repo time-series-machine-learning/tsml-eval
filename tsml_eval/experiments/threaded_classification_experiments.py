@@ -8,8 +8,8 @@ __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 import sys
 
-from tsml_eval.experiments import load_and_run_classification_experiment
-from tsml_eval.experiments.set_classifier import get_classifier_by_name
+from tsml_eval.experiments import load_and_run_classification_experiment, \
+    get_classifier_by_name, get_data_transform_by_name
 from tsml_eval.experiments.tests import _CLASSIFIER_RESULTS_PATH
 from tsml_eval.testing.testing_utils import _TEST_DATA_PATH
 from tsml_eval.utils.arguments import parse_args
@@ -57,9 +57,18 @@ def run_experiment(args):
                     checkpoint=args.checkpoint,
                     **args.kwargs,
                 ),
-                row_normalise=args.row_normalise,
                 classifier_name=args.estimator_name,
                 resample_id=args.resample_id,
+                data_transforms=get_data_transform_by_name(
+                    args.data_transform_names,
+                    row_normalise=args.row_normalise,
+                    random_state=(
+                        args.resample_id
+                        if args.random_seed is None
+                        else args.random_seed
+                    ),
+                    n_jobs=args.n_jobs,
+                ),
                 build_train_file=args.train_fold,
                 write_attributes=args.write_attributes,
                 att_max_shape=args.att_max_shape,

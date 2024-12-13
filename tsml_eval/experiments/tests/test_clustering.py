@@ -14,7 +14,7 @@ from tsml_eval.experiments import (
     clustering_experiments,
     get_clusterer_by_name,
     run_clustering_experiment,
-    set_clusterer,
+    _get_clusterer,
     threaded_clustering_experiments,
 )
 from tsml_eval.experiments.tests import _CLUSTERER_RESULTS_PATH
@@ -172,9 +172,9 @@ def test_run_clustering_experiment_invalid_estimator():
 def test_get_clusterer_by_name():
     """Test get_clusterer_by_name method."""
     clusterer_lists = [
-        set_clusterer.distance_based_clusterers,
-        set_clusterer.other_clusterers,
-        set_clusterer.vector_clusterers,
+        _get_clusterer.distance_based_clusterers,
+        _get_clusterer.other_clusterers,
+        _get_clusterer.vector_clusterers,
     ]
 
     clusterer_dict = {}
@@ -189,7 +189,7 @@ def test_get_clusterer_by_name():
         )
 
     _check_set_method_results(
-        clusterer_dict, estimator_name="Clusterers", method_name="set_clusterer"
+        clusterer_dict, estimator_name="Clusterers", method_name="get_clusterer_by_name"
     )
 
 

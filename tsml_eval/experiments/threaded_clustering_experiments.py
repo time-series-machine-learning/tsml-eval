@@ -9,8 +9,8 @@ __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 import sys
 
-from tsml_eval.experiments import load_and_run_clustering_experiment
-from tsml_eval.experiments.set_clusterer import get_clusterer_by_name
+from tsml_eval.experiments import load_and_run_clustering_experiment, \
+    get_clusterer_by_name, get_data_transform_by_name
 from tsml_eval.experiments.tests import _CLUSTERER_RESULTS_PATH
 from tsml_eval.testing.testing_utils import _TEST_DATA_PATH
 from tsml_eval.utils.arguments import parse_args
@@ -65,10 +65,19 @@ def run_experiment(args):
                     row_normalise=args.row_normalise,
                     **args.kwargs,
                 ),
-                row_normalise=args.row_normalise,
                 n_clusters=args.n_clusters,
                 clusterer_name=args.estimator_name,
                 resample_id=args.resample_id,
+                data_transforms=get_data_transform_by_name(
+                    args.data_transform_names,
+                    row_normalise=args.row_normalise,
+                    random_state=(
+                        args.resample_id
+                        if args.random_seed is None
+                        else args.random_seed
+                    ),
+                    n_jobs=args.n_jobs,
+                ),
                 build_test_file=args.test_fold,
                 write_attributes=args.write_attributes,
                 att_max_shape=args.att_max_shape,

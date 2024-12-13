@@ -12,7 +12,7 @@ from tsml_eval.experiments import (
     classification_experiments,
     get_classifier_by_name,
     run_classification_experiment,
-    set_classifier,
+    _get_classifier,
     threaded_classification_experiments,
 )
 from tsml_eval.experiments.tests import _CLASSIFIER_RESULTS_PATH
@@ -170,16 +170,16 @@ def test_run_classification_experiment_invalid_estimator():
 def test_get_classifier_by_name():
     """Test get_classifier_by_name method."""
     classifier_lists = [
-        set_classifier.convolution_based_classifiers,
-        set_classifier.deep_learning_classifiers,
-        set_classifier.dictionary_based_classifiers,
-        set_classifier.distance_based_classifiers,
-        set_classifier.feature_based_classifiers,
-        set_classifier.hybrid_classifiers,
-        set_classifier.interval_based_classifiers,
-        set_classifier.other_classifiers,
-        set_classifier.shapelet_based_classifiers,
-        set_classifier.vector_classifiers,
+        _get_classifier.convolution_based_classifiers,
+        _get_classifier.deep_learning_classifiers,
+        _get_classifier.dictionary_based_classifiers,
+        _get_classifier.distance_based_classifiers,
+        _get_classifier.feature_based_classifiers,
+        _get_classifier.hybrid_classifiers,
+        _get_classifier.interval_based_classifiers,
+        _get_classifier.other_classifiers,
+        _get_classifier.shapelet_based_classifiers,
+        _get_classifier.vector_classifiers,
     ]
 
     classifier_dict = {}
@@ -194,7 +194,7 @@ def test_get_classifier_by_name():
         )
 
     _check_set_method_results(
-        classifier_dict, estimator_name="Classifiers", method_name="set_classifier"
+        classifier_dict, estimator_name="Classifiers", method_name="get_classifier_by_name"
     )
 
 

@@ -1,4 +1,4 @@
-"""Set classifier function."""
+"""Get classifier function."""
 
 __author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
@@ -187,7 +187,7 @@ def get_classifier_by_name(
             c, random_state, n_jobs, fit_contract, checkpoint, kwargs
         )
     else:
-        raise ValueError(f"UNKNOWN CLASSIFIER: {c} in set_classifier")
+        raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
 
 
 def _set_classifier_convolution_based(

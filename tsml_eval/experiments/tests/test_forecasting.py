@@ -152,7 +152,9 @@
 #         )
 #
 #     _check_set_method_results(
-#         forecaster_dict, estimator_name="Forecasters", method_name="set_forecaster"
+#         forecaster_dict,
+#         estimator_name="Forecasters",
+#         method_name="get_forecaster_by_name",
 #     )
 #
 #
