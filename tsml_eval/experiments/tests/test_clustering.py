@@ -1,6 +1,6 @@
 """Tests for clustering experiments."""
 
-__author__ = ["MatthewMiddlehurst"]
+__maintainer__ = ["MatthewMiddlehurst"]
 
 import os
 import runpy
@@ -11,10 +11,10 @@ from tsml.dummy import DummyClassifier, DummyClusterer
 
 from tsml_eval.datasets._test_data._data_sizes import DATA_TEST_SIZES, DATA_TRAIN_SIZES
 from tsml_eval.experiments import (
+    _get_clusterer,
     clustering_experiments,
     get_clusterer_by_name,
     run_clustering_experiment,
-    _get_clusterer,
     threaded_clustering_experiments,
 )
 from tsml_eval.experiments.tests import _CLUSTERER_RESULTS_PATH
@@ -172,21 +172,43 @@ def test_run_clustering_experiment_invalid_estimator():
 def test_get_clusterer_by_name():
     """Test get_clusterer_by_name method."""
     clusterer_lists = [
+        _get_clusterer.deep_learning_clusterers,
         _get_clusterer.distance_based_clusterers,
+        _get_clusterer.feature_based_clusterers,
         _get_clusterer.other_clusterers,
         _get_clusterer.vector_clusterers,
+    ]
+    clusterer_non_default_params = [
+        "clusterer",
+        "base_clusterer",
+        "estimator",
+        "base_estimator",
     ]
 
     clusterer_dict = {}
     all_clusterer_names = []
 
     for clusterer_list in clusterer_lists:
-        _check_set_method(
+        estimatorrs = _check_set_method(
             get_clusterer_by_name,
             clusterer_list,
             clusterer_dict,
             all_clusterer_names,
+            return_estimator=True,
         )
+
+        # Check that clusterers with estimator parameters which are likely to be
+        # a sub-estimator are not None so n_clusters can be set
+        for clusterer in estimatorrs:
+            for param_name in clusterer_non_default_params:
+                params = clusterer.get_params()
+                if param_name in params:
+                    assert params[param_name] is not None, (
+                        f"Clusterers which have an estimator parameter i.e. "
+                        f"pipelines and deep learners must not have None as the "
+                        f"estimator. Found None for {param_name} in "
+                        f"{clusterer.__class__.__name__}"
+                    )
 
     _check_set_method_results(
         clusterer_dict, estimator_name="Clusterers", method_name="get_clusterer_by_name"
@@ -204,15 +226,8 @@ def test_aeon_clusterers_available():
     excluded = [
         # composable/wrapper
         "ClustererPipeline",
-        "SklearnClustererWrapper"
+        "SklearnClustererWrapper",
         # just missing
-        "AEFCNClusterer",
-        "AEResNetClusterer",
-        "AEAttentionBiGRUClusterer",
-        "AEBiGRUClusterer",
-        "TimeSeriesKernelKMeans",
-        "AEDCNNClusterer",
-        "AEDRNNClusterer",
     ]
 
     est = [e for e, _ in all_estimators(type_filter="clusterer")]
@@ -229,7 +244,7 @@ def test_aeon_clusterers_available():
 @pytest.mark.parametrize("n_clusters", ["4", "-1"])
 @pytest.mark.parametrize(
     "clusterer",
-    ["DBSCAN", "DummyClusterer-aeon", "DummyClusterer-sklearn"],
+    ["DBSCAN", "DummyClusterer-aeon", "DummyClusterer-sklearn", "Summary"],
 )
 def test_n_clusters(n_clusters, clusterer):
     """Test n_clusters parameter."""

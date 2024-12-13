@@ -1,6 +1,6 @@
 """Tests for regression experiments."""
 
-__author__ = ["MatthewMiddlehurst"]
+__maintainer__ = ["MatthewMiddlehurst"]
 
 import os
 import runpy
@@ -11,10 +11,10 @@ from tsml.dummy import DummyClassifier
 
 from tsml_eval.datasets._test_data._data_sizes import DATA_TEST_SIZES
 from tsml_eval.experiments import (
+    _get_regressor,
     get_regressor_by_name,
     regression_experiments,
     run_regression_experiment,
-    _get_regressor,
     threaded_regression_experiments,
 )
 from tsml_eval.experiments.tests import _REGRESSOR_RESULTS_PATH
@@ -209,10 +209,8 @@ def test_aeon_regressors_available():
         "RegressorPipeline",
         "RegressorEnsemble",
         "SklearnRegressorWrapper",
-        # just missing
-        "IndividualLITERegressor",
         "IntervalForestRegressor",
-        "DisjointCNNRegressor",
+        # just missing
     ]
 
     est = [e for e, _ in all_estimators(type_filter="regressor")]

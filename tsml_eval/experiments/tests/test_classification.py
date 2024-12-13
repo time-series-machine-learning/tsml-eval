@@ -9,10 +9,10 @@ from tsml.dummy import DummyRegressor
 
 from tsml_eval.datasets._test_data._data_sizes import DATA_TEST_SIZES
 from tsml_eval.experiments import (
+    _get_classifier,
     classification_experiments,
     get_classifier_by_name,
     run_classification_experiment,
-    _get_classifier,
     threaded_classification_experiments,
 )
 from tsml_eval.experiments.tests import _CLASSIFIER_RESULTS_PATH
@@ -194,7 +194,9 @@ def test_get_classifier_by_name():
         )
 
     _check_set_method_results(
-        classifier_dict, estimator_name="Classifiers", method_name="get_classifier_by_name"
+        classifier_dict,
+        estimator_name="Classifiers",
+        method_name="get_classifier_by_name",
     )
 
 
@@ -212,15 +214,11 @@ def test_aeon_classifiers_available():
         "ClassifierPipeline",
         "ClassifierEnsemble",
         "SklearnClassifierWrapper",
-        # just missing
-        "IndividualLITEClassifier",
+        "IntervalForestClassifier",
+        # ordinal
         "OrdinalTDE",
         "IndividualOrdinalTDE",
-        "IntervalForestClassifier",
-        "SupervisedIntervalClassifier",
-        "LearningShapeletClassifier",
-        "DisjointCNNClassifier",
-        "MrSEQLClassifier",
+        # just missing
     ]
 
     est = [e for e, _ in all_estimators(type_filter="classifier")]

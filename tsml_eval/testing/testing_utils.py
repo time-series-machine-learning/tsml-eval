@@ -24,8 +24,13 @@ _TEST_OUTPUT_PATH = f"{os.path.dirname(Path(__file__).parent.parent)}/test_outpu
 
 
 def _check_set_method(
-    set_method, estimator_sub_list, estimator_dict, all_estimator_names
+    set_method,
+    estimator_sub_list,
+    estimator_dict,
+    all_estimator_names,
+    return_estimator=False,
 ):
+    estimators = []
     for estimator_names in estimator_sub_list:
         estimator_names = (
             [estimator_names] if isinstance(estimator_names, str) else estimator_names
@@ -66,10 +71,13 @@ def _check_set_method(
                 elif e_name not in estimator_dict:
                     estimator_dict[e_name] = False
 
+            if return_estimator:
+                estimators.append(e)
+    if return_estimator:
+        return estimators
 
-EXEMPT_ESTIMATOR_NAMES = [
 
-]
+EXEMPT_ESTIMATOR_NAMES = []
 
 
 def _check_set_method_results(

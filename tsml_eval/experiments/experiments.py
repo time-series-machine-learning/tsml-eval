@@ -3,7 +3,7 @@
 Results are saved a standardised format used by tsml.
 """
 
-__author__ = ["TonyBagnall", "MatthewMiddlehurst"]
+__maintainer__ = ["TonyBagnall", "MatthewMiddlehurst"]
 __all__ = [
     "run_classification_experiment",
     "load_and_run_classification_experiment",
@@ -28,7 +28,6 @@ from aeon.classification import BaseClassifier
 from aeon.clustering import BaseClusterer
 from aeon.forecasting import BaseForecaster
 from aeon.regression.base import BaseRegressor
-from aeon.transformations.collection import Normalizer
 from pycparser.c_ast import Union
 from sklearn import preprocessing
 from sklearn.base import BaseEstimator, is_classifier, is_regressor
@@ -62,7 +61,11 @@ from tsml_eval.utils.results_writing import (
 )
 
 if os.getenv("MEMRECORD_INTERVAL") is not None:  # pragma: no cover
-    MEMRECORD_INTERVAL = float(os.getenv("MEMRECORD_INTERVAL")) if isinstance(os.getenv("MEMRECORD_INTERVAL"), str) else 5.0
+    MEMRECORD_INTERVAL = (
+        float(os.getenv("MEMRECORD_INTERVAL"))
+        if isinstance(os.getenv("MEMRECORD_INTERVAL"), str)
+        else 5.0
+    )
 else:
     MEMRECORD_INTERVAL = 5.0
 
@@ -731,8 +734,8 @@ def run_clustering_experiment(
     y_train: np.ndarray,
     clusterer,
     results_path,
-    X_test: Optional[Union[np.ndarray, list]]=None,
-    y_test: Optional[np.ndarray]=None,
+    X_test: Optional[Union[np.ndarray, list]] = None,
+    y_test: Optional[np.ndarray] = None,
     n_clusters=None,
     clusterer_name=None,
     dataset_name="N/A",
@@ -773,7 +776,11 @@ def run_clustering_experiment(
         If None, the clusterers default is used. If -1, the number of classes in the
         dataset is used.
 
-        This may not work as intended for pipelines currently.
+        The `n_clusters` parameter for arguments which are estimators will also be
+        set to this value if it exists. Please ensure that the argument input itself
+        has the `n_clusters` parameters and is not a default such as None. This is
+        likely to be the case for parameters such as `estimator` or `clusterer` in
+        pipelines and deep learners.
     clusterer_name : str or None, default=None
         Name of clusterer used in writing results. If None, the name is taken from
         the clusterer.
@@ -853,22 +860,18 @@ def run_clustering_experiment(
         f"Encoder dictionary: {str(encoder_dict)}"
     )
 
+    # set n_clusters for clusterer and any contained estimators
+    # NOTE: If the clusterer has an estimator parameteri.e. `estimator` or `clusterer`
+    # which defaults to None, we cannot set the n_clusters parameter for it here.
     if isinstance(n_clusters, int):
-        try:
-            if n_clusters == -1:
-                n_clusters = n_classes
+        if n_clusters == -1:
+            n_clusters = n_classes
 
-            if isinstance(clusterer, SklearnToTsmlClusterer):
-                clusterer.set_params(clusterer__n_clusters=n_clusters)
-            else:
-                clusterer.set_params(n_clusters=n_clusters)
-        except ValueError:
-            warnings.warn(
-                f"{clusterer_name} does not have a n_clusters parameter, "
-                "so it cannot be set.",
-                stacklevel=1,
-            )
-            n_clusters = None
+        if "n_clusters" in clusterer.get_params():
+            clusterer.set_params(n_clusters=n_clusters)
+        for att in clusterer.__dict__.values():
+            if isinstance(att, BaseEstimator) and "n_clusters" in att.get_params():
+                att.set_params(n_clusters=n_clusters)
     elif n_clusters is not None:
         raise ValueError("n_clusters must be an int or None.")
 
@@ -900,7 +903,7 @@ def run_clustering_experiment(
         train_probs = np.zeros(
             (
                 len(train_preds),
-                n_clusters if n_clusters is not None else len(np.unique(train_preds)),
+                len(np.unique(train_preds)),
             )
         )
         train_probs[np.arange(len(train_preds)), train_preds] = 1
@@ -941,11 +944,7 @@ def run_clustering_experiment(
             test_probs = np.zeros(
                 (
                     len(test_preds),
-                    (
-                        n_clusters
-                        if n_clusters is not None
-                        else len(np.unique(train_preds))
-                    ),
+                    len(np.unique(train_preds)),
                 )
             )
             test_probs[np.arange(len(test_preds)), test_preds] = 1
@@ -1018,6 +1017,9 @@ def load_and_run_clustering_experiment(
         Number of clusters to use if the clusterer has an `n_clusters` parameter.
         If None, the clusterers default is used. If -1, the number of classes in the
         dataset is used.
+
+        The `n_clusters` parameter for attributes which are estimators will also be
+        set to this value if it exists.
     clusterer_name : str or None, default=None
         Name of clusterer used in writing results. If None, the name is taken from
         the clusterer.

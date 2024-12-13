@@ -1,6 +1,6 @@
 """Set forecaster function."""
 
-__author__ = ["MatthewMiddlehurst"]
+__maintainer__ = ["MatthewMiddlehurst"]
 
 from aeon.forecasting import DummyForecaster, ETSForecaster
 
