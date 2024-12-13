@@ -24,6 +24,8 @@ deep_learning_classifiers = [
     ["inceptiontimeclassifier", "inceptiontime"],
     ["h-inceptiontimeclassifier", "h-inceptiontime"],
     ["litetimeclassifier", "litetime"],
+    ["individualliteclassifier", "individuallite"],
+    ["disjointcnnclassifier", "disjointcnn"],
 ]
 dictionary_based_classifiers = [
     ["bossensemble", "boss"],
@@ -38,6 +40,7 @@ dictionary_based_classifiers = [
     ["weasel_v2", "weaseldilation", "weasel-dilation", "weasel-d"],
     "redcomets",
     "redcomets-500",
+    ["mrseqlclassifier", "mrseql"],
     ["mrsqmclassifier", "mrsqm"],
 ]
 distance_based_classifiers = [
@@ -83,6 +86,7 @@ interval_based_classifiers = [
     "summary-intervals",
     ["randomintervals-500", "catch22-intervals-500"],
     ["randomintervalclassifier", "randomintervals", "catch22-intervals"],
+    ["supervisedintervalclassifier", "supervisedintervals"],
     ["quantclassifier", "quant"],
 ]
 other_classifiers = [
@@ -97,6 +101,7 @@ shapelet_based_classifiers = [
     ["randomshapeletforestclassifier", "randomshapeletforest", "rsf"],
     ["sastclassifier", "sast"],
     ["rsastclassifier", "rsast"],
+    ["learningshapeletclassifier", "ls"],
 ]
 vector_classifiers = [
     ["rotationforestclassifier", "rotationforest", "rotf"],
@@ -299,6 +304,14 @@ def _set_classifier_deep_learning(
         from aeon.classification.deep_learning import LITETimeClassifier
 
         return LITETimeClassifier(random_state=random_state, **kwargs)
+    elif c == "individualliteclassifier" or c == "individuallite":
+        from aeon.classification.deep_learning import IndividualLITEClassifier
+
+        return IndividualLITEClassifier(random_state=random_state, **kwargs)
+    elif c == "disjointcnnclassifier" or c == "disjointcnn":
+        from aeon.classification.deep_learning import DisjointCNNClassifier
+
+        return DisjointCNNClassifier(random_state=random_state, **kwargs)
 
 
 def _set_classifier_dictionary_based(
@@ -391,6 +404,10 @@ def _set_classifier_dictionary_based(
         return REDCOMETS(
             n_trees=500, random_state=random_state, n_jobs=n_jobs, **kwargs
         )
+    elif c == "mrseqlclassifier" or c == "mrseql":
+        from aeon.classification.dictionary_based import MrSEQLClassifier
+
+        return MrSEQLClassifier(**kwargs)
     elif c == "mrsqmclassifier" or c == "mrsqm":
         from aeon.classification.dictionary_based import MrSQMClassifier
 
@@ -670,6 +687,12 @@ def _set_classifier_interval_based(
         return RandomIntervalClassifier(
             random_state=random_state, n_jobs=n_jobs, **kwargs
         )
+    elif c == "supervisedintervalclassifier" or c == "supervisedintervals":
+        from aeon.classification.interval_based import SupervisedIntervalClassifier
+
+        return SupervisedIntervalClassifier(
+            random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
     elif c == "quantclassifier" or c == "quant":
         from aeon.classification.interval_based import QUANTClassifier
 
@@ -734,6 +757,10 @@ def _set_classifier_shapelet_based(
         from aeon.classification.shapelet_based import RSASTClassifier
 
         return RSASTClassifier(seed=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "learningshapeletclassifier" or c == "ls":
+        from aeon.classification.shapelet_based import LearningShapeletClassifier
+
+        return LearningShapeletClassifier(random_state=random_state, **kwargs)
 
 
 def _set_classifier_vector(c, random_state, n_jobs, fit_contract, checkpoint, kwargs):
