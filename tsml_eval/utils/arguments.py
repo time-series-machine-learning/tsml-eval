@@ -1,6 +1,6 @@
 """tsml-eval command line argument parser."""
 
-__author__ = ["MatthewMiddlehurst"]
+__maintainer__ = ["MatthewMiddlehurst"]
 
 __all__ = [
     "parse_args",
@@ -69,7 +69,10 @@ def parse_args(args):
       -nc N_CLUSTERS, --n_clusters N_CLUSTERS
                             the number of clusters to find for clusterers which
                             have an {n_clusters} parameter. If {-1}, use the
-                            number of classes in the dataset (default: -1).
+                            number of classes in the dataset. The {n_clusters} parameter
+                            for attributes will also be set. Please ensure that
+                            the argument input itself has the {n_clusters} parameters
+                            and is not a default such as None. (default: -1).
       -ctts, --combine_test_train_split
                             whether to use a train/test split or not. If True, the
                             train and test sets are combined and used the fit the
@@ -214,8 +217,10 @@ def parse_args(args):
         type=int,
         default=-1,
         help="the number of clusters to find for clusterers which have an {n_clusters} "
-        "parameter. If {-1}, use the number of classes in the dataset "
-        "(default: %(default)s).",
+        "parameter. If {-1}, use the number of classes in the dataset. The "
+        "{n_clusters} parameter for arguments will also be set. Please ensure that"
+        "the argument input itself has the {n_clusters} parameters and is not a default"
+        "such as None (default: %(default)s).",
     )
     parser.add_argument(
         "-ctts",

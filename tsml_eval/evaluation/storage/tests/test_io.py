@@ -2,6 +2,8 @@
 
 import os
 
+import pytest
+
 from tsml_eval.evaluation.storage.classifier_results import ClassifierResults
 from tsml_eval.evaluation.storage.clusterer_results import ClustererResults
 from tsml_eval.evaluation.storage.forecaster_results import ForecasterResults
@@ -82,3 +84,46 @@ def test_forecaster_results():
     )
 
     os.remove(_TEST_OUTPUT_PATH + "/forecasting/results_io/testResample0.csv")
+
+
+results_classes = [
+    ClassifierResults,
+    ClustererResults,
+    RegressorResults,
+    ForecasterResults,
+]
+
+
+@pytest.mark.parametrize(
+    "type,path",
+    [
+        (
+            ClassifierResults,
+            _TEST_RESULTS_PATH
+            + "/classification/ROCKET/Predictions/MinimalChinatown/testResample0.csv",
+        ),
+        (
+            ClustererResults,
+            _TEST_RESULTS_PATH
+            + "/clustering/KMeans/Predictions/MinimalChinatown/trainResample0.csv",
+        ),
+        (
+            RegressorResults,
+            _TEST_RESULTS_PATH
+            + "/regression/ROCKET/Predictions/MinimalGasPrices/testResample0.csv",
+        ),
+        (
+            ForecasterResults,
+            _TEST_RESULTS_PATH
+            + "/forecasting/NaiveForecaster/Predictions/ShampooSales/testResample0.csv",
+        ),
+    ],
+)
+def test_invalid_tasks_fail_to_load(type, path):
+    """Test that loading into the wrong learning task class fails."""
+    type().load_from_file(path)
+    invalid_types = [x for x in results_classes if x != type]
+
+    for invalid_type in invalid_types:
+        with pytest.raises((ValueError, IndexError, AssertionError)):
+            invalid_type().load_from_file(path)

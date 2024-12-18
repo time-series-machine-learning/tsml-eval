@@ -36,8 +36,8 @@ def _path_mask(cost_matrix, path, ax, theme=None):  # pragma: no cover
     ax.matshow(plot_matrix, cmap=theme)
 
 
-def _pairwise_path(x, y, metric):  # pragma: no cover
-    pw_matrix = pairwise_distance(x, y, metric=metric)
+def _pairwise_path(x, y, method):  # pragma: no cover
+    pw_matrix = pairwise_distance(x, y, method=method)
     path = []
     for i in range(pw_matrix.shape[0]):
         for j in range(pw_matrix.shape[1]):
@@ -49,7 +49,7 @@ def _pairwise_path(x, y, metric):  # pragma: no cover
 def _plot_path(
     x: np.ndarray,
     y: np.ndarray,
-    metric: str,
+    method: str,
     dist_kwargs: Optional[dict] = None,
     title: str = "",
     plot_over_pw: bool = False,
@@ -61,25 +61,25 @@ def _plot_path(
     if dist_kwargs is None:
         dist_kwargs = {}
     try:
-        path, dist = alignment_path(x, y, metric=metric, **dist_kwargs)
-        cost_matrix = compute_cost_matrix(x, y, metric=metric, **dist_kwargs)
+        path, dist = alignment_path(x, y, method=method, **dist_kwargs)
+        cost_matrix = compute_cost_matrix(x, y, method=method, **dist_kwargs)
 
-        if metric == "lcss":
+        if method == "lcss":
             _path = []
             for tup in path:
                 _path.append(tuple(x + 1 for x in tup))
             path = _path
 
         if plot_over_pw is True:
-            if metric == "lcss":
-                pw = pairwise_distance(x, y, metric="euclidean")
+            if method == "lcss":
+                pw = pairwise_distance(x, y, method="euclidean")
                 cost_matrix = np.zeros_like(cost_matrix)
                 cost_matrix[1:, 1:] = pw
             else:
-                pw = pairwise_distance(x, y, metric="squared")
+                pw = pairwise_distance(x, y, method="squared")
                 cost_matrix = pw
     except NotImplementedError:
-        path, dist, cost_matrix = _pairwise_path(x, y, metric)
+        path, dist, cost_matrix = _pairwise_path(x, y, method)
 
     plt.figure(1, figsize=(8, 8))
     x_size = x.shape[0]
@@ -119,7 +119,7 @@ def _plot_path(
 
 
 def _plot_alignment(
-    x, y, metric, dist_kwargs: Optional[dict] = None, title: str = ""
+    x, y, method, dist_kwargs: Optional[dict] = None, title: str = ""
 ):  # pragma: no cover
     _check_soft_dependencies("matplotlib")
 
@@ -128,9 +128,9 @@ def _plot_alignment(
     if dist_kwargs is None:
         dist_kwargs = {}
     try:
-        path, dist = alignment_path(x, y, metric=metric, **dist_kwargs)
+        path, dist = alignment_path(x, y, method=method, **dist_kwargs)
     except NotImplementedError:
-        path, dist, cost_matrix = _pairwise_path(x, y, metric)
+        path, dist, cost_matrix = _pairwise_path(x, y, method)
 
     plt.figure(1, figsize=(8, 8))
 
