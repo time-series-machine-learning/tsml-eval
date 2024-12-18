@@ -1,12 +1,10 @@
 """Tests for classification experiments."""
 
-__author__ = ["MatthewMiddlehurst"]
-
 import os
 import runpy
 
 import pytest
-from aeon.registry import all_estimators
+from aeon.utils.discovery import all_estimators
 from tsml.dummy import DummyRegressor
 
 from tsml_eval.datasets._test_data._data_sizes import DATA_TEST_SIZES
@@ -209,20 +207,19 @@ def test_get_classifier_by_name_invalid():
 def test_aeon_classifiers_available():
     """Test all aeon classifiers are available."""
     excluded = [
-        # composable
-        "ChannelEnsembleClassifier",
+        # composable/wrapper
+        "ClassifierChannelEnsemble",
         "ClassifierPipeline",
-        "WeightedEnsembleClassifier",
-        # just missing
-        "IndividualLITEClassifier",
+        "ClassifierEnsemble",
+        "SklearnClassifierWrapper",
+        "IntervalForestClassifier",
+        # ordinal
         "OrdinalTDE",
         "IndividualOrdinalTDE",
-        "IntervalForestClassifier",
-        "SupervisedIntervalClassifier",
-        "LearningShapeletClassifier",
+        # just missing
     ]
 
-    est = [e for e, _ in all_estimators(estimator_types="classifier")]
+    est = [e for e, _ in all_estimators(type_filter="classifier")]
     for e in est:
         if e in excluded:
             continue

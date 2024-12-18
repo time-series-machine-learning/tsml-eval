@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   check-manifest:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v4
@@ -26,7 +26,7 @@ jobs:
           extra_args: check-manifest --hook-stage manual
 
   pre-commit:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v4
@@ -65,7 +65,7 @@ jobs:
         run: mypy tsml_eval/
 
   run-notebook-examples:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v4
@@ -99,13 +99,74 @@ jobs:
           path: ${{ github.workspace }}/.numba_cache
           key: numba-run-notebook-examples-${{ runner.os }}-3.10-${{ env.CURRENT_DATE }}
 
+  test-no-soft-deps:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Use numba cache to set env variables but not restore cache
+        uses: ./.github/actions/numba_cache
+        with:
+          cache_name: "test-no-soft-deps"
+          runner_os: ${{ runner.os }}
+          python_version: "3.10"
+          restore_cache: "false"
+
+      - name: Install
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          command: python -m pip install .[dev]
+
+      - name: Show dependencies
+        run: python -m pip list
+
+      - name: Run tests
+        run: python -m pytest -n logical
+
+      - name: Save new cache
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ github.workspace }}/.numba_cache
+          # Save cache with the current date (ENV set in numba_cache action)
+          key: numba-test-no-soft-deps-${{ runner.os }}-3.10-${{ env.CURRENT_DATE }}
+
+  test-core-imports:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          command: python -m pip install .
+
+      - name: Show dependencies
+        run: python -m pip list
+
+      - name: Run import test
+        run: python tsml_eval/testing/tests/test_core_imports.py
+
   pytest:
     runs-on: ${{ matrix.os }}
 
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-20.04, macos-14, windows-2022 ]
+        os: [ ubuntu-24.04, macos-14, windows-2022 ]
         python-version: [ "3.9", "3.10", "3.11", "3.12" ]
 
     steps:
@@ -143,7 +204,7 @@ jobs:
           key: numba-pytest-${{ runner.os }}-${{ matrix.python-version}}-${{ env.CURRENT_DATE }}
 
   codecov:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v4
@@ -168,6 +229,6 @@ jobs:
       - name: Run tests
         run: python -m pytest -n logical --cov=aeon --cov-report=xml --timeout 1800
 
-      - uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@v5
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

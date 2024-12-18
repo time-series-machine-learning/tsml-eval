@@ -6,26 +6,26 @@
 # While reading is fine, please dont write anything to the default directories in this script
 
 # Start and end for resamples
-max_folds=30
+max_folds=10
 start_fold=1
 
 # To avoid dumping 1000s of jobs in the queue we have a higher level queue
 max_num_submitted=100
 
 # Queue options are https://sotonac.sharepoint.com/teams/HPCCommunityWiki/SitePages/Iridis%205%20Job-submission-and-Limits-Quotas.aspx
-queue="batch"
+queue="amd"
 
 # The partition name may not always be the same as the queue name, i.e. batch is the queue, serial is the partition
 # This is used for the script job limit queue
 queue_alias=$queue
 
 # Enter your username and email here
-username="ajb2u23"
+username="cq2u24"
 mail="NONE"
 mailto="$username@soton.ac.uk"
 
 # MB for jobs, increase incrementally and try not to use more than you need. If you need hundreds of GB consider the huge memory queue
-max_memory=8000
+max_memory=32000
 
 # Max allowable is 60 hours
 max_time="60:00:00"
@@ -34,14 +34,14 @@ max_time="60:00:00"
 start_point=1
 
 # Put your home directory here
-local_path="/mainfs/home/$username/"
-
+local_path="/home/$username/"
+data_path="/scratch/$username/"
 # Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
-data_dir="$local_path/Data/"
-datasets="$local_path/DataSetLists/Classification.txt"
+data_dir="$data_path/Data/"
+datasets="$data_path/DataSetLists/classification10.txt"
 
 # Results and output file write location. Change these to reflect your own file structure
-results_dir="$local_path/ClassificationResults/results/"
+results_dir="$local_path/Classifi[Cry]cationResults/results/"
 out_dir="$local_path/ClassificationResults/output/"
 
 # The python script we are running
@@ -52,12 +52,21 @@ script_file_path="$local_path/tsml-eval/tsml_eval/experiments/classification_exp
 env_name="tsml-eval"
 
 # Classifiers to loop over. Must be seperated by a space
-# See list of potential classifiers in set_classifier
-classifiers_to_run="ROCKET DrCIF"
+# See list of potential classifiers in set_classifier hc2, dummy, multirockethydra
+classifiers_to_run="hc2"
 
 # You can add extra arguments here. See tsml_eval/utils/arguments.py parse_args
 # You will have to add any variable to the python call close to the bottom of the script
 # and possibly to the options handling below
+
+# set the imbalance ration to create the imbalance data
+imbalance_ratio="90 10"
+# Set to the oversampling methods you want to test \smote \adasyn
+toms="ros"
+results_dir="${results_dir}${toms}/"
+results_dir=$(echo "$results_dir" | sed 's#//*#/#g')
+out_dir="${out_dir}${toms}/"
+out_dir=$(echo "$out_dir" | sed 's#//*#/#g')
 
 # generate a results file for the train data as well as test, usually slower
 generate_train_files="false"
@@ -84,6 +93,11 @@ predefined_folds=$([ "${predefined_folds,,}" == "true" ] && echo "-pr" || echo "
 # Set to -rn to normalise data
 normalise_data=$([ "${normalise_data,,}" == "true" ] && echo "-rn" || echo "")
 
+# Set to --test_oversampling_methods to specify the oversampling method
+test_oversampling_methods=$([ -n "${toms}" ] && echo "--test_oversampling_methods ${toms}" || echo "")
+
+# Set to --imbalance_ratio to specify the imbalance ratio
+imbalance_ratio=$([ -n "${imbalance_ratio}" ] && echo "--imbalance_ratio ${imbalance_ratio}" || echo "")
 count=0
 while read dataset; do
 for classifier in $classifiers_to_run; do
@@ -133,12 +147,13 @@ echo "#!/bin/bash
 
 . /etc/profile
 
-module load anaconda/py3.10
+module load conda
 source activate $env_name
+export PYTHONPATH="$local_path/tsml-eval:$PYTHONPATH"
 
 # Input args to the default classification_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/classification_experiments.py
-python -u ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_train_files} ${predefined_folds} ${normalise_data}"  > generatedFile.sub
+python -u ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_train_files} ${predefined_folds} ${normalise_data} ${test_oversampling_methods} ${imbalance_ratio}"  > generatedFile.sub
 
 echo "${count} ${classifier}/${dataset}"
 

@@ -1,6 +1,6 @@
 """Functions for running experiments using cross-validation."""
 
-__author__ = ["MatthewMiddlehurst"]
+__maintainer__ = ["MatthewMiddlehurst"]
 __all__ = [
     "classification_cross_validation",
     "classification_cross_validation_folds",

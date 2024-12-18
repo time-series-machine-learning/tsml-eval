@@ -4,7 +4,7 @@ This file is configured for runs of the main method with command line arguments,
 single debugging runs. Results are written in a standard tsml format.
 """
 
-__author__ = ["TonyBagnall", "MatthewMiddlehurst"]
+__maintainer__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 import os
 import sys
@@ -90,6 +90,8 @@ def run_experiment(args):
                 benchmark_time=args.benchmark_time,
                 overwrite=args.overwrite,
                 predefined_resample=args.predefined_resample,
+                test_oversampling_methods=args.test_oversampling_methods,
+                imbalance_ratio=args.imbalance_ratio,
             )
     # local run (no args)
     else:

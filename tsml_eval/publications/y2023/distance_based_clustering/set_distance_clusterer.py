@@ -1,6 +1,6 @@
 """Clusterers used in the publication."""
 
-__author__ = ["MatthewMiddlehurst"]
+__maintainer__ = ["MatthewMiddlehurst"]
 
 from tsml_eval.utils.functions import str_in_nested_list
 

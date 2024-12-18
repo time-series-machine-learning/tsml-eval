@@ -1,7 +1,7 @@
 """Class for storing and loading results from a clustering experiment."""
 
 import numpy as np
-from aeon.performance_metrics.clustering import clustering_accuracy_score
+from aeon.benchmarking.metrics.clustering import clustering_accuracy_score
 from numpy.testing import assert_allclose
 from sklearn.metrics import (
     adjusted_mutual_info_score,
