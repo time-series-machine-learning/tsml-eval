@@ -63,7 +63,7 @@ def run_experiment(args):
                 classifier_name=args.estimator_name,
                 resample_id=args.resample_id,
                 data_transforms=get_data_transform_by_name(
-                    args.data_transform_names,
+                    args.data_transform_name,
                     row_normalise=args.row_normalise,
                     random_state=(
                         args.resample_id
@@ -88,6 +88,7 @@ def run_experiment(args):
         estimator_name = "ROCKET"
         dataset_name = "MinimalChinatown"
         row_normalise = False
+        transform_name = None
         resample_id = 0
         n_jobs = 1
         train_fold = False
@@ -108,6 +109,12 @@ def run_experiment(args):
             checkpoint=checkpoint,
             **kwargs,
         )
+        transform = get_data_transform_by_name(
+            transform_name,
+            row_normalise=row_normalise,
+            random_state=resample_id,
+            n_jobs=n_jobs,
+        )
         print(f"Local Run of {estimator_name} ({classifier.__class__.__name__}).")
 
         load_and_run_classification_experiment(
@@ -115,9 +122,9 @@ def run_experiment(args):
             results_path,
             dataset_name,
             classifier,
-            row_normalise=row_normalise,
             classifier_name=estimator_name,
             resample_id=resample_id,
+            data_transforms=transform,
             build_train_file=train_fold,
             write_attributes=write_attributes,
             att_max_shape=att_max_shape,

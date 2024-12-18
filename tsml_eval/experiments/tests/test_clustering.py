@@ -108,8 +108,10 @@ def test_run_threaded_clustering_experiment():
         "1",
         "-nj",
         "2",
-        # also test normalisation and benchmark time here
+        # also test transforms and benchmark time here
         "--row_normalise",
+        "--data_transform_name",
+        "Padder",
         "--benchmark_time",
         "-te",
     ]

@@ -2,13 +2,15 @@
 
 __maintainer__ = ["MatthewMiddlehurst"]
 
-from sklearn.preprocessing import Normalizer
+from aeon.transformations.collection import Normalizer
 
 from tsml_eval.utils.functions import str_in_nested_list
 
 transformers = [
     ["normalizer", "normaliser"],
+    "padder",
 ]
+
 
 def get_data_transform_by_name(
     transformer_names,
@@ -16,14 +18,13 @@ def get_data_transform_by_name(
     random_state=None,
     n_jobs=1,
 ):
-    """
-    """
+    """ """
     if transformer_names is None and not row_normalise:
         return None
 
-    transformers = []
+    t_list = []
     if row_normalise:
-        transformers.append(Normalizer())
+        t_list.append(Normalizer())
 
     if transformer_names is not None:
         if not isinstance(transformer_names, list):
@@ -33,15 +34,19 @@ def get_data_transform_by_name(
             t = transformer_name.casefold()
 
             if str_in_nested_list(transformers, t):
-                transformers.append(_set_transformer(
-                    t, random_state, n_jobs
-                ))
+                t_list.append(_set_transformer(t, random_state, n_jobs))
             else:
-                raise ValueError(f"UNKNOWN TRANSFORMER: {t} in get_data_transform_by_name")
+                raise ValueError(
+                    f"UNKNOWN TRANSFORMER: {t} in get_data_transform_by_name"
+                )
 
-    return transformers if len(transformers) > 1 else transformers[0]
+    return t_list if len(t_list) > 1 else t_list[0]
 
 
 def _set_transformer(t, random_state, n_jobs):
     if t == "normalizer" or t == "normaliser":
         return Normalizer()
+    elif t == "padder":
+        from aeon.transformations.collection import Padder
+
+        return Padder()

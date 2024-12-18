@@ -95,7 +95,7 @@ def run_experiment(args):
                 clusterer_name=args.estimator_name,
                 resample_id=args.resample_id,
                 data_transforms=get_data_transform_by_name(
-                    args.data_transform_names,
+                    args.data_transform_name,
                     row_normalise=args.row_normalise,
                     random_state=(
                         args.resample_id
@@ -122,6 +122,7 @@ def run_experiment(args):
         estimator_name = "KMeans"
         dataset_name = "MinimalChinatown"
         row_normalise = False
+        transform_name = None
         n_clusters = -1
         resample_id = 0
         test_fold = False
@@ -145,6 +146,11 @@ def run_experiment(args):
             row_normalise=row_normalise,
             **kwargs,
         )
+        transform = get_data_transform_by_name(
+            transform_name,
+            row_normalise=row_normalise,
+            random_state=resample_id,
+        )
         print(f"Local Run of {estimator_name} ({clusterer.__class__.__name__}).")
 
         load_and_run_clustering_experiment(
@@ -152,10 +158,10 @@ def run_experiment(args):
             results_path,
             dataset_name,
             clusterer,
-            row_normalise=row_normalise,
             n_clusters=n_clusters,
             clusterer_name=estimator_name,
             resample_id=resample_id,
+            data_transforms=transform,
             build_test_file=test_fold,
             write_attributes=write_attributes,
             att_max_shape=att_max_shape,

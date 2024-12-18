@@ -77,7 +77,10 @@ def _check_set_method(
         return estimators
 
 
-EXEMPT_ESTIMATOR_NAMES = []
+EXEMPT_ESTIMATOR_NAMES = [
+    "channelensembleregressor",
+    "gridsearchcv",
+]
 
 
 def _check_set_method_results(

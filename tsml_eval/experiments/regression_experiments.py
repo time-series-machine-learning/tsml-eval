@@ -87,7 +87,7 @@ def run_experiment(args):
                 regressor_name=args.estimator_name,
                 resample_id=args.resample_id,
                 data_transforms=get_data_transform_by_name(
-                    args.data_transform_names,
+                    args.data_transform_name,
                     row_normalise=args.row_normalise,
                     random_state=(
                         args.resample_id
@@ -113,6 +113,7 @@ def run_experiment(args):
         estimator_name = "ROCKET"
         dataset_name = "MinimalGasPrices"
         row_normalise = False
+        transform_name = None
         resample_id = 0
         train_fold = False
         write_attributes = True
@@ -132,6 +133,11 @@ def run_experiment(args):
             checkpoint=checkpoint,
             **kwargs,
         )
+        transform = get_data_transform_by_name(
+            transform_name,
+            row_normalise=row_normalise,
+            random_state=resample_id,
+        )
         print(f"Local Run of {estimator_name} ({regressor.__class__.__name__}).")
 
         load_and_run_regression_experiment(
@@ -139,9 +145,9 @@ def run_experiment(args):
             results_path,
             dataset_name,
             regressor,
-            row_normalise=row_normalise,
             regressor_name=estimator_name,
             resample_id=resample_id,
+            data_transforms=transform,
             build_train_file=train_fold,
             write_attributes=write_attributes,
             att_max_shape=att_max_shape,

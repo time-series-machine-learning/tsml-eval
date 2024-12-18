@@ -19,7 +19,7 @@ import os
 import time
 import warnings
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -28,7 +28,6 @@ from aeon.classification import BaseClassifier
 from aeon.clustering import BaseClusterer
 from aeon.forecasting import BaseForecaster
 from aeon.regression.base import BaseRegressor
-from pycparser.c_ast import Union
 from sklearn import preprocessing
 from sklearn.base import BaseEstimator, is_classifier, is_regressor
 from sklearn.metrics import (
