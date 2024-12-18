@@ -5,6 +5,8 @@ __maintainer__ = ["MatthewMiddlehurst"]
 import os
 import sys
 
+from aeon.transformations.collection import Normalizer
+
 os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
@@ -132,10 +134,10 @@ def _run_experiment(args):
                 if isinstance(clusterer, str)
                 else _clone_estimator(clusterer, resample_id)
             ),
-            row_normalise=normalise,
             n_clusters=-1,
             clusterer_name=clusterer,
             resample_id=resample_id,
+            data_transforms=Normalizer() if normalise else None,
             build_test_file=True,
             overwrite=overwrite,
         )

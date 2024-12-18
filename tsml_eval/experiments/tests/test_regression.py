@@ -11,10 +11,10 @@ from tsml.dummy import DummyClassifier
 
 from tsml_eval.datasets._test_data._data_sizes import DATA_TEST_SIZES
 from tsml_eval.experiments import (
+    _get_regressor,
     get_regressor_by_name,
     regression_experiments,
     run_regression_experiment,
-    set_regressor,
     threaded_regression_experiments,
 )
 from tsml_eval.experiments.tests import _REGRESSOR_RESULTS_PATH
@@ -109,8 +109,10 @@ def test_run_threaded_regression_experiment():
         "1",
         "-nj",
         "2",
-        # also test normalisation and benchmark time here
+        # also test transforms and benchmark time here
         "--row_normalise",
+        "--data_transform_name",
+        "Padder",
         "--benchmark_time",
     ]
 
@@ -169,15 +171,15 @@ def test_run_regression_experiment_invalid_estimator():
 def test_get_regressor_by_name():
     """Test get_regressor_by_name method."""
     regressor_lists = [
-        set_regressor.convolution_based_regressors,
-        set_regressor.deep_learning_regressors,
-        set_regressor.distance_based_regressors,
-        set_regressor.feature_based_regressors,
-        set_regressor.hybrid_regressors,
-        set_regressor.interval_based_regressors,
-        set_regressor.other_regressors,
-        set_regressor.shapelet_based_regressors,
-        set_regressor.vector_regressors,
+        _get_regressor.convolution_based_regressors,
+        _get_regressor.deep_learning_regressors,
+        _get_regressor.distance_based_regressors,
+        _get_regressor.feature_based_regressors,
+        _get_regressor.hybrid_regressors,
+        _get_regressor.interval_based_regressors,
+        _get_regressor.other_regressors,
+        _get_regressor.shapelet_based_regressors,
+        _get_regressor.vector_regressors,
     ]
 
     regressor_dict = {}
@@ -192,7 +194,7 @@ def test_get_regressor_by_name():
         )
 
     _check_set_method_results(
-        regressor_dict, estimator_name="Regressors", method_name="set_regressor"
+        regressor_dict, estimator_name="Regressors", method_name="get_regressor_by_name"
     )
 
 
