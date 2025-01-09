@@ -15,6 +15,8 @@ __all__ = [
     "classification_cross_validation_folds",
     "regression_cross_validation",
     "regression_cross_validation_folds",
+    "classification_experiments_meta_learning",
+    "experiments_meta_learning",
 ]
 
 from tsml_eval.experiments.cross_validation import (
