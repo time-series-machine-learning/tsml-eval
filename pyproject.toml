@@ -54,7 +54,7 @@ dependencies = [
 all_extras = [
     "aeon[all_extras]",
     #"tsml[all_extras]",
-    "xgboost",
+    #"xgboost",
 ]
 unstable_extras = [
     "aeon[unstable_extras]",
