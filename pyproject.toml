@@ -44,10 +44,10 @@ dependencies = [
     "aeon>=1.0.0,<1.1.0",
     "tsml>=0.6.0,<0.7.0",
     "scikit-learn>=1.0.0,<1.7.0",
-    "matplotlib",
-    "seaborn",
-    "gpustat",
-    "psutil",
+#    "matplotlib",
+#    "seaborn",
+#    "gpustat",
+#    "psutil",
 ]
 
 [project.optional-dependencies]
