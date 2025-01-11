@@ -44,17 +44,19 @@ dependencies = [
     "aeon>=1.0.0,<1.1.0",
     "tsml>=0.6.0,<0.7.0",
     "scikit-learn>=1.0.0,<1.7.0",
-#    "matplotlib",
-#    "seaborn",
-#    "gpustat",
-#    "psutil",
+    "matplotlib",
+    "seaborn",
+    "gpustat",
+    "psutil",
 ]
 
 [project.optional-dependencies]
 all_extras = [
     "aeon[all_extras]",
-    #"tsml[all_extras]",
-    #"xgboost",
+    "tsml[all_extras]",
+    "xgboost",
+    # temp
+    "esig<=1.0.0"
 ]
 unstable_extras = [
     "aeon[unstable_extras]",
