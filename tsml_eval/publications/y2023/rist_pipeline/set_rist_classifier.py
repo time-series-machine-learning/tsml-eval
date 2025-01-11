@@ -110,11 +110,11 @@ def _set_rist_classifier(
     elif (
         c == "randomintervalclassifier" or c == "intervalpipeline" or c == "i-pipeline"
     ):
+        from aeon.transformations.collection.feature_based import Catch22
         from sklearn.ensemble import ExtraTreesClassifier
         from tsml.interval_based import RandomIntervalClassifier
         from tsml.transformations import (
             ARCoefficientTransformer,
-            Catch22Transformer,
             FunctionTransformer,
             PeriodogramTransformer,
         )
@@ -136,7 +136,7 @@ def _set_rist_classifier(
             )  # pragma: no cover
 
         interval_features = [
-            Catch22Transformer(outlier_norm=True, replace_nans=True),
+            Catch22(outlier_norm=True, replace_nans=True),
             row_mean,
             row_std,
             row_slope,

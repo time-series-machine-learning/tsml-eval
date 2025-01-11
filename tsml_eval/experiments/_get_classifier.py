@@ -770,7 +770,7 @@ def _set_classifier_shapelet_based(
 
 def _set_classifier_vector(c, random_state, n_jobs, fit_contract, checkpoint, kwargs):
     if c == "rotationforestclassifier" or c == "rotationforest" or c == "rotf":
-        from tsml.vector import RotationForestClassifier
+        from aeon.classification.sklearn import RotationForestClassifier
 
         return RotationForestClassifier(
             random_state=random_state,
