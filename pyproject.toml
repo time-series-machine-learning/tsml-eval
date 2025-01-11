@@ -42,7 +42,7 @@ classifiers = [
 requires-python = ">=3.9,<3.13"
 dependencies = [
     "aeon>=1.0.0,<1.1.0",
-    "tsml",
+    "tsml>=0.6.0,<0.7.0",
     "scikit-learn>=1.0.0,<1.7.0",
     "matplotlib",
     "seaborn",
