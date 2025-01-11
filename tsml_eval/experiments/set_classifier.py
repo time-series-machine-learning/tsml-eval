@@ -49,6 +49,29 @@ distance_based_classifiers = [
     ["msm", "1nn-msm"],
     ["twe", "1nn-twe"],
     "1nn-dtw-cv",
+    "condenserclassifier",
+    "kMeansCondenser-dtw-1",
+    "kMeansCondenser-dtw-2",
+    "kMeansCondenser-dtw-3",
+    "kMeansCondenser-twe-1",
+    "kMeansCondenser-twe-2",
+    "kMeansCondenser-twe-3",
+    "kMeansCondenser-msm-1",
+    "kMeansCondenser-msm-2",
+    "kMeansCondenser-msm-3",
+    "SimpleRankCondenser",
+    "PAMCondenser-dtw-1",
+    "PAMCondenser-dtw-2",
+    "PAMCondenser-dtw-3",
+    "PAMCondenser-twe-1",
+    "PAMCondenser-twe-2",
+    "PAMCondenser-twe-3",
+    "PAMCondenser-msm-1",
+    "PAMCondenser-msm-2",
+    "PAMCondenser-msm-3",
+    "Drop1Condenser",
+    "Drop2Condenser",
+    "Drop3Condenser",
     ["elasticensemble", "ee"],
     ["grailclassifier", "grail"],
     ["proximitytree", "proximitytreeclassifier"],
@@ -420,7 +443,13 @@ def _set_classifier_distance_based(
     if c == "kneighborstimeseriesclassifier" or c == "dtw" or c == "1nn-dtw":
         from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
 
-        return KNeighborsTimeSeriesClassifier(distance="dtw", n_jobs=n_jobs, **kwargs)
+        return KNeighborsTimeSeriesClassifier(
+            distance="dtw",
+            distance_params={"window": 0.2},
+            weights="distance",
+            n_jobs=n_jobs,
+            **kwargs,
+        )
     elif c == "ed" or c == "1nn-euclidean" or c == "1nn-ed":
         from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
 
@@ -430,11 +459,171 @@ def _set_classifier_distance_based(
     elif c == "msm" or c == "1nn-msm":
         from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
 
-        return KNeighborsTimeSeriesClassifier(distance="msm", n_jobs=n_jobs, **kwargs)
+        return KNeighborsTimeSeriesClassifier(
+            distance="msm", n_jobs=n_jobs, weights="distance", **kwargs
+        )
     elif c == "twe" or c == "1nn-twe":
         from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
 
-        return KNeighborsTimeSeriesClassifier(distance="twe", n_jobs=n_jobs, **kwargs)
+        return KNeighborsTimeSeriesClassifier(
+            distance="twe", distance_params={"nu": 0.001}, n_jobs=n_jobs, **kwargs
+        )
+    elif c == "condenserclassifier":
+        from tsml_eval._wip.condensing.condensing_classifier import CondenserClassifier
+
+        return CondenserClassifier(**kwargs)
+    elif c == "simplerankcondenser":
+        from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
+
+        from tsml_eval._wip.condensing.condensing_classifier import CondenserClassifier
+        from tsml_eval._wip.condensing.simple_rank import SimpleRankCondenser
+
+        return CondenserClassifier(
+            condenser=SimpleRankCondenser(
+                distance="dtw",
+                distance_params={"window": 0.2},
+                num_instances=5,
+            ),
+            classifier=KNeighborsTimeSeriesClassifier(
+                distance="dtw",
+                weights="distance",
+                distance_params={"window": 0.2},
+                n_neighbors=1,
+            ),
+            **kwargs,
+        )
+
+    elif c.startswith("kmeanscondenser"):
+        from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
+
+        from tsml_eval._wip.condensing.clustering_condenser import ClusteringCondenser
+        from tsml_eval._wip.condensing.condensing_classifier import CondenserClassifier
+
+        distance = c.split("-")[1]
+        num_instances_per_class = int(c.split("-")[2])
+
+        if distance == "dtw":
+            distance_params = {"window": 0.2}
+        elif distance == "msm":
+            distance_params = {}
+        elif distance == "twe":
+            distance_params = {"nu": 0.001}
+
+        return CondenserClassifier(
+            condenser=ClusteringCondenser(
+                clustering_approach="kmeans",
+                distance=distance,
+                distance_params=distance_params,
+                num_instances_per_class=num_instances_per_class,
+                random_state=random_state,
+            ),
+            classifier=KNeighborsTimeSeriesClassifier(
+                distance=distance,
+                distance_params=distance_params,
+                weights="distance",
+                n_neighbors=1,
+            ),
+            random_state=random_state,
+            **kwargs,
+        )
+
+    elif c.startswith("pamcondenser"):
+        from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
+
+        from tsml_eval._wip.condensing.clustering_condenser import ClusteringCondenser
+        from tsml_eval._wip.condensing.condensing_classifier import CondenserClassifier
+
+        distance = c.split("-")[1]
+        num_instances_per_class = int(c.split("-")[2])
+
+        if distance == "dtw":
+            distance_params = {"window": 0.2}
+        elif distance == "msm":
+            distance_params = {}
+        elif distance == "twe":
+            distance_params = {"nu": 0.001}
+
+        return CondenserClassifier(
+            condenser=ClusteringCondenser(
+                clustering_approach="pam",
+                distance=distance,
+                distance_params=distance_params,
+                num_instances_per_class=num_instances_per_class,
+                random_state=random_state,
+            ),
+            classifier=KNeighborsTimeSeriesClassifier(
+                distance=distance,
+                distance_params=distance_params,
+                weights="distance",
+                n_neighbors=1,
+            ),
+            random_state=random_state,
+            **kwargs,
+        )
+
+    elif c == "drop1condenser":
+        from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
+
+        from tsml_eval._wip.condensing.condensing_classifier import CondenserClassifier
+        from tsml_eval._wip.condensing.drop1 import Drop1Condenser
+
+        return CondenserClassifier(
+            condenser=Drop1Condenser(
+                distance="dtw",
+                distance_params={"window": 0.2},
+                num_instances=15,
+            ),
+            classifier=KNeighborsTimeSeriesClassifier(
+                distance="dtw",
+                weights="distance",
+                distance_params={"window": 0.2},
+                n_neighbors=1,
+            ),
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "drop2condenser":
+        from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
+
+        from tsml_eval._wip.condensing.condensing_classifier import CondenserClassifier
+        from tsml_eval._wip.condensing.drop2 import Drop2Condenser
+
+        return CondenserClassifier(
+            condenser=Drop2Condenser(
+                distance="dtw",
+                distance_params={"window": 0.2},
+                num_instances=15,
+            ),
+            classifier=KNeighborsTimeSeriesClassifier(
+                distance="dtw",
+                weights="distance",
+                distance_params={"window": 0.2},
+                n_neighbors=1,
+            ),
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "drop3condenser":
+        from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
+
+        from tsml_eval._wip.condensing.condensing_classifier import CondenserClassifier
+        from tsml_eval._wip.condensing.drop3 import Drop3Condenser
+
+        return CondenserClassifier(
+            condenser=Drop3Condenser(
+                distance="dtw",
+                distance_params={"window": 0.2},
+                num_instances=15,
+            ),
+            classifier=KNeighborsTimeSeriesClassifier(
+                distance="dtw",
+                weights="distance",
+                distance_params={"window": 0.2},
+                n_neighbors=1,
+            ),
+            random_state=random_state,
+            **kwargs,
+        )
     elif c == "elasticensemble" or c == "ee":
         from aeon.classification.distance_based import ElasticEnsemble
 
