@@ -56,7 +56,7 @@ all_extras = [
     "tsml[all_extras]",
     "xgboost",
     # temp
-    "esig<=1.0.0"
+    "esig<1.0.0"
 ]
 unstable_extras = [
     "aeon[unstable_extras]",
