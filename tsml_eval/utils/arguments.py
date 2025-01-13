@@ -99,9 +99,9 @@ def parse_args(args):
                             other type will be passed as a str. Can be used
                             multiple times (default: None).
       -toms TEST_OVERSAMPLING_METHODS, --test_oversampling_methods
-                            the over-sampling methods to deal with imbalance classification problems.
-                            If None, no over-sampling method is used.
-                            (default: None).
+                            the over-sampling methods to deal with imbalance
+                            classification problems. If None, no over-sampling
+                            method is used.(default: None).
       -imb_ratio, --imbalance_ratio,
                             the ratio of the majority class to the minority class in the training set.
                             (default: 19 i.e. 95% majority data).

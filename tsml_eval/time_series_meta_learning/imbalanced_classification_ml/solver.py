@@ -6,7 +6,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import yaml
 from sklearn.utils import check_random_state
 from torch.utils.data.dataloader import DataLoader
 
