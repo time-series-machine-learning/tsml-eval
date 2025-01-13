@@ -308,7 +308,6 @@ def load_and_run_classification_experiment(
     overwrite=False,
     predefined_resample=False,
     test_oversampling_methods=None,
-    imbalance_ratio=None,
 ):
     """Load a dataset and run a classification experiment.
 
@@ -350,10 +349,7 @@ def load_and_run_classification_experiment(
         Read a predefined resample from file instead of performing a resample. If True
         the file format must include the resample_id at the end of the dataset name i.e.
         <problem_path>/<dataset>/<dataset>+<resample_id>+"_TRAIN.ts".
-    test_smote_family_resample : bool, default=False
-    imbalance_ratio : int, default=None
-        used to create imbalance data, the value is the ratio of the majority class to
-        the minority class
+    test_oversampling_methods : bool, default=False
     """
     if classifier_name is None:
         classifier_name = type(classifier).__name__
@@ -385,14 +381,6 @@ def load_and_run_classification_experiment(
         attribute_file_path = f"{results_path}/{classifier_name}/Workspace/{dataset}/"
     else:
         attribute_file_path = None
-
-    if imbalance_ratio:
-        X_train, y_train = make_imbalance(
-            X_train, y_train, sampling_ratio=imbalance_ratio, random_state=resample_id
-        )
-        X_test, y_test = make_imbalance(
-            X_test, y_test, sampling_ratio=imbalance_ratio, random_state=resample_id
-        )
 
     if test_oversampling_methods:
         oversampler = getattr(SMOTE_FAMILY(), test_oversampling_methods)(

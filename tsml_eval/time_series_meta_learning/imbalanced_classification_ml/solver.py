@@ -7,6 +7,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import yaml
+from sklearn.utils import check_random_state
 from torch.utils.data.dataloader import DataLoader
 
 from tsml_eval.time_series_meta_learning.base_torch import BaseDeepClassifier_Pytorch
@@ -22,6 +23,8 @@ from tsml_eval.time_series_meta_learning.imbalanced_classification_ml.model impo
 
 class Siamese_Classifier(BaseDeepClassifier_Pytorch):
     """Siamese Networks (Meta-learning) PyTorch Classifier for Time Series Data."""
+
+    _tags = {"capability:train_estimate": False}
 
     def __init__(
         self,
@@ -63,15 +66,6 @@ class Siamese_Classifier(BaseDeepClassifier_Pytorch):
         self.predefined_resample = predefined_resample
         self.datasetlists = datasetlists
 
-        self.data_utils = Task_Data(
-            problem_path=problem_path,
-            dataset=dataset,
-            resample_id=resample_id,
-            predefined_resample=predefined_resample,
-            datasetlists=datasetlists,
-            K_support=5,
-            K_Query=5,
-        )
         self.n_features = n_features
         self.n_epochs = n_epochs
         self.meta_train_model = meta_train_model
@@ -102,7 +96,7 @@ class Siamese_Classifier(BaseDeepClassifier_Pytorch):
         )
         return model
 
-    def meta_train(self):
+    def meta_train(self, data_utils: Task_Data) -> "Siamese_Classifier":
         """
         Meta-train the model.
         Using the meta-learning approach, the model is trained on a set of tasks.
@@ -132,7 +126,7 @@ class Siamese_Classifier(BaseDeepClassifier_Pytorch):
                 query_labels,
                 val_data,
                 val_labels,
-            ) = self.data_utils.get_meta_train_task(val=True)
+            ) = data_utils.get_meta_train_task(val=True)
             train_dataset = PairDataset(
                 support_data, query_data, support_labels, query_labels
             )
@@ -225,8 +219,9 @@ class Siamese_Classifier(BaseDeepClassifier_Pytorch):
         self.save_model_to_file(model=model, file_name="meta_trained_last_model.pth")
 
         self.history = history
-
         gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
         return self
 
     def _fit(self, X, y):
@@ -259,10 +254,10 @@ class Siamese_Classifier(BaseDeepClassifier_Pytorch):
             else self.optimizer
         )
         model = model.to(self.device)
-
-        for epoch in range(self.n_epochs):
+        base_rng = check_random_state(self.resample_id)
+        for _ in range(self.n_epochs):
             support_data, support_labels, query_data, query_labels = (
-                self.data_utils.sample_data(data=X, labels=y)
+                Task_Data.sample_data(data=X, labels=y, base_rng=base_rng)
             )
             num_val_data = int(0.3 * len(query_data))
             assert num_val_data >= 1
@@ -362,15 +357,18 @@ class Siamese_Classifier(BaseDeepClassifier_Pytorch):
         model = self.build_model(input_channel=X.shape[1], n_features=self.n_features)
         self.model = self.load_model(model=model, file_name="last_model.pth")
         gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
         return self
 
     def _predict_proba(self, X: np.ndarray) -> np.ndarray:
         """Predict class probabilities for input data."""
         self.model.to(self.device)
         self.model.eval()
-        support_data = torch.tensor(self.support_data).to(self.device)
-        query_data = torch.tensor(X)
-        classes = torch.unique(self.support_labels)
+        support_data = torch.tensor(self.support_data).float().to(self.device)
+        support_labels = torch.tensor(self.support_labels).long().to(self.device)
+        query_data = torch.tensor(X).float()
+        classes = torch.unique(support_labels)
         n_classes = len(classes)
         probs = torch.zeros(
             query_data.size(0), n_classes, device=self.device
@@ -380,7 +378,7 @@ class Siamese_Classifier(BaseDeepClassifier_Pytorch):
             for start_idx in range(0, query_data.size(0), 10):
                 end_idx = min(start_idx + 10, query_data.size(0))
                 query_batch = query_data[start_idx:end_idx].to(self.device)
-                query_embeddings = self.model.forward_once()
+                query_embeddings = self.model.forward_once(query_batch)
                 distances = torch.cdist(
                     query_embeddings, support_embeddings, p=2
                 )  # (batch_size, n_support)
@@ -391,7 +389,7 @@ class Siamese_Classifier(BaseDeepClassifier_Pytorch):
                 )  # (batch_size, n_classes)
 
                 for i, cls in enumerate(classes):
-                    class_mask = (self.support_labels == cls).float()  # (n_support,)
+                    class_mask = (support_labels == cls).float()  # (n_support,)
                     class_similarities = normalized_similarities * class_mask.unsqueeze(
                         0
                     )

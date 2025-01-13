@@ -51,6 +51,7 @@ class BaseDeepClassifier_Pytorch(BaseClassifier):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = None
         self.history = None
+        self.data_utils = None
 
     @abstractmethod
     def build_model(self, input_channel: int, n_classes: int) -> nn.Module:

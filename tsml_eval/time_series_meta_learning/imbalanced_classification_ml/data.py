@@ -30,7 +30,6 @@ class Task_Data:
         K_support=5,
         K_Query=5,
     ):
-        super().__init__()
         self.problem_path = problem_path
         self.dataset = dataset
 
@@ -97,14 +96,15 @@ class Task_Data:
         )
         return all_data, all_labels
 
+    @staticmethod
     def sample_data(
-        self,
         data,
         labels,
         n_label_1_support=5,
         n_label_0_support=10,
         n_label_1_query=5,
         n_label_0_query=10,
+        base_rng=None,
     ):
         """
         Randomly sample data points with specific label counts and split into support and query sets.
@@ -123,7 +123,7 @@ class Task_Data:
             tuple: (support_data, support_labels, query_data, query_labels)
         """
         # Generate a unique seed for this sampling
-        task_seed = self.base_rng.randint(0, 2**16 - 1)
+        task_seed = base_rng.randint(0, 2**16 - 1)
         rng = check_random_state(task_seed)
 
         # Separate data based on labels
@@ -242,7 +242,7 @@ class Task_Data:
             tuple: Meta-test support set and query set data
         """
         if imbalance_ratio is None:
-            imbalance_ratio = [10, 90]
+            imbalance_ratio = [90, 10]
         X_train, y_train, X_test, y_test, resample = load_experiment_data(
             self.problem_path, self.dataset, self.resample_id, self.predefined_resample
         )

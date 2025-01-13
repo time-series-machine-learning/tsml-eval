@@ -277,15 +277,6 @@ def parse_args(args):
         "If None, no over-sampling method is used. (default: %(default)s).",
     )
 
-    parser.add_argument(
-        "-imb_ratio",
-        "--imbalance_ratio",
-        type=int,
-        nargs="+",
-        default=[95, 5],
-        help="the ratio of the majority class to the minority class in the training set. "
-        "(default: %(default)s).",
-    )
     args = parser.parse_args(args=args)
 
     kwargs = {}
