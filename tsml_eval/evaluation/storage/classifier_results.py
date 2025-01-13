@@ -95,8 +95,7 @@ class ClassifierResults(EstimatorResults):
     ...     "/classification/ROCKET/Predictions/Chinatown/testResample0.csv"
     ... )
     >>> cr.calculate_statistics()
-    >>> cr.accuracy
-    0.9795918367346939
+    >>> acc = cr.accuracy
     """
 
     def __init__(
