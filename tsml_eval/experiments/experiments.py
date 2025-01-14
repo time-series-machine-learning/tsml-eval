@@ -59,12 +59,8 @@ from tsml_eval.utils.results_writing import (
     write_regression_results,
 )
 
-if os.getenv("MEMRECORD_INTERVAL") is not None:  # pragma: no cover
-    MEMRECORD_INTERVAL = (
-        float(os.getenv("MEMRECORD_INTERVAL"))
-        if isinstance(os.getenv("MEMRECORD_INTERVAL"), str)
-        else 5.0
-    )
+if isinstance(os.getenv("MEMRECORD_INTERVAL"), str):  # pragma: no cover
+    MEMRECORD_INTERVAL = float(os.getenv("MEMRECORD_INTERVAL"))
 else:
     MEMRECORD_INTERVAL = 5.0
 

@@ -18,7 +18,26 @@ def get_data_transform_by_name(
     random_state=None,
     n_jobs=1,
 ):
-    """ """
+    """Return a transformers matching a given input name(s).
+
+    Parameters
+    ----------
+    transformer_names : str or list of str
+        String or list of strings indicating the transformer(s) to be returned.
+    row_normalise : bool, default=False
+        Adds a Normalizer to the front of the transformer list.
+    random_state : int, RandomState instance or None, default=None
+        Random seed or RandomState object to be used in the classifier if available.
+    n_jobs: int, default=1
+        The number of jobs to run in parallel for both classifier ``fit`` and
+        ``predict`` if available. `-1` means using all processors.
+
+    Return
+    ------
+    transformers : A transformer or list of transformers.
+        The transformer(s) matching the input transformer name(s). Returns a list if
+        more than one transformer is requested.
+    """
     if transformer_names is None and not row_normalise:
         return None
 
