@@ -20,7 +20,7 @@ queue="gpu"
 queue_alias=$queue
 
 # Enter your username and email here
-username="ajb2u23"
+username="cq2u24"
 mail="NONE"
 mailto="$username@soton.ac.uk"
 
@@ -34,14 +34,14 @@ max_time="60:00:00"
 start_point=1
 
 # Put your home directory here
-local_path="/mainfs/home/$username/"
-
+local_path="/home/$username/"
+data_path="/scratch/$username/"
 # Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
-data_dir="$local_path/Data/"
-datasets="$local_path/DataSetLists/Classification.txt"
+data_dir="$data_path/Data/imbalanced_data/imbalanced_data9_1/"
+datasets="$data_path/DataSetLists/classification9_1.txt"
 
 # Results and output file write location. Change these to reflect your own file structure
-results_dir="$local_path/ClassificationResults/results/"
+results_dir="$local_path/Classifi[Cry]cationResults/results/"
 out_dir="$local_path/ClassificationResults/output/"
 
 # The python script we are running
@@ -53,11 +53,18 @@ env_name="tsml-eval-gpu"
 
 # Classifiers to loop over. Must be seperated by a space
 # See list of potential classifiers in set_classifier
-classifiers_to_run="CNNClassifier FCNClassifier"
+classifiers_to_run="H-InceptionTime"
 
 # You can add extra arguments here. See tsml_eval/utils/arguments.py parse_args
 # You will have to add any variable to the python call close to the bottom of the script
 # and possibly to the options handling below
+
+# Set to the oversampling methods you want to test \smote \adasyn
+toms=""
+results_dir="${results_dir}${toms}/"
+results_dir=$(echo "$results_dir" | sed 's#//*#/#g')
+out_dir="${out_dir}${toms}/"
+out_dir=$(echo "$out_dir" | sed 's#//*#/#g')
 
 # generate a results file for the train data as well as test, usually slower
 generate_train_files="false"
@@ -67,6 +74,7 @@ predefined_folds="false"
 
 # Normalise data before fit/predict
 normalise_data="false"
+
 
 # ======================================================================================
 # ======================================================================================
@@ -83,6 +91,9 @@ predefined_folds=$([ "${predefined_folds,,}" == "true" ] && echo "-pr" || echo "
 
 # Set to -rn to normalise data
 normalise_data=$([ "${normalise_data,,}" == "true" ] && echo "-rn" || echo "")
+
+# Set to --test_oversampling_methods to specify the oversampling method
+test_oversampling_methods=$([ -n "${toms}" ] && echo "--test_oversampling_methods ${toms}" || echo "")
 
 count=0
 while read dataset; do
@@ -139,7 +150,7 @@ source activate $env_name
 
 # Input args to the default classification_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/classification_experiments.py
-python -u ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_train_files} ${predefined_folds} ${normalise_data}"  > generatedFile.sub
+python -u ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_train_files} ${predefined_folds} ${normalise_data} ${test_oversampling_methods}"  > generatedFile.sub
 
 echo "${count} ${classifier}/${dataset}"
 
