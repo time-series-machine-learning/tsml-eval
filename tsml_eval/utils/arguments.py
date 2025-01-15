@@ -64,8 +64,13 @@ def parse_args(args):
       -ch, --checkpoint     save the estimator fit to file periodically while
                             building. Only used if the estimator can checkpoint
                             (default: False).
+      -dtn DATA_TRANSFORM_NAME, --data_transform_name DATA_TRANSFORM_NAME
+                            str to pass to get_data_transform_by_name to apply a
+                            transformation to the data prior to running the experiment.
+                            By default no transform is applied (default: None).
       -rn, --row_normalise  normalise the data rows prior to fitting and
-                            predicting. (default: False).
+                            predicting. effectively the same as passing Normalizer to
+                            --data_transform_name (default: False).
       -nc N_CLUSTERS, --n_clusters N_CLUSTERS
                             the number of clusters to find for clusterers which
                             have an {n_clusters} parameter. If {-1}, use the
@@ -198,10 +203,19 @@ def parse_args(args):
         "the estimator can checkpoint (default: %(default)s).",
     )
     parser.add_argument(
+        "-dtn",
+        "--data_transform_name",
+        default=None,
+        help="str to pass to get_data_transform_by_name to apply a transformation "
+        "to the data prior to running the experiment. By default no transform "
+        "is applied (default: %(default)s).",
+    )
+    parser.add_argument(
         "-rn",
         "--row_normalise",
         action="store_true",
         help="normalise the data rows prior to fitting and predicting. "
+        "effectively the same as passing Normalizer to --data_transform_name "
         "(default: %(default)s).",
     )
     parser.add_argument(

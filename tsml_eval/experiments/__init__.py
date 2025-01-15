@@ -10,6 +10,7 @@ __all__ = [
     "get_classifier_by_name",
     "get_clusterer_by_name",
     "get_regressor_by_name",
+    "get_data_transform_by_name",
     "run_timing_experiment",
     "classification_cross_validation",
     "classification_cross_validation_folds",
@@ -17,6 +18,10 @@ __all__ = [
     "regression_cross_validation_folds",
 ]
 
+from tsml_eval.experiments._get_classifier import get_classifier_by_name
+from tsml_eval.experiments._get_clusterer import get_clusterer_by_name
+from tsml_eval.experiments._get_data_transform import get_data_transform_by_name
+from tsml_eval.experiments._get_regressor import get_regressor_by_name
 from tsml_eval.experiments.cross_validation import (
     classification_cross_validation,
     classification_cross_validation_folds,
@@ -32,6 +37,3 @@ from tsml_eval.experiments.experiments import (
     run_regression_experiment,
 )
 from tsml_eval.experiments.scalability import run_timing_experiment
-from tsml_eval.experiments.set_classifier import get_classifier_by_name
-from tsml_eval.experiments.set_clusterer import get_clusterer_by_name
-from tsml_eval.experiments.set_regressor import get_regressor_by_name

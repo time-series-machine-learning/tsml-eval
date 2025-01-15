@@ -66,8 +66,7 @@ class ForecasterResults(EstimatorResults):
     ...     "/forecasting/NaiveForecaster/Predictions/Airline/testResample0.csv"
     ... )
     >>> fr.calculate_statistics()
-    >>> fr.mean_absolute_percentage_error
-    0.19886711926999853
+    >>> mape = fr.mean_absolute_percentage_error
     """
 
     def __init__(

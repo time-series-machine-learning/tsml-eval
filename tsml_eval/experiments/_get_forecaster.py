@@ -48,7 +48,7 @@ def get_forecaster_by_name(forecaster_name, random_state=None, n_jobs=1, **kwarg
     elif str_in_nested_list(other_forecasters, f):
         return _set_forecaster_other(f, random_state, n_jobs, kwargs)
     else:
-        raise ValueError(f"UNKNOWN FORECASTER: {f} in set_forecaster")
+        raise ValueError(f"UNKNOWN FORECASTER: {f} in get_forecaster_by_name")
 
 
 def _set_forecaster_stats(f, random_state, n_jobs, kwargs):

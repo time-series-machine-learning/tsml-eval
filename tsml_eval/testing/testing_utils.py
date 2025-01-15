@@ -43,7 +43,7 @@ def _check_set_method(
             all_estimator_names.append(estimator_alias)
 
             try:
-                e = set_method(estimator_alias)
+                out = set_method(estimator_alias)
             except ModuleNotFoundError as err:
                 exempt_errors = [
                     "optional dependency",
@@ -55,16 +55,21 @@ def _check_set_method(
                 else:
                     raise err
 
-            assert e is not None, f"Estimator {estimator_alias} not found"
-            assert isinstance(
-                e, BaseEstimator
-            ), f"Estimator {estimator_alias} is not a BaseEstimator"
+            assert out is not None, f"Estimator {estimator_alias} not found"
 
-            c_name = e.__class__.__name__.lower()
-            if c_name == estimator_alias.lower():
-                estimator_dict[c_name] = True
-            elif c_name not in estimator_dict:
-                estimator_dict[c_name] = False
+            if not isinstance(out, list):
+                out = [out]
+
+            for e in out:
+                assert isinstance(
+                    e, BaseEstimator
+                ), f"Estimator {estimator_alias} is not a BaseEstimator"
+
+                e_name = e.__class__.__name__.lower()
+                if e_name == estimator_alias.lower():
+                    estimator_dict[e_name] = True
+                elif e_name not in estimator_dict:
+                    estimator_dict[e_name] = False
 
             if return_estimator:
                 estimators.append(e)
@@ -75,7 +80,6 @@ def _check_set_method(
 EXEMPT_ESTIMATOR_NAMES = [
     "channelensembleregressor",
     "gridsearchcv",
-    "transformedtargetforecaster",
 ]
 
 

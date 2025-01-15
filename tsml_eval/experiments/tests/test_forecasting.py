@@ -93,8 +93,10 @@
 #         "1",
 #         "-nj",
 #         "2",
-#         # also test normalisation and benchmark time here
+#         # also test transforms and benchmark time here
 #         "--row_normalise",
+#         "--data_transform_name",
+#         "Padder",
 #         "--benchmark_time",
 #     ]
 #
@@ -152,7 +154,9 @@
 #         )
 #
 #     _check_set_method_results(
-#         forecaster_dict, estimator_name="Forecasters", method_name="set_forecaster"
+#         forecaster_dict,
+#         estimator_name="Forecasters",
+#         method_name="get_forecaster_by_name",
 #     )
 #
 #
