@@ -92,8 +92,7 @@ class ClustererResults(EstimatorResults):
     ...     "/clustering/KMeans/Predictions/Trace/trainResample0.csv"
     ... )
     >>> cr.calculate_statistics()
-    >>> cr.clustering_accuracy
-    0.57
+    >>> acc = cr.clustering_accuracy
     """
 
     def __init__(

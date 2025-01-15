@@ -1,4 +1,4 @@
-"""Set classifier function."""
+"""Get classifier function."""
 
 __maintainer__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
@@ -24,6 +24,7 @@ deep_learning_classifiers = [
     ["inceptiontimeclassifier", "inceptiontime"],
     ["h-inceptiontimeclassifier", "h-inceptiontime"],
     ["litetimeclassifier", "litetime"],
+    "litetime-mv",
     ["individualliteclassifier", "individuallite"],
     ["disjointcnnclassifier", "disjointcnn"],
 ]
@@ -192,7 +193,7 @@ def get_classifier_by_name(
             c, random_state, n_jobs, fit_contract, checkpoint, kwargs
         )
     else:
-        raise ValueError(f"UNKNOWN CLASSIFIER: {c} in set_classifier")
+        raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
 
 
 def _set_classifier_convolution_based(
@@ -304,6 +305,10 @@ def _set_classifier_deep_learning(
         from aeon.classification.deep_learning import LITETimeClassifier
 
         return LITETimeClassifier(random_state=random_state, **kwargs)
+    elif c == "litetime-mv":
+        from aeon.classification.deep_learning import LITETimeClassifier
+
+        return LITETimeClassifier(use_litemv=True, random_state=random_state, **kwargs)
     elif c == "individualliteclassifier" or c == "individuallite":
         from aeon.classification.deep_learning import IndividualLITEClassifier
 
@@ -765,7 +770,7 @@ def _set_classifier_shapelet_based(
 
 def _set_classifier_vector(c, random_state, n_jobs, fit_contract, checkpoint, kwargs):
     if c == "rotationforestclassifier" or c == "rotationforest" or c == "rotf":
-        from tsml.vector import RotationForestClassifier
+        from aeon.classification.sklearn import RotationForestClassifier
 
         return RotationForestClassifier(
             random_state=random_state,
