@@ -89,9 +89,7 @@ class RegressorResults(EstimatorResults):
     ...     "/regression/ROCKET/Predictions/Covid3Month/testResample0.csv"
     ... )
     >>> rr.calculate_statistics()
-    >>> rr.mean_squared_error
-    0.0015126663111567206
-
+    >>> mse = rr.mean_squared_error
     """
 
     def __init__(

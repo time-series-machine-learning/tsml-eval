@@ -11,10 +11,10 @@ from tsml.dummy import DummyClassifier, DummyClusterer
 
 from tsml_eval.datasets._test_data._data_sizes import DATA_TEST_SIZES, DATA_TRAIN_SIZES
 from tsml_eval.experiments import (
+    _get_clusterer,
     clustering_experiments,
     get_clusterer_by_name,
     run_clustering_experiment,
-    set_clusterer,
     threaded_clustering_experiments,
 )
 from tsml_eval.experiments.tests import _CLUSTERER_RESULTS_PATH
@@ -108,8 +108,10 @@ def test_run_threaded_clustering_experiment():
         "1",
         "-nj",
         "2",
-        # also test normalisation and benchmark time here
+        # also test transforms and benchmark time here
         "--row_normalise",
+        "--data_transform_name",
+        "Padder",
         "--benchmark_time",
         "-te",
     ]
@@ -172,11 +174,11 @@ def test_run_clustering_experiment_invalid_estimator():
 def test_get_clusterer_by_name():
     """Test get_clusterer_by_name method."""
     clusterer_lists = [
-        set_clusterer.deep_learning_clusterers,
-        set_clusterer.distance_based_clusterers,
-        set_clusterer.feature_based_clusterers,
-        set_clusterer.other_clusterers,
-        set_clusterer.vector_clusterers,
+        _get_clusterer.deep_learning_clusterers,
+        _get_clusterer.distance_based_clusterers,
+        _get_clusterer.feature_based_clusterers,
+        _get_clusterer.other_clusterers,
+        _get_clusterer.vector_clusterers,
     ]
     clusterer_non_default_params = [
         "clusterer",
@@ -211,7 +213,7 @@ def test_get_clusterer_by_name():
                     )
 
     _check_set_method_results(
-        clusterer_dict, estimator_name="Clusterers", method_name="set_clusterer"
+        clusterer_dict, estimator_name="Clusterers", method_name="get_clusterer_by_name"
     )
 
 
