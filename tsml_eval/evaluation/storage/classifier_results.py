@@ -1,5 +1,7 @@
 """Class for storing and loading results from a classification experiment."""
 
+import warnings
+
 import numpy as np
 from numpy.testing import assert_allclose
 from sklearn.metrics import (
@@ -7,6 +9,7 @@ from sklearn.metrics import (
     balanced_accuracy_score,
     f1_score,
     log_loss,
+    recall_score,
     roc_auc_score,
 )
 
@@ -79,12 +82,17 @@ class ClassifierResults(EstimatorResults):
         Accuracy of the classifier.
     balanced_accuracy : float or None
         Balanced accuracy of the classifier.
-    f1_score : float or None
-        F1 score of the classifier.
-    log_loss : float or None
-        Negative log likelihood of the classifier.
     auroc_score : float or None
         Mean area under the ROC curve of the classifier.
+    log_loss : float or None
+        Negative log likelihood of the classifier.
+    recall : float or None
+        Recall of the classifier.
+    specificity : float or None
+        Precision of the classifier.
+    f1_score : float or None
+        F1 score of the classifier.
+
 
     Examples
     --------
@@ -138,11 +146,15 @@ class ClassifierResults(EstimatorResults):
         self.pred_descriptions = pred_descriptions
 
         self.n_cases = None
+        self._minority_class = None
+        self._majority_class = None
 
         self.accuracy = None
         self.balanced_accuracy = None
         self.auroc_score = None
         self.log_loss = None
+        self.sensitivity = None
+        self.specificity = None
         self.f1_score = None
 
         super().__init__(
@@ -165,6 +177,8 @@ class ClassifierResults(EstimatorResults):
         "balanced_accuracy": ("BalAcc", True, False),
         "auroc_score": ("AUROC", True, False),
         "log_loss": ("LogLoss", False, False),
+        "sensitivity": ("Sensitivity", True, False),  # Binary class only
+        "specificity": ("Specificity", True, False),  # Binary class only
         "f1_score": ("F1", True, False),
         **EstimatorResults.statistics,
     }
@@ -258,12 +272,10 @@ class ClassifierResults(EstimatorResults):
                 self.class_labels, self.predictions
             )
         if self.log_loss is None or overwrite:
-            import warnings
-
+            # We check this elsewhere, they are just stricter on the tolerance
             warnings.filterwarnings(
                 "ignore",
-                message="The y_pred values do not sum to one. Starting from 1.5 "
-                "thiswill result in an error.",
+                message="The y_pred values do not sum to one",
             )
             self.log_loss = log_loss(
                 self.class_labels,
@@ -276,9 +288,29 @@ class ClassifierResults(EstimatorResults):
                 average="weighted",
                 multi_class="ovr",
             )
+        if self.sensitivity is None or overwrite:
+            self.sensitivity = recall_score(
+                self.class_labels,
+                self.predictions,
+                average="binary",
+                pos_label=self._minority_class,
+                zero_division=0.0,
+            )
+        if self.specificity is None or overwrite:
+            self.specificity = recall_score(
+                self.class_labels,
+                self.predictions,
+                average="binary",
+                pos_label=self._majority_class,
+                zero_division=0.0,
+            )
         if self.f1_score is None or overwrite:
             self.f1_score = f1_score(
-                self.class_labels, self.predictions, average="weighted"
+                self.class_labels,
+                self.predictions,
+                average="binary" if self.n_classes == 2 else "weighted",
+                pos_label=self._minority_class,
+                zero_division=0.0,
             )
 
     def infer_size(self, overwrite=False):
@@ -297,6 +329,10 @@ class ClassifierResults(EstimatorResults):
             self.n_cases = len(self.class_labels)
         if self.n_classes is None or overwrite:
             self.n_classes = len(self.probabilities[0])
+        if self._minority_class is None or self._majority_class is None or overwrite:
+            unique, counts = np.unique(self.class_labels, return_counts=True)
+            self._minority_class = unique[np.argmin(counts)]
+            self._majority_class = unique[np.argmax(counts)]
 
 
 def load_classifier_results(file_path, calculate_stats=True, verify_values=True):
