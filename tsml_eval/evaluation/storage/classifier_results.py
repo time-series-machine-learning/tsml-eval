@@ -86,10 +86,10 @@ class ClassifierResults(EstimatorResults):
         Mean area under the ROC curve of the classifier.
     log_loss : float or None
         Negative log likelihood of the classifier.
-    recall : float or None
-        Recall of the classifier.
+    sensitivity : float or None
+        Sensitivity of the classifier.
     specificity : float or None
-        Precision of the classifier.
+        Specificity of the classifier.
     f1_score : float or None
         F1 score of the classifier.
 
