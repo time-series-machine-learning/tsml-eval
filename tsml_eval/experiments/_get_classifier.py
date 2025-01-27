@@ -200,7 +200,7 @@ def _set_classifier_convolution_based(
     c, random_state, n_jobs, fit_contract, checkpoint, kwargs
 ):
     if c == "rocketclassifier" or c == "rocket":
-        from aeon.classification.convolution_based import RocketClassifier
+        from tsml_eval._wip.unequal_length._rocket import RocketClassifier
 
         return RocketClassifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "minirocket" or c == "mini-rocket" or "minirocketclassifier":
