@@ -93,7 +93,6 @@ class ClassifierResults(EstimatorResults):
     f1_score : float or None
         F1 score of the classifier.
 
-
     Examples
     --------
     >>> from tsml_eval.evaluation.storage import ClassifierResults
@@ -177,8 +176,8 @@ class ClassifierResults(EstimatorResults):
         "balanced_accuracy": ("BalAcc", True, False),
         "auroc_score": ("AUROC", True, False),
         "log_loss": ("LogLoss", False, False),
-        "sensitivity": ("Sensitivity", True, False),  # Binary class only
-        "specificity": ("Specificity", True, False),  # Binary class only
+        "sensitivity": ("Sensitivity", True, False),
+        "specificity": ("Specificity", True, False),
         "f1_score": ("F1", True, False),
         **EstimatorResults.statistics,
     }
@@ -292,16 +291,16 @@ class ClassifierResults(EstimatorResults):
             self.sensitivity = recall_score(
                 self.class_labels,
                 self.predictions,
-                average="binary",
-                pos_label=self._minority_class,
+                average="binary" if self.n_classes == 2 else "weighted",
+                pos_label=self._minority_class if self.n_classes == 2 else 1,
                 zero_division=0.0,
             )
         if self.specificity is None or overwrite:
             self.specificity = recall_score(
                 self.class_labels,
                 self.predictions,
-                average="binary",
-                pos_label=self._majority_class,
+                average="binary" if self.n_classes == 2 else "weighted",
+                pos_label=self._majority_class if self.n_classes == 2 else 1,
                 zero_division=0.0,
             )
         if self.f1_score is None or overwrite:
@@ -309,7 +308,7 @@ class ClassifierResults(EstimatorResults):
                 self.class_labels,
                 self.predictions,
                 average="binary" if self.n_classes == 2 else "weighted",
-                pos_label=self._minority_class,
+                pos_label=self._minority_class if self.n_classes == 2 else 1,
                 zero_division=0.0,
             )
 

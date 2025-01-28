@@ -8,13 +8,13 @@ __maintainer__ = []
 __all__ = ["DrCIFClassifier"]
 
 import numpy as np
+from aeon.utils.validation import is_equal_length
 from sklearn.preprocessing import FunctionTransformer
 
 from aeon.classification.base import BaseClassifier
 from aeon.classification.sklearn._continuous_interval_tree import ContinuousIntervalTree
-from aeon.transformations.collection import PeriodogramTransformer
 from aeon.transformations.collection.feature_based import Catch22
-from aeon.utils.numba.general import first_order_differences_3d
+from aeon.utils.numba.general import first_order_differences_2d
 from aeon.utils.numba.stats import (
     row_iqr,
     row_mean,
@@ -22,8 +22,11 @@ from aeon.utils.numba.stats import (
     row_numba_max,
     row_numba_min,
     row_slope,
-    row_std,
+    row_std, mean, std, slope, median, iqr, numba_min, numba_max,
 )
+
+from tsml_eval._wip.unequal_length.other._periodogram import PeriodogramTransformer
+from tsml_eval._wip.unequal_length.other.base_interval_forest import BaseIntervalForest
 
 
 class DrCIFClassifier(BaseIntervalForest, BaseClassifier):
@@ -177,7 +180,9 @@ class DrCIFClassifier(BaseIntervalForest, BaseClassifier):
         "capability:train_estimate": True,
         "capability:contractable": True,
         "capability:multithreading": True,
+        "capability:unequal_length": True,
         "algorithm_type": "interval",
+        "X_inner_type": ["np-list", "numpy3D"],
     }
 
     def __init__(
@@ -204,19 +209,19 @@ class DrCIFClassifier(BaseIntervalForest, BaseClassifier):
 
         series_transformers = [
             None,
-            FunctionTransformer(func=first_order_differences_3d, validate=False),
+            FunctionTransformer(func=_diff, validate=False),
             PeriodogramTransformer(),
         ]
 
         interval_features = [
             Catch22(outlier_norm=True, use_pycatch22=use_pycatch22),
-            row_mean,
-            row_std,
-            row_slope,
-            row_median,
-            row_iqr,
-            row_numba_min,
-            row_numba_max,
+            mean,
+            std,
+            slope,
+            median,
+            iqr,
+            numba_min,
+            numba_max,
         ]
 
         super().__init__(
@@ -241,6 +246,10 @@ class DrCIFClassifier(BaseIntervalForest, BaseClassifier):
             self.set_tags(**{"python_dependencies": "pycatch22"})
 
     def _fit(self, X, y):
+        if not is_equal_length(X):
+            self._base_estimator = ContinuousIntervalTree()
+            self.replace_nan = "nan"
+
         return super()._fit(X, y)
 
     def _predict(self, X) -> np.ndarray:
@@ -293,3 +302,7 @@ class DrCIFClassifier(BaseIntervalForest, BaseClassifier):
             }
         else:
             return {"n_estimators": 2, "n_intervals": 2, "att_subsample_size": 2}
+
+
+def _diff(X):
+    return [first_order_differences_2d(x) for x in X]
