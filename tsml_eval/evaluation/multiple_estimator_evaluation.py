@@ -1032,8 +1032,6 @@ def _evaluate_estimators(
     eval_name,
     estimator_names,
 ):
-    save_path = save_path + "/" + eval_name + "/"
-
     estimators = set()
     datasets = set()
     resamples = set()
@@ -1046,7 +1044,9 @@ def _evaluate_estimators(
 
     if eval_name is None:
         dt = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        eval_name = f"{estimator_results[0].__class__.__name__}Evaluation {dt}"
+        eval_name = f"{estimator_results[0].__class__.__name__}Evaluation_{dt}"
+
+    save_path = save_path + "/" + eval_name + "/"
 
     for estimator_name in results_dict:
         estimators.add(estimator_name)
