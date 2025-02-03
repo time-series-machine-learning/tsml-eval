@@ -51,6 +51,7 @@ def _check_set_method(
                     "optional dependency",
                     "soft dependency",
                     "python version",
+                    "No module named 'xgboost'",
                 ]
                 if any(s in str(err) for s in exempt_errors):
                     continue
