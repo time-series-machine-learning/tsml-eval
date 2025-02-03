@@ -330,8 +330,11 @@ class ClassifierResults(EstimatorResults):
             self.n_classes = len(self.probabilities[0])
         if self._minority_class is None or self._majority_class is None or overwrite:
             unique, counts = np.unique(self.class_labels, return_counts=True)
-            self._minority_class = unique[np.argmin(counts)]
-            self._majority_class = unique[np.argmax(counts)]
+            sorted_indices = np.argsort(unique)
+            unique = unique[sorted_indices]
+            counts = counts[sorted_indices]
+            self._minority_class = unique[np.flatnonzero(counts == np.min(counts))[0]]
+            self._majority_class = unique[np.flatnonzero(counts == np.max(counts))[-1]]
 
 
 def load_classifier_results(file_path, calculate_stats=True, verify_values=True):

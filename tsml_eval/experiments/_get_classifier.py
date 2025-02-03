@@ -6,9 +6,11 @@ from tsml_eval.utils.functions import str_in_nested_list
 
 convolution_based_classifiers = [
     ["rocketclassifier", "rocket"],
+    "rocket-unequal",
     ["minirocket", "mini-rocket", "minirocketclassifier"],
     ["multirocket", "multi-rocket", "multirocketclassifier"],
     ["arsenalclassifier", "arsenal"],
+    "arsenal-unequal",
     ["miniarsenal", "mini-arsenal"],
     ["multiarsenal", "multi-arsenal"],
     ["hydraclassifier", "hydra"],
@@ -33,6 +35,7 @@ dictionary_based_classifiers = [
     "individualboss",
     ["contractableboss", "cboss"],
     ["temporaldictionaryensemble", "tde"],
+    "tde-unequal",
     "individualtde",
     "weasel",
     "weasel-logistic",
@@ -84,6 +87,7 @@ interval_based_classifiers = [
     ["supervisedtimeseriesforest", "stsf"],
     "drcif-500",
     ["drcif", "drcifclassifier"],
+    "drcif-unequal",
     "summary-intervals",
     ["randomintervals-500", "catch22-intervals-500"],
     ["randomintervalclassifier", "randomintervals", "catch22-intervals"],
@@ -98,6 +102,7 @@ other_classifiers = [
 shapelet_based_classifiers = [
     "stc-2hour",
     ["shapelettransformclassifier", "stc"],
+    "stc-unequal",
     ["rdstclassifier", "rdst"],
     ["randomshapeletforestclassifier", "randomshapeletforest", "rsf"],
     ["sastclassifier", "sast"],
@@ -200,10 +205,14 @@ def _set_classifier_convolution_based(
     c, random_state, n_jobs, fit_contract, checkpoint, kwargs
 ):
     if c == "rocketclassifier" or c == "rocket":
+        from aeon.classification.convolution_based import RocketClassifier
+
+        return RocketClassifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "rocket-unequal":
         from tsml_eval._wip.unequal_length._rocket import RocketClassifier
 
         return RocketClassifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
-    elif c == "minirocket" or c == "mini-rocket" or "minirocketclassifier":
+    elif c == "minirocket" or c == "mini-rocket" or c == "minirocketclassifier":
         from aeon.classification.convolution_based import MiniRocketClassifier
 
         return MiniRocketClassifier(
@@ -211,7 +220,7 @@ def _set_classifier_convolution_based(
             n_jobs=n_jobs,
             **kwargs,
         )
-    elif c == "multirocket" or c == "multi-rocket" or "multirocketclassifier":
+    elif c == "multirocket" or c == "multi-rocket" or c == "multirocketclassifier":
         from aeon.classification.convolution_based import MultiRocketClassifier
 
         return MultiRocketClassifier(
@@ -221,6 +230,15 @@ def _set_classifier_convolution_based(
         )
     elif c == "arsenalclassifier" or c == "arsenal":
         from aeon.classification.convolution_based import Arsenal
+
+        return Arsenal(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "arsenal-unequal":
+        from tsml_eval._wip.unequal_length._arsenal import Arsenal
 
         return Arsenal(
             random_state=random_state,
@@ -349,6 +367,15 @@ def _set_classifier_dictionary_based(
         )
     elif c == "temporaldictionaryensemble" or c == "tde":
         from aeon.classification.dictionary_based import TemporalDictionaryEnsemble
+
+        return TemporalDictionaryEnsemble(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "tde-unequal":
+        from tsml_eval._wip.unequal_length._tde import TemporalDictionaryEnsemble
 
         return TemporalDictionaryEnsemble(
             random_state=random_state,
@@ -660,6 +687,16 @@ def _set_classifier_interval_based(
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
+    elif c == "drcif-unequal":
+        from tsml_eval._wip.unequal_length._drcif import DrCIFClassifier
+
+        return DrCIFClassifier(
+            n_estimators=500,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
     elif c == "summary-intervals":
         from aeon.classification.interval_based import RandomIntervalClassifier
         from aeon.transformations.collection.feature_based import SevenNumberSummary
@@ -733,6 +770,15 @@ def _set_classifier_shapelet_based(
         )
     elif c == "shapelettransformclassifier" or c == "stc":
         from aeon.classification.shapelet_based import ShapeletTransformClassifier
+
+        return ShapeletTransformClassifier(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "stc-unequal":
+        from tsml_eval._wip.unequal_length._stc import ShapeletTransformClassifier
 
         return ShapeletTransformClassifier(
             random_state=random_state,
