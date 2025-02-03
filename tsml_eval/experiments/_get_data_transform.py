@@ -8,6 +8,7 @@ from tsml_eval.utils.functions import str_in_nested_list
 
 transformers = [
     ["normalizer", "normaliser"],
+    ["padder", "zero-padder"],
     "low-noise-padder",
 ]
 
@@ -65,6 +66,10 @@ def get_data_transform_by_name(
 def _set_transformer(t, random_state, n_jobs):
     if t == "normalizer" or t == "normaliser":
         return Normalizer()
+    elif t == "padder" or t == "zero-padder":
+        from aeon.transformations.collection import Padder
+
+        return Padder()
     elif t == "low-noise-padder":
         from tsml_eval._wip.unequal_length._pad import Padder
 

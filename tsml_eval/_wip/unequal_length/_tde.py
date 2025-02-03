@@ -23,6 +23,8 @@ from sklearn.utils import check_random_state
 
 from aeon.classification.base import BaseClassifier
 
+from tsml_eval._wip.unequal_length.other._sfa import SFA
+
 
 class TemporalDictionaryEnsemble(BaseClassifier):
     """
@@ -109,8 +111,8 @@ class TemporalDictionaryEnsemble(BaseClassifier):
         The number of train cases.
     n_channels_ : int
         The number of dimensions per case.
-    n_timepoints_ : int
-        The length of each series.
+    min_n_timepoints_ : int
+        The minimum length of series in train data.
     estimators_ : list of shape (n_estimators) of IndividualTDE
         The collections of estimators trained in fit.
     n_estimators_ : int
@@ -199,7 +201,6 @@ class TemporalDictionaryEnsemble(BaseClassifier):
 
         self.n_cases_ = 0
         self.n_channels_ = 0
-        self.n_timepoints_ = 0
         self.n_estimators_ = 0
         self.estimators_ = []
         self.weights_ = []
@@ -247,7 +248,9 @@ class TemporalDictionaryEnsemble(BaseClassifier):
                 stacklevel=2,
             )
 
-        self.n_cases_, self.n_channels_, self.n_timepoints_ = X.shape
+        self.n_cases_ = len(X)
+        self.n_channels_ = X[0].shape[0]
+        self.min_n_timepoints_ = min([x.shape[1] for x in X])
 
         self.estimators_ = []
         self.weights_ = []
@@ -255,8 +258,8 @@ class TemporalDictionaryEnsemble(BaseClassifier):
         self._prev_parameters_y = []
 
         # Window length parameter space dependent on series length
-        max_window_searches = self.n_timepoints_ / 4
-        max_window = int(self.n_timepoints_ * self.max_win_len_prop)
+        max_window_searches = self.min_n_timepoints_ / 4
+        max_window = int(self.min_n_timepoints_ * self.max_win_len_prop)
 
         if self.min_window > max_window:
             self._min_window = max_window
@@ -325,7 +328,7 @@ class TemporalDictionaryEnsemble(BaseClassifier):
                 subsample = rng.choice(
                     self.n_cases_, size=subsample_size, replace=False
                 )
-                X_subsample = X[subsample]
+                X_subsample = [X[i] for i in subsample] if isinstance(X, list) else X[subsample]
                 y_subsample = y[subsample]
                 if len(np.unique(y_subsample)) > 1:
                     break
@@ -416,11 +419,11 @@ class TemporalDictionaryEnsemble(BaseClassifier):
             n_cases, n_classes_).
 
         """
-        sums = np.zeros((X.shape[0], self.n_classes_))
+        sums = np.zeros((len(X), self.n_classes_))
 
         for n, clf in enumerate(self.estimators_):
             preds = clf.predict(X)
-            for i in range(0, X.shape[0]):
+            for i in range(0, len(X)):
                 sums[i, self._class_dictionary[preds[i]]] += self.weights_[n]
 
         return sums / (np.ones(self.n_classes_) * self._weight_sum)
@@ -641,8 +644,6 @@ class IndividualTDE(BaseClassifier):
         The number of train cases.
     n_channels_ : int
         The number of dimensions per case.
-    n_timepoints_ : int
-        The length of each series.
 
     See Also
     --------
@@ -677,6 +678,9 @@ class IndividualTDE(BaseClassifier):
     _tags = {
         "capability:multivariate": True,
         "capability:multithreading": True,
+        "capability:unequal_length": True,
+        "algorithm_type": "dictionary",
+        "X_inner_type": ["np-list", "numpy3D"],
     }
 
     def __init__(
@@ -780,7 +784,8 @@ class IndividualTDE(BaseClassifier):
         Changes state by creating a fitted model that updates attributes
         ending in "_" and sets is_fitted flag to True.
         """
-        self.n_cases_, self.n_channels_, self.n_timepoints_ = X.shape
+        self.n_cases_ = len(X)
+        self.n_channels_ = X[0].shape[0]
         self._class_vals = y
 
         # select dimensions using accuracy estimate if multivariate
@@ -799,7 +804,7 @@ class IndividualTDE(BaseClassifier):
             )
 
             for i, dim in enumerate(self._dims):
-                X_dim = X[:, dim, :].reshape(self.n_cases_, 1, self.n_timepoints_)
+                X_dim = [x[i, :].reshape(1, x.shape[1]) for x in X] if isinstance(X, list) else X[:, dim, :].reshape(self.n_cases_, 1, X.shape[2])
                 dim_words = self._transformers[i].transform(X_dim, y)
                 dim_words = dim_words[0]
 
@@ -854,7 +859,7 @@ class IndividualTDE(BaseClassifier):
         1D np.ndarray
             The predicted class labels shape = (n_cases).
         """
-        n_cases = X.shape[0]
+        n_cases = len(X)
 
         if self.n_channels_ > 1:
             words = (
@@ -869,7 +874,7 @@ class IndividualTDE(BaseClassifier):
             )
 
             for i, dim in enumerate(self._dims):
-                X_dim = X[:, dim, :].reshape(n_cases, 1, self.n_timepoints_)
+                X_dim = [x[i, :].reshape(1, x.shape[1]) for x in X] if isinstance(X, list) else X[:, dim, :].reshape(n_cases, 1, X.shape[2])
                 dim_words = self._transformers[i].transform(X_dim)
                 dim_words = dim_words[0]
 
@@ -942,7 +947,7 @@ class IndividualTDE(BaseClassifier):
                 )
             )
 
-            X_dim = X[:, i, :].reshape(self.n_cases_, 1, self.n_timepoints_)
+            X_dim = [x[i, :].reshape(1, x.shape[1]) for x in X] if isinstance(X, list) else X[:, i, :].reshape(self.n_cases_, 1, X.shape[2])
 
             transformers[i].fit(X_dim, y)
             sfa = transformers[i].transform(
