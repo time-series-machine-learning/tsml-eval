@@ -30,7 +30,7 @@ deep_learning_clusterers = [
 distance_based_clusterers = [
     "kmeans-euclidean",
     "kmeans-squared",
-    "kmeans-dtw",
+    ["kmeans-dtw", "timeserieskmeans"],
     "kmeans-ddtw",
     "kmeans-wdtw",
     "kmeans-wddtw",
@@ -43,7 +43,7 @@ distance_based_clusterers = [
     "kmeans-shape_dtw",
     "kmedoids-euclidean",
     "kmedoids-squared",
-    "kmedoids-dtw",
+    ["kmedoids-dtw", "timeserieskmedoids"],
     "kmedoids-ddtw",
     "kmedoids-wdtw",
     "kmedoids-wddtw",
@@ -56,7 +56,7 @@ distance_based_clusterers = [
     "kmedoids-shape_dtw",
     "clarans-euclidean",
     "clarans-squared",
-    "clarans-dtw",
+    ["clarans-dtw", "timeseriesclarans"],
     "clarans-ddtw",
     "clarans-wdtw",
     "clarans-wddtw",
@@ -69,7 +69,7 @@ distance_based_clusterers = [
     "clarans-shape_dtw",
     "clara-euclidean",
     "clara-squared",
-    "clara-dtw",
+    ["clara-dtw", "timeseriesclara"],
     "clara-ddtw",
     "clara-wdtw",
     "clara-wddtw",
@@ -114,7 +114,7 @@ distance_based_clusterers = [
     "kmeans-ssg-ba-msm",
     "kmeans-ssg-ba-adtw",
     "kmeans-ssg-ba-shape_dtw",
-    "som-dtw",
+    ["som-dtw", "elasticsom"],
     "som-ddtw",
     "som-wdtw",
     "som-wddtw",
@@ -126,16 +126,8 @@ distance_based_clusterers = [
     "som-adtw",
     "som-shape_dtw",
     "som-soft_dtw",
-    "ksc",
-    "kshape",
-    "timeserieskmeans",
-    "timeserieskmedoids",
-    "timeseriesclarans",
-    "timeseriesclara",
-    "elasticsom",
-    "kspectralcentroid",
-    "timeserieskshape",
-    "timeserieskernelkmeans",
+    ["kspectralcentroid", "ksc"],
+    ["timeserieskshape", "kshape"],
 ]
 feature_based_clusterers = [
     ["catch22", "catch22clusterer"],
@@ -423,7 +415,7 @@ def _set_clusterer_distance_based(
             random_state=random_state,
             **kwargs,
         )
-    elif "kshape" in c or "timeserieskshape" in c:
+    elif "kshape" in c:
         return TimeSeriesKShape(
             init=init_algorithm,
             max_iter=50,
@@ -432,7 +424,7 @@ def _set_clusterer_distance_based(
             random_state=random_state,
             **kwargs,
         )
-    elif c == "timeserieskernelkmeans" or c == "kernelkmeans":
+    elif "timeserieskernelkmeans" in c:
         return TimeSeriesKernelKMeans(
             max_iter=50,
             n_init=10,

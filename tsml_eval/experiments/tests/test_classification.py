@@ -171,7 +171,7 @@ def test_run_classification_experiment_invalid_estimator():
 
 def test_get_classifier_by_name():
     """Test get_classifier_by_name method."""
-    classifier_lists = [
+    classifier_name_lists = [
         _get_classifier.convolution_based_classifiers,
         _get_classifier.deep_learning_classifiers,
         _get_classifier.dictionary_based_classifiers,
@@ -184,12 +184,14 @@ def test_get_classifier_by_name():
         _get_classifier.vector_classifiers,
     ]
 
+    # filled by _check_set_method
+    classifier_list = []
     classifier_dict = {}
     all_classifier_names = []
-
-    for classifier_list in classifier_lists:
+    for classifier_name_list in classifier_name_lists:
         _check_set_method(
             get_classifier_by_name,
+            classifier_name_list,
             classifier_list,
             classifier_dict,
             all_classifier_names,

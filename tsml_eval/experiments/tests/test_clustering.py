@@ -173,7 +173,7 @@ def test_run_clustering_experiment_invalid_estimator():
 
 def test_get_clusterer_by_name():
     """Test get_clusterer_by_name method."""
-    clusterer_lists = [
+    clusterer_name_lists = [
         _get_clusterer.deep_learning_clusterers,
         _get_clusterer.distance_based_clusterers,
         _get_clusterer.feature_based_clusterers,
@@ -187,29 +187,30 @@ def test_get_clusterer_by_name():
         "base_estimator",
     ]
 
+    clusterer_list = []
     clusterer_dict = {}
     all_clusterer_names = []
-
-    for clusterer_list in clusterer_lists:
-        estimatorrs = _check_set_method(
+    for clusterer_name_list in clusterer_name_lists:
+        _check_set_method(
             get_clusterer_by_name,
+            clusterer_name_list,
             clusterer_list,
             clusterer_dict,
             all_clusterer_names,
-            return_estimator=True,
         )
 
-        # Check that clusterers with estimator parameters which are likely to be
-        # a sub-estimator are not None so n_clusters can be set
-        for clusterer in estimatorrs:
+    # Check that clusterers with parameters which are likely to be
+    # a sub-estimator are not None so n_clusters can be set
+    for clusterers in clusterer_list:
+        for c in clusterers:
             for param_name in clusterer_non_default_params:
-                params = clusterer.get_params()
+                params = c.get_params()
                 if param_name in params:
                     assert params[param_name] is not None, (
                         f"Clusterers which have an estimator parameter i.e. "
                         f"pipelines and deep learners must not have None as the "
                         f"estimator. Found None for {param_name} in "
-                        f"{clusterer.__class__.__name__}"
+                        f"{c.__class__.__name__}"
                     )
 
     _check_set_method_results(
@@ -230,6 +231,7 @@ def test_aeon_clusterers_available():
         "ClustererPipeline",
         "SklearnClustererWrapper",
         # just missing
+        "TimeSeriesKernelKMeans",
     ]
 
     est = [e for e, _ in all_estimators(type_filter="clusterer")]

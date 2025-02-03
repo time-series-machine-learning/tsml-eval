@@ -170,7 +170,7 @@ def test_run_regression_experiment_invalid_estimator():
 
 def test_get_regressor_by_name():
     """Test get_regressor_by_name method."""
-    regressor_lists = [
+    regressor_name_lists = [
         _get_regressor.convolution_based_regressors,
         _get_regressor.deep_learning_regressors,
         _get_regressor.distance_based_regressors,
@@ -182,12 +182,13 @@ def test_get_regressor_by_name():
         _get_regressor.vector_regressors,
     ]
 
+    regressor_list = []
     regressor_dict = {}
     all_regressor_names = []
-
-    for regressor_list in regressor_lists:
+    for regressor_name_list in regressor_name_lists:
         _check_set_method(
             get_regressor_by_name,
+            regressor_name_list,
             regressor_list,
             regressor_dict,
             all_regressor_names,
