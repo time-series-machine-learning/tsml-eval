@@ -152,8 +152,9 @@ per-file-ignores = [
 [tool.mypy]
 mypy_path = "tsml_eval/"
 ignore_missing_imports = true
+follow_imports = "silent"
 exclude = [
-    "_wip",
+    "_wip/",
     # Ignore the publications symlinks and its contents
     "tsml_eval/publications/2023",
 ]
