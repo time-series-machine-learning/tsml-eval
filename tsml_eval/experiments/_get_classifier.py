@@ -14,7 +14,7 @@ convolution_based_classifiers = [
     ["miniarsenal", "mini-arsenal"],
     ["multiarsenal", "multi-arsenal"],
     ["hydraclassifier", "hydra"],
-    ["multirockethydraclassifier", "multirockethydra", "multirocket-hydra"],
+    ["multirockethydraclassifier", "multirockethydra", "multirocket-hydra", "mrhydra"],
 ]
 deep_learning_classifiers = [
     ["timecnnclassifier", "timecnn", "cnnclassifier", "cnn"],
@@ -274,6 +274,7 @@ def _set_classifier_convolution_based(
         c == "multirockethydraclassifier"
         or c == "multirockethydra"
         or c == "multirocket-hydra"
+        or c == "mrhydra"
     ):
         from aeon.classification.convolution_based import MultiRocketHydraClassifier
 
