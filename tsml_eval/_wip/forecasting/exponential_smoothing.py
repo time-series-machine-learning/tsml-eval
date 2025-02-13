@@ -113,10 +113,10 @@ class ExponentialSmoothingForecaster(BaseForecaster):
     Attributes
     ----------
     model_type : ModelType
-        Collection of parameters decribing the (Error, Trend, Seasonality) 
+        Collection of parameters decribing the (Error, Trend, Seasonality)
         types of the model, as well as the seasonal period if applicable.
     model_parameters : ModelParameters
-        Collection of parameters describing the level, trend and 
+        Collection of parameters describing the level, trend and
         seasonality smoothing parameters, as well as the damping parameter.
     _level : float
         Inital value for the level parameter l_0
@@ -173,7 +173,7 @@ class ExponentialSmoothingForecaster(BaseForecaster):
         """
         self.fit(y,X)
         return self.predict()
-    
+
     def __str__ (self):
         return f"ExponentialSmoothingForecaster\n\
         (error_type={self.model_type.error_type},\n\
@@ -259,10 +259,10 @@ def predict(model_type, model_parameters, level, trend, seasonality, y=None, X=N
     Parameters
     ----------
     model_type : ModelType
-        Parameters describing the (E,T,S) model type, 
+        Parameters describing the (E,T,S) model type,
         seasonal period and forecasting horizon.
     model_parameters: ModelParameters
-        Collection of the smoothing parameters 
+        Collection of the smoothing parameters
         alpha, beta, gamma and phi of the model.
     l : float
         Current level.
@@ -307,10 +307,10 @@ def update(model_type, model_parameters, oldl, l, oldb, b, olds, s, y):
     Parameters
     ----------
     model_type : ModelType
-        Parameters describing the (E,T,S) model type, 
+        Parameters describing the (E,T,S) model type,
         seasonal period and forecasting horizon.
     model_parameters: ModelParameters
-        Collection of the smoothing parameters 
+        Collection of the smoothing parameters
         alpha, beta, gamma and phi of the model.
     oldl : float
         Previous level.
