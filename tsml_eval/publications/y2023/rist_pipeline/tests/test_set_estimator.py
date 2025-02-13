@@ -13,12 +13,13 @@ from tsml_eval.testing.testing_utils import _check_set_method, _check_set_method
 
 def test_set_rist_classifier():
     """Test set_rist_classifier method."""
+    classifier_list = []
     classifier_dict = {}
     all_classifier_names = []
-
     _check_set_method(
         _set_rist_classifier,
         rist_classifiers,
+        classifier_list,
         classifier_dict,
         all_classifier_names,
     )
@@ -38,12 +39,13 @@ def test_set_rist_classifier_invalid():
 
 def test_set_rist_regressor():
     """Test set_rist_regressors method."""
+    regressor_list = []
     regressor_dict = {}
     all_regressor_names = []
-
     _check_set_method(
         _set_rist_regressor,
         rist_regressors,
+        regressor_list,
         regressor_dict,
         all_regressor_names,
     )

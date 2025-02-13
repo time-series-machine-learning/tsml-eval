@@ -4,7 +4,7 @@ This file is configured for runs of the main method with command line arguments,
 single debugging runs. Results are written in a standard tsml format.
 """
 
-__author__ = ["TonyBagnall", "MatthewMiddlehurst"]
+__maintainer__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 import os
 import sys
@@ -18,8 +18,11 @@ os.environ["TF_NUM_INTRAOP_THREADS"] = "1"
 import numba
 from aeon.utils.validation._dependencies import _check_soft_dependencies
 
-from tsml_eval.experiments import load_and_run_regression_experiment
-from tsml_eval.experiments.set_regressor import get_regressor_by_name
+from tsml_eval.experiments import (
+    get_data_transform_by_name,
+    get_regressor_by_name,
+    load_and_run_regression_experiment,
+)
 from tsml_eval.experiments.tests import _REGRESSOR_RESULTS_PATH
 from tsml_eval.testing.testing_utils import _TEST_DATA_PATH
 from tsml_eval.utils.arguments import parse_args
@@ -81,9 +84,18 @@ def run_experiment(args):
                     checkpoint=args.checkpoint,
                     **args.kwargs,
                 ),
-                row_normalise=args.row_normalise,
                 regressor_name=args.estimator_name,
                 resample_id=args.resample_id,
+                data_transforms=get_data_transform_by_name(
+                    args.data_transform_name,
+                    row_normalise=args.row_normalise,
+                    random_state=(
+                        args.resample_id
+                        if args.random_seed is None
+                        else args.random_seed
+                    ),
+                    n_jobs=1,
+                ),
                 build_train_file=args.train_fold,
                 write_attributes=args.write_attributes,
                 att_max_shape=args.att_max_shape,
@@ -101,6 +113,7 @@ def run_experiment(args):
         estimator_name = "ROCKET"
         dataset_name = "MinimalGasPrices"
         row_normalise = False
+        transform_name = None
         resample_id = 0
         train_fold = False
         write_attributes = True
@@ -120,6 +133,11 @@ def run_experiment(args):
             checkpoint=checkpoint,
             **kwargs,
         )
+        transform = get_data_transform_by_name(
+            transform_name,
+            row_normalise=row_normalise,
+            random_state=resample_id,
+        )
         print(f"Local Run of {estimator_name} ({regressor.__class__.__name__}).")
 
         load_and_run_regression_experiment(
@@ -127,9 +145,9 @@ def run_experiment(args):
             results_path,
             dataset_name,
             regressor,
-            row_normalise=row_normalise,
             regressor_name=estimator_name,
             resample_id=resample_id,
+            data_transforms=transform,
             build_train_file=train_fold,
             write_attributes=write_attributes,
             att_max_shape=att_max_shape,

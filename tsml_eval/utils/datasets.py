@@ -1,6 +1,6 @@
 """Utilities for datasets."""
 
-__author__ = ["MatthewMiddlehurst"]
+__maintainer__ = ["MatthewMiddlehurst"]
 __all__ = [
     "load_experiment_data",
     "copy_dataset_ts_files",
@@ -13,7 +13,7 @@ from os.path import exists
 from typing import Optional, Union
 
 import numpy as np
-from aeon.datasets import load_from_tsfile, write_to_tsfile
+from aeon.datasets import load_from_ts_file, write_to_ts_file
 
 
 def load_experiment_data(
@@ -51,19 +51,21 @@ def load_experiment_data(
     if resample_id is not None and predefined_resample:
         resample_str = "" if resample_id is None else str(resample_id)
 
-        X_train, y_train = load_from_tsfile(
+        X_train, y_train = load_from_ts_file(
             f"{problem_path}/{dataset}/{dataset}{resample_str}_TRAIN.ts"
         )
-        X_test, y_test = load_from_tsfile(
+        X_test, y_test = load_from_ts_file(
             f"{problem_path}/{dataset}/{dataset}{resample_str}_TEST.ts"
         )
 
         resample_data = False
     else:
-        X_train, y_train = load_from_tsfile(
+        X_train, y_train = load_from_ts_file(
             f"{problem_path}/{dataset}/{dataset}_TRAIN.ts"
         )
-        X_test, y_test = load_from_tsfile(f"{problem_path}/{dataset}/{dataset}_TEST.ts")
+        X_test, y_test = load_from_ts_file(
+            f"{problem_path}/{dataset}/{dataset}_TEST.ts"
+        )
 
         resample_data = True if resample_id != 0 else False
 
@@ -144,11 +146,11 @@ def save_merged_dataset_splits(
     if save_path is None:
         save_path = problem_path
 
-    X_train, y_train = load_from_tsfile(f"{problem_path}/{dataset}/{dataset}_TRAIN.ts")
-    X_test, y_test = load_from_tsfile(f"{problem_path}/{dataset}/{dataset}_TEST.ts")
+    X_train, y_train = load_from_ts_file(f"{problem_path}/{dataset}/{dataset}_TRAIN.ts")
+    X_test, y_test = load_from_ts_file(f"{problem_path}/{dataset}/{dataset}_TEST.ts")
 
     os.makedirs(save_path, exist_ok=True)
     X = np.concatenate([X_train, X_test], axis=0)
     y = np.concatenate([y_train, y_test], axis=0)
 
-    write_to_tsfile(X, f"{save_path}/{dataset}/", y=y, problem_name=dataset)
+    write_to_ts_file(X, f"{save_path}/{dataset}/", y=y, problem_name=dataset)

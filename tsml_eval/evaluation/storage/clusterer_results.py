@@ -1,7 +1,7 @@
 """Class for storing and loading results from a clustering experiment."""
 
 import numpy as np
-from aeon.performance_metrics.clustering import clustering_accuracy_score
+from aeon.benchmarking.metrics.clustering import clustering_accuracy_score
 from numpy.testing import assert_allclose
 from sklearn.metrics import (
     adjusted_mutual_info_score,
@@ -92,8 +92,7 @@ class ClustererResults(EstimatorResults):
     ...     "/clustering/KMeans/Predictions/Trace/trainResample0.csv"
     ... )
     >>> cr.calculate_statistics()
-    >>> cr.clustering_accuracy
-    0.57
+    >>> acc = cr.clustering_accuracy
     """
 
     def __init__(

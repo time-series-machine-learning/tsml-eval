@@ -3,7 +3,7 @@
 Results are saved a standardised format used by tsml.
 """
 
-__author__ = ["TonyBagnall", "MatthewMiddlehurst"]
+__maintainer__ = ["TonyBagnall", "MatthewMiddlehurst"]
 __all__ = [
     "run_classification_experiment",
     "load_and_run_classification_experiment",
@@ -19,15 +19,15 @@ import os
 import time
 import warnings
 from datetime import datetime
+from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
+from aeon.benchmarking.metrics.clustering import clustering_accuracy_score
 from aeon.classification import BaseClassifier
 from aeon.clustering import BaseClusterer
-from aeon.forecasting.base import BaseForecaster
-from aeon.performance_metrics.clustering import clustering_accuracy_score
+from aeon.forecasting import BaseForecaster
 from aeon.regression.base import BaseRegressor
-from aeon.transformations.collection import TimeSeriesScaler
 from sklearn import preprocessing
 from sklearn.base import BaseEstimator, is_classifier, is_regressor
 from sklearn.metrics import (
@@ -59,24 +59,24 @@ from tsml_eval.utils.results_writing import (
     write_regression_results,
 )
 
-if os.getenv("MEMRECORD_INTERVAL") is not None:  # pragma: no cover
-    TEMP = os.getenv("MEMRECORD_INTERVAL")
-    MEMRECORD_INTERVAL = float(TEMP) if isinstance(TEMP, str) else 5.0
+MEMRECORD_ENV = os.getenv("MEMRECORD_INTERVAL")
+if isinstance(MEMRECORD_ENV, str):  # pragma: no cover
+    MEMRECORD_INTERVAL = float(MEMRECORD_ENV)
 else:
     MEMRECORD_INTERVAL = 5.0
 
 
 def run_classification_experiment(
-    X_train,
-    y_train,
-    X_test,
-    y_test,
+    X_train: Union[np.ndarray, list],
+    y_train: np.ndarray,
+    X_test: Union[np.ndarray, list],
+    y_test: np.ndarray,
     classifier,
     results_path,
-    row_normalise=False,
     classifier_name=None,
     dataset_name="N/A",
     resample_id=None,
+    data_transforms=None,
     build_test_file=True,
     build_train_file=False,
     ignore_custom_train_estimate=False,
@@ -92,21 +92,22 @@ def run_classification_experiment(
 
     Parameters
     ----------
-    X_train : pd.DataFrame or np.array    todo
-        The data to train the classifier.
+    X_train : np.ndarray or list of np.ndarray
+        The data to train the classifier. Numpy array or list of numpy arrays in the
+        ``aeon`` data format.
     y_train : np.array
-        Training data class labels.
-    X_test : pd.DataFrame or np.array
-        The data used to test the trained classifier.
+        Training data class labels. One label per case in the training data using the
+        same ordering.
+    X_test : np.ndarray or list of np.ndarray
+        The data used to test the trained classifier. Numpy array or list of numpy
+        arrays in the ``aeon`` data format.
     y_test : np.array
-        Testing data class labels.
+        Testing data class labels. One label per case in the testing data using the
+        same ordering.
     classifier : BaseClassifier
         Classifier to be used in the experiment.
     results_path : str
         Location of where to write results. Any required directories will be created.
-    row_normalise : bool, default=False
-        Whether to normalise the data rows (time series) prior to fitting and
-        predicting.
     classifier_name : str or None, default=None
         Name of classifier used in writing results. If None, the name is taken from
         the classifier.
@@ -115,6 +116,11 @@ def run_classification_experiment(
     resample_id : int or None, default=None
         Seed for resampling. If set to 0, the default train/test split from file is
         used. Also used in output file name.
+    data_transforms : transformer, list of transformers or None, default=None
+        Transformer(s) to apply to the data before running the experiment.
+        If a list, the transformers are applied in order.
+        If None, no transformation is applied.
+        Calls fit_transform on the training data and transform on the test data.
     build_test_file : bool, default=True:
         Whether to generate test files or not. If the classifier can generate its own
         train probabilities, the classifier will be built but no file will be output.
@@ -162,10 +168,13 @@ def run_classification_experiment(
     else:
         raise TypeError("classifier must be a tsml, aeon or sklearn classifier.")
 
-    if row_normalise:
-        scaler = TimeSeriesScaler()
-        X_train = scaler.fit_transform(X_train)
-        X_test = scaler.fit_transform(X_test)
+    if data_transforms is not None:
+        if not isinstance(data_transforms, list):
+            data_transforms = [data_transforms]
+
+        for transform in data_transforms:
+            X_train = transform.fit_transform(X_train, y_train)
+            X_test = transform.transform(X_test, y_test)
 
     le = preprocessing.LabelEncoder()
     y_train = le.fit_transform(y_train)
@@ -221,6 +230,9 @@ def run_classification_experiment(
             dataset_name,
             results_path,
             full_path=False,
+            first_line_classifier_name=(
+                f"{classifier_name} ({type(classifier).__name__})"
+            ),
             split="TRAIN",
             resample_id=resample_id,
             time_unit="MILLISECONDS",
@@ -271,6 +283,9 @@ def run_classification_experiment(
             dataset_name,
             results_path,
             full_path=False,
+            first_line_classifier_name=(
+                f"{classifier_name} ({type(classifier).__name__})"
+            ),
             split="TEST",
             resample_id=resample_id,
             time_unit="MILLISECONDS",
@@ -293,9 +308,9 @@ def load_and_run_classification_experiment(
     results_path,
     dataset,
     classifier,
-    row_normalise=False,
     classifier_name=None,
     resample_id=0,
+    data_transforms=None,
     build_train_file=False,
     write_attributes=False,
     att_max_shape=0,
@@ -320,15 +335,17 @@ def load_and_run_classification_experiment(
         same for "_TEST.ts".
     classifier : BaseClassifier
         Classifier to be used in the experiment.
-    row_normalise : bool, default=False
-        Whether to normalise the data rows (time series) prior to fitting and
-        predicting.
     classifier_name : str or None, default=None
         Name of classifier used in writing results. If None, the name is taken from
         the classifier.
     resample_id : int, default=0
         Seed for resampling. If set to 0, the default train/test split from file is
         used. Also used in output file name.
+    data_transforms : transformer, list of transformers or None, default=None
+        Transformer(s) to apply to the data before running the experiment.
+        If a list, the transformers are applied in order.
+        If None, no transformation is applied.
+        Calls fit_transform on the training data and transform on the test data.
     build_train_file : bool, default=False
         Whether to generate train files or not. If true, it performs a 10-fold
         cross-validation on the train data and saves. If the classifier can produce its
@@ -382,10 +399,10 @@ def load_and_run_classification_experiment(
         y_test,
         classifier,
         results_path,
-        row_normalise=row_normalise,
         classifier_name=classifier_name,
         dataset_name=dataset,
         resample_id=resample_id,
+        data_transforms=data_transforms,
         build_test_file=build_test_file,
         build_train_file=build_train_file,
         attribute_file_path=attribute_file_path,
@@ -395,16 +412,16 @@ def load_and_run_classification_experiment(
 
 
 def run_regression_experiment(
-    X_train,
-    y_train,
-    X_test,
-    y_test,
+    X_train: Union[np.ndarray, list],
+    y_train: np.ndarray,
+    X_test: Union[np.ndarray, list],
+    y_test: np.ndarray,
     regressor,
     results_path,
-    row_normalise=False,
     regressor_name=None,
     dataset_name="",
     resample_id=None,
+    data_transforms=None,
     build_test_file=True,
     build_train_file=False,
     ignore_custom_train_estimate=False,
@@ -420,21 +437,22 @@ def run_regression_experiment(
 
     Parameters
     ----------
-    X_train : pd.DataFrame or np.array
-        The data to train the regressor.
+    X_train : np.ndarray or list of np.ndarray
+        The data to train the classifier. Numpy array or list of numpy arrays in the
+        ``aeon`` data format.
     y_train : np.array
-        Training data labels.
-    X_test : pd.DataFrame or np.array
-        The data used to test the trained regressor.
+        Training data class labels. One label per case in the training data using the
+        same ordering.
+    X_test : np.ndarray or list of np.ndarray
+        The data used to test the trained classifier. Numpy array or list of numpy
+        arrays in the ``aeon`` data format.
     y_test : np.array
-        Testing data labels.
+        Testing data class labels. One label per case in the testing data using the
+        same ordering.
     regressor : BaseRegressor
         Regressor to be used in the experiment.
     results_path : str
         Location of where to write results. Any required directories will be created.
-    row_normalise : bool, default=False
-        Whether to normalise the data rows (time series) prior to fitting and
-        predicting.
     regressor_name : str or None, default=None
         Name of regressor used in writing results. If None, the name is taken from
         the regressor.
@@ -443,6 +461,11 @@ def run_regression_experiment(
     resample_id : int or None, default=None
         Seed for resampling. If set to 0, the default train/test split from file is
         used. Also used in output file name.
+    data_transforms : transformer, list of transformers or None, default=None
+        Transformer(s) to apply to the data before running the experiment.
+        If a list, the transformers are applied in order.
+        If None, no transformation is applied.
+        Calls fit_transform on the training data and transform on the test data.
     build_test_file : bool, default=True:
         Whether to generate test files or not. If the regressor can generate its own
         train predictions, the classifier will be built but no file will be output.
@@ -490,10 +513,13 @@ def run_regression_experiment(
     else:
         raise TypeError("regressor must be a tsml, aeon or sklearn regressor.")
 
-    if row_normalise:
-        scaler = TimeSeriesScaler()
-        X_train = scaler.fit_transform(X_train)
-        X_test = scaler.fit_transform(X_test)
+    if data_transforms is not None:
+        if not isinstance(data_transforms, list):
+            data_transforms = [data_transforms]
+
+        for transform in data_transforms:
+            X_train = transform.fit_transform(X_train, y_train)
+            X_test = transform.transform(X_test, y_test)
 
     needs_fit = True
     fit_time = -1
@@ -532,6 +558,7 @@ def run_regression_experiment(
             dataset_name,
             results_path,
             full_path=False,
+            first_line_regressor_name=f"{regressor_name} ({type(regressor).__name__})",
             split="TRAIN",
             resample_id=resample_id,
             time_unit="MILLISECONDS",
@@ -577,6 +604,7 @@ def run_regression_experiment(
             dataset_name,
             results_path,
             full_path=False,
+            first_line_regressor_name=f"{regressor_name} ({type(regressor).__name__})",
             split="TEST",
             resample_id=resample_id,
             time_unit="MILLISECONDS",
@@ -598,9 +626,9 @@ def load_and_run_regression_experiment(
     results_path,
     dataset,
     regressor,
-    row_normalise=False,
     regressor_name=None,
     resample_id=0,
+    data_transforms=None,
     build_train_file=False,
     write_attributes=False,
     att_max_shape=0,
@@ -625,15 +653,17 @@ def load_and_run_regression_experiment(
         same for "_TEST.ts".
     regressor : BaseRegressor
         Regressor to be used in the experiment.
-    row_normalise : bool, default=False
-        Whether to normalise the data rows (time series) prior to fitting and
-        predicting.
     regressor_name : str or None, default=None
         Name of regressor used in writing results. If None, the name is taken from
         the regressor.
     resample_id : int, default=0
         Seed for resampling. If set to 0, the default train/test split from file is
         used. Also used in output file name.
+    data_transforms : transformer, list of transformers or None, default=None
+        Transformer(s) to apply to the data before running the experiment.
+        If a list, the transformers are applied in order.
+        If None, no transformation is applied.
+        Calls fit_transform on the training data and transform on the test data.
     build_train_file : bool, default=False
         Whether to generate train files or not. If true, it performs a 10-fold
         cross-validation on the train data and saves. If the regressor can produce its
@@ -691,10 +721,10 @@ def load_and_run_regression_experiment(
         y_test,
         regressor,
         results_path,
-        row_normalise=row_normalise,
         regressor_name=regressor_name,
         dataset_name=dataset,
         resample_id=resample_id,
+        data_transforms=data_transforms,
         build_test_file=build_test_file,
         build_train_file=build_train_file,
         attribute_file_path=attribute_file_path,
@@ -704,17 +734,17 @@ def load_and_run_regression_experiment(
 
 
 def run_clustering_experiment(
-    X_train,
-    y_train,
+    X_train: Union[np.ndarray, list],
+    y_train: np.ndarray,
     clusterer,
     results_path,
-    X_test=None,
-    y_test=None,
-    row_normalise=False,
+    X_test: Optional[Union[np.ndarray, list]] = None,
+    y_test: Optional[np.ndarray] = None,
     n_clusters=None,
     clusterer_name=None,
     dataset_name="N/A",
     resample_id=None,
+    data_transforms=None,
     build_test_file=False,
     build_train_file=True,
     attribute_file_path=None,
@@ -729,27 +759,32 @@ def run_clustering_experiment(
 
     Parameters
     ----------
-    X_train : pd.DataFrame or np.array
-        The data to train the clusterer.
+    X_train : np.ndarray or list of np.ndarray
+        The data to train the classifier. Numpy array or list of numpy arrays in the
+        ``aeon`` data format.
     y_train : np.array
-        Training data class labels (used for evaluation).
+        Training data class labels. One label per case in the training data using the
+        same ordering.
     clusterer : BaseClusterer
         Clusterer to be used in the experiment.
     results_path : str
         Location of where to write results. Any required directories will be created.
-    X_test : pd.DataFrame or np.array, default=None
-        The data used to test the fitted clusterer.
-    y_test : np.array, default=None
-        Testing data class labels.
-    row_normalise : bool, default=False
-        Whether to normalise the data rows (time series) prior to fitting and
-        predicting.
+    X_test : np.ndarray or list of np.ndarray
+        The data used to test the trained classifier. Numpy array or list of numpy
+        arrays in the ``aeon`` data format.
+    y_test : np.array
+        Testing data class labels. One label per case in the testing data using the
+        same ordering.
     n_clusters : int or None, default=None
         Number of clusters to use if the clusterer has an `n_clusters` parameter.
         If None, the clusterers default is used. If -1, the number of classes in the
         dataset is used.
 
-        This may not work as intended for pipelines currently.
+        The `n_clusters` parameter for arguments which are estimators will also be
+        set to this value if it exists. Please ensure that the argument input itself
+        has the `n_clusters` parameters and is not a default such as None. This is
+        likely to be the case for parameters such as `estimator` or `clusterer` in
+        pipelines and deep learners.
     clusterer_name : str or None, default=None
         Name of clusterer used in writing results. If None, the name is taken from
         the clusterer.
@@ -758,6 +793,11 @@ def run_clustering_experiment(
     resample_id : int or None, default=None
         Seed for resampling. If set to 0, the default train/test split from file is
         used. Also used in output file name.
+    data_transforms : transformer, list of transformers or None, default=None
+        Transformer(s) to apply to the data before running the experiment.
+        If a list, the transformers are applied in order.
+        If None, no transformation is applied.
+        Calls fit_transform on the training data and transform on the test data.
     build_test_file : bool, default=False:
         Whether to generate test files or not. If True, X_test and y_test must be
         provided.
@@ -797,11 +837,14 @@ def run_clustering_experiment(
     if build_test_file and (X_test is None or y_test is None):
         raise ValueError("Test data and labels not provided, cannot build test file.")
 
-    if row_normalise:
-        scaler = TimeSeriesScaler()
-        X_train = scaler.fit_transform(X_train)
-        if build_test_file:
-            X_test = scaler.fit_transform(X_test)
+    if data_transforms is not None:
+        if not isinstance(data_transforms, list):
+            data_transforms = [data_transforms]
+
+        for transform in data_transforms:
+            X_train = transform.fit_transform(X_train, y_train)
+            if build_test_file:
+                X_test = transform.transform(X_test, y_test)
 
     le = preprocessing.LabelEncoder()
     y_train = le.fit_transform(y_train)
@@ -821,22 +864,18 @@ def run_clustering_experiment(
         f"Encoder dictionary: {str(encoder_dict)}"
     )
 
+    # set n_clusters for clusterer and any contained estimators
+    # NOTE: If the clusterer has an estimator parameteri.e. `estimator` or `clusterer`
+    # which defaults to None, we cannot set the n_clusters parameter for it here.
     if isinstance(n_clusters, int):
-        try:
-            if n_clusters == -1:
-                n_clusters = n_classes
+        if n_clusters == -1:
+            n_clusters = n_classes
 
-            if isinstance(clusterer, SklearnToTsmlClusterer):
-                clusterer.set_params(clusterer__n_clusters=n_clusters)
-            else:
-                clusterer.set_params(n_clusters=n_clusters)
-        except ValueError:
-            warnings.warn(
-                f"{clusterer_name} does not have a n_clusters parameter, "
-                "so it cannot be set.",
-                stacklevel=1,
-            )
-            n_clusters = None
+        if "n_clusters" in clusterer.get_params():
+            clusterer.set_params(n_clusters=n_clusters)
+        for att in clusterer.__dict__.values():
+            if isinstance(att, BaseEstimator) and "n_clusters" in att.get_params():
+                att.set_params(n_clusters=n_clusters)
     elif n_clusters is not None:
         raise ValueError("n_clusters must be an int or None.")
 
@@ -868,7 +907,7 @@ def run_clustering_experiment(
         train_probs = np.zeros(
             (
                 len(train_preds),
-                n_clusters if n_clusters is not None else len(np.unique(train_preds)),
+                len(np.unique(train_preds)),
             )
         )
         train_probs[np.arange(len(train_preds)), train_preds] = 1
@@ -885,6 +924,7 @@ def run_clustering_experiment(
             dataset_name,
             results_path,
             full_path=False,
+            first_line_clusterer_name=f"{clusterer_name} ({type(clusterer).__name__})",
             split="TRAIN",
             resample_id=resample_id,
             time_unit="MILLISECONDS",
@@ -909,11 +949,7 @@ def run_clustering_experiment(
             test_probs = np.zeros(
                 (
                     len(test_preds),
-                    (
-                        n_clusters
-                        if n_clusters is not None
-                        else len(np.unique(train_preds))
-                    ),
+                    len(np.unique(train_preds)),
                 )
             )
             test_probs[np.arange(len(test_preds)), test_preds] = 1
@@ -933,6 +969,7 @@ def run_clustering_experiment(
             dataset_name,
             results_path,
             full_path=False,
+            first_line_clusterer_name=f"{clusterer_name} ({type(clusterer).__name__})",
             split="TEST",
             resample_id=resample_id,
             time_unit="MILLISECONDS",
@@ -953,10 +990,10 @@ def load_and_run_clustering_experiment(
     results_path,
     dataset,
     clusterer,
-    row_normalise=False,
     n_clusters=None,
     clusterer_name=None,
     resample_id=0,
+    data_transforms=None,
     build_test_file=False,
     write_attributes=False,
     att_max_shape=0,
@@ -982,19 +1019,24 @@ def load_and_run_clustering_experiment(
         same for "_TEST.ts".
     clusterer : BaseClusterer
         Clusterer to be used in the experiment.
-    row_normalise : bool, default=False
-        Whether to normalise the data rows (time series) prior to fitting and
-        predicting.
     n_clusters : int or None, default=None
         Number of clusters to use if the clusterer has an `n_clusters` parameter.
         If None, the clusterers default is used. If -1, the number of classes in the
         dataset is used.
+
+        The `n_clusters` parameter for attributes which are estimators will also be
+        set to this value if it exists.
     clusterer_name : str or None, default=None
         Name of clusterer used in writing results. If None, the name is taken from
         the clusterer.
     resample_id : int, default=0
         Seed for resampling. If set to 0, the default train/test split from file is
         used. Also used in output file name.
+    data_transforms : transformer, list of transformers or None, default=None
+        Transformer(s) to apply to the data before running the experiment.
+        If a list, the transformers are applied in order.
+        If None, no transformation is applied.
+        Calls fit_transform on the training data and transform on the test data.
     build_test_file : bool, default=False
         Whether to generate test files or not. If true, the clusterer will assign
         clusters to the loaded test data.
@@ -1064,11 +1106,11 @@ def load_and_run_clustering_experiment(
         results_path,
         X_test=X_test,
         y_test=y_test,
-        row_normalise=row_normalise,
         n_clusters=n_clusters,
         clusterer_name=clusterer_name,
         dataset_name=dataset,
         resample_id=resample_id,
+        data_transforms=data_transforms,
         build_train_file=build_train_file,
         build_test_file=build_test_file,
         attribute_file_path=attribute_file_path,
@@ -1165,6 +1207,7 @@ def run_forecasting_experiment(
         dataset_name,
         results_path,
         full_path=False,
+        first_line_forecaster_name=f"{forecaster_name} ({type(forecaster).__name__})",
         split="TEST",
         random_seed=random_seed,
         time_unit="MILLISECONDS",
