@@ -107,9 +107,9 @@ class Rocket(BaseCollectionTransformer):
         n_channels = X[0].shape[0]
 
         # The only use of n_timepoints is to set the maximum dilation
-        self.fit_first_length_ = X[0].shape[1]
+        self.fit_max_length_ = max([x.shape[1] for x in X])
         self.kernels = _generate_kernels(
-            self.fit_first_length_, self.n_kernels, n_channels, self._random_state
+            self.fit_max_length_, self.n_kernels, n_channels, self._random_state
         )
         return self
 

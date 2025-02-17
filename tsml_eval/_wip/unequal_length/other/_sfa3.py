@@ -188,7 +188,6 @@ class SFA(BaseCollectionTransformer):
         self.random_state = random_state
 
         self.n_cases = 0
-        self.min_n_timepoints = 0
         self.letter_bits = 0
         self.letter_max = 0
         self.word_bits = 0
@@ -262,7 +261,7 @@ class SFA(BaseCollectionTransformer):
             self.level_max = pow(2, self.level_bits) - 1
 
         self.n_cases = len(X)
-        self.min_n_timepoints = min([x.shape[0] for x in X])
+        self.max_n_timepoints = max([x.shape[0] for x in X])
         self.breakpoints = self._binning(X, y)
 
         return self
@@ -381,7 +380,7 @@ class SFA(BaseCollectionTransformer):
 
             repeat_word = (
                 self._add_to_pyramid(
-                    bag, word_raw, last_word, window - int(repeat_words / 2)
+                    bag, word_raw, last_word, window - int(repeat_words / 2), len(X)
                 )
                 if self.levels > 1
                 else self._add_to_bag(bag, word_raw, last_word)
@@ -482,19 +481,20 @@ class SFA(BaseCollectionTransformer):
         )
 
     def _binning(self, X, y=None):
-        num_windows_per_inst = math.ceil(self.min_n_timepoints / self.window_size)
-        dft = np.array(
-            [
-                self._binning_dft(X[i], num_windows_per_inst)
-                for i in range(self.n_cases)
-            ]
-        )
+        dft = [
+            self._binning_dft(X[i])
+            for i in range(self.n_cases)
+        ]
         if self.keep_binning_dft:
             self.binning_dft = dft
-        dft = dft.reshape(len(X) * num_windows_per_inst, self.dft_length)
 
         if y is not None:
-            y = np.repeat(y, num_windows_per_inst)
+            new_y = []
+            for i, d in enumerate(dft):
+                new_y.extend([y[i]] * len(d))
+            y = np.array(new_y)
+
+        dft = np.concatenate(dft, axis=0)
 
         if self.anova and y is not None:
             non_constant = np.where(
@@ -539,19 +539,17 @@ class SFA(BaseCollectionTransformer):
         return breakpoints
 
     def _mcb(self, dft):
-        num_windows_per_inst = math.ceil(self.min_n_timepoints / self.window_size)
-        total_num_windows = int(self.n_cases * num_windows_per_inst)
         breakpoints = np.zeros((self.word_length, self.alphabet_size))
 
         for letter in range(self.word_length):
-            res = [round(dft[i][letter] * 100) / 100 for i in range(total_num_windows)]
+            res = [round(dft[i][letter] * 100) / 100 for i in range(len(dft))]
             column = np.sort(np.array(res))
 
             bin_index = 0
 
             # use equi-depth binning
             if self.binning_method == "equi-depth":
-                target_bin_depth = total_num_windows / self.alphabet_size
+                target_bin_depth = len(dft) / self.alphabet_size
 
                 for bp in range(self.alphabet_size - 1):
                     bin_index += target_bin_depth
@@ -605,7 +603,9 @@ class SFA(BaseCollectionTransformer):
 
         return np.sort(breakpoints, axis=1)
 
-    def _binning_dft(self, series, num_windows_per_inst):
+    def _binning_dft(self, series):
+        num_windows_per_inst = math.ceil(len(series) / self.window_size)
+
         # Splits individual time series into windows and returns the DFT for
         # each
         split = np.split(
@@ -617,8 +617,8 @@ class SFA(BaseCollectionTransformer):
                 dtype=np.int_,
             ),
         )
-        start = self.min_n_timepoints - self.window_size
-        split[-1] = series[start : self.min_n_timepoints]
+        start = len(series) - self.window_size
+        split[-1] = series[start : len(series)]
 
         result = np.zeros((len(split), self.dft_length), dtype=np.float64)
 
@@ -927,7 +927,7 @@ class SFA(BaseCollectionTransformer):
 
         return False
 
-    def _add_to_pyramid(self, bag, word, last_word, window_ind):
+    def _add_to_pyramid(self, bag, word, last_word, window_ind, length):
         if self.remove_repeat_words and word == last_word:
             return True
 
@@ -935,7 +935,7 @@ class SFA(BaseCollectionTransformer):
         for i in range(self.levels):
             if self._typed_dict:
                 new_word, num_quadrants = SFA._add_level_typed(
-                    word, start, i, window_ind, self.window_size, self.min_n_timepoints
+                    word, start, i, window_ind, self.window_size, length
                 )
             else:
                 new_word, num_quadrants = (
@@ -945,7 +945,7 @@ class SFA(BaseCollectionTransformer):
                         i,
                         window_ind,
                         self.window_size,
-                        self.min_n_timepoints,
+                        self.max_n_timepoints,
                         self.level_bits,
                     )
                     if self.word_bits + self.level_bits <= 64
@@ -976,7 +976,7 @@ class SFA(BaseCollectionTransformer):
         num_quadrants = pow(2, level)
         quadrant = start + int(
             (window_ind + int(self.window_size / 2))
-            / int(self.min_n_timepoints / num_quadrants)
+            / int(self.max_n_timepoints / num_quadrants)
         )
         return (word << self.level_bits) | quadrant, num_quadrants
 

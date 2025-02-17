@@ -181,7 +181,7 @@ class RandomShapeletTransform(BaseCollectionTransformer):
         self.n_classes_ = 0
         self.n_cases_ = 0
         self.n_channels_ = 0
-        self.first_n_timepoints_ = 0
+        self.min_n_timepoints_ = 0
         self.classes_ = []
         self.shapelets = []
 
@@ -223,14 +223,14 @@ class RandomShapeletTransform(BaseCollectionTransformer):
 
         self.n_cases_ = len(X)
         self.n_channels_ = X[0].shape[0]
-        self.first_n_timepoints_ = X[0].shape[1]
+        self.min_n_timepoints_ = min([x.shape[1] for x in X])
 
         if self.max_shapelets is None:
             self._max_shapelets = min(10 * self.n_cases_, 1000)
         if self._max_shapelets < self.n_classes_:
             self._max_shapelets = self.n_classes_
         if self.max_shapelet_length is None:
-            self._max_shapelet_length = self.first_n_timepoints_
+            self._max_shapelet_length = self.min_n_timepoints_
 
         time_limit = self.time_limit_in_minutes * 60
         start_time = time.time()

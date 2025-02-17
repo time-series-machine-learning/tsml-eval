@@ -10,7 +10,9 @@ convolution_based_classifiers = [
     ["minirocket", "mini-rocket", "minirocketclassifier"],
     ["multirocket", "multi-rocket", "multirocketclassifier"],
     ["arsenalclassifier", "arsenal"],
-    "arsenal-unequal",
+    "arsenal-unequal1",
+    "arsenal-unequal2",
+    "arsenal-unequal3",
     ["miniarsenal", "mini-arsenal"],
     ["multiarsenal", "multi-arsenal"],
     ["hydraclassifier", "hydra"],
@@ -35,7 +37,9 @@ dictionary_based_classifiers = [
     "individualboss",
     ["contractableboss", "cboss"],
     ["temporaldictionaryensemble", "tde"],
-    "tde-unequal",
+    "tde-unequal1",
+    "tde-unequal2",
+    "tde-unequal3",
     "individualtde",
     "weasel",
     "weasel-logistic",
@@ -87,7 +91,13 @@ interval_based_classifiers = [
     ["supervisedtimeseriesforest", "stsf"],
     "drcif-500",
     ["drcif", "drcifclassifier"],
-    "drcif-unequal",
+    "drcif-unequal1",
+    "drcif-unequal2",
+    "drcif-unequal3",
+    "drcif-unequal4",
+    "drcif-unequal5",
+    "drcif-unequal6",
+    "drcif-unequal7",
     "summary-intervals",
     ["randomintervals-500", "catch22-intervals-500"],
     ["randomintervalclassifier", "randomintervals", "catch22-intervals"],
@@ -102,7 +112,14 @@ other_classifiers = [
 shapelet_based_classifiers = [
     "stc-2hour",
     ["shapelettransformclassifier", "stc"],
-    "stc-unequal",
+    "stc-unequal1",
+    "stc-unequal2",
+    "stc-unequal3",
+    "stc-unequal4",
+    "stc-unequal5",
+    "stc-unequal6",
+    "stc-unequal7",
+    "stc-unequal8",
     ["rdstclassifier", "rdst"],
     ["randomshapeletforestclassifier", "randomshapeletforest", "rsf"],
     ["sastclassifier", "sast"],
@@ -237,8 +254,26 @@ def _set_classifier_convolution_based(
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
-    elif c == "arsenal-unequal":
+    elif c == "arsenal-unequal1":
         from tsml_eval._wip.unequal_length._arsenal import Arsenal
+
+        return Arsenal(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "arsenal-unequal2":
+        from tsml_eval._wip.unequal_length._arsenal2 import Arsenal
+
+        return Arsenal(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "arsenal-unequal3":
+        from tsml_eval._wip.unequal_length._arsenal3 import Arsenal
 
         return Arsenal(
             random_state=random_state,
@@ -375,8 +410,26 @@ def _set_classifier_dictionary_based(
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
-    elif c == "tde-unequal":
+    elif c == "tde-unequal1":
         from tsml_eval._wip.unequal_length._tde import TemporalDictionaryEnsemble
+
+        return TemporalDictionaryEnsemble(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "tde-unequal2":
+        from tsml_eval._wip.unequal_length._tde2 import TemporalDictionaryEnsemble
+
+        return TemporalDictionaryEnsemble(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "tde-unequal3":
+        from tsml_eval._wip.unequal_length._tde3 import TemporalDictionaryEnsemble
 
         return TemporalDictionaryEnsemble(
             random_state=random_state,
@@ -688,8 +741,68 @@ def _set_classifier_interval_based(
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
-    elif c == "drcif-unequal":
+    elif c == "drcif-unequal1":
         from tsml_eval._wip.unequal_length._drcif import DrCIFClassifier
+
+        return DrCIFClassifier(
+            n_estimators=500,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "drcif-unequal2":
+        from tsml_eval._wip.unequal_length._drcif2 import DrCIFClassifier
+
+        return DrCIFClassifier(
+            n_estimators=500,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "drcif-unequal3":
+        from tsml_eval._wip.unequal_length._drcif3 import DrCIFClassifier
+
+        return DrCIFClassifier(
+            n_estimators=500,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "drcif-unequal4":
+        from tsml_eval._wip.unequal_length._drcif4 import DrCIFClassifier
+
+        return DrCIFClassifier(
+            n_estimators=500,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "drcif-unequal5":
+        from tsml_eval._wip.unequal_length._drcif5 import DrCIFClassifier
+
+        return DrCIFClassifier(
+            n_estimators=500,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "drcif-unequal6":
+        from tsml_eval._wip.unequal_length._drcif6 import DrCIFClassifier
+
+        return DrCIFClassifier(
+            n_estimators=500,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "drcif-unequal7":
+        from tsml_eval._wip.unequal_length._drcif7 import DrCIFClassifier
 
         return DrCIFClassifier(
             n_estimators=500,
@@ -778,8 +891,71 @@ def _set_classifier_shapelet_based(
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
-    elif c == "stc-unequal":
+    elif c == "stc-unequal1":
         from tsml_eval._wip.unequal_length._stc import ShapeletTransformClassifier
+
+        return ShapeletTransformClassifier(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "stc-unequal2":
+        from tsml_eval._wip.unequal_length._stc2 import ShapeletTransformClassifier
+
+        return ShapeletTransformClassifier(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "stc-unequal3":
+        from tsml_eval._wip.unequal_length._stc3 import ShapeletTransformClassifier
+
+        return ShapeletTransformClassifier(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "stc-unequal4":
+        from tsml_eval._wip.unequal_length._stc4 import ShapeletTransformClassifier
+
+        return ShapeletTransformClassifier(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "stc-unequal5":
+        from tsml_eval._wip.unequal_length._stc5 import ShapeletTransformClassifier
+
+        return ShapeletTransformClassifier(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "stc-unequal6":
+        from tsml_eval._wip.unequal_length._stc6 import ShapeletTransformClassifier
+
+        return ShapeletTransformClassifier(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "stc-unequal7":
+        from tsml_eval._wip.unequal_length._stc7 import ShapeletTransformClassifier
+
+        return ShapeletTransformClassifier(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "stc-unequal8":
+        from tsml_eval._wip.unequal_length._stc8 import ShapeletTransformClassifier
 
         return ShapeletTransformClassifier(
             random_state=random_state,

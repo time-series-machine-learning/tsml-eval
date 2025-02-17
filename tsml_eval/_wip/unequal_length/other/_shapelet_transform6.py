@@ -181,7 +181,7 @@ class RandomShapeletTransform(BaseCollectionTransformer):
         self.n_classes_ = 0
         self.n_cases_ = 0
         self.n_channels_ = 0
-        self.first_n_timepoints_ = 0
+        self.max_n_timepoints_ = 0
         self.classes_ = []
         self.shapelets = []
 
@@ -223,14 +223,14 @@ class RandomShapeletTransform(BaseCollectionTransformer):
 
         self.n_cases_ = len(X)
         self.n_channels_ = X[0].shape[0]
-        self.first_n_timepoints_ = X[0].shape[1]
+        self.max_n_timepoints_ = max([x.shape[1] for x in X])
 
         if self.max_shapelets is None:
             self._max_shapelets = min(10 * self.n_cases_, 1000)
         if self._max_shapelets < self.n_classes_:
             self._max_shapelets = self.n_classes_
         if self.max_shapelet_length is None:
-            self._max_shapelet_length = self.first_n_timepoints_
+            self._max_shapelet_length = self.max_n_timepoints_
 
         time_limit = self.time_limit_in_minutes * 60
         start_time = time.time()
@@ -343,7 +343,8 @@ class RandomShapeletTransform(BaseCollectionTransformer):
             sabs = np.abs(s[6])
             self._sorted_indicies.append(
                 np.array(
-                    sorted(range(s[1]), reverse=True, key=lambda j, sabs=sabs: sabs[j])
+                    sorted(range(s[1]), reverse=True, key=lambda j, sabs=sabs: sabs[j]),
+                    dtype=np.int32,
                 )
             )
 
@@ -425,7 +426,8 @@ class RandomShapeletTransform(BaseCollectionTransformer):
         )
         sabs = np.abs(shapelet)
         sorted_indicies = np.array(
-            sorted(range(length), reverse=True, key=lambda j: sabs[j])
+            sorted(range(length), reverse=True, key=lambda j: sabs[j]),
+            dtype=np.int32,
         )
 
         quality = self._find_shapelet_quality(
@@ -562,7 +564,11 @@ class RandomShapeletTransform(BaseCollectionTransformer):
 @njit(fastmath=True, cache=True)
 def _online_shapelet_distance(series, shapelet, sorted_indicies, position, length):
     if len(series) < len(shapelet):
-        return np.nan
+        t = series
+        series = shapelet
+        shapelet = t
+        length = len(shapelet)
+        sorted_indicies = np.arange(length, dtype=np.int32)
     if position + length > len(series):
         position = int((len(series) - length)/2)
 

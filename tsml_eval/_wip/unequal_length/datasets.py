@@ -52,8 +52,10 @@ def create_unequal_ucr():
         test_indices = rng.choice(len(X_test), int(0.8 * len(X_test)), replace=False)
         train_new_size = rng.uniform(0.2, 1, len(train_indices))
         train_new_size = [int(x * X_train[train_indices[i]].shape[1]) for i, x in enumerate(train_new_size)]
+        train_new_size = [12 if x < 12 else x for x in train_new_size]
         test_new_size = rng.uniform(0.2, 1, len(test_indices))
         test_new_size = [int(x * X_test[test_indices[i]].shape[1]) for i, x in enumerate(test_new_size)]
+        test_new_size = [12 if x < 12 else x for x in test_new_size]
 
         X_train_resize = transform_X(X_train, train_indices, train_new_size, resize_series, rng)
         write_to_ts_file(

@@ -181,7 +181,7 @@ class RandomShapeletTransform(BaseCollectionTransformer):
         self.n_classes_ = 0
         self.n_cases_ = 0
         self.n_channels_ = 0
-        self.first_n_timepoints_ = 0
+        self.max_n_timepoints_ = 0
         self.classes_ = []
         self.shapelets = []
 
@@ -223,14 +223,14 @@ class RandomShapeletTransform(BaseCollectionTransformer):
 
         self.n_cases_ = len(X)
         self.n_channels_ = X[0].shape[0]
-        self.first_n_timepoints_ = X[0].shape[1]
+        self.max_n_timepoints_ = max([x.shape[1] for x in X])
 
         if self.max_shapelets is None:
             self._max_shapelets = min(10 * self.n_cases_, 1000)
         if self._max_shapelets < self.n_classes_:
             self._max_shapelets = self.n_classes_
         if self.max_shapelet_length is None:
-            self._max_shapelet_length = self.first_n_timepoints_
+            self._max_shapelet_length = self.max_n_timepoints_
 
         time_limit = self.time_limit_in_minutes * 60
         start_time = time.time()
@@ -472,28 +472,29 @@ class RandomShapeletTransform(BaseCollectionTransformer):
             else:
                 distance = 0
 
-            if y[i] == y[inst_idx]:
-                cls = 1
-                this_cls_traversed += 1
-            else:
-                cls = -1
-                other_cls_traversed += 1
+            if not np.isnan(distance):
+                if y[i] == y[inst_idx]:
+                    cls = 1
+                    this_cls_traversed += 1
+                else:
+                    cls = -1
+                    other_cls_traversed += 1
 
-            orderline.append((distance, cls))
-            orderline.sort()
+                orderline.append((distance, cls))
+                orderline.sort()
 
-            if worst_quality > 0:
-                quality = _calc_early_binary_ig(
-                    orderline,
-                    this_cls_traversed,
-                    other_cls_traversed,
-                    this_cls_count - this_cls_traversed,
-                    other_cls_count - other_cls_traversed,
-                    worst_quality,
-                )
+                if worst_quality > 0:
+                    quality = _calc_early_binary_ig(
+                        orderline,
+                        this_cls_traversed,
+                        other_cls_traversed,
+                        this_cls_count - this_cls_traversed,
+                        other_cls_count - other_cls_traversed,
+                        worst_quality,
+                    )
 
-                if quality <= worst_quality:
-                    return -1
+                    if quality <= worst_quality:
+                        return -1
 
         quality = _calc_binary_ig(orderline, this_cls_count, other_cls_count)
 
