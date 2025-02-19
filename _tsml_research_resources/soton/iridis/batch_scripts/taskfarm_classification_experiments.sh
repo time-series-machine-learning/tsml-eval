@@ -1,26 +1,66 @@
 #!/bin/bash
+# Check and edit all options before the first run!
+# While reading is fine, please dont write anything to the default directories in this script
 
+# Start and end for resamples
 max_folds=10
 start_fold=1
-max_num_submitted=400
+
+# To avoid hitting the cluster queue limit we have a higher level queue
+max_num_submitted=900
+
+# Queue options are https://sotonac.sharepoint.com/teams/HPCCommunityWiki/SitePages/Iridis%205%20Job-submission-and-Limits-Quotas.aspx
 queue="batch"
+
+# The number of tasks/threads to use in each job. 40 is the number of cores on batch nodes
 n_tasks_per_node=40
+
+# Enter your username and email here
 username="mbm1g23"
 mail="NONE"
 mailto=$username"@soton.ac.uk"
+
+# Max allowable is 60 hours
 max_time="60:00:00"
+
+# Start point for the script i.e. 3 datasets, 3 classifiers = 9 experiments to submit, start_point=5 will skip to job 5
 start_point=1
+
+# Put your home directory here
 local_path="/mainfs/home/$username/"
-data_dir=$local_path"scratch/UnivariateDataTSC/"
-dataset_list=$local_path"DatasetLists/datasetsUV112Batch/"
-results_dir=$local_path"ClassificationResults/results/"
-out_dir=$local_path"ClassificationResults/output/"
-script_file_path=$local_path"tsml-eval/tsml_eval/experiments/classification_experiments.py"
+
+# Datasets to use and directory of data files. This can either be a text file or directory of text files
+# Separate text files will not run jobs of the same dataset in the same node. This is good to keep large and small datasets separate
+data_dir="$local_path/Data/"
+datasets="$local_path/DataSetLists/ClassificationBatch/"
+
+# Results and output file write location. Change these to reflect your own file structure
+results_dir="$local_path/ClassificationResults/results/"
+out_dir="$local_path/ClassificationResults/output/"
+
+# The python script we are running
+script_file_path="$local_path/tsml-eval/tsml_eval/experiments/classification_experiments.py"
+
+# Environment name, change accordingly, for set up, see https://github.com/time-series-machine-learning/tsml-eval/blob/main/_tsml_research_resources/soton/iridis/iridis_python.md
+# Separate environments for GPU and CPU are recommended
 env_name="eval-py11"
+
+# Classifiers to loop over. Must be seperated by a space. Different classifiers will not run in the same node
+# See list of potential classifiers in set_classifier
+classifiers_to_run="ROCKET DrCIF"
+
+# You can add extra arguments here. See tsml_eval/utils/arguments.py parse_args
+# You will have to add any variable to the python call close to the bottom of the script
+# and possibly to the options handling below
+
+# generate a results file for the train data as well as test, usually slower
 generate_train_files="false"
+
+# If set for true, looks for <problem><fold>_TRAIN.ts file. This is useful for running tsml-java resamples
 predefined_folds="false"
+
+# Normalise data before fit/predict
 normalise_data="false"
-classifiers_to_run="Arsenal STC DrCIF-500 TDE"
 
 
 # ======================================================================================
