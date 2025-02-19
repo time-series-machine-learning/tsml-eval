@@ -1,19 +1,16 @@
 #!/bin/bash
-# CHECK before each new run:
-#   datasets (list of problems)
-#   results_dir (where to check/write results)
-#   clusterers_to_run (list of clusterers to run)
+# Check and edit all options before the first run!
 # While reading is fine, please dont write anything to the default directories in this script
 
 # Start and end for resamples
-max_folds=30
+max_folds=5
 start_fold=1
 
-# To avoid dumping 1000s of jobs in the queue we have a higher level queue
-max_num_submitted=100
+# To avoid hitting the cluster queue limit we have a higher level queue
+max_num_submitted=12
 
 # Queue options are https://sotonac.sharepoint.com/teams/HPCCommunityWiki/SitePages/Iridis%205%20Job-submission-and-Limits-Quotas.aspx
-queue="batch"
+queue="gpu"
 
 # The partition name may not always be the same as the queue name, i.e. batch is the queue, serial is the partition
 # This is used for the script job limit queue
@@ -49,7 +46,7 @@ script_file_path="$local_path/tsml-eval/tsml_eval/experiments/clustering_experim
 
 # Environment name, change accordingly, for set up, see https://github.com/time-series-machine-learning/tsml-eval/blob/main/_tsml_research_resources/soton/iridis/iridis_python.md
 # Separate environments for GPU and CPU are recommended
-env_name="tsml-eval"
+env_name="tsml-eval-gpu"
 
 # Clusterers to loop over. Must be seperated by a space
 # See list of potential clusterers in set_clusterer
@@ -132,6 +129,7 @@ if [ "${array_jobs}" != "" ]; then
 
 # This creates the scrip to run the job based on the info above
 echo "#!/bin/bash
+#SBATCH --gres=gpu:1
 #SBATCH --mail-type=${mail}
 #SBATCH --mail-user=${mailto}
 #SBATCH -p ${queue}
