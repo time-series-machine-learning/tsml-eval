@@ -1,8 +1,5 @@
 #!/bin/bash
-# CHECK before each new run:
-#   datasets (list of problems)
-#   results_dir (where to check/write results)
-#   clusterers_to_run (list of clusterers to run)
+# Check and edit all options before the first run!
 # While reading is fine, please dont write anything to the default directories in this script
 
 # To use GPU resources you need to be given access (gpu qos), which involves emailing hpc.admin@uea.ac.uk
@@ -72,10 +69,7 @@ combine_test_train_split="false"
 normalise_data="true"
 
 # ======================================================================================
-# ======================================================================================
-# Dont change anything under here (unless you want to change how the experiment
-# is working)
-# ======================================================================================
+# 	Experiment configuration end
 # ======================================================================================
 
 # Set to -te to generate test files
