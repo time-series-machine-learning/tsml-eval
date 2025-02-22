@@ -53,7 +53,6 @@ class Padder(BaseCollectionTransformer):
 
     _tags = {
         "X_inner_type": ["np-list", "numpy3D"],
-        "fit_is_empty": False,
         "capability:multivariate": True,
         "capability:unequal_length": True,
         "removes_unequal_length": True,
@@ -117,8 +116,8 @@ class Padder(BaseCollectionTransformer):
         max_length = _get_max_length(X)
         if max_length > pad_length:
             raise ValueError(
-                "max length of series in X is less than the provided pad_length"
-                "(or less than the series seen in fit if pad_length is None)."
+                "max length of series in X is greater than the provided pad_length"
+                "(or greater than the series seen in fit if pad_length is None)."
             )
 
         # Determine if fill value is a function

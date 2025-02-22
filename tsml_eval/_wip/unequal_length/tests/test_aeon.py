@@ -23,8 +23,9 @@ from tsml_eval._wip.unequal_length._stc7 import ShapeletTransformClassifier as S
 from tsml_eval._wip.unequal_length._tde import TemporalDictionaryEnsemble
 from tsml_eval._wip.unequal_length._tde2 import TemporalDictionaryEnsemble as TemporalDictionaryEnsemble2
 from tsml_eval._wip.unequal_length._tde3 import TemporalDictionaryEnsemble as TemporalDictionaryEnsemble3
+from tsml_eval._wip.unequal_length.truncate import Truncator
 
 
-@parametrize_with_checks([Arsenal, Arsenal2, Arsenal3, ShapeletTransformClassifier, ShapeletTransformClassifier2, ShapeletTransformClassifier3, ShapeletTransformClassifier4, ShapeletTransformClassifier5, ShapeletTransformClassifier6, ShapeletTransformClassifier7, ShapeletTransformClassifier8, RocketClassifier, TemporalDictionaryEnsemble, TemporalDictionaryEnsemble2, TemporalDictionaryEnsemble3, DrCIFClassifier, DrCIFClassifier2, DrCIFClassifier3, DrCIFClassifier4, DrCIFClassifier5, DrCIFClassifier6, DrCIFClassifier7, Padder])
+@parametrize_with_checks([Arsenal, Arsenal2, Arsenal3, ShapeletTransformClassifier, ShapeletTransformClassifier2, ShapeletTransformClassifier3, ShapeletTransformClassifier4, ShapeletTransformClassifier5, ShapeletTransformClassifier6, ShapeletTransformClassifier7, ShapeletTransformClassifier8, RocketClassifier, TemporalDictionaryEnsemble, TemporalDictionaryEnsemble2, TemporalDictionaryEnsemble3, DrCIFClassifier, DrCIFClassifier2, DrCIFClassifier3, DrCIFClassifier4, DrCIFClassifier5, DrCIFClassifier6, DrCIFClassifier7, Padder, Truncator])
 def test_aeon_estimator(check):
     check()

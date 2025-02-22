@@ -67,7 +67,8 @@ def parse_args(args):
       -dtn DATA_TRANSFORM_NAME, --data_transform_name DATA_TRANSFORM_NAME
                             str to pass to get_data_transform_by_name to apply a
                             transformation to the data prior to running the experiment.
-                            By default no transform is applied (default: None).
+                            By default no transform is applied.
+                            Can be used multiple times (default: None).
       -rn, --row_normalise  normalise the data rows prior to fitting and
                             predicting. effectively the same as passing Normalizer to
                             --data_transform_name (default: False).
@@ -205,10 +206,10 @@ def parse_args(args):
     parser.add_argument(
         "-dtn",
         "--data_transform_name",
-        default=None,
+        action="append",
         help="str to pass to get_data_transform_by_name to apply a transformation "
         "to the data prior to running the experiment. By default no transform "
-        "is applied (default: %(default)s).",
+        "is applied. Can be used multiple times (default: %(default)s).",
     )
     parser.add_argument(
         "-rn",
