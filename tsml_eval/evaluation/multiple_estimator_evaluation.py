@@ -6,8 +6,10 @@ import warnings
 from datetime import datetime
 
 import numpy as np
+import pandas as pd
 from aeon.benchmarking.stats import wilcoxon_test
 from aeon.visualisation import (
+    create_multi_comparison_matrix,
     plot_boxplot,
     plot_critical_difference,
     plot_pairwise_scatter,
@@ -1030,8 +1032,6 @@ def _evaluate_estimators(
     eval_name,
     estimator_names,
 ):
-    save_path = save_path + "/" + eval_name + "/"
-
     estimators = set()
     datasets = set()
     resamples = set()
@@ -1044,7 +1044,9 @@ def _evaluate_estimators(
 
     if eval_name is None:
         dt = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        eval_name = f"{estimator_results[0].__class__.__name__}Evaluation {dt}"
+        eval_name = f"{estimator_results[0].__class__.__name__}Evaluation_{dt}"
+
+    save_path = save_path + "/" + eval_name + "/"
 
     for estimator_name in results_dict:
         estimators.add(estimator_name)
@@ -1323,6 +1325,24 @@ def _figures_for_statistic(
     )
     plt.close()
 
+    df = pd.DataFrame(scores)
+    df.columns = estimators
+    mcm = create_multi_comparison_matrix(df)
+    mcm.savefig(
+        f"{save_path}/{statistic_name}/figures/"
+        f"{eval_name}_{statistic_name.lower()}_mcm.pdf",
+        bbox_inches="tight",
+    )
+    pickle.dump(
+        mcm,
+        open(
+            f"{save_path}/{statistic_name}/figures/"
+            f"{eval_name}_{statistic_name.lower()}_mcm.pickle",
+            "wb",
+        ),
+    )
+    plt.close()
+
     for i, est1 in enumerate(estimators):
         for n, est2 in enumerate(estimators):
             if i == n:
@@ -1358,30 +1378,39 @@ def _figures_for_statistic(
 
 
 def _summary_evaluation(stats, estimators, save_path, eval_name):
+    avg_stat = [np.mean(stat[0], axis=0) for stat in stats]
+    avg_rank = [np.mean(stat[1], axis=0) for stat in stats]
+
     with open(f"{save_path}/{eval_name}_summary.csv", "w") as file:
-        for stat in stats:
-            avg_stat = np.mean(stat[0], axis=0)
-            avg_rank = np.mean(stat[1], axis=0)
+        for i, stat in enumerate(stats):
             sorted_indices = [
                 i
                 for i in sorted(
-                    range(len(avg_rank)),
+                    range(len(avg_rank[i])),
                     key=lambda x: (
-                        avg_rank[x],
-                        -avg_stat[x] if stat[3] else avg_stat[x],
+                        avg_rank[i][x],
+                        -avg_stat[i][x] if stat[3] else avg_stat[i][x],
                     ),
                 )
             ]
 
             file.write(
                 f"{stat[4]}{stat[2]},"
-                f"{','.join([estimators[i] for i in sorted_indices])}\n"
+                f"{','.join([estimators[n] for n in sorted_indices])}\n"
             )
             file.write(
                 f"{stat[4]}{stat[2]}Mean,"
-                f"{','.join([str(n) for n in avg_stat[sorted_indices]])}\n"
+                f"{','.join([str(n) for n in avg_stat[i][sorted_indices]])}\n"
             )
             file.write(
                 f"{stat[4]}{stat[2]}AvgRank,"
-                f"{','.join([str(n) for n in avg_rank[sorted_indices]])}\n\n"
+                f"{','.join([str(n) for n in avg_rank[i][sorted_indices]])}\n\n"
+            )
+
+    with open(f"{save_path}/{eval_name}_summary_table.csv", "w") as file:
+        file.write(f",{','.join([e for e in estimators])}\n")
+        for i, stat in enumerate(stats):
+            file.write(
+                f"{stat[4]}{stat[2]}Mean,"
+                f"{','.join([str(n) for n in avg_stat[i]])}\n"
             )

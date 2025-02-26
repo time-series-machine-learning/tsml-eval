@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tsml-eval"
-version = "0.4.0"
+version = "0.5.0"
 description = "A package for benchmarking time series machine learning tools."
 authors = [
     {name = "Matthew Middlehurst", email = "m.b.middlehurst@soton.ac.uk"},
@@ -152,8 +152,9 @@ per-file-ignores = [
 [tool.mypy]
 mypy_path = "tsml_eval/"
 ignore_missing_imports = true
+follow_imports = "silent"
 exclude = [
-    "_wip",
+    "_wip/",
     # Ignore the publications symlinks and its contents
     "tsml_eval/publications/2023",
 ]

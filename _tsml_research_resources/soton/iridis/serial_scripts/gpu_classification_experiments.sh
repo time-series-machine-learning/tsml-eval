@@ -1,15 +1,12 @@
 #!/bin/bash
-# CHECK before each new run:
-#   datasets (list of problems)
-#   results_dir (where to check/write results)
-#   classifiers_to_run (list of classifiers to run)
+# Check and edit all options before the first run!
 # While reading is fine, please dont write anything to the default directories in this script
 
 # Start and end for resamples
 max_folds=5
 start_fold=1
 
-# To avoid dumping 1000s of jobs in the queue we have a higher level queue
+# To avoid hitting the cluster queue limit we have a higher level queue
 max_num_submitted=12
 
 # Queue options are https://sotonac.sharepoint.com/teams/HPCCommunityWiki/SitePages/Iridis%205%20Job-submission-and-Limits-Quotas.aspx
