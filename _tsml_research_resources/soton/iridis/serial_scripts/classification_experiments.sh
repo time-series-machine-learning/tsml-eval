@@ -3,7 +3,7 @@
 # While reading is fine, please dont write anything to the default directories in this script
 
 # Start and end for resamples
-max_folds=10
+max_folds=1
 start_fold=1
 
 # To avoid hitting the cluster queue limit we have a higher level queue
@@ -34,8 +34,8 @@ start_point=1
 local_path="/home/$username/"
 data_path="/scratch/$username/"
 # Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
-data_dir="$data_path/Data/imbalanced_data/imbalanced_data9_1/"
-datasets="$data_path/DataSetLists/classification9_1.txt"
+data_dir="$data_path/Data/30NewDatasets_9_1"
+datasets="$data_path/DataSetLists/datasetsNew9_1.txt"
 
 # Results and output file write location. Change these to reflect your own file structure
 results_dir="$local_path/Classifi[Cry]cationResults/results/"
@@ -50,7 +50,7 @@ env_name="tsml-eval"
 
 # Classifiers to loop over. Must be seperated by a space
 # See list of potential classifiers in set_classifier hc2, dummy, multirockethydra
-classifiers_to_run="hc2"
+classifiers_to_run="dummy multirockethydra"
 
 # You can add extra arguments here. See tsml_eval/utils/arguments.py parse_args
 # You will have to add any variable to the python call close to the bottom of the script
