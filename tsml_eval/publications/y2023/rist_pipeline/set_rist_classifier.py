@@ -1,6 +1,6 @@
 """Classifiers used in the publication."""
 
-__author__ = ["MatthewMiddlehurst"]
+__maintainer__ = ["MatthewMiddlehurst"]
 
 import numpy as np
 
@@ -46,13 +46,13 @@ def _set_rist_classifier(
             **kwargs,
         )
     elif c == "rdstclassifier" or c == "rdst":
-        from tsml.shapelet_based import RDSTClassifier
+        from aeon.classification.shapelet_based import RDSTClassifier
 
         return RDSTClassifier(random_state=random_state)
     elif c == c == "rstsfclassifier" or c == "rstsf" or c == "r-stsf":
-        from tsml.interval_based import RSTSFClassifier
+        from aeon.classification.interval_based import RSTSF
 
-        return RSTSFClassifier(
+        return RSTSF(
             n_estimators=500, random_state=random_state, n_jobs=n_jobs, **kwargs
         )
     elif c == "drcif" or c == "drcifclassifier":
@@ -73,8 +73,8 @@ def _set_rist_classifier(
 
         return HIVECOTEV2(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "ristclassifier" or c == "rist" or c == "rist-extrat":
+        from aeon.classification.hybrid import RISTClassifier
         from sklearn.ensemble import ExtraTreesClassifier
-        from tsml.hybrid import RISTClassifier
 
         return RISTClassifier(
             random_state=random_state,
@@ -83,8 +83,8 @@ def _set_rist_classifier(
             **kwargs,
         )
     elif c == "rist-rf":
+        from aeon.classification.hybrid import RISTClassifier
         from sklearn.ensemble import RandomForestClassifier
-        from tsml.hybrid import RISTClassifier
 
         return RISTClassifier(
             random_state=random_state,
@@ -93,10 +93,10 @@ def _set_rist_classifier(
             **kwargs,
         )
     elif c == "rist-ridgecv":
+        from aeon.classification.hybrid import RISTClassifier
         from sklearn.linear_model import RidgeClassifierCV
         from sklearn.pipeline import make_pipeline
         from sklearn.preprocessing import StandardScaler
-        from tsml.hybrid import RISTClassifier
 
         return RISTClassifier(
             random_state=random_state,
@@ -110,11 +110,11 @@ def _set_rist_classifier(
     elif (
         c == "randomintervalclassifier" or c == "intervalpipeline" or c == "i-pipeline"
     ):
+        from aeon.transformations.collection.feature_based import Catch22
         from sklearn.ensemble import ExtraTreesClassifier
         from tsml.interval_based import RandomIntervalClassifier
         from tsml.transformations import (
             ARCoefficientTransformer,
-            Catch22Transformer,
             FunctionTransformer,
             PeriodogramTransformer,
         )
@@ -136,7 +136,7 @@ def _set_rist_classifier(
             )  # pragma: no cover
 
         interval_features = [
-            Catch22Transformer(outlier_norm=True, replace_nans=True),
+            Catch22(outlier_norm=True, replace_nans=True),
             row_mean,
             row_std,
             row_slope,

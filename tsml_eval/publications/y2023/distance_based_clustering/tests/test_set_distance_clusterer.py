@@ -11,12 +11,13 @@ from tsml_eval.testing.testing_utils import _check_set_method, _check_set_method
 
 def test_set_distance_clusterer():
     """Test set_distance_clusterer method."""
+    clusterer_list = []
     clusterer_dict = {}
     all_clusterer_names = []
-
     _check_set_method(
         _set_distance_clusterer,
         distance_based_clusterers,
+        clusterer_list,
         clusterer_dict,
         all_clusterer_names,
     )

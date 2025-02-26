@@ -11,12 +11,13 @@ from tsml_eval.testing.testing_utils import _check_set_method, _check_set_method
 
 def test_set_expansion_regressor():
     """Test set_tser_exp_regressor method."""
+    regressor_list = []
     regressor_dict = {}
     all_regressor_names = []
-
     _check_set_method(
         _set_tser_exp_regressor,
         expansion_regressors,
+        regressor_list,
         regressor_dict,
         all_regressor_names,
     )

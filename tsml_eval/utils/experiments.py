@@ -1,6 +1,6 @@
 """Utility functions for experiments."""
 
-__author__ = ["MatthewMiddlehurst"]
+__maintainer__ = ["MatthewMiddlehurst"]
 __all__ = [
     "assign_gpu",
     "timing_benchmark",

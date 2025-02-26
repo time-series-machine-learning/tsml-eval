@@ -6,8 +6,10 @@ import warnings
 from datetime import datetime
 
 import numpy as np
-from aeon.performance_metrics.stats import wilcoxon_test
+import pandas as pd
+from aeon.benchmarking.stats import wilcoxon_test
 from aeon.visualisation import (
+    create_multi_comparison_matrix,
     plot_boxplot,
     plot_critical_difference,
     plot_pairwise_scatter,
@@ -36,6 +38,11 @@ __all__ = [
     "evaluate_forecasters_from_file",
     "evaluate_forecasters_by_problem",
 ]
+
+from tsml_eval.utils.results_loading import (
+    _create_results_dictionary,
+    _load_by_problem_init,
+)
 
 
 def evaluate_classifiers(
@@ -186,7 +193,7 @@ def evaluate_classifiers_by_problem(
     verbose : bool, default=False
         If verbose output should be printed.
     """
-    load_path, classifier_names, dataset_names, resamples = _evaluate_by_problem_init(
+    load_path, classifier_names, dataset_names, resamples = _load_by_problem_init(
         "classifier",
         load_path,
         classifier_names,
@@ -433,7 +440,7 @@ def evaluate_clusterers_by_problem(
     verbose : bool, default=False
         If verbose output should be printed.
     """
-    load_path, clusterer_names, dataset_names, resamples = _evaluate_by_problem_init(
+    load_path, clusterer_names, dataset_names, resamples = _load_by_problem_init(
         "clusterer",
         load_path,
         clusterer_names,
@@ -680,7 +687,7 @@ def evaluate_regressors_by_problem(
     verbose : bool, default=False
         If verbose output should be printed.
     """
-    load_path, regressor_names, dataset_names, resamples = _evaluate_by_problem_init(
+    load_path, regressor_names, dataset_names, resamples = _load_by_problem_init(
         "regressor",
         load_path,
         regressor_names,
@@ -924,7 +931,7 @@ def evaluate_forecasters_by_problem(
     verbose : bool, default=False
         If verbose output should be printed.
     """
-    load_path, forecaster_names, dataset_names, resamples = _evaluate_by_problem_init(
+    load_path, forecaster_names, dataset_names, resamples = _load_by_problem_init(
         "forecaster",
         load_path,
         forecaster_names,
@@ -1017,43 +1024,6 @@ def evaluate_forecasters_by_problem(
     )
 
 
-def _evaluate_by_problem_init(
-    type, load_path, estimator_names, dataset_names, resamples
-):
-    if isinstance(load_path, str):
-        load_path = [load_path]
-    elif not isinstance(load_path, list):
-        raise TypeError("load_path must be a str or list of str.")
-
-    if isinstance(estimator_names[0], (str, tuple)):
-        estimator_names = [estimator_names]
-    elif not isinstance(estimator_names[0], list):
-        raise TypeError(f"{type}_names must be a str, tuple or list of str or tuple.")
-
-    if isinstance(dataset_names, str):
-        with open(dataset_names) as f:
-            dataset_names = f.readlines()
-            dataset_names = [[d.strip() for d in dataset_names]] * len(load_path)
-    elif isinstance(dataset_names[0], str):
-        dataset_names = [dataset_names] * len(load_path)
-    elif not isinstance(dataset_names[0], list):
-        raise TypeError("dataset_names must be a str or list of str.")
-
-    if len(load_path) != len(estimator_names) or len(load_path) != len(dataset_names):
-        raise ValueError(
-            f"load_path, {type}_names and dataset_names must be the same length."
-        )
-
-    if resamples is None:
-        resamples = [""]
-    elif isinstance(resamples, int):
-        resamples = [str(i) for i in range(resamples)]
-    else:
-        resamples = [str(resample) for resample in resamples]
-
-    return load_path, estimator_names, dataset_names, resamples
-
-
 def _evaluate_estimators(
     estimator_results,
     statistics,
@@ -1062,19 +1032,21 @@ def _evaluate_estimators(
     eval_name,
     estimator_names,
 ):
-    save_path = save_path + "/" + eval_name + "/"
-
     estimators = set()
     datasets = set()
     resamples = set()
     has_test = False
     has_train = False
 
-    results_dict = _create_results_dictionary(estimator_results, estimator_names)
+    results_dict = _create_results_dictionary(
+        estimator_results, estimator_names=estimator_names
+    )
 
     if eval_name is None:
         dt = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        eval_name = f"{estimator_results[0].__class__.__name__}Evaluation {dt}"
+        eval_name = f"{estimator_results[0].__class__.__name__}Evaluation_{dt}"
+
+    save_path = save_path + "/" + eval_name + "/"
 
     for estimator_name in results_dict:
         estimators.add(estimator_name)
@@ -1207,39 +1179,6 @@ def _evaluate_estimators(
             stats.append((average, rank, stat, ascending, split))
 
     _summary_evaluation(stats, estimators, save_path, eval_name)
-
-
-def _create_results_dictionary(estimator_results, estimator_names):
-    results_dict = {}
-
-    for i, estimator_result in enumerate(estimator_results):
-        name = (
-            estimator_result.estimator_name
-            if estimator_names is None
-            else estimator_names[i]
-        )
-
-        if results_dict.get(name) is None:
-            results_dict[name] = {}
-
-        if results_dict[name].get(estimator_result.dataset_name) is None:
-            results_dict[name][estimator_result.dataset_name] = {}
-
-        if (
-            results_dict[name][estimator_result.dataset_name].get(
-                estimator_result.split.lower()
-            )
-            is None
-        ):
-            results_dict[name][estimator_result.dataset_name][
-                estimator_result.split.lower()
-            ] = {}
-
-        results_dict[name][estimator_result.dataset_name][
-            estimator_result.split.lower()
-        ][estimator_result.resample_id] = estimator_result
-
-    return results_dict
 
 
 def _create_directory_for_statistic(
@@ -1386,6 +1325,24 @@ def _figures_for_statistic(
     )
     plt.close()
 
+    df = pd.DataFrame(scores)
+    df.columns = estimators
+    mcm = create_multi_comparison_matrix(df)
+    mcm.savefig(
+        f"{save_path}/{statistic_name}/figures/"
+        f"{eval_name}_{statistic_name.lower()}_mcm.pdf",
+        bbox_inches="tight",
+    )
+    pickle.dump(
+        mcm,
+        open(
+            f"{save_path}/{statistic_name}/figures/"
+            f"{eval_name}_{statistic_name.lower()}_mcm.pickle",
+            "wb",
+        ),
+    )
+    plt.close()
+
     for i, est1 in enumerate(estimators):
         for n, est2 in enumerate(estimators):
             if i == n:
@@ -1396,7 +1353,12 @@ def _figures_for_statistic(
             )
 
             scatter, _ = plot_pairwise_scatter(
-                scores[:, i], scores[:, n], est1, est2, metric=statistic_name.upper()
+                scores[:, i],
+                scores[:, n],
+                est1,
+                est2,
+                metric=statistic_name.upper(),
+                lower_better=not higher_better,
             )
             scatter.savefig(
                 f"{save_path}/{statistic_name}/figures/scatters/{est1}/"
@@ -1416,30 +1378,39 @@ def _figures_for_statistic(
 
 
 def _summary_evaluation(stats, estimators, save_path, eval_name):
+    avg_stat = [np.mean(stat[0], axis=0) for stat in stats]
+    avg_rank = [np.mean(stat[1], axis=0) for stat in stats]
+
     with open(f"{save_path}/{eval_name}_summary.csv", "w") as file:
-        for stat in stats:
-            avg_stat = np.mean(stat[0], axis=0)
-            avg_rank = np.mean(stat[1], axis=0)
+        for i, stat in enumerate(stats):
             sorted_indices = [
                 i
                 for i in sorted(
-                    range(len(avg_rank)),
+                    range(len(avg_rank[i])),
                     key=lambda x: (
-                        avg_rank[x],
-                        -avg_stat[x] if stat[3] else avg_stat[x],
+                        avg_rank[i][x],
+                        -avg_stat[i][x] if stat[3] else avg_stat[i][x],
                     ),
                 )
             ]
 
             file.write(
                 f"{stat[4]}{stat[2]},"
-                f"{','.join([estimators[i] for i in sorted_indices])}\n"
+                f"{','.join([estimators[n] for n in sorted_indices])}\n"
             )
             file.write(
                 f"{stat[4]}{stat[2]}Mean,"
-                f"{','.join([str(n) for n in avg_stat[sorted_indices]])}\n"
+                f"{','.join([str(n) for n in avg_stat[i][sorted_indices]])}\n"
             )
             file.write(
                 f"{stat[4]}{stat[2]}AvgRank,"
-                f"{','.join([str(n) for n in avg_rank[sorted_indices]])}\n\n"
+                f"{','.join([str(n) for n in avg_rank[i][sorted_indices]])}\n\n"
+            )
+
+    with open(f"{save_path}/{eval_name}_summary_table.csv", "w") as file:
+        file.write(f",{','.join([e for e in estimators])}\n")
+        for i, stat in enumerate(stats):
+            file.write(
+                f"{stat[4]}{stat[2]}Mean,"
+                f"{','.join([str(n) for n in avg_stat[i]])}\n"
             )

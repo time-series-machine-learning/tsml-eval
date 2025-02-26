@@ -2,7 +2,7 @@
 Configurable SFA transform for discretising time series into words.
 """
 
-__author__ = ["patrickzib"]
+__maintainer__ = ["patrickzib"]
 __all__ = ["SFADilation"]
 
 import math

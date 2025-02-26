@@ -1,37 +1,41 @@
-"""Set classifier function."""
+"""Get classifier function."""
 
-__author__ = ["TonyBagnall", "MatthewMiddlehurst"]
+__maintainer__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 from tsml_eval.utils.functions import str_in_nested_list
 
 convolution_based_classifiers = [
     ["rocketclassifier", "rocket"],
-    ["minirocket", "mini-rocket"],
-    ["multirocket", "multi-rocket"],
+    "rocket-unequal",
+    ["minirocket", "mini-rocket", "minirocketclassifier"],
+    ["multirocket", "multi-rocket", "multirocketclassifier"],
     ["arsenalclassifier", "arsenal"],
+    "arsenal-unequal",
     ["miniarsenal", "mini-arsenal"],
     ["multiarsenal", "multi-arsenal"],
     ["hydraclassifier", "hydra"],
-    ["multirockethydraclassifier", "multirockethydra", "multirocket-hydra"],
+    ["multirockethydraclassifier", "multirockethydra", "multirocket-hydra", "mrhydra"],
 ]
 deep_learning_classifiers = [
-    ["cnnclassifier", "cnn"],
+    ["timecnnclassifier", "timecnn", "cnnclassifier", "cnn"],
     ["fcnclassifier", "fcnn"],
     ["mlpclassifier", "mlp"],
     ["encoderclassifier", "encoder"],
-    ["tapnetclassifier", "tapnet"],
     ["resnetclassifier", "resnet"],
     ["individualinceptionclassifier", "singleinception"],
     ["inceptiontimeclassifier", "inceptiontime"],
     ["h-inceptiontimeclassifier", "h-inceptiontime"],
     ["litetimeclassifier", "litetime"],
-    ["timecnnclassifier", "timecnn"],
+    "litetime-mv",
+    ["individualliteclassifier", "individuallite"],
+    ["disjointcnnclassifier", "disjointcnn"],
 ]
 dictionary_based_classifiers = [
     ["bossensemble", "boss"],
     "individualboss",
     ["contractableboss", "cboss"],
     ["temporaldictionaryensemble", "tde"],
+    "tde-unequal",
     "individualtde",
     "weasel",
     "weasel-logistic",
@@ -40,6 +44,7 @@ dictionary_based_classifiers = [
     ["weasel_v2", "weaseldilation", "weasel-dilation", "weasel-d"],
     "redcomets",
     "redcomets-500",
+    ["mrseqlclassifier", "mrseql"],
     ["mrsqmclassifier", "mrsqm"],
 ]
 distance_based_classifiers = [
@@ -82,9 +87,11 @@ interval_based_classifiers = [
     ["supervisedtimeseriesforest", "stsf"],
     "drcif-500",
     ["drcif", "drcifclassifier"],
+    "drcif-unequal",
     "summary-intervals",
     ["randomintervals-500", "catch22-intervals-500"],
     ["randomintervalclassifier", "randomintervals", "catch22-intervals"],
+    ["supervisedintervalclassifier", "supervisedintervals"],
     ["quantclassifier", "quant"],
 ]
 other_classifiers = [
@@ -95,10 +102,12 @@ other_classifiers = [
 shapelet_based_classifiers = [
     "stc-2hour",
     ["shapelettransformclassifier", "stc"],
+    "stc-unequal",
     ["rdstclassifier", "rdst"],
     ["randomshapeletforestclassifier", "randomshapeletforest", "rsf"],
     ["sastclassifier", "sast"],
     ["rsastclassifier", "rsast"],
+    ["learningshapeletclassifier", "ls"],
 ]
 vector_classifiers = [
     ["rotationforestclassifier", "rotationforest", "rotf"],
@@ -189,7 +198,7 @@ def get_classifier_by_name(
             c, random_state, n_jobs, fit_contract, checkpoint, kwargs
         )
     else:
-        raise ValueError(f"UNKNOWN CLASSIFIER: {c} in set_classifier")
+        raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
 
 
 def _set_classifier_convolution_based(
@@ -199,26 +208,37 @@ def _set_classifier_convolution_based(
         from aeon.classification.convolution_based import RocketClassifier
 
         return RocketClassifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
-    elif c == "minirocket" or c == "mini-rocket":
-        from aeon.classification.convolution_based import RocketClassifier
+    elif c == "rocket-unequal":
+        from tsml_eval._wip.unequal_length._rocket import RocketClassifier
 
-        return RocketClassifier(
-            rocket_transform="minirocket",
+        return RocketClassifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "minirocket" or c == "mini-rocket" or c == "minirocketclassifier":
+        from aeon.classification.convolution_based import MiniRocketClassifier
+
+        return MiniRocketClassifier(
             random_state=random_state,
             n_jobs=n_jobs,
             **kwargs,
         )
-    elif c == "multirocket" or c == "multi-rocket":
-        from aeon.classification.convolution_based import RocketClassifier
+    elif c == "multirocket" or c == "multi-rocket" or c == "multirocketclassifier":
+        from aeon.classification.convolution_based import MultiRocketClassifier
 
-        return RocketClassifier(
-            rocket_transform="multirocket",
+        return MultiRocketClassifier(
             random_state=random_state,
             n_jobs=n_jobs,
             **kwargs,
         )
     elif c == "arsenalclassifier" or c == "arsenal":
         from aeon.classification.convolution_based import Arsenal
+
+        return Arsenal(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "arsenal-unequal":
+        from tsml_eval._wip.unequal_length._arsenal import Arsenal
 
         return Arsenal(
             random_state=random_state,
@@ -254,6 +274,7 @@ def _set_classifier_convolution_based(
         c == "multirockethydraclassifier"
         or c == "multirockethydra"
         or c == "multirocket-hydra"
+        or c == "mrhydra"
     ):
         from aeon.classification.convolution_based import MultiRocketHydraClassifier
 
@@ -265,10 +286,10 @@ def _set_classifier_convolution_based(
 def _set_classifier_deep_learning(
     c, random_state, n_jobs, fit_contract, checkpoint, kwargs
 ):
-    if c == "cnnclassifier" or c == "cnn":
-        from aeon.classification.deep_learning import CNNClassifier
+    if c == "timecnnclassifier" or c == "timecnn" or c == "cnnclassifier" or c == "cnn":
+        from aeon.classification.deep_learning import TimeCNNClassifier
 
-        return CNNClassifier(random_state=random_state, **kwargs)
+        return TimeCNNClassifier(random_state=random_state, **kwargs)
     elif c == "fcnclassifier" or c == "fcnn":
         from aeon.classification.deep_learning import FCNClassifier
 
@@ -281,10 +302,6 @@ def _set_classifier_deep_learning(
         from aeon.classification.deep_learning import EncoderClassifier
 
         return EncoderClassifier(random_state=random_state, **kwargs)
-    elif c == "tapnetclassifier" or c == "tapnet":
-        from aeon.classification.deep_learning import TapNetClassifier
-
-        return TapNetClassifier(random_state=random_state, **kwargs)
     elif c == "resnetclassifier" or c == "resnet":
         from aeon.classification.deep_learning import ResNetClassifier
 
@@ -307,10 +324,18 @@ def _set_classifier_deep_learning(
         from aeon.classification.deep_learning import LITETimeClassifier
 
         return LITETimeClassifier(random_state=random_state, **kwargs)
-    elif c == "timecnnclassifier" or c == "timecnn":
-        from aeon.classification.deep_learning import TimeCNNClassifier
+    elif c == "litetime-mv":
+        from aeon.classification.deep_learning import LITETimeClassifier
 
-        return TimeCNNClassifier(random_state=random_state, **kwargs)
+        return LITETimeClassifier(use_litemv=True, random_state=random_state, **kwargs)
+    elif c == "individualliteclassifier" or c == "individuallite":
+        from aeon.classification.deep_learning import IndividualLITEClassifier
+
+        return IndividualLITEClassifier(random_state=random_state, **kwargs)
+    elif c == "disjointcnnclassifier" or c == "disjointcnn":
+        from aeon.classification.deep_learning import DisjointCNNClassifier
+
+        return DisjointCNNClassifier(random_state=random_state, **kwargs)
 
 
 def _set_classifier_dictionary_based(
@@ -343,6 +368,15 @@ def _set_classifier_dictionary_based(
         )
     elif c == "temporaldictionaryensemble" or c == "tde":
         from aeon.classification.dictionary_based import TemporalDictionaryEnsemble
+
+        return TemporalDictionaryEnsemble(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "tde-unequal":
+        from tsml_eval._wip.unequal_length._tde import TemporalDictionaryEnsemble
 
         return TemporalDictionaryEnsemble(
             random_state=random_state,
@@ -403,6 +437,10 @@ def _set_classifier_dictionary_based(
         return REDCOMETS(
             n_trees=500, random_state=random_state, n_jobs=n_jobs, **kwargs
         )
+    elif c == "mrseqlclassifier" or c == "mrseql":
+        from aeon.classification.dictionary_based import MrSEQLClassifier
+
+        return MrSEQLClassifier(**kwargs)
     elif c == "mrsqmclassifier" or c == "mrsqm":
         from aeon.classification.dictionary_based import MrSQMClassifier
 
@@ -650,15 +688,23 @@ def _set_classifier_interval_based(
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
+    elif c == "drcif-unequal":
+        from tsml_eval._wip.unequal_length._drcif import DrCIFClassifier
+
+        return DrCIFClassifier(
+            n_estimators=500,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
     elif c == "summary-intervals":
         from aeon.classification.interval_based import RandomIntervalClassifier
-        from aeon.transformations.collection.feature_based import (
-            SevenNumberSummaryTransformer,
-        )
+        from aeon.transformations.collection.feature_based import SevenNumberSummary
         from sklearn.ensemble import RandomForestClassifier
 
         return RandomIntervalClassifier(
-            features=SevenNumberSummaryTransformer(),
+            features=SevenNumberSummary(),
             estimator=RandomForestClassifier(n_estimators=500),
             random_state=random_state,
             n_jobs=n_jobs,
@@ -682,6 +728,12 @@ def _set_classifier_interval_based(
         from aeon.classification.interval_based import RandomIntervalClassifier
 
         return RandomIntervalClassifier(
+            random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
+    elif c == "supervisedintervalclassifier" or c == "supervisedintervals":
+        from aeon.classification.interval_based import SupervisedIntervalClassifier
+
+        return SupervisedIntervalClassifier(
             random_state=random_state, n_jobs=n_jobs, **kwargs
         )
     elif c == "quantclassifier" or c == "quant":
@@ -726,6 +778,15 @@ def _set_classifier_shapelet_based(
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
+    elif c == "stc-unequal":
+        from tsml_eval._wip.unequal_length._stc import ShapeletTransformClassifier
+
+        return ShapeletTransformClassifier(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
     elif c == "rdstclassifier" or c == "rdst":
         from aeon.classification.shapelet_based import RDSTClassifier
 
@@ -748,11 +809,15 @@ def _set_classifier_shapelet_based(
         from aeon.classification.shapelet_based import RSASTClassifier
 
         return RSASTClassifier(seed=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "learningshapeletclassifier" or c == "ls":
+        from aeon.classification.shapelet_based import LearningShapeletClassifier
+
+        return LearningShapeletClassifier(random_state=random_state, **kwargs)
 
 
 def _set_classifier_vector(c, random_state, n_jobs, fit_contract, checkpoint, kwargs):
     if c == "rotationforestclassifier" or c == "rotationforest" or c == "rotf":
-        from tsml.vector import RotationForestClassifier
+        from aeon.classification.sklearn import RotationForestClassifier
 
         return RotationForestClassifier(
             random_state=random_state,

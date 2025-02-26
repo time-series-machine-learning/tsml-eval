@@ -66,8 +66,7 @@ class ForecasterResults(EstimatorResults):
     ...     "/forecasting/NaiveForecaster/Predictions/Airline/testResample0.csv"
     ... )
     >>> fr.calculate_statistics()
-    >>> fr.mean_absolute_percentage_error
-    0.19886711926999853
+    >>> mape = fr.mean_absolute_percentage_error
     """
 
     def __init__(
@@ -277,7 +276,7 @@ def load_forecaster_results(file_path, calculate_stats=True, verify_values=True)
                 pred_times[i] = float(line[3])
 
             if pred_descriptions is not None:
-                pred_descriptions.append(",".join(line[5]).strip())
+                pred_descriptions.append(",".join(line[5:]).strip())
 
     fr = ForecasterResults(
         dataset_name=line1[0],

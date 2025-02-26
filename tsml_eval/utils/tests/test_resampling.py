@@ -1,6 +1,6 @@
 """Tests for dataset resampling functions."""
 
-__author__ = ["TonyBagnall", "MatthewMiddlehurst"]
+__maintainer__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 
 import numpy as np

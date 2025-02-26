@@ -1,20 +1,18 @@
 """Tests for classification experiments."""
 
-__author__ = ["MatthewMiddlehurst"]
-
 import os
 import runpy
 
 import pytest
-from aeon.registry import all_estimators
+from aeon.utils.discovery import all_estimators
 from tsml.dummy import DummyRegressor
 
 from tsml_eval.datasets._test_data._data_sizes import DATA_TEST_SIZES
 from tsml_eval.experiments import (
+    _get_classifier,
     classification_experiments,
     get_classifier_by_name,
     run_classification_experiment,
-    set_classifier,
     threaded_classification_experiments,
 )
 from tsml_eval.experiments.tests import _CLASSIFIER_RESULTS_PATH
@@ -111,8 +109,10 @@ def test_run_threaded_classification_experiment():
         "1",
         "-nj",
         "2",
-        # also test normalisation and benchmark time here
+        # also test transforms and benchmark time here
         "--row_normalise",
+        "--data_transform_name",
+        "Padder",
         "--benchmark_time",
     ]
 
@@ -171,32 +171,36 @@ def test_run_classification_experiment_invalid_estimator():
 
 def test_get_classifier_by_name():
     """Test get_classifier_by_name method."""
-    classifier_lists = [
-        set_classifier.convolution_based_classifiers,
-        set_classifier.deep_learning_classifiers,
-        set_classifier.dictionary_based_classifiers,
-        set_classifier.distance_based_classifiers,
-        set_classifier.feature_based_classifiers,
-        set_classifier.hybrid_classifiers,
-        set_classifier.interval_based_classifiers,
-        set_classifier.other_classifiers,
-        set_classifier.shapelet_based_classifiers,
-        set_classifier.vector_classifiers,
+    classifier_name_lists = [
+        _get_classifier.convolution_based_classifiers,
+        _get_classifier.deep_learning_classifiers,
+        _get_classifier.dictionary_based_classifiers,
+        _get_classifier.distance_based_classifiers,
+        _get_classifier.feature_based_classifiers,
+        _get_classifier.hybrid_classifiers,
+        _get_classifier.interval_based_classifiers,
+        _get_classifier.other_classifiers,
+        _get_classifier.shapelet_based_classifiers,
+        _get_classifier.vector_classifiers,
     ]
 
+    # filled by _check_set_method
+    classifier_list = []
     classifier_dict = {}
     all_classifier_names = []
-
-    for classifier_list in classifier_lists:
+    for classifier_name_list in classifier_name_lists:
         _check_set_method(
             get_classifier_by_name,
+            classifier_name_list,
             classifier_list,
             classifier_dict,
             all_classifier_names,
         )
 
     _check_set_method_results(
-        classifier_dict, estimator_name="Classifiers", method_name="set_classifier"
+        classifier_dict,
+        estimator_name="Classifiers",
+        method_name="get_classifier_by_name",
     )
 
 
@@ -209,20 +213,19 @@ def test_get_classifier_by_name_invalid():
 def test_aeon_classifiers_available():
     """Test all aeon classifiers are available."""
     excluded = [
-        # composable
-        "ChannelEnsembleClassifier",
+        # composable/wrapper
+        "ClassifierChannelEnsemble",
         "ClassifierPipeline",
-        "WeightedEnsembleClassifier",
-        # just missing
-        "IndividualLITEClassifier",
+        "ClassifierEnsemble",
+        "SklearnClassifierWrapper",
+        "IntervalForestClassifier",
+        # ordinal
         "OrdinalTDE",
         "IndividualOrdinalTDE",
-        "IntervalForestClassifier",
-        "SupervisedIntervalClassifier",
-        "LearningShapeletClassifier",
+        # just missing
     ]
 
-    est = [e for e, _ in all_estimators(estimator_types="classifier")]
+    est = [e for e, _ in all_estimators(type_filter="classifier")]
     for e in est:
         if e in excluded:
             continue

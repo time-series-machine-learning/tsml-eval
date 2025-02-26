@@ -18,7 +18,7 @@ def run_timing_experiment(
     function="fit",
     random_state=None,
 ):
-    """Return the time taken to run eestimator functions for randomly generated data.
+    """Return the time taken to run estimator functions for randomly generated data.
 
     Will time the function for each estimator in milliseconds, gradually increasing the
     size of the chosen dimension. The time taken will be stored in a dictionary.

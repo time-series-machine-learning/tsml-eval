@@ -1,6 +1,6 @@
 """Set regressor function."""
 
-__author__ = ["TonyBagnall", "MatthewMiddlehurst"]
+__maintainer__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 import numpy as np
 
@@ -8,23 +8,23 @@ from tsml_eval.utils.functions import str_in_nested_list
 
 convolution_based_regressors = [
     ["rocketregressor", "rocket"],
-    ["minirocket", "minirocketregressor"],
-    ["multirocket", "multirocketregressor"],
+    ["minirocket", "mini-rocket", "minirocketregressor"],
+    ["multirocket", "multi-rocket", "multirocketregressor"],
     ["hydraregressor", "hydra"],
     ["multirockethydraregressor", "multirockethydra", "multirocket-hydra"],
 ]
 deep_learning_regressors = [
-    ["cnnregressor", "cnn"],
+    ["timecnnregressor", "timecnn", "cnnregressor", "cnn"],
     ["fcnregressor", "fcnn", "fcn"],
     ["mlpregressor", "mlp"],
     ["encoderregressor", "encoder"],
-    ["tapnetregressor", "tapnet"],
     ["resnetregressor", "resnet"],
     ["individualinceptionregressor", "singleinception", "individualinception"],
     ["inceptiontimeregressor", "inception", "inceptiontime"],
     ["h-inceptiontimeregressor", "h-inceptiontime"],
     ["litetimeregressor", "litetime"],
-    ["timecnnregressor", "timecnn"],
+    ["individualliteregressor", "individuallite"],
+    ["disjointcnnregressor", "disjointcnn"],
 ]
 distance_based_regressors = [
     "1nn-ed",
@@ -165,7 +165,7 @@ def get_regressor_by_name(
             r, random_state, n_jobs, fit_contract, checkpoint, kwargs
         )
     else:
-        raise ValueError(f"UNKNOWN REGRESSOR: {r} in set_regressor")
+        raise ValueError(f"UNKNOWN REGRESSOR: {r} in get_regressor_by_name")
 
 
 def _set_regressor_convolution_based(
@@ -175,20 +175,18 @@ def _set_regressor_convolution_based(
         from aeon.regression.convolution_based import RocketRegressor
 
         return RocketRegressor(random_state=random_state, n_jobs=n_jobs, **kwargs)
-    elif r == "minirocket" or r == "minirocketregressor":
-        from aeon.regression.convolution_based import RocketRegressor
+    elif r == "minirocket" or r == "mini-rocket" or r == "minirocketregressor":
+        from aeon.regression.convolution_based import MiniRocketRegressor
 
-        return RocketRegressor(
-            rocket_transform="minirocket",
+        return MiniRocketRegressor(
             random_state=random_state,
             n_jobs=n_jobs,
             **kwargs,
         )
-    elif r == "multirocket" or r == "multirocketregressor":
-        from aeon.regression.convolution_based import RocketRegressor
+    elif r == "multirocket" or r == "multi-rocket" or r == "multirocketregressor":
+        from aeon.regression.convolution_based import MultiRocketRegressor
 
-        return RocketRegressor(
-            rocket_transform="multirocket",
+        return MultiRocketRegressor(
             random_state=random_state,
             n_jobs=n_jobs,
             **kwargs,
@@ -212,10 +210,10 @@ def _set_regressor_convolution_based(
 def _set_regressor_deep_learning(
     r, random_state, n_jobs, fit_contract, checkpoint, kwargs
 ):
-    if r == "cnnregressor" or r == "cnn":
-        from aeon.regression.deep_learning import CNNRegressor
+    if r == "timecnnregressor" or r == "timecnn" or r == "cnnregressor" or r == "cnn":
+        from aeon.regression.deep_learning import TimeCNNRegressor
 
-        return CNNRegressor(random_state=random_state, **kwargs)
+        return TimeCNNRegressor(random_state=random_state, **kwargs)
     elif r == "fcnregressor" or r == "fcnn" or r == "fcn":
         from aeon.regression.deep_learning import FCNRegressor
 
@@ -228,10 +226,6 @@ def _set_regressor_deep_learning(
         from aeon.regression.deep_learning import EncoderRegressor
 
         return EncoderRegressor(random_state=random_state, **kwargs)
-    elif r == "tapnetregressor" or r == "tapnet":
-        from aeon.regression.deep_learning import TapNetRegressor
-
-        return TapNetRegressor(random_state=random_state, **kwargs)
     elif r == "resnetregressor" or r == "resnet":
         from aeon.regression.deep_learning import ResNetRegressor
 
@@ -259,10 +253,14 @@ def _set_regressor_deep_learning(
         from aeon.regression.deep_learning import LITETimeRegressor
 
         return LITETimeRegressor(random_state=random_state, **kwargs)
-    elif r == "timecnnregressor" or r == "timecnn":
-        from aeon.regression.deep_learning import TimeCNNRegressor
+    elif r == "individualliteregressor" or r == "individuallite":
+        from aeon.regression.deep_learning import IndividualLITERegressor
 
-        return TimeCNNRegressor(random_state=random_state, **kwargs)
+        return IndividualLITERegressor(random_state=random_state, **kwargs)
+    elif r == "disjointcnnregressor" or r == "disjointcnn":
+        from aeon.regression.deep_learning import DisjointCNNRegressor
+
+        return DisjointCNNRegressor(random_state=random_state, **kwargs)
 
 
 def _set_regressor_distance_based(
@@ -485,13 +483,11 @@ def _set_regressor_interval_based(
         )
     elif r == "summary-intervals":
         from aeon.regression.interval_based import RandomIntervalRegressor
-        from aeon.transformations.collection.feature_based import (
-            SevenNumberSummaryTransformer,
-        )
+        from aeon.transformations.collection.feature_based import SevenNumberSummary
         from sklearn.ensemble import RandomForestRegressor
 
         return RandomIntervalRegressor(
-            features=SevenNumberSummaryTransformer(),
+            features=SevenNumberSummary(),
             estimator=RandomForestRegressor(n_estimators=500),
             random_state=random_state,
             n_jobs=n_jobs,

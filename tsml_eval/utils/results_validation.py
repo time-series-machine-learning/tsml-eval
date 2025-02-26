@@ -1,6 +1,6 @@
 """Utilities for validating results."""
 
-__author__ = ["MatthewMiddlehurst"]
+__maintainer__ = ["MatthewMiddlehurst"]
 __all__ = [
     "validate_results_file",
     "compare_result_file_resample",

@@ -5,7 +5,7 @@ from aeon.classification.base import BaseClassifier
 from tsml_eval._wip.tschief._splitters import generate_boss_transforms
 from tsml_eval._wip.tschief.tschiefnode import TsChiefNode
 
-__author__ = ["GuiArcencio"]
+__maintainer__ = ["GuiArcencio"]
 __all__ = ["TsChief"]
 
 
