@@ -15,7 +15,7 @@ from typing import Optional, Union
 import numpy as np
 from sklearn.utils import check_random_state
 
-from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
+from tsml_eval._wip.rt.classification.distance_based import KNeighborsTimeSeriesClassifier
 from aeon.transformations.collection import BaseCollectionTransformer
 
 __maintainer__ = ["TonyBagnall"]

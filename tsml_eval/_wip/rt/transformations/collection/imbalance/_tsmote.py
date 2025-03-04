@@ -9,7 +9,7 @@ from typing import Optional, Union
 import numpy as np
 from sklearn.utils import check_random_state
 
-from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
+from tsml_eval._wip.rt.classification.distance_based import KNeighborsTimeSeriesClassifier
 from aeon.transformations.collection import BaseCollectionTransformer
 
 
@@ -217,3 +217,13 @@ class TSMOTE(BaseCollectionTransformer):
         sample[..., : self.window_size_] = x[..., start_idx:end_idx]
 
         return sample
+
+if __name__ == "__main__":
+    # Example usage
+    X = np.random.randn(100, 1, 100)
+    y = np.random.choice([0, 1], size=100)
+    print(np.unique(y, return_counts=True))
+    tsmote = TSMOTE(random_state=0)
+    X_resampled, y_resampled = tsmote.fit_transform(X, y)
+    print(X_resampled.shape, y_resampled.shape)
+    # Output: (200, 1, 100) (200,)
