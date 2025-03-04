@@ -51,12 +51,7 @@ from tsml_eval.utils.experiments import (
     timing_benchmark,
 )
 from tsml_eval.utils.memory_recorder import record_max_memory
-from tsml_eval.utils.oversampling_methods import SMOTE_FAMILY
-from tsml_eval.utils.resampling import (
-    make_imbalance,
-    resample_data,
-    stratified_resample_data,
-)
+from tsml_eval.utils.resampling import resample_data, stratified_resample_data
 from tsml_eval.utils.results_writing import (
     write_classification_results,
     write_clustering_results,
@@ -322,7 +317,6 @@ def load_and_run_classification_experiment(
     benchmark_time=True,
     overwrite=False,
     predefined_resample=False,
-    test_oversampling_methods=None,
 ):
     """Load a dataset and run a classification experiment.
 
@@ -366,7 +360,6 @@ def load_and_run_classification_experiment(
         Read a predefined resample from file instead of performing a resample. If True
         the file format must include the resample_id at the end of the dataset name i.e.
         <problem_path>/<dataset>/<dataset>+<resample_id>+"_TRAIN.ts".
-    test_oversampling_methods : bool, default=False
     """
     if classifier_name is None:
         classifier_name = type(classifier).__name__
@@ -399,12 +392,6 @@ def load_and_run_classification_experiment(
     else:
         attribute_file_path = None
 
-    if test_oversampling_methods:
-        oversampler = getattr(SMOTE_FAMILY(), test_oversampling_methods)(
-            seed=resample_id + 2024
-        )
-        X_train, y_train = oversampler.fit_resample(np.squeeze(X_train), y_train)
-        X_train = np.expand_dims(X_train, axis=1)
     run_classification_experiment(
         X_train,
         y_train,

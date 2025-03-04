@@ -103,13 +103,6 @@ def parse_args(args):
                             ensemble. Valid types are {int, float, bool, str}. Any
                             other type will be passed as a str. Can be used
                             multiple times (default: None).
-      -toms TEST_OVERSAMPLING_METHODS, --test_oversampling_methods
-                            the over-sampling methods to deal with imbalance
-                            classification problems. If None, no over-sampling
-                            method is used.(default: None).
-      -imb_ratio, --imbalance_ratio,
-                            the ratio of the majority class to the minority class in the training set.
-                            (default: 19 i.e. 95% majority data).
 
     Parameters
     ----------
@@ -281,16 +274,6 @@ def parse_args(args):
         "types are {int, float, bool, str}. Any other type will be passed as a str. "
         "Can be used multiple times (default: %(default)s).",
     )
-
-    parser.add_argument(
-        "-toms",
-        "--test_oversampling_methods",
-        type=str,
-        default=None,
-        help="the over-sampling methods to deal with imbalance classification problems. "
-        "If None, no over-sampling method is used. (default: %(default)s).",
-    )
-
     args = parser.parse_args(args=args)
 
     kwargs = {}
