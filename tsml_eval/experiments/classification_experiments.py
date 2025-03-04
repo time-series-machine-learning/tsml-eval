@@ -68,6 +68,7 @@ def run_experiment(args):
         ):
             print("Ignoring, results already present")
         else:
+            print(args)
             load_and_run_classification_experiment(
                 args.data_path,
                 args.results_path,
@@ -96,6 +97,7 @@ def run_experiment(args):
                     ),
                     n_jobs=1,
                 ),
+                data_transform_limit=args.data_transform_limit,
                 build_train_file=args.train_fold,
                 write_attributes=args.write_attributes,
                 att_max_shape=args.att_max_shape,
@@ -113,7 +115,8 @@ def run_experiment(args):
         estimator_name = "ROCKET"
         dataset_name = "MinimalChinatown"
         row_normalise = False
-        transform_name = None
+        transform_name = "smote"
+        data_transform_limit = True
         resample_id = 0
         train_fold = False
         write_attributes = True
@@ -148,6 +151,7 @@ def run_experiment(args):
             classifier_name=estimator_name,
             resample_id=resample_id,
             data_transforms=transform,
+            data_transform_limit=data_transform_limit,
             build_train_file=train_fold,
             write_attributes=write_attributes,
             att_max_shape=att_max_shape,

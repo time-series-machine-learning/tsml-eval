@@ -4,12 +4,28 @@ __maintainer__ = ["MatthewMiddlehurst"]
 
 from aeon.transformations.collection import Normalizer
 
+from tsml_eval._wip.rt.transformations.collection.imbalance._adasyn import (
+    ADASYN,
+)
+from tsml_eval._wip.rt.transformations.collection.imbalance._ohit import (
+    OHIT,
+)
+from tsml_eval._wip.rt.transformations.collection.imbalance._smote import (
+    SMOTE,
+)
+from tsml_eval._wip.rt.transformations.collection.imbalance._tsmote import (
+    TSMOTE,
+)
 from tsml_eval.utils.functions import str_in_nested_list
 
 transformers = [
     ["normalizer", "normaliser"],
     ["padder", "zero-padder"],
     "low-noise-padder",
+    ["smote"],
+    ["adasyn"],
+    ["tsmote"],
+    ["ohit"],
 ]
 
 
@@ -74,3 +90,38 @@ def _set_transformer(t, random_state, n_jobs):
         from tsml_eval._wip.unequal_length._pad import Padder
 
         return Padder(add_noise=0.1, random_state=random_state)
+
+    elif t == "smote":
+
+        return SMOTE(
+            n_neighbors=5,
+            distance="euclidean",
+            distance_params=None,
+            weights="uniform",
+            n_jobs=n_jobs,
+            random_state=random_state,
+        )
+
+    elif t == "adasyn":
+
+        return ADASYN(
+            n_neighbors=5,
+            distance="euclidean",
+            distance_params=None,
+            weights="uniform",
+            n_jobs=n_jobs,
+            random_state=random_state,
+        )
+
+    elif t == "tsmote":
+
+        return TSMOTE(
+            random_state=random_state,
+            spy_size=0.15,
+            window_size=None,
+            distance="euclidean",
+            distance_params=None,
+        )
+    elif t == "ohit":
+
+        return OHIT(distance="euclidean", random_state=random_state)
