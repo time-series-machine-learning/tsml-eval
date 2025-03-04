@@ -178,9 +178,17 @@ def run_classification_experiment(
             data_transforms = [data_transforms]
 
         for transform in data_transforms:
-            X_train = transform.fit_transform(X_train, y_train)
+            transform_results = transform.fit_transform(X_train, y_train)
+            if isinstance(transform_results, tuple) and len(transform_results) == 2:
+                X_train, y_train = transform_results
+            else:
+                X_train = transform_results
             if not data_transform_limit:
-                X_test = transform.transform(X_test, y_test)
+                transform_results = transform.transform(X_test, y_test)
+                if isinstance(transform_results, tuple) and len(transform_results) == 2:
+                    X_test, y_test = transform_results
+                else:
+                    X_test = transform_results
                 assert X_test.shape[0] == num_test_samples_before, (
                     f"Error: X_test sample size changed from {num_test_samples_before} "
                     f"to {X_test.shape[0]} after transformation "

@@ -114,8 +114,8 @@ def run_experiment(args):
         estimator_name = "ROCKET"
         dataset_name = "MinimalChinatown"
         row_normalise = False
-        transform_name = None
-        data_transform_limit = False
+        transform_name = "smote"
+        data_transform_limit = True
         resample_id = 0
         train_fold = False
         write_attributes = True
