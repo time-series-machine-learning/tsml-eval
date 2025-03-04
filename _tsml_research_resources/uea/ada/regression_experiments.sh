@@ -1,8 +1,5 @@
 #!/bin/bash
-# CHECK before each new run:
-#   datasets (list of problems)
-#   results_dir (where to check/write results)
-#   regressors_to_run (list of regressors to run)
+# Check and edit all options before the first run!
 # While reading is fine, please dont write anything to the default directories in this script
 
 # Start and end for resamples
@@ -65,10 +62,7 @@ predefined_folds="false"
 normalise_data="false"
 
 # ======================================================================================
-# ======================================================================================
-# Dont change anything under here (unless you want to change how the experiment
-# is working)
-# ======================================================================================
+# 	Experiment configuration end
 # ======================================================================================
 
 # Set to -tr to generate test files

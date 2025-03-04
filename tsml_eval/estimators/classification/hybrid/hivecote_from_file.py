@@ -4,7 +4,7 @@ Hybrid ensemble of classifiers from separate time series classification
 representations, using the weighted probabilistic CAWPE as an ensemble controller.
 """
 
-__author__ = ["MatthewMiddlehurst", "ander-hg"]
+__maintainer__ = ["MatthewMiddlehurst", "ander-hg"]
 __all__ = ["FromFileHIVECOTE"]
 
 import numpy as np
@@ -69,7 +69,9 @@ class FromFileHIVECOTE(BaseClassifier):
     """
 
     _tags = {
+        "X_inner_type": ["np-list", "numpy3D"],
         "capability:multivariate": True,
+        "capability:unequal_length": True,
         "algorithm_type": "hybrid",
     }
 
@@ -103,7 +105,7 @@ class FromFileHIVECOTE(BaseClassifier):
         if self.new_weights:
             acc_list = self.new_weights
         else:
-            n_instances, _, _ = X.shape
+            n_instances = len(X)
             acc_list = []
 
             # load train file at path (trainResample.csv if random_state is None,
@@ -128,7 +130,7 @@ class FromFileHIVECOTE(BaseClassifier):
                     if len(lines) - 3 != n_instances:
                         raise ValueError(
                             f"n_instances of {path + file_name} does not match X, "
-                            f"expected {X.shape[0]}, got {len(lines) - 3}"
+                            f"expected {n_instances}, got {len(lines) - 3}"
                         )
                     if not self.skip_y_check and self.n_classes_ != int(line2[5]):
                         raise ValueError(
@@ -215,7 +217,7 @@ class FromFileHIVECOTE(BaseClassifier):
         )
 
     def _predict_proba(self, X):
-        n_instances, _, _ = X.shape
+        n_instances = len(X)
 
         # load test file at path (testResample.csv if random_state is None,
         # testResample{self.random_state}.csv otherwise)
@@ -239,7 +241,7 @@ class FromFileHIVECOTE(BaseClassifier):
                 if len(lines) - 3 != n_instances:
                     raise ValueError(
                         f"n_instances of {path + file_name} does not match X, "
-                        f"expected {X.shape[0]}, got {len(lines) - 3}"
+                        f"expected {n_instances}, got {len(lines) - 3}"
                     )
                 if not self.skip_y_check and self.n_classes_ != int(line2[5]):
                     raise ValueError(
