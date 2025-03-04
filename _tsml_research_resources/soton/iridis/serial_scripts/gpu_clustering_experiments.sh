@@ -12,10 +12,6 @@ max_num_submitted=12
 # Queue options are https://sotonac.sharepoint.com/teams/HPCCommunityWiki/SitePages/Iridis%205%20Job-submission-and-Limits-Quotas.aspx
 queue="gpu"
 
-# The partition name may not always be the same as the queue name, i.e. batch is the queue, serial is the partition
-# This is used for the script job limit queue
-queue_alias=$queue
-
 # Enter your username and email here
 username="ajb2u23"
 mail="NONE"
@@ -69,10 +65,7 @@ combine_test_train_split="false"
 normalise_data="true"
 
 # ======================================================================================
-# ======================================================================================
-# Dont change anything under here (unless you want to change how the experiment
-# is working)
-# ======================================================================================
+# 	Experiment configuration end
 # ======================================================================================
 
 # Set to -te to generate test files
@@ -102,12 +95,12 @@ for clusterer in $clusterers_to_run; do
 if ((count>=start_point)); then
 
 # This is the loop to keep from dumping everything in the queue which is maintained around max_num_submitted jobs
-num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue_alias}" -e "PD ${queue_alias}" | wc -l)
+num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue}" -e "PD ${queue}" | wc -l)
 while [ "${num_jobs}" -ge "${max_num_submitted}" ]
 do
     echo Waiting 60s, ${num_jobs} currently submitted on ${queue}, user-defined max is ${max_num_submitted}
     sleep 60
-    num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue_alias}" -e "PD ${queue_alias}" | wc -l)
+    num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue}" -e "PD ${queue}" | wc -l)
 done
 
 mkdir -p "${out_dir}${clusterer}/${dataset}/"
