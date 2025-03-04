@@ -1,6 +1,6 @@
 """Experiment runner for bakeoff redux 2023 publication."""
 
-__maintainer__ = ["TonyBagnall", "MatthewMiddlehurst"]
+__author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 import os
 import sys

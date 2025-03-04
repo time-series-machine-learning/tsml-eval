@@ -1,6 +1,6 @@
 """Experiment runner for RIST pipeline publication."""
 
-__maintainer__ = ["MatthewMiddlehurst"]
+__author__ = ["MatthewMiddlehurst"]
 
 import os
 import sys

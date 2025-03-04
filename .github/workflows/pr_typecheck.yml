@@ -9,7 +9,6 @@ on:
       - main
     paths:
       - "tsml_eval/**"
-      - "pyproject.toml"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}

@@ -3,7 +3,7 @@ multivariate dictionary based classifier based on SFA transform, dictionaries
 and logistic regression.
 """
 
-__maintainer__ = ["patrickzib"]
+__author__ = ["patrickzib"]
 __all__ = ["MUSEDilation"]
 
 import math

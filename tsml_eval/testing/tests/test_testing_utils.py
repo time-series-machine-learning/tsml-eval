@@ -15,7 +15,6 @@ def test_check_set_method_fail():
         _check_set_method(
             _test_set_method_fail,
             ["a", "b", "c"],
-            [],
             {},
             [],
         )

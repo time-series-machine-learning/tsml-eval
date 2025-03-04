@@ -1,6 +1,6 @@
 """tsml-eval command line argument parser."""
 
-__maintainer__ = ["MatthewMiddlehurst"]
+__author__ = ["MatthewMiddlehurst"]
 
 __all__ = [
     "parse_args",
@@ -64,20 +64,12 @@ def parse_args(args):
       -ch, --checkpoint     save the estimator fit to file periodically while
                             building. Only used if the estimator can checkpoint
                             (default: False).
-      -dtn DATA_TRANSFORM_NAME, --data_transform_name DATA_TRANSFORM_NAME
-                            str to pass to get_data_transform_by_name to apply a
-                            transformation to the data prior to running the experiment.
-                            By default no transform is applied (default: None).
       -rn, --row_normalise  normalise the data rows prior to fitting and
-                            predicting. effectively the same as passing Normalizer to
-                            --data_transform_name (default: False).
+                            predicting. (default: False).
       -nc N_CLUSTERS, --n_clusters N_CLUSTERS
                             the number of clusters to find for clusterers which
                             have an {n_clusters} parameter. If {-1}, use the
-                            number of classes in the dataset. The {n_clusters} parameter
-                            for attributes will also be set. Please ensure that
-                            the argument input itself has the {n_clusters} parameters
-                            and is not a default such as None. (default: -1).
+                            number of classes in the dataset (default: -1).
       -ctts, --combine_test_train_split
                             whether to use a train/test split or not. If True, the
                             train and test sets are combined and used the fit the
@@ -203,19 +195,10 @@ def parse_args(args):
         "the estimator can checkpoint (default: %(default)s).",
     )
     parser.add_argument(
-        "-dtn",
-        "--data_transform_name",
-        default=None,
-        help="str to pass to get_data_transform_by_name to apply a transformation "
-        "to the data prior to running the experiment. By default no transform "
-        "is applied (default: %(default)s).",
-    )
-    parser.add_argument(
         "-rn",
         "--row_normalise",
         action="store_true",
         help="normalise the data rows prior to fitting and predicting. "
-        "effectively the same as passing Normalizer to --data_transform_name "
         "(default: %(default)s).",
     )
     parser.add_argument(
@@ -224,10 +207,8 @@ def parse_args(args):
         type=int,
         default=-1,
         help="the number of clusters to find for clusterers which have an {n_clusters} "
-        "parameter. If {-1}, use the number of classes in the dataset. The "
-        "{n_clusters} parameter for arguments will also be set. Please ensure that"
-        "the argument input itself has the {n_clusters} parameters and is not a default"
-        "such as None (default: %(default)s).",
+        "parameter. If {-1}, use the number of classes in the dataset "
+        "(default: %(default)s).",
     )
     parser.add_argument(
         "-ctts",

@@ -4,16 +4,13 @@ This file is configured for runs of the main method with command line arguments,
 single debugging runs. Results are written in a standard tsml format.
 """
 
-__maintainer__ = ["TonyBagnall", "MatthewMiddlehurst"]
+__author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 
 import sys
 
-from tsml_eval.experiments import (
-    get_clusterer_by_name,
-    get_data_transform_by_name,
-    load_and_run_clustering_experiment,
-)
+from tsml_eval.experiments import load_and_run_clustering_experiment
+from tsml_eval.experiments.set_clusterer import get_clusterer_by_name
 from tsml_eval.experiments.tests import _CLUSTERER_RESULTS_PATH
 from tsml_eval.testing.testing_utils import _TEST_DATA_PATH
 from tsml_eval.utils.arguments import parse_args
@@ -68,19 +65,10 @@ def run_experiment(args):
                     row_normalise=args.row_normalise,
                     **args.kwargs,
                 ),
+                row_normalise=args.row_normalise,
                 n_clusters=args.n_clusters,
                 clusterer_name=args.estimator_name,
                 resample_id=args.resample_id,
-                data_transforms=get_data_transform_by_name(
-                    args.data_transform_name,
-                    row_normalise=args.row_normalise,
-                    random_state=(
-                        args.resample_id
-                        if args.random_seed is None
-                        else args.random_seed
-                    ),
-                    n_jobs=args.n_jobs,
-                ),
                 build_test_file=args.test_fold,
                 write_attributes=args.write_attributes,
                 att_max_shape=args.att_max_shape,
@@ -97,7 +85,6 @@ def run_experiment(args):
         estimator_name = "KMeans"
         dataset_name = "MinimalChinatown"
         row_normalise = False
-        transform_name = None
         n_clusters = -1
         resample_id = 0
         n_jobs = 1
@@ -121,12 +108,6 @@ def run_experiment(args):
             row_normalise=row_normalise,
             **kwargs,
         )
-        transform = get_data_transform_by_name(
-            transform_name,
-            row_normalise=row_normalise,
-            random_state=resample_id,
-            n_jobs=n_jobs,
-        )
         print(f"Local Run of {estimator_name} ({clusterer.__class__.__name__}).")
 
         load_and_run_clustering_experiment(
@@ -134,10 +115,10 @@ def run_experiment(args):
             results_path,
             dataset_name,
             clusterer,
+            row_normalise=row_normalise,
             n_clusters=n_clusters,
             clusterer_name=estimator_name,
             resample_id=resample_id,
-            data_transforms=transform,
             build_test_file=test_fold,
             write_attributes=write_attributes,
             att_max_shape=att_max_shape,
