@@ -1,6 +1,6 @@
 """Functions for running experiments using cross-validation."""
 
-__author__ = ["MatthewMiddlehurst"]
+__maintainer__ = ["MatthewMiddlehurst"]
 __all__ = [
     "classification_cross_validation",
     "classification_cross_validation_folds",
@@ -24,7 +24,6 @@ def classification_cross_validation(
     results_path,
     cv=None,
     fold_ids=None,
-    row_normalise=False,
     classifier_name=None,
     dataset_name="N/A",
     build_test_file=True,
@@ -108,7 +107,6 @@ def classification_cross_validation(
             y[test],
             estimator,
             results_path,
-            row_normalise=row_normalise,
             classifier_name=classifier_name,
             dataset_name=dataset_name,
             resample_id=fold,
@@ -155,7 +153,6 @@ def regression_cross_validation(
     results_path,
     cv=None,
     fold_ids=None,
-    row_normalise=False,
     regressor_name=None,
     dataset_name="",
     build_test_file=True,
@@ -229,7 +226,6 @@ def regression_cross_validation(
             y[test],
             estimator,
             results_path,
-            row_normalise=row_normalise,
             regressor_name=regressor_name,
             dataset_name=dataset_name,
             resample_id=fold,

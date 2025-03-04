@@ -1,6 +1,6 @@
 """Utility functions for repairing results."""
 
-__author__ = ["MatthewMiddlehurst"]
+__maintainer__ = ["MatthewMiddlehurst"]
 __all__ = ["fix_broken_second_line"]
 
 import os

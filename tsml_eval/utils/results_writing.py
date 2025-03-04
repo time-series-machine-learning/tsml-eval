@@ -1,6 +1,6 @@
 """Utility functions for results writing."""
 
-__author__ = ["TonyBagnall", "MatthewMiddlehurst"]
+__maintainer__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 __all__ = [
     "write_classification_results",
@@ -23,6 +23,7 @@ def write_classification_results(
     dataset_name,
     file_path,
     full_path=True,
+    first_line_classifier_name=None,
     split=None,
     resample_id=None,
     time_unit="N/A",
@@ -61,6 +62,10 @@ def write_classification_results(
         If True, results are written directly to the directory passed in file_path.
         If False, then a standard file structure using the classifier and dataset names
         is created and used to write the results file.
+    first_line_classifier_name : str or None, default=None
+        Alternative name for the classifier to be written to the file. If None, the
+        classifier_name is used. Useful if full_path is False and extra information is
+        wanted in the classifier name (i.e. and alias and class name)
     split : str or None, default=None
         Either None, 'TRAIN' or 'TEST'. Influences the result file name and first line
         of the file.
@@ -133,6 +138,7 @@ def write_classification_results(
         file_path,
         predicted_probabilities=probabilities,
         full_path=full_path,
+        first_line_estimator_name=first_line_classifier_name,
         split=split,
         resample_id=resample_id,
         time_unit=time_unit,
@@ -149,6 +155,7 @@ def write_regression_results(
     dataset_name,
     file_path,
     full_path=True,
+    first_line_regressor_name=None,
     split=None,
     resample_id=None,
     time_unit="N/A",
@@ -183,6 +190,10 @@ def write_regression_results(
         If True, results are written directly to the directory passed in file_path.
         If False, then a standard file structure using the regressor and dataset names
         is created and used to write the results file.
+    first_line_regressor_name : str or None, default=None
+        Alternative name for the regressor to be written to the file. If None, the
+        regressor_name is used. Useful if full_path is False and extra information is
+        wanted in the regressor name (i.e. and alias and class name)
     split : str or None, default=None
         Either None, 'TRAIN' or 'TEST'. Influences the result file name and first line
         of the file.
@@ -239,6 +250,7 @@ def write_regression_results(
         dataset_name,
         file_path,
         full_path=full_path,
+        first_line_estimator_name=first_line_regressor_name,
         split=split,
         resample_id=resample_id,
         time_unit=time_unit,
@@ -256,6 +268,7 @@ def write_clustering_results(
     dataset_name,
     file_path,
     full_path=True,
+    first_line_clusterer_name=None,
     split=None,
     resample_id=None,
     time_unit="N/A",
@@ -293,6 +306,10 @@ def write_clustering_results(
         If True, results are written directly to the directory passed in file_path.
         If False, then a standard file structure using the clusterer and dataset names
         is created and used to write the results file.
+    first_line_clusterer_name : str or None, default=None
+        Alternative name for the clusterer to be written to the file. If None, the
+        clusterer_name is used. Useful if full_path is False and extra information is
+        wanted in the clusterer name (i.e. and alias and class name)
     split : str or None, default=None
         Either None, 'TRAIN' or 'TEST'. Influences the result file name and first line
         of the file.
@@ -353,6 +370,7 @@ def write_clustering_results(
         file_path,
         predicted_probabilities=cluster_probabilities,
         full_path=full_path,
+        first_line_estimator_name=first_line_clusterer_name,
         split=split,
         resample_id=resample_id,
         time_unit=time_unit,
@@ -369,6 +387,7 @@ def write_forecasting_results(
     dataset_name,
     file_path,
     full_path=True,
+    first_line_forecaster_name=None,
     split=None,
     random_seed=None,
     time_unit="N/A",
@@ -400,6 +419,10 @@ def write_forecasting_results(
         If True, results are written directly to the directory passed in file_path.
         If False, then a standard file structure using the forecaster and dataset names
         is created and used to write the results file.
+    first_line_forecaster_name : str or None, default=None
+        Alternative name for the forecaster to be written to the file. If None, the
+        forecaster_name is used. Useful if full_path is False and extra information is
+        wanted in the forecaster name (i.e. and alias and class name)
     split : str or None, default=None
         Either None, 'TRAIN' or 'TEST'. Influences the result file name and first line
         of the file.
@@ -440,6 +463,7 @@ def write_forecasting_results(
         dataset_name,
         file_path,
         full_path=full_path,
+        first_line_estimator_name=first_line_forecaster_name,
         split=split,
         resample_id=random_seed,
         time_unit=time_unit,
@@ -456,6 +480,7 @@ def write_results_to_tsml_format(
     dataset_name,
     file_path,
     predicted_probabilities=None,
+    first_line_estimator_name=None,
     full_path=True,
     split=None,
     resample_id=None,
@@ -488,6 +513,10 @@ def write_results_to_tsml_format(
         If True, results are written directly to the directory passed in file_path.
         If False, then a standard file structure using the estimator and dataset names
         is created and used to write the results file.
+    first_line_estimator_name : str or None, default=None
+        Alternative name for the estimator to be written to the file. If None, the
+        estimator_name is used. Useful if full_path is False and extra information is
+        wanted in the estimator name (i.e. and alias and class name)
     split : str or None, default=None
         Either None, 'TRAIN' or 'TEST'. Influences the result file name and first line
         of the file.
@@ -535,11 +564,14 @@ def write_results_to_tsml_format(
     )
     fname = fname.lower() if split == "" else fname
 
+    if first_line_estimator_name is None:
+        first_line_estimator_name = estimator_name
+
     with open(f"{file_path}/{fname}.csv", "w") as file:
         # the first line of the output file is in the form of:
         first_line = (
             f"{dataset_name},"
-            f"{estimator_name},"
+            f"{first_line_estimator_name},"
             f"{'No split' if split == '' else split.upper()},"
             f"{'None' if resample_id is None else resample_id},"
             f"{time_unit.upper()},"
