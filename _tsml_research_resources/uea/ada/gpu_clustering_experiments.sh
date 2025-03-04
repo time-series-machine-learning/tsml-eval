@@ -69,10 +69,7 @@ combine_test_train_split="false"
 normalise_data="true"
 
 # ======================================================================================
-# ======================================================================================
-# Dont change anything under here (unless you want to change how the experiment
-# is working)
-# ======================================================================================
+# 	Experiment configuration end
 # ======================================================================================
 
 # Set to -te to generate test files
