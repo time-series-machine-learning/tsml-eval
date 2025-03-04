@@ -1,6 +1,6 @@
-# Iridis 5 Python
+# Iridis Python
 
-Installation guide for Python packages on Iridis 5 and useful slurm commands.
+Installation guide for Python packages on Iridis and useful slurm commands.
 
 The [Iridis wiki](https://sotonac.sharepoint.com/teams/HPCCommunityWiki) provides a lot of useful information and getting started guides for using Iridis.
 
@@ -157,10 +157,6 @@ For CPU experiments start with one of the following scripts:
 >regression_experiments.sh
 
 >clustering_experiments.sh
-
-These scrips can be run from the command line with the following command:
-
->sh classification_experiments.sh
 
 You may need to use `dos2unix` to convert the line endings to unix format.
 

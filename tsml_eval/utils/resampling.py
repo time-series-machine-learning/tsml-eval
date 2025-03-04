@@ -1,6 +1,6 @@
 """Utility functions fordata resampling."""
 
-__maintainer__ = ["TonyBagnall", "MatthewMiddlehurst"]
+__author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 __all__ = [
     "resample_data",
     "resample_data_indices",

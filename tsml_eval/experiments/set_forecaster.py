@@ -1,16 +1,14 @@
 """Set forecaster function."""
 
-__maintainer__ = ["MatthewMiddlehurst"]
+__author__ = ["MatthewMiddlehurst"]
 
-from aeon.forecasting import DummyForecaster, ETSForecaster
+from aeon.forecasting.naive import NaiveForecaster
 
 from tsml_eval.utils.functions import str_in_nested_list
 
-stats_forecasters = [
-    ["etsforecaster", "ets"],
-]
+# ml_forecasters = []
 other_forecasters = [
-    ["dummyforecaster", "dummy"],
+    ["naiveforecaster", "naive"],
 ]
 
 
@@ -43,19 +41,18 @@ def get_forecaster_by_name(forecaster_name, random_state=None, n_jobs=1, **kwarg
     """
     f = forecaster_name.lower()
 
-    if str_in_nested_list(stats_forecasters, f):
-        return _set_forecaster_stats(f, random_state, n_jobs, kwargs)
-    elif str_in_nested_list(other_forecasters, f):
+    # if str_in_nested_list(ml_forecasters, f):
+    #     return _set_forecaster_ml(f, random_state, n_jobs, kwargs)
+    if str_in_nested_list(other_forecasters, f):
         return _set_forecaster_other(f, random_state, n_jobs, kwargs)
     else:
-        raise ValueError(f"UNKNOWN FORECASTER: {f} in get_forecaster_by_name")
+        raise ValueError(f"UNKNOWN FORECASTER: {f} in set_forecaster")
 
 
-def _set_forecaster_stats(f, random_state, n_jobs, kwargs):
-    if f == "etsforecaster" or f == "ets":
-        return ETSForecaster(**kwargs)
+# def _set_forecaster_ml(f, random_state, n_jobs, kwargs):
+#     pass
 
 
 def _set_forecaster_other(f, random_state, n_jobs, kwargs):
-    if f == "dummyforecaster" or f == "dummy":
-        return DummyForecaster(**kwargs)
+    if f == "naiveforecaster" or f == "naive":
+        return NaiveForecaster(**kwargs)

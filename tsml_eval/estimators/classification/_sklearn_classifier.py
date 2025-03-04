@@ -1,6 +1,6 @@
 """A tsml wrapper for sklearn classifiers."""
 
-__maintainer__ = ["MatthewMiddlehurst"]
+__author__ = ["MatthewMiddlehurst"]
 __all__ = ["SklearnToTsmlClassifier"]
 
 import numpy as np

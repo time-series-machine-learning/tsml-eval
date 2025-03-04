@@ -1,6 +1,6 @@
 """Regressors used in the publication."""
 
-__maintainer__ = ["TonyBagnall", "MatthewMiddlehurst", "dguijo"]
+__author__ = ["TonyBagnall", "MatthewMiddlehurst", "dguijo"]
 
 import numpy as np
 
@@ -25,9 +25,9 @@ expansion_regressors = [
     ["rf", "randf", "randomforest", "RandomForestRegressor"],
     ["resnet", "ResNetRegressor"],
     ["rocket", "RocketRegressor"],
-    ["MultiRocketRegressor", "multirocket"],
+    ["multirocket", "multirocketregressor"],
     ["xgb", "xgboost", "xgboostregressor", "XGBRegressor"],
-    ["TimeCNNRegressor", "cnnregressor", "cnn", "timecnn"],
+    ["cnn", "CNNRegressor"],
     ["RidgeCV", "ridge"],
     ["RotationForestRegressor", "rotf", "rotationforest"],
     ["tsf", "timeseriesforestregressor"],
@@ -176,10 +176,11 @@ def _set_tser_exp_regressor(
             n_jobs=n_jobs,
             **kwargs,
         )
-    elif r == "multirocketregressor" or r == "multirocket":
-        from aeon.regression.convolution_based import MultiRocketRegressor
+    elif r == "multirocket" or r == "multirocketregressor":
+        from aeon.regression.convolution_based import RocketRegressor
 
-        return MultiRocketRegressor(
+        return RocketRegressor(
+            rocket_transform="multirocket",
             random_state=random_state,
             n_jobs=n_jobs,
             **kwargs,
@@ -194,10 +195,10 @@ def _set_tser_exp_regressor(
             random_state=random_state,
             **kwargs,
         )
-    elif r == "timecnnregressor" or r == "cnnregressor" or r == "cnn" or r == "timecnn":
-        from aeon.regression.deep_learning import TimeCNNRegressor
+    elif r == "cnn" or r == "cnnregressor":
+        from aeon.regression.deep_learning import CNNRegressor
 
-        return TimeCNNRegressor(
+        return CNNRegressor(
             random_state=random_state,
             **kwargs,
         )

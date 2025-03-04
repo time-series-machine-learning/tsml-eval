@@ -1,16 +1,23 @@
 #!/bin/bash
-# Check and edit all options before the first run!
+# CHECK before each new run:
+#   datasets (list of problems)
+#   results_dir (where to check/write results)
+#   classifiers_to_run (list of classifiers to run)
 # While reading is fine, please dont write anything to the default directories in this script
 
 # Start and end for resamples
-max_folds=5
+max_folds=30
 start_fold=1
 
-# To avoid hitting the cluster queue limit we have a higher level queue
-max_num_submitted=12
+# To avoid dumping 1000s of jobs in the queue we have a higher level queue
+max_num_submitted=100
 
 # Queue options are https://sotonac.sharepoint.com/teams/HPCCommunityWiki/SitePages/Iridis%205%20Job-submission-and-Limits-Quotas.aspx
-queue="gpu"
+queue="batch"
+
+# The partition name may not always be the same as the queue name, i.e. batch is the queue, serial is the partition
+# This is used for the script job limit queue
+queue_alias=$queue
 
 # Enter your username and email here
 username="ajb2u23"
@@ -42,11 +49,11 @@ script_file_path="$local_path/tsml-eval/tsml_eval/experiments/classification_exp
 
 # Environment name, change accordingly, for set up, see https://github.com/time-series-machine-learning/tsml-eval/blob/main/_tsml_research_resources/soton/iridis/iridis_python.md
 # Separate environments for GPU and CPU are recommended
-env_name="tsml-eval-gpu"
+env_name="tsml-eval"
 
 # Classifiers to loop over. Must be seperated by a space
 # See list of potential classifiers in set_classifier
-classifiers_to_run="CNNClassifier FCNClassifier"
+classifiers_to_run="ROCKET DrCIF"
 
 # You can add extra arguments here. See tsml_eval/utils/arguments.py parse_args
 # You will have to add any variable to the python call close to the bottom of the script
@@ -62,7 +69,10 @@ predefined_folds="false"
 normalise_data="false"
 
 # ======================================================================================
-# 	Experiment configuration end
+# ======================================================================================
+# Dont change anything under here (unless you want to change how the experiment
+# is working)
+# ======================================================================================
 # ======================================================================================
 
 # Set to -tr to generate test files
@@ -83,12 +93,12 @@ for classifier in $classifiers_to_run; do
 if ((count>=start_point)); then
 
 # This is the loop to keep from dumping everything in the queue which is maintained around max_num_submitted jobs
-num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue}" -e "PD ${queue}" | wc -l)
+num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue_alias}" -e "PD ${queue_alias}" | wc -l)
 while [ "${num_jobs}" -ge "${max_num_submitted}" ]
 do
     echo Waiting 60s, "${num_jobs}" currently submitted on ${queue}, user-defined max is ${max_num_submitted}
     sleep 60
-    num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue}" -e "PD ${queue}" | wc -l)
+    num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue_alias}" -e "PD ${queue_alias}" | wc -l)
 done
 
 mkdir -p "${out_dir}${classifier}/${dataset}/"
@@ -110,7 +120,6 @@ if [ "${array_jobs}" != "" ]; then
 
 # This creates the scrip to run the job based on the info above
 echo "#!/bin/bash
-#SBATCH --gres=gpu:1
 #SBATCH --mail-type=${mail}
 #SBATCH --mail-user=${mailto}
 #SBATCH -p ${queue}

@@ -1,11 +1,9 @@
 """Experiment runner for distance clustering publication."""
 
-__maintainer__ = ["MatthewMiddlehurst"]
+__author__ = ["MatthewMiddlehurst"]
 
 import os
 import sys
-
-from aeon.transformations.collection import Normalizer
 
 os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
@@ -74,29 +72,19 @@ def _run_experiment(args):
 
     # further default parameterisation for clusterers and distances.
     # feel free to change
-    kwargs["init"] = "random"
+    kwargs["init_algorithm"] = "random"
     kwargs["max_iter"] = 30
     kwargs["n_init"] = 10
 
-    if distance == "dtw" or distance == "ddtw":
-        distance_params = {"window": 0.2}
-    elif distance == "wdtw" or distance == "wddtw":
-        distance_params = {"g": 0.05}
-    elif distance == "lcss" or distance == "edr":
-        distance_params = {"epsilon": 0.05}
-    elif distance == "erp":
-        distance_params = {"g": 0.05}
-    elif distance == "msm":
-        distance_params = {"c": 1.0, "independent": True}
-    elif distance == "twe":
-        distance_params = {
-            "nu": 0.05,
-            "lmbda": 1.0,
-        }
-    else:
-        distance_params = {}
-        print("Unknown distance metric, using defaults")  # noqa: T001
-
+    distance_params = {
+        "window": 0.2 if distance == "dtw" or distance == "wdtw" else 1.0,
+        "epsilon": 0.05,
+        "g": 0.05,
+        "c": 1.0,
+        "nu": 0.05,
+        "lmbda": 1.0,
+        "strategy": "independent",
+    }
     kwargs["distance_params"] = distance_params
 
     cnl = clusterer.lower()
@@ -134,10 +122,10 @@ def _run_experiment(args):
                 if isinstance(clusterer, str)
                 else _clone_estimator(clusterer, resample_id)
             ),
+            row_normalise=normalise,
             n_clusters=-1,
             clusterer_name=clusterer,
             resample_id=resample_id,
-            data_transforms=Normalizer() if normalise else None,
             build_test_file=True,
             overwrite=overwrite,
         )

@@ -1,6 +1,6 @@
 """Tests for results writing functions."""
 
-__maintainer__ = ["MatthewMiddlehurst"]
+__author__ = ["MatthewMiddlehurst"]
 
 import os
 

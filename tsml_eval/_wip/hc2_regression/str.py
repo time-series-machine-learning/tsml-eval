@@ -4,7 +4,7 @@ Shapelet transform classifier pipeline that simply performs a (configurable) sha
 transform then builds (by default) a rotation forest classifier on the output.
 """
 
-__maintainer__ = ["TonyBagnall", "MatthewMiddlehurst", "DavidGuijoRubio"]
+__author__ = ["TonyBagnall", "MatthewMiddlehurst", "DavidGuijoRubio"]
 __all__ = ["ShapeletTransformRegressor"]
 
 import numpy as np

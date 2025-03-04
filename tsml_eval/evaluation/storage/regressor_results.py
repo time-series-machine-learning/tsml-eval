@@ -89,7 +89,9 @@ class RegressorResults(EstimatorResults):
     ...     "/regression/ROCKET/Predictions/Covid3Month/testResample0.csv"
     ... )
     >>> rr.calculate_statistics()
-    >>> mse = rr.mean_squared_error
+    >>> rr.mean_squared_error
+    0.0015126663111567206
+
     """
 
     def __init__(
@@ -331,7 +333,7 @@ def load_regressor_results(file_path, calculate_stats=True, verify_values=True):
                 pred_times[i] = float(line[3])
 
             if pred_descriptions is not None:
-                pred_descriptions.append(",".join(line[5:]).strip())
+                pred_descriptions.append(",".join(line[5]).strip())
 
     rr = RegressorResults(
         dataset_name=line1[0],

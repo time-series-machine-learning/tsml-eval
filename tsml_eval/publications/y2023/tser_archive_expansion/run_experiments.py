@@ -1,6 +1,6 @@
 """Experiment runner for TSER expansion publication."""
 
-__maintainer__ = ["TonyBagnall", "MatthewMiddlehurst", "dguijo"]
+__author__ = ["TonyBagnall", "MatthewMiddlehurst", "dguijo"]
 
 import os
 import sys

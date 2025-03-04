@@ -3,7 +3,7 @@
 kernel based ensemble of ROCKET classifiers.
 """
 
-__maintainer__ = ["MatthewMiddlehurst"]
+__author__ = ["MatthewMiddlehurst"]
 __all__ = ["Arsenal"]
 
 import time

@@ -1,8 +1,8 @@
 """Tests for validation utilities."""
 
-from aeon.classification.interval_based import TimeSeriesForestClassifier
 from sklearn.cluster import KMeans
 from sklearn.dummy import DummyClassifier, DummyRegressor
+from tsml.interval_based import TSFClassifier
 
 from tsml_eval.utils.estimator_validation import (
     is_sklearn_classifier,
@@ -15,7 +15,7 @@ from tsml_eval.utils.estimator_validation import (
 def test_is_sklearn_estimator():
     """Test is_sklearn_estimator."""
     assert is_sklearn_estimator(DummyClassifier())
-    assert not is_sklearn_estimator(TimeSeriesForestClassifier())
+    assert not is_sklearn_estimator(TSFClassifier())
 
 
 def test_is_sklearn_classifier():

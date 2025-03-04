@@ -1,5 +1,8 @@
 #!/bin/bash
-# Check and edit all options before the first run!
+# CHECK before each new run:
+#   datasets (list of problems)
+#   results_dir (where to check/write results)
+#   regressors_to_run (list of regressors to run)
 # While reading is fine, please dont write anything to the default directories in this script
 
 # To use GPU resources you need to be given access (gpu qos), which involves emailing hpc.admin@uea.ac.uk
@@ -66,7 +69,10 @@ predefined_folds="false"
 normalise_data="false"
 
 # ======================================================================================
-# 	Experiment configuration end
+# ======================================================================================
+# Dont change anything under here (unless you want to change how the experiment
+# is working)
+# ======================================================================================
 # ======================================================================================
 
 # Set to -tr to generate test files

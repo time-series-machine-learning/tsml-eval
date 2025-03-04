@@ -11,13 +11,12 @@ from tsml_eval.testing.testing_utils import _check_set_method, _check_set_method
 
 def test_set_bakeoff_classifier():
     """Test set_bakeoff_classifier method."""
-    classifier_list = []
     classifier_dict = {}
     all_classifier_names = []
+
     _check_set_method(
         _set_bakeoff_classifier,
         bakeoff_classifiers,
-        classifier_list,
         classifier_dict,
         all_classifier_names,
     )

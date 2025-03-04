@@ -1,20 +1,20 @@
 """Tests for clustering experiments."""
 
-__maintainer__ = ["MatthewMiddlehurst"]
+__author__ = ["MatthewMiddlehurst"]
 
 import os
 import runpy
 
 import pytest
-from aeon.utils.discovery import all_estimators
+from aeon.registry import all_estimators
 from tsml.dummy import DummyClassifier, DummyClusterer
 
 from tsml_eval.datasets._test_data._data_sizes import DATA_TEST_SIZES, DATA_TRAIN_SIZES
 from tsml_eval.experiments import (
-    _get_clusterer,
     clustering_experiments,
     get_clusterer_by_name,
     run_clustering_experiment,
+    set_clusterer,
     threaded_clustering_experiments,
 )
 from tsml_eval.experiments.tests import _CLUSTERER_RESULTS_PATH
@@ -108,10 +108,8 @@ def test_run_threaded_clustering_experiment():
         "1",
         "-nj",
         "2",
-        # also test transforms and benchmark time here
+        # also test normalisation and benchmark time here
         "--row_normalise",
-        "--data_transform_name",
-        "Padder",
         "--benchmark_time",
         "-te",
     ]
@@ -173,48 +171,25 @@ def test_run_clustering_experiment_invalid_estimator():
 
 def test_get_clusterer_by_name():
     """Test get_clusterer_by_name method."""
-    clusterer_name_lists = [
-        _get_clusterer.deep_learning_clusterers,
-        _get_clusterer.distance_based_clusterers,
-        _get_clusterer.feature_based_clusterers,
-        _get_clusterer.other_clusterers,
-        _get_clusterer.vector_clusterers,
-    ]
-    clusterer_non_default_params = [
-        "clusterer",
-        "base_clusterer",
-        "estimator",
-        "base_estimator",
+    clusterer_lists = [
+        set_clusterer.distance_based_clusterers,
+        set_clusterer.other_clusterers,
+        set_clusterer.vector_clusterers,
     ]
 
-    clusterer_list = []
     clusterer_dict = {}
     all_clusterer_names = []
-    for clusterer_name_list in clusterer_name_lists:
+
+    for clusterer_list in clusterer_lists:
         _check_set_method(
             get_clusterer_by_name,
-            clusterer_name_list,
             clusterer_list,
             clusterer_dict,
             all_clusterer_names,
         )
 
-    # Check that clusterers with parameters which are likely to be
-    # a sub-estimator are not None so n_clusters can be set
-    for clusterers in clusterer_list:
-        for c in clusterers:
-            for param_name in clusterer_non_default_params:
-                params = c.get_params()
-                if param_name in params:
-                    assert params[param_name] is not None, (
-                        f"Clusterers which have an estimator parameter i.e. "
-                        f"pipelines and deep learners must not have None as the "
-                        f"estimator. Found None for {param_name} in "
-                        f"{c.__class__.__name__}"
-                    )
-
     _check_set_method_results(
-        clusterer_dict, estimator_name="Clusterers", method_name="get_clusterer_by_name"
+        clusterer_dict, estimator_name="Clusterers", method_name="set_clusterer"
     )
 
 
@@ -227,14 +202,17 @@ def test_get_clusterer_by_name_invalid():
 def test_aeon_clusterers_available():
     """Test all aeon clusterers are available."""
     excluded = [
-        # composable/wrapper
+        # composable
         "ClustererPipeline",
-        "SklearnClustererWrapper",
         # just missing
+        "AEFCNClusterer",
+        "AEResNetClusterer",
+        "TimeSeriesKShapes",
+        "TimeSeriesKShape",
         "TimeSeriesKernelKMeans",
     ]
 
-    est = [e for e, _ in all_estimators(type_filter="clusterer")]
+    est = [e for e, _ in all_estimators(estimator_types="clusterer")]
     for e in est:
         if e in excluded:
             continue
@@ -248,7 +226,7 @@ def test_aeon_clusterers_available():
 @pytest.mark.parametrize("n_clusters", ["4", "-1"])
 @pytest.mark.parametrize(
     "clusterer",
-    ["DBSCAN", "DummyClusterer-aeon", "DummyClusterer-sklearn", "Summary"],
+    ["DBSCAN", "DummyClusterer-aeon", "DummyClusterer-sklearn"],
 )
 def test_n_clusters(n_clusters, clusterer):
     """Test n_clusters parameter."""

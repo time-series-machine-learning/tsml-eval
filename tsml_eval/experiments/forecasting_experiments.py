@@ -4,7 +4,7 @@ This file is configured for runs of the main method with command line arguments,
 single debugging runs. Results are written in a standard tsml format.
 """
 
-__maintainer__ = ["TonyBagnall", "MatthewMiddlehurst"]
+__author__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 import os
 import sys
@@ -18,10 +18,8 @@ os.environ["TF_NUM_INTRAOP_THREADS"] = "1"
 import numba
 from aeon.utils.validation._dependencies import _check_soft_dependencies
 
-from tsml_eval.experiments._get_forecaster import get_forecaster_by_name
-
-# todo replace when added back to init
-from tsml_eval.experiments.experiments import load_and_run_forecasting_experiment
+from tsml_eval.experiments import load_and_run_forecasting_experiment
+from tsml_eval.experiments.set_forecaster import get_forecaster_by_name
 from tsml_eval.experiments.tests import _FORECASTER_RESULTS_PATH
 from tsml_eval.testing.testing_utils import _TEST_DATA_PATH
 from tsml_eval.utils.arguments import parse_args
@@ -93,7 +91,7 @@ def run_experiment(args, overwrite=False):
         # If threading is required, see the threaded version of this file
         data_path = _TEST_DATA_PATH
         results_path = _FORECASTER_RESULTS_PATH
-        estimator_name = "DummyForecaster"
+        estimator_name = "NaiveForecaster"
         dataset_name = "ShampooSales"
         random_seed = 0
         write_attributes = True
