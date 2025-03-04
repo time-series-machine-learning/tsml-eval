@@ -211,6 +211,14 @@ def parse_args(args):
         "is applied (default: %(default)s).",
     )
     parser.add_argument(
+        "-dtl",
+        "--data_transform_limit",
+        action="store_true",
+        help="If set, transformations will be applied only to the training dataset, "
+        "leaving the test dataset unchanged. Default: False.",
+    )
+
+    parser.add_argument(
         "-rn",
         "--row_normalise",
         action="store_true",

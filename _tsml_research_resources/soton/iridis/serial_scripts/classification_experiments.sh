@@ -61,6 +61,10 @@ predefined_folds="false"
 # Normalise data before fit/predict
 normalise_data="false"
 
+# Data transformation options
+data_transform_name="smote"
+data_transform_limit="true"
+
 # ======================================================================================
 # 	Experiment configuration end
 # ======================================================================================
@@ -73,6 +77,12 @@ predefined_folds=$([ "${predefined_folds,,}" == "true" ] && echo "-pr" || echo "
 
 # Set to -rn to normalise data
 normalise_data=$([ "${normalise_data,,}" == "true" ] && echo "-rn" || echo "")
+
+# Set to -dtn to use data transformation name
+data_transform_name=$([ -n "${data_transform_name}" ] && echo "-dtn ${data_transform_name}" || echo "")
+
+# Set to -dtl to use data transformation limit
+data_transform_limit=$([ "${data_transform_limit,,}" == "true" ] && echo "-dtl" || echo "")
 
 # dont submit to serial directly
 queue=$([ "$queue" == "serial" ] && echo "batch" || echo "$queue")
@@ -132,7 +142,7 @@ source activate $env_name
 
 # Input args to the default classification_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/classification_experiments.py
-python -u ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_train_files} ${predefined_folds} ${normalise_data}"  > generatedFile.sub
+python -u ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_train_files} ${predefined_folds} ${normalise_data} ${data_transform_name} ${data_transform_limit}"  > generatedFile.sub
 
 echo "${count} ${classifier}/${dataset}"
 
