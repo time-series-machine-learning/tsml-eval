@@ -29,55 +29,55 @@ function usage {
 	cat <<-EOM
 	Usage: $(basename "$0") [-v] command_filename
 	  or:  $(basename "$0") [-v] command param [param]...
-	
+
 	In the first mode of operation: $(basename "$0") [-v] command_filename
-	
+
 	The <command_filename> must have one individual task per
 	line. The task can comprise of multiple bash shell commands,
 	each separated by a semi-colon (;).
-	
+
 	For example, the following shows 6 tasks:
-	
+
 	    ./my_prog my_input01 > my_output01
 	    ./my_prog my_input02 > my_output02
 	    ./my_prog my_input03 > my_output03
 	    ./my_prog my_input04 > my_output04
 	    ./my_prog my_input05 > my_output05
 	    ./my_prog my_input06 > my_output06
-	
+
 	A more complex example, showing 4 tasks which include loops:
-	
+
 	    cd sample01; for i in controls patients; do ./my_prog \$i; done
 	    cd sample02; for i in controls patients; do ./my_prog \$i; done
 	    cd sample03; for i in controls patients; do ./my_prog \$i; done
 	    cd sample04; for i in controls patients; do ./my_prog \$i; done
-	
+
 	Enabling verbose mode prints each command to stdout as it is
 	read from the command file.
-	
+
 	In the second mode of operation: $(basename "$0") [-v] command param [param]...
-	
+
 	The <command> is combined with each of the individual <param> parameters to
 	generate the list of tasks to be executed. The number of tasks will be equal
 	to the number of <param> values.
-	
+
 	The <param> values can either be a simple list (e.g. input1 input2...),
 	or a shell glob (e.g. *.inp).
-	
+
 	Note that no output redirection is performed in this mode.
-	
+
 	Limitations:
 
   * the use of MPI is not supported in the tasks. Only serial tasks
     can appear in the task lists.
-	
+
 	* it writes the list of tasks to K files, where K is the value of
 	  of the SLURM_NTASKS environment variable. The tasks are written
 	  in a simple round-robin manner over the K files. This makes no
 	  provision for how quickly any individual task might execute
 	  compared to the others, and so an equal division of labour
 	  between the SLURM_NTASKS processors is not guaranteed at all.
-	
+
 	* it makes no decisions about memory usage per task. The
 	  assumption is that the user has already calculated memory
 	  consumption, and has used a combination of "#SBATCH -n <n>"
@@ -88,17 +88,17 @@ function usage {
 	  need 4GB per task, then instead you must use "#SBATCH -n 8"
 	  and "#SBATCH -N 2" in order to spread the 8 tasks
 	  over 2 nodes.
-	
+
 	* no output redirection is performed, so any stdout/stderr will
 	  be sent to the slurm-NNNNN.out file by default. This can
 	  be changed by adding individual redirects to each task (in the
 	  first mode of operation). Care must be taken in that case so
 	  that the output files have unique names/paths.
-	
+
 	Note that this program will create a temporary directory
 	(called .taskfarm_job_\${SLURM_JOB_ID}) in which to store
 	the slurm multi-config files.
-	
+
 EOM
 }
 
@@ -372,4 +372,3 @@ then
 	echo ""
 fi
 srun --multi-prog ".taskfarm_job_${SLURM_JOB_ID}/multi.config"
-
