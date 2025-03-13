@@ -16,7 +16,7 @@ queue="batch"
 n_tasks_per_node=40
 
 # Enter your username and email here
-username="mbm1g23"
+username="ajb2u23"
 mail="NONE"
 mailto=$username"@soton.ac.uk"
 
@@ -32,7 +32,7 @@ local_path="/mainfs/home/$username/"
 # Datasets to use and directory of data files. This can either be a text file or directory of text files
 # Separate text files will not run jobs of the same dataset in the same node. This is good to keep large and small datasets separate
 data_dir="$local_path/Data/"
-datasets="$local_path/DataSetLists/ClassificationBatch/"
+dataset_list="$local_path/DataSetLists/ClassificationBatch/"
 
 # Results and output file write location. Change these to reflect your own file structure
 results_dir="$local_path/ClassificationResults/results/"
@@ -126,6 +126,7 @@ echo "Dataset list ${dataset_file}"
 
 for classifier in $classifiers_to_run; do
 
+# create a new command list for each classifier and dataset list
 # we use time for unique names
 sleep 1
 cmdCount=0
@@ -138,11 +139,12 @@ while read dataset; do
 if ((expCount>=start_point)); then
 
 # This finds the resamples to run and skips jobs which have test/train files already written to the results directory.
+# This can result in uneven sized command lists
 resamples_to_run=""
 for (( i=start_fold-1; i<max_folds; i++ ))
 do
     if [ -f "${results_dir}${classifier}/Predictions/${dataset}/testResample${i}.csv" ]; then
-        if [ "${generate_train_files}" == "true" ] && ! [ -f "${results_dir}${classifier}/Predictions/${dataset}/trainResample${i}.csv" ]; then
+        if [ "${generate_train_files}" == "-tr" ] && ! [ -f "${results_dir}${classifier}/Predictions/${dataset}/trainResample${i}.csv" ]; then
             resamples_to_run="${resamples_to_run}${i} "
         fi
     else
@@ -152,11 +154,11 @@ done
 
 for resample in $resamples_to_run; do
 
-# add to the command list if
+# submit the command list if
 if ((cmdCount>=n_tasks_per_node)); then
     submit_jobs
 
-    # This is the loop to stop you from dumping everything in the queue at once, see max_num_submitted jobs
+    # This is the loop to stop you from dumping everything in the queue at once, see max_num_submitted
     num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue}" -e "PD ${queue}" | wc -l)
     while [ "${num_jobs}" -ge "${max_num_submitted}" ]
     do
@@ -182,7 +184,7 @@ fi
 done < ${dataset_file}
 
 if ((cmdCount>0)); then
-    # final submit for this dataset list
+    # final submit for this dataset list and classifier
     submit_jobs
 fi
 

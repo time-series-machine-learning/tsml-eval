@@ -12,10 +12,6 @@ max_num_submitted=100
 # Queue options are https://sotonac.sharepoint.com/teams/HPCCommunityWiki/SitePages/Iridis%205%20Job-submission-and-Limits-Quotas.aspx
 queue="batch"
 
-# The partition name may not always be the same as the queue name, i.e. batch is the queue, serial is the partition
-# This is used for the script job limit queue
-queue_alias=$queue
-
 # Enter your username and email here
 username="arb1g19"
 mail="NONE"
@@ -66,10 +62,7 @@ predefined_folds="false"
 normalise_data="false"
 
 # ======================================================================================
-# ======================================================================================
-# Dont change anything under here (unless you want to change how the experiment
-# is working)
-# ======================================================================================
+# 	Experiment configuration end
 # ======================================================================================
 
 # Set to -tr to generate test files
@@ -80,6 +73,10 @@ predefined_folds=$([ "${predefined_folds,,}" == "true" ] && echo "-pr" || echo "
 
 # Set to -rn to normalise data
 normalise_data=$([ "${normalise_data,,}" == "true" ] && echo "-rn" || echo "")
+
+# dont submit to serial directly
+queue=$([ "$queue" == "serial" ] && echo "batch" || echo "$queue")
+queue_alias=$([ "$queue" == "batch" ] && echo "serial" || echo "$queue")
 
 count=0
 while read dataset; do

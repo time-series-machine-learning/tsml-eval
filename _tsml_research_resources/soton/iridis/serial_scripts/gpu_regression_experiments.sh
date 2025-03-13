@@ -7,14 +7,10 @@ max_folds=10
 start_fold=1
 
 # To avoid hitting the cluster queue limit we have a higher level queue
-max_num_submitted=100
+max_num_submitted=12
 
 # Queue options are https://sotonac.sharepoint.com/teams/HPCCommunityWiki/SitePages/Iridis%205%20Job-submission-and-Limits-Quotas.aspx
-queue="batch"
-
-# The partition name may not always be the same as the queue name, i.e. batch is the queue, serial is the partition
-# This is used for the script job limit queue
-queue_alias=$queue
+queue="gpu"
 
 # Enter your username and email here
 username="arb1g19"
@@ -66,10 +62,7 @@ predefined_folds="false"
 normalise_data="false"
 
 # ======================================================================================
-# ======================================================================================
-# Dont change anything under here (unless you want to change how the experiment
-# is working)
-# ======================================================================================
+# 	Experiment configuration end
 # ======================================================================================
 
 # Set to -tr to generate test files
