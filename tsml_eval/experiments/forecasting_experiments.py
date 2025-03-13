@@ -15,6 +15,9 @@ os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["TF_NUM_INTEROP_THREADS"] = "1"
 os.environ["TF_NUM_INTRAOP_THREADS"] = "1"
 
+sys.path.append(PATH HERE)
+sys.path.append(PATH HERE)
+
 import numba
 from aeon.utils.validation._dependencies import _check_soft_dependencies
 
