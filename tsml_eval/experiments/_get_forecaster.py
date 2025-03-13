@@ -2,7 +2,7 @@
 
 __maintainer__ = ["MatthewMiddlehurst"]
 
-from aeon.forecasting import DummyForecaster, ETSForecaster
+from aeon.forecasting import DummyForecaster, ETSForecaster, NaiveForecaster
 
 from tsml_eval.utils.functions import str_in_nested_list
 
@@ -11,6 +11,7 @@ stats_forecasters = [
 ]
 other_forecasters = [
     ["dummyforecaster", "dummy"],
+    ["naiveforecaster", "naive"],
 ]
 
 
@@ -59,3 +60,5 @@ def _set_forecaster_stats(f, random_state, n_jobs, kwargs):
 def _set_forecaster_other(f, random_state, n_jobs, kwargs):
     if f == "dummyforecaster" or f == "dummy":
         return DummyForecaster(**kwargs)
+    if f == "naiveforecaster" or f == "naive":
+        return NaiveForecaster(**kwargs)
