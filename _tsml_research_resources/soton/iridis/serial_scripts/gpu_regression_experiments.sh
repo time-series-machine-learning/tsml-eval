@@ -3,7 +3,7 @@
 # While reading is fine, please dont write anything to the default directories in this script
 
 # Start and end for resamples
-max_folds=30
+max_folds=10
 start_fold=1
 
 # To avoid hitting the cluster queue limit we have a higher level queue
@@ -17,7 +17,7 @@ queue="batch"
 queue_alias=$queue
 
 # Enter your username and email here
-username="ajb2u23"
+username="arb1g19"
 mail="NONE"
 mailto="$username@soton.ac.uk"
 
@@ -31,11 +31,11 @@ max_time="60:00:00"
 start_point=1
 
 # Put your home directory here
-local_path="/mainfs/home/$username/"
+local_path="/mainfs/ECShome/$username/"
 
 # Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
-data_dir="$local_path/Data/"
-datasets="$local_path/DataSetLists/Regression.txt"
+data_dir="$local_path/Data/windowed_series"
+datasets="$local_path/Data/windowed_series.txt"
 
 # Results and output file write location. Change these to reflect your own file structure
 results_dir="$local_path/RegressionResults/results/"
@@ -46,11 +46,11 @@ script_file_path="$local_path/tsml-eval/tsml_eval/experiments/regression_experim
 
 # Environment name, change accordingly, for set up, see https://github.com/time-series-machine-learning/tsml-eval/blob/main/_tsml_research_resources/soton/iridis/iridis_python.md
 # Separate environments for GPU and CPU are recommended
-env_name="tsml-eval-gpu"
+env_name="regression_experiments"
 
 # Regressors to loop over. Must be seperated by a space
 # See list of potential regressors in set_regressor
-regressors_to_run="RocketRegressor TimeSeriesForestRegressor"
+regressors_to_run="InceptionTimeRegressor IndividualInceptionRegressor"
 
 # You can add extra arguments here. See tsml_eval/utils/arguments.py parse_args
 # You will have to add any variable to the python call close to the bottom of the script
