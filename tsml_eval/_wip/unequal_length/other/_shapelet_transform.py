@@ -181,7 +181,7 @@ class RandomShapeletTransform(BaseCollectionTransformer):
         self.n_classes_ = 0
         self.n_cases_ = 0
         self.n_channels_ = 0
-        self.min_n_timepoints_ = 0
+        self.first_n_timepoints_ = 0
         self.classes_ = []
         self.shapelets = []
 
@@ -223,14 +223,20 @@ class RandomShapeletTransform(BaseCollectionTransformer):
 
         self.n_cases_ = len(X)
         self.n_channels_ = X[0].shape[0]
-        self.min_n_timepoints_ = min([x.shape[1] for x in X])
+        self.first_n_timepoints_ = X[0].shape[1]
 
         if self.max_shapelets is None:
             self._max_shapelets = min(10 * self.n_cases_, 1000)
         if self._max_shapelets < self.n_classes_:
             self._max_shapelets = self.n_classes_
+        self._max_shapelet_length = self.max_shapelet_length
         if self.max_shapelet_length is None:
-            self._max_shapelet_length = self.min_n_timepoints_
+            self._max_shapelet_length = self.first_n_timepoints_
+
+        minl = min([x.shape[1] for x in X])
+        self._min_shapelet_length = self.min_shapelet_length
+        if minl < self.min_shapelet_length:
+            self._min_shapelet_length = minl
 
         time_limit = self.time_limit_in_minutes * 60
         start_time = time.time()
@@ -413,11 +419,14 @@ class RandomShapeletTransform(BaseCollectionTransformer):
             else -1
         )
 
+        minl = min(X[inst_idx].shape[1], self._max_shapelet_length)
         length = (
-            rng.randint(0, self._max_shapelet_length - self.min_shapelet_length)
-            + self.min_shapelet_length
+            rng.randint(0, minl - self._min_shapelet_length)
+            + self._min_shapelet_length
+            if minl - self._min_shapelet_length > 0
+            else minl
         )
-        position = rng.randint(0, self.min_n_timepoints_ - length)
+        position = rng.randint(0, X[inst_idx].shape[1] - length) if X[inst_idx].shape[1] - length > 0 else 0
         channel = rng.randint(0, self.n_channels_)
 
         shapelet = z_normalise_series(
@@ -561,10 +570,12 @@ class RandomShapeletTransform(BaseCollectionTransformer):
 
 @njit(fastmath=True, cache=True)
 def _online_shapelet_distance(series, shapelet, sorted_indicies, position, length):
-    if len(series) < length:
+    if len(series) < len(shapelet):
         return np.nan
+    if position + length > len(series):
+        position = int((len(series) - length)/2)
 
-    subseq = series[position : position + length]
+    subseq = series[position: position + length]
 
     sum = 0.0
     sum2 = 0.0

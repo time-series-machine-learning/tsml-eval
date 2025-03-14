@@ -77,8 +77,6 @@ predefined_folds=$([ "${predefined_folds,,}" == "true" ] && echo "-pr" || echo "
 # Set to -rn to normalise data
 normalise_data=$([ "${normalise_data,,}" == "true" ] && echo "-rn" || echo "")
 
-mkdir -p "${out_dir}/"
-
 # This creates the submission file to run and does clean up
 submit_jobs () {
 
@@ -88,8 +86,8 @@ echo "#!/bin/bash
 #SBATCH --job-name=batch-${dt}
 #SBATCH -p ${queue}
 #SBATCH -t ${max_time}
-#SBATCH -o ${out_dir}/%A-${dt}.out
-#SBATCH -e ${out_dir}/%A-${dt}.err
+#SBATCH -o ${out_dir}/${classifier}/%A-${dt}.out
+#SBATCH -e ${out_dir}/${classifier}/%A-${dt}.err
 #SBATCH --nodes=1
 #SBATCH --ntasks=${cmdCount}
 
@@ -98,7 +96,7 @@ echo "#!/bin/bash
 module load anaconda/py3.10
 source activate $env_name
 
-staskfarm ${out_dir}/generatedCommandList-${dt}.txt" > generatedSubmissionFile-${dt}.sub
+staskfarm ${out_dir}/${classifier}/generatedCommandList-${dt}.txt" > generatedSubmissionFile-${dt}.sub
 
 echo "At experiment ${expCount}, ${totalCount} jobs submitted total"
 
@@ -125,6 +123,8 @@ for dataset_file in $dataset_list; do
 echo "Dataset list ${dataset_file}"
 
 for classifier in $classifiers_to_run; do
+
+mkdir -p "${out_dir}/${classifier}/"
 
 # create a new command list for each classifier and dataset list
 # we use time for unique names
@@ -174,7 +174,7 @@ fi
 
 # Input args to the default classification_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/classification_experiments.py
-echo "python -u ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} ${resample} ${generate_train_files} ${predefined_folds} ${normalise_data}" >> ${out_dir}/generatedCommandList-${dt}.txt
+echo "python -u ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} ${resample} ${generate_train_files} ${predefined_folds} ${normalise_data}" >> ${out_dir}/${classifier}/generatedCommandList-${dt}.txt
 
 ((cmdCount++))
 ((totalCount++))
