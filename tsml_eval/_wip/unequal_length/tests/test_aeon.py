@@ -3,6 +3,7 @@ from aeon.testing.estimator_checking import parametrize_with_checks
 from tsml_eval._wip.unequal_length._arsenal import Arsenal
 from tsml_eval._wip.unequal_length._arsenal2 import Arsenal as Arsenal2
 from tsml_eval._wip.unequal_length._arsenal3 import Arsenal as Arsenal3
+from tsml_eval._wip.unequal_length._arsenal3 import Arsenal as Arsenal4
 from tsml_eval._wip.unequal_length._drcif import DrCIFClassifier
 from tsml_eval._wip.unequal_length._drcif2 import DrCIFClassifier as DrCIFClassifier2
 from tsml_eval._wip.unequal_length._drcif3 import DrCIFClassifier as DrCIFClassifier3
@@ -10,7 +11,10 @@ from tsml_eval._wip.unequal_length._drcif4 import DrCIFClassifier as DrCIFClassi
 from tsml_eval._wip.unequal_length._drcif5 import DrCIFClassifier as DrCIFClassifier5
 from tsml_eval._wip.unequal_length._drcif6 import DrCIFClassifier as DrCIFClassifier6
 from tsml_eval._wip.unequal_length._drcif7 import DrCIFClassifier as DrCIFClassifier7
+from tsml_eval._wip.unequal_length._drcif7 import DrCIFClassifier as DrCIFClassifier8
+from tsml_eval._wip.unequal_length._fresh_prince import FreshPRINCEClassifier
 from tsml_eval._wip.unequal_length._pad import Padder
+from tsml_eval._wip.unequal_length._resize import Resizer
 from tsml_eval._wip.unequal_length._rocket import RocketClassifier
 from tsml_eval._wip.unequal_length._stc import ShapeletTransformClassifier
 from tsml_eval._wip.unequal_length._stc2 import ShapeletTransformClassifier as ShapeletTransformClassifier2
@@ -23,9 +27,13 @@ from tsml_eval._wip.unequal_length._stc7 import ShapeletTransformClassifier as S
 from tsml_eval._wip.unequal_length._tde import TemporalDictionaryEnsemble
 from tsml_eval._wip.unequal_length._tde2 import TemporalDictionaryEnsemble as TemporalDictionaryEnsemble2
 from tsml_eval._wip.unequal_length._tde3 import TemporalDictionaryEnsemble as TemporalDictionaryEnsemble3
-from tsml_eval._wip.unequal_length.truncate import Truncator
+from tsml_eval._wip.unequal_length._tde4 import TemporalDictionaryEnsemble as TemporalDictionaryEnsemble4
+from tsml_eval._wip.unequal_length._tde5 import TemporalDictionaryEnsemble as TemporalDictionaryEnsemble5
+from tsml_eval._wip.unequal_length._tde6 import TemporalDictionaryEnsemble as TemporalDictionaryEnsemble6
+from tsml_eval._wip.unequal_length._tde7 import TemporalDictionaryEnsemble as TemporalDictionaryEnsemble7
+from tsml_eval._wip.unequal_length._truncate import Truncator
 
 
-@parametrize_with_checks([Arsenal, Arsenal2, Arsenal3, ShapeletTransformClassifier, ShapeletTransformClassifier2, ShapeletTransformClassifier3, ShapeletTransformClassifier4, ShapeletTransformClassifier5, ShapeletTransformClassifier6, ShapeletTransformClassifier7, ShapeletTransformClassifier8, RocketClassifier, TemporalDictionaryEnsemble, TemporalDictionaryEnsemble2, TemporalDictionaryEnsemble3, DrCIFClassifier, DrCIFClassifier2, DrCIFClassifier3, DrCIFClassifier4, DrCIFClassifier5, DrCIFClassifier6, DrCIFClassifier7, Padder, Truncator])
+@parametrize_with_checks([Arsenal, Arsenal2, Arsenal3, Arsenal4, ShapeletTransformClassifier, ShapeletTransformClassifier2, ShapeletTransformClassifier3, ShapeletTransformClassifier4, ShapeletTransformClassifier5, ShapeletTransformClassifier6, ShapeletTransformClassifier7, ShapeletTransformClassifier8, RocketClassifier, FreshPRINCEClassifier, TemporalDictionaryEnsemble, TemporalDictionaryEnsemble2, TemporalDictionaryEnsemble3, TemporalDictionaryEnsemble4, TemporalDictionaryEnsemble5, TemporalDictionaryEnsemble6, TemporalDictionaryEnsemble7, DrCIFClassifier, DrCIFClassifier2, DrCIFClassifier3, DrCIFClassifier4, DrCIFClassifier5, DrCIFClassifier6, DrCIFClassifier7, DrCIFClassifier8, Padder, Truncator, Resizer])
 def test_aeon_estimator(check):
     check()

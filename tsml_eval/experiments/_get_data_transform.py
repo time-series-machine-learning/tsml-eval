@@ -11,9 +11,11 @@ transformers = [
     ["padder", "zero-padder"],
     "mean-padder",
     "zero-noise-padder",
+    "zero-noise-padder-min",
     "mean-noise-padder",
     ["truncator", "truncate"],
     "truncate-max",
+    "resizer",
 ]
 
 
@@ -82,15 +84,28 @@ def _set_transformer(t, random_state, n_jobs):
         from tsml_eval._wip.unequal_length._pad import Padder
 
         return Padder(add_noise=0.001, random_state=random_state)
+    elif t == "zero-noise-padder-min":
+        from tsml_eval._wip.unequal_length._pad import Padder
+
+        return Padder(
+            pad_length="min",
+            add_noise=0.001,
+            error_on_long=False,
+            random_state=random_state,
+        )
     elif t == "mean-noise-padder":
         from tsml_eval._wip.unequal_length._pad import Padder
 
         return Padder(fill_value="mean", add_noise=0.001, random_state=random_state)
     elif t == "truncator" or t == "truncate":
-        from aeon.transformations.collection import Truncator
+        from tsml_eval._wip.unequal_length._truncate import Truncator
 
         return Truncator()
     elif t == "truncate-max":
         from tsml_eval._wip.unequal_length._truncate import Truncator
 
         return Truncator(truncated_length="max", error_on_short=False)
+    elif t == "resizer":
+        from tsml_eval._wip.unequal_length._resize import Resizer
+
+        return Resizer()

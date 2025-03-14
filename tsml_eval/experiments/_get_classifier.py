@@ -13,6 +13,7 @@ convolution_based_classifiers = [
     "arsenal-unequal1",
     "arsenal-unequal2",
     "arsenal-unequal3",
+    "arsenal-unequal4",
     ["miniarsenal", "mini-arsenal"],
     ["multiarsenal", "multi-arsenal"],
     ["hydraclassifier", "hydra"],
@@ -40,6 +41,10 @@ dictionary_based_classifiers = [
     "tde-unequal1",
     "tde-unequal2",
     "tde-unequal3",
+    "tde-unequal4",
+    "tde-unequal5",
+    "tde-unequal6",
+    "tde-unequal7",
     "individualtde",
     "weasel",
     "weasel-logistic",
@@ -67,7 +72,9 @@ feature_based_classifiers = [
     ["summaryclassifier", "summary"],
     "catch22-500",
     ["catch22classifier", "catch22"],
+    "catch22-unequal",
     ["freshprinceclassifier", "freshprince"],
+    "freshprince-unequal",
     "freshprince-500",
     "tsfresh-nofs",
     ["tsfreshclassifier", "tsfresh"],
@@ -98,6 +105,7 @@ interval_based_classifiers = [
     "drcif-unequal5",
     "drcif-unequal6",
     "drcif-unequal7",
+    "drcif-unequal8",
     "summary-intervals",
     ["randomintervals-500", "catch22-intervals-500"],
     ["randomintervalclassifier", "randomintervals", "catch22-intervals"],
@@ -281,6 +289,15 @@ def _set_classifier_convolution_based(
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
+    elif c == "arsenal-unequal4":
+        from tsml_eval._wip.unequal_length._arsenal4 import Arsenal
+
+        return Arsenal(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
     elif c == "miniarsenal" or c == "mini-arsenal":
         from aeon.classification.convolution_based import Arsenal
 
@@ -437,6 +454,42 @@ def _set_classifier_dictionary_based(
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
+    elif c == "tde-unequal4":
+        from tsml_eval._wip.unequal_length._tde4 import TemporalDictionaryEnsemble
+
+        return TemporalDictionaryEnsemble(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "tde-unequal5":
+        from tsml_eval._wip.unequal_length._tde5 import TemporalDictionaryEnsemble
+
+        return TemporalDictionaryEnsemble(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "tde-unequal6":
+        from tsml_eval._wip.unequal_length._tde6 import TemporalDictionaryEnsemble
+
+        return TemporalDictionaryEnsemble(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "tde-unequal7":
+        from tsml_eval._wip.unequal_length._tde7 import TemporalDictionaryEnsemble
+
+        return TemporalDictionaryEnsemble(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
     elif c == "individualtde":
         from aeon.classification.dictionary_based import IndividualTDE
 
@@ -582,8 +635,16 @@ def _set_classifier_feature_based(
         from aeon.classification.feature_based import Catch22Classifier
 
         return Catch22Classifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "catch22-unequal":
+        from tsml_eval._wip.unequal_length._catch22 import Catch22Classifier
+
+        return Catch22Classifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "freshprinceclassifier" or c == "freshprince":
         from aeon.classification.feature_based import FreshPRINCEClassifier
+
+        return FreshPRINCEClassifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "freshprince-unequal":
+        from tsml_eval._wip.unequal_length._fresh_prince import FreshPRINCEClassifier
 
         return FreshPRINCEClassifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "freshprince-500":
@@ -803,6 +864,16 @@ def _set_classifier_interval_based(
         )
     elif c == "drcif-unequal7":
         from tsml_eval._wip.unequal_length._drcif7 import DrCIFClassifier
+
+        return DrCIFClassifier(
+            n_estimators=500,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "drcif-unequal8":
+        from tsml_eval._wip.unequal_length._drcif8 import DrCIFClassifier
 
         return DrCIFClassifier(
             n_estimators=500,

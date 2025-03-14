@@ -986,7 +986,7 @@ class SFA(BaseCollectionTransformer):
         num_quadrants = pow(2, level)
         quadrant = start + int(
             (window_ind + int(window_size / 2)) / int(n_timepoints / num_quadrants)
-        )
+        ) if int(n_timepoints / num_quadrants) > 0 else 0
         return (word, quadrant), num_quadrants
 
     @staticmethod

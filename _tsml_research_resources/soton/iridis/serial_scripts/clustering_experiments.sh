@@ -133,8 +133,8 @@ echo "#!/bin/bash
 #SBATCH --job-name=${clusterer}${dataset}
 #SBATCH --array=${array_jobs}
 #SBATCH --mem=${max_memory}M
-#SBATCH -o ${out_dir}${clusterer}/${dataset}/%A-%a.out
-#SBATCH -e ${out_dir}${clusterer}/${dataset}/%A-%a.err
+#SBATCH -o ${out_dir}/${clusterer}/${dataset}/%A-%a.out
+#SBATCH -e ${out_dir}/${clusterer}/${dataset}/%A-%a.err
 #SBATCH --nodes=1
 
 . /etc/profile

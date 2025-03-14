@@ -253,6 +253,11 @@ class SFA(BaseCollectionTransformer):
             )
         X = [x.squeeze(0) for x in X]
 
+        for i, x in enumerate(X):
+            if x.shape[0] < self.window_size:
+                pad = np.zeros(self.window_size - x.shape[0])
+                X[i] = np.concatenate((x, pad), axis=0)
+
         if self.levels > 1:
             quadrants = 0
             for i in range(self.levels):
@@ -279,6 +284,11 @@ class SFA(BaseCollectionTransformer):
         List of dictionaries containing SFA words
         """
         X = [x.squeeze(0) for x in X]
+
+        for i, x in enumerate(X):
+            if x.shape[0] < self.window_size:
+                pad = np.zeros(self.window_size - x.shape[0])
+                X[i] = np.concatenate((x, pad), axis=0)
 
         # with warnings.catch_warnings():
         # warnings.simplefilter("ignore", category=NumbaTypeSafetyWarning)
@@ -986,7 +996,7 @@ class SFA(BaseCollectionTransformer):
         num_quadrants = pow(2, level)
         quadrant = start + int(
             (window_ind + int(window_size / 2)) / int(n_timepoints / num_quadrants)
-        ) if int(n_timepoints / num_quadrants) > 0 else 0
+        )
         return (word, quadrant), num_quadrants
 
     @staticmethod

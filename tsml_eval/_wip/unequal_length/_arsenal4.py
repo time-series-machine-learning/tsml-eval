@@ -20,7 +20,7 @@ from aeon.base._base import _clone_estimator
 from aeon.classification.base import BaseClassifier
 
 
-from tsml_eval._wip.unequal_length.other._rocket2 import Rocket
+from tsml_eval._wip.unequal_length.other._rocket4 import Rocket
 
 
 class Arsenal(BaseClassifier):
