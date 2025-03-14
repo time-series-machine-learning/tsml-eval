@@ -188,7 +188,7 @@ class SFA(BaseCollectionTransformer):
         self.random_state = random_state
 
         self.n_cases = 0
-        self.n_timepoints = 0
+        self.min_n_timepoints = 0
         self.letter_bits = 0
         self.letter_max = 0
         self.word_bits = 0
@@ -262,7 +262,7 @@ class SFA(BaseCollectionTransformer):
             self.level_max = pow(2, self.level_bits) - 1
 
         self.n_cases = len(X)
-        self.n_timepoints = min([x.shape[0] for x in X])
+        self.min_n_timepoints = min([x.shape[0] for x in X])
         self.breakpoints = self._binning(X, y)
 
         return self
@@ -482,7 +482,7 @@ class SFA(BaseCollectionTransformer):
         )
 
     def _binning(self, X, y=None):
-        num_windows_per_inst = math.ceil(self.n_timepoints / self.window_size)
+        num_windows_per_inst = math.ceil(self.min_n_timepoints / self.window_size)
         dft = np.array(
             [
                 self._binning_dft(X[i], num_windows_per_inst)
@@ -539,7 +539,7 @@ class SFA(BaseCollectionTransformer):
         return breakpoints
 
     def _mcb(self, dft):
-        num_windows_per_inst = math.ceil(self.n_timepoints / self.window_size)
+        num_windows_per_inst = math.ceil(self.min_n_timepoints / self.window_size)
         total_num_windows = int(self.n_cases * num_windows_per_inst)
         breakpoints = np.zeros((self.word_length, self.alphabet_size))
 
@@ -617,8 +617,8 @@ class SFA(BaseCollectionTransformer):
                 dtype=np.int_,
             ),
         )
-        start = self.n_timepoints - self.window_size
-        split[-1] = series[start : self.n_timepoints]
+        start = self.min_n_timepoints - self.window_size
+        split[-1] = series[start : self.min_n_timepoints]
 
         result = np.zeros((len(split), self.dft_length), dtype=np.float64)
 
@@ -935,7 +935,7 @@ class SFA(BaseCollectionTransformer):
         for i in range(self.levels):
             if self._typed_dict:
                 new_word, num_quadrants = SFA._add_level_typed(
-                    word, start, i, window_ind, self.window_size, self.n_timepoints
+                    word, start, i, window_ind, self.window_size, self.min_n_timepoints
                 )
             else:
                 new_word, num_quadrants = (
@@ -945,7 +945,7 @@ class SFA(BaseCollectionTransformer):
                         i,
                         window_ind,
                         self.window_size,
-                        self.n_timepoints,
+                        self.min_n_timepoints,
                         self.level_bits,
                     )
                     if self.word_bits + self.level_bits <= 64
@@ -976,7 +976,7 @@ class SFA(BaseCollectionTransformer):
         num_quadrants = pow(2, level)
         quadrant = start + int(
             (window_ind + int(self.window_size / 2))
-            / int(self.n_timepoints / num_quadrants)
+            / int(self.min_n_timepoints / num_quadrants)
         )
         return (word << self.level_bits) | quadrant, num_quadrants
 
@@ -986,7 +986,7 @@ class SFA(BaseCollectionTransformer):
         num_quadrants = pow(2, level)
         quadrant = start + int(
             (window_ind + int(window_size / 2)) / int(n_timepoints / num_quadrants)
-        )
+        ) if int(n_timepoints / num_quadrants) > 0 else 0
         return (word, quadrant), num_quadrants
 
     @staticmethod
