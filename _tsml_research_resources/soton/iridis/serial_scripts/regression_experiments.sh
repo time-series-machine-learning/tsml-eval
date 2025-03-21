@@ -121,8 +121,8 @@ echo "#!/bin/bash
 #SBATCH --job-name=${regressor}${dataset}
 #SBATCH --array=${array_jobs}
 #SBATCH --mem=${max_memory}M
-#SBATCH -o ${out_dir}${regressor}/${dataset}/%A-%a.out
-#SBATCH -e ${out_dir}${regressor}/${dataset}/%A-%a.err
+#SBATCH -o ${out_dir}/${regressor}/${dataset}/%A-%a.out
+#SBATCH -e ${out_dir}/${regressor}/${dataset}/%A-%a.err
 #SBATCH --nodes=1
 
 . /etc/profile

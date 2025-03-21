@@ -37,7 +37,7 @@ def transform_X(X, indices, new_sizes, func, rng):
 
 def create_unequal_ucr():
     for dataset in univariate_equal_length:
-        print(dataset + "\n")
+        print(dataset)
 
         X_train, y_train = load_from_ts_file(
             f"C:/Users/mattm/Documents/Work/Datasets/UnivariateTS/{dataset}/{dataset}_TRAIN.ts",

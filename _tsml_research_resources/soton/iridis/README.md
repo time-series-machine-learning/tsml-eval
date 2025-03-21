@@ -6,3 +6,6 @@ batch_scripts:
     More complex scripts which submit multiple experiments in a single job. This
     allows a much larger number of jobs for experiments and allows using the
     batch queues, but requires more setup to work efficiently.
+thread_scripts:
+    Similar to serial_scripts but for multi-threaded jobs.
+```

@@ -9,9 +9,12 @@ from aeon.datasets import (
     load_plaid,
     load_unit_test,
 )
+from aeon.testing.data_generation import make_example_3d_numpy_list
+from aeon.testing.utils.deep_equals import deep_equals
 from numpy.ma.testutils import assert_array_equal
 
 from tsml_eval._wip.unequal_length._pad import Padder
+from tsml_eval._wip.unequal_length._truncate import _get_min_length
 
 
 @pytest.mark.parametrize(
@@ -79,6 +82,26 @@ def test_padding_fill_unequal_length():
     X_padded = padding_transformer.fit_transform(X)
     assert isinstance(X_padded, np.ndarray)
     assert X_padded.shape == (len(X), X[0].shape[0], 120)
+
+
+def test_padding_min():
+    """Test Truncator handles unequal length data correctly."""
+    X, _ = make_example_3d_numpy_list()
+    X2, _ = make_example_3d_numpy_list(min_n_timepoints=6, max_n_timepoints=16)
+    min_length = _get_min_length(X)
+
+    padder = Padder(pad_length="min", error_on_long=False)
+    padder.fit(X)
+    Xt = padder.transform(X2)
+
+    assert isinstance(Xt, list)
+    assert len(Xt) == len(X2)
+    assert len(Xt[0].shape) == 2 and Xt[0].shape[0] == 1
+    assert all(Xt[i].shape[1] == min_length if X2[i].shape[1] < min_length else Xt[i].shape[1] == X2[i].shape[1] for i in range(len(Xt)))
+
+    X3, _ = make_example_3d_numpy_list(min_n_timepoints=13, max_n_timepoints=17)
+    Xt2 = padder.transform(X3)
+    assert deep_equals(Xt2, X3)
 
 
 def test_padding_fill_too_short_pad_value():

@@ -112,6 +112,8 @@ def test_run_threaded_classification_experiment():
         # also test transforms and benchmark time here
         "--row_normalise",
         "--data_transform_name",
+        "Truncate-max",
+        "--data_transform_name",
         "Padder",
         "--benchmark_time",
     ]

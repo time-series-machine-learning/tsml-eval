@@ -1327,11 +1327,14 @@ def _figures_for_statistic(
 
     df = pd.DataFrame(scores)
     df.columns = estimators
-    mcm = create_multi_comparison_matrix(df)
-    mcm.savefig(
-        f"{save_path}/{statistic_name}/figures/"
-        f"{eval_name}_{statistic_name.lower()}_mcm.pdf",
-        bbox_inches="tight",
+    mcm = create_multi_comparison_matrix(
+        df,
+        output_dir=f"{save_path}/{statistic_name}/figures/",
+        pdf_savename=f"{eval_name}_{statistic_name.lower()}_mcm",
+        show_symetry=True,
+        order_win_tie_loss="higher" if higher_better else "lower",
+        order_better="decreasing" if higher_better else "increasing",
+        used_statistic=statistic_name,
     )
     pickle.dump(
         mcm,
@@ -1359,6 +1362,8 @@ def _figures_for_statistic(
                 est2,
                 metric=statistic_name.upper(),
                 lower_better=not higher_better,
+                figsize=(8, 8),
+                statistic_tests=False,
             )
             scatter.savefig(
                 f"{save_path}/{statistic_name}/figures/scatters/{est1}/"
