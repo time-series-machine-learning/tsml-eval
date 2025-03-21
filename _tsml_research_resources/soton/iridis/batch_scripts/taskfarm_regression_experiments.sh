@@ -9,8 +9,8 @@ start_fold=1
 # To avoid hitting the cluster queue limit we have a higher level queue
 max_num_submitted=900
 
-gpu_job="true"
-iridis_version="X"
+gpu_job="false"
+iridis_version="5"
 
 # Queue options are https://sotonac.sharepoint.com/teams/HPCCommunityWiki/SitePages/Iridis%205%20Job-submission-and-Limits-Quotas.aspx
 if [ "${gpu_job}" == "true" ]; then
@@ -24,7 +24,7 @@ else
 fi
 
 # The number of tasks/threads to use in each job. 40 is the number of cores on batch nodes
-n_tasks_per_node=1
+n_tasks_per_node=40
 
 # Enter your username and email here
 username="arb1g19"
@@ -46,7 +46,7 @@ fi
 
 # Datasets to use and directory of data files. This can either be a text file or directory of text files
 # Separate text files will not run jobs of the same dataset in the same node. This is good to keep large and small datasets separate
-data_dir="$local_path/Data/windowed_series"
+data_dir="$local_path/Data/forecasting"
 dataset_list="$local_path/Data/windowed_series.txt"
 
 # Results and output file write location. Change these to reflect your own file structure
@@ -54,7 +54,7 @@ results_dir="$local_path/RegressionResults/results/"
 out_dir="$local_path/RegressionResults/output/"
 
 # The python script we are running
-script_file_path="$local_path/tsml-eval/tsml_eval/experiments/regression_experiments.py"
+script_file_path="$local_path/tsml-eval/tsml_eval/experiments/forecasting_experiments.py"
 
 if [ "${iridis_version}" == "5" ]; then
     taskfarm_file_path="staskfarm"
@@ -63,12 +63,12 @@ else
 fi
 
 # Environment name, change accordingly, for set up, see https://github.com/time-series-machine-learning/tsml-eval/blob/main/_tsml_research_resources/soton/iridis/iridis_python.md
-# Separate environments for GPU and CPU are recommended
-env_name="regress_gpu"
+# Separate environments for GPU and CPU are recommended #regress_gpu regression_experiments
+env_name="regression_experiments"
 
 # Regressors to loop over. Must be seperated by a space. Different regressors will not run in the same node
 # See list of potential regressors in set_regressor  InceptionTimeRegressor
-regressors_to_run="IndividualInceptionRegressor" # RocketRegressor MultiRocketRegressor ResNetRegressor fpcregressor fpcr-b-spline TimeCNNRegressor FCNRegressor 1nn-ed 1nn-dtw 5nn-ed 5nn-dtw FreshPRINCERegressor TimeSeriesForestRegressor DrCIFRegressor Ridge SVR RandomForestRegressor RotationForestRegressor xgboost
+regressors_to_run="ETSForecaster, AutoETSForecaster, SktimeETS, StatsForecastETS" # RocketRegressor MultiRocketRegressor ResNetRegressor fpcregressor fpcr-b-spline TimeCNNRegressor FCNRegressor 1nn-ed 1nn-dtw 5nn-ed 5nn-dtw FreshPRINCERegressor TimeSeriesForestRegressor DrCIFRegressor Ridge SVR RandomForestRegressor RotationForestRegressor xgboost
 
 # You can add extra arguments here. See tsml_eval/utils/arguments.py parse_args
 # You will have to add any variable to the python call close to the bottom of the script

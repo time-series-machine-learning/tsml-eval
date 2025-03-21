@@ -2,12 +2,17 @@
 
 __maintainer__ = ["MatthewMiddlehurst"]
 
-from aeon.forecasting import DummyForecaster, ETSForecaster, NaiveForecaster
+from aeon.forecasting import DummyForecaster, ETSForecaster, NaiveForecaster, AutoETSForecaster
+from aeon.forecasting._statsforecast_autoets import StatsForecastAutoETSForecaster
+from aeon.forecasting._sktime_autoets import SktimeAutoETSForecaster
 
 from tsml_eval.utils.functions import str_in_nested_list
 
 stats_forecasters = [
     ["etsforecaster", "ets"],
+    ["autoetsforecaster", "autoets"],
+    "sktimeets",
+    "statsforecastets",
 ]
 other_forecasters = [
     ["dummyforecaster", "dummy"],
@@ -55,6 +60,13 @@ def get_forecaster_by_name(forecaster_name, random_state=None, n_jobs=1, **kwarg
 def _set_forecaster_stats(f, random_state, n_jobs, kwargs):
     if f == "etsforecaster" or f == "ets":
         return ETSForecaster(**kwargs)
+    if f == "autoetsforecaster" or f == "autoets":
+        return AutoETSForecaster(**kwargs)
+    if f == "sktimeets":
+        from sktime.forecasting.ets import AutoETS as sktime_AutoETS
+        return SktimeAutoETSForecaster(**kwargs)
+    if f == "statsforecastets":
+        return StatsForecastAutoETSForecaster(**kwargs)
 
 
 def _set_forecaster_other(f, random_state, n_jobs, kwargs):
