@@ -68,8 +68,6 @@ def _set_forecaster_stats(f, random_state, n_jobs, kwargs):
     if f == "autoetsforecaster" or f == "autoets":
         return AutoETSForecaster(**kwargs)
     if f == "sktimeets":
-        from sktime.forecasting.ets import AutoETS as sktime_AutoETS
-
         return SktimeAutoETSForecaster(**kwargs)
     if f == "statsforecastets":
         return StatsForecastAutoETSForecaster(**kwargs)
