@@ -60,6 +60,7 @@ feature_based_classifiers = [
     ["summaryclassifier", "summary"],
     "catch22-500",
     ["catch22classifier", "catch22"],
+    "catch22-outlier",
     ["freshprinceclassifier", "freshprince"],
     "freshprince-500",
     "tsfresh-nofs",
@@ -494,6 +495,7 @@ def _set_classifier_feature_based(
 
         return Catch22Classifier(
             estimator=RandomForestClassifier(n_estimators=500),
+            outlier_norm=False,
             random_state=random_state,
             n_jobs=n_jobs,
             **kwargs,
@@ -501,7 +503,15 @@ def _set_classifier_feature_based(
     elif c == "catch22classifier" or c == "catch22":
         from aeon.classification.feature_based import Catch22Classifier
 
-        return Catch22Classifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
+        return Catch22Classifier(
+            outlier_norm=False, random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
+    elif c == "catch22-outlier":
+        from aeon.classification.feature_based import Catch22Classifier
+
+        return Catch22Classifier(
+            outlier_norm=True, random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
     elif c == "freshprinceclassifier" or c == "freshprince":
         from aeon.classification.feature_based import FreshPRINCEClassifier
 
