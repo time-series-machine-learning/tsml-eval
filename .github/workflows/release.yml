@@ -95,6 +95,12 @@ jobs:
     needs: test-wheels
     runs-on: ubuntu-24.04
 
+    environment:
+      name: release
+      url: https://pypi.org/p/tsml-eval/
+    permissions:
+      id-token: write
+
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -103,5 +109,3 @@ jobs:
 
       - name: Publish package to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          password: ${{ secrets.PYPI_TOKEN }}
