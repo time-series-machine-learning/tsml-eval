@@ -28,6 +28,7 @@ from aeon.classification import BaseClassifier
 from aeon.clustering import BaseClusterer
 from aeon.forecasting import BaseForecaster
 from aeon.regression.base import BaseRegressor
+from aeon.utils.validation import get_n_cases
 from sklearn import preprocessing
 from sklearn.base import BaseEstimator, is_classifier, is_regressor
 from sklearn.metrics import (
@@ -77,6 +78,7 @@ def run_classification_experiment(
     dataset_name="N/A",
     resample_id=None,
     data_transforms=None,
+    transform_train_only=False,
     build_test_file=True,
     build_train_file=False,
     ignore_custom_train_estimate=False,
@@ -121,6 +123,8 @@ def run_classification_experiment(
         If a list, the transformers are applied in order.
         If None, no transformation is applied.
         Calls fit_transform on the training data and transform on the test data.
+    transform_train_only : bool, default=False
+        if True, the data_transforms are limited to the training data only.
     build_test_file : bool, default=True:
         Whether to generate test files or not. If the classifier can generate its own
         train probabilities, the classifier will be built but no file will be output.
@@ -168,13 +172,34 @@ def run_classification_experiment(
     else:
         raise TypeError("classifier must be a tsml, aeon or sklearn classifier.")
 
+    n_cases_test = get_n_cases(X_test)
     if data_transforms is not None:
         if not isinstance(data_transforms, list):
             data_transforms = [data_transforms]
 
         for transform in data_transforms:
-            X_train = transform.fit_transform(X_train, y_train)
-            X_test = transform.transform(X_test, y_test)
+            transform_results = transform.fit_transform(X_train, y_train)
+            if isinstance(transform_results, tuple) and len(transform_results) == 2:
+                # If the transformer returns a tuple of length 2, assume it is (X, y)
+                X_train, y_train = transform_results
+            else:
+                X_train = transform_results
+
+            if not transform_train_only:
+                transform_results = transform.transform(X_test, y_test)
+                if isinstance(transform_results, tuple) and len(transform_results) == 2:
+                    X_test, y_test = transform_results
+                else:
+                    X_test = transform_results
+
+                # If we have edited the number of cases in test something has gone
+                # wrong i.e. we have applied SMOTE to the test set
+                new_n_cases_test = get_n_cases(X_test)
+                assert new_n_cases_test == n_cases_test, (
+                    f"Error: X_test sample size changed from {n_cases_test} to "
+                    f"{new_n_cases_test} after transformation "
+                    f"{transform.__class__.__name__}"
+                )
 
     le = preprocessing.LabelEncoder()
     y_train = le.fit_transform(y_train)
@@ -311,6 +336,7 @@ def load_and_run_classification_experiment(
     classifier_name=None,
     resample_id=0,
     data_transforms=None,
+    transform_train_only=False,
     build_train_file=False,
     write_attributes=False,
     att_max_shape=0,
@@ -346,6 +372,8 @@ def load_and_run_classification_experiment(
         If a list, the transformers are applied in order.
         If None, no transformation is applied.
         Calls fit_transform on the training data and transform on the test data.
+    transform_train_only : bool, default=False
+        if the data_transforms are limited to the training data only.
     build_train_file : bool, default=False
         Whether to generate train files or not. If true, it performs a 10-fold
         cross-validation on the train data and saves. If the classifier can produce its
@@ -403,6 +431,7 @@ def load_and_run_classification_experiment(
         dataset_name=dataset,
         resample_id=resample_id,
         data_transforms=data_transforms,
+        transform_train_only=transform_train_only,
         build_test_file=build_test_file,
         build_train_file=build_train_file,
         attribute_file_path=attribute_file_path,
