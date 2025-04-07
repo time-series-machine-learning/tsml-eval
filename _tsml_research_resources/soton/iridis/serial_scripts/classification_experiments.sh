@@ -3,7 +3,7 @@
 # While reading is fine, please dont write anything to the default directories in this script
 
  Start and end for resamples
-max_folds=10
+max_folds=1
 start_fold=1
 
 # To avoid hitting the cluster queue limit we have a higher level queue
