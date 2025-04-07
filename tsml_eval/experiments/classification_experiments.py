@@ -102,6 +102,7 @@ def run_experiment(args):
                     ),
                     n_jobs=1,
                 ),
+                transform_train_only=args.data_transform_limit,
                 build_train_file=args.train_fold,
                 write_attributes=args.write_attributes,
                 att_max_shape=args.att_max_shape,
