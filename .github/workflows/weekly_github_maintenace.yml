@@ -24,7 +24,7 @@ jobs:
       - uses: browniebroke/pre-commit-autoupdate-action@v1.0.0
 
       - if: always()
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@v2
         id: app-token
         with:
           app-id: ${{ vars.PR_APP_ID }}
