@@ -30,8 +30,8 @@ start_point=1
 local_path="/home/$username/"
 data_path="/scratch/$username/"
 # Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
-data_dir="$data_path/Data/imbalanced_data/imbalanced_data9_1/"
-datasets="$data_path/DataSetLists/classification9_1.txt"
+data_dir="$data_path/Data/Ford/"
+datasets="$data_path/DataSetLists/Ford.txt"
 
 # Results and output file write location. Change these to reflect your own file structure
 results_dir="$local_path/Classifi[Cry]cationResults/results/"
