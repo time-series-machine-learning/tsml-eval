@@ -84,10 +84,10 @@ predefined_folds=$([ "${predefined_folds,,}" == "true" ] && echo "-pr" || echo "
 normalise_data=$([ "${normalise_data,,}" == "true" ] && echo "-rn" || echo "")
 
 # Set to -dtn to use data transformation name
-data_transform_name=$([ -n "${data_transform_name}" ] && echo "--dtn ${data_transform_name}" || echo "")
+data_transform_name=$([ -n "${data_transform_name}" ] && echo "-dtn ${data_transform_name}" || echo "")
 
 # Set to -dtl to use data transformation limit
-data_transform_limit=$([ "${data_transform_limit,,}" == "true" ] && echo "--dtl" || echo "")
+data_transform_limit=$([ "${data_transform_limit,,}" == "true" ] && echo "-dtl" || echo "")
 
 # dont submit to serial directly
 queue=$([ "$queue" == "serial" ] && echo "batch" || echo "$queue")
