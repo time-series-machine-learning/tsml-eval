@@ -216,6 +216,13 @@ def parse_args(args):
         "is applied. Can be used multiple times (default: %(default)s).",
     )
     parser.add_argument(
+        "-dtl",
+        "--data_transform_limit",
+        action="store_true",
+        help="bool to pass to get_data_transform_by_limit to apply a transformation "
+             "if true, only transformation to train set.",
+    )
+    parser.add_argument(
         "-tto",
         "--transform_train_only",
         action="store_true",

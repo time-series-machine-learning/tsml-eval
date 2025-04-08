@@ -221,9 +221,10 @@ class TSMOTE(BaseCollectionTransformer):
 if __name__ == "__main__":
     # Example usage
     X = np.random.randn(100, 1, 100)
-    y = np.random.choice([0, 1], size=100)
+    y = np.random.choice([0, 0, 1], size=100)
     print(np.unique(y, return_counts=True))
     tsmote = TSMOTE(random_state=0)
     X_resampled, y_resampled = tsmote.fit_transform(X, y)
     print(X_resampled.shape, y_resampled.shape)
+    print(np.unique(y_resampled, return_counts=True))
     # Output: (200, 1, 100) (200,)

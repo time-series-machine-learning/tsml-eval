@@ -173,3 +173,17 @@ def _set_unbalanced_transformer(t, random_state, n_jobs):
         )
 
         return OHIT(distance="euclidean", random_state=random_state)
+
+    elif t == "esmote":
+        from tsml_eval._wip.rt.transformations.collection.imbalance._esmote import (
+            ESMOTE,
+        )
+
+        return ESMOTE(
+            n_neighbors=5,
+            distance="msm",
+            distance_params=None,
+            weights="uniform",
+            n_jobs=n_jobs,
+            random_state=random_state,
+        )
