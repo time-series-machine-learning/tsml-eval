@@ -12,7 +12,7 @@ class MIC(nn.Module):
 
     def __init__(self, feature_size=512, n_heads=8, dropout=0.05, decomp_kernel=[32], conv_kernel=[24],
                  isometric_kernel=[18, 6], device='cuda'):
-        super(MIC, self).__init__()
+        super().__init__()
         self.conv_kernel = conv_kernel
         self.device = device
 
@@ -90,7 +90,7 @@ class MIC(nn.Module):
 class SeasonalPrediction(nn.Module):
     def __init__(self, embedding_size=512, n_heads=8, dropout=0.05, d_layers=1, decomp_kernel=[32], c_out=1,
                  conv_kernel=[2, 4], isometric_kernel=[18, 6], device='cuda'):
-        super(SeasonalPrediction, self).__init__()
+        super().__init__()
 
         self.mic = nn.ModuleList([MIC(feature_size=embedding_size, n_heads=n_heads,
                                       decomp_kernel=decomp_kernel, conv_kernel=conv_kernel,
@@ -113,7 +113,7 @@ class Model(nn.Module):
         """
         conv_kernel: downsampling and upsampling convolution kernel_size
         """
-        super(Model, self).__init__()
+        super().__init__()
 
         decomp_kernel = []  # kernel of decomposition operation
         isometric_kernel = []  # kernel of isometric convolution

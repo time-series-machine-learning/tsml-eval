@@ -80,7 +80,7 @@ class EncoderLayer(nn.Module):
     """ Compose with two layers """
 
     def __init__(self, d_model, d_inner, n_head, dropout=0.1, normalize_before=True):
-        super(EncoderLayer, self).__init__()
+        super().__init__()
 
         self.slf_attn = AttentionLayer(
             FullAttention(mask_flag=True, factor=0,
@@ -138,7 +138,7 @@ class Encoder(nn.Module):
 
 class ConvLayer(nn.Module):
     def __init__(self, c_in, window_size):
-        super(ConvLayer, self).__init__()
+        super().__init__()
         self.downConv = nn.Conv1d(in_channels=c_in,
                                   out_channels=c_in,
                                   kernel_size=window_size,
@@ -157,7 +157,7 @@ class Bottleneck_Construct(nn.Module):
     """Bottleneck convolution CSCM"""
 
     def __init__(self, d_model, window_size, d_inner):
-        super(Bottleneck_Construct, self).__init__()
+        super().__init__()
         if not isinstance(window_size, list):
             self.conv_layers = nn.ModuleList([
                 ConvLayer(d_inner, window_size),

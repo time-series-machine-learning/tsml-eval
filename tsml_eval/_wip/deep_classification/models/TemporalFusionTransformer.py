@@ -31,7 +31,7 @@ def get_known_len(embed_type, freq):
 
 class TFTTemporalEmbedding(TemporalEmbedding):
     def __init__(self, d_model, embed_type='fixed', freq='h'):
-        super(TFTTemporalEmbedding, self).__init__(d_model, embed_type, freq)
+        super().__init__(d_model, embed_type, freq)
 
     def forward(self, x):
         x = x.long()
@@ -49,7 +49,7 @@ class TFTTemporalEmbedding(TemporalEmbedding):
 
 class TFTTimeFeatureEmbedding(nn.Module):
     def __init__(self, d_model, embed_type='timeF', freq='h'):
-        super(TFTTimeFeatureEmbedding, self).__init__()
+        super().__init__()
         d_inp = get_known_len(embed_type, freq)
         self.embed = nn.ModuleList([nn.Linear(1, d_model, bias=False) for _ in range(d_inp)])
 
@@ -59,7 +59,7 @@ class TFTTimeFeatureEmbedding(nn.Module):
 
 class TFTEmbedding(nn.Module):
     def __init__(self, configs):
-        super(TFTEmbedding, self).__init__()
+        super().__init__()
         self.pred_len = configs.pred_len
         self.static_pos = datatype_dict[configs.data].static
         self.observed_pos = datatype_dict[configs.data].observed
@@ -104,7 +104,7 @@ class GLU(nn.Module):
 
 class GateAddNorm(nn.Module):
     def __init__(self, input_size, output_size):
-        super(GateAddNorm, self).__init__()
+        super().__init__()
         self.glu = GLU(input_size, input_size)
         self.projection = nn.Linear(input_size, output_size) if input_size != output_size else nn.Identity()
         self.layer_norm = nn.LayerNorm(output_size)
@@ -117,7 +117,7 @@ class GateAddNorm(nn.Module):
 
 class GRN(nn.Module):
     def __init__(self, input_size, output_size, hidden_size=None, context_size=None, dropout=0.0):
-        super(GRN, self).__init__()
+        super().__init__()
         hidden_size = input_size if hidden_size is None else hidden_size
         self.lin_a = nn.Linear(input_size, hidden_size)
         self.lin_c = nn.Linear(context_size, hidden_size) if context_size is not None else None
@@ -139,7 +139,7 @@ class GRN(nn.Module):
 
 class VariableSelectionNetwork(nn.Module):
     def __init__(self, d_model, variable_num, dropout=0.0):
-        super(VariableSelectionNetwork, self).__init__()
+        super().__init__()
         self.joint_grn = GRN(d_model * variable_num, variable_num, hidden_size=d_model, context_size=d_model, dropout=dropout)
         self.variable_grns = nn.ModuleList([GRN(d_model, d_model, dropout=dropout) for _ in range(variable_num)])
 
@@ -160,7 +160,7 @@ class VariableSelectionNetwork(nn.Module):
 
 class StaticCovariateEncoder(nn.Module):
     def __init__(self, d_model, static_len, dropout=0.0):
-        super(StaticCovariateEncoder, self).__init__()
+        super().__init__()
         self.static_vsn = VariableSelectionNetwork(d_model, static_len) if static_len else None
         self.grns = nn.ModuleList([GRN(d_model, d_model, dropout=dropout) for _ in range(4)])
 
@@ -175,7 +175,7 @@ class StaticCovariateEncoder(nn.Module):
 
 class InterpretableMultiHeadAttention(nn.Module):
     def __init__(self, configs):
-        super(InterpretableMultiHeadAttention, self).__init__()
+        super().__init__()
         self.n_heads = configs.n_heads
         assert configs.d_model % configs.n_heads == 0
         self.d_head = configs.d_model // configs.n_heads
@@ -209,7 +209,7 @@ class InterpretableMultiHeadAttention(nn.Module):
 
 class TemporalFusionDecoder(nn.Module):
     def __init__(self, configs):
-        super(TemporalFusionDecoder, self).__init__()
+        super().__init__()
         self.pred_len = configs.pred_len
 
         self.history_encoder = nn.LSTM(configs.d_model, configs.d_model, batch_first=True)
@@ -253,7 +253,7 @@ class TemporalFusionDecoder(nn.Module):
 
 class Model(nn.Module):
     def __init__(self, configs):
-        super(Model, self).__init__()
+        super().__init__()
         self.configs = configs
         self.task_name = configs.task_name
         self.seq_len = configs.seq_len

@@ -23,7 +23,7 @@ class FlattenHead(nn.Module):
 
 class EnEmbedding(nn.Module):
     def __init__(self, n_vars, d_model, patch_len, dropout):
-        super(EnEmbedding, self).__init__()
+        super().__init__()
         # Patching
         self.patch_len = patch_len
 
@@ -50,7 +50,7 @@ class EnEmbedding(nn.Module):
 
 class Encoder(nn.Module):
     def __init__(self, layers, norm_layer=None, projection=None):
-        super(Encoder, self).__init__()
+        super().__init__()
         self.layers = nn.ModuleList(layers)
         self.norm = norm_layer
         self.projection = projection
@@ -70,7 +70,7 @@ class Encoder(nn.Module):
 class EncoderLayer(nn.Module):
     def __init__(self, self_attention, cross_attention, d_model, d_ff=None,
                  dropout=0.1, activation="relu"):
-        super(EncoderLayer, self).__init__()
+        super().__init__()
         d_ff = d_ff or 4 * d_model
         self.self_attention = self_attention
         self.cross_attention = cross_attention
@@ -114,7 +114,7 @@ class EncoderLayer(nn.Module):
 class Model(nn.Module):
 
     def __init__(self, configs):
-        super(Model, self).__init__()
+        super().__init__()
         self.task_name = configs.task_name
         self.features = configs.features
         self.seq_len = configs.seq_len

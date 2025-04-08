@@ -13,7 +13,7 @@ class Model(nn.Module):
     """
 
     def __init__(self, configs):
-        super(Model, self).__init__()
+        super().__init__()
         self.task_name = configs.task_name
         self.pred_len = configs.pred_len
         self.label_len = configs.label_len
@@ -82,7 +82,7 @@ class Model(nn.Module):
         dec_out = self.decoder(dec_out, enc_out, x_mask=None, cross_mask=None)
 
         return dec_out  # [B, L, D]
-    
+
     def short_forecast(self, x_enc, x_mark_enc, x_dec, x_mark_dec):
         # Normalization
         mean_enc = x_enc.mean(1, keepdim=True).detach()  # B x 1 x E

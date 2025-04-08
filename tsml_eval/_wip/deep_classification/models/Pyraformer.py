@@ -4,7 +4,7 @@ from layers.Pyraformer_EncDec import Encoder
 
 
 class Model(nn.Module):
-    """ 
+    """
     Pyraformer: Pyramidal attention to reduce complexity
     Paper link: https://openreview.net/pdf?id=0EXmFzUn5I
     """
@@ -40,7 +40,7 @@ class Model(nn.Module):
         dec_out = self.projection(enc_out).view(
             enc_out.size(0), self.pred_len, -1)
         return dec_out
-    
+
     def short_forecast(self, x_enc, x_mark_enc, x_dec, x_mark_dec, mask=None):
         # Normalization
         mean_enc = x_enc.mean(1, keepdim=True).detach()  # B x 1 x E
@@ -51,7 +51,7 @@ class Model(nn.Module):
         enc_out = self.encoder(x_enc, x_mark_enc)[:, -1, :]
         dec_out = self.projection(enc_out).view(
             enc_out.size(0), self.pred_len, -1)
-        
+
         dec_out = dec_out * std_enc + mean_enc
         return dec_out
 

@@ -9,15 +9,15 @@ from mamba_ssm import Mamba
 from layers.Embed import DataEmbedding
 
 class Model(nn.Module):
-    
+
     def __init__(self, configs):
-        super(Model, self).__init__()
+        super().__init__()
         self.task_name = configs.task_name
         self.pred_len = configs.pred_len
 
         self.d_inner = configs.d_model * configs.expand
         self.dt_rank = math.ceil(configs.d_model / 16)
-        
+
         self.embedding = DataEmbedding(configs.enc_in, configs.d_model, configs.embed, configs.freq, configs.dropout)
 
         self.mamba = Mamba(

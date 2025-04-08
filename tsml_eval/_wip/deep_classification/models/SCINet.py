@@ -5,7 +5,7 @@ import math
 
 class Splitting(nn.Module):
     def __init__(self):
-        super(Splitting, self).__init__()
+        super().__init__()
 
     def even(self, x):
         return x[:, ::2, :]
@@ -20,7 +20,7 @@ class Splitting(nn.Module):
 
 class CausalConvBlock(nn.Module):
     def __init__(self, d_model, kernel_size=5, dropout=0.0):
-        super(CausalConvBlock, self).__init__()
+        super().__init__()
         module_list = [
             nn.ReplicationPad1d((kernel_size - 1, kernel_size - 1)),
 
@@ -41,9 +41,9 @@ class CausalConvBlock(nn.Module):
 
 class SCIBlock(nn.Module):
     def __init__(self, d_model, kernel_size=5, dropout=0.0):
-        super(SCIBlock, self).__init__()
+        super().__init__()
         self.splitting = Splitting()
-        self.modules_even, self.modules_odd, self.interactor_even, self.interactor_odd = [CausalConvBlock(d_model) for _ in range(4)]
+        self.modules_even, self.modules_odd, self.interactor_even, self.interactor_odd = (CausalConvBlock(d_model) for _ in range(4))
 
     def forward(self, x):
         x_even, x_odd = self.splitting(x)
@@ -61,7 +61,7 @@ class SCIBlock(nn.Module):
 
 class SCINet(nn.Module):
     def __init__(self, d_model, current_level=3, kernel_size=5, dropout=0.0):
-        super(SCINet, self).__init__()
+        super().__init__()
         self.current_level = current_level
         self.working_block = SCIBlock(d_model, kernel_size, dropout)
 
@@ -101,7 +101,7 @@ class SCINet(nn.Module):
 
 class Model(nn.Module):
     def __init__(self, configs):
-        super(Model, self).__init__()
+        super().__init__()
         self.task_name = configs.task_name
         self.seq_len = configs.seq_len
         self.label_len = configs.label_len
@@ -113,7 +113,7 @@ class Model(nn.Module):
             self.sci_net_1 = SCINet(configs.enc_in, dropout=configs.dropout)
             self.projection_1 = nn.Conv1d(self.seq_len, self.seq_len + self.pred_len, kernel_size=1, stride=1, bias=False)
         else:
-            self.sci_net_1, self.sci_net_2 = [SCINet(configs.enc_in, dropout=configs.dropout) for _ in range(2)]
+            self.sci_net_1, self.sci_net_2 = (SCINet(configs.enc_in, dropout=configs.dropout) for _ in range(2))
             self.projection_1 = nn.Conv1d(self.seq_len, self.pred_len, kernel_size=1, stride=1, bias=False)
             self.projection_2 = nn.Conv1d(self.seq_len+self.pred_len, self.seq_len+self.pred_len,
                                                 kernel_size = 1, bias = False)

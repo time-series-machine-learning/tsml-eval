@@ -10,31 +10,31 @@ class FourierFilter(nn.Module):
     Fourier Filter: to time-variant and time-invariant term
     """
     def __init__(self, mask_spectrum):
-        super(FourierFilter, self).__init__()
+        super().__init__()
         self.mask_spectrum = mask_spectrum
-        
+
     def forward(self, x):
         xf = torch.fft.rfft(x, dim=1)
         mask = torch.ones_like(xf)
         mask[:, self.mask_spectrum, :] = 0
         x_var = torch.fft.irfft(xf*mask, dim=1)
         x_inv = x - x_var
-        
+
         return x_var, x_inv
-    
+
 
 class MLP(nn.Module):
     '''
     Multilayer perceptron to encode/decode high dimension representation of sequential data
     '''
-    def __init__(self, 
-                 f_in, 
-                 f_out, 
-                 hidden_dim=128, 
-                 hidden_layers=2, 
+    def __init__(self,
+                 f_in,
+                 f_out,
+                 hidden_dim=128,
+                 hidden_layers=2,
                  dropout=0.05,
-                 activation='tanh'): 
-        super(MLP, self).__init__()
+                 activation='tanh'):
+        super().__init__()
         self.f_in = f_in
         self.f_out = f_out
         self.hidden_dim = hidden_dim
@@ -46,13 +46,13 @@ class MLP(nn.Module):
             self.activation = nn.Tanh()
         else:
             raise NotImplementedError
-        
-        layers = [nn.Linear(self.f_in, self.hidden_dim), 
+
+        layers = [nn.Linear(self.f_in, self.hidden_dim),
                   self.activation, nn.Dropout(self.dropout)]
         for i in range(self.hidden_layers-2):
             layers += [nn.Linear(self.hidden_dim, self.hidden_dim),
                        self.activation, nn.Dropout(dropout)]
-        
+
         layers += [nn.Linear(hidden_dim, f_out)]
         self.layers = nn.Sequential(*layers)
 
@@ -61,15 +61,15 @@ class MLP(nn.Module):
         # y:     B x S x f_out
         y = self.layers(x)
         return y
-    
+
 
 class KPLayer(nn.Module):
     """
     A demonstration of finding one step transition of linear system by DMD iteratively
     """
-    def __init__(self): 
-        super(KPLayer, self).__init__()
-        
+    def __init__(self):
+        super().__init__()
+
         self.K = None # B E E
 
     def one_step_forward(self, z, return_rec=False, return_K=False):
@@ -89,7 +89,7 @@ class KPLayer(nn.Module):
             return z_rec, z_pred
 
         return z_pred
-    
+
     def forward(self, z, pred_len=1):
         assert pred_len >= 1, 'prediction length should not be less than 1'
         z_rec, z_pred= self.one_step_forward(z, return_rec=True)
@@ -105,9 +105,9 @@ class KPLayerApprox(nn.Module):
     """
     Find koopman transition of linear system by DMD with multistep K approximation
     """
-    def __init__(self): 
-        super(KPLayerApprox, self).__init__()
-        
+    def __init__(self):
+        super().__init__()
+
         self.K = None # B E E
         self.K_step = None # B E E
 
@@ -127,7 +127,7 @@ class KPLayerApprox(nn.Module):
             self.K = torch.eye(self.K.shape[1]).to(self.K.device).unsqueeze(0).repeat(B, 1, 1)
 
         z_rec = torch.cat((z[:, :1], torch.bmm(x, self.K)), dim=1) # B L E
-        
+
         if pred_len <= input_len:
             self.K_step = torch.linalg.matrix_power(self.K, pred_len)
             if torch.isnan(self.K_step).any():
@@ -146,7 +146,7 @@ class KPLayerApprox(nn.Module):
             z_pred = torch.cat(all_pred, dim=1)[:, :pred_len, :]
 
         return z_rec, z_pred
-    
+
 
 class TimeVarKP(nn.Module):
     """
@@ -163,19 +163,19 @@ class TimeVarKP(nn.Module):
                  decoder=None,
                  multistep=False,
                 ):
-        super(TimeVarKP, self).__init__()
+        super().__init__()
         self.input_len = input_len
         self.pred_len = pred_len
         self.enc_in = enc_in
         self.seg_len = seg_len
         self.dynamic_dim = dynamic_dim
         self.multistep = multistep
-        self.encoder, self.decoder = encoder, decoder            
+        self.encoder, self.decoder = encoder, decoder
         self.freq = math.ceil(self.input_len / self.seg_len)  # segment number of input
         self.step = math.ceil(self.pred_len / self.seg_len)   # segment number of output
         self.padding_len = self.seg_len * self.freq - self.input_len
         # Approximate mulitstep K by KPLayerApprox when pred_len is large
-        self.dynamics = KPLayerApprox() if self.multistep else KPLayer() 
+        self.dynamics = KPLayerApprox() if self.multistep else KPLayer()
 
     def forward(self, x):
         # x: B L C
@@ -192,7 +192,7 @@ class TimeVarKP(nn.Module):
         x_rec = self.decoder(x_rec) # B F PC
         x_rec = x_rec.reshape(B, self.freq, self.seg_len, self.enc_in)
         x_rec = x_rec.reshape(B, -1, self.enc_in)[:, :self.input_len, :]  # B L C
-        
+
         x_pred = self.decoder(x_pred)     # B S PC
         x_pred = x_pred.reshape(B, self.step, self.seg_len, self.enc_in)
         x_pred = x_pred.reshape(B, -1, self.enc_in)[:, :self.pred_len, :] # B S C
@@ -211,7 +211,7 @@ class TimeInvKP(nn.Module):
                  dynamic_dim=128,
                  encoder=None,
                  decoder=None):
-        super(TimeInvKP, self).__init__()
+        super().__init__()
         self.dynamic_dim = dynamic_dim
         self.input_len = input_len
         self.pred_len = pred_len
@@ -222,7 +222,7 @@ class TimeInvKP(nn.Module):
         U, _, V = torch.svd(K_init) # stable initialization
         self.K = nn.Linear(self.dynamic_dim, self.dynamic_dim, bias=False)
         self.K.weight.data = torch.mm(U, V.t())
-    
+
     def forward(self, x):
         # x: B L C
         res = x.transpose(1, 2) # B C L
@@ -249,7 +249,7 @@ class Model(nn.Module):
         multistep: bool, whether to use approximation for multistep K
         alpha: float, spectrum filter ratio
         """
-        super(Model, self).__init__()
+        super().__init__()
         self.task_name = configs.task_name
         self.enc_in = configs.enc_in
         self.input_len = configs.seq_len
@@ -273,9 +273,9 @@ class Model(nn.Module):
                            hidden_dim=self.hidden_dim, hidden_layers=self.hidden_layers)
         self.time_inv_kps = self.time_var_kps = nn.ModuleList([
                                 TimeInvKP(input_len=self.input_len,
-                                    pred_len=self.pred_len, 
+                                    pred_len=self.pred_len,
                                     dynamic_dim=self.dynamic_dim,
-                                    encoder=self.time_inv_encoder, 
+                                    encoder=self.time_inv_encoder,
                                     decoder=self.time_inv_decoder)
                                 for _ in range(self.num_blocks)])
 
@@ -306,7 +306,7 @@ class Model(nn.Module):
             amps += abs(torch.fft.rfft(lookback_window, dim=1)).mean(dim=0).mean(dim=1)
         mask_spectrum = amps.topk(int(amps.shape[0]*self.alpha)).indices
         return mask_spectrum # as the spectrums of time-invariant component
-    
+
     def forecast(self, x_enc):
         # Series Stationarization adopted from NSformer
         mean_enc = x_enc.mean(1, keepdim=True).detach() # B x 1 x E
@@ -329,8 +329,8 @@ class Model(nn.Module):
         # Series Stationarization adopted from NSformer
         res = forecast * std_enc + mean_enc
 
-        return res        
-    
+        return res
+
     def forward(self, x_enc, x_mark_enc, x_dec, x_mark_dec):
         if self.task_name == 'long_term_forecast':
             dec_out = self.forecast(x_enc)

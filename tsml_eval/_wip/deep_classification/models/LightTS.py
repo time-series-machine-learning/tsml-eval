@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 class IEBlock(nn.Module):
     def __init__(self, input_dim, hid_dim, output_dim, num_node):
-        super(IEBlock, self).__init__()
+        super().__init__()
 
         self.input_dim = input_dim
         self.hid_dim = hid_dim
@@ -45,7 +45,7 @@ class Model(nn.Module):
         """
         chunk_size: int, reshape T into [num_chunks, chunk_size]
         """
-        super(Model, self).__init__()
+        super().__init__()
         self.task_name = configs.task_name
         self.seq_len = configs.seq_len
         if self.task_name == 'classification' or self.task_name == 'anomaly_detection' or self.task_name == 'imputation':

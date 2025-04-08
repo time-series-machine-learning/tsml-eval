@@ -83,7 +83,7 @@ def padding_mask(lengths, max_len=None):
             .lt(lengths.unsqueeze(1)))
 
 
-class Normalizer(object):
+class Normalizer:
     """
     Normalizes dataframe across ALL contained rows (time steps). Different from per-sample normalization.
     """

@@ -23,7 +23,7 @@ class HiPPO_LegT(nn.Module):
         N: the order of the HiPPO projection
         dt: discretization step size - should be roughly inverse to the length of the sequence
         """
-        super(HiPPO_LegT, self).__init__()
+        super().__init__()
         self.N = N
         A, B = transition(N)
         C = np.ones((1, N))
@@ -61,7 +61,7 @@ class SpectralConv1d(nn.Module):
         """
         1D Fourier layer. It does FFT, linear transform, and Inverse FFT.
         """
-        super(SpectralConv1d, self).__init__()
+        super().__init__()
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.ratio = ratio
@@ -93,7 +93,7 @@ class Model(nn.Module):
     Paper link: https://arxiv.org/abs/2205.08897
     """
     def __init__(self, configs):
-        super(Model, self).__init__()
+        super().__init__()
         self.task_name = configs.task_name
         self.configs = configs
         self.seq_len = configs.seq_len

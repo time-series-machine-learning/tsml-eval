@@ -4,7 +4,7 @@ import torch.nn as nn
 
 class Inception_Block_V1(nn.Module):
     def __init__(self, in_channels, out_channels, num_kernels=6, init_weight=True):
-        super(Inception_Block_V1, self).__init__()
+        super().__init__()
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.num_kernels = num_kernels
@@ -32,7 +32,7 @@ class Inception_Block_V1(nn.Module):
 
 class Inception_Block_V2(nn.Module):
     def __init__(self, in_channels, out_channels, num_kernels=6, init_weight=True):
-        super(Inception_Block_V2, self).__init__()
+        super().__init__()
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.num_kernels = num_kernels

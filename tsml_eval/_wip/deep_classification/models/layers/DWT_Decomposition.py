@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Created on Sun Jan  5
 @author: Murad
@@ -29,7 +28,7 @@ class Decomposition(nn.Module):
                  device=[],
                  no_decomposition=[],
                  use_amp=[]):
-        super(Decomposition, self).__init__()
+        super().__init__()
         self.input_length = input_length
         self.pred_length = pred_length
         self.wavelet_name = wavelet_name
@@ -126,7 +125,7 @@ class Decomposition(nn.Module):
 
 ###############################################################################################
 """
-Following codes are combined from https://github.com/fbcotter/pytorch_wavelets. 
+Following codes are combined from https://github.com/fbcotter/pytorch_wavelets.
 To use Wavelet decomposition, you do not need to modify any of the codes below this line,
 we can just play with the class Decomposition(above)
 """
@@ -328,7 +327,7 @@ def mypad(x, pad, mode='constant', value=0):
     elif mode == 'zero':
         return F.pad(x, pad)
     else:
-        raise ValueError("Unkown pad type: {}".format(mode))
+        raise ValueError(f"Unkown pad type: {mode}")
 
 
 def afb1d(x, h0, h1, use_amp, mode='zero', dim=-1):
@@ -422,7 +421,7 @@ def afb1d(x, h0, h1, use_amp, mode='zero', dim=-1):
             else:
                 lohi = F.conv2d(x, h, stride=s, groups=C)
         else:
-            raise ValueError("Unkown pad type: {}".format(mode))
+            raise ValueError(f"Unkown pad type: {mode}")
 
     return lohi
 
@@ -531,7 +530,7 @@ def sfb1d(lo, hi, g0, g1, use_amp, mode='zero', dim=-1):
                 y = F.conv_transpose2d(lo, g0, stride=s, padding=pad, groups=C) + \
                     F.conv_transpose2d(hi, g1, stride=s, padding=pad, groups=C)
         else:
-            raise ValueError("Unkown pad type: {}".format(mode))
+            raise ValueError(f"Unkown pad type: {mode}")
 
     return y
 
@@ -552,7 +551,7 @@ def mode_to_int(mode):
     elif mode == 'periodic':
         return 6
     else:
-        raise ValueError("Unkown pad type: {}".format(mode))
+        raise ValueError(f"Unkown pad type: {mode}")
 
 
 def int_to_mode(mode):
@@ -571,7 +570,7 @@ def int_to_mode(mode):
     elif mode == 6:
         return 'periodic'
     else:
-        raise ValueError("Unkown pad type: {}".format(mode))
+        raise ValueError(f"Unkown pad type: {mode}")
 
 
 class AFB2D(Function):
@@ -861,7 +860,7 @@ def afb2d_nonsep(x, filts, mode='zero'):
             x = mypad(x, pad=pad, mode=mode)
             y = F.conv2d(x, f, stride=2, groups=C)
     else:
-        raise ValueError("Unkown pad type: {}".format(mode))
+        raise ValueError(f"Unkown pad type: {mode}")
 
     return y
 
@@ -1066,7 +1065,7 @@ def sfb2d_nonsep(coeffs, filts, mode='zero'):
         pad = (Ly - 2, Lx - 2)
         ll = F.conv_transpose2d(x, f, padding=pad, groups=C, stride=2)
     else:
-        raise ValueError("Unkown pad type: {}".format(mode))
+        raise ValueError(f"Unkown pad type: {mode}")
 
     return ll.contiguous()
 

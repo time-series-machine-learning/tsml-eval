@@ -8,7 +8,7 @@ from layers.SelfAttention_Family import AttentionLayer, FullAttention
 
 class FeedForward(nn.Module):
     def __init__(self, d_model: int, d_hidden: int = 512):
-        super(FeedForward, self).__init__()
+        super().__init__()
 
         self.linear_1 = torch.nn.Linear(d_model, d_hidden)
         self.linear_2 = torch.nn.Linear(d_hidden, d_model)
@@ -31,7 +31,7 @@ class Encoder(nn.Module):
         dropout: float = 0,
         channel_wise=False,
     ):
-        super(Encoder, self).__init__()
+        super().__init__()
 
         self.channel_wise = channel_wise
         if self.channel_wise:
@@ -73,7 +73,7 @@ class Encoder(nn.Module):
 
 class Model(nn.Module):
     def __init__(self, configs):
-        super(Model, self).__init__()
+        super().__init__()
         self.task_name = configs.task_name
         self.seq_len = configs.seq_len
         self.pred_len = configs.pred_len

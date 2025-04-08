@@ -3,7 +3,7 @@ import torch.nn as nn
 
 class ResBlock(nn.Module):
     def __init__(self, configs):
-        super(ResBlock, self).__init__()
+        super().__init__()
 
         self.temporal = nn.Sequential(
             nn.Linear(configs.seq_len, configs.d_model),
@@ -29,7 +29,7 @@ class ResBlock(nn.Module):
 
 class Model(nn.Module):
     def __init__(self, configs):
-        super(Model, self).__init__()
+        super().__init__()
         self.task_name = configs.task_name
         self.layer = configs.e_layers
         self.model = nn.ModuleList([ResBlock(configs)

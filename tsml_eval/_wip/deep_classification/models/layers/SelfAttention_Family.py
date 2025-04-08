@@ -11,7 +11,7 @@ class DSAttention(nn.Module):
     '''De-stationary Attention'''
 
     def __init__(self, mask_flag=True, factor=5, scale=None, attention_dropout=0.1, output_attention=False):
-        super(DSAttention, self).__init__()
+        super().__init__()
         self.scale = scale
         self.mask_flag = mask_flag
         self.output_attention = output_attention
@@ -47,7 +47,7 @@ class DSAttention(nn.Module):
 
 class FullAttention(nn.Module):
     def __init__(self, mask_flag=True, factor=5, scale=None, attention_dropout=0.1, output_attention=False):
-        super(FullAttention, self).__init__()
+        super().__init__()
         self.scale = scale
         self.mask_flag = mask_flag
         self.output_attention = output_attention
@@ -77,7 +77,7 @@ class FullAttention(nn.Module):
 
 class ProbAttention(nn.Module):
     def __init__(self, mask_flag=True, factor=5, scale=None, attention_dropout=0.1, output_attention=False):
-        super(ProbAttention, self).__init__()
+        super().__init__()
         self.factor = factor
         self.scale = scale
         self.mask_flag = mask_flag
@@ -179,7 +179,7 @@ class ProbAttention(nn.Module):
 class AttentionLayer(nn.Module):
     def __init__(self, attention, d_model, n_heads, d_keys=None,
                  d_values=None):
-        super(AttentionLayer, self).__init__()
+        super().__init__()
 
         d_keys = d_keys or (d_model // n_heads)
         d_values = d_values or (d_model // n_heads)
@@ -251,7 +251,7 @@ class TwoStageAttentionLayer(nn.Module):
 
     def __init__(self, configs,
                  seg_num, factor, d_model, n_heads, d_ff=None, dropout=0.1):
-        super(TwoStageAttentionLayer, self).__init__()
+        super().__init__()
         d_ff = d_ff or 4 * d_model
         self.time_attention = AttentionLayer(FullAttention(False, configs.factor, attention_dropout=configs.dropout,
                                                            output_attention=False), d_model, n_heads)

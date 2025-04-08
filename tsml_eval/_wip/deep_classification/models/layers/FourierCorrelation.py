@@ -1,4 +1,3 @@
-# coding=utf-8
 # author=maziqing
 # email=maziqing.mzq@alibaba-inc.com
 
@@ -27,15 +26,15 @@ def get_frequency_modes(seq_len, modes=64, mode_select_method='random'):
 # ########## fourier layer #############
 class FourierBlock(nn.Module):
     def __init__(self, in_channels, out_channels, n_heads, seq_len, modes=0, mode_select_method='random'):
-        super(FourierBlock, self).__init__()
+        super().__init__()
         print('fourier enhanced block used!')
         """
-        1D Fourier block. It performs representation learning on frequency domain, 
-        it does FFT, linear transform, and Inverse FFT.    
+        1D Fourier block. It performs representation learning on frequency domain,
+        it does FFT, linear transform, and Inverse FFT.
         """
         # get modes on frequency domain
         self.index = get_frequency_modes(seq_len, modes=modes, mode_select_method=mode_select_method)
-        print('modes={}, index={}'.format(modes, self.index))
+        print(f'modes={modes}, index={self.index}')
 
         self.n_heads = n_heads
         self.scale = (1 / (in_channels * out_channels))
@@ -83,10 +82,10 @@ class FourierBlock(nn.Module):
 class FourierCrossAttention(nn.Module):
     def __init__(self, in_channels, out_channels, seq_len_q, seq_len_kv, modes=64, mode_select_method='random',
                  activation='tanh', policy=0, num_heads=8):
-        super(FourierCrossAttention, self).__init__()
+        super().__init__()
         print(' fourier enhanced cross attention used!')
         """
-        1D Fourier Cross Attention layer. It does FFT, linear transform, attention mechanism and Inverse FFT.    
+        1D Fourier Cross Attention layer. It does FFT, linear transform, attention mechanism and Inverse FFT.
         """
         self.activation = activation
         self.in_channels = in_channels
@@ -95,8 +94,8 @@ class FourierCrossAttention(nn.Module):
         self.index_q = get_frequency_modes(seq_len_q, modes=modes, mode_select_method=mode_select_method)
         self.index_kv = get_frequency_modes(seq_len_kv, modes=modes, mode_select_method=mode_select_method)
 
-        print('modes_q={}, index_q={}'.format(len(self.index_q), self.index_q))
-        print('modes_kv={}, index_kv={}'.format(len(self.index_kv), self.index_kv))
+        print(f'modes_q={len(self.index_q)}, index_q={self.index_q}')
+        print(f'modes_kv={len(self.index_kv)}, index_kv={self.index_kv}')
 
         self.scale = (1 / (in_channels * out_channels))
         self.weights1 = nn.Parameter(
@@ -149,7 +148,7 @@ class FourierCrossAttention(nn.Module):
             xqk_ft = torch.softmax(abs(xqk_ft), dim=-1)
             xqk_ft = torch.complex(xqk_ft, torch.zeros_like(xqk_ft))
         else:
-            raise Exception('{} actiation function is not implemented'.format(self.activation))
+            raise Exception(f'{self.activation} actiation function is not implemented')
         xqkv_ft = self.compl_mul1d("bhxy,bhey->bhex", xqk_ft, xk_ft_)
         xqkvw = self.compl_mul1d("bhex,heox->bhox", xqkv_ft, torch.complex(self.weights1, self.weights2))
         out_ft = torch.zeros(B, H, E, L // 2 + 1, device=xq.device, dtype=torch.cfloat)

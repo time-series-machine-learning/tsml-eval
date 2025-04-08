@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Created on Sun Jan  5 16:10:01 2025
 @author: Murad
@@ -14,7 +13,7 @@ from layers.DWT_Decomposition import Decomposition
 
 class TokenMixer(nn.Module):
     def __init__(self, input_seq=[], batch_size=[], channel=[], pred_seq=[], dropout=[], factor=[], d_model=[]):
-        super(TokenMixer, self).__init__()
+        super().__init__()
         self.input_seq = input_seq
         self.batch_size = batch_size
         self.channel = channel
@@ -47,7 +46,7 @@ class Mixer(nn.Module):
                  dropout=[],
                  tfactor=[],
                  dfactor=[]):
-        super(Mixer, self).__init__()
+        super().__init__()
         self.input_seq = input_seq
         self.pred_seq = out_seq
         self.batch_size = batch_size
@@ -102,7 +101,7 @@ class ResolutionBranch(nn.Module):
                  dfactor=[],
                  patch_len=[],
                  patch_stride=[]):
-        super(ResolutionBranch, self).__init__()
+        super().__init__()
         self.input_seq = input_seq
         self.pred_seq = pred_seq
         self.batch_size = batch_size
@@ -188,7 +187,7 @@ class WPMixerCore(nn.Module):
                  patch_stride=[],
                  no_decomposition=[],
                  use_amp=[]):
-        super(WPMixerCore, self).__init__()
+        super().__init__()
         self.input_length = input_length
         self.pred_length = pred_length
         self.wavelet_name = wavelet_name
@@ -271,7 +270,7 @@ class WPMixerCore(nn.Module):
 
 class Model(nn.Module):
     def __init__(self, args, tfactor=5, dfactor=5, wavelet='db2', level=1, stride=8, no_decomposition=False):
-        super(Model, self).__init__()
+        super().__init__()
         self.args = args
         self.task_name = args.task_name
         self.wpmixerCore = WPMixerCore(input_length=self.args.seq_len,

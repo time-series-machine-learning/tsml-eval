@@ -20,7 +20,7 @@ class Model(nn.Module):
         mode_select: str, for FEDformer, there are two mode selection method, options: [random, low].
         modes: int, modes to be selected.
         """
-        super(Model, self).__init__()
+        super().__init__()
         self.task_name = configs.task_name
         self.seq_len = configs.seq_len
         self.label_len = configs.label_len

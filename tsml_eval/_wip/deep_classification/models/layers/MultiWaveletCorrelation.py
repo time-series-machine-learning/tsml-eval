@@ -205,7 +205,7 @@ class MultiWaveletTransform(nn.Module):
 
     def __init__(self, ich=1, k=8, alpha=16, c=128,
                  nCZ=1, L=0, base='legendre', attention_dropout=0.1):
-        super(MultiWaveletTransform, self).__init__()
+        super().__init__()
         print('base', base)
         self.k = k
         self.c = c
@@ -251,7 +251,7 @@ class MultiWaveletCross(nn.Module):
                  mode_select_method='random',
                  initializer=None, activation='tanh',
                  **kwargs):
-        super(MultiWaveletCross, self).__init__()
+        super().__init__()
         print('base', base)
 
         self.c = c
@@ -329,16 +329,16 @@ class MultiWaveletCross(nn.Module):
         k = torch.cat([k, extra_k], 1)
         v = torch.cat([v, extra_v], 1)
 
-        Ud_q = torch.jit.annotate(List[Tuple[Tensor]], [])
-        Ud_k = torch.jit.annotate(List[Tuple[Tensor]], [])
-        Ud_v = torch.jit.annotate(List[Tuple[Tensor]], [])
+        Ud_q = torch.jit.annotate(list[tuple[Tensor]], [])
+        Ud_k = torch.jit.annotate(list[tuple[Tensor]], [])
+        Ud_v = torch.jit.annotate(list[tuple[Tensor]], [])
 
-        Us_q = torch.jit.annotate(List[Tensor], [])
-        Us_k = torch.jit.annotate(List[Tensor], [])
-        Us_v = torch.jit.annotate(List[Tensor], [])
+        Us_q = torch.jit.annotate(list[Tensor], [])
+        Us_k = torch.jit.annotate(list[Tensor], [])
+        Us_v = torch.jit.annotate(list[Tensor], [])
 
-        Ud = torch.jit.annotate(List[Tensor], [])
-        Us = torch.jit.annotate(List[Tensor], [])
+        Ud = torch.jit.annotate(list[Tensor], [])
+        Us = torch.jit.annotate(list[Tensor], [])
 
         # decompose
         for i in range(ns - self.L):
@@ -394,7 +394,7 @@ class MultiWaveletCross(nn.Module):
 class FourierCrossAttentionW(nn.Module):
     def __init__(self, in_channels, out_channels, seq_len_q, seq_len_kv, modes=16, activation='tanh',
                  mode_select_method='random'):
-        super(FourierCrossAttentionW, self).__init__()
+        super().__init__()
         print('corss fourier correlation used!')
         self.in_channels = in_channels
         self.out_channels = out_channels
@@ -442,7 +442,7 @@ class FourierCrossAttentionW(nn.Module):
             xqk_ft = torch.softmax(abs(xqk_ft), dim=-1)
             xqk_ft = torch.complex(xqk_ft, torch.zeros_like(xqk_ft))
         else:
-            raise Exception('{} actiation function is not implemented'.format(self.activation))
+            raise Exception(f'{self.activation} actiation function is not implemented')
         xqkv_ft = self.compl_mul1d("bhxy,bhey->bhex", xqk_ft, xk_ft_)
 
         xqkvw = xqkv_ft
@@ -461,7 +461,7 @@ class sparseKernelFT1d(nn.Module):
                  nl=1,
                  initializer=None,
                  **kwargs):
-        super(sparseKernelFT1d, self).__init__()
+        super().__init__()
 
         self.modes1 = alpha
         self.scale = (1 / (c * k * c * k))
@@ -510,7 +510,7 @@ class MWT_CZ1d(nn.Module):
                  base='legendre',
                  initializer=None,
                  **kwargs):
-        super(MWT_CZ1d, self).__init__()
+        super().__init__()
 
         self.k = k
         self.L = L
@@ -548,8 +548,8 @@ class MWT_CZ1d(nn.Module):
         nl = pow(2, math.ceil(np.log2(N)))
         extra_x = x[:, 0:nl - N, :, :]
         x = torch.cat([x, extra_x], 1)
-        Ud = torch.jit.annotate(List[Tensor], [])
-        Us = torch.jit.annotate(List[Tensor], [])
+        Ud = torch.jit.annotate(list[Tensor], [])
+        Us = torch.jit.annotate(list[Tensor], [])
         for i in range(ns - self.L):
             d, x = self.wavelet_transform(x)
             Ud += [self.A(d) + self.B(x)]

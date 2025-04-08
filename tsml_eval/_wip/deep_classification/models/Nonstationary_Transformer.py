@@ -13,7 +13,7 @@ class Projector(nn.Module):
     '''
 
     def __init__(self, enc_in, seq_len, hidden_dims, hidden_layers, output_dim, kernel_size=3):
-        super(Projector, self).__init__()
+        super().__init__()
 
         padding = 1 if torch.__version__ >= '1.5.0' else 2
         self.series_conv = nn.Conv1d(in_channels=seq_len, out_channels=1, kernel_size=kernel_size, padding=padding,
@@ -45,7 +45,7 @@ class Model(nn.Module):
     """
 
     def __init__(self, configs):
-        super(Model, self).__init__()
+        super().__init__()
         self.task_name = configs.task_name
         self.pred_len = configs.pred_len
         self.seq_len = configs.seq_len

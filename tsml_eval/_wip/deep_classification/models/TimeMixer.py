@@ -12,7 +12,7 @@ class DFT_series_decomp(nn.Module):
     """
 
     def __init__(self, top_k=5):
-        super(DFT_series_decomp, self).__init__()
+        super().__init__()
         self.top_k = top_k
 
     def forward(self, x):
@@ -32,7 +32,7 @@ class MultiScaleSeasonMixing(nn.Module):
     """
 
     def __init__(self, configs):
-        super(MultiScaleSeasonMixing, self).__init__()
+        super().__init__()
 
         self.down_sampling_layers = torch.nn.ModuleList(
             [
@@ -76,7 +76,7 @@ class MultiScaleTrendMixing(nn.Module):
     """
 
     def __init__(self, configs):
-        super(MultiScaleTrendMixing, self).__init__()
+        super().__init__()
 
         self.up_sampling_layers = torch.nn.ModuleList(
             [
@@ -117,7 +117,7 @@ class MultiScaleTrendMixing(nn.Module):
 
 class PastDecomposableMixing(nn.Module):
     def __init__(self, configs):
-        super(PastDecomposableMixing, self).__init__()
+        super().__init__()
         self.seq_len = configs.seq_len
         self.pred_len = configs.pred_len
         self.down_sampling_window = configs.down_sampling_window
@@ -187,7 +187,7 @@ class PastDecomposableMixing(nn.Module):
 class Model(nn.Module):
 
     def __init__(self, configs):
-        super(Model, self).__init__()
+        super().__init__()
         self.configs = configs
         self.task_name = configs.task_name
         self.seq_len = configs.seq_len

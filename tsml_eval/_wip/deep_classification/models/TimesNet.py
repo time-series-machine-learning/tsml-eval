@@ -20,7 +20,7 @@ def FFT_for_Period(x, k=2):
 
 class TimesBlock(nn.Module):
     def __init__(self, configs):
-        super(TimesBlock, self).__init__()
+        super().__init__()
         self.seq_len = configs.seq_len
         self.pred_len = configs.pred_len
         self.k = configs.top_k
@@ -74,7 +74,7 @@ class Model(nn.Module):
     """
 
     def __init__(self, configs):
-        super(Model, self).__init__()
+        super().__init__()
         self.configs = configs
         self.task_name = configs.task_name
         self.seq_len = configs.seq_len
