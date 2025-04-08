@@ -138,5 +138,3 @@ class Model(nn.Module):
         if self.task_name == 'classification':
             raise NotImplementedError("Task classification for Tide is temporarily not supported")
         return None
-
-
