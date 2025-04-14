@@ -89,7 +89,7 @@ def wdtw_distance(
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances import wdtw_distance
+    >>> from tsml_eval._wip.rt.distances import wdtw_distance
     >>> x = np.array([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]])
     >>> y = np.array([[11, 12, 13, 14, 15, 16, 17, 18, 19, 20]])
     >>> round(wdtw_distance(x, y),1)
@@ -151,7 +151,7 @@ def wdtw_cost_matrix(
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances import wdtw_cost_matrix
+    >>> from tsml_eval._wip.rt.distances import wdtw_cost_matrix
     >>> x = np.array([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]])
     >>> y = np.array([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]])
     >>> wdtw_cost_matrix(x, y)
@@ -286,7 +286,7 @@ def wdtw_pairwise_distance(
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances import wdtw_pairwise_distance
+    >>> from tsml_eval._wip.rt.distances import wdtw_pairwise_distance
     >>> # Distance between each time series in a collection of time series
     >>> X = np.array([[[1, 2, 3]],[[4, 5, 6]], [[7, 8, 9]]])
     >>> wdtw_pairwise_distance(X)
@@ -432,7 +432,7 @@ def wdtw_alignment_path(
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances import wdtw_alignment_path
+    >>> from tsml_eval._wip.rt.distances import wdtw_alignment_path
     >>> x = np.array([[1, 2, 3, 6]])
     >>> y = np.array([[1, 2, 3, 4]])
     >>> path, dist = wdtw_alignment_path(x, y)

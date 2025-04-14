@@ -99,7 +99,7 @@ def lcss_distance(
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances import lcss_distance
+    >>> from tsml_eval._wip.rt.distances import lcss_distance
     >>> x = np.array([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]])
     >>> y = np.array([[11, 12, 13, 14, 15, 16, 17, 18, 19, 20]])
     >>> dist = lcss_distance(x, y)
@@ -160,7 +160,7 @@ def lcss_cost_matrix(
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances import lcss_cost_matrix
+    >>> from tsml_eval._wip.rt.distances import lcss_cost_matrix
     >>> x = np.array([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]])
     >>> y = np.array([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]])
     >>> lcss_cost_matrix(x, y)
@@ -273,7 +273,7 @@ def lcss_pairwise_distance(
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances import lcss_pairwise_distance
+    >>> from tsml_eval._wip.rt.distances import lcss_pairwise_distance
     >>> # Distance between each time series in a collection of time series
     >>> X = np.array([[[1, 2, 3]],[[4, 5, 6]], [[7, 8, 9]]])
     >>> lcss_pairwise_distance(X)
@@ -419,7 +419,7 @@ def lcss_alignment_path(
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances import lcss_alignment_path
+    >>> from tsml_eval._wip.rt.distances import lcss_alignment_path
     >>> x = np.array([[1, 2, 3, 6]])
     >>> y = np.array([[1, 2, 3, 4]])
     >>> path, dist = lcss_alignment_path(x, y)

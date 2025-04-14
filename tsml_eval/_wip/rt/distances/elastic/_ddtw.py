@@ -74,7 +74,7 @@ def ddtw_distance(
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances import ddtw_distance
+    >>> from tsml_eval._wip.rt.distances import ddtw_distance
     >>> x = np.array([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]])
     >>> y = np.array([[42, 23, 21, 55, 1, 19, 33, 34, 29, 19]])
     >>> round(ddtw_distance(x, y))
@@ -138,7 +138,7 @@ def ddtw_cost_matrix(
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances import ddtw_cost_matrix
+    >>> from tsml_eval._wip.rt.distances import ddtw_cost_matrix
     >>> x = np.array([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]])
     >>> y = np.array([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]])
     >>> ddtw_cost_matrix(x, y)
@@ -215,7 +215,7 @@ def ddtw_pairwise_distance(
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances import ddtw_pairwise_distance
+    >>> from tsml_eval._wip.rt.distances import ddtw_pairwise_distance
     >>> # Distance between each time series in a collection of time series
     >>> X = np.array([[[1, 2, 3]],[[49, 58, 61]], [[73, 82, 99]]])
     >>> ddtw_pairwise_distance(X)
@@ -374,7 +374,7 @@ def ddtw_alignment_path(
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances import ddtw_alignment_path
+    >>> from tsml_eval._wip.rt.distances import ddtw_alignment_path
     >>> x = np.array([[1, 2, 3, 6]])
     >>> y = np.array([[1, 2, 3, 4]])
     >>> ddtw_alignment_path(x, y)
@@ -416,7 +416,7 @@ def average_of_slope(q: np.ndarray) -> np.ndarray:
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances.elastic._ddtw import average_of_slope
+    >>> from tsml_eval._wip.rt.distances.elastic._ddtw import average_of_slope
     >>> q = np.array([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]])
     >>> average_of_slope(q)
     array([[1., 1., 1., 1., 1., 1., 1., 1.]])

@@ -43,7 +43,7 @@ def erp_distance(
     Where :math:`D_{0,j}` and :math:`D_{i,0}` are initialised to the sum of
     distances to $g$ for each series.
 
-    The value of :math:`g` is by default 0 in ``aeon``, but in [1]_ it is data dependent
+    The value of :math:`g` is by default 0 in ``tsml_eval._wip.rt``, but in [1]_ it is data dependent
     , selected from the range :math:`[\sigma/5, \sigma]`, where :math:`\sigma` is the
     average standard deviation of the training time series. When a
     series is multivariate (more than one channel), :math:`g` is an array where the
@@ -90,7 +90,7 @@ def erp_distance(
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances import erp_distance
+    >>> from tsml_eval._wip.rt.distances import erp_distance
     >>> x = np.array([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]])
     >>> y = np.array([[2, 2, 2, 2, 5, 6, 7, 8, 9, 10]])
     >>> erp_distance(x, y)
@@ -154,7 +154,7 @@ def erp_cost_matrix(
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances import erp_cost_matrix
+    >>> from tsml_eval._wip.rt.distances import erp_cost_matrix
     >>> x = np.array([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]])
     >>> y = np.array([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]])
     >>> erp_cost_matrix(x, y)
@@ -306,7 +306,7 @@ def erp_pairwise_distance(
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances import erp_pairwise_distance
+    >>> from tsml_eval._wip.rt.distances import erp_pairwise_distance
     >>> # Distance between each time series in a collection of time series
     >>> X = np.array([[[1, 2, 3]],[[4, 5, 6]], [[7, 8, 9]]])
     >>> erp_pairwise_distance(X)
@@ -462,13 +462,13 @@ def erp_alignment_path(
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances import erp_alignment_path
+    >>> from tsml_eval._wip.rt.distances import erp_alignment_path
     >>> x = np.array([[1, 2, 3, 6]])
     >>> y = np.array([[1, 2, 3, 4]])
     >>> erp_alignment_path(x, y)
     ([(0, 0), (1, 1), (2, 2), (3, 3)], 2.0)
     """
-    cost_matrix = erp_cost_matrix(x, y, window, g, g_arr)
+    cost_matrix = erp_cost_matrix(x, y, window, g, g_arr, itakura_max_slope)
     return (
         compute_min_return_path(cost_matrix),
         cost_matrix[x.shape[-1] - 1, y.shape[-1] - 1],

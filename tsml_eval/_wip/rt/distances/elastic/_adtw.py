@@ -68,7 +68,7 @@ def adtw_distance(
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances import adtw_distance
+    >>> from tsml_eval._wip.rt.distances import adtw_distance
     >>> x = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     >>> y = np.array([11, 12, 13, 14, 15, 16, 17, 18, 19, 20])
     >>> adtw_distance(x, y) # 1D series
@@ -135,7 +135,7 @@ def adtw_cost_matrix(
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances import adtw_cost_matrix
+    >>> from tsml_eval._wip.rt.distances import adtw_cost_matrix
     >>> x = np.array([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]])
     >>> y = np.array([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]])
     >>> adtw_cost_matrix(x, y)
@@ -250,7 +250,7 @@ def adtw_pairwise_distance(
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances import adtw_pairwise_distance
+    >>> from tsml_eval._wip.rt.distances import adtw_pairwise_distance
     >>> # Distance between each time series in a collection of time series
     >>> X = np.array([[[1, 2, 3]],[[4, 5, 6]], [[7, 8, 9]]])
     >>> adtw_pairwise_distance(X)
@@ -397,7 +397,7 @@ def adtw_alignment_path(
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances import adtw_alignment_path
+    >>> from tsml_eval._wip.rt.distances import adtw_alignment_path
     >>> x = np.array([[1, 2, 3, 6]])
     >>> y = np.array([[1, 2, 3, 4]])
     >>> adtw_alignment_path(x, y)

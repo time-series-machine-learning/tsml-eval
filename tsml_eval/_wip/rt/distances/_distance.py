@@ -34,6 +34,8 @@ from tsml_eval._wip.rt.distances.elastic import (
     erp_cost_matrix,
     erp_distance,
     erp_pairwise_distance,
+    gradient_weighted_distance,
+    gradient_weighted_pairwise_distance,
     lcss_alignment_path,
     lcss_cost_matrix,
     lcss_distance,
@@ -46,10 +48,41 @@ from tsml_eval._wip.rt.distances.elastic import (
     shape_dtw_cost_matrix,
     shape_dtw_distance,
     shape_dtw_pairwise_distance,
+    soft_adtw_alignment_path,
+    soft_adtw_cost_matrix,
+    soft_adtw_distance,
+    soft_adtw_gradient,
+    soft_adtw_pairwise_distance,
     soft_dtw_alignment_path,
     soft_dtw_cost_matrix,
     soft_dtw_distance,
+    soft_dtw_gradient,
     soft_dtw_pairwise_distance,
+    soft_erp_alignment_path,
+    soft_erp_cost_matrix,
+    soft_erp_distance,
+    soft_erp_gradient,
+    soft_erp_pairwise_distance,
+    soft_msm_alignment_path,
+    soft_msm_cost_matrix,
+    soft_msm_distance,
+    soft_msm_gradient,
+    soft_msm_pairwise_distance,
+    soft_shape_dtw_alignment_path,
+    soft_shape_dtw_cost_matrix,
+    soft_shape_dtw_distance,
+    soft_shape_dtw_gradient,
+    soft_shape_dtw_pairwise_distance,
+    soft_twe_alignment_path,
+    soft_twe_cost_matrix,
+    soft_twe_distance,
+    soft_twe_gradient,
+    soft_twe_pairwise_distance,
+    soft_wdtw_alignment_path,
+    soft_wdtw_cost_matrix,
+    soft_wdtw_distance,
+    soft_wdtw_gradient,
+    soft_wdtw_pairwise_distance,
     twe_alignment_path,
     twe_cost_matrix,
     twe_distance,
@@ -136,8 +169,8 @@ def distance(
     method : str or Callable
         The distance to use.
         A list of valid distance can be found in the documentation for
-        :func:`aeon.distances.get_distance_function` or by calling  the function
-        :func:`aeon.distances.get_distance_function_names`.
+        :func:`tsml_eval._wip.rt.distances.get_distance_function` or by calling  the function
+        :func:`tsml_eval._wip.rt.distances.get_distance_function_names`.
     kwargs : Any
         Arguments for distance. Refer to each distance documentation for a list of
         possible arguments.
@@ -156,7 +189,7 @@ def distance(
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances import distance
+    >>> from tsml_eval._wip.rt.distances import distance
     >>> x = np.array([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]])
     >>> y = np.array([[11, 12, 13, 14, 15, 16, 17, 18, 19, 20]])
     >>> distance(x, y, method="dtw")
@@ -191,8 +224,8 @@ def pairwise_distance(
     method : str or Callable
         The distance to use.
         A list of valid distance can be found in the documentation for
-        :func:`aeon.distances.get_distance_function` or by calling  the function
-        :func:`aeon.distances.get_distance_function_names`.
+        :func:`tsml_eval._wip.rt.distances.get_distance_function` or by calling  the function
+        :func:`tsml_eval._wip.rt.distances.get_distance_function_names`.
     symmetric : bool, default=True
         If True and a function is provided as the "method" paramter, then it will
         compute a symmetric distance matrix where d(x, y) = d(y, x). Only the lower
@@ -223,7 +256,7 @@ def pairwise_distance(
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances import pairwise_distance
+    >>> from tsml_eval._wip.rt.distances import pairwise_distance
     >>> # Distance between each time series in a collection of time series
     >>> X = np.array([[[1, 2, 3]],[[4, 5, 6]], [[7, 8, 9]]])
     >>> pairwise_distance(X, method='dtw')
@@ -363,8 +396,8 @@ def alignment_path(
     method : str or Callable
         The distance method to use.
         A list of valid distances can be found in the documentation for
-        :func:`aeon.distances.get_distance_function` or by calling  the function
-        :func:`aeon.distances.get_distance_function_names`.
+        :func:`tsml_eval._wip.rt.distances.get_distance_function` or by calling  the function
+        :func:`tsml_eval._wip.rt.distances.get_distance_function_names`.
     kwargs : any
         Arguments for distance. Refer to each distance documentation for a list of
         possible arguments.
@@ -387,7 +420,7 @@ def alignment_path(
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances import alignment_path
+    >>> from tsml_eval._wip.rt.distances import alignment_path
     >>> x = np.array([[1, 2, 3, 6]])
     >>> y = np.array([[1, 2, 3, 4]])
     >>> alignment_path(x, y, method='dtw')
@@ -418,8 +451,8 @@ def cost_matrix(
     method : str or Callable
         The distance to use.
         A list of valid distances can be found in the documentation for
-        :func:`aeon.distances.get_distance_function` or by calling  the function
-        :func:`aeon.distances.get_distance_function_names`.
+        :func:`tsml_eval._wip.rt.distances.get_distance_function` or by calling  the function
+        :func:`tsml_eval._wip.rt.distances.get_distance_function_names`.
     kwargs : Any
         Arguments for distance. Refer to each distance documentation for a list of
         possible arguments.
@@ -438,7 +471,7 @@ def cost_matrix(
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances import cost_matrix
+    >>> from tsml_eval._wip.rt.distances import cost_matrix
     >>> x = np.array([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]])
     >>> y = np.array([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]])
     >>> cost_matrix(x, y, method="dtw")
@@ -462,7 +495,7 @@ def cost_matrix(
 
 
 def get_distance_function_names() -> list[str]:
-    """Get a list of distance function names in aeon.
+    """Get a list of distance function names in tsml_eval._wip.rt.
 
     All distance function names have two associated functions:
         name_distance
@@ -474,11 +507,11 @@ def get_distance_function_names() -> list[str]:
     Returns
     -------
     List[str]
-        List of distance function names in aeon.
+        List of distance function names in tsml_eval._wip.rt.
 
     Examples
     --------
-    >>> from aeon.distances import get_distance_function_names
+    >>> from tsml_eval._wip.rt.distances import get_distance_function_names
     >>> names = get_distance_function_names()
     >>> names[0]
     'adtw'
@@ -533,7 +566,7 @@ def get_distance_function(method: Union[str, DistanceFunction]) -> DistanceFunct
 
     Examples
     --------
-    >>> from aeon.distances import get_distance_function
+    >>> from tsml_eval._wip.rt.distances import get_distance_function
     >>> import numpy as np
     >>> x = np.array([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]])
     >>> y = np.array([[11, 12, 13, 14, 15, 16, 17, 18, 19, 20]])
@@ -593,7 +626,7 @@ def get_pairwise_distance_function(
 
     Examples
     --------
-    >>> from aeon.distances import get_pairwise_distance_function
+    >>> from tsml_eval._wip.rt.distances import get_pairwise_distance_function
     >>> import numpy as np
     >>> x = np.array([[[1, 2, 3]],[[4, 5, 6]], [[7, 8, 9]]])
     >>> y = np.array([[[11, 12, 13]],[[14, 15, 16]], [[17, 18, 19]]])
@@ -644,7 +677,7 @@ def get_alignment_path_function(method: str) -> AlignmentPathFunction:
 
     Examples
     --------
-    >>> from aeon.distances import get_alignment_path_function
+    >>> from tsml_eval._wip.rt.distances import get_alignment_path_function
     >>> import numpy as np
     >>> x = np.array([[1, 2, 3, 4, 5]])
     >>> y = np.array([[11, 12, 13, 14, 15]])
@@ -693,7 +726,7 @@ def get_cost_matrix_function(method: str) -> CostMatrixFunction:
 
     Examples
     --------
-    >>> from aeon.distances import get_cost_matrix_function
+    >>> from tsml_eval._wip.rt.distances import get_cost_matrix_function
     >>> import numpy as np
     >>> x = np.array([[1, 2, 3, 4, 5]])
     >>> y = np.array([[11, 12, 13, 14, 15]])
@@ -881,6 +914,73 @@ DISTANCES = [
         "pairwise_distance": soft_dtw_pairwise_distance,
         "cost_matrix": soft_dtw_cost_matrix,
         "alignment_path": soft_dtw_alignment_path,
+        "gradient": soft_dtw_gradient,
+        "type": DistanceType.ELASTIC,
+        "symmetric": True,
+        "unequal_support": True,
+    },
+    {
+        "name": "soft_twe",
+        "distance": soft_twe_distance,
+        "pairwise_distance": soft_twe_pairwise_distance,
+        "cost_matrix": soft_twe_cost_matrix,
+        "alignment_path": soft_twe_alignment_path,
+        "gradient": soft_twe_gradient,
+        "type": DistanceType.ELASTIC,
+        "symmetric": True,
+        "unequal_support": True,
+    },
+    {
+        "name": "soft_msm",
+        "distance": soft_msm_distance,
+        "pairwise_distance": soft_msm_pairwise_distance,
+        "cost_matrix": soft_msm_cost_matrix,
+        "alignment_path": soft_msm_alignment_path,
+        "gradient": soft_msm_gradient,
+        "type": DistanceType.ELASTIC,
+        "symmetric": True,
+        "unequal_support": True,
+    },
+    {
+        "name": "soft_adtw",
+        "distance": soft_adtw_distance,
+        "pairwise_distance": soft_adtw_pairwise_distance,
+        "cost_matrix": soft_adtw_cost_matrix,
+        "alignment_path": soft_adtw_alignment_path,
+        "gradient": soft_adtw_gradient,
+        "type": DistanceType.ELASTIC,
+        "symmetric": True,
+        "unequal_support": True,
+    },
+    {
+        "name": "soft_shape_dtw",
+        "distance": soft_shape_dtw_distance,
+        "pairwise_distance": soft_shape_dtw_pairwise_distance,
+        "cost_matrix": soft_shape_dtw_cost_matrix,
+        "alignment_path": soft_shape_dtw_alignment_path,
+        "gradient": soft_shape_dtw_gradient,
+        "type": DistanceType.ELASTIC,
+        "symmetric": True,
+        "unequal_support": True,
+    },
+    {
+        "name": "soft_erp",
+        "distance": soft_erp_distance,
+        "pairwise_distance": soft_erp_pairwise_distance,
+        "cost_matrix": soft_erp_cost_matrix,
+        "alignment_path": soft_erp_alignment_path,
+        "gradient": soft_erp_gradient,
+        "type": DistanceType.ELASTIC,
+        "symmetric": True,
+        "unequal_support": True,
+    },
+    {
+        "name": "soft_wdtw",
+        "distance": soft_wdtw_distance,
+        "pairwise_distance": soft_wdtw_pairwise_distance,
+        "cost_matrix": soft_wdtw_cost_matrix,
+        "alignment_path": soft_wdtw_alignment_path,
+        "gradient": soft_wdtw_gradient,
         "type": DistanceType.ELASTIC,
         "symmetric": True,
         "unequal_support": True,
@@ -941,6 +1041,14 @@ DISTANCES = [
         "symmetric": True,
         "unequal_support": True,
     },
+    {
+        "name": "gradient_weighted",
+        "distance": gradient_weighted_distance,
+        "pairwise_distance": gradient_weighted_pairwise_distance,
+        "type": DistanceType.ELASTIC,
+        "symmetric": True,
+        "unequal_support": True,
+    },
 ]
 
 DISTANCES_DICT = {d["name"]: d for d in DISTANCES}
@@ -954,6 +1062,16 @@ UNEQUAL_LENGTH_SUPPORT_DISTANCES = [
 ]
 
 ELASTIC_DISTANCES = [d["name"] for d in DISTANCES if d["type"] == DistanceType.ELASTIC]
+ELASTIC_DISTANCE_GRADIENT = [
+    d["name"]
+    for d in DISTANCES
+    if "gradient" in d and d["type"] == DistanceType.ELASTIC
+]
+ELASTIC_DISTANCE_GRADIENT_WITH_ARRS = [
+    d["name"]
+    for d in DISTANCES
+    if "gradient_with_arrs" in d and d["type"] == DistanceType.ELASTIC
+]
 POINTWISE_DISTANCES = [
     d["name"] for d in DISTANCES if d["type"] == DistanceType.POINTWISE
 ]
@@ -961,6 +1079,7 @@ MP_DISTANCES = [
     d["name"] for d in DISTANCES if d["type"] == DistanceType.MATRIX_PROFILE
 ]
 MIN_DISTANCES = [d["name"] for d in DISTANCES if d["type"] == DistanceType.MIN_DISTANCE]
+SOFT_DISTANCES = [d["name"] for d in DISTANCES if "soft" in d["name"]]
 
 # This is a very specific list for testing where a time series of length 1 is not
 # supported

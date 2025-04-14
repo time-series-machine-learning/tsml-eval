@@ -6,7 +6,7 @@ from numba import prange
 from sklearn.utils import check_random_state
 
 from tsml_eval._wip.rt.classification.distance_based import KNeighborsTimeSeriesClassifier
-from aeon.clustering.averaging._ba_utils import _get_alignment_path
+from tsml_eval._wip.rt.clustering.averaging._ba_utils import _get_alignment_path
 from aeon.transformations.collection import BaseCollectionTransformer
 
 __maintainer__ = ["chrisholder"]

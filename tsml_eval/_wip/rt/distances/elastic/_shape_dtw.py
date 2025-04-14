@@ -587,7 +587,7 @@ def shape_dtw_pairwise_distance(
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances import shape_dtw_pairwise_distance
+    >>> from tsml_eval._wip.rt.distances import shape_dtw_pairwise_distance
     >>> # Distance between each time series in a collection of time series
     >>> X = np.array([[[1, 2, 3]],[[4, 5, 6]], [[7, 8, 9]]])
     >>> shape_dtw_pairwise_distance(X)

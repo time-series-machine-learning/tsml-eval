@@ -108,7 +108,7 @@ def msm_distance(
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances import msm_distance
+    >>> from tsml_eval._wip.rt.distances import msm_distance
     >>> x = np.array([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]])
     >>> y = np.array([[11, 12, 13, 14, 15, 16, 17, 18, 19, 20]])
     >>> dist = msm_distance(x, y)
@@ -189,7 +189,7 @@ def msm_cost_matrix(
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances import msm_cost_matrix
+    >>> from tsml_eval._wip.rt.distances import msm_cost_matrix
     >>> x = np.array([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]])
     >>> y = np.array([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]])
     >>> msm_cost_matrix(x, y)
@@ -397,7 +397,7 @@ def msm_pairwise_distance(
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances import msm_pairwise_distance
+    >>> from tsml_eval._wip.rt.distances import msm_pairwise_distance
     >>> # Distance between each time series in a collection of time series
     >>> X = np.array([[[1, 2, 3]],[[4, 5, 6]], [[7, 8, 9]]])
     >>> msm_pairwise_distance(X)
@@ -551,7 +551,7 @@ def msm_alignment_path(
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances import msm_alignment_path
+    >>> from tsml_eval._wip.rt.distances import msm_alignment_path
     >>> x = np.array([[1, 2, 3, 6]])
     >>> y = np.array([[1, 2, 3, 4]])
     >>> msm_alignment_path(x, y)

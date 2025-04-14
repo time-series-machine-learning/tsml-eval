@@ -89,7 +89,7 @@ def twe_distance(
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances import twe_distance
+    >>> from tsml_eval._wip.rt.distances import twe_distance
     >>> x = np.array([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]])
     >>> y = np.array([[11, 12, 13, 14, 15, 16, 17, 18, 19, 20]])
     >>> twe_distance(x, y)
@@ -154,7 +154,7 @@ def twe_cost_matrix(
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances import twe_cost_matrix
+    >>> from tsml_eval._wip.rt.distances import twe_cost_matrix
     >>> x = np.array([[1, 2, 3, 4, 5, 6, 7, 8]])
     >>> y = np.array([[1, 2, 3, 4, 5, 6, 7, 8]])
     >>> twe_cost_matrix(x, y)
@@ -297,7 +297,7 @@ def twe_pairwise_distance(
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances import twe_pairwise_distance
+    >>> from tsml_eval._wip.rt.distances import twe_pairwise_distance
     >>> # Distance between each time series in a collection of time series
     >>> X = np.array([[[1, 2, 3]],[[4, 5, 6]], [[7, 8, 9]]])
     >>> twe_pairwise_distance(X)
@@ -464,7 +464,7 @@ def twe_alignment_path(
     Examples
     --------
     >>> import numpy as np
-    >>> from aeon.distances import twe_alignment_path
+    >>> from tsml_eval._wip.rt.distances import twe_alignment_path
     >>> x = np.array([[1, 2, 3, 6]])
     >>> y = np.array([[1, 2, 3, 4]])
     >>> twe_alignment_path(x, y)
