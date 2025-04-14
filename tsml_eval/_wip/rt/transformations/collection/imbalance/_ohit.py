@@ -254,3 +254,13 @@ class OHIT(BaseCollectionTransformer):
     @classmethod
     def _get_test_params(cls, parameter_set="default"):
         return {"n_clusters": 3}
+
+if __name__ == "__main__":
+    # Example usage
+    X = np.random.randn(100, 1, 100)
+    y = np.random.choice([0, 0, 1], size=100)
+    print(np.unique(y, return_counts=True))
+    tsmote = OHIT(random_state=0)
+    X_resampled, y_resampled = tsmote.fit_transform(X, y)
+    print(np.unique(y_resampled, return_counts=True))
+    # Output: (200, 1, 100) (200,)
