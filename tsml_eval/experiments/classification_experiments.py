@@ -102,6 +102,7 @@ def run_experiment(args):
                     ),
                     n_jobs=1,
                 ),
+                transform_train_only=args.transform_train_only,
                 build_train_file=args.train_fold,
                 write_attributes=args.write_attributes,
                 att_max_shape=args.att_max_shape,
@@ -120,6 +121,7 @@ def run_experiment(args):
         dataset_name = "MinimalChinatown"
         row_normalise = False
         transform_name = None
+        transform_train_only = False
         resample_id = 0
         train_fold = False
         write_attributes = True
@@ -154,6 +156,7 @@ def run_experiment(args):
             classifier_name=estimator_name,
             resample_id=resample_id,
             data_transforms=transform,
+            transform_train_only=transform_train_only,
             build_train_file=train_fold,
             write_attributes=write_attributes,
             att_max_shape=att_max_shape,

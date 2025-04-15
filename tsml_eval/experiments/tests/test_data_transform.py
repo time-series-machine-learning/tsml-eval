@@ -9,7 +9,11 @@ from tsml_eval.testing.testing_utils import _check_set_method, _check_set_method
 
 def test_get_data_transform_by_name():
     """Test get_data_transform_by_name method."""
-    transform_name_lists = [_get_data_transform.transformers]
+    transform_name_lists = [
+        _get_data_transform.scaling_transformers,
+        _get_data_transform.unbalanced_transformers,
+        _get_data_transform.unequal_transformers,
+    ]
 
     transform_list = []
     transform_dict = {}
