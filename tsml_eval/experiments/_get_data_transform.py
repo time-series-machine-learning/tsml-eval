@@ -14,7 +14,7 @@ unbalanced_transformers = [
     "adasyn",
     "tsmote",
     "ohit",
-    'esmote',
+    "esmote",
 ]
 unequal_transformers = [
     ["padder", "zero-padder"],
