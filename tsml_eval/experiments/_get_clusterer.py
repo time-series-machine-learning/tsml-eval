@@ -128,6 +128,7 @@ distance_based_clusterers = [
     "som-soft_dtw",
     ["kspectralcentroid", "ksc"],
     ["timeserieskshape", "kshape"],
+    "kasba",
 ]
 feature_based_clusterers = [
     ["catch22", "catch22clusterer"],
@@ -431,6 +432,13 @@ def _set_clusterer_distance_based(
             tol=1e-06,
             random_state=random_state,
             n_jobs=n_jobs,
+            **kwargs,
+        )
+    elif c == "kasba":
+        from aeon.clustering import KASBA
+
+        return KASBA(
+            random_state=random_state,
             **kwargs,
         )
 
