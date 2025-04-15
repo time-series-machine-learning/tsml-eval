@@ -10,16 +10,15 @@ start_fold=1
 max_num_submitted=100
 
 # Queue options are https://sotonac.sharepoint.com/teams/HPCCommunityWiki/SitePages/Iridis%205%20Job-submission-and-Limits-Quotas.aspx
-# AMD for iridisX002, batch for iridis5
-queue="amd"
+queue="batch"
 
 # Enter your username and email here
-username="cq2u24"
+username="ajb2u23"
 mail="NONE"
 mailto="$username@soton.ac.uk"
 
 # MB for jobs, increase incrementally and try not to use more than you need. If you need hundreds of GB consider the huge memory queue
-max_memory=32000
+max_memory=8000
 
 # Max allowable is 60 hours
 max_time="60:00:00"
@@ -28,11 +27,11 @@ max_time="60:00:00"
 start_point=1
 
 # Put your home directory here
-local_path="/home/$username/"
-data_path="/scratch/$username/"
+local_path="/mainfs/home/$username/"
+
 # Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
-data_dir="$data_path/Data/Ford/"
-datasets="$data_path/DataSetLists/Ford.txt"
+data_dir="$local_path/Data/"
+datasets="$local_path/DataSetLists/Classification.txt"
 
 # Results and output file write location. Change these to reflect your own file structure
 results_dir="$local_path/ClassificationResults/results/"
@@ -47,7 +46,7 @@ env_name="tsml-eval"
 
 # Classifiers to loop over. Must be seperated by a space
 # See list of potential classifiers in set_classifier
-classifiers_to_run="hc2 multirockethydra"
+classifiers_to_run="ROCKET DrCIF"
 
 # You can add extra arguments here. See tsml_eval/utils/arguments.py parse_args
 # You will have to add any variable to the python call close to the bottom of the script
@@ -62,15 +61,6 @@ predefined_folds="false"
 # Normalise data before fit/predict
 normalise_data="false"
 
-# Data transformation options
-data_transform_name="smote"
-transform_train_only="true"
-
-results_dir="${results_dir%/}_${data_transform_name}/"
-results_dir=$(echo "$results_dir" | sed 's#//*#/#g')
-out_dir="${out_dir%/}_${data_transform_name}/"
-out_dir=$(echo "$out_dir" | sed 's#//*#/#g')
-
 # ======================================================================================
 # 	Experiment configuration end
 # ======================================================================================
@@ -83,12 +73,6 @@ predefined_folds=$([ "${predefined_folds,,}" == "true" ] && echo "-pr" || echo "
 
 # Set to -rn to normalise data
 normalise_data=$([ "${normalise_data,,}" == "true" ] && echo "-rn" || echo "")
-
-# Set to -dtn to use data transformation name
-data_transform_name=$([ -n "${data_transform_name}" ] && echo "-dtn ${data_transform_name}" || echo "")
-
-# Set to -tto to use transform_train_only
-transform_train_only=$([ "${transform_train_only,,}" == "true" ] && echo "-tto" || echo "")
 
 # dont submit to serial directly
 queue=$([ "$queue" == "serial" ] && echo "batch" || echo "$queue")
@@ -128,7 +112,7 @@ done
 
 if [ "${array_jobs}" != "" ]; then
 
-# This creates the scrip to run the job based on the info above module load anaconda/py3.10 for iridis5 and module load conda for iridisX002
+# This creates the scrip to run the job based on the info above
 echo "#!/bin/bash
 #SBATCH --mail-type=${mail}
 #SBATCH --mail-user=${mailto}
@@ -143,12 +127,12 @@ echo "#!/bin/bash
 
 . /etc/profile
 
-module load conda
+module load anaconda/py3.10
 source activate $env_name
 
 # Input args to the default classification_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/classification_experiments.py
-python -u ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_train_files} ${predefined_folds} ${normalise_data} ${data_transform_name} ${transform_train_only}"  > generatedFile.sub
+python -u ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_train_files} ${predefined_folds} ${normalise_data}"  > generatedFile.sub
 
 echo "${count} ${classifier}/${dataset}"
 
