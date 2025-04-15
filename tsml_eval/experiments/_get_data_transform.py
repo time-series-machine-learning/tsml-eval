@@ -6,8 +6,17 @@ from aeon.transformations.collection import Normalizer
 
 from tsml_eval.utils.functions import str_in_nested_list
 
-transformers = [
+scaling_transformers = [
     ["normalizer", "normaliser"],
+]
+unbalanced_transformers = [
+    "smote",
+    "adasyn",
+    "tsmote",
+    "ohit",
+    "esmote",
+]
+unequal_transformers = [
     ["padder", "zero-padder"],
     "mean-padder",
     "zero-noise-padder",
@@ -59,8 +68,12 @@ def get_data_transform_by_name(
         for transformer_name in transformer_names:
             t = transformer_name.casefold()
 
-            if str_in_nested_list(transformers, t):
-                t_list.append(_set_transformer(t, random_state, n_jobs))
+            if str_in_nested_list(scaling_transformers, t):
+                t_list.append(_set_scaling_transformer(t, random_state, n_jobs))
+            elif str_in_nested_list(unbalanced_transformers, t):
+                t_list.append(_set_unbalanced_transformer(t, random_state, n_jobs))
+            elif str_in_nested_list(unequal_transformers, t):
+                t_list.append(_set_unequal_transformer(t, random_state, n_jobs))
             else:
                 raise ValueError(
                     f"UNKNOWN TRANSFORMER: {t} in get_data_transform_by_name"
@@ -69,10 +82,13 @@ def get_data_transform_by_name(
     return t_list if len(t_list) > 1 else t_list[0]
 
 
-def _set_transformer(t, random_state, n_jobs):
+def _set_scaling_transformer(t, random_state, n_jobs):
     if t == "normalizer" or t == "normaliser":
         return Normalizer()
-    elif t == "padder" or t == "zero-padder":
+
+
+def _set_unequal_transformer(t, random_state, n_jobs):
+    if t == "padder" or t == "zero-padder":
         from aeon.transformations.collection import Padder
 
         return Padder()
@@ -109,3 +125,66 @@ def _set_transformer(t, random_state, n_jobs):
         from tsml_eval._wip.unequal_length._resize import Resizer
 
         return Resizer()
+
+
+def _set_unbalanced_transformer(t, random_state, n_jobs):
+    if t == "smote":
+        from tsml_eval._wip.rt.transformations.collection.imbalance._smote import (
+            SMOTE,
+        )
+
+        return SMOTE(
+            n_neighbors=5,
+            distance="euclidean",
+            distance_params=None,
+            weights="uniform",
+            n_jobs=n_jobs,
+            random_state=random_state,
+        )
+
+    elif t == "adasyn":
+        from tsml_eval._wip.rt.transformations.collection.imbalance._adasyn import (
+            ADASYN,
+        )
+
+        return ADASYN(
+            n_neighbors=5,
+            distance="euclidean",
+            distance_params=None,
+            weights="uniform",
+            n_jobs=n_jobs,
+            random_state=random_state,
+        )
+
+    elif t == "tsmote":
+        from tsml_eval._wip.rt.transformations.collection.imbalance._tsmote import (
+            TSMOTE,
+        )
+
+        return TSMOTE(
+            random_state=random_state,
+            spy_size=0.15,
+            window_size=None,
+            distance="euclidean",
+            distance_params=None,
+        )
+    elif t == "ohit":
+        from tsml_eval._wip.rt.transformations.collection.imbalance._ohit import (
+            OHIT,
+        )
+
+        return OHIT(distance="euclidean", random_state=random_state)
+
+    elif t == "esmote":
+        from tsml_eval._wip.rt.transformations.collection.imbalance._esmote import (
+            ESMOTE,
+        )
+
+        return ESMOTE(
+            n_neighbors=5,
+            distance="msm",
+            distance_params=None,
+            weights="uniform",
+            n_jobs=n_jobs,
+            random_state=random_state,
+        )
