@@ -7,9 +7,10 @@ from scipy.optimize import linear_sum_assignment
 from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.cluster import KMeans
 from sklearn.utils import check_random_state
+from sklearn.utils.validation import check_is_fitted
 
 
-class IterativeVotingClustering(BaseEstimator, ClusterMixin):
+class IterativeVotingClustering(ClusterMixin, BaseEstimator):
     """
     IVC (Iterative Voting Clustering) Consensus Clusterer.
 
@@ -122,6 +123,8 @@ class IterativeVotingClustering(BaseEstimator, ClusterMixin):
 
     def predict(self, X):
         """Predict cluster labels for X."""
+        check_is_fitted(self)
+
         if isinstance(X, np.ndarray) and len(X.shape) == 3 and X.shape[1] == 1:
             X = np.reshape(X, (X.shape[0], -1))
         elif isinstance(X, pd.DataFrame) and len(X.shape) == 2:

@@ -7,9 +7,10 @@ from scipy.optimize import linear_sum_assignment
 from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.cluster import KMeans
 from sklearn.utils import check_random_state
+from sklearn.utils.validation import check_is_fitted
 
 
-class SimpleVote(BaseEstimator, ClusterMixin):
+class SimpleVote(ClusterMixin, BaseEstimator):
     """
     SimpleVote clustering ensemble.
 
@@ -119,6 +120,8 @@ class SimpleVote(BaseEstimator, ClusterMixin):
 
     def predict_proba(self, X):
         """Predict cluster probabilities for X."""
+        check_is_fitted(self)
+
         if isinstance(X, np.ndarray) and len(X.shape) == 3 and X.shape[1] == 1:
             X = np.reshape(X, (X.shape[0], -1))
         elif isinstance(X, pd.DataFrame) and len(X.shape) == 2:
