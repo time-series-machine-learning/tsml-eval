@@ -4,10 +4,11 @@ __maintainer__ = ["MatthewMiddlehurst"]
 __all__ = ["SklearnToTsmlClassifier"]
 
 import numpy as np
+from aeon.base._base import _clone_estimator
 from sklearn.base import ClassifierMixin
 from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils.validation import check_is_fitted
-from tsml.base import BaseTimeSeriesEstimator, _clone_estimator
+from tsml.base import BaseTimeSeriesEstimator
 
 
 class SklearnToTsmlClassifier(ClassifierMixin, BaseTimeSeriesEstimator):

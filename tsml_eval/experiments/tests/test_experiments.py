@@ -2,7 +2,7 @@
 
 import os
 
-from tsml.dummy import DummyClassifier
+from aeon.classification import DummyClassifier
 
 from tsml_eval.experiments import (
     classification_experiments,

@@ -4,9 +4,10 @@ __maintainer__ = ["MatthewMiddlehurst"]
 __all__ = ["SklearnToTsmlClusterer"]
 
 import numpy as np
+from aeon.base._base import _clone_estimator
 from sklearn.base import ClusterMixin
 from sklearn.utils.validation import check_is_fitted
-from tsml.base import BaseTimeSeriesEstimator, _clone_estimator
+from tsml.base import BaseTimeSeriesEstimator
 
 
 class SklearnToTsmlClusterer(ClusterMixin, BaseTimeSeriesEstimator):

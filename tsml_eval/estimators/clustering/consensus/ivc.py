@@ -2,11 +2,11 @@
 
 import numpy as np
 import pandas as pd
+from aeon.base._base import _clone_estimator
 from scipy.optimize import linear_sum_assignment
 from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.cluster import KMeans
 from sklearn.utils import check_random_state
-from tsml.base import _clone_estimator
 
 
 class IterativeVotingClustering(BaseEstimator, ClusterMixin):
