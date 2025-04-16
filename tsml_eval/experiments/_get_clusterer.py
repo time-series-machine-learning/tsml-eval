@@ -128,6 +128,7 @@ distance_based_clusterers = [
     "som-soft_dtw",
     ["kspectralcentroid", "ksc"],
     ["timeserieskshape", "kshape"],
+    "kasba",
 ]
 feature_based_clusterers = [
     ["catch22", "catch22clusterer"],
@@ -135,8 +136,8 @@ feature_based_clusterers = [
     ["summary", "summaryclusterer"],
 ]
 other_clusterers = [
-    ["dummyclusterer", "dummy", "dummyclusterer-tsml"],
-    "dummyclusterer-aeon",
+    ["dummyclusterer", "dummy", "dummyclusterer-aeon"],
+    "dummyclusterer-tsml",
     "dummyclusterer-sklearn",
 ]
 vector_clusterers = [
@@ -433,6 +434,13 @@ def _set_clusterer_distance_based(
             n_jobs=n_jobs,
             **kwargs,
         )
+    elif c == "kasba":
+        from aeon.clustering import KASBA
+
+        return KASBA(
+            random_state=random_state,
+            **kwargs,
+        )
 
 
 def _get_distance_default_params(
@@ -496,20 +504,14 @@ def _set_clusterer_feature_based(
 
 
 def _set_clusterer_other(c, random_state, n_jobs, fit_contract, checkpoint, kwargs):
-    if c == "dummyclusterer" or c == "dummy" or c == "dummyclusterer-tsml":
+    if c == "dummyclusterer" or c == "dummy" or c == "dummyclusterer-aeon":
+        from aeon.clustering.dummy import DummyClusterer
+
+        return DummyClusterer(random_state=random_state, **kwargs)
+    elif c == "dummyclusterer-tsml":
         from tsml.dummy import DummyClusterer
 
         return DummyClusterer(strategy="random", random_state=random_state, **kwargs)
-    elif c == "dummyclusterer-aeon":
-        return TimeSeriesKMeans(
-            n_clusters=1,
-            n_init=1,
-            init="random",
-            distance="euclidean",
-            max_iter=1,
-            random_state=random_state,
-            **kwargs,
-        )
     elif c == "dummyclusterer-sklearn":
         return KMeans(
             n_init=1,

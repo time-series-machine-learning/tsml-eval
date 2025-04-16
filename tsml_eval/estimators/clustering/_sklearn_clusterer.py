@@ -4,9 +4,10 @@ __maintainer__ = ["MatthewMiddlehurst"]
 __all__ = ["SklearnToTsmlClusterer"]
 
 import numpy as np
+from aeon.base._base import _clone_estimator
 from sklearn.base import ClusterMixin
 from sklearn.utils.validation import check_is_fitted
-from tsml.base import BaseTimeSeriesEstimator, _clone_estimator
+from tsml.base import BaseTimeSeriesEstimator
 
 
 class SklearnToTsmlClusterer(ClusterMixin, BaseTimeSeriesEstimator):
@@ -33,7 +34,11 @@ class SklearnToTsmlClusterer(ClusterMixin, BaseTimeSeriesEstimator):
         if self.clusterer is None:
             raise ValueError("Clusterer not set")
 
-        X = self._validate_data(X=X)
+        X = self._validate_data(
+            X=X,
+            ensure_univariate=not self.concatenate_channels,
+            ensure_equal_length=not self.pad_unequal,
+        )
         X = self._convert_X(
             X,
             pad_unequal=self.pad_unequal,
@@ -67,7 +72,6 @@ class SklearnToTsmlClusterer(ClusterMixin, BaseTimeSeriesEstimator):
     def _more_tags(self):
         return {
             "X_types": ["2darray"],
-            "equal_length_only": (
-                False if self.pad_unequal or self.concatenate_channels else True
-            ),
+            "equal_length_only": (False if self.pad_unequal else True),
+            "univariate_only": False if self.concatenate_channels else True,
         }

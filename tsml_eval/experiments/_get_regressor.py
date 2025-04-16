@@ -65,8 +65,8 @@ interval_based_regressors = [
     ["quantregressor", "quant"],
 ]
 other_regressors = [
-    ["dummyregressor", "dummy", "dummyregressor-tsml"],
-    "dummyregressor-aeon",
+    ["dummyregressor", "dummy", "dummyregressor-aeon"],
+    "dummyregressor-tsml",
     ["dummyregressor-sklearn", "meanpredictorregressor", "dummymeanpred"],
     ["medianpredictorregressor", "dummymedianpred"],
 ]
@@ -520,12 +520,12 @@ def _set_regressor_interval_based(
 
 
 def _set_regressor_other(r, random_state, n_jobs, fit_contract, checkpoint, kwargs):
-    if r == "dummy" or r == "dummyregressor" or r == "dummyregressor-tsml":
-        from tsml.dummy import DummyRegressor
+    if r == "dummy" or r == "dummyregressor" or r == "dummyregressor-aeon":
+        from aeon.regression import DummyRegressor
 
         return DummyRegressor(**kwargs)
-    elif r == "dummyregressor-aeon":
-        from aeon.regression import DummyRegressor
+    elif r == "dummyregressor-tsml":
+        from tsml.dummy import DummyRegressor
 
         return DummyRegressor(**kwargs)
     elif (
