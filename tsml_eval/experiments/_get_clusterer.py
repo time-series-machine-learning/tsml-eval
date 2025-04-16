@@ -136,8 +136,8 @@ feature_based_clusterers = [
     ["summary", "summaryclusterer"],
 ]
 other_clusterers = [
-    ["dummyclusterer", "dummy", "dummyclusterer-tsml"],
-    "dummyclusterer-aeon",
+    ["dummyclusterer", "dummy", "dummyclusterer-aeon"],
+    "dummyclusterer-tsml",
     "dummyclusterer-sklearn",
 ]
 vector_clusterers = [

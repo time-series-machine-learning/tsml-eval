@@ -65,8 +65,8 @@ interval_based_regressors = [
     ["quantregressor", "quant"],
 ]
 other_regressors = [
-    ["dummyregressor", "dummy", "dummyregressor-tsml"],
-    "dummyregressor-aeon",
+    ["dummyregressor", "dummy", "dummyregressor-aeon"],
+    "dummyregressor-tsml",
     ["dummyregressor-sklearn", "meanpredictorregressor", "dummymeanpred"],
     ["medianpredictorregressor", "dummymedianpred"],
 ]

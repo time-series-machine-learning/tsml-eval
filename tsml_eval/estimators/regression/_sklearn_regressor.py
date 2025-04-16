@@ -34,7 +34,12 @@ class SklearnToTsmlRegressor(RegressorMixin, BaseTimeSeriesEstimator):
         if self.regressor is None:
             raise ValueError("Regressor not set")
 
-        X, y = self._validate_data(X=X, y=y)
+        X, y = self._validate_data(
+            X=X,
+            y=y,
+            ensure_univariate=not self.concatenate_channels,
+            ensure_equal_length=not self.pad_unequal,
+        )
         X = self._convert_X(
             X,
             pad_unequal=self.pad_unequal,
@@ -66,7 +71,6 @@ class SklearnToTsmlRegressor(RegressorMixin, BaseTimeSeriesEstimator):
     def _more_tags(self):
         return {
             "X_types": ["2darray"],
-            "equal_length_only": (
-                False if self.pad_unequal or self.concatenate_channels else True
-            ),
+            "equal_length_only": (False if self.pad_unequal else True),
+            "univariate_only": False if self.concatenate_channels else True,
         }
