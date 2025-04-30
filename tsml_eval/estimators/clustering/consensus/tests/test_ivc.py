@@ -20,7 +20,7 @@ def test_ivc_init_methods(init):
 
     ivc = IterativeVotingClustering(
         n_clusters=4,
-        max_iterations=10,
+        max_iterations=20,
         init=init,
     )
     ivc.fit(X, y)
