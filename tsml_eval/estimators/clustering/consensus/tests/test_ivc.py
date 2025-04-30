@@ -16,7 +16,7 @@ from tsml_eval.testing.testing_utils import _TEST_RESULTS_PATH
 @pytest.mark.parametrize("init", ["plus", "random", "aligned"])
 def test_ivc_init_methods(init):
     """Test IVC init methods."""
-    X, y = make_example_3d_numpy(n_labels=4)
+    X, y = make_example_3d_numpy(n_cases=30, n_timepoints=30, n_labels=4)
 
     ivc = IterativeVotingClustering(
         n_clusters=4,
