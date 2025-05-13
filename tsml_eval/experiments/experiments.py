@@ -1219,7 +1219,7 @@ def run_forecasting_experiment(
         )
 
     start = int(round(time.time() * 1000))
-    test_preds = forecaster.predict(np.arange(1, len(test) + 1))
+    test_preds = forecaster.predict(test)
     test_time = (
         int(round(time.time() * 1000))
         - start
@@ -1314,13 +1314,13 @@ def load_and_run_forecasting_experiment(
     else:
         attribute_file_path = None
 
-    train = pd.read_csv(
-        f"{problem_path}/{dataset}/{dataset}_TRAIN.csv", index_col=0
-    ).squeeze("columns")
+    train = pd.read_csv(f"{problem_path}/{dataset}/{dataset}_TRAIN.csv").squeeze(
+        "columns"
+    )
     train = train.astype(float).to_numpy()
-    test = pd.read_csv(
-        f"{problem_path}/{dataset}/{dataset}_TEST.csv", index_col=0
-    ).squeeze("columns")
+    test = pd.read_csv(f"{problem_path}/{dataset}/{dataset}_TEST.csv").squeeze(
+        "columns"
+    )
     test = test.astype(float).to_numpy()
 
     run_forecasting_experiment(
