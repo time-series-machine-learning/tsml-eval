@@ -1,7 +1,7 @@
 """Class for storing and loading results from a forecasting experiment."""
 
 import numpy as np
-from sklearn.metrics import mean_absolute_percentage_error
+from sklearn.metrics import mean_absolute_percentage_error, mean_squared_error
 
 from tsml_eval.evaluation.storage.estimator_results import EstimatorResults
 from tsml_eval.utils.results_writing import write_forecasting_results
@@ -56,6 +56,8 @@ class ForecasterResults(EstimatorResults):
     ----------
     mean_absolute_percentage_error : float or None
         Mean absolute percentage error of the predictions.
+    mean_absolute_squared_error : float or None
+        Mean absolute squared error of the predictions.
 
     Examples
     --------
@@ -100,6 +102,7 @@ class ForecasterResults(EstimatorResults):
         self.forecasting_horizon = None
 
         self.mean_absolute_percentage_error = None
+        self.mean_absolute_squared_error = None
 
         super().__init__(
             dataset_name=dataset_name,
@@ -118,6 +121,7 @@ class ForecasterResults(EstimatorResults):
     # var_name: (display_name, higher is better, is timing)
     statistics = {
         "mean_absolute_percentage_error": ("MAPE", False, False),
+        "mean_absolute_squared_error": ("MASE", False, False),
         **EstimatorResults.statistics,
     }
 
@@ -141,6 +145,10 @@ class ForecasterResults(EstimatorResults):
             self.mean_absolute_percentage_error = mean_absolute_percentage_error(
                 self.target_labels, self.predictions
             )
+        if self.mean_absolute_squared_error is None:
+            self.mean_absolute_squared_error = mean_squared_error(
+                self.target_labels, self.predictions
+            )
 
         write_forecasting_results(
             self.predictions,
@@ -155,6 +163,7 @@ class ForecasterResults(EstimatorResults):
             first_line_comment=self.description,
             parameter_info=self.parameter_info,
             mape=self.mean_absolute_percentage_error,
+            mase=self.mean_absolute_squared_error,
             fit_time=self.fit_time,
             predict_time=self.predict_time,
             benchmark_time=self.benchmark_time,
@@ -202,6 +211,11 @@ class ForecasterResults(EstimatorResults):
 
         if self.mean_absolute_percentage_error is None or overwrite:
             self.mean_absolute_percentage_error = mean_absolute_percentage_error(
+                self.target_labels, self.predictions
+            )
+        
+        if self.mean_absolute_squared_error is None or overwrite:
+            self.mean_absolute_squared_error = mean_squared_error(
                 self.target_labels, self.predictions
             )
 

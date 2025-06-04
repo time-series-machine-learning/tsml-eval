@@ -394,6 +394,7 @@ def write_forecasting_results(
     first_line_comment=None,
     parameter_info="No Parameter Info",
     mape=-1,
+    mase=-1,
     fit_time=-1,
     predict_time=-1,
     benchmark_time=-1,
@@ -439,6 +440,8 @@ def write_forecasting_results(
         values from the model build.
     mape: float, default=-1
         The mean absolute percentage error of the predictions.
+    mase: float, default=-1
+        The mean absolute percentage error of the predictions.
     fit_time : int, default=-1
         The time taken to fit the forecaster.
     predict_time : int, default=-1
@@ -450,6 +453,7 @@ def write_forecasting_results(
     """
     third_line = (
         f"{mape},"
+        f"{mase},"
         f"{fit_time},"
         f"{predict_time},"
         f"{benchmark_time},"
