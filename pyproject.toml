@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tsml-eval"
-version = "0.5.0"
+version = "0.6.0"
 description = "A package for benchmarking time series machine learning tools."
 authors = [
     {name = "Matthew Middlehurst", email = "m.b.middlehurst@soton.ac.uk"},
@@ -38,11 +38,12 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
-requires-python = ">=3.9,<3.13"
+requires-python = ">=3.9,<3.14"
 dependencies = [
-    "aeon>=1.0.0,<1.1.0",
-    "tsml>=0.6.1,<0.7.0",
+    "aeon>=1.0.0,<1.2.0",
+    "tsml>=0.6.0,<0.8.0",
     "scikit-learn>=1.0.0,<1.7.0",
     "matplotlib",
     "seaborn",
@@ -55,8 +56,6 @@ all_extras = [
     "aeon[all_extras]",
     "tsml[all_extras]",
     "xgboost",
-    # temp
-    "esig>=0.9.7,<1.0.0; platform_system != 'Darwin' and python_version < '3.11'",
 ]
 unstable_extras = [
     "aeon[unstable_extras]",

@@ -69,6 +69,10 @@ def parse_args(args):
                             transformation to the data prior to running the experiment.
                             By default no transform is applied.
                             Can be used multiple times (default: None).
+      -tto, --transform_train_only
+                            if set, transformations will be applied only to the
+                            training dataset leaving the test dataset unchanged
+                            (default: False).
       -rn, --row_normalise  normalise the data rows prior to fitting and
                             predicting. effectively the same as passing Normalizer to
                             --data_transform_name (default: False).
@@ -210,6 +214,13 @@ def parse_args(args):
         help="str to pass to get_data_transform_by_name to apply a transformation "
         "to the data prior to running the experiment. By default no transform "
         "is applied. Can be used multiple times (default: %(default)s).",
+    )
+    parser.add_argument(
+        "-tto",
+        "--transform_train_only",
+        action="store_true",
+        help="if set, transformations will be applied only to the training dataset, "
+        "leaving the test dataset unchanged (default: %(default)s).",
     )
     parser.add_argument(
         "-rn",

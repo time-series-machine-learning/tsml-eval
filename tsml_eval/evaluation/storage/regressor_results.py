@@ -6,6 +6,7 @@ from sklearn.metrics import (
     mean_absolute_percentage_error,
     mean_squared_error,
     r2_score,
+    root_mean_squared_error,
 )
 
 from tsml_eval.evaluation.storage.estimator_results import EstimatorResults
@@ -246,8 +247,8 @@ class RegressorResults(EstimatorResults):
                 self.target_labels, self.predictions
             )
         if self.root_mean_squared_error is None or overwrite:
-            self.root_mean_squared_error = mean_squared_error(
-                self.target_labels, self.predictions, squared=False
+            self.root_mean_squared_error = root_mean_squared_error(
+                self.target_labels, self.predictions
             )
         if self.mean_absolute_error is None or overwrite:
             self.mean_absolute_error = mean_absolute_error(
