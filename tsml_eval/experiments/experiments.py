@@ -1205,26 +1205,33 @@ def run_forecasting_experiment(
 
     second = str(forecaster.get_params()).replace("\n", " ").replace("\r", " ")
 
-    mem_usage, fit_time = record_max_memory(
-        forecaster.fit,
-        args=(train,),
-        interval=MEMRECORD_INTERVAL,
-        return_func_time=True,
-    )
-    fit_time += int(round(getattr(forecaster, "_fit_time_milli", 0)))
-
-    if attribute_file_path is not None:
-        estimator_attributes_to_file(
-            forecaster, attribute_file_path, max_list_shape=att_max_shape
+    train_test = np.concatenate((train, test), axis=0)
+    fit_time = 0
+    test_time = 0
+    mem_usage = 0
+    test_preds = []
+    for i in range(len(train),len(train_test)):
+        mem_usage_local, fit_time_local = record_max_memory(
+            forecaster.fit,
+            args=(train_test[:i],),
+            interval=MEMRECORD_INTERVAL,
+            return_func_time=True,
+        )
+        mem_usage += mem_usage_local
+        fit_time += fit_time_local + int(round(getattr(forecaster, "_fit_time_milli", 0)))
+        start = int(round(time.time() * 1000))
+        test_preds.append(forecaster.predict(test))
+        test_time = (
+            int(round(time.time() * 1000))
+            - start
+            + int(round(getattr(forecaster, "_predict_time_milli", 0)))
         )
 
-    start = int(round(time.time() * 1000))
-    test_preds = forecaster.predict(test)
-    test_time = (
-        int(round(time.time() * 1000))
-        - start
-        + int(round(getattr(forecaster, "_predict_time_milli", 0)))
-    )
+    # if attribute_file_path is not None:
+    #     estimator_attributes_to_file(
+    #         forecaster, attribute_file_path, max_list_shape=att_max_shape
+    #     )
+    test_preds = np.array(test_preds)
     test_preds = test_preds.flatten()
 
     test_mape = mean_absolute_percentage_error(test, test_preds)
