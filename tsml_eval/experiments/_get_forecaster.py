@@ -18,7 +18,8 @@ from tsml_eval.utils.functions import str_in_nested_list
 stats_forecasters = [
     ["etsforecaster", "ets"],
     ["autoetsforecaster", "autoets"],
-    ["autosarima"],
+    ["autosarima", "sarima"],
+    ["autoarima", "arima"],
     "sktimeets",
     "statsforecastets",
 ]
