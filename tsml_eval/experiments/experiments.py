@@ -1225,7 +1225,7 @@ def run_forecasting_experiment(
         - start
         + int(round(getattr(forecaster, "_predict_time_milli", 0)))
     )
-    test_preds = test_preds.flatten()
+    test_preds = test_preds.flatten()[:-1]  # Remove last value as we have no actual data for it
 
     test_mape = mean_absolute_percentage_error(test, test_preds)
 
