@@ -15,7 +15,7 @@ class SklearnToTsmlRegressor(RegressorMixin, BaseTimeSeriesEstimator):
 
     def __init__(
         self,
-        regressor=None,
+        regressor,
         pad_unequal=False,
         concatenate_channels=False,
         clone_estimator=True,

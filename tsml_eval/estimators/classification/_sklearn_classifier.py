@@ -16,7 +16,7 @@ class SklearnToTsmlClassifier(ClassifierMixin, BaseTimeSeriesEstimator):
 
     def __init__(
         self,
-        classifier=None,
+        classifier,
         pad_unequal=False,
         concatenate_channels=False,
         clone_estimator=True,

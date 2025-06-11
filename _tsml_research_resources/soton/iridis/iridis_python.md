@@ -12,7 +12,7 @@ Alternatively, you can connect to one of the specific login nodes:
 - iridis5_c.soton.ac.uk
 - iridis5_d.soton.ac.uk (AMD CPU architecture)
 
-This guide only covers Iridis 5 cureently, not Iridis 6 or X.
+This guide only covers Iridis 5 currently, but should be applicable to Iridis 6 or X.
 
 There is a Southampton Microsoft Teams group called "HPC Community" where you can ask questions if needed.
 
@@ -48,6 +48,8 @@ Python is activated by default, but it is good practice to manually select the v
 
 >module load anaconda/py3.10
 
+This will be different on each cluster. Iridis 6 is `conda/python3` for example.
+
 You may also need to run the following to use some conda commands:
 
 >conda init bash
@@ -72,9 +74,10 @@ Hitting this limit is very annoying, as it will prevent you from creating new co
 
 For conda related storage guidance, see the [related HPC webpage](https://sotonac.sharepoint.com/teams/HPCCommunityWiki/SitePages/Conda.aspx#conda-and-inodes)
 
-### 3.2. Create environment
+#### 3.2. Create environment
 
-Create a new environment with a name of your choice. Replace PYTHON_VERSION with 3.11.
+Create a new environment with a name of your choice. Replace PYTHON_VERSION with 3.12
+by default.
 
 >conda create -n ENV_NAME python=PYTHON_VERSION
 
@@ -85,6 +88,13 @@ Activate the new environment.
 Your environment should be listed now when you use the following command:
 
 >conda info --envs
+
+#### 3.3. Removing an environment
+
+At some point you may want to remove an environment, either because it is no longer
+needed or you want to start fresh. You can do this with the following command:
+
+>conda remove -n ENV_NAME --all
 
 ### 4. Install package and dependencies
 
