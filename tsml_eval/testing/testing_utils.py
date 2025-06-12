@@ -73,6 +73,9 @@ def _check_set_method(
                                 str(out[i].get_params()) == str(e[i].get_params())
                                 for i in range(len(out))
                             ]
+                        ), (
+                            f"Estimator {estimator_alias} is duplicated in the set "
+                            f"method output"
                         )
 
                 s_out = out

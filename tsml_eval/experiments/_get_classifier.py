@@ -6,9 +6,11 @@ from tsml_eval.utils.functions import str_in_nested_list
 
 convolution_based_classifiers = [
     ["rocketclassifier", "rocket"],
+    "rocket-unequal",
     ["minirocket", "mini-rocket", "minirocketclassifier"],
     ["multirocket", "multi-rocket", "multirocketclassifier"],
     ["arsenalclassifier", "arsenal"],
+    "arsenal-unequal",
     ["miniarsenal", "mini-arsenal"],
     ["multiarsenal", "multi-arsenal"],
     ["hydraclassifier", "hydra"],
@@ -33,6 +35,7 @@ dictionary_based_classifiers = [
     "individualboss",
     ["contractableboss", "cboss"],
     ["temporaldictionaryensemble", "tde"],
+    "tde-unequal",
     "individualtde",
     "weasel",
     "weasel-logistic",
@@ -54,6 +57,7 @@ distance_based_classifiers = [
     ["grailclassifier", "grail"],
     ["proximitytree", "proximitytreeclassifier"],
     ["proximityforest", "pf"],
+    ["proximityforest2", "pf2"],
 ]
 feature_based_classifiers = [
     "summary-500",
@@ -62,6 +66,7 @@ feature_based_classifiers = [
     ["catch22classifier", "catch22"],
     "catch22-outlier",
     ["freshprinceclassifier", "freshprince"],
+    "freshprince-unequal",
     "freshprince-500",
     "tsfresh-nofs",
     ["tsfreshclassifier", "tsfresh"],
@@ -85,6 +90,7 @@ interval_based_classifiers = [
     ["supervisedtimeseriesforest", "stsf"],
     "drcif-500",
     ["drcif", "drcifclassifier"],
+    "drcif-unequal",
     "summary-intervals",
     ["randomintervals-500", "catch22-intervals-500"],
     ["randomintervalclassifier", "randomintervals", "catch22-intervals"],
@@ -99,6 +105,7 @@ other_classifiers = [
 shapelet_based_classifiers = [
     "stc-2hour",
     ["shapelettransformclassifier", "stc"],
+    "stc-unequal",
     ["rdstclassifier", "rdst"],
     ["randomshapeletforestclassifier", "randomshapeletforest", "rsf"],
     ["sastclassifier", "sast"],
@@ -204,6 +211,10 @@ def _set_classifier_convolution_based(
         from aeon.classification.convolution_based import RocketClassifier
 
         return RocketClassifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "rocket-unequal":
+        from tsml_eval._wip.unequal_length._rocket import RocketClassifier
+
+        return RocketClassifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "minirocket" or c == "mini-rocket" or c == "minirocketclassifier":
         from aeon.classification.convolution_based import MiniRocketClassifier
 
@@ -222,6 +233,15 @@ def _set_classifier_convolution_based(
         )
     elif c == "arsenalclassifier" or c == "arsenal":
         from aeon.classification.convolution_based import Arsenal
+
+        return Arsenal(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "arsenal-unequal":
+        from tsml_eval._wip.unequal_length._arsenal4 import Arsenal
 
         return Arsenal(
             random_state=random_state,
@@ -264,6 +284,8 @@ def _set_classifier_convolution_based(
         return MultiRocketHydraClassifier(
             random_state=random_state, n_jobs=n_jobs, **kwargs
         )
+    else:
+        raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
 
 
 def _set_classifier_deep_learning(
@@ -319,6 +341,8 @@ def _set_classifier_deep_learning(
         from aeon.classification.deep_learning import DisjointCNNClassifier
 
         return DisjointCNNClassifier(random_state=random_state, **kwargs)
+    else:
+        raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
 
 
 def _set_classifier_dictionary_based(
@@ -351,6 +375,15 @@ def _set_classifier_dictionary_based(
         )
     elif c == "temporaldictionaryensemble" or c == "tde":
         from aeon.classification.dictionary_based import TemporalDictionaryEnsemble
+
+        return TemporalDictionaryEnsemble(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "tde-unequal":
+        from tsml_eval._wip.unequal_length._tde7 import TemporalDictionaryEnsemble
 
         return TemporalDictionaryEnsemble(
             random_state=random_state,
@@ -419,6 +452,8 @@ def _set_classifier_dictionary_based(
         from aeon.classification.dictionary_based import MrSQMClassifier
 
         return MrSQMClassifier(random_state=random_state, **kwargs)
+    else:
+        raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
 
 
 def _set_classifier_distance_based(
@@ -462,14 +497,20 @@ def _set_classifier_distance_based(
 
         return GRAILClassifier(**kwargs)
     elif c == "proximitytree" or c == "proximitytreeclassifier":
-        from aeon.classification.distance_based import ProximityTree
+        from tsml_eval._wip.pf._pt import ProximityTree
 
         return ProximityTree(random_state=random_state, **kwargs)
 
     elif c == "proximityforest" or c == "pf":
-        from aeon.classification.distance_based import ProximityForest
+        from tsml_eval._wip.pf._pf import ProximityForest
 
         return ProximityForest(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "proximityforest2" or c == "pf2":
+        from tsml_eval._wip.pf._pf2 import ProximityForest2
+
+        return ProximityForest2(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    else:
+        raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
 
 
 def _set_classifier_feature_based(
@@ -516,6 +557,10 @@ def _set_classifier_feature_based(
         from aeon.classification.feature_based import FreshPRINCEClassifier
 
         return FreshPRINCEClassifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "freshprince-unequal":
+        from tsml_eval._wip.unequal_length._fresh_prince import FreshPRINCEClassifier
+
+        return FreshPRINCEClassifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "freshprince-500":
         from aeon.classification.feature_based import FreshPRINCEClassifier
 
@@ -539,6 +584,8 @@ def _set_classifier_feature_based(
         from aeon.classification.feature_based import SignatureClassifier
 
         return SignatureClassifier(random_state=random_state, **kwargs)
+    else:
+        raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
 
 
 def _set_classifier_hybrid(c, random_state, n_jobs, fit_contract, checkpoint, kwargs):
@@ -565,6 +612,8 @@ def _set_classifier_hybrid(c, random_state, n_jobs, fit_contract, checkpoint, kw
             estimator=ExtraTreesClassifier(n_estimators=500, criterion="entropy"),
             **kwargs,
         )
+    else:
+        raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
 
 
 def _set_classifier_interval_based(
@@ -671,6 +720,16 @@ def _set_classifier_interval_based(
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
+    elif c == "drcif-unequal":
+        from tsml_eval._wip.unequal_length._drcif6 import DrCIFClassifier
+
+        return DrCIFClassifier(
+            n_estimators=500,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
     elif c == "summary-intervals":
         from aeon.classification.interval_based import RandomIntervalClassifier
         from aeon.transformations.collection.feature_based import SevenNumberSummary
@@ -713,6 +772,8 @@ def _set_classifier_interval_based(
         from aeon.classification.interval_based import QUANTClassifier
 
         return QUANTClassifier(random_state=random_state, **kwargs)
+    else:
+        raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
 
 
 def _set_classifier_other(c, random_state, n_jobs, fit_contract, checkpoint, kwargs):
@@ -728,6 +789,8 @@ def _set_classifier_other(c, random_state, n_jobs, fit_contract, checkpoint, kwa
         from sklearn.dummy import DummyClassifier
 
         return DummyClassifier(random_state=random_state, **kwargs)
+    else:
+        raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
 
 
 def _set_classifier_shapelet_based(
@@ -744,6 +807,15 @@ def _set_classifier_shapelet_based(
         )
     elif c == "shapelettransformclassifier" or c == "stc":
         from aeon.classification.shapelet_based import ShapeletTransformClassifier
+
+        return ShapeletTransformClassifier(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "stc-unequal":
+        from tsml_eval._wip.unequal_length._stc7 import ShapeletTransformClassifier
 
         return ShapeletTransformClassifier(
             random_state=random_state,
@@ -777,6 +849,8 @@ def _set_classifier_shapelet_based(
         from aeon.classification.shapelet_based import LearningShapeletClassifier
 
         return LearningShapeletClassifier(random_state=random_state, **kwargs)
+    else:
+        raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
 
 
 def _set_classifier_vector(c, random_state, n_jobs, fit_contract, checkpoint, kwargs):
@@ -797,3 +871,5 @@ def _set_classifier_vector(c, random_state, n_jobs, fit_contract, checkpoint, kw
         from sklearn.linear_model import LogisticRegression
 
         return LogisticRegression(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    else:
+        raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
