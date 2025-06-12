@@ -49,7 +49,6 @@ dictionary_based_classifiers = [
 ]
 distance_based_classifiers = [
     ["kneighborstimeseriesclassifier", "dtw", "1nn-dtw"],
-    "1nn-dtw-unequal",
     ["ed", "1nn-euclidean", "1nn-ed"],
     ["msm", "1nn-msm"],
     ["twe", "1nn-twe"],
@@ -65,7 +64,6 @@ feature_based_classifiers = [
     ["summaryclassifier", "summary"],
     "catch22-500",
     ["catch22classifier", "catch22"],
-    "catch22-unequal",
     "catch22-outlier",
     ["freshprinceclassifier", "freshprince"],
     "freshprince-unequal",
@@ -286,6 +284,8 @@ def _set_classifier_convolution_based(
         return MultiRocketHydraClassifier(
             random_state=random_state, n_jobs=n_jobs, **kwargs
         )
+    else:
+        raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
 
 
 def _set_classifier_deep_learning(
@@ -341,6 +341,8 @@ def _set_classifier_deep_learning(
         from aeon.classification.deep_learning import DisjointCNNClassifier
 
         return DisjointCNNClassifier(random_state=random_state, **kwargs)
+    else:
+        raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
 
 
 def _set_classifier_dictionary_based(
@@ -450,16 +452,14 @@ def _set_classifier_dictionary_based(
         from aeon.classification.dictionary_based import MrSQMClassifier
 
         return MrSQMClassifier(random_state=random_state, **kwargs)
+    else:
+        raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
 
 
 def _set_classifier_distance_based(
     c, random_state, n_jobs, fit_contract, checkpoint, kwargs
 ):
     if c == "kneighborstimeseriesclassifier" or c == "dtw" or c == "1nn-dtw":
-        from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
-
-        return KNeighborsTimeSeriesClassifier(distance="dtw", n_jobs=n_jobs, **kwargs)
-    elif c == "1nn-dtw-unequal":
         from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
 
         return KNeighborsTimeSeriesClassifier(distance="dtw", n_jobs=n_jobs, **kwargs)
@@ -509,6 +509,8 @@ def _set_classifier_distance_based(
         from tsml_eval._wip.pf._pf2 import ProximityForest2
 
         return ProximityForest2(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    else:
+        raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
 
 
 def _set_classifier_feature_based(
@@ -540,12 +542,6 @@ def _set_classifier_feature_based(
             **kwargs,
         )
     elif c == "catch22classifier" or c == "catch22":
-        from aeon.classification.feature_based import Catch22Classifier
-
-        return Catch22Classifier(
-            outlier_norm=False, random_state=random_state, n_jobs=n_jobs, **kwargs
-        )
-    elif c == "catch22-unequal":
         from aeon.classification.feature_based import Catch22Classifier
 
         return Catch22Classifier(
@@ -588,6 +584,8 @@ def _set_classifier_feature_based(
         from aeon.classification.feature_based import SignatureClassifier
 
         return SignatureClassifier(random_state=random_state, **kwargs)
+    else:
+        raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
 
 
 def _set_classifier_hybrid(c, random_state, n_jobs, fit_contract, checkpoint, kwargs):
@@ -614,6 +612,8 @@ def _set_classifier_hybrid(c, random_state, n_jobs, fit_contract, checkpoint, kw
             estimator=ExtraTreesClassifier(n_estimators=500, criterion="entropy"),
             **kwargs,
         )
+    else:
+        raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
 
 
 def _set_classifier_interval_based(
@@ -772,6 +772,8 @@ def _set_classifier_interval_based(
         from aeon.classification.interval_based import QUANTClassifier
 
         return QUANTClassifier(random_state=random_state, **kwargs)
+    else:
+        raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
 
 
 def _set_classifier_other(c, random_state, n_jobs, fit_contract, checkpoint, kwargs):
@@ -787,6 +789,8 @@ def _set_classifier_other(c, random_state, n_jobs, fit_contract, checkpoint, kwa
         from sklearn.dummy import DummyClassifier
 
         return DummyClassifier(random_state=random_state, **kwargs)
+    else:
+        raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
 
 
 def _set_classifier_shapelet_based(
@@ -845,6 +849,8 @@ def _set_classifier_shapelet_based(
         from aeon.classification.shapelet_based import LearningShapeletClassifier
 
         return LearningShapeletClassifier(random_state=random_state, **kwargs)
+    else:
+        raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
 
 
 def _set_classifier_vector(c, random_state, n_jobs, fit_contract, checkpoint, kwargs):
@@ -865,3 +871,5 @@ def _set_classifier_vector(c, random_state, n_jobs, fit_contract, checkpoint, kw
         from sklearn.linear_model import LogisticRegression
 
         return LogisticRegression(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    else:
+        raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
