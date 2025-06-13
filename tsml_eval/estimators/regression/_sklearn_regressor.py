@@ -37,7 +37,7 @@ class SklearnToTsmlRegressor(RegressorMixin, BaseTimeSeriesEstimator):
         X, y = self._validate_data(
             X=X,
             y=y,
-            ensure_univariate=not self.concatenate_channels,
+            convert_2d=self.concatenate_channels,
             ensure_equal_length=not self.pad_unequal,
         )
         X = self._convert_X(
