@@ -11,7 +11,7 @@ from aeon.base._base import _clone_estimator
 from aeon.clustering import BaseClusterer
 from sklearn.cluster import KMeans
 
-from tsml_eval.estimators.clustering._r_clustering._r_clustering_minirocket import (
+from tsml_eval._wip.r_clustering._r_clustering_minirocket import (
     RClusteringTransformer,
 )
 

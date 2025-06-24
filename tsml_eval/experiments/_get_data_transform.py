@@ -22,6 +22,7 @@ unequal_transformers = [
     "zero-noise-padder",
     "zero-noise-padder-min",
     "mean-noise-padder",
+    "mean-noise-padder-min",
     ["truncator", "truncate"],
     "truncate-max",
     "resizer",
@@ -113,6 +114,15 @@ def _set_unequal_transformer(t, random_state, n_jobs):
         from tsml_eval._wip.unequal_length._pad import Padder
 
         return Padder(fill_value="mean", add_noise=0.001, random_state=random_state)
+    elif t == "mean-noise-padder-min":
+        from tsml_eval._wip.unequal_length._pad import Padder
+
+        return Padder(
+            fill_value="mean",
+            add_noise=0.001,
+            error_on_long=False,
+            random_state=random_state,
+        )
     elif t == "truncator" or t == "truncate":
         from tsml_eval._wip.unequal_length._truncate import Truncator
 
