@@ -68,10 +68,10 @@ deep_learning = [
 dev = [
     "pre-commit",
     "pytest",
+    "pytest-cov",
     "pytest-randomly",
     "pytest-timeout",
     "pytest-xdist[psutil]",
-    "pytest-cov",
     "pytest-rerunfailures",
 ]
 binder = [
@@ -149,7 +149,6 @@ per-file-ignores = [
 ]
 
 [tool.mypy]
-mypy_path = "tsml_eval/"
 ignore_missing_imports = true
 follow_imports = "silent"
 exclude = [
