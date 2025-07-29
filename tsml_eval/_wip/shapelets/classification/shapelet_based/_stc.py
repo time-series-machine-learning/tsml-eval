@@ -4,9 +4,10 @@ Shapelet transform classifier pipeline that simply performs a (configurable) sha
 transform then builds (by default) a rotation forest classifier on the output.
 """
 
+__maintainer__ = ["TonyBagnall"]
 __all__ = ["ShapeletTransformClassifier"]
 
-from typing import List, Type, Union
+from typing import Union
 
 import numpy as np
 from sklearn.model_selection import cross_val_predict
@@ -15,15 +16,19 @@ from sklearn.utils import check_random_state
 from aeon.base._base import _clone_estimator
 from aeon.classification.base import BaseClassifier
 from aeon.classification.sklearn import RotationForestClassifier
-from tsml_eval._wip.transformations.collection.shapelet_based import (
-    RandomShapeletTransform,
-)
+from aeon.utils.validation import check_n_jobs
+from tsml_eval._wip.transformations.collection.shapelet_based._shapelet_transform import RandomShapeletTransform
+from tsml_eval._wip.transformations.collection.shapelet_based._shapelet_transform_new import RandomShapeletTransform as NewST
 
 
 class ShapeletTransformClassifier(BaseClassifier):
     """
     A shapelet transform classifier (STC).
 
+    Implementation of the binary shapelet transform classifier pipeline along the lines
+    of [1]_, [2]_, but with random shapelet sampling. Transforms the data using the
+    configurable `RandomShapeletTransform` and then builds a `RotationForestClassifier`
+    classifier.
 
     As some implementations and applications contract the transformation solely,
     contracting is available for the transform only and both classifier and transform.
@@ -44,6 +49,11 @@ class ShapeletTransformClassifier(BaseClassifier):
     estimator : BaseEstimator or None, default=None
         Base estimator for the ensemble, can be supplied a sklearn `BaseEstimator`. If
         `None` a default `RotationForestClassifier` classifier is used.
+    batch_size : int or None, default=100
+        Number of shapelet candidates processed before being merged into the set of best
+        shapelets in the transform.
+    verbose : bool, default=False
+        Whether to print progress messages during fitting and transforming.
     transform_limit_in_minutes : int, default=0
         Time contract to limit transform time in minutes for the shapelet transform,
         overriding `n_shapelet_samples`. A value of `0` means ``n_shapelet_samples``
@@ -59,9 +69,6 @@ class ShapeletTransformClassifier(BaseClassifier):
     n_jobs : int, default=1
         The number of jobs to run in parallel for both ``fit`` and ``predict``.
         `-1` means using all processors.
-    batch_size : int or None, default=100
-        Number of shapelet candidates processed before being merged into the set of best
-        shapelets in the transform.
     random_state : int, RandomState instance or None, default=None
         If `int`, random_state is the seed used by the random number generator;
         If `RandomState` instance, random_state is the random number generator;
@@ -74,14 +81,10 @@ class ShapeletTransformClassifier(BaseClassifier):
         The unique class labels in the training set.
     n_classes_ : int
         The number of unique classes in the training set.
-    fit_time_  : int
-        The time (in milliseconds) for ``fit`` to run.
     n_cases_ : int
         The number of train cases in the training set.
     n_channels_ : int
         The number of dimensions per case in the training set.
-    n_timepoints_ : int
-        The length of each series in the training set.
 
     See Also
     --------
@@ -107,8 +110,8 @@ class ShapeletTransformClassifier(BaseClassifier):
     >>> from aeon.classification.shapelet_based import ShapeletTransformClassifier
     >>> from aeon.classification.sklearn import RotationForestClassifier
     >>> from aeon.datasets import load_unit_test
-    >>> X_train, y_train = load_unit_test(split="train", return_X_y=True)
-    >>> X_test, y_test = load_unit_test(split="test", return_X_y=True)
+    >>> X_train, y_train = load_unit_test(split="train")
+    >>> X_test, y_test = load_unit_test(split="test")
     >>> clf = ShapeletTransformClassifier(
     ...     estimator=RotationForestClassifier(n_estimators=3),
     ...     n_shapelet_samples=100,
@@ -125,7 +128,9 @@ class ShapeletTransformClassifier(BaseClassifier):
         "capability:train_estimate": True,
         "capability:contractable": True,
         "capability:multithreading": True,
+        "capability:unequal_length": True,
         "algorithm_type": "shapelet",
+        "X_inner_type": ["np-list", "numpy3D"],
     }
 
     def __init__(
@@ -134,35 +139,25 @@ class ShapeletTransformClassifier(BaseClassifier):
         max_shapelets: Union[int, None] = None,
         max_shapelet_length: Union[int, None] = None,
         estimator=None,
+        batch_size: Union[int, None] = 100,
+        verbose: bool = False,
         transform_limit_in_minutes: int = 0,
         time_limit_in_minutes: int = 0,
         contract_max_n_shapelet_samples: int = np.inf,
         n_jobs: int = 1,
-        batch_size: Union[int, None] = 100,
-        random_state: Union[int, type[np.random.RandomState], None] = None,
-        shapelet_quality="F_STAT",
+        random_state: Union[int, np.random.RandomState, None] = None,
     ) -> None:
         self.n_shapelet_samples = n_shapelet_samples
         self.max_shapelets = max_shapelets
         self.max_shapelet_length = max_shapelet_length
         self.estimator = estimator
-
+        self.batch_size = batch_size
+        self.verbose = verbose
         self.transform_limit_in_minutes = transform_limit_in_minutes
         self.time_limit_in_minutes = time_limit_in_minutes
         self.contract_max_n_shapelet_samples = contract_max_n_shapelet_samples
-
         self.random_state = random_state
-        self.batch_size = batch_size
         self.n_jobs = n_jobs
-
-        self.n_cases_ = 0
-        self.n_channels_ = 0
-        self.n_timepoints_ = 0
-        self.shapelet_quality = shapelet_quality
-        self._transformer = RandomShapeletTransform(shapelet_quality=shapelet_quality)
-        self._estimator = estimator
-        self._transform_limit_in_minutes = 0
-        self._classifier_limit_in_minutes = 0
 
         super().__init__()
 
@@ -187,8 +182,14 @@ class ShapeletTransformClassifier(BaseClassifier):
         ending in "_".
         """
         X_t = self._fit_stc_shared(X, y)
+
+        if self.verbose:
+            print("Fitting estimator...")  # noqa: T201
+
         self._estimator.fit(X_t, y)
-        return self
+
+        if self.verbose:
+            print("Finished fitting estimator...")  # noqa: T201
 
     def _predict(self, X) -> np.ndarray:
         """Predicts labels for sequences in X.
@@ -203,9 +204,22 @@ class ShapeletTransformClassifier(BaseClassifier):
         y : array-like, shape = [n_cases]
             Predicted class labels.
         """
-        X_t = self._transformer.transform(X)
+        if self.verbose:
+            print("Transforming predict X...")  # noqa: T201
 
-        return self._estimator.predict(X_t)
+        X_t = self._transformer.transform(X)
+        X_t = np.nan_to_num(X_t, False, -1, -1, -1)
+
+        if self.verbose:
+            print("Finished transforming predict X...")  # noqa: T201
+            print("Predicting...")  # noqa: T201
+
+        pred = self._estimator.predict(X_t)
+
+        if self.verbose:
+            print("Finished predicting...")  # noqa: T201
+
+        return pred
 
     def _predict_proba(self, X) -> np.ndarray:
         """Predicts labels probabilities for sequences in X.
@@ -220,17 +234,29 @@ class ShapeletTransformClassifier(BaseClassifier):
         y : array-like, shape = [n_cases, n_classes_]
             Predicted probabilities using the ordering in classes_.
         """
+        if self.verbose:
+            print("Transforming predict_proba X...")  # noqa: T201
+
         X_t = self._transformer.transform(X)
+        X_t = np.nan_to_num(X_t, False, -1, -1, -1)
+
+        if self.verbose:
+            print("Finished transforming predict_proba X...")  # noqa: T201
+            print("Predicting probabilities...")  # noqa: T201
 
         m = getattr(self._estimator, "predict_proba", None)
         if callable(m):
-            return self._estimator.predict_proba(X_t)
+            proba = self._estimator.predict_proba(X_t)
         else:
-            dists = np.zeros((X.shape[0], self.n_classes_))
+            proba = np.zeros((X.shape[0], self.n_classes_))
             preds = self._estimator.predict(X_t)
             for i in range(0, X.shape[0]):
-                dists[i, np.where(self.classes_ == preds[i])] = 1
-            return dists
+                proba[i, np.where(self.classes_ == preds[i])] = 1
+
+        if self.verbose:
+            print("Finished predicting probabilities...")  # noqa: T201
+
+        return proba
 
     def _fit_predict(self, X, y) -> np.ndarray:
         rng = check_random_state(self.random_state)
@@ -247,8 +273,20 @@ class ShapeletTransformClassifier(BaseClassifier):
         if (isinstance(self.estimator, RotationForestClassifier)) or (
             self.estimator is None
         ):
-            return self._estimator.fit_predict_proba(X_t, y)
+            if self.verbose:
+                print(  # noqa: T201
+                    "Fitting estimator and generating train set estimates "
+                    "(RotF OOB)..."
+                )
+
+            proba = self._estimator.fit_predict_proba(X_t, y)
         else:
+            if self.verbose:
+                print(  # noqa: T201
+                    "Fitting estimator and generating train set estimates "
+                    "(10 fold CV)..."
+                )
+
             self._estimator.fit(X_t, y)
 
             m = getattr(self._estimator, "predict_proba", None)
@@ -268,7 +306,7 @@ class ShapeletTransformClassifier(BaseClassifier):
 
             estimator = _clone_estimator(self.estimator, self.random_state)
 
-            return cross_val_predict(
+            proba = cross_val_predict(
                 estimator,
                 X=X_t,
                 y=y,
@@ -277,9 +315,20 @@ class ShapeletTransformClassifier(BaseClassifier):
                 n_jobs=self._n_jobs,
             )
 
-    def _fit_stc_shared(self, X, y):
-        self.n_cases_, self.n_channels_, self.n_timepoints_ = X.shape
+        if self.verbose:
+            print(  # noqa: T201
+                "Finished fitting estimator and generating train set estimates..."
+            )
 
+        return proba
+
+    def _fit_stc_shared(self, X, y):
+        self.n_instances_ = len(X)
+        self.n_channels_ = X[0].shape[0]
+        self._n_jobs = check_n_jobs(self.n_jobs)
+
+        self._transform_limit_in_minutes = 0
+        self._classifier_limit_in_minutes = 0
         if self.time_limit_in_minutes > 0:
             # contracting 2/3 transform (with 1/5 of that taken away for final
             # transform), 1/3 classifier
@@ -293,12 +342,12 @@ class ShapeletTransformClassifier(BaseClassifier):
             n_shapelet_samples=self.n_shapelet_samples,
             max_shapelets=self.max_shapelets,
             max_shapelet_length=self.max_shapelet_length,
+            batch_size=self.batch_size,
+            verbose=self.verbose,
             time_limit_in_minutes=self._transform_limit_in_minutes,
             contract_max_n_shapelet_samples=self.contract_max_n_shapelet_samples,
             n_jobs=self.n_jobs,
-            batch_size=self.batch_size,
             random_state=self.random_state,
-            shapelet_quality=self.shapelet_quality,
         )
 
         self._estimator = _clone_estimator(
@@ -314,10 +363,21 @@ class ShapeletTransformClassifier(BaseClassifier):
         if m is not None and self.time_limit_in_minutes > 0:
             self._estimator.time_limit_in_minutes = self._classifier_limit_in_minutes
 
-        return self._transformer.fit_transform(X, y)
+        if self.verbose:
+            print("Fitting and transforming shapelets...")  # noqa: T201
+
+        X_t = self._transformer.fit_transform(X, y)
+        X_t = np.nan_to_num(X_t, False, -1, -1, -1)
+
+        if self.verbose:
+            print("Finished and transforming shapelets...")  # noqa: T201
+
+        return X_t
 
     @classmethod
-    def get_test_params(cls, parameter_set: str = "default") -> Union[dict, list[dict]]:
+    def _get_test_params(
+        cls, parameter_set: str = "default"
+    ) -> Union[dict, list[dict]]:
         """Return testing parameter settings for the estimator.
 
         Parameters
@@ -342,7 +402,6 @@ class ShapeletTransformClassifier(BaseClassifier):
             Parameters to create testing instances of the class.
             Each dict are parameters to construct an "interesting" test instance, i.e.,
             `MyClass(**params)` or `MyClass(**params[i])` creates a valid test instance.
-            `create_test_instance` uses the first (or only) dictionary in `params`.
         """
         from sklearn.ensemble import RandomForestClassifier
 
