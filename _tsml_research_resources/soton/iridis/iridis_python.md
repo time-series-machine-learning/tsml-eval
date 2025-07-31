@@ -44,13 +44,18 @@ e.g. https://github.com/time-series-machine-learning/tsml-eval
 
 ### 2. Activate an Iridis Python installation
 
-Python is activated by default, but it is good practice to manually select the version used. The Iridis module should be loaded before creating and editing an environment.
+Iridis 5: Python is activated by default, but it is good practice to manually select 
+the version used. The Iridis module should be loaded before creating and editing an environment.
 
 >module load anaconda/py3.10
 
 You may also need to run the following to use some conda commands:
 
 >conda init bash
+
+Iridis 6: you need to load conda but don't load python first.
+
+>module load conda/python3
 
 You can check the current version using:
 
