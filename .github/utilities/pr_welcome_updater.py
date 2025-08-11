@@ -16,19 +16,15 @@ pr_number = context_dict["event"]["number"]
 pr = repo.get_pull(number=pr_number)
 labels = [label.name for label in pr.get_labels()]
 
-print("Starting")
-print(pr.get_comments())  # noqa: T201
-
 comment = None
-for c in pr.get_comments():
-    print(c.body)
+for c in pr.get_issue_comments():
     if (
         c.user.login == "tsml-actions-bot[bot]"
         and "## Thank you for contributing to `tsml-eval`" in c.body
     ):
         comment = c
         break
-print(comment)
+
 if comment is None:
     sys.exit(0)
 
