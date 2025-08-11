@@ -10,7 +10,6 @@ import time
 
 import numpy as np
 from joblib import Parallel, delayed
-from numpy.linalg import LinAlgError
 from sklearn.linear_model import RidgeClassifierCV
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
@@ -18,9 +17,11 @@ from sklearn.utils import check_random_state
 
 from aeon.base._base import _clone_estimator
 from aeon.classification.base import BaseClassifier
-
-
-from tsml_eval._wip.unequal_length.other._rocket2 import Rocket
+from aeon.transformations.collection.convolution_based import (
+    MiniRocket,
+    MultiRocket,
+    Rocket,
+)
 
 
 class Arsenal(BaseClassifier):
@@ -78,12 +79,12 @@ class Arsenal(BaseClassifier):
         The number of train cases.
     n_channels_ : int
         The number of dimensions per case.
+    n_timepoints_ : int
+        The length of each series.
     classes_ : list
         The classes labels.
-    transforms_ : list of shape (n_estimators) of BaseTransformer
-        The collections of Rocket transformers trained on the data in fit.
     estimators_ : list of shape (n_estimators) of BaseEstimator
-        The collections of estimators trained on rocket transformed data in fit.
+        The collections of estimators trained in fit.
     weights_ : list of shape (n_estimators) of float
         Weight of each estimator in the ensemble.
     n_estimators_ : int
@@ -124,22 +125,20 @@ class Arsenal(BaseClassifier):
         "capability:train_estimate": True,
         "capability:contractable": True,
         "capability:multithreading": True,
-        "capability:unequal_length": True,
         "algorithm_type": "convolution",
-        "X_inner_type": ["np-list", "numpy3D"],
     }
 
     def __init__(
         self,
-        n_kernels=2000,
-        n_estimators=25,
-        rocket_transform="rocket",
-        max_dilations_per_kernel=32,
-        n_features_per_kernel=4,
-        time_limit_in_minutes=0.0,
-        contract_max_n_estimators=100,
+        n_kernels: int = 2000,
+        n_estimators: int = 25,
+        rocket_transform: str = "rocket",
+        max_dilations_per_kernel: int = 32,
+        n_features_per_kernel: int = 4,
+        time_limit_in_minutes: float = 0.0,
+        contract_max_n_estimators: int = 100,
         class_weight=None,
-        n_jobs=1,
+        n_jobs: int = 1,
         random_state=None,
     ):
         self.n_kernels = n_kernels
@@ -153,6 +152,14 @@ class Arsenal(BaseClassifier):
         self.class_weight = class_weight
         self.n_jobs = n_jobs
         self.random_state = random_state
+
+        self.n_cases_ = 0
+        self.n_channels_ = 0
+        self.n_timepoints_ = 0
+        self.estimators_ = []
+        self.weights_ = []
+
+        self._weight_sum = 0
 
         super().__init__()
 
@@ -217,7 +224,6 @@ class Arsenal(BaseClassifier):
         y_probas = Parallel(n_jobs=self._n_jobs, prefer="threads")(
             delayed(self._predict_proba_for_estimator)(
                 X,
-                self.transforms_[i],
                 self.estimators_[i],
                 i,
             )
@@ -269,8 +275,7 @@ class Arsenal(BaseClassifier):
         return results
 
     def _fit_arsenal(self, X, y, keep_transformed_data=False):
-        self.n_cases_ = len(X)
-        self.n_channels_ = X[0].shape[0]
+        self.n_cases_, self.n_channels_, self.n_timepoints_ = X.shape
         time_limit = self.time_limit_in_minutes * 60
         start_time = time.time()
         train_time = 0
@@ -295,7 +300,6 @@ class Arsenal(BaseClassifier):
 
         if time_limit > 0:
             self.n_estimators_ = 0
-            self.transforms_ = []
             self.estimators_ = []
             Xt = []
 
@@ -308,18 +312,15 @@ class Arsenal(BaseClassifier):
                         _clone_estimator(
                             base_rocket, rng.randint(np.iinfo(np.int32).max)
                         ),
-                        base_rocket,
-                        rng.randint(np.iinfo(np.int32).max),
                         X,
                         y,
                         keep_transformed_data=keep_transformed_data,
                     )
-                    for _ in range(self._n_jobs)
+                    for i in range(self._n_jobs)
                 )
 
-                transforms, estimators, transformed_data = zip(*fit)
+                estimators, transformed_data = zip(*fit)
 
-                self.transforms_ += transforms
                 self.estimators_ += estimators
                 Xt += transformed_data
 
@@ -328,59 +329,43 @@ class Arsenal(BaseClassifier):
         else:
             fit = Parallel(n_jobs=self._n_jobs, prefer="threads")(
                 delayed(self._fit_ensemble_estimator)(
-                    base_rocket,
-                    rng.randint(np.iinfo(np.int32).max),
+                    _clone_estimator(base_rocket, rng.randint(np.iinfo(np.int32).max)),
                     X,
                     y,
                     keep_transformed_data=keep_transformed_data,
                 )
-                for _ in range(self.n_estimators)
+                for i in range(self.n_estimators)
             )
 
-            self.transforms_, self.estimators_, Xt = zip(*fit)
+            self.estimators_, Xt = zip(*fit)
             self.n_estimators_ = self.n_estimators
 
         self.weights_ = []
         self._weight_sum = 0
         for rocket_pipeline in self.estimators_:
-            weight = rocket_pipeline.steps[1][1].best_score_
+            weight = rocket_pipeline.steps[2][1].best_score_
             self.weights_.append(weight)
             self._weight_sum += weight
 
         return Xt
 
-    def _fit_ensemble_estimator(self, base_rocket, rng,  X, y, keep_transformed_data):
-        attemps = 0
-        while True:
-            try:
-                rocket = _clone_estimator(base_rocket, rng)
-                Xt = rocket.fit_transform(X)
-                Xt = np.nan_to_num(Xt, False, -1, -1, -1)
-                scaler = StandardScaler(with_mean=False)
-                scaler.fit(Xt, y)
-                ridge = RidgeClassifierCV(
-                    alphas=np.logspace(-3, 3, 10), class_weight=self.class_weight
-                )
-                ridge.fit(scaler.transform(Xt), y)
-                return [
-                    rocket,
-                    make_pipeline(scaler, ridge),
-                    Xt if keep_transformed_data else None,
-                ]
-            except LinAlgError:
-                if attemps > 10:
-                    raise
-                else:
-                    attemps += 1
-                    rng += 1
-                    pass
+    def _fit_ensemble_estimator(self, rocket, X, y, keep_transformed_data):
+        transformed_x = rocket.fit_transform(X)
+        scaler = StandardScaler(with_mean=False)
+        scaler.fit(transformed_x, y)
+        ridge = RidgeClassifierCV(
+            alphas=np.logspace(-3, 3, 10), class_weight=self.class_weight
+        )
+        ridge.fit(scaler.transform(transformed_x), y)
+        return [
+            make_pipeline(rocket, scaler, ridge),
+            transformed_x if keep_transformed_data else None,
+        ]
 
-    def _predict_proba_for_estimator(self, X, transform, classifier, idx):
-        Xt = transform.transform(X)
-        Xt = np.nan_to_num(Xt, False, -1, -1, -1)
-        preds = classifier.predict(Xt)
-        weights = np.zeros((len(X), self.n_classes_))
-        for i in range(len(X)):
+    def _predict_proba_for_estimator(self, X, classifier, idx):
+        preds = classifier.predict(X)
+        weights = np.zeros((X.shape[0], self.n_classes_))
+        for i in range(X.shape[0]):
             weights[i, self._class_dictionary[preds[i]]] += self.weights_[idx]
         return weights
 

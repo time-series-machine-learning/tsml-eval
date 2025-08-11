@@ -72,7 +72,6 @@ class ProximityForest2(BaseClassifier):
     Examples
     --------
     >>> from aeon.datasets import load_unit_test
-    >>> from aeon.classification.distance_based import ProximityForest
     >>> X_train, y_train = load_unit_test(split="train")
     >>> X_test, y_test = load_unit_test(split="test")
     >>> classifier = ProximityForest2(n_trees = 10, n_splitters = 3)

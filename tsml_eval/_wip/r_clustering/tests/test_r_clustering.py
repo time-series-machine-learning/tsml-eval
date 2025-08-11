@@ -5,7 +5,7 @@ from aeon.testing.data_generation import make_example_3d_numpy
 from aeon.testing.estimator_checking import parametrize_with_checks
 from sklearn.cluster import KMeans
 
-from tsml_eval.estimators.clustering import RClustering
+from tsml_eval._wip.r_clustering import RClustering
 
 
 def test_r_clustering():
