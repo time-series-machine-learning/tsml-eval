@@ -28,17 +28,6 @@ if (
     sys.exit(0)
 pr = issue.as_pull_request()
 
-
-def check_label_option(label, option):
-    """Add or remove a label based on a checkbox in a comment."""
-    if f"- [x] {option}" in comment_body:
-        if label not in labels:
-            issue.add_to_labels(label)
-    elif f"- [ ] {option}" in comment_body:
-        if label in labels:
-            issue.remove_from_labels(label)
-
-
 label_options = [
     ("full pre-commit", "Run `pre-commit` checks for all files"),
     ("full examples run", "Run all notebook example tests"),
@@ -50,7 +39,10 @@ label_options = [
 ]
 
 for option in label_options:
-    check_label_option(option[0], option[1])
+    if f"- [x] {option[1]}" in comment_body and option[0] not in labels:
+        pr.add_to_labels(option[0])
+    elif f"- [ ] {option[1]}" in comment_body and option[0] in labels:
+        pr.remove_from_labels(option[0])
 
 repo_name = pr.head.repo.full_name
 branch_name = pr.head.ref
