@@ -41,4 +41,6 @@ for option in label_options:
             f"- [x] {option[1]}",
         )
 
+print(comment_body)  # noqa: T201
+
 comment.edit(comment_body)
