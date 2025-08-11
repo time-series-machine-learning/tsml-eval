@@ -1,4 +1,4 @@
-"""Labels PRs based on bot comment checkboxes."""
+"""Uncheck relevant boxes after running the comment edit workflow."""
 
 import json
 import os
