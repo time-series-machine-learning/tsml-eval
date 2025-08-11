@@ -27,7 +27,7 @@ jobs:
         run: pip install -Uq PyGithub
 
       - name: Process label edit
-        run: python .github/utilities/pr_welcome_updater.py
+        run: python -u .github/utilities/pr_welcome_updater.py
         env:
           CONTEXT_GITHUB: ${{ toJson(github) }}
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
