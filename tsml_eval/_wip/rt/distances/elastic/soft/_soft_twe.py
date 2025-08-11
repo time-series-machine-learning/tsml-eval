@@ -28,10 +28,10 @@ def soft_twe_distance(
     x: np.ndarray,
     y: np.ndarray,
     gamma: float = 1.0,
-    window: Optional[float] = None,
+    window: float | None = None,
     nu: float = 0.001,
     lmbda: float = 1.0,
-    itakura_max_slope: Optional[float] = None,
+    itakura_max_slope: float | None = None,
 ) -> float:
     if x.ndim == 1 and y.ndim == 1:
         _x = x.reshape((1, x.shape[0]))
@@ -57,10 +57,10 @@ def soft_twe_cost_matrix(
     x: np.ndarray,
     y: np.ndarray,
     gamma: float = 1.0,
-    window: Optional[float] = None,
+    window: float | None = None,
     nu: float = 0.001,
     lmbda: float = 1.0,
-    itakura_max_slope: Optional[float] = None,
+    itakura_max_slope: float | None = None,
 ) -> np.ndarray:
     if x.ndim == 1 and y.ndim == 1:
         _x = x.reshape((1, x.shape[0]))
@@ -142,13 +142,13 @@ def _soft_twe_cost_matrix(
 
 @threaded
 def soft_twe_pairwise_distance(
-    X: Union[np.ndarray, list[np.ndarray]],
-    y: Optional[Union[np.ndarray, list[np.ndarray]]] = None,
+    X: np.ndarray | list[np.ndarray],
+    y: np.ndarray | list[np.ndarray] | None = None,
     gamma: float = 1.0,
-    window: Optional[float] = None,
+    window: float | None = None,
     nu: float = 0.001,
     lmbda: float = 1.0,
-    itakura_max_slope: Optional[float] = None,
+    itakura_max_slope: float | None = None,
     n_jobs: int = 1,
     **kwargs,
 ) -> np.ndarray:
@@ -172,10 +172,10 @@ def soft_twe_pairwise_distance(
 @njit(cache=True, fastmath=True, parallel=True)
 def _soft_twe_pairwise_distance(
     X: NumbaList[np.ndarray],
-    window: Optional[float],
+    window: float | None,
     nu: float,
     lmbda: float,
-    itakura_max_slope: Optional[float],
+    itakura_max_slope: float | None,
     unequal_length: bool,
     gamma: float,
 ) -> np.ndarray:
@@ -212,10 +212,10 @@ def _soft_twe_pairwise_distance(
 def _soft_twe_from_multiple_to_multiple_distance(
     x: NumbaList[np.ndarray],
     y: NumbaList[np.ndarray],
-    window: Optional[float],
+    window: float | None,
     nu: float,
     lmbda: float,
-    itakura_max_slope: Optional[float],
+    itakura_max_slope: float | None,
     unequal_length: bool,
     gamma: float,
 ) -> np.ndarray:
@@ -253,11 +253,11 @@ def _soft_twe_from_multiple_to_multiple_distance(
 def soft_twe_alignment_path(
     x: np.ndarray,
     y: np.ndarray,
-    window: Optional[float] = None,
+    window: float | None = None,
     gamma: float = 1.0,
     nu: float = 0.001,
     lmbda: float = 1.0,
-    itakura_max_slope: Optional[float] = None,
+    itakura_max_slope: float | None = None,
 ) -> tuple[list[tuple[int, int]], float]:
     cost_matrix = soft_twe_cost_matrix(
         x,
@@ -341,10 +341,10 @@ def soft_twe_gradient(
     x: np.ndarray,
     y: np.ndarray,
     gamma: float = 1.0,
-    window: Optional[float] = None,
+    window: float | None = None,
     nu: float = 0.001,
     lmbda: float = 1.0,
-    itakura_max_slope: Optional[float] = None,
+    itakura_max_slope: float | None = None,
 ) -> tuple[np.ndarray, float]:
     grad, dist = _compute_soft_gradient(
         _pad_arrs(x),

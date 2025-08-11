@@ -68,9 +68,9 @@ else:
 
 
 def run_classification_experiment(
-    X_train: Union[np.ndarray, list],
+    X_train: np.ndarray | list,
     y_train: np.ndarray,
-    X_test: Union[np.ndarray, list],
+    X_test: np.ndarray | list,
     y_test: np.ndarray,
     classifier,
     results_path,
@@ -442,9 +442,9 @@ def load_and_run_classification_experiment(
 
 
 def run_regression_experiment(
-    X_train: Union[np.ndarray, list],
+    X_train: np.ndarray | list,
     y_train: np.ndarray,
-    X_test: Union[np.ndarray, list],
+    X_test: np.ndarray | list,
     y_test: np.ndarray,
     regressor,
     results_path,
@@ -764,12 +764,12 @@ def load_and_run_regression_experiment(
 
 
 def run_clustering_experiment(
-    X_train: Union[np.ndarray, list],
+    X_train: np.ndarray | list,
     y_train: np.ndarray,
     clusterer,
     results_path,
-    X_test: Optional[Union[np.ndarray, list]] = None,
-    y_test: Optional[np.ndarray] = None,
+    X_test: np.ndarray | list | None = None,
+    y_test: np.ndarray | None = None,
     n_clusters=None,
     clusterer_name=None,
     dataset_name="N/A",

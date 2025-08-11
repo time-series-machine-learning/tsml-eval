@@ -30,13 +30,13 @@ def soft_shape_dtw_distance(
     x: np.ndarray,
     y: np.ndarray,
     gamma: float = 1.0,
-    window: Optional[float] = None,
+    window: float | None = None,
     descriptor: str = "identity",
     reach: int = 15,
-    itakura_max_slope: Optional[float] = None,
+    itakura_max_slope: float | None = None,
     transformation_precomputed: bool = False,
-    transformed_x: Optional[np.ndarray] = None,
-    transformed_y: Optional[np.ndarray] = None,
+    transformed_x: np.ndarray | None = None,
+    transformed_y: np.ndarray | None = None,
 ) -> float:
     if x.ndim == 1 and y.ndim == 1:
         _x = x.reshape((1, x.shape[0]))
@@ -91,8 +91,8 @@ def _soft_shape_dtw_distance(
     descriptor: str = "identity",
     reach: int = 15,
     transformation_precomputed: bool = False,
-    transformed_x: Optional[np.ndarray] = None,
-    transformed_y: Optional[np.ndarray] = None,
+    transformed_x: np.ndarray | None = None,
+    transformed_y: np.ndarray | None = None,
     gamma: float = 1.0,
 ) -> float:
     # for compilation purposes
@@ -126,13 +126,13 @@ def soft_shape_dtw_cost_matrix(
     x: np.ndarray,
     y: np.ndarray,
     gamma: float = 1.0,
-    window: Optional[float] = None,
+    window: float | None = None,
     descriptor: str = "identity",
     reach: int = 15,
-    itakura_max_slope: Optional[float] = None,
+    itakura_max_slope: float | None = None,
     transformation_precomputed: bool = False,
-    transformed_x: Optional[np.ndarray] = None,
-    transformed_y: Optional[np.ndarray] = None,
+    transformed_x: np.ndarray | None = None,
+    transformed_y: np.ndarray | None = None,
 ) -> np.ndarray:
     if x.ndim == 1 and y.ndim == 1:
         _x = x.reshape((1, x.shape[0]))
@@ -187,8 +187,8 @@ def _soft_shape_dtw_cost_matrix(
     descriptor: str,
     reach: int,
     transformation_precomputed: bool,
-    transformed_x: Optional[np.ndarray],
-    transformed_y: Optional[np.ndarray],
+    transformed_x: np.ndarray | None,
+    transformed_y: np.ndarray | None,
     gamma: float,
 ) -> np.ndarray:
     # for compilation purposes
@@ -220,13 +220,13 @@ def soft_shape_dtw_alignment_path(
     x: np.ndarray,
     y: np.ndarray,
     gamma: float = 1.0,
-    window: Optional[float] = None,
+    window: float | None = None,
     descriptor: str = "identity",
     reach: int = 15,
-    itakura_max_slope: Optional[float] = None,
+    itakura_max_slope: float | None = None,
     transformation_precomputed: bool = False,
-    transformed_x: Optional[np.ndarray] = None,
-    transformed_y: Optional[np.ndarray] = None,
+    transformed_x: np.ndarray | None = None,
+    transformed_y: np.ndarray | None = None,
 ) -> tuple[list[tuple[int, int]], float]:
     cost_matrix = soft_shape_dtw_cost_matrix(
         x=x,
@@ -262,16 +262,16 @@ def soft_shape_dtw_alignment_path(
 
 @threaded
 def soft_shape_dtw_pairwise_distance(
-    X: Union[np.ndarray, list[np.ndarray]],
-    y: Optional[Union[np.ndarray, list[np.ndarray]]] = None,
+    X: np.ndarray | list[np.ndarray],
+    y: np.ndarray | list[np.ndarray] | None = None,
     gamma: float = 1.0,
-    window: Optional[float] = None,
+    window: float | None = None,
     descriptor: str = "identity",
     reach: int = 15,
-    itakura_max_slope: Optional[float] = None,
+    itakura_max_slope: float | None = None,
     transformation_precomputed: bool = False,
-    transformed_x: Optional[np.ndarray] = None,
-    transformed_y: Optional[np.ndarray] = None,
+    transformed_x: np.ndarray | None = None,
+    transformed_y: np.ndarray | None = None,
     n_jobs: int = 1,
     **kwargs,
 ) -> np.ndarray:
@@ -315,12 +315,12 @@ def soft_shape_dtw_pairwise_distance(
 @njit(cache=True, fastmath=True, parallel=True)
 def _soft_shape_dtw_pairwise_distance(
     X: NumbaList[np.ndarray],
-    window: Optional[float],
+    window: float | None,
     descriptor: str,
     reach: int,
-    itakura_max_slope: Optional[float],
+    itakura_max_slope: float | None,
     transformation_precomputed: bool,
-    transformed_x: Optional[np.ndarray],
+    transformed_x: np.ndarray | None,
     unequal_length: bool,
     gamma: float,
 ) -> np.ndarray:
@@ -369,13 +369,13 @@ def _soft_shape_dtw_pairwise_distance(
 def _soft_shape_dtw_from_multiple_to_multiple_distance(
     x: NumbaList[np.ndarray],
     y: NumbaList[np.ndarray],
-    window: Optional[float],
+    window: float | None,
     descriptor: str,
     reach: int,
-    itakura_max_slope: Optional[float],
+    itakura_max_slope: float | None,
     transformation_precomputed: bool,
-    transformed_x: Optional[np.ndarray],
-    transformed_y: Optional[np.ndarray],
+    transformed_x: np.ndarray | None,
+    transformed_y: np.ndarray | None,
     unequal_length: bool,
     gamma: float,
 ) -> np.ndarray:
@@ -432,8 +432,8 @@ def _soft_shape_dtw_cost_matrix_with_arrs(
     descriptor: str = "identity",
     reach: int = 15,
     transformation_precomputed: bool = False,
-    transformed_x: Optional[np.ndarray] = None,
-    transformed_y: Optional[np.ndarray] = None,
+    transformed_x: np.ndarray | None = None,
+    transformed_y: np.ndarray | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     _x = _pad_ts_edges(x=x, reach=reach)
     _y = _pad_ts_edges(x=y, reach=reach)
@@ -475,13 +475,13 @@ def soft_shape_dtw_gradient(
     x: np.ndarray,
     y: np.ndarray,
     gamma: float = 1.0,
-    window: Optional[float] = None,
+    window: float | None = None,
     descriptor: str = "identity",
     reach: int = 15,
-    itakura_max_slope: Optional[float] = None,
+    itakura_max_slope: float | None = None,
     transformation_precomputed: bool = False,
-    transformed_x: Optional[np.ndarray] = None,
-    transformed_y: Optional[np.ndarray] = None,
+    transformed_x: np.ndarray | None = None,
+    transformed_y: np.ndarray | None = None,
 ) -> tuple[np.ndarray, float]:
     gradient = _compute_soft_gradient(
         x,

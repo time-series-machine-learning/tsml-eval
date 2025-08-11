@@ -136,16 +136,16 @@ class ShapeletTransformClassifier(BaseClassifier):
     def __init__(
         self,
         n_shapelet_samples: int = 10000,
-        max_shapelets: Union[int, None] = None,
-        max_shapelet_length: Union[int, None] = None,
+        max_shapelets: int | None = None,
+        max_shapelet_length: int | None = None,
         estimator=None,
-        batch_size: Union[int, None] = 100,
+        batch_size: int | None = 100,
         verbose: bool = False,
         transform_limit_in_minutes: int = 0,
         time_limit_in_minutes: int = 0,
         contract_max_n_shapelet_samples: int = np.inf,
         n_jobs: int = 1,
-        random_state: Union[int, np.random.RandomState, None] = None,
+        random_state: int | np.random.RandomState | None = None,
     ) -> None:
         self.n_shapelet_samples = n_shapelet_samples
         self.max_shapelets = max_shapelets
@@ -369,7 +369,7 @@ class ShapeletTransformClassifier(BaseClassifier):
     @classmethod
     def _get_test_params(
         cls, parameter_set: str = "default"
-    ) -> Union[dict, list[dict]]:
+    ) -> dict | list[dict]:
         """Return testing parameter settings for the estimator.
 
         Parameters
