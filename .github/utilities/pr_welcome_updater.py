@@ -17,6 +17,7 @@ pr = repo.get_pull(number=pr_number)
 labels = [label.name for label in pr.get_labels()]
 
 print("Starting")
+print(f"PR: {pr_number}")  # noqa: T201
 
 comment = None
 for c in pr.get_comments():
