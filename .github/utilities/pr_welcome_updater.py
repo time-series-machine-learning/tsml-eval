@@ -4,8 +4,8 @@ import json
 import os
 import sys
 
+from _commons import label_options
 from github import Github
-from pr_welcome_edited import label_options
 
 context_dict = json.loads(os.getenv("CONTEXT_GITHUB"))
 
