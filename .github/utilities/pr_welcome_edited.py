@@ -14,12 +14,9 @@ g = Github(os.getenv("GITHUB_TOKEN"))
 repo = g.get_repo(repo)
 issue_number = context_dict["event"]["issue"]["number"]
 issue = repo.get_issue(number=issue_number)
-comment = context_dict["event"]["comment"]
 comment_body = context_dict["event"]["comment"]["body"]
 comment_user = context_dict["event"]["comment"]["user"]["login"]
 labels = [label.name for label in issue.get_labels()]
-
-print(comment)  # noqa: T201
 
 if (
     issue.pull_request is None
@@ -29,7 +26,9 @@ if (
     with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
         print("empty_commit=false", file=fh)  # noqa: T201
     sys.exit(0)
+
 pr = issue.as_pull_request()
+comment = pr.get_issue_comment(context_dict["event"]["comment"]["id"])
 
 for option in label_options:
     if f"- [x] {option[1]}" in comment_body and option[0] not in labels:

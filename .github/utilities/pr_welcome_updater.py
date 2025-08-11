@@ -41,8 +41,4 @@ for option in label_options:
             f"- [x] {option[1]}",
         )
 
-print("Comment body:")  # noqa: T201
-print(comment_body)  # noqa: T201
-print(f"type(comment_body): {type(comment_body)}")  # noqa: T201
-
 comment.edit(comment_body)
