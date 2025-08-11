@@ -31,7 +31,7 @@ from aeon.utils.validation import check_n_jobs
 
 def _medoids(
     X: np.ndarray,
-    precomputed_pairwise_distance: Union[np.ndarray, None] = None,
+    precomputed_pairwise_distance: np.ndarray | None = None,
     distance: str = "dtw",
     **kwargs,
 ):
@@ -51,10 +51,10 @@ def _medoids(
 
 def _get_init_barycenter(
     X: np.ndarray,
-    init_barycenter: Optional[Union[np.ndarray, str]],
+    init_barycenter: np.ndarray | str | None,
     distance: str,
-    precomputed_medoids_pw: Optional[np.ndarray] = None,
-    random_state: Optional[int] = None,
+    precomputed_medoids_pw: np.ndarray | None = None,
+    random_state: int | None = None,
     **kwargs,
 ) -> np.ndarray:
     if isinstance(init_barycenter, str):
@@ -106,12 +106,12 @@ def _get_init_barycenter(
 def _ba_setup(
     X: np.ndarray,
     distance: str = "dtw",
-    init_barycenter: Union[np.ndarray, str] = "mean",
-    previous_cost: Optional[float] = None,
-    previous_distance_to_center: Optional[np.ndarray] = None,
-    precomputed_medoids_pairwise_distance: Optional[np.ndarray] = None,
+    init_barycenter: np.ndarray | str = "mean",
+    previous_cost: float | None = None,
+    previous_distance_to_center: np.ndarray | None = None,
+    precomputed_medoids_pairwise_distance: np.ndarray | None = None,
     n_jobs: int = 1,
-    random_state: Optional[int] = None,
+    random_state: int | None = None,
     **kwargs,
 ):
     n_jobs = check_n_jobs(n_jobs)
@@ -205,9 +205,9 @@ def _get_alignment_path(
     center: np.ndarray,
     ts: np.ndarray,
     distance: str = "dtw",
-    window: Union[float, None] = None,
+    window: float | None = None,
     g: float = 0.0,
-    epsilon: Union[float, None] = None,
+    epsilon: float | None = None,
     nu: float = 0.001,
     lmbda: float = 1.0,
     independent: bool = True,
@@ -216,8 +216,8 @@ def _get_alignment_path(
     reach: int = 15,
     warp_penalty: float = 1.0,
     transformation_precomputed: bool = False,
-    transformed_x: Optional[np.ndarray] = None,
-    transformed_y: Optional[np.ndarray] = None,
+    transformed_x: np.ndarray | None = None,
+    transformed_y: np.ndarray | None = None,
     gamma: float = 1.0,
 ) -> tuple[list[tuple[int, int]], float]:
     if distance == "dtw":

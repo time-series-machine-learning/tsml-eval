@@ -2,7 +2,8 @@ import functools
 import inspect
 import os
 import threading
-from typing import Any, Callable
+from typing import Any
+from collections.abc import Callable
 
 from numba import set_num_threads
 

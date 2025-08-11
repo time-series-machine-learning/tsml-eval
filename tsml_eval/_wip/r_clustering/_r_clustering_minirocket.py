@@ -454,7 +454,7 @@ def _quantiles(n):
 
 
 def _fit(
-    X, num_features=10_000, max_dilations_per_kernel=32, seed: Union[int, None] = None
+    X, num_features=10_000, max_dilations_per_kernel=32, seed: int | None = None
 ):
     if seed is not None:
         np.random.seed(seed)

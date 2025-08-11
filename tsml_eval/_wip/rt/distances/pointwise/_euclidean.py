@@ -73,8 +73,8 @@ def _univariate_euclidean_distance(x: np.ndarray, y: np.ndarray) -> float:
 
 @threaded
 def euclidean_pairwise_distance(
-    X: Union[np.ndarray, list[np.ndarray]],
-    y: Optional[Union[np.ndarray, list[np.ndarray]]] = None,
+    X: np.ndarray | list[np.ndarray],
+    y: np.ndarray | list[np.ndarray] | None = None,
     n_jobs: int = 1,
     **kwargs,
 ) -> np.ndarray:

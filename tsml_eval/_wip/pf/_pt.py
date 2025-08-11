@@ -122,9 +122,9 @@ class ProximityTree(BaseClassifier):
     def __init__(
         self,
         n_splitters: int = 5,
-        max_depth: Optional[int] = None,
+        max_depth: int | None = None,
         min_samples_split: int = 2,
-        random_state: Union[int, np.random.RandomState, None] = None,
+        random_state: int | np.random.RandomState | None = None,
     ) -> None:
         self.n_splitters = n_splitters
         self.max_depth = max_depth
@@ -468,7 +468,7 @@ class ProximityTree(BaseClassifier):
     @classmethod
     def _get_test_params(
         cls, parameter_set: str = "default"
-    ) -> Union[dict, list[dict]]:
+    ) -> dict | list[dict]:
         """Return testing parameter settings for the estimator.
 
         Parameters

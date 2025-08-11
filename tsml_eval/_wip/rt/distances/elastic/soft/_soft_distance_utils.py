@@ -158,8 +158,8 @@ def _compute_soft_gradient(
     y: np.ndarray,
     cost_matrix_with_arrs_func: callable,
     gamma: float = 1.0,
-    window: Optional[float] = None,
-    itakura_max_slope: Optional[float] = None,
+    window: float | None = None,
+    itakura_max_slope: float | None = None,
     **kwargs,
 ) -> tuple[np.ndarray, float]:
     if gamma <= 0:

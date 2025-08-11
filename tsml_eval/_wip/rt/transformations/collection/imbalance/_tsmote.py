@@ -45,9 +45,9 @@ class TSMOTE(BaseCollectionTransformer):
         self,
         random_state=None,
         spy_size: float = 0.15,
-        window_size: Optional[int] = None,
-        distance: Union[str, callable] = "euclidean",
-        distance_params: Optional[dict] = None,
+        window_size: int | None = None,
+        distance: str | callable = "euclidean",
+        distance_params: dict | None = None,
     ):
         self.random_state = random_state
         self.spy_size = spy_size

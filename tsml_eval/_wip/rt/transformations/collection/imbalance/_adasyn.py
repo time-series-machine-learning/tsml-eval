@@ -29,9 +29,9 @@ class ADASYN(SMOTE):
     def __init__(
         self,
         n_neighbors=5,
-        distance: Union[str, callable] = "euclidean",
-        distance_params: Optional[dict] = None,
-        weights: Union[str, callable] = "uniform",
+        distance: str | callable = "euclidean",
+        distance_params: dict | None = None,
+        weights: str | callable = "uniform",
         n_jobs: int = 1,
         random_state=None,
     ):

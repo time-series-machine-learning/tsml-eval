@@ -50,7 +50,7 @@ def _plot_path(
     x: np.ndarray,
     y: np.ndarray,
     method: str,
-    dist_kwargs: Optional[dict] = None,
+    dist_kwargs: dict | None = None,
     title: str = "",
     plot_over_pw: bool = False,
 ):  # pragma: no cover
@@ -119,7 +119,7 @@ def _plot_path(
 
 
 def _plot_alignment(
-    x, y, method, dist_kwargs: Optional[dict] = None, title: str = ""
+    x, y, method, dist_kwargs: dict | None = None, title: str = ""
 ):  # pragma: no cover
     _check_soft_dependencies("matplotlib")
 
