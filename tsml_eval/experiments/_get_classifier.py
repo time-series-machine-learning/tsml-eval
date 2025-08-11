@@ -96,6 +96,7 @@ interval_based_classifiers = [
     ["randomintervalclassifier", "randomintervals", "catch22-intervals"],
     ["supervisedintervalclassifier", "supervisedintervals"],
     ["quantclassifier", "quant"],
+    "drcif-pipeline",
 ]
 other_classifiers = [
     ["dummyclassifier", "dummy", "dummyclassifier-aeon"],
@@ -772,6 +773,62 @@ def _set_classifier_interval_based(
         from aeon.classification.interval_based import QUANTClassifier
 
         return QUANTClassifier(random_state=random_state, **kwargs)
+
+    elif c == "drcif-pipeline":
+        import numpy as np
+        from aeon.transformations.collection.feature_based import Catch22
+        from sklearn.ensemble import ExtraTreesClassifier
+        from tsml.interval_based import RandomIntervalClassifier
+        from tsml.transformations import (
+            ARCoefficientTransformer,
+            FunctionTransformer,
+            PeriodogramTransformer,
+        )
+        from tsml.utils.numba_functions.general import first_order_differences_3d
+        from tsml.utils.numba_functions.stats import (
+            row_iqr,
+            row_mean,
+            row_median,
+            row_numba_max,
+            row_numba_min,
+            row_ppv,
+            row_slope,
+            row_std,
+        )
+
+        def sqrt_times_15_plus_5_mv(X):
+            return int(
+                np.sqrt(X.shape[2]) * np.sqrt(X.shape[1]) * 15 + 5
+            )  # pragma: no cover
+
+        interval_features = [
+            Catch22(outlier_norm=True, replace_nans=True),
+            row_mean,
+            row_std,
+            row_slope,
+            row_median,
+            row_iqr,
+            row_numba_min,
+            row_numba_max,
+            row_ppv,
+        ]
+        series_transformers = [
+            None,
+            FunctionTransformer(func=first_order_differences_3d, validate=False),
+            PeriodogramTransformer(use_pyfftw=True),
+            ARCoefficientTransformer(replace_nan=True),
+        ]
+
+        return RandomIntervalClassifier(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            n_intervals=sqrt_times_15_plus_5_mv,
+            features=interval_features,
+            series_transformers=series_transformers,
+            estimator=ExtraTreesClassifier(n_estimators=500, criterion="entropy"),
+            **kwargs,
+        )
+
     else:
         raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
 
@@ -797,7 +854,9 @@ def _set_classifier_shapelet_based(
     c, random_state, n_jobs, fit_contract, checkpoint, kwargs
 ):
     if c == "stc-2hour":
-        from aeon.classification.shapelet_based import ShapeletTransformClassifier
+        from tsml_eval._wip.shapelets.early_abandon._stc3 import (
+            ShapeletTransformClassifier,
+        )
 
         return ShapeletTransformClassifier(
             transform_limit_in_minutes=120,
@@ -806,7 +865,9 @@ def _set_classifier_shapelet_based(
             **kwargs,
         )
     elif c == "shapelettransformclassifier" or c == "stc":
-        from aeon.classification.shapelet_based import ShapeletTransformClassifier
+        from tsml_eval._wip.shapelets.early_abandon._stc3 import (
+            ShapeletTransformClassifier,
+        )
 
         return ShapeletTransformClassifier(
             random_state=random_state,

@@ -32,8 +32,12 @@ from tsml_eval._wip.unequal_length._tde5 import TemporalDictionaryEnsemble as Te
 from tsml_eval._wip.unequal_length._tde6 import TemporalDictionaryEnsemble as TemporalDictionaryEnsemble6
 from tsml_eval._wip.unequal_length._tde7 import TemporalDictionaryEnsemble as TemporalDictionaryEnsemble7
 from tsml_eval._wip.unequal_length._truncate import Truncator
-
+from tsml_eval._wip.unequal_length.other._shapelet_transform6 import RandomShapeletTransform as RandomShapeletTransform6
 
 @parametrize_with_checks([Arsenal, Arsenal2, Arsenal3, Arsenal4, ShapeletTransformClassifier, ShapeletTransformClassifier2, ShapeletTransformClassifier3, ShapeletTransformClassifier4, ShapeletTransformClassifier5, ShapeletTransformClassifier6, ShapeletTransformClassifier7, ShapeletTransformClassifier8, RocketClassifier, FreshPRINCEClassifier, TemporalDictionaryEnsemble, TemporalDictionaryEnsemble2, TemporalDictionaryEnsemble3, TemporalDictionaryEnsemble4, TemporalDictionaryEnsemble5, TemporalDictionaryEnsemble6, TemporalDictionaryEnsemble7, DrCIFClassifier, DrCIFClassifier2, DrCIFClassifier3, DrCIFClassifier4, DrCIFClassifier5, DrCIFClassifier6, DrCIFClassifier7, DrCIFClassifier8, Padder, Truncator, Resizer])
 def test_aeon_estimator(check):
+    check()
+
+@parametrize_with_checks([RandomShapeletTransform6])
+def test_aeon_transform(check):
     check()

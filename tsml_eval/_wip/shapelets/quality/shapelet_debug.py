@@ -2,7 +2,7 @@
 
 # Changes to the core ST algorithm from aeon.
 
-from tsml_eval._wip.shapelets.classification.shapelet_based import ShapeletTransformClassifier \
+from tsml_eval._wip.shapelets.quality.classification.shapelet_based import ShapeletTransformClassifier \
     as WIP_STC
 from aeon.classification.shapelet_based import ShapeletTransformClassifier as STC
 from aeon.datasets import load_unit_test
