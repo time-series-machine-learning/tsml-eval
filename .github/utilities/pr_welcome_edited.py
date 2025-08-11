@@ -13,6 +13,7 @@ g = Github(os.getenv("GITHUB_TOKEN"))
 repo = g.get_repo(repo)
 issue_number = context_dict["event"]["issue"]["number"]
 issue = repo.get_issue(number=issue_number)
+comment = context_dict["event"]["comment"]
 comment_body = context_dict["event"]["comment"]["body"]
 comment_user = context_dict["event"]["comment"]["user"]["login"]
 labels = [label.name for label in issue.get_labels()]
@@ -58,24 +59,12 @@ with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
     print(f"branch={branch_name}", file=fh)  # noqa: T201
 
 if "- [x] Push an empty commit to re-run CI checks" in comment_body:
-    for comment in pr.get_comments():
-        print(comment_user)  # noqa: T201
-        print(comment.user.login)  # noqa: T201
-        print(comment.user.login == comment_user)  # noqa: T201
-        print(  # noqa: T201
-            "## Thank you for contributing to `tsml-eval`" in comment.body
+    comment.edit(
+        comment_body.replace(
+            "- [x] Push an empty commit to re-run CI checks",
+            "- [ ] Push an empty commit to re-run CI checks",
         )
-        if (
-            comment.user.login == comment_user
-            and "## Thank you for contributing to `tsml-eval`" in comment.body
-        ):
-            comment.edit(
-                comment_body.replace(
-                    "- [x] Push an empty commit to re-run CI checks",
-                    "- [ ] Push an empty commit to re-run CI checks",
-                )
-            )
-            break
+    )
 
     with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
         print("empty_commit=true", file=fh)  # noqa: T201
