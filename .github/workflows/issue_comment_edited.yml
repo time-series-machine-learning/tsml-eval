@@ -53,9 +53,3 @@ jobs:
           commit_options: --allow-empty
           create_branch: false
           skip_dirty_check: true
-
-      - name: Uncheck relevant boxes
-        run: python .github/utilities/uncheck_welcome_boxes.py
-        env:
-          CONTEXT_GITHUB: ${{ toJson(github) }}
-          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
