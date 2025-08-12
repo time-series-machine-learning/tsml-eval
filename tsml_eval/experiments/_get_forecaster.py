@@ -55,6 +55,8 @@ def _set_forecaster_stats(f, random_state, n_jobs, kwargs):
     if f == "etsforecaster" or f == "ets":
         return ETSForecaster(**kwargs)
 
+    # todo
+
 
 def _set_forecaster_other(f, random_state, n_jobs, kwargs):
     if f == "dummyforecaster" or f == "dummy":
