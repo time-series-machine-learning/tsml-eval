@@ -19,7 +19,8 @@ comment_user = context_dict["event"]["comment"]["user"]["login"]
 labels = [label.name for label in issue.get_labels()]
 
 if (
-    issue.pull_request is None
+    "[bot]" in context_dict["sender"]["login"]
+    or issue.pull_request is None
     or comment_user != "tsml-actions-bot[bot]"
     or "## Thank you for contributing to `tsml-eval`" not in comment_body
 ):
@@ -43,6 +44,13 @@ with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
     print(f"branch={branch_name}", file=fh)  # noqa: T201
 
 if "- [x] Push an empty commit to re-run CI checks" in comment_body:
+    comment.edit(
+        comment_body.replace(
+            "- [x] Push an empty commit to re-run CI checks",
+            "- [ ] Push an empty commit to re-run CI checks",
+        )
+    )
+
     with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
         print("empty_commit=true", file=fh)  # noqa: T201
 else:
