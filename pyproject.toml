@@ -175,6 +175,6 @@ addopts = '''
 [tool.codespell]
 ignore-words = ".github/utilities/codespell_ignore_words.txt"
 ignore-regex = '(^\s*"image/\S+": ".*|"som")'
-skip = ".venv,.idea,.mypy_cache,.git,./tsml_eval/_wip,./tsml_eval/testing/_test_eval_files"
+skip = ".venv,.idea,.mypy_cache,.git,tsml_eval/_wip,tsml_eval/testing/_test_eval_files"
 check-filenames = true
 check-hidden = true
