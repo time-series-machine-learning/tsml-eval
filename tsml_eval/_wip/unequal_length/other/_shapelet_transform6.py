@@ -154,17 +154,17 @@ class RandomShapeletTransform(BaseCollectionTransformer):
     def __init__(
         self,
         n_shapelet_samples: int = 10000,
-        max_shapelets: Optional[int] = None,
+        max_shapelets: int | None = None,
         min_shapelet_length: int = 3,
-        max_shapelet_length: Optional[int] = None,
+        max_shapelet_length: int | None = None,
         remove_self_similar: bool = True,
-        batch_size: Optional[int] = 100,
+        batch_size: int | None = 100,
         verbose: bool = False,
         time_limit_in_minutes: float = 0.0,
         contract_max_n_shapelet_samples: float = np.inf,
         n_jobs: int = 1,
         parallel_backend=None,
-        random_state: Optional[int] = None,
+        random_state: int | None = None,
     ) -> None:
         self.n_shapelet_samples = n_shapelet_samples
         self.max_shapelets = max_shapelets
@@ -542,28 +542,8 @@ class RandomShapeletTransform(BaseCollectionTransformer):
                 other_cls_traversed += 1
 
             orderline.append((distance, cls))
-
-# https://github.com/time-series-machine-learning/tsml-java/blob/master/src/main/java/weka/classifiers/evaluation/ThresholdCurve.java#L377
-# https://github.com/time-series-machine-learning/tsml-java/blob/master/src/main/java/tsml/transformers/ShapeletTransform.java#L1167
-
-            # if worst_quality > 0:
-            #     orderline.sort()
-            #
-            #     quality = _calc_early_binary_ig(
-            #         orderline,
-            #         this_cls_traversed,
-            #         other_cls_traversed,
-            #         this_cls_count - this_cls_traversed,
-            #         other_cls_count - other_cls_traversed,
-            #         worst_quality,
-            #     )
-            #
-            #     if quality <= worst_quality:
-            #         return -1, None
-
             distances[i] = distance
 
-        # if worst_quality <= 0:
         orderline.sort()
 
         quality = _calc_binary_ig(orderline, this_cls_count, other_cls_count)

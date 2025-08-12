@@ -44,7 +44,7 @@ script_file_path="$local_path/tsml-eval/tsml_eval/experiments/threaded_classific
 # Separate environments for GPU and CPU are recommended
 env_name="tsml-eval"
 
-# Classifiers to loop over. Must be seperated by a space
+# Classifiers to loop over. Must be separated by a space
 # See list of potential classifiers in set_classifier
 classifiers_to_run="ROCKET DrCIF"
 
@@ -112,7 +112,7 @@ done
 
 if [ "${array_jobs}" != "" ]; then
 
-# This creates the scrip to run the job based on the info above
+# This creates the script to run the job based on the info above
 echo "#!/bin/bash
 #SBATCH --mail-type=${mail}
 #SBATCH --mail-user=${mailto}

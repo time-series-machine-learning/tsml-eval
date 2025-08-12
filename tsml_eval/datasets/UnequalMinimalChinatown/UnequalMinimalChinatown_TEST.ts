@@ -1,7 +1,7 @@
 % This is a cut down version of the problem ChinaTown, useful for code examples and unit tests
 % http://www.timeseriesclassification.com/description.php?Dataset=Chinatown
 % The train set is the same as ChinaTown, but the test set is reduced from 345 cases to 20 cases
-% To make the series unequal length, values have arbitratily been removed from the beginning and end of series
+% To make the series unequal length, values have arbitrarily been removed from the beginning and end of series
 %
 @problemName UnequalMinimalChinatown
 @timeStamps false

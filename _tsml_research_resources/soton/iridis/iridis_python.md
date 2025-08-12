@@ -168,7 +168,7 @@ For CPU experiments start with one of the following scripts:
 
 >clustering_experiments.sh
 
-These scrips can be run from the command line with the following command:
+These scripts can be run from the command line with the following command:
 
 >sh classification_experiments.sh
 

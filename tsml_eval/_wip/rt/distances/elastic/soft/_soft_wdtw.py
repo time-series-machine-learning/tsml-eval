@@ -26,10 +26,10 @@ from aeon.utils.validation.collection import _is_numpy_list_multivariate
 def soft_wdtw_distance(
     x: np.ndarray,
     y: np.ndarray,
-    window: Optional[float] = None,
+    window: float | None = None,
     g: float = 0.05,
     gamma: float = 1.0,
-    itakura_max_slope: Optional[float] = None,
+    itakura_max_slope: float | None = None,
 ) -> float:
     if x.ndim == 1 and y.ndim == 1:
         _x = x.reshape((1, x.shape[0]))
@@ -50,10 +50,10 @@ def soft_wdtw_distance(
 def soft_wdtw_cost_matrix(
     x: np.ndarray,
     y: np.ndarray,
-    window: Optional[float] = None,
+    window: float | None = None,
     g: float = 0.05,
     gamma: float = 1.0,
-    itakura_max_slope: Optional[float] = None,
+    itakura_max_slope: float | None = None,
 ) -> np.ndarray:
     if x.ndim == 1 and y.ndim == 1:
         _x = x.reshape((1, x.shape[0]))
@@ -112,12 +112,12 @@ def _soft_wdtw_cost_matrix(
 
 @threaded
 def soft_wdtw_pairwise_distance(
-    X: Union[np.ndarray, list[np.ndarray]],
-    y: Optional[Union[np.ndarray, list[np.ndarray]]] = None,
-    window: Optional[float] = None,
+    X: np.ndarray | list[np.ndarray],
+    y: np.ndarray | list[np.ndarray] | None = None,
+    window: float | None = None,
     g: float = 0.05,
     gamma: float = 1.0,
-    itakura_max_slope: Optional[float] = None,
+    itakura_max_slope: float | None = None,
     n_jobs: int = 1,
     **kwargs,
 ) -> np.ndarray:
@@ -142,9 +142,9 @@ def soft_wdtw_pairwise_distance(
 @njit(cache=True, fastmath=True, parallel=True)
 def _soft_wdtw_pairwise_distance(
     X: NumbaList[np.ndarray],
-    window: Optional[float],
+    window: float | None,
     g: float,
-    itakura_max_slope: Optional[float],
+    itakura_max_slope: float | None,
     unequal_length: bool,
     gamma: float,
 ) -> np.ndarray:
@@ -173,9 +173,9 @@ def _soft_wdtw_pairwise_distance(
 def _soft_wdtw_from_multiple_to_multiple_distance(
     x: NumbaList[np.ndarray],
     y: NumbaList[np.ndarray],
-    window: Optional[float],
+    window: float | None,
     g: float,
-    itakura_max_slope: Optional[float],
+    itakura_max_slope: float | None,
     unequal_length: bool,
     gamma: float,
 ) -> np.ndarray:
@@ -202,10 +202,10 @@ def _soft_wdtw_from_multiple_to_multiple_distance(
 def soft_wdtw_alignment_path(
     x: np.ndarray,
     y: np.ndarray,
-    window: Optional[float] = None,
+    window: float | None = None,
     gamma: float = 1.0,
     g: float = 0.05,
-    itakura_max_slope: Optional[float] = None,
+    itakura_max_slope: float | None = None,
 ) -> tuple[list[tuple[int, int]], float]:
     cost_matrix = soft_wdtw_cost_matrix(
         x, y, window=window, g=g, itakura_max_slope=itakura_max_slope, gamma=gamma
@@ -275,8 +275,8 @@ def soft_wdtw_gradient(
     y: np.ndarray,
     g: float = 0.05,
     gamma: float = 1.0,
-    window: Optional[float] = None,
-    itakura_max_slope: Optional[float] = None,
+    window: float | None = None,
+    itakura_max_slope: float | None = None,
 ) -> tuple[np.ndarray, float]:
     return _compute_soft_gradient(
         x,

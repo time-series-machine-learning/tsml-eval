@@ -73,7 +73,7 @@ def load_experiment_data(
 
 
 def copy_dataset_ts_files(
-    datasets: Union[list[str], str],
+    datasets: list[str] | str,
     source_path: str,
     destination_path: str,
 ):
@@ -126,7 +126,7 @@ def copy_dataset_ts_files(
 def save_merged_dataset_splits(
     problem_path: str,
     dataset: str,
-    save_path: Optional[str] = None,
+    save_path: str | None = None,
 ):
     """Merge the TRAIN and TEST .ts files of a dataset and save the merged file.
 

@@ -29,8 +29,8 @@ def soft_adtw_distance(
     x: np.ndarray,
     y: np.ndarray,
     gamma: float = 1.0,
-    window: Optional[float] = None,
-    itakura_max_slope: Optional[float] = None,
+    window: float | None = None,
+    itakura_max_slope: float | None = None,
     warp_penalty: float = 1.0,
 ) -> float:
     if x.ndim == 1 and y.ndim == 1:
@@ -53,8 +53,8 @@ def soft_adtw_cost_matrix(
     x: np.ndarray,
     y: np.ndarray,
     gamma: float = 1.0,
-    window: Optional[float] = None,
-    itakura_max_slope: Optional[float] = None,
+    window: float | None = None,
+    itakura_max_slope: float | None = None,
     warp_penalty: float = 1.0,
 ) -> np.ndarray:
     if x.ndim == 1 and y.ndim == 1:
@@ -116,11 +116,11 @@ def _soft_adtw_cost_matrix(
 
 @threaded
 def soft_adtw_pairwise_distance(
-    X: Union[np.ndarray, list[np.ndarray]],
-    y: Optional[Union[np.ndarray, list[np.ndarray]]] = None,
+    X: np.ndarray | list[np.ndarray],
+    y: np.ndarray | list[np.ndarray] | None = None,
     gamma: float = 1.0,
-    window: Optional[float] = None,
-    itakura_max_slope: Optional[float] = None,
+    window: float | None = None,
+    itakura_max_slope: float | None = None,
     warp_penalty: float = 1.0,
     n_jobs: int = 1,
     **kwargs,
@@ -146,8 +146,8 @@ def soft_adtw_pairwise_distance(
 @njit(cache=True, fastmath=True, parallel=True)
 def _soft_adtw_pairwise_distance(
     X: NumbaList[np.ndarray],
-    window: Optional[float],
-    itakura_max_slope: Optional[float],
+    window: float | None,
+    itakura_max_slope: float | None,
     unequal_length: bool,
     gamma: float,
     warp_penalty: float = 1.0,
@@ -179,8 +179,8 @@ def _soft_adtw_pairwise_distance(
 def _soft_adtw_from_multiple_to_multiple_distance(
     x: NumbaList[np.ndarray],
     y: NumbaList[np.ndarray],
-    window: Optional[float],
-    itakura_max_slope: Optional[float],
+    window: float | None,
+    itakura_max_slope: float | None,
     unequal_length: bool,
     gamma: float,
     warp_penalty: float,
@@ -211,8 +211,8 @@ def soft_adtw_alignment_path(
     x: np.ndarray,
     y: np.ndarray,
     gamma: float = 1.0,
-    window: Optional[float] = None,
-    itakura_max_slope: Optional[float] = None,
+    window: float | None = None,
+    itakura_max_slope: float | None = None,
     warp_penalty: float = 1.0,
 ) -> tuple[list[tuple[int, int]], float]:
     cost_matrix = soft_adtw_cost_matrix(
@@ -275,8 +275,8 @@ def soft_adtw_gradient(
     x: np.ndarray,
     y: np.ndarray,
     gamma: float = 1.0,
-    window: Optional[float] = None,
-    itakura_max_slope: Optional[float] = None,
+    window: float | None = None,
+    itakura_max_slope: float | None = None,
     warp_penalty: float = 1.0,
 ) -> tuple[np.ndarray, float]:
     return _compute_soft_gradient(

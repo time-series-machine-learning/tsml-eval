@@ -26,10 +26,10 @@ MAX_NP_FLOAT = np.finfo(np.float64).max
 def soft_msm_distance(
     x: np.ndarray,
     y: np.ndarray,
-    window: Optional[float] = None,
+    window: float | None = None,
     c: float = 1.0,
     gamma: float = 1.0,
-    itakura_max_slope: Optional[float] = None,
+    itakura_max_slope: float | None = None,
 ) -> float:
     if x.ndim == 1 and y.ndim == 1:
         _x = x.reshape((1, x.shape[0]))
@@ -51,10 +51,10 @@ def soft_msm_distance(
 def soft_msm_cost_matrix(
     x: np.ndarray,
     y: np.ndarray,
-    window: Optional[float] = None,
+    window: float | None = None,
     c: float = 1.0,
     gamma: float = 1.0,
-    itakura_max_slope: Optional[float] = None,
+    itakura_max_slope: float | None = None,
 ) -> np.ndarray:
     if x.ndim == 1 and y.ndim == 1:
         _x = x.reshape((1, x.shape[0]))
@@ -141,11 +141,11 @@ def _soft_msm_univariate_cost_matrix(
 
 @threaded
 def soft_msm_pairwise_distance(
-    X: Union[np.ndarray, list[np.ndarray]],
-    y: Optional[Union[np.ndarray, list[np.ndarray]]] = None,
-    window: Optional[float] = None,
+    X: np.ndarray | list[np.ndarray],
+    y: np.ndarray | list[np.ndarray] | None = None,
+    window: float | None = None,
     c: float = 1.0,
-    itakura_max_slope: Optional[float] = None,
+    itakura_max_slope: float | None = None,
     gamma: float = 1.0,
     n_jobs: int = 1,
     **kwargs,
@@ -172,9 +172,9 @@ def soft_msm_pairwise_distance(
 @njit(cache=True, fastmath=True, parallel=True)
 def _soft_msm_pairwise_distance(
     X: NumbaList[np.ndarray],
-    window: Optional[float],
+    window: float | None,
     c: float,
-    itakura_max_slope: Optional[float],
+    itakura_max_slope: float | None,
     gamma: float,
     unequal_length: bool,
 ) -> np.ndarray:
@@ -203,9 +203,9 @@ def _soft_msm_pairwise_distance(
 def _soft_msm_from_multiple_to_multiple_distance(
     x: NumbaList[np.ndarray],
     y: NumbaList[np.ndarray],
-    window: Optional[float],
+    window: float | None,
     c: float,
-    itakura_max_slope: Optional[float],
+    itakura_max_slope: float | None,
     gamma: float,
     unequal_length: bool,
 ) -> np.ndarray:
@@ -232,10 +232,10 @@ def _soft_msm_from_multiple_to_multiple_distance(
 def soft_msm_alignment_path(
     x: np.ndarray,
     y: np.ndarray,
-    window: Optional[float] = None,
+    window: float | None = None,
     gamma: float = 1.0,
     c: float = 1.0,
-    itakura_max_slope: Optional[float] = None,
+    itakura_max_slope: float | None = None,
 ) -> tuple[list[tuple[int, int]], float]:
     cm = soft_msm_cost_matrix(x, y, window, c, gamma, itakura_max_slope)
     return compute_min_return_path(cm), abs(cm[x.shape[-1] - 1, y.shape[-1] - 1])
@@ -373,9 +373,9 @@ def soft_msm_gradient(
     x: np.ndarray,
     y: np.ndarray,
     gamma: float = 1.0,
-    window: Optional[float] = None,
+    window: float | None = None,
     c: float = 1.0,
-    itakura_max_slope: Optional[float] = None,
+    itakura_max_slope: float | None = None,
 ) -> tuple[np.ndarray, float]:
     return _compute_soft_gradient(
         x,

@@ -1,6 +1,8 @@
 __maintainer__ = []
 from typing import Optional
 
+from collections.abc import Callable
+
 import numpy as np
 from numba import njit
 
@@ -156,10 +158,10 @@ def _jacobian_product_euclidean(
 def _compute_soft_gradient(
     x: np.ndarray,
     y: np.ndarray,
-    cost_matrix_with_arrs_func: callable,
+    cost_matrix_with_arrs_func: Callable,
     gamma: float = 1.0,
-    window: Optional[float] = None,
-    itakura_max_slope: Optional[float] = None,
+    window: float | None = None,
+    itakura_max_slope: float | None = None,
     **kwargs,
 ) -> tuple[np.ndarray, float]:
     if gamma <= 0:
@@ -182,7 +184,7 @@ def _compute_soft_gradient(
 def _compute_soft_gradient_with_diff_dist_matrix(
     x: np.ndarray,
     y: np.ndarray,
-    cost_matrix_with_arrs_func: callable,
+    cost_matrix_with_arrs_func: Callable,
     gamma: float,
     bounding_matrix: np.ndarray,
     **kwargs,

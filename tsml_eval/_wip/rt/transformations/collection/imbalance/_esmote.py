@@ -1,6 +1,8 @@
 from collections import OrderedDict
 from typing import Optional, Union
 
+from collections.abc import Callable
+
 import numpy as np
 from numba import prange
 from sklearn.utils import check_random_state
@@ -52,9 +54,9 @@ class ESMOTE(BaseCollectionTransformer):
     def __init__(
         self,
         n_neighbors=5,
-        distance: Union[str, callable] = "euclidean",
-        distance_params: Optional[dict] = None,
-        weights: Union[str, callable] = "uniform",
+        distance: str | Callable = "euclidean",
+        distance_params: dict | None = None,
+        weights: str | Callable = "uniform",
         n_jobs: int = 1,
         random_state=None,
     ):
@@ -164,10 +166,10 @@ def _generate_samples(
     steps,
     random_state,
     distance,
-    weights: Optional[np.ndarray] = None,
-    window: Union[float, None] = None,
+    weights: np.ndarray | None = None,
+    window: float | None = None,
     g: float = 0.0,
-    epsilon: Union[float, None] = None,
+    epsilon: float | None = None,
     nu: float = 0.001,
     lmbda: float = 1.0,
     independent: bool = True,
@@ -176,8 +178,8 @@ def _generate_samples(
     reach: int = 15,
     warp_penalty: float = 1.0,
     transformation_precomputed: bool = False,
-    transformed_x: Optional[np.ndarray] = None,
-    transformed_y: Optional[np.ndarray] = None,
+    transformed_x: np.ndarray | None = None,
+    transformed_y: np.ndarray | None = None,
 ):
     X_new = np.zeros((len(rows), X.shape[1]), dtype=X.dtype)
 

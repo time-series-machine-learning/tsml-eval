@@ -79,7 +79,7 @@ def write_classification_results(
         Optional comment appended to the end of the first line, i.e. the file used to
         generate the results.
     parameter_info : str, default="No Parameter Info"
-        Unstructured estimator dependant information, i.e. estimator parameters or
+        Unstructured estimator dependent information, i.e. estimator parameters or
         values from the model build.
     accuracy: float, default=-1
         The accuracy of the predictions.
@@ -207,7 +207,7 @@ def write_regression_results(
         Optional comment appended to the end of the first line, i.e. the file used to
         generate the results.
     parameter_info : str, default="No Parameter Info"
-        Unstructured estimator dependant information, i.e. estimator parameters or
+        Unstructured estimator dependent information, i.e. estimator parameters or
         values from the model build.
     mse: float, default=-1
         The mean squared error of the predictions.
@@ -323,7 +323,7 @@ def write_clustering_results(
         Optional comment appended to the end of the first line, i.e. the file used to
         generate the results or a dictionary linking label indices to actual values.
     parameter_info : str, default="No Parameter Info"
-        Unstructured estimator dependant information, i.e. estimator parameters or
+        Unstructured estimator dependent information, i.e. estimator parameters or
         values from the model build.
     clustering_accuracy : float, default=-1
         The clustering accuracy of the predictions.
@@ -435,7 +435,7 @@ def write_forecasting_results(
         Optional comment appended to the end of the first line, i.e. the file used to
         generate the results.
     parameter_info : str, default="No Parameter Info"
-        Unstructured estimator dependant information, i.e. estimator parameters or
+        Unstructured estimator dependent information, i.e. estimator parameters or
         values from the model build.
     mape: float, default=-1
         The mean absolute percentage error of the predictions.
@@ -530,7 +530,7 @@ def write_results_to_tsml_format(
         Optional comment appended to the end of the first line, i.e. the file used to
         generate the results or a dictionary linking label indices to actual values.
     second_line : str, default="No Parameter Info"
-        Unstructured estimator dependant information, i.e. estimator parameters or
+        Unstructured estimator dependent information, i.e. estimator parameters or
         values from the model build.
     third_line : str, default = "N/A"
         Summary performance information, what values are written depends on the task.
@@ -580,7 +580,7 @@ def write_results_to_tsml_format(
         file.write(first_line + "\n")
 
         # the second line of the output is free form and estimator-specific; usually
-        # this will record info such as paramater options used, any constituent model
+        # this will record info such as parameter options used, any constituent model
         # names for ensembles, etc.
         file.write(str(second_line) + "\n")
 
