@@ -45,7 +45,7 @@ script_file_path="$local_path/tsml-eval/tsml_eval/experiments/classification_exp
 # Separate environments for GPU and CPU are recommended
 env_name="eval-py11"
 
-# Classifiers to loop over. Must be seperated by a space. Different classifiers will not run in the same node
+# Classifiers to loop over. Must be separated by a space. Different classifiers will not run in the same node
 # See list of potential classifiers in set_classifier
 classifiers_to_run="ROCKET DrCIF"
 

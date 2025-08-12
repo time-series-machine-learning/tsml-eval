@@ -48,7 +48,7 @@ script_file_path="$local_path/tsml-eval/tsml_eval/experiments/clustering_experim
 # Separate environments for GPU and CPU are recommended
 env_name="tsml-eval-gpu"
 
-# Clusterers to loop over. Must be seperated by a space
+# Clusterers to loop over. Must be separated by a space
 # See list of potential clusterers in set_clusterer
 clusterers_to_run="kmedoids-squared kmedoids-euclidean"
 
@@ -124,7 +124,7 @@ done
 
 if [ "${array_jobs}" != "" ]; then
 
-# This creates the scrip to run the job based on the info above
+# This creates the script to run the job based on the info above
 echo "#!/bin/bash
 #SBATCH --qos=gpu-rtx #gpu-rtx-reserved
 #SBATCH --gres=gpu:1

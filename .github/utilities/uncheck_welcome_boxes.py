@@ -18,6 +18,7 @@ comment_user = context_dict["event"]["comment"]["user"]["login"]
 
 if (
     issue.pull_request is None
+    or comment_user != "tsml-actions-bot[bot]"
     or "## Thank you for contributing to `tsml-eval`" not in comment_body
 ):
     sys.exit(0)

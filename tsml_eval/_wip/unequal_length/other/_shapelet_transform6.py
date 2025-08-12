@@ -542,28 +542,8 @@ class RandomShapeletTransform(BaseCollectionTransformer):
                 other_cls_traversed += 1
 
             orderline.append((distance, cls))
-
-# https://github.com/time-series-machine-learning/tsml-java/blob/master/src/main/java/weka/classifiers/evaluation/ThresholdCurve.java#L377
-# https://github.com/time-series-machine-learning/tsml-java/blob/master/src/main/java/tsml/transformers/ShapeletTransform.java#L1167
-
-            # if worst_quality > 0:
-            #     orderline.sort()
-            #
-            #     quality = _calc_early_binary_ig(
-            #         orderline,
-            #         this_cls_traversed,
-            #         other_cls_traversed,
-            #         this_cls_count - this_cls_traversed,
-            #         other_cls_count - other_cls_traversed,
-            #         worst_quality,
-            #     )
-            #
-            #     if quality <= worst_quality:
-            #         return -1, None
-
             distances[i] = distance
 
-        # if worst_quality <= 0:
         orderline.sort()
 
         quality = _calc_binary_ig(orderline, this_cls_count, other_cls_count)

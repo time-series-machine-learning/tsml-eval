@@ -399,7 +399,7 @@ def load_classifier_results(file_path, calculate_stats=True, verify_values=True)
             if pred_descriptions is not None:
                 pred_descriptions.append(",".join(line[6 + n_classes :]).strip())
 
-        # compatability with old results files
+        # compatibility with old results files
         if len(line3) > 6:
             error_estimate_method = line3[6]
             error_estimate_time = float(line3[7])
