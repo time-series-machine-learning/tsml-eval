@@ -19,7 +19,7 @@ comment_user = context_dict["event"]["comment"]["user"]["login"]
 labels = [label.name for label in issue.get_labels()]
 
 if (
-    "[bot]" in context_dict["sender"]["login"]
+    "[bot]" in context_dict["event"]["sender"]["login"]
     or issue.pull_request is None
     or comment_user != "tsml-actions-bot[bot]"
     or "## Thank you for contributing to `tsml-eval`" not in comment_body
