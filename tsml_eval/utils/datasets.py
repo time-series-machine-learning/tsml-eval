@@ -10,7 +10,6 @@ __all__ = [
 import os
 import shutil
 from os.path import exists
-from typing import Optional, Union
 
 import numpy as np
 from aeon.datasets import load_from_ts_file, write_to_ts_file

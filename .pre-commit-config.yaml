@@ -84,5 +84,6 @@ repos:
     rev: v2.4.1
     hooks:
       - id: codespell
+        exclude: "tsml_eval/_wip/"
         additional_dependencies:
           - tomli  # for python_version < '3.11'

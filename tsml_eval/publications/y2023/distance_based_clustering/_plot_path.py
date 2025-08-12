@@ -1,7 +1,5 @@
 """Alignment path plotting utilities."""
 
-from typing import Optional
-
 import numpy as np
 from aeon.distances import cost_matrix as compute_cost_matrix
 from aeon.distances._distance import alignment_path, pairwise_distance

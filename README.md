@@ -21,7 +21,7 @@ The current release of `tsml-eval` is v0.6.0.
 
 ## Installation
 
-`tsml-eval` is available on PyPI and can be installed via pip:
+`tsml-eval` is available on PyPI and can be installed via `pip`:
 
 ```console
 pip install tsml-eval
