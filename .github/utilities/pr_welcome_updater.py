@@ -16,7 +16,7 @@ pr_number = context_dict["event"]["number"]
 pr = repo.get_pull(number=pr_number)
 labels = [label.name for label in pr.get_labels()]
 
-if "[bot]" in context_dict["sender"]["login"]:
+if "[bot]" in context_dict["event"]["sender"]["login"]:
     sys.exit(0)
 
 comment = None
