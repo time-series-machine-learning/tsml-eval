@@ -16,6 +16,7 @@ __all__ = [
 ]
 
 import os
+import tempfile
 import time
 import warnings
 from datetime import datetime
@@ -27,6 +28,7 @@ from aeon.benchmarking.metrics.clustering import clustering_accuracy_score
 from aeon.classification import BaseClassifier
 from aeon.clustering import BaseClusterer
 from aeon.forecasting import BaseForecaster
+from aeon.transformations.series import TrainTestTransformer
 from aeon.regression.base import BaseRegressor
 from aeon.utils.validation import get_n_cases
 from sklearn import preprocessing
@@ -1313,14 +1315,18 @@ def load_and_run_forecasting_experiment(
         attribute_file_path = f"{results_path}/{forecaster_name}/Workspace/{dataset}/"
     else:
         attribute_file_path = None
-
-    train = pd.read_csv(f"{problem_path}/{dataset}/{dataset}_TRAIN.csv").squeeze(
-        "columns"
+    
+    tmpdir = tempfile.mkdtemp()
+    dataset = load_forecasting(dataset, tmpdir)
+    series = (
+        dataset[dataset["series_name"] == series_name]["series_value"]
+        .iloc[0]
+        .to_numpy()
     )
+    from aeon.transformations.series import TrainTestTransformer
+    dataset = f"{dataset}_{series_name}"
+    train, test = TrainTestTransformer().fit_transform(series)
     train = train.astype(float).to_numpy()
-    test = pd.read_csv(f"{problem_path}/{dataset}/{dataset}_TEST.csv").squeeze(
-        "columns"
-    )
     test = test.astype(float).to_numpy()
 
     run_forecasting_experiment(

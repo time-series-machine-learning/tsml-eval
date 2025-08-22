@@ -20,6 +20,9 @@ os.environ["LOKY_MAX_CPU_COUNT"] = "1"
 os.environ["TF_NUM_INTEROP_THREADS"] = "1"
 os.environ["TF_NUM_INTRAOP_THREADS"] = "1"
 
+sys.path.append("C:/Users/alexb/Documents/University/PhD/aeon/aeon")
+sys.path.append("C:/Users/alexb/Documents/University/PhD/aeon/tsml-eval")
+
 import numba
 from aeon.utils.validation._dependencies import _check_soft_dependencies
 
@@ -73,6 +76,32 @@ def run_experiment(args):
         ):
             print("Ignoring, results already present")
         else:
+                    if current_dataset != item[0]:
+                        dataset = load_forecasting(item[0], tmpdir)
+                        current_dataset = item[0]
+                        print(f"Current Dataset: {current_dataset}")  # noqa
+                    f.write(f"{item[0]}_{item[1]}\n")
+                    series = (
+                        dataset[dataset["series_name"] == item[1]]["series_value"]
+                        .iloc[0]
+                        .to_numpy()
+                    )
+                    dataset_name = f"{item[0]}_{item[1]}"
+                    full_file_path = f"{location_of_datasets}/{dataset_name}"
+                    if not os.path.exists(full_file_path):
+                        os.makedirs(full_file_path)
+                    if problem_type == "regression":
+                        write_regression_dataset(
+                            series,
+                            full_file_path,
+                            dataset_name,
+                            difference_series=False,
+                            difference_y=True,
+                        )
+                    elif problem_type == "forecasting":
+                        write_forecasting_dataset(
+                            series, full_file_path, dataset_name, difference_series=False
+                        )
             load_and_run_regression_experiment(
                 args.data_path,
                 args.results_path,
