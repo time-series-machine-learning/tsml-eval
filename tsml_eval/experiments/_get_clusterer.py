@@ -15,7 +15,6 @@ from aeon.clustering import (
 )
 from aeon.transformations.collection import Normalizer
 from sklearn.cluster import KMeans
-
 from tsml_eval.utils.datasets import load_experiment_data
 from tsml_eval.utils.functions import str_in_nested_list
 
@@ -128,6 +127,7 @@ distance_based_clusterers = [
     "som-soft_dtw",
     ["kspectralcentroid", "ksc"],
     ["timeserieskshape", "kshape"],
+    "wrapper-kshape"
     "kasba",
 ]
 feature_based_clusterers = [
@@ -298,6 +298,11 @@ def _set_clusterer_distance_based(
             distance = "dtw"
         else:
             distance = c.split("-")[-1]
+    if "wrapper-kshape" in c:
+        from tsml_eval._wip.clustering._kshape import KShapeWrapper
+
+        return KShapeWrapper(**kwargs)
+
 
     if "distance_params" in kwargs:
         distance_params = kwargs["distance_params"]
@@ -305,7 +310,6 @@ def _set_clusterer_distance_based(
         distance_params = _get_distance_default_params(
             distance, data_vars, row_normalise
         )
-
     if "kmeans" in c or "timeserieskmeans" in c:
         if "average_params" in kwargs:
             average_params = kwargs["average_params"]
