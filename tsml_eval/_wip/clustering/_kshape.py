@@ -48,7 +48,7 @@ class KShapeWrapper(BaseClusterer):
         for i in range(self.n_clusters):
             centroid, indices = self.kshape_model[i]
             predictions[indices] = i
-
+        predictions = predictions.astype(int)
         return predictions
 
 
