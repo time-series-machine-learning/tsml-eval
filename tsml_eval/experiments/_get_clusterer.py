@@ -21,6 +21,7 @@ from tsml_eval.utils.functions import str_in_nested_list
 deep_learning_clusterers = [
     ["aefcnclusterer", "aefcn"],
     ["aeresnetclusterer", "aeresnet"],
+    ["aeresnetclusterer2", "aeresnet2"],
     ["aeattentionbigruclusterer", "aeattentionbigru"],
     ["aebigruclusterer", "aebigru"],
     ["aedcnnclusterer", "aedcnn"],
@@ -239,6 +240,15 @@ def _set_clusterer_deep_learning(
         return AEResNetClusterer(
             estimator=TimeSeriesKMeans(distance="euclidean", averaging_method="mean"),
             random_state=random_state,
+            **kwargs,
+        )
+    elif c == "aeresnetclusterer2" or c == "aeresnet2":
+        from aeon.clustering.deep_learning import AEResNetClusterer
+
+        return AEResNetClusterer(
+            estimator=TimeSeriesKMeans(distance="euclidean", averaging_method="mean"),
+            random_state=random_state,
+            loss="multi_rec",
             **kwargs,
         )
     elif c == "aeattentionbigruclusterer" or c == "aeattentionbigru":
