@@ -58,6 +58,7 @@ from tsml_eval.utils.results_writing import (
     write_forecasting_results,
     write_regression_results,
 )
+from aeon.clustering import BaseClusterer, TimeSeriesKMeans
 
 MEMRECORD_ENV = os.getenv("MEMRECORD_INTERVAL")
 if isinstance(MEMRECORD_ENV, str):  # pragma: no cover
@@ -905,8 +906,14 @@ def run_clustering_experiment(
         for att in clusterer.__dict__.values():
             if isinstance(att, BaseEstimator) and "n_clusters" in att.get_params():
                 att.set_params(n_clusters=n_clusters)
+        if isinstance(clusterer,BaseDeepClusterer):
+            clusterer.estimator = (TimeSeriesKMeans(n_clusters=n_clusters,
+                                                    distance="euclidean", averaging_method="mean"))
+
     elif n_clusters is not None:
         raise ValueError("n_clusters must be an int or None.")
+
+
 
     second = str(clusterer.get_params()).replace("\n", " ").replace("\r", " ")
 
