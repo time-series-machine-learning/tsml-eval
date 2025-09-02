@@ -443,6 +443,7 @@ def _set_clusterer_distance_based(
 
         return KASBA(
             random_state=random_state,
+            max_iter=100,
             **kwargs,
         )
 
