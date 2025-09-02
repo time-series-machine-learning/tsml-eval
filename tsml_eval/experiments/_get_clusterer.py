@@ -127,7 +127,7 @@ distance_based_clusterers = [
     "som-soft_dtw",
     ["kspectralcentroid", "ksc"],
     ["timeserieskshape", "kshape"],
-    "wrapper-kshape"
+    "wrapper-kshape",
     "kasba",
 ]
 feature_based_clusterers = [
