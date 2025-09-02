@@ -58,8 +58,8 @@ from tsml_eval.utils.results_writing import (
     write_forecasting_results,
     write_regression_results,
 )
-from aeon.clustering import BaseClusterer, TimeSeriesKMeans
-
+from aeon.clustering import TimeSeriesKMeans
+from aeon.clustering.deep_learning import BaseDeepClusterer
 MEMRECORD_ENV = os.getenv("MEMRECORD_INTERVAL")
 if isinstance(MEMRECORD_ENV, str):  # pragma: no cover
     MEMRECORD_INTERVAL = float(MEMRECORD_ENV)
