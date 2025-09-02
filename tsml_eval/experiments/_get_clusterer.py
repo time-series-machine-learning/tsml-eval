@@ -298,10 +298,6 @@ def _set_clusterer_distance_based(
             distance = "dtw"
         else:
             distance = c.split("-")[-1]
-    if "wrapper-kshape" in c:
-        from tsml_eval._wip.clustering._kshape import KShapeWrapper
-
-        return KShapeWrapper(**kwargs)
 
 
     if "distance_params" in kwargs:
@@ -429,6 +425,11 @@ def _set_clusterer_distance_based(
             random_state=random_state,
             **kwargs,
         )
+    elif "wrapper-kshape" in c:
+        from tsml_eval._wip.clustering._kshape import KShapeWrapper
+
+        return KShapeWrapper(**kwargs)
+
     elif "timeserieskernelkmeans" in c:
         return TimeSeriesKernelKMeans(
             max_iter=50,
