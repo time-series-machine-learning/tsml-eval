@@ -354,7 +354,7 @@ def _set_clusterer_distance_based(
         else:
             return TimeSeriesKMeans(
                 max_iter=50,
-                n_init=10,
+                n_init=1,
                 init=init_algorithm,
                 distance=distance,
                 distance_params=distance_params,
