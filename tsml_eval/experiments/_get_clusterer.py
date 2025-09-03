@@ -15,6 +15,7 @@ from aeon.clustering import (
 )
 from aeon.transformations.collection import Normalizer
 from sklearn.cluster import KMeans
+
 from tsml_eval.utils.datasets import load_experiment_data
 from tsml_eval.utils.functions import str_in_nested_list
 
@@ -130,6 +131,7 @@ distance_based_clusterers = [
     ["timeserieskshape", "kshape"],
     "wrapper-kshape",
     "kasba",
+    "kasba-init",
 ]
 feature_based_clusterers = [
     ["catch22", "catch22clusterer"],
@@ -309,7 +311,6 @@ def _set_clusterer_distance_based(
         else:
             distance = c.split("-")[-1]
 
-
     if "distance_params" in kwargs:
         distance_params = kwargs["distance_params"]
     else:
@@ -455,6 +456,15 @@ def _set_clusterer_distance_based(
         return KASBA(
             random_state=random_state,
             max_iter=100,
+            **kwargs,
+        )
+    elif c == "kasba-init":
+        from tsml_eval.estimators.clustering._kasba_random_init import KASBAInit
+
+        return KASBAInit(
+            random_state=random_state,
+            max_iter=100,
+            init="random",
             **kwargs,
         )
 
