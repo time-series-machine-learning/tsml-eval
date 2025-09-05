@@ -474,7 +474,7 @@ def _get_distance_default_params(
     dist_name: str, data_vars: list, row_normalise: bool
 ) -> dict:
     if dist_name == "dtw" or dist_name == "ddtw":
-        return {"window": 0.2}
+        return {"window": 0.1}
     if dist_name == "lcss":
         return {"epsilon": 1.0}
     if dist_name == "erp":
@@ -493,7 +493,7 @@ def _get_distance_default_params(
                 raise ValueError("Unknown data type in _get_distance_default_params")
         return {"g": 0.05}
     if dist_name == "msm":
-        return {"c": 1.0, "independent": True}
+        return {"c": 0.5, "independent": True}
     if dist_name == "edr":
         return {"epsilon": None}
     if dist_name == "twe":
