@@ -493,7 +493,7 @@ def _get_distance_default_params(
                 raise ValueError("Unknown data type in _get_distance_default_params")
         return {"g": 0.05}
     if dist_name == "msm":
-        return {"c": 0.5, "independent": True}
+        return {"c": 1.0, "independent": True}
     if dist_name == "edr":
         return {"epsilon": None}
     if dist_name == "twe":
