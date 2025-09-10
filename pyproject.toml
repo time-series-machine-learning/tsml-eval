@@ -84,6 +84,7 @@ docs = [
     "sphinx_issues",
     "sphinx-copybutton",
     "sphinx-remove-toctrees",
+    "sphinx-reredirects",
     "sphinxext-opengraph",
     "nbsphinx",
     "numpydoc",
