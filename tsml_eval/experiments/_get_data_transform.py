@@ -18,14 +18,17 @@ unbalanced_transformers = [
 ]
 unequal_transformers = [
     ["padder", "zero-padder"],
+    "zero-padder-min",
     "mean-padder",
-    "zero-noise-padder",
+    "mean-padder-min",
+    ["noise-padder", "zero-noise-padder"],
     "zero-noise-padder-min",
     "mean-noise-padder",
     "mean-noise-padder-min",
     ["truncator", "truncate"],
     "truncate-max",
     "resizer",
+    "resizer-min",
 ]
 
 
@@ -90,51 +93,73 @@ def _set_scaling_transformer(t, random_state, n_jobs):
 
 def _set_unequal_transformer(t, random_state, n_jobs):
     if t == "padder" or t == "zero-padder":
-        from aeon.transformations.collection import Padder
+        from aeon.transformations.collection.unequal_length import Padder
 
         return Padder()
+    elif t == "zero-padder-min":
+        from aeon.transformations.collection.unequal_length import Padder
+
+        return Padder(
+            padded_length="min",
+            error_on_long=False,
+            random_state=random_state,
+        )
     elif t == "mean-padder":
-        from tsml_eval._wip.unequal_length._pad import Padder
+        from aeon.transformations.collection.unequal_length import Padder
 
         return Padder(fill_value="mean", random_state=random_state)
-    elif t == "zero-noise-padder":
-        from tsml_eval._wip.unequal_length._pad import Padder
+    elif t == "mean-padder-min":
+        from aeon.transformations.collection.unequal_length import Padder
+
+        return Padder(
+            padded_length="min",
+            fill_value="mean",
+            error_on_long=False,
+            random_state=random_state,
+        )
+    elif t == "noise-padder" or t == "zero-noise-padder":
+        from aeon.transformations.collection.unequal_length import Padder
 
         return Padder(add_noise=0.001, random_state=random_state)
     elif t == "zero-noise-padder-min":
-        from tsml_eval._wip.unequal_length._pad import Padder
+        from aeon.transformations.collection.unequal_length import Padder
 
         return Padder(
-            pad_length="min",
+            padded_length="min",
             add_noise=0.001,
             error_on_long=False,
             random_state=random_state,
         )
     elif t == "mean-noise-padder":
-        from tsml_eval._wip.unequal_length._pad import Padder
+        from aeon.transformations.collection.unequal_length import Padder
 
         return Padder(fill_value="mean", add_noise=0.001, random_state=random_state)
     elif t == "mean-noise-padder-min":
-        from tsml_eval._wip.unequal_length._pad import Padder
+        from aeon.transformations.collection.unequal_length import Padder
 
         return Padder(
+            padded_length="min",
             fill_value="mean",
             add_noise=0.001,
             error_on_long=False,
             random_state=random_state,
         )
     elif t == "truncator" or t == "truncate":
-        from tsml_eval._wip.unequal_length._truncate import Truncator
+        from aeon.transformations.collection.unequal_length import Truncator
 
         return Truncator()
     elif t == "truncate-max":
-        from tsml_eval._wip.unequal_length._truncate import Truncator
+        from aeon.transformations.collection.unequal_length import Truncator
 
         return Truncator(truncated_length="max", error_on_short=False)
     elif t == "resizer":
-        from tsml_eval._wip.unequal_length._resize import Resizer
+        from aeon.transformations.collection.unequal_length import Resizer
 
         return Resizer()
+    elif t == "resizer-min":
+        from aeon.transformations.collection.unequal_length import Resizer
+
+        return Resizer(resized_length="min")
 
 
 def _set_unbalanced_transformer(t, random_state, n_jobs):

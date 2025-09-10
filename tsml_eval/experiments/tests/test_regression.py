@@ -214,6 +214,7 @@ def test_aeon_regressors_available():
         "SklearnRegressorWrapper",
         "IntervalForestRegressor",
         # just missing
+        "RecurrentRegressor",
     ]
 
     est = [e for e, _ in all_estimators(type_filter="regressor")]

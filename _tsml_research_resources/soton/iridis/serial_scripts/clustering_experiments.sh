@@ -114,7 +114,7 @@ array_jobs=""
 for (( i=start_fold-1; i<max_folds; i++ ))
 do
     if [ -f "${results_dir}${clusterer}/Predictions/${dataset}/trainResample${i}.csv" ]; then
-        if [ "${generate_test_files}" == "true" ] && ! [ -f "${results_dir}${clusterer}/Predictions/${dataset}/testResample${i}.csv" ]; then
+        if [ "${generate_test_files}" == "-te" ] && ! [ -f "${results_dir}${clusterer}/Predictions/${dataset}/testResample${i}.csv" ]; then
             array_jobs="${array_jobs}${array_jobs:+,}$((i + 1))"
         fi
     else
@@ -144,7 +144,7 @@ source activate $env_name
 
 # Input args to the default clustering_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/clustering_experiments.py
-python -u ${script_file_path} ${data_dir} ${results_dir} ${clusterer} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_test_files} ${predefined_folds} ${combine_test_train_split} ${normalise_data}"  > generatedFile.sub
+python -u ${script_file_path} ${data_dir} ${results_dir} ${clusterer} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_test_files} ${predefined_folds} ${combine_test_train_split} ${normalise_data}" > generatedFile.sub
 
 echo "${count} ${clusterer}/${dataset}"
 

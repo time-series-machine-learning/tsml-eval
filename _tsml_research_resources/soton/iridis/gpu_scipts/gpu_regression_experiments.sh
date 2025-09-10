@@ -98,7 +98,7 @@ array_jobs=""
 for (( i=start_fold-1; i<max_folds; i++ ))
 do
     if [ -f "${results_dir}${regressor}/Predictions/${dataset}/testResample${i}.csv" ]; then
-        if [ "${generate_train_files}" == "true" ] && ! [ -f "${results_dir}${regressor}/Predictions/${dataset}/trainResample${i}.csv" ]; then
+        if [ "${generate_train_files}" == "-tr" ] && ! [ -f "${results_dir}${regressor}/Predictions/${dataset}/trainResample${i}.csv" ]; then
             array_jobs="${array_jobs}${array_jobs:+,}$((i + 1))"
         fi
     else
@@ -129,7 +129,7 @@ source activate $env_name
 
 # Input args to the default regression_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/regression_experiments.py
-python -u ${script_file_path} ${data_dir} ${results_dir} ${regressor} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_train_files} ${predefined_folds} ${normalise_data}"  > generatedFile.sub
+python -u ${script_file_path} ${data_dir} ${results_dir} ${regressor} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_train_files} ${predefined_folds} ${normalise_data}" > generatedFile.sub
 
 echo "${count} ${regressor}/${dataset}"
 

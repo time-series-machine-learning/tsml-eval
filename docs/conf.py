@@ -57,6 +57,7 @@ extensions = [
     "sphinx_remove_toctrees",
     "versionwarning.extension",
     "myst_parser",
+    "sphinx-reredirects",
 ]
 
 templates_path = ["_templates"]
