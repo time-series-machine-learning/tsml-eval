@@ -6,7 +6,7 @@ __all__ = ["SklearnToTsmlClusterer"]
 import numpy as np
 from aeon.base._base import _clone_estimator
 from sklearn.base import ClusterMixin
-from sklearn.utils.validation import check_is_fitted, validate_data
+from sklearn.utils.validation import check_is_fitted
 from tsml.base import BaseTimeSeriesEstimator
 
 
@@ -34,8 +34,7 @@ class SklearnToTsmlClusterer(ClusterMixin, BaseTimeSeriesEstimator):
         if self.clusterer is None:
             raise ValueError("Clusterer not set")
 
-        X = validate_data(
-            self,
+        X = self._validate_data(
             X=X,
             ensure_univariate=not self.concatenate_channels,
             ensure_equal_length=not self.pad_unequal,
@@ -61,7 +60,7 @@ class SklearnToTsmlClusterer(ClusterMixin, BaseTimeSeriesEstimator):
         """Wrap predict."""
         check_is_fitted(self)
 
-        X = validate_data(self, X=X, reset=False)
+        X = self._validate_data(X=X, reset=False)
         X = self._convert_X(
             X,
             pad_unequal=self.pad_unequal,

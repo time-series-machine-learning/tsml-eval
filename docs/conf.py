@@ -105,6 +105,9 @@ copybutton_exclude = ".linenos, .gp, .go"
 
 remove_from_toctrees = ["auto_generated/*"]
 
+# sphinx-reredirects
+redirects = {"<source>": "<target>"}
+
 # nbsphinx
 
 nbsphinx_execute = "never"
