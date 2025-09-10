@@ -55,9 +55,9 @@ extensions = [
     "sphinx_issues",
     "sphinx_copybutton",
     "sphinx_remove_toctrees",
+    "sphinx_reredirects",
     "versionwarning.extension",
     "myst_parser",
-    "sphinx-reredirects",
 ]
 
 templates_path = ["_templates"]
@@ -106,7 +106,7 @@ copybutton_exclude = ".linenos, .gp, .go"
 remove_from_toctrees = ["auto_generated/*"]
 
 # sphinx-reredirects
-redirects = {"<source>": "<target>"}
+redirects = {"redirect": "index"}
 
 # nbsphinx
 
