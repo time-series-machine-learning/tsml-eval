@@ -55,6 +55,7 @@ all_extras = [
     "aeon[all_extras]",
     "tsml[all_extras]",
     "xgboost",
+    "wildboard<=1.2", # latest version puts a cap on scikit-learn
 ]
 unstable_extras = [
     "aeon[unstable_extras]",
