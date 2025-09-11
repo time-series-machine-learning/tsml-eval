@@ -1329,11 +1329,11 @@ def _figures_for_statistic(
     df.columns = estimators
     mcm = create_multi_comparison_matrix(
         df,
-        output_dir=f"{save_path}/{statistic_name}/figures/",
-        pdf_savename=f"{eval_name}_{statistic_name.lower()}_mcm",
+        save_path=f"{save_path}/{statistic_name}/figures/{eval_name}"
+        f"_{statistic_name.lower()}_mcm",
+        formats="pdf",
         show_symetry=True,
-        order_win_tie_loss="higher" if higher_better else "lower",
-        order_better="decreasing" if higher_better else "increasing",
+        higher_stat_better=higher_better,
         used_statistic=statistic_name,
     )
     pickle.dump(

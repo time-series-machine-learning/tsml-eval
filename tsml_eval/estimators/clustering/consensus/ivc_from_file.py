@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from sklearn import preprocessing
 from sklearn.utils import check_random_state
+from sklearn.utils.validation import validate_data
 
 from tsml_eval.estimators.clustering.consensus.ivc import IterativeVotingClustering
 
@@ -79,7 +80,7 @@ class FromFileIterativeVotingClustering(IterativeVotingClustering):
                 "A valid sklearn input such as a 2d numpy array is required."
                 "Sparse input formats are currently not supported."
             )
-        X = self._validate_data(X=X, ensure_min_samples=self.n_clusters)
+        X = validate_data(self, X=X, ensure_min_samples=self.n_clusters)
 
         # load train file at path (trainResample.csv if random_state is None,
         # trainResample{self.random_state}.csv otherwise)
@@ -153,7 +154,7 @@ class FromFileIterativeVotingClustering(IterativeVotingClustering):
                 "A valid sklearn input such as a 2d numpy array is required."
                 "Sparse input formats are currently not supported."
             )
-        X = self._validate_data(X=X, reset=False)
+        X = validate_data(self, X=X, reset=False)
 
         # load train file at path (trainResample.csv if random_state is None,
         # trainResample{self.random_state}.csv otherwise)

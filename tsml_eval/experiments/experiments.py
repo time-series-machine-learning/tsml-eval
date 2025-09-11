@@ -37,13 +37,13 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import cross_val_predict
 from tsml.base import BaseTimeSeriesEstimator
-from tsml.utils.validation import is_clusterer
-
-from tsml_eval.estimators import (
+from tsml.compose import (
     SklearnToTsmlClassifier,
     SklearnToTsmlClusterer,
     SklearnToTsmlRegressor,
 )
+from tsml.utils.validation import is_clusterer
+
 from tsml_eval.utils.datasets import load_experiment_data
 from tsml_eval.utils.experiments import (
     _check_existing_results,
