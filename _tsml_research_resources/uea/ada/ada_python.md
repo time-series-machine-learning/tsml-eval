@@ -118,7 +118,7 @@ If any a dependency install is "Killed", it is likely the interactive session ha
 
 >pip install PACKAGE_NAME --no-cache-dir
 
-#### 5.1. tsml-eval GPU
+#### 5.2. tsml-eval GPU
 
 For GPU jobs we require two additional ADA modules, CUDA and cuDNN:
 
@@ -130,13 +130,13 @@ A specific Tensorflow version is required to match the available CUDA install.
 
 >pip install --editable . tensorflow==2.3.0
 
-# Running experiments
+## Running experiments
 
 For running jobs on ADA, we recommend using copies the submission scripts provided in this folder.
 
 **NOTE: Scripts will not run properly if done whilst the conda environment is active.**
 
-## Running `tsml-eval` CPU experiments
+### Running `tsml-eval` CPU experiments
 
 For CPU experiments start with one of the following scripts:
 
@@ -156,7 +156,7 @@ the CPU resources allocated to others. The default python file in the scripts at
 
 Requesting memory for a job will allocate it all on the jobs assigned node. New jobs will not be submitted to a node if the total allocated memory exceeds the amount available for the node. As such, requesting too much memory can block new jobs from using the node. This is ok if the memory is actually being used, but large amounts of memory should not be requested unless you know it will be required for the jobs you are submitting. ADA is a shared resource, and instantly requesting hundreds of GB will hurt the overall efficiency of the cluster.
 
-## Running `tsml-eval` GPU experiments
+### Running `tsml-eval` GPU experiments
 
 For GPU experiments use one of the following scripts:
 

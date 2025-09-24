@@ -22,7 +22,7 @@ class EstimatorResults(ABC):
     description : str, default=""
         Additional description of the experiment. Appended to the end
         of the first line of the results file.
-    parameters : str, default="No parameter info"
+    parameter_info : str, default="No parameter info"
         Information about parameters used in the estimator and other build information.
         Written to the second line of the results file.
     fit_time : float, default=-1.0
@@ -45,7 +45,7 @@ class EstimatorResults(ABC):
         resample_id=-1,
         time_unit="nanoseconds",
         description="",
-        parameters="No parameter info",
+        parameter_info="No parameter info",
         fit_time=-1.0,
         predict_time=-1.0,
         benchmark_time=-1.0,
@@ -60,7 +60,7 @@ class EstimatorResults(ABC):
         self.description = description
 
         # Line 2
-        self.parameter_info = parameters
+        self.parameter_info = parameter_info
 
         # Line 3
         self.fit_time = fit_time

@@ -77,8 +77,7 @@ For conda related storage guidance, see the [related HPC webpage](https://sotona
 
 #### 3.2. Create environment
 
-Create a new environment with a name of your choice. Replace PYTHON_VERSION with 3.12
-by default.
+Create a new environment with a name of your choice. Replace PYTHON_VERSION with 3.12 by default.
 
 >conda create -n ENV_NAME python=PYTHON_VERSION
 
@@ -121,7 +120,7 @@ or
 
 Move to the package directory i.e.
 
->ls tsml-eval
+>cd tsml-eval
 
 This will have a `pyproject.toml` file. Run:
 
@@ -153,11 +152,33 @@ If any a dependency install is "Killed", it is likely the session has run out of
 
 #### 5.1. tsml-eval GPU
 
-It is recommended to use a different environment for GPU jobs. Move to the package directory and install the required packages for GPU jobs:
+Currently the recommended way to run GPU jobs on Iridis is using an apptainer container built from an NVIDIA tensorflow docker image. Pulling the docker image will likely require an [NVIDIA NGC account](https://catalog.ngc.nvidia.com/) and API key.
 
->pip install --editable . tensorflow[and-cuda] tensorrt
+>module load apptainer/1.3.3
 
-# Running experiments
+>export APPTAINER_DOCKER_USERNAME='$oauthtoken'
+
+>export APPTAINER_DOCKER_PASSWORD=PUT_YOUR_API_KEY_HERE
+
+Pull the image you want, this can be image which has the necessary dependencies but was last tested with:
+
+>apptainer pull docker://nvcr.io/nvidia/tensorflow:25.02-tf2-py3
+
+Create a writable sandbox from the image. This is probably large with a lot of files so will be best on scratch:
+
+>apptainer build --sandbox scratch/tensorflow_sandbox/ tensorflow_25.02-tf2-py3.sif
+
+Open a shell in the container:
+
+>apptainer shell --writable scratch/tensorflow_sandbox
+
+Install `tsml-eval` like the above instructions, this does not have to be in the sandbox:
+
+>cd tsml-eval
+
+>pip install --editable .
+
+## Running experiments
 
 For running jobs on Iridis, we recommend using *copies* of the submission scripts provided in this folder.
 
@@ -167,7 +188,7 @@ Disable the conda environment before running scripts if you have installed packa
 
 >conda deactivate
 
-## Running `tsml-eval` CPU experiments
+### Running `tsml-eval` CPU experiments
 
 For CPU experiments start with one of the following scripts:
 
@@ -189,7 +210,7 @@ Do not run threaded code on the cluster without requesting the correct amount of
 
 Requesting memory for a job will allocate it all on the jobs assigned node. New jobs will not be submitted to a node if the total allocated memory exceeds the amount available for the node. As such, requesting too much memory can block new jobs from using the node. This is ok if the memory is actually being used, but large amounts of memory should not be requested unless you know it will be required for the jobs you are submitting. Iridis is a shared resource, and instantly requesting hundreds of GB will hurt the overall efficiency of the cluster.
 
-## Running `tsml-eval` CPU experiments on the Iridis 5 batch queue
+### Running `tsml-eval` CPU experiments on the Iridis 5 batch queue
 
 If you submit less than 20 tasks when requesting the _batch_ queue, your job will be redirected to the _serial_ queue. This has a much smaller job limit which you will reach quickly when submitting a lot of jobs. If you submit a single task in each submission, you will only be running ~32 jobs at once.
 
@@ -203,7 +224,7 @@ To get around this, you can use the batch submission scripts provided in the `ba
 
 They are named this as they use the `staskfarm` utility to run different processes over multiple threads. Read through the configuration as it is slightly different to the serial scripts. You can split task groupings by dataset by loading from a directory of submission scripts and keep classifiers separate with a variable.
 
-## Running `tsml-eval` GPU experiments
+### Running `tsml-eval` GPU experiments
 
 For GPU experiments use one of the following scripts:
 
@@ -213,7 +234,7 @@ For GPU experiments use one of the following scripts:
 
 >gpu_clustering_experiments.sh
 
-It is recommended you use different environments for CPU and GPU jobs.
+It is recommended you use different environments for CPU and GPU jobs. Using an apptainer container this will be standard, make sure to set the path to your sandbox in the script.
 
 The default queue for GPU jobs is _gpu_.
 
