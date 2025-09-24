@@ -38,7 +38,7 @@ class ClustererResults(EstimatorResults):
     description : str, default=""
         Additional description of the clustering experiment. Appended to the end
         of the first line of the results file.
-    parameters : str, default="No parameter info"
+    parameter_info : str, default="No parameter info"
         Information about parameters used in the clusterer and other build information.
         Written to the second line of the results file.
     fit_time : float, default=-1.0
@@ -103,7 +103,7 @@ class ClustererResults(EstimatorResults):
         resample_id=None,
         time_unit="nanoseconds",
         description="",
-        parameters="No parameter info",
+        parameter_info="No parameter info",
         fit_time=-1.0,
         predict_time=-1.0,
         benchmark_time=-1.0,
@@ -146,7 +146,7 @@ class ClustererResults(EstimatorResults):
             resample_id=resample_id,
             time_unit=time_unit,
             description=description,
-            parameters=parameters,
+            parameter_info=parameter_info,
             fit_time=fit_time,
             predict_time=predict_time,
             benchmark_time=benchmark_time,
@@ -358,7 +358,7 @@ def load_clusterer_results(file_path, calculate_stats=True, verify_values=True):
         resample_id=None if line1[3] == "None" else int(line1[3]),
         time_unit=line1[4].lower(),
         description=",".join(line1[5:]).strip(),
-        parameters=lines[1].strip(),
+        parameter_info=lines[1].strip(),
         fit_time=float(line3[1]),
         predict_time=float(line3[2]),
         benchmark_time=float(line3[3]),

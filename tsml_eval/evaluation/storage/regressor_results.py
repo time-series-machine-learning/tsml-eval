@@ -36,7 +36,7 @@ class RegressorResults(EstimatorResults):
     description : str, default=""
         Additional description of the regression experiment. Appended to the end
         of the first line of the results file.
-    parameters : str, default="No parameter info"
+    parameter_info : str, default="No parameter info"
         Information about parameters used in the regressor and other build information.
         Written to the second line of the results file.
     fit_time : float, default=-1.0
@@ -101,7 +101,7 @@ class RegressorResults(EstimatorResults):
         resample_id=None,
         time_unit="nanoseconds",
         description="",
-        parameters="No parameter info",
+        parameter_info="No parameter info",
         fit_time=-1.0,
         predict_time=-1.0,
         benchmark_time=-1.0,
@@ -143,7 +143,7 @@ class RegressorResults(EstimatorResults):
             resample_id=resample_id,
             time_unit=time_unit,
             description=description,
-            parameters=parameters,
+            parameter_info=parameter_info,
             fit_time=fit_time,
             predict_time=predict_time,
             benchmark_time=benchmark_time,
@@ -334,6 +334,16 @@ def load_regressor_results(file_path, calculate_stats=True, verify_values=True):
             if pred_descriptions is not None:
                 pred_descriptions.append(",".join(line[5:]).strip())
 
+        # compatibility with old results files
+        if len(line3) > 5:
+            error_estimate_method = line3[5]
+            error_estimate_time = float(line3[6])
+            build_plus_estimate_time = float(line3[7])
+        else:
+            error_estimate_method = "N/A"
+            error_estimate_time = -1.0
+            build_plus_estimate_time = -1.0
+
     rr = RegressorResults(
         dataset_name=line1[0],
         regressor_name=line1[1],
@@ -341,14 +351,14 @@ def load_regressor_results(file_path, calculate_stats=True, verify_values=True):
         resample_id=None if line1[3] == "None" else int(line1[3]),
         time_unit=line1[4].lower(),
         description=",".join(line1[5:]).strip(),
-        parameters=lines[1].strip(),
+        parameter_info=lines[1].strip(),
         fit_time=float(line3[1]),
         predict_time=float(line3[2]),
         benchmark_time=float(line3[3]),
         memory_usage=float(line3[4]),
-        error_estimate_method=line3[5],
-        error_estimate_time=float(line3[6]),
-        build_plus_estimate_time=float(line3[7]),
+        error_estimate_method=error_estimate_method,
+        error_estimate_time=error_estimate_time,
+        build_plus_estimate_time=build_plus_estimate_time,
         target_labels=target_labels,
         predictions=predictions,
         pred_times=pred_times,
