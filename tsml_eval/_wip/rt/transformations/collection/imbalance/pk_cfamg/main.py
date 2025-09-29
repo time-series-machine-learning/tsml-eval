@@ -1,10 +1,9 @@
 import os
-import argparse
 import numpy as np
 import pandas as pd
 import torch
-from data_preprocess import set_seed, load_dataset
-from cfamg import CFAMG
+from tsml_eval._wip.rt.transformations.collection.imbalance.pk_cfamg.data_preprocess import set_seed, load_dataset
+from tsml_eval._wip.rt.transformations.collection.imbalance.pk_cfamg.cfamg import CFAMG
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_colwidth', None)
@@ -12,40 +11,63 @@ pd.set_option('display.expand_frame_repr', False)
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='CFAMG')
-
     # Set path
-    parser.add_argument('--output_dir', type=str, default='CFAMG', help='directory to save the results')
+    output_dir = 'CFAMG'
+    log_dir = './Exp_log'
+    data_dir = None  # action='store_true' implies a boolean flag, so default to None or False
 
     # Set data parameter
-    parser.add_argument('--batch_size', type=int, default=32, help='data batch size')
+    batch_size = 32
 
     # Set logging
-    parser.add_argument("--log_dir", default='./Exp_log', type=str, help='path for saving model')
-    parser.add_argument("--data_dir", action='store_true', help='path for loading data')
-    parser.add_argument("--log_freq", default=5, type=int, help='frequency to log on tensorboard')
-    parser.add_argument("--save_freq", default=200, type=int, help='frequency to save model checkpoint')
-    parser.add_argument("--tensorboard", action="store_true", help="whether to use tensorboard")
-    parser.add_argument("--wandb", action='store_true', help='whether to use wandb')
+    log_freq = 5
+    save_freq = 200
+    tensorboard = False  # action="store_true" implies a boolean flag
+    wandb = False  # action='store_true' implies a boolean flag
 
     # Set train parameter
-    parser.add_argument('--num_epochs', type=int, default=201, help='max iters for training')
-    parser.add_argument('--latent_dim', type=int, default=64, help='latent dim')
-    parser.add_argument('--hidden_dim', type=int, default=[32, 64, 128],
-                        help='hidden layer dimension')
-    parser.add_argument("--dropout_list", type=int, default=[0.1, 0.1, 0.2], help='MLP Dropout')
-    parser.add_argument("--use_lr_decay", type=bool, default=False, help="whether to use learning rate decay")
-    parser.add_argument("--lr_decay_step", help="learning rate decay steps", type=int, default=100)
-    parser.add_argument("--lr_gamma", help="lr gamma", type=float, default=0.1)
-    parser.add_argument("--lr", help='learning rate', default=1e-3, type=float)
-    parser.add_argument("--weight_decay", help='weight_decay', default=1e-4, type=float)
-    parser.add_argument("--temp_epochs", help="curriculum steps", type=int, default=300)
-    parser.add_argument('--cls_num_epochs', type=int, default=100, help='max iters for classifier training')
-    parser.add_argument('--beta', type=float, default=10, help='VAE parameter')
+    num_epochs = 201
+    latent_dim = 64
+    hidden_dim = [32, 64, 128]
+    dropout_list = [0.1, 0.1, 0.2]
+    use_lr_decay = False
+    lr_decay_step = 100
+    lr_gamma = 0.1
+    lr = 1e-3
+    weight_decay = 1e-4
+    temp_epochs = 300
+    cls_num_epochs = 100
+    beta = 10
 
-    args = parser.parse_args()
+    # Create a class or object to hold the parameters
+    class Args:
+        pass
+
+    args = Args()
+    args.output_dir = output_dir
+    args.log_dir = log_dir
+    args.data_dir = data_dir
+    args.batch_size = batch_size
+    args.log_freq = log_freq
+    args.save_freq = save_freq
+    args.tensorboard = tensorboard
+    args.wandb = wandb
+    args.num_epochs = num_epochs
+    args.latent_dim = latent_dim
+    args.hidden_dim = hidden_dim
+    args.dropout_list = dropout_list
+    args.use_lr_decay = use_lr_decay
+    args.lr_decay_step = lr_decay_step
+    args.lr_gamma = lr_gamma
+    args.lr = lr
+    args.weight_decay = weight_decay
+    args.temp_epochs = temp_epochs
+    args.cls_num_epochs = cls_num_epochs
+    args.beta = beta
+
     args.save_path = os.path.join(os.getcwd(), args.output_dir)
     args.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print('Device:', args.device)
     return args
 
 

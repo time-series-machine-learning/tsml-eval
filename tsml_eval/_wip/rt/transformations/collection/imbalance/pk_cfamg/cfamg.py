@@ -2,13 +2,11 @@ import os
 from collections import OrderedDict
 
 import numpy as np
-import wandb
 from torch import nn
-from tqdm import tqdm
 import torch.nn.functional as F
-from data_preprocess import create_dataLoader2
-from model_utils import resample_from_normal
-from network import HiddenLayerMLP
+from tsml_eval._wip.rt.transformations.collection.imbalance.pk_cfamg.data_preprocess import create_dataLoader2
+from tsml_eval._wip.rt.transformations.collection.imbalance.pk_cfamg.model_utils import resample_from_normal
+from tsml_eval._wip.rt.transformations.collection.imbalance.pk_cfamg.network import HiddenLayerMLP
 import torch
 
 
@@ -186,19 +184,11 @@ class CFAMG:
         self.args = args
 
         self.device = args.device
-        project_name = args.project_name
+        # project_name = args.project_name
 
-        if args.wandb:
-            wandb.init(project=project_name, config=args)
-
-        if args.tensorboard:
-            from torch.utils.tensorboard import SummaryWriter
-            self.writer = SummaryWriter(f"Experiment/{project_name}/VAE/{args.exp_name}")
-            self.writer_cls = SummaryWriter(f"Experiment/{project_name}/Classifier/{args.exp_name}")
-
-        self.log_dir_path = os.path.join(args.log_dir, project_name, args.dataset_name)
-        self.result_dir = os.path.join(self.log_dir_path, "result")
-        os.makedirs(self.result_dir, exist_ok=True)
+        # self.log_dir_path = os.path.join(args.log_dir, project_name, args.dataset_name)
+        # self.result_dir = os.path.join(self.log_dir_path, "result")
+        # os.makedirs(self.result_dir, exist_ok=True)
         self.dataset = args.dataset
         self.pos_dataloader, self.neg_dataloader, self.feat_dim, self.seq_len, self.batch_size = create_dataLoader2(
             args.dataset,
@@ -233,7 +223,7 @@ class CFAMG:
         best_loss = float('inf')
         patience = 10
         counter = 0
-        for epoch in tqdm(range(self.args.num_epochs)):
+        for epoch in range(self.args.num_epochs):
             self.pos_model.train()
             self.neg_model.train()
 
@@ -310,7 +300,8 @@ class CFAMG:
                 self.scheduler_neg.step()
 
             if epoch % self.args.save_freq == 0:
-                self.save_model(epoch)
+                # self.save_model(epoch)
+                pass
 
             if epoch % self.args.log_freq == 0:
                 self.board_loss(epoch)
@@ -325,7 +316,7 @@ class CFAMG:
                 counter += 1
                 if counter >= patience:
                     print(f"Early stopping at epoch {epoch}")
-                    self.save_model(epoch)
+                    # self.save_model(epoch)
                     break
 
     def generator_sample(self):
@@ -364,19 +355,19 @@ class CFAMG:
 
         return balance_samp, balance_label, generated_samples
 
-    def save_model(self, epoch, model_name='CFAMG'):
-        model_path = os.path.join(self.result_dir, f"model_{model_name}_{epoch}.pth")
-        state_dict = {
-            'steps': epoch,
-            'pos_state_dict': self.pos_model.state_dict(),
-            'pos_optimizer': self.optimizer_pos.state_dict(),
-            'neg_state_dict': self.neg_model.state_dict(),
-            'neg_optimizer': self.optimizer_neg.state_dict()
-        }
-        with open(model_path, "wb") as f:
-            torch.save(state_dict, f)
-
-        print(f'\n {epoch} model saved ...')
+    # def save_model(self, epoch, model_name='CFAMG'):
+    #     model_path = os.path.join(self.result_dir, f"model_{model_name}_{epoch}.pth")
+    #     state_dict = {
+    #         'steps': epoch,
+    #         'pos_state_dict': self.pos_model.state_dict(),
+    #         'pos_optimizer': self.optimizer_pos.state_dict(),
+    #         'neg_state_dict': self.neg_model.state_dict(),
+    #         'neg_optimizer': self.optimizer_neg.state_dict()
+    #     }
+    #     with open(model_path, "wb") as f:
+    #         torch.save(state_dict, f)
+    #
+    #     print(f'\n {epoch} model saved ...')
 
     def board_loss(self, epoch):
         print('\n')
