@@ -50,7 +50,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: ossf/scorecard-action@v2.4.2
+      - uses: ossf/scorecard-action@v2.4.3
         with:
           results_file: results.sarif
           results_format: sarif
@@ -62,6 +62,6 @@ jobs:
           path: results.sarif
           retention-days: 5
 
-      - uses: github/codeql-action/upload-sarif@v3
+      - uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: results.sarif
