@@ -103,7 +103,7 @@ array_jobs=""
 for (( i=start_fold-1; i<max_folds; i++ ))
 do
     if [ -f "${results_dir}${classifier}/Predictions/${dataset}/testResample${i}.csv" ]; then
-        if [ "${generate_train_files}" == "true" ] && ! [ -f "${results_dir}${classifier}/Predictions/${dataset}/trainResample${i}.csv" ]; then
+        if [ "${generate_train_files}" == "-tr" ] && ! [ -f "${results_dir}${classifier}/Predictions/${dataset}/trainResample${i}.csv" ]; then
             array_jobs="${array_jobs}${array_jobs:+,}$((i + 1))"
         fi
     else

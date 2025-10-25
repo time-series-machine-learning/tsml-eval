@@ -1,7 +1,8 @@
 """Tests for data transforms in experiments."""
 
 import pytest
-from aeon.transformations.collection import Normalizer, Padder
+from aeon.transformations.collection import Normalizer
+from aeon.transformations.collection.unequal_length import Padder
 
 from tsml_eval.experiments import _get_data_transform, get_data_transform_by_name
 from tsml_eval.testing.testing_utils import _check_set_method, _check_set_method_results

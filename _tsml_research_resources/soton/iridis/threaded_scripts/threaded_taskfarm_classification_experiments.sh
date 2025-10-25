@@ -13,7 +13,10 @@ max_num_submitted=900
 queue="batch"
 
 # The number of tasks to submit in each job. This can be larger than the number of cores, but tasks will be delayed until a core is free
-n_tasks_per_node=40
+n_tasks_per_node=4
+
+# The number of threads to use per task. You can only run as many tasks as there are CPUs available, 4 tasks with 10 threads will take up a full batch node
+n_threads_per_task=10
 
 # The number of cores to request from the node. Don't go over the number of cores for the node. 40 is the number of cores on batch nodes
 # If you are not using the whole node, please make sure you are requesting memory correctly
@@ -49,7 +52,7 @@ results_dir="$local_path/ClassificationResults/results/"
 out_dir="$local_path/ClassificationResults/output/"
 
 # The python script we are running
-script_file_path="$local_path/tsml-eval/tsml_eval/experiments/classification_experiments.py"
+script_file_path="$local_path/tsml-eval/tsml_eval/experiments/threaded_classification_experiments.py"
 
 # Environment name, change accordingly, for set up, see https://github.com/time-series-machine-learning/tsml-eval/blob/main/_tsml_research_resources/soton/iridis/iridis_python.md
 # Separate environments for GPU and CPU are recommended
@@ -88,10 +91,11 @@ normalise_data=$([ "${normalise_data,,}" == "true" ] && echo "-rn" || echo "")
 # This creates the submission file to run and does clean up
 submit_jobs () {
 
-if ((cmdCount>=max_cpus_to_use)); then
+totalThreads=$((cmdCount * n_threads_per_task))
+if ((totalJobs>=max_cpus_to_use)); then
     cpuCount=$max_cpus_to_use
 else
-    cpuCount=$cmdCount
+    cpuCount=$totalThreads
 fi
 
 echo "#!/bin/bash
@@ -191,9 +195,9 @@ if ((cmdCount>=n_tasks_per_node)); then
     dt=$(date +%Y%m%d%H%M%S)
 fi
 
-# Input args to the default classification_experiments are in main method of
-# https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/classification_experiments.py
-echo "python -u ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} ${resample} ${generate_train_files} ${predefined_folds} ${normalise_data} > ${out_dir}/${classifier}/output-${dataset}-${resample}-${dt}.txt 2>&1" >> ${outDir}/generatedCommandList-${dt}.txt
+# Input args to the default threaded_classification_experiments are in main method of
+# https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/threaded_classification_experiments.py
+echo "python -u ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} ${resample} -nj ${n_threads_per_task} ${generate_train_files} ${predefined_folds} ${normalise_data} > ${out_dir}/${classifier}/output-${dataset}-${resample}-${dt}.txt 2>&1" >> ${outDir}/generatedCommandList-${dt}.txt
 
 ((cmdCount++))
 ((totalCount++))

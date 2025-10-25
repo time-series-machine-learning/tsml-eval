@@ -55,6 +55,7 @@ extensions = [
     "sphinx_issues",
     "sphinx_copybutton",
     "sphinx_remove_toctrees",
+    "sphinx_reredirects",
     "versionwarning.extension",
     "myst_parser",
 ]
@@ -103,6 +104,9 @@ copybutton_exclude = ".linenos, .gp, .go"
 # see https://github.com/pradyunsg/furo/pull/674
 
 remove_from_toctrees = ["auto_generated/*"]
+
+# sphinx-reredirects
+redirects = {"redirect": "index"}
 
 # nbsphinx
 

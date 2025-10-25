@@ -776,16 +776,13 @@ def _set_classifier_interval_based(
 
     elif c == "drcif-pipeline":
         import numpy as np
-        from aeon.transformations.collection.feature_based import Catch22
-        from sklearn.ensemble import ExtraTreesClassifier
-        from tsml.interval_based import RandomIntervalClassifier
-        from tsml.transformations import (
+        from aeon.transformations.collection import (
             ARCoefficientTransformer,
-            FunctionTransformer,
             PeriodogramTransformer,
         )
-        from tsml.utils.numba_functions.general import first_order_differences_3d
-        from tsml.utils.numba_functions.stats import (
+        from aeon.transformations.collection.feature_based import Catch22
+        from aeon.utils.numba.general import first_order_differences_3d
+        from aeon.utils.numba.stats import (
             row_iqr,
             row_mean,
             row_median,
@@ -795,6 +792,9 @@ def _set_classifier_interval_based(
             row_slope,
             row_std,
         )
+        from sklearn.ensemble import ExtraTreesClassifier
+        from tsml.interval_based import RandomIntervalClassifier
+        from tsml.transformations import FunctionTransformer
 
         def sqrt_times_15_plus_5_mv(X):
             return int(
@@ -815,7 +815,7 @@ def _set_classifier_interval_based(
         series_transformers = [
             None,
             FunctionTransformer(func=first_order_differences_3d, validate=False),
-            PeriodogramTransformer(use_pyfftw=True),
+            PeriodogramTransformer(),
             ARCoefficientTransformer(replace_nan=True),
         ]
 
@@ -901,11 +901,11 @@ def _set_classifier_shapelet_based(
     elif c == "sastclassifier" or c == "sast":
         from aeon.classification.shapelet_based import SASTClassifier
 
-        return SASTClassifier(seed=random_state, n_jobs=n_jobs, **kwargs)
+        return SASTClassifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "rsastclassifier" or c == "rsast":
         from aeon.classification.shapelet_based import RSASTClassifier
 
-        return RSASTClassifier(seed=random_state, n_jobs=n_jobs, **kwargs)
+        return RSASTClassifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "learningshapeletclassifier" or c == "ls":
         from aeon.classification.shapelet_based import LearningShapeletClassifier
 

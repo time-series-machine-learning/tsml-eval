@@ -9,7 +9,7 @@ batch_scripts:
     but requires more setup to work efficiently.
 
 thread_scripts:
-    Similar to serial_scripts but for multi-threaded jobs.
+    Similar to serial_scripts and batch_scripts but for multithreaded jobs.
 
 gpu_scripts:
     Scripts for running GPU jobs. These are similar to the serial scripts, but
