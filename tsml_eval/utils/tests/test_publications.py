@@ -2,6 +2,9 @@
 
 import os
 
+import pytest
+from aeon.utils.validation._dependencies import _check_soft_dependencies
+
 from tsml_eval.experiments import get_classifier_by_name
 from tsml_eval.testing.testing_utils import _TEST_EVAL_PATH, _TEST_OUTPUT_PATH
 from tsml_eval.utils.publications import (
@@ -51,6 +54,10 @@ def test_parameter_table_from_estimator_selector():
     assert isinstance(table, str)
 
 
+@pytest.mark.skipif(
+    not _check_soft_dependencies("jinja2", severity="none"),
+    reason="skip test if required soft dependency tsfresh not available",
+)
 def test_results_table_from_evaluation_csv():
     """Test creating a results table from evaluation CSV files."""
     table = results_table_from_evaluation_csv(

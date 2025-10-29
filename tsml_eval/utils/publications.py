@@ -10,6 +10,7 @@ import os
 import shutil
 
 import pandas as pd
+from aeon.utils.validation._dependencies import _check_soft_dependencies
 
 
 def extract_publication_csv_from_evaluation(stats, eval_path, write_path):
@@ -114,6 +115,8 @@ def results_table_from_evaluation_csv(
     str
         The LaTeX table string.
     """
+    _check_soft_dependencies("jinja2")
+
     df = pd.read_csv(eval_csv_path)
     df.set_index(df.columns[0], inplace=True)
     df.index.name = None
