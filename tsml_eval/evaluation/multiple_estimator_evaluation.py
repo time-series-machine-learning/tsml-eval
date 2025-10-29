@@ -1499,6 +1499,8 @@ def _figures_for_statistic(
         save_path=f"{save_path}/{statistic_name}/figures/{eval_name}"
         f"_{statistic_name.lower()}_mcm",
         formats="pdf",
+        pvalue_test_params={"zero_method": "pratt", "alternative": "two-sided"},
+        pvalue_correction=None,
         show_symetry=True,
         higher_stat_better=higher_better,
         used_statistic=statistic_name,
