@@ -1,9 +1,9 @@
-name: GitHub Maintenance
+name: Monthly GitHub Maintenance
 
 on:
   schedule:
     # every 1st of the month at 01:00 AM UTC
-    - cron:  "0 1 1 1 *"
+    - cron:  "0 1 1 * *"
   workflow_dispatch:
 
 concurrency:
