@@ -40,11 +40,10 @@ out_dir="$local_path/ClassificationResults/output/"
 # The python script we are running
 script_file_path="$local_path/tsml-eval/tsml_eval/experiments/classification_experiments.py"
 
-# Environment name, change accordingly, for set up, see https://github.com/time-series-machine-learning/tsml-eval/blob/main/_tsml_research_resources/soton/iridis/iridis_python.md
-# Separate environments for GPU and CPU are recommended
-env_name="tsml-eval-gpu"
+# the path to the apptainer sandbox. The above script or most other files do not need to be in the sandbox
+container_path="scratch/tensorflow_sandbox/"
 
-# Classifiers to loop over. Must be seperated by a space
+# Classifiers to loop over. Must be separated by a space
 # See list of potential classifiers in set_classifier
 classifiers_to_run="CNNClassifier FCNClassifier"
 
@@ -86,7 +85,7 @@ if ((count>=start_point)); then
 num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue}" -e "PD ${queue}" | wc -l)
 while [ "${num_jobs}" -ge "${max_num_submitted}" ]
 do
-    echo Waiting 60s, "${num_jobs}" currently submitted on ${queue}, user-defined max is ${max_num_submitted}
+    echo Waiting 60s, ${num_jobs} currently submitted on ${queue}, user-defined max is ${max_num_submitted}
     sleep 60
     num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue}" -e "PD ${queue}" | wc -l)
 done
@@ -98,7 +97,7 @@ array_jobs=""
 for (( i=start_fold-1; i<max_folds; i++ ))
 do
     if [ -f "${results_dir}${classifier}/Predictions/${dataset}/testResample${i}.csv" ]; then
-        if [ "${generate_train_files}" == "true" ] && ! [ -f "${results_dir}${classifier}/Predictions/${dataset}/trainResample${i}.csv" ]; then
+        if [ "${generate_train_files}" == "-tr" ] && ! [ -f "${results_dir}${classifier}/Predictions/${dataset}/trainResample${i}.csv" ]; then
             array_jobs="${array_jobs}${array_jobs:+,}$((i + 1))"
         fi
     else
@@ -108,7 +107,7 @@ done
 
 if [ "${array_jobs}" != "" ]; then
 
-# This creates the scrip to run the job based on the info above
+# This creates the script to run the job based on the info above
 echo "#!/bin/bash
 #SBATCH --gres=gpu:1
 #SBATCH --mail-type=${mail}
@@ -124,12 +123,11 @@ echo "#!/bin/bash
 
 . /etc/profile
 
-module load anaconda/py3.10
-source activate $env_name
+module load apptainer/1.3.3
 
 # Input args to the default classification_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/classification_experiments.py
-python -u ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_train_files} ${predefined_folds} ${normalise_data}"  > generatedFile.sub
+apptainer exec --nv ${container_path} echo "Running Apptainer job."; python -u ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_train_files} ${predefined_folds} ${normalise_data}" > generatedFile.sub
 
 echo "${count} ${classifier}/${dataset}"
 

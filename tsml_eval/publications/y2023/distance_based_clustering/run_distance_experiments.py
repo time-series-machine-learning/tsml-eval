@@ -5,13 +5,12 @@ __maintainer__ = ["MatthewMiddlehurst"]
 import os
 import sys
 
-from aeon.transformations.collection import Normalizer
-
 os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
 
-from tsml.base import _clone_estimator
+from aeon.base._base import _clone_estimator
+from aeon.transformations.collection import Normalizer
 
 from tsml_eval.experiments import load_and_run_clustering_experiment
 from tsml_eval.publications.y2023.distance_based_clustering.set_distance_clusterer import (  # noqa: E501
@@ -102,12 +101,7 @@ def _run_experiment(args):
     cnl = clusterer.lower()
     if cnl.find("kmeans") or cnl.find("k-means"):
         kwargs["averaging_method"] = "mean"
-        average_params = {
-            **distance_params,
-            "averaging_distance_metric": distance,
-            "medoids_distance_metric": distance,
-        }
-        kwargs["average_params"] = average_params
+        kwargs["average_params"] = {}
 
     # Skip if not overwrite and results already present
     # this is also checked in load_and_run, but doing a quick check here so can

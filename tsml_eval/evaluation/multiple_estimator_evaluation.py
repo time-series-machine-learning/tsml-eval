@@ -2,6 +2,7 @@
 
 import os
 import pickle
+import re
 import warnings
 from datetime import datetime
 
@@ -49,6 +50,7 @@ def evaluate_classifiers(
     classifier_results,
     save_path,
     error_on_missing=True,
+    continue_on_missing=False,
     eval_name=None,
     estimator_names=None,
 ):
@@ -67,6 +69,11 @@ def evaluate_classifiers(
         The path to save the evaluation results to.
     error_on_missing : bool, default=True
         Whether to raise an error if results are missing.
+    continue_on_missing : bool, default=False
+        Whether to continue the evaluation if results are missing.
+        If False, removes datasets with missing results from the evaluation.
+        If True, keeps all datasets but does not include summary results, figures
+        or p-values. Treats any missing stat as NaN.
     eval_name : str, default=None
         The name of the evaluation, used in save_path.
     estimator_names : list of str, default=None
@@ -78,6 +85,7 @@ def evaluate_classifiers(
         ClassifierResults.statistics,
         save_path,
         error_on_missing,
+        continue_on_missing,
         eval_name,
         estimator_names,
     )
@@ -87,6 +95,7 @@ def evaluate_classifiers_from_file(
     load_paths,
     save_path,
     error_on_missing=True,
+    continue_on_missing=False,
     eval_name=None,
     verify_results=True,
     estimator_names=None,
@@ -106,6 +115,11 @@ def evaluate_classifiers_from_file(
         The path to save the evaluation results to.
     error_on_missing : bool, default=True
         Whether to raise an error if results are missing.
+    continue_on_missing : bool, default=False
+        Whether to continue the evaluation if results are missing.
+        If False, removes datasets with missing results from the evaluation.
+        If True, keeps all datasets but does not include summary results, figures
+        or p-values. Treats any missing stat as NaN.
     eval_name : str, default=None
         The name of the evaluation, used in save_path.
     verify_results : bool, default=True
@@ -130,6 +144,7 @@ def evaluate_classifiers_from_file(
         classifier_results,
         save_path,
         error_on_missing=error_on_missing,
+        continue_on_missing=continue_on_missing,
         eval_name=eval_name,
         estimator_names=estimator_names,
     )
@@ -140,9 +155,10 @@ def evaluate_classifiers_by_problem(
     classifier_names,
     dataset_names,
     save_path,
-    resamples=None,
+    resamples=1,
     load_train_results=False,
     error_on_missing=True,
+    continue_on_missing=False,
     eval_name=None,
     verify_results=True,
     verbose=False,
@@ -180,12 +196,19 @@ def evaluate_classifiers_by_problem(
         length as load_path.
     save_path : str
         The path to save the evaluation results to.
-    resamples : int or list of int, default=None
-        The resamples to evaluate. If int, evaluates resamples 0 to resamples-1.
+    resamples : int or list of int, default=1
+        The resamples to evaluate.
+        If int, evaluates resamples 0 to resamples-1.
+        if None, treats resample as empty i.e. {split}Resample.csv.
     load_train_results : bool, default=False
         Whether to load train results as well as test results.
     error_on_missing : bool, default=True
         Whether to raise an error if results are missing.
+    continue_on_missing : bool, default=False
+        Whether to continue the evaluation if results are missing.
+        If False, removes datasets with missing results from the evaluation.
+        If True, keeps all datasets but does not include summary results, figures
+        or p-values. Treats any missing stat as NaN.
     eval_name : str, default=None
         The name of the evaluation, used in save_path.
     verify_results : bool, default=True
@@ -287,6 +310,7 @@ def evaluate_classifiers_by_problem(
         classifier_results,
         save_path,
         error_on_missing=error_on_missing,
+        continue_on_missing=continue_on_missing,
         eval_name=eval_name,
         estimator_names=names,
     )
@@ -296,6 +320,7 @@ def evaluate_clusterers(
     clusterer_results,
     save_path,
     error_on_missing=True,
+    continue_on_missing=False,
     eval_name=None,
     estimator_names=None,
 ):
@@ -314,6 +339,11 @@ def evaluate_clusterers(
         The path to save the evaluation results to.
     error_on_missing : bool, default=True
         Whether to raise an error if results are missing.
+    continue_on_missing : bool, default=False
+        Whether to continue the evaluation if results are missing.
+        If False, removes datasets with missing results from the evaluation.
+        If True, keeps all datasets but does not include summary results, figures
+        or p-values. Treats any missing stat as NaN.
     eval_name : str, default=None
         The name of the evaluation, used in save_path.
     estimator_names : list of str, default=None
@@ -325,6 +355,7 @@ def evaluate_clusterers(
         ClustererResults.statistics,
         save_path,
         error_on_missing,
+        continue_on_missing,
         eval_name,
         estimator_names,
     )
@@ -334,6 +365,7 @@ def evaluate_clusterers_from_file(
     load_paths,
     save_path,
     error_on_missing=True,
+    continue_on_missing=False,
     eval_name=None,
     verify_results=True,
     estimator_names=None,
@@ -353,6 +385,11 @@ def evaluate_clusterers_from_file(
         The path to save the evaluation results to.
     error_on_missing : bool, default=True
         Whether to raise an error if results are missing.
+    continue_on_missing : bool, default=False
+        Whether to continue the evaluation if results are missing.
+        If False, removes datasets with missing results from the evaluation.
+        If True, keeps all datasets but does not include summary results, figures
+        or p-values. Treats any missing stat as NaN.
     eval_name : str, default=None
         The name of the evaluation, used in save_path.
     verify_results : bool, default=True
@@ -377,6 +414,7 @@ def evaluate_clusterers_from_file(
         clusterer_results,
         save_path,
         error_on_missing=error_on_missing,
+        continue_on_missing=continue_on_missing,
         eval_name=eval_name,
         estimator_names=estimator_names,
     )
@@ -387,9 +425,10 @@ def evaluate_clusterers_by_problem(
     clusterer_names,
     dataset_names,
     save_path,
-    resamples=None,
+    resamples=1,
     load_test_results=True,
     error_on_missing=True,
+    continue_on_missing=False,
     eval_name=None,
     verify_results=True,
     verbose=False,
@@ -427,12 +466,19 @@ def evaluate_clusterers_by_problem(
         length as load_path.
     save_path : str
         The path to save the evaluation results to.
-    resamples : int or list of int, default=None
-        The resamples to evaluate. If int, evaluates resamples 0 to resamples-1.
+    resamples : int or list of int, default=1
+        The resamples to evaluate.
+        If int, evaluates resamples 0 to resamples-1.
+        if None, treats resample as empty i.e. {split}Resample.csv.
     load_test_results : bool, default=True
         Whether to load test results as well as train results.
     error_on_missing : bool, default=True
         Whether to raise an error if results are missing.
+    continue_on_missing : bool, default=False
+        Whether to continue the evaluation if results are missing.
+        If False, removes datasets with missing results from the evaluation.
+        If True, keeps all datasets but does not include summary results, figures
+        or p-values. Treats any missing stat as NaN.
     eval_name : str, default=None
         The name of the evaluation, used in save_path.
     verify_results : bool, default=True
@@ -534,6 +580,7 @@ def evaluate_clusterers_by_problem(
         clusterer_results,
         save_path,
         error_on_missing=error_on_missing,
+        continue_on_missing=continue_on_missing,
         eval_name=eval_name,
         estimator_names=names,
     )
@@ -543,6 +590,7 @@ def evaluate_regressors(
     regressor_results,
     save_path,
     error_on_missing=True,
+    continue_on_missing=False,
     eval_name=None,
     estimator_names=None,
 ):
@@ -561,6 +609,11 @@ def evaluate_regressors(
         The path to save the evaluation results to.
     error_on_missing : bool, default=True
         Whether to raise an error if results are missing.
+    continue_on_missing : bool, default=False
+        Whether to continue the evaluation if results are missing.
+        If False, removes datasets with missing results from the evaluation.
+        If True, keeps all datasets but does not include summary results, figures
+        or p-values. Treats any missing stat as NaN.
     eval_name : str, default=None
         The name of the evaluation, used in save_path.
     estimator_names : list of str, default=None
@@ -572,6 +625,7 @@ def evaluate_regressors(
         RegressorResults.statistics,
         save_path,
         error_on_missing,
+        continue_on_missing,
         eval_name,
         estimator_names,
     )
@@ -581,6 +635,7 @@ def evaluate_regressors_from_file(
     load_paths,
     save_path,
     error_on_missing=True,
+    continue_on_missing=False,
     eval_name=None,
     verify_results=True,
     estimator_names=None,
@@ -600,6 +655,11 @@ def evaluate_regressors_from_file(
         The path to save the evaluation results to.
     error_on_missing : bool, default=True
         Whether to raise an error if results are missing.
+    continue_on_missing : bool, default=False
+        Whether to continue the evaluation if results are missing.
+        If False, removes datasets with missing results from the evaluation.
+        If True, keeps all datasets but does not include summary results, figures
+        or p-values. Treats any missing stat as NaN.
     eval_name : str, default=None
         The name of the evaluation, used in save_path.
     verify_results : bool, default=True
@@ -624,6 +684,7 @@ def evaluate_regressors_from_file(
         regressor_results,
         save_path,
         error_on_missing=error_on_missing,
+        continue_on_missing=continue_on_missing,
         eval_name=eval_name,
         estimator_names=estimator_names,
     )
@@ -634,9 +695,10 @@ def evaluate_regressors_by_problem(
     regressor_names,
     dataset_names,
     save_path,
-    resamples=None,
+    resamples=1,
     load_train_results=False,
     error_on_missing=True,
+    continue_on_missing=False,
     eval_name=None,
     verify_results=True,
     verbose=False,
@@ -674,12 +736,19 @@ def evaluate_regressors_by_problem(
         length as load_path.
     save_path : str
         The path to save the evaluation results to.
-    resamples : int or list of int, default=None
-        The resamples to evaluate. If int, evaluates resamples 0 to resamples-1.
+    resamples : int or list of int, default=1
+        The resamples to evaluate.
+        If int, evaluates resamples 0 to resamples-1.
+        if None, treats resample as empty i.e. {split}Resample.csv.
     load_train_results : bool, default=False
         Whether to load train results as well as test results.
     error_on_missing : bool, default=True
         Whether to raise an error if results are missing.
+    continue_on_missing : bool, default=False
+        Whether to continue the evaluation if results are missing.
+        If False, removes datasets with missing results from the evaluation.
+        If True, keeps all datasets but does not include summary results, figures
+        or p-values. Treats any missing stat as NaN.
     eval_name : str, default=None
         The name of the evaluation, used in save_path.
     verify_results : bool, default=True
@@ -781,6 +850,7 @@ def evaluate_regressors_by_problem(
         regressor_results,
         save_path,
         error_on_missing=error_on_missing,
+        continue_on_missing=continue_on_missing,
         eval_name=eval_name,
         estimator_names=names,
     )
@@ -790,6 +860,7 @@ def evaluate_forecasters(
     forecaster_results,
     save_path,
     error_on_missing=True,
+    continue_on_missing=False,
     eval_name=None,
     estimator_names=None,
 ):
@@ -808,6 +879,11 @@ def evaluate_forecasters(
         The path to save the evaluation results to.
     error_on_missing : bool, default=True
         Whether to raise an error if results are missing.
+    continue_on_missing : bool, default=False
+        Whether to continue the evaluation if results are missing.
+        If False, removes datasets with missing results from the evaluation.
+        If True, keeps all datasets but does not include summary results, figures
+        or p-values. Treats any missing stat as NaN.
     eval_name : str, default=None
         The name of the evaluation, used in save_path.
     estimator_names : list of str, default=None
@@ -819,6 +895,7 @@ def evaluate_forecasters(
         ForecasterResults.statistics,
         save_path,
         error_on_missing,
+        continue_on_missing,
         eval_name,
         estimator_names,
     )
@@ -828,6 +905,7 @@ def evaluate_forecasters_from_file(
     load_paths,
     save_path,
     error_on_missing=True,
+    continue_on_missing=False,
     eval_name=None,
     verify_results=True,
     estimator_names=None,
@@ -847,6 +925,11 @@ def evaluate_forecasters_from_file(
         The path to save the evaluation results to.
     error_on_missing : bool, default=True
         Whether to raise an error if results are missing.
+    continue_on_missing : bool, default=False
+        Whether to continue the evaluation if results are missing.
+        If False, removes datasets with missing results from the evaluation.
+        If True, keeps all datasets but does not include summary results, figures
+        or p-values. Treats any missing stat as NaN.
     eval_name : str, default=None
         The name of the evaluation, used in save_path.
     verify_results : bool, default=True
@@ -871,6 +954,7 @@ def evaluate_forecasters_from_file(
         forecaster_results,
         save_path,
         error_on_missing=error_on_missing,
+        continue_on_missing=continue_on_missing,
         eval_name=eval_name,
         estimator_names=estimator_names,
     )
@@ -881,8 +965,9 @@ def evaluate_forecasters_by_problem(
     forecaster_names,
     dataset_names,
     save_path,
-    resamples=None,
+    resamples=1,
     error_on_missing=True,
+    continue_on_missing=False,
     eval_name=None,
     verify_results=True,
     verbose=False,
@@ -920,10 +1005,17 @@ def evaluate_forecasters_by_problem(
         length as load_path.
     save_path : str
         The path to save the evaluation results to.
-    resamples : int or list of int, default=None
-        The resamples to evaluate. If int, evaluates resamples 0 to resamples-1.
+    resamples : int or list of int, default=1
+        The resamples to evaluate.
+        If int, evaluates resamples 0 to resamples-1.
+        if None, treats resample as empty i.e. {split}Resample.csv.
     error_on_missing : bool, default=True
         Whether to raise an error if results are missing.
+    continue_on_missing : bool, default=False
+        Whether to continue the evaluation if results are missing.
+        If False, removes datasets with missing results from the evaluation.
+        If True, keeps all datasets but does not include summary results, figures
+        or p-values. Treats any missing stat as NaN.
     eval_name : str, default=None
         The name of the evaluation, used in save_path.
     verify_results : bool, default=True
@@ -1019,6 +1111,7 @@ def evaluate_forecasters_by_problem(
         forecaster_results,
         save_path,
         error_on_missing=error_on_missing,
+        continue_on_missing=continue_on_missing,
         eval_name=eval_name,
         estimator_names=names,
     )
@@ -1029,6 +1122,7 @@ def _evaluate_estimators(
     statistics,
     save_path,
     error_on_missing,
+    continue_with_missing,
     eval_name,
     estimator_names,
 ):
@@ -1053,22 +1147,18 @@ def _evaluate_estimators(
         for dataset_name in results_dict[estimator_name]:
             datasets.add(dataset_name)
             for split in results_dict[estimator_name][dataset_name]:
-                split_fail = False
                 if split == "train":
                     has_train = True
                 elif split == "test":
                     has_test = True
                 else:
-                    split_fail = True
+                    raise ValueError(
+                        "Results must have a split of either 'train' or 'test' "
+                        f"to be evaluated. Unknown split {split} found for "
+                        f"{estimator_name} on {dataset_name}."
+                    )
 
                 for resample in results_dict[estimator_name][dataset_name][split]:
-                    if split_fail:
-                        raise ValueError(
-                            "Results must have a split of either 'train' or 'test' "
-                            f"to be evaluated. Missing for {estimator_name} on "
-                            f"{dataset_name} resample {resample}."
-                        )
-
                     if resample is not None:
                         resamples.add(resample)
                     else:
@@ -1087,11 +1177,16 @@ def _evaluate_estimators(
     has_dataset_test = np.zeros(
         (len(estimators), len(datasets), len(resamples)), dtype=bool
     )
+    stored_n_jobs = None
 
     for estimator_name in results_dict:
         for dataset_name in results_dict[estimator_name]:
+            stored_data_transform = None
+
             for split in results_dict[estimator_name][dataset_name]:
-                for resample in results_dict[estimator_name][dataset_name][split]:
+                for resample, result in results_dict[estimator_name][dataset_name][
+                    split
+                ].items():
                     if split == "train":
                         has_dataset_train[estimators.index(estimator_name)][
                             datasets.index(dataset_name)
@@ -1100,6 +1195,47 @@ def _evaluate_estimators(
                         has_dataset_test[estimators.index(estimator_name)][
                             datasets.index(dataset_name)
                         ][resamples.index(resample)] = True
+
+                    n_jobs = re.search(
+                        r"['\"]n_jobs['\"]\s*:\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*,",
+                        result.parameter_info,
+                    )
+                    n_jobs = int(n_jobs.group(1)) if n_jobs is not None else 1
+                    if stored_n_jobs is None:
+                        stored_n_jobs = n_jobs
+                    else:
+                        if n_jobs != stored_n_jobs:
+                            warnings.warn(
+                                f"Number of jobs for {estimator_name} on "
+                                f"{dataset_name} {split} resample {resample} is "
+                                f"{n_jobs}, which is different to the first result "
+                                f"with {stored_n_jobs}. This may cause "
+                                f"inconsistencies in timing results.",
+                                stacklevel=0,
+                            )
+
+                    data_transformers = re.search(
+                        r"Data transformers:\s*(.*?)\.", result.description
+                    )
+                    data_transformers = (
+                        data_transformers.group(1)
+                        if data_transformers is not None
+                        else "None"
+                    )
+                    if stored_data_transform is None:
+                        stored_data_transform = data_transformers
+                    else:
+                        if data_transformers != stored_data_transform:
+                            warnings.warn(
+                                f"Data transformers for {estimator_name} on "
+                                f"{dataset_name} {split} resample {resample} are "
+                                f"{data_transformers}, which is different to the "
+                                f"first result for {estimator_name}: "
+                                f"{stored_data_transform}. Double check your results"
+                                f"as there should likely not be grouped as the"
+                                f"same estimator.",
+                                stacklevel=0,
+                            )
 
     msg = "\n\n"
     missing = False
@@ -1129,7 +1265,7 @@ def _evaluate_estimators(
         if error_on_missing:
             print(msg + "\n")  # noqa: T201
             raise ValueError("Missing results, exiting evaluation.")
-        else:
+        elif not continue_with_missing:
             if has_test and has_train:
                 has_both = has_dataset_train.all(axis=(0, 2)) & has_dataset_test.all(
                     axis=(0, 2)
@@ -1151,10 +1287,9 @@ def _evaluate_estimators(
                 ]
 
             msg += "\nMissing results, continuing evaluation with available datasets.\n"
-            print(msg)  # noqa: T201
     else:
         msg += "All results present, continuing evaluation.\n"
-        print(msg)  # noqa: T201
+    print(msg)  # noqa: T201
 
     print(f"Estimators ({len(estimators)}): {estimators}\n")  # noqa: T201
     print(f"Datasets ({len(datasets)}): {datasets}\n")  # noqa: T201
@@ -1175,10 +1310,12 @@ def _evaluate_estimators(
                 var,
                 save_path,
                 eval_name,
+                continue_with_missing and missing,
             )
             stats.append((average, rank, stat, ascending, split))
 
-    _summary_evaluation(stats, estimators, save_path, eval_name)
+    if not continue_with_missing or not missing:
+        _summary_evaluation(stats, estimators, save_path, eval_name)
 
 
 def _create_directory_for_statistic(
@@ -1193,6 +1330,7 @@ def _create_directory_for_statistic(
     variable_name,
     save_path,
     eval_name,
+    has_missing,
 ):
     os.makedirs(f"{save_path}/{statistic_name}/all_resamples/", exist_ok=True)
 
@@ -1203,15 +1341,39 @@ def _create_directory_for_statistic(
 
         for n, dataset_name in enumerate(datasets):
             for j, resample in enumerate(resamples):
-                er = results_dict[estimator_name][dataset_name][split][resample]
-                er.calculate_statistics()
-                est_stats[n, j] = (
-                    er.__dict__[variable_name]
-                    if not is_timing
-                    else (
-                        time_to_milliseconds(er.__dict__[variable_name], er.time_unit)
+                try:
+                    er = results_dict[estimator_name][dataset_name][split][resample]
+
+                    er.calculate_statistics()
+                    est_stats[n, j] = (
+                        er.__dict__[variable_name]
+                        if not is_timing
+                        else (
+                            time_to_milliseconds(
+                                er.__dict__[variable_name], er.time_unit
+                            )
+                        )
                     )
-                )
+
+                    if est_stats[n, j] == -1:
+                        warnings.warn(
+                            f"Statistic {statistic_name} for {estimator_name} on "
+                            f"{dataset_name} {split} resample {resample} is -1, "
+                            f"which indicates it was not recorded or calculated "
+                            f"correctly. Be careful using averaged values with this "
+                            f"statistic.",
+                            stacklevel=0,
+                        )
+                except KeyError:
+                    est_stats[n, j] = np.nan
+
+                    if not has_missing:
+                        raise ValueError(
+                            f"Missing {statistic_name} for {estimator_name} on "
+                            f"{dataset_name} {split} resample {resample}. Should not "
+                            f"be able to reach here as files are processed in prior "
+                            f"function!"
+                        )
 
             average_stats[n, i] = np.mean(est_stats[n, :])
 
@@ -1246,28 +1408,33 @@ def _create_directory_for_statistic(
         for i, dataset_name in enumerate(datasets):
             file.write(f"{dataset_name},{','.join([str(n) for n in ranks[i]])}\n")
 
-    p_values = wilcoxon_test(average_stats, estimators, lower_better=not higher_better)
-    with open(
-        f"{save_path}/{statistic_name}/{statistic_name.lower()}_p_values.csv", "w"
-    ) as file:
-        file.write(f"Estimators:,{','.join(estimators)}\n")
-        for i, estimator_name in enumerate(estimators):
-            file.write(f"{estimator_name},{','.join([str(n) for n in p_values[i]])}\n")
+    if not has_missing:
+        p_values = wilcoxon_test(
+            average_stats, estimators, lower_better=not higher_better
+        )
+        with open(
+            f"{save_path}/{statistic_name}/{statistic_name.lower()}_p_values.csv", "w"
+        ) as file:
+            file.write(f"Estimators:,{','.join(estimators)}\n")
+            for i, estimator_name in enumerate(estimators):
+                file.write(
+                    f"{estimator_name},{','.join([str(n) for n in p_values[i]])}\n"
+                )
 
-    try:
-        _figures_for_statistic(
-            average_stats,
-            estimators,
-            statistic_name,
-            higher_better,
-            save_path,
-            eval_name,
-        )
-    except ValueError as e:
-        warnings.warn(
-            f"Error during figure creation for {statistic_name}: {e}",
-            stacklevel=2,
-        )
+        try:
+            _figures_for_statistic(
+                average_stats,
+                estimators,
+                statistic_name,
+                higher_better,
+                save_path,
+                eval_name,
+            )
+        except ValueError as e:
+            warnings.warn(
+                f"Error during figure creation for {statistic_name}: {e}",
+                stacklevel=2,
+            )
 
     return average_stats, ranks
 
@@ -1329,11 +1496,13 @@ def _figures_for_statistic(
     df.columns = estimators
     mcm = create_multi_comparison_matrix(
         df,
-        output_dir=f"{save_path}/{statistic_name}/figures/",
-        pdf_savename=f"{eval_name}_{statistic_name.lower()}_mcm",
+        save_path=f"{save_path}/{statistic_name}/figures/{eval_name}"
+        f"_{statistic_name.lower()}_mcm",
+        formats="pdf",
+        pvalue_test_params={"zero_method": "pratt", "alternative": "two-sided"},
+        pvalue_correction=None,
         show_symetry=True,
-        order_win_tie_loss="higher" if higher_better else "lower",
-        order_better="decreasing" if higher_better else "increasing",
+        higher_stat_better=higher_better,
         used_statistic=statistic_name,
     )
     pickle.dump(

@@ -26,6 +26,16 @@ fi
 # The number of tasks/threads to use in each job. 40 is the number of cores on batch nodes
 n_tasks_per_node=40
 
+# The number of cores to request from the node. Don't go over the number of cores for the node. 40 is the number of cores on batch nodes
+# If you are not using the whole node, please make sure you are requesting memory correctly
+max_cpus_to_use=40
+
+# Create a separate submission list for each regressor. This will stop the mixing of
+# large and small jobs in the same node, but results in some smaller scripts submitted
+# to serial when moving between regressors.
+# For small workloads i.e. single resample 10 datasets, turning this off will be the only way to get on the batch queue realistically
+split_regressors="true"
+
 # Enter your username and email here
 username="arb1g19"
 mail="NONE"
@@ -114,6 +124,11 @@ fi
 
 # This creates the submission file to run and does clean up
 submit_jobs () {
+if ((cmdCount>=max_cpus_to_use)); then
+    cpuCount=$max_cpus_to_use
+else
+    cpuCount=$cmdCount
+fi
 
 echo "#!/bin/bash
 ${gpu_instruction}
@@ -160,10 +175,17 @@ echo "Dataset list ${dataset_file}"
 
 for regressor in $regressors_to_run; do
 
-# we use time for unique names
-sleep 1
-cmdCount=0
-dt=$(date +%Y%m%d%H%M%S)
+mkdir -p "${out_dir}/${regressor}/"
+
+if [ "${split_regressors,,}" == "true" ]; then
+    # we use time for unique names
+    sleep 1
+    cmdCount=0
+    dt=$(date +%Y%m%d%H%M%S)
+    outDir=${out_dir}/${regressor}
+else
+    outDir=${out_dir}
+fi
 
 while read dataset; do
 
@@ -216,12 +238,17 @@ done
 fi
 done < ${dataset_file}
 
-if ((cmdCount>0)); then
-    # final submit for this dataset list
+if [[ "${split_regressors,,}" == "true" && $cmdCount -gt 0 ]]; then
+    # final submit for this regressor
     submit_jobs
 fi
 
 done
+
+if [[ "${split_regressors,,}" != "true" && $cmdCount -gt 0 ]]; then
+    # final submit for this dataset list
+    submit_jobs
+fi
 done
 
 echo Finished submitting jobs

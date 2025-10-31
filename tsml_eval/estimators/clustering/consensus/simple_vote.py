@@ -7,7 +7,7 @@ from scipy.optimize import linear_sum_assignment
 from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.cluster import KMeans
 from sklearn.utils import check_random_state
-from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import check_is_fitted, validate_data
 
 
 class SimpleVote(ClusterMixin, BaseEstimator):
@@ -63,7 +63,7 @@ class SimpleVote(ClusterMixin, BaseEstimator):
                 "A valid sklearn input such as a 2d numpy array is required."
                 "Sparse input formats are currently not supported."
             )
-        X = self._validate_data(X=X, ensure_min_samples=self.n_clusters)
+        X = validate_data(self, X=X, ensure_min_samples=self.n_clusters)
 
         rng = check_random_state(self.random_state)
 
@@ -134,7 +134,7 @@ class SimpleVote(ClusterMixin, BaseEstimator):
                 "A valid sklearn input such as a 2d numpy array is required."
                 "Sparse input formats are currently not supported."
             )
-        X = self._validate_data(X=X, reset=False)
+        X = validate_data(self, X=X, reset=False)
 
         cluster_assignments = np.zeros(
             (len(self._clusterers), X.shape[0]), dtype=np.int32

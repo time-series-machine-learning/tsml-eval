@@ -14,13 +14,29 @@ from aeon.forecasting._statsforecast_autoets import StatsForecastAutoETSForecast
 
 from tsml_eval.utils.functions import str_in_nested_list
 
+deep_forecasters = [
+    ["tcnforecaster", "tcn"],
+]
+ml_forecasters = [
+    "setartree",
+    "setarforest",
+]
 stats_forecasters = [
+    ["arimaforecaster", "arima"],
+    "autoarima",
     ["etsforecaster", "ets"],
+    ["tarforecaster", "tar"],
     ["autoetsforecaster", "autoets"],
     ["autosarima", "sarima"],
-    ["autoarima", "arima"],
+    "autotar",
     "sktimeets",
     "statsforecastets",
+    ["setarforecaster", "setar"],
+    ["thetaforecaster", "theta"],
+    ["tvpforecaster", "tvp"],
+]
+regression_forecasters = [
+    "randomforest",
 ]
 other_forecasters = [
     ["naiveforecaster", "naive"],
@@ -56,29 +72,94 @@ def get_forecaster_by_name(forecaster_name, random_state=None, n_jobs=1, **kwarg
     """
     f = forecaster_name.lower()
 
-    if str_in_nested_list(stats_forecasters, f):
+    if str_in_nested_list(deep_forecasters, f):
+        return _set_forecaster_deep(f, random_state, n_jobs, kwargs)
+    elif str_in_nested_list(ml_forecasters, f):
+        return _set_forecaster_ml(f, random_state, n_jobs, kwargs)
+    elif str_in_nested_list(stats_forecasters, f):
         return _set_forecaster_stats(f, random_state, n_jobs, kwargs)
+    elif str_in_nested_list(regression_forecasters, f):
+        return _set_forecaster_regression(f, random_state, n_jobs, kwargs)
     elif str_in_nested_list(other_forecasters, f):
         return _set_forecaster_other(f, random_state, n_jobs, kwargs)
     else:
         raise ValueError(f"UNKNOWN FORECASTER: {f} in get_forecaster_by_name")
 
 
+def _set_forecaster_deep(f, random_state, n_jobs, kwargs):
+    if f == "tcnforecaster" or f == "tcn":
+        from aeon.forecasting.deep_learning import TCNForecaster
+
+        return TCNForecaster(random_state=random_state, **kwargs)
+
+
+def _set_forecaster_ml(f, random_state, n_jobs, kwargs):
+    if f == "setartree":
+        from aeon.forecasting.machine_learning import SETARTree
+
+        return SETARTree(**kwargs)
+    elif f == "setarforest":
+        from aeon.forecasting.machine_learning import SETARForest
+
+        return SETARForest(random_state=random_state, **kwargs)
+
+
 def _set_forecaster_stats(f, random_state, n_jobs, kwargs):
-    if f == "etsforecaster" or f == "ets":
-        return ETSForecaster(**kwargs)
-    if f == "autoetsforecaster" or f == "autoets":
+    if f == "arimaforecaster" or f == "arima":
+        from aeon.forecasting.stats import ARIMA
+
+        return ARIMA(**kwargs)
+    elif f == "autoarima":
+        from aeon.forecasting.stats import AutoARIMA
+
+        return AutoARIMA(**kwargs)
+    elif f == "etsforecaster" or f == "ets":
+        from aeon.forecasting.stats import ETS
+
+        return ETS(**kwargs)
+    elif f == "tarforecaster" or f == "tar":
+        from aeon.forecasting.stats import TAR
+
+        return TAR(**kwargs)
+    elif f == "autotar":
+        from aeon.forecasting.stats import AutoTAR
+
+        return AutoTAR(**kwargs)
+    elif f == "setarforecaster" or f == "setar":
+        from aeon.forecasting.machine_learning import SETAR
+
+        return SETAR(**kwargs)
+    elif f == "thetaforecaster" or f == "theta":
+        from aeon.forecasting.stats import Theta
+
+        return Theta(**kwargs)
+    elif f == "tvpforecaster" or f == "tvp":
+        from aeon.forecasting.stats import TVP
+
+        return TVP(**kwargs)
+    elif f == "autoetsforecaster" or f == "autoets":
         return AutoETSForecaster(**kwargs)
-    if f == "sktimeets":
+    elif f == "sktimeets":
         return SktimeAutoETSForecaster(**kwargs)
-    if f == "statsforecastets":
+    elif f == "statsforecastets":
         return StatsForecastAutoETSForecaster(**kwargs)
-    if f == "autosarima" or f == "sarima":
+    elif f == "autosarima" or f == "sarima":
         return AutoSARIMAForecaster(**kwargs)
-    if f == "autoarima" or f == "arima":
+    elif f == "autoarima":
         return AutoARIMAForecaster(**kwargs)
+
+
+def _set_forecaster_regression(f, random_state, n_jobs, kwargs):
+    if f == "randomforest":
+        from aeon.forecasting import RegressionForecaster
+        from sklearn.ensemble import RandomForestRegressor
+
+        reg = RandomForestRegressor(random_state=random_state, n_jobs=n_jobs, **kwargs)
+        return RegressionForecaster(10, regressor=reg)
 
 
 def _set_forecaster_other(f, random_state, n_jobs, kwargs):
     if f == "naiveforecaster" or f == "naive":
+        from aeon.forecasting import NaiveForecaster
+
         return NaiveForecaster(**kwargs)

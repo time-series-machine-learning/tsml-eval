@@ -34,17 +34,16 @@ classifiers = [
     "Operating System :: Unix",
     "Operating System :: MacOS",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
 ]
-requires-python = ">=3.9,<3.14"
+requires-python = ">=3.10,<3.14"
 dependencies = [
-    "aeon>=1.0.0,<1.2.0",
-    "tsml>=0.6.0,<0.8.0",
-    "scikit-learn>=1.0.0,<1.7.0",
+    "aeon>=1.0.0,<1.4.0",
+    "tsml>=0.6.0,<0.9.0",
+    "scikit-learn>=1.0.0,<1.8.0",
     "matplotlib",
     "seaborn",
     "gpustat",
@@ -68,10 +67,10 @@ deep_learning = [
 dev = [
     "pre-commit",
     "pytest",
+    "pytest-cov",
     "pytest-randomly",
     "pytest-timeout",
     "pytest-xdist[psutil]",
-    "pytest-cov",
     "pytest-rerunfailures",
 ]
 binder = [
@@ -85,6 +84,7 @@ docs = [
     "sphinx_issues",
     "sphinx-copybutton",
     "sphinx-remove-toctrees",
+    "sphinx-reredirects",
     "sphinxext-opengraph",
     "nbsphinx",
     "numpydoc",
@@ -149,7 +149,6 @@ per-file-ignores = [
 ]
 
 [tool.mypy]
-mypy_path = "tsml_eval/"
 ignore_missing_imports = true
 follow_imports = "silent"
 exclude = [
@@ -173,3 +172,10 @@ addopts = '''
     --only-rerun "crashed while running"
     --meminterval 0.1
 '''
+
+[tool.codespell]
+ignore-words = ".github/utilities/codespell_ignore_words.txt"
+ignore-regex = '(^\s*"image/\S+": ".*|"som")'
+skip = ".venv,.idea,.mypy_cache,.git,./tsml_eval/_wip,./tsml_eval/testing/_test_eval_files"
+check-filenames = true
+check-hidden = true

@@ -11,7 +11,8 @@ from typing import Optional
 __maintainer__ = []
 __all__ = ["KNeighborsTimeSeriesClassifier"]
 
-from typing import Callable, Union
+from typing import Union
+from collections.abc import Callable
 
 import numpy as np
 
@@ -75,10 +76,10 @@ class KNeighborsTimeSeriesClassifier(BaseClassifier):
 
     def __init__(
         self,
-        distance: Union[str, Callable] = "dtw",
-        distance_params: Optional[dict] = None,
+        distance: str | Callable = "dtw",
+        distance_params: dict | None = None,
         n_neighbors: int = 1,
-        weights: Union[str, Callable] = "uniform",
+        weights: str | Callable = "uniform",
         n_jobs: int = 1,
     ) -> None:
         self.distance = distance
@@ -299,7 +300,7 @@ class KNeighborsTimeSeriesClassifier(BaseClassifier):
     @classmethod
     def _get_test_params(
         cls, parameter_set: str = "default"
-    ) -> Union[dict, list[dict]]:
+    ) -> dict | list[dict]:
         """Return testing parameter settings for the estimator.
 
         Parameters

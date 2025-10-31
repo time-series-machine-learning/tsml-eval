@@ -65,6 +65,11 @@ class RandomShapeletTransform(BaseCollectionTransformer):
         input series is used.
     remove_self_similar : boolean, default=True
         Remove overlapping "self-similar" shapelets when merging candidate shapelets.
+    batch_size : int or None, default=100
+        Number of shapelet candidates processed before being merged into the set of best
+        shapelets.
+    verbose : bool, default=False
+        todo
     time_limit_in_minutes : float, default=0.0
         Time contract to limit build time in minutes, overriding n_shapelet_samples.
         Default of 0 means n_shapelet_samples is used.
@@ -78,9 +83,6 @@ class RandomShapeletTransform(BaseCollectionTransformer):
         value of "threads" is used by default. Valid options are "loky",
         "multiprocessing", "threading" or a custom backend. See the joblib Parallel
         documentation for more details.
-    batch_size : int or None, default=100
-        Number of shapelet candidates processed before being merged into the set of best
-        shapelets.
     random_state : int or None, default=None
         Seed for random number generation.
 
@@ -152,29 +154,31 @@ class RandomShapeletTransform(BaseCollectionTransformer):
     def __init__(
         self,
         n_shapelet_samples: int = 10000,
-        max_shapelets: Optional[int] = None,
+        max_shapelets: int | None = None,
         min_shapelet_length: int = 3,
-        max_shapelet_length: Optional[int] = None,
+        max_shapelet_length: int | None = None,
         remove_self_similar: bool = True,
+        batch_size: int | None = 100,
+        verbose: bool = False,
         time_limit_in_minutes: float = 0.0,
         contract_max_n_shapelet_samples: float = np.inf,
         n_jobs: int = 1,
         parallel_backend=None,
-        batch_size: Optional[int] = 100,
-        random_state: Optional[int] = None,
+        random_state: int | None = None,
     ) -> None:
         self.n_shapelet_samples = n_shapelet_samples
         self.max_shapelets = max_shapelets
         self.min_shapelet_length = min_shapelet_length
         self.max_shapelet_length = max_shapelet_length
         self.remove_self_similar = remove_self_similar
+        self.batch_size = batch_size
 
+        self.verbose = verbose
         self.time_limit_in_minutes = time_limit_in_minutes
         self.contract_max_n_shapelet_samples = contract_max_n_shapelet_samples
 
         self.n_jobs = n_jobs
         self.parallel_backend = parallel_backend
-        self.batch_size = batch_size
         self.random_state = random_state
 
         # The following set in method fit
@@ -196,21 +200,13 @@ class RandomShapeletTransform(BaseCollectionTransformer):
 
         super().__init__()
 
-    def _fit(self, X, y):
-        """Fit the shapelet transform to a specified X and y.
+    def _fit(self, X, y=None):
+        self._fit_shapelets(X, y, save_distances=False)
 
-        Parameters
-        ----------
-        X: np.ndarray shape (n_cases, n_channels, n_timepoints)
-            The training input samples.
-        y: array-like or list
-            The class values for X.
+    def _fit_transform(self, X, y=None):
+        return self._fit_shapelets(X, y, save_distances=True)
 
-        Returns
-        -------
-        self : RandomShapeletTransform
-            This estimator.
-        """
+    def _fit_shapelets(self, X, y, save_distances):
         self._n_jobs = check_n_jobs(self.n_jobs)
 
         self.classes_, self._class_counts = np.unique(y, return_counts=True)
@@ -247,8 +243,9 @@ class RandomShapeletTransform(BaseCollectionTransformer):
             max_shapelets_per_class = 1
         # shapelet list content: quality, length, position, channel, inst_idx, cls_idx
         shapelets = List(
-            [List([(-1.0, -1, -1, -1, -1, -1)]) for _ in range(self.n_classes_)]
+            [List([List([-1.0, -1, -1, -1, -1, -1, -1])]) for _ in range(self.n_classes_)]
         )
+        distances = []
         n_shapelets_extracted = 0
 
         rng = check_random_state(self.random_state)
@@ -258,7 +255,7 @@ class RandomShapeletTransform(BaseCollectionTransformer):
                 fit_time < time_limit
                 and n_shapelets_extracted < self.contract_max_n_shapelet_samples
             ):
-                candidate_shapelets = Parallel(
+                p = Parallel(
                     n_jobs=self._n_jobs, backend=self.parallel_backend, prefer="threads"
                 )(
                     delayed(self._extract_random_shapelet)(
@@ -268,9 +265,16 @@ class RandomShapeletTransform(BaseCollectionTransformer):
                         shapelets,
                         max_shapelets_per_class,
                         check_random_state(rng.randint(np.iinfo(np.int32).max)),
+                        save_distances
                     )
                     for i in range(self._batch_size)
                 )
+                candidate_shapelets, candidate_distances = zip(*p)
+
+                if save_distances:
+                    for i, s in enumerate(candidate_shapelets):
+                        s[6] = len(distances) + i
+                    distances.extend(candidate_distances)
 
                 for i, heap in enumerate(shapelets):
                     self._merge_shapelets(
@@ -285,8 +289,21 @@ class RandomShapeletTransform(BaseCollectionTransformer):
                         to_keep = self._remove_self_similar_shapelets(heap)
                         shapelets[i] = List([n for (n, b) in zip(heap, to_keep) if b])
 
+                if save_distances:
+                    new_distances = []
+                    i = 0
+                    for heap in shapelets:
+                        for s in heap:
+                            new_distances.append(distances[int(s[6])])
+                            s[6] = i
+                            i += 1
+
                 n_shapelets_extracted += self._batch_size
                 fit_time = time.time() - start_time
+
+                if self.verbose:
+                    print(f"Extracted {self._batch_size} shapelets ({n_shapelets_extracted} total), current list contains {sum([len(heap) for heap in shapelets])} shapelets...")
+                    print(f"Time elapsed: {fit_time:.2f} seconds, time limit: {time_limit:.2f} seconds...")
         else:
             while n_shapelets_extracted < self.n_shapelet_samples:
                 n_shapelets_to_extract = (
@@ -296,7 +313,7 @@ class RandomShapeletTransform(BaseCollectionTransformer):
                     else self.n_shapelet_samples - n_shapelets_extracted
                 )
 
-                candidate_shapelets = Parallel(
+                p = Parallel(
                     n_jobs=self._n_jobs, backend=self.parallel_backend, prefer="threads"
                 )(
                     delayed(self._extract_random_shapelet)(
@@ -306,9 +323,17 @@ class RandomShapeletTransform(BaseCollectionTransformer):
                         shapelets,
                         max_shapelets_per_class,
                         check_random_state(rng.randint(np.iinfo(np.int32).max)),
+                        save_distances
                     )
                     for i in range(n_shapelets_to_extract)
                 )
+                candidate_shapelets, candidate_distances = zip(*p)
+
+                if save_distances:
+                    for i, s in enumerate(candidate_shapelets):
+                        s[6] = len(distances) + i
+                        print(s)
+                    distances.extend(candidate_distances)
 
                 for i, heap in enumerate(shapelets):
                     self._merge_shapelets(
@@ -323,17 +348,31 @@ class RandomShapeletTransform(BaseCollectionTransformer):
                         to_keep = self._remove_self_similar_shapelets(heap)
                         shapelets[i] = List([n for (n, b) in zip(heap, to_keep) if b])
 
+                if save_distances:
+                    new_distances = []
+                    i = 0
+                    for heap in shapelets:
+                        for s in heap:
+                            new_distances.append(distances[int(s[6])])
+                            s[6] = i
+                            i += 1
+                    distances = new_distances
+
                 n_shapelets_extracted += n_shapelets_to_extract
+
+                if self.verbose:
+                    print(f"Extracted {n_shapelets_to_extract} shapelets ({n_shapelets_extracted} total), current list contains {sum([len(heap) for heap in shapelets])} shapelets...")
 
         self.shapelets = [
             (
                 s[0],
-                s[1],
-                s[2],
-                s[3],
-                s[4],
-                self.classes_[s[5]],
-                z_normalise_series(X[s[4]][s[3]][s[2] : s[2] + s[1]]),
+                int(s[1]),
+                int(s[2]),
+                int(s[3]),
+                int(s[4]),
+                self.classes_[int(s[5])],
+                z_normalise_series(X[int(s[4])][int(s[3])][int(s[2]): int(s[2]) + int(s[1])]),
+                int(s[6]),
             )
             for class_shapelets in shapelets
             for s in class_shapelets
@@ -344,6 +383,9 @@ class RandomShapeletTransform(BaseCollectionTransformer):
         to_keep = self._remove_identical_shapelets(List(self.shapelets))
         self.shapelets = [n for (n, b) in zip(self.shapelets, to_keep) if b]
 
+        if self.verbose:
+            print(f"Final shapelet count: {len(self.shapelets)}")
+
         self._sorted_indicies = []
         for s in self.shapelets:
             sabs = np.abs(s[6])
@@ -353,6 +395,14 @@ class RandomShapeletTransform(BaseCollectionTransformer):
                     dtype=np.int32,
                 )
             )
+
+        if save_distances:
+            Xt = np.array([distances[s[7]] for s in self.shapelets]).transpose()
+            self.shapelets = [s[:-1] for s in self.shapelets]
+            return Xt
+        else:
+            self.shapelets = [s[:-1] for s in self.shapelets]
+            return None
 
     def _transform(self, X, y=None):
         """Transform X according to the extracted shapelets.
@@ -410,7 +460,7 @@ class RandomShapeletTransform(BaseCollectionTransformer):
             return {"max_shapelets": 5, "n_shapelet_samples": 50, "batch_size": 20}
 
     def _extract_random_shapelet(
-        self, X, y, i, shapelets, max_shapelets_per_class, rng
+        self, X, y, i, shapelets, max_shapelets_per_class, rng, keep_distances
     ):
         inst_idx = i % self.n_cases_
         cls_idx = int(y[inst_idx])
@@ -439,7 +489,7 @@ class RandomShapeletTransform(BaseCollectionTransformer):
             dtype=np.int32,
         )
 
-        quality = self._find_shapelet_quality(
+        quality, distances = self._find_shapelet_quality(
             X,
             y,
             shapelet,
@@ -453,7 +503,7 @@ class RandomShapeletTransform(BaseCollectionTransformer):
             worst_quality,
         )
 
-        return np.round(quality, 8), length, position, channel, inst_idx, cls_idx
+        return List([np.round(quality, 8), length, position, channel, inst_idx, cls_idx, -1]), distances
 
     @staticmethod
     @njit(fastmath=True, cache=True)
@@ -472,6 +522,7 @@ class RandomShapeletTransform(BaseCollectionTransformer):
     ):
         # This is slow and could be optimised, we spend 99% of time here
         orderline = []
+        distances = np.zeros(len(X))
         this_cls_traversed = 0
         other_cls_traversed = 0
 
@@ -491,24 +542,12 @@ class RandomShapeletTransform(BaseCollectionTransformer):
                 other_cls_traversed += 1
 
             orderline.append((distance, cls))
-            orderline.sort()
+            distances[i] = distance
 
-            if worst_quality > 0:
-                quality = _calc_early_binary_ig(
-                    orderline,
-                    this_cls_traversed,
-                    other_cls_traversed,
-                    this_cls_count - this_cls_traversed,
-                    other_cls_count - other_cls_traversed,
-                    worst_quality,
-                )
-
-                if quality <= worst_quality:
-                    return -1
+        orderline.sort()
 
         quality = _calc_binary_ig(orderline, this_cls_count, other_cls_count)
-
-        return round(quality, 12)
+        return round(quality, 12), distances
 
     @staticmethod
     @njit(fastmath=True, cache=True)
@@ -758,5 +797,4 @@ def _is_self_similar(s1, s2):
             return True
         if s1[2] <= s2[2] <= s1[2] + s1[1]:
             return True
-
     return False

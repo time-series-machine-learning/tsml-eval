@@ -1,4 +1,5 @@
 # Iridis 5 Python
+##### Last updated: 07/09/2025
 
 Installation guide for Python packages on Iridis 5 and useful slurm commands.
 
@@ -12,7 +13,7 @@ Alternatively, you can connect to one of the specific login nodes:
 - iridis5_c.soton.ac.uk
 - iridis5_d.soton.ac.uk (AMD CPU architecture)
 
-This guide only covers Iridis 5 cureently, not Iridis 6 or X.
+This guide only covers Iridis 5 currently, but should be applicable to Iridis 6 or X.
 
 There is a Southampton Microsoft Teams group called "HPC Community" where you can ask questions if needed.
 
@@ -20,7 +21,7 @@ There is a Southampton Microsoft Teams group called "HPC Community" where you ca
 
 You need to be on a Soton network machine or have the VPN running to connect to Iridis. Connect to one of the addresses listed above.
 
-The recommended way of connecting to Iridis is using Putty as a command-line interface and WinSCP for file management.
+The recommended way of connecting to Iridis in our group is using Putty for a SSH command-line interface and WinSCP for FTP file management.
 
 Copies of data files used in experiments must be stored on the cluster, the best place to put these files is on your user area scratch storage. It is a good idea to create shortcuts to and from your scratch drive. Alternatively, you can read from someone else's directory (i.e. `/mainfs/scratch/mbm1g23/`).
 
@@ -28,11 +29,11 @@ Copies of data files used in experiments must be stored on the cluster, the best
 
 Complete these steps sequentially for a fresh installation.
 
-By default, commands will be run on the login node. Beyond simple commands or scripts, an interactive session should be started. For most usage here you will not require one.
+By default, commands will be run on the login node. Beyond simple commands or scripts, an interactive session should be started. For most usage (including setting up and running submission scripts as guided here) you will not require one.
 
 >sinteractive
 
-__DO NOT__ enter interactive mode for commands that require an internet connection (i.e. steps 1-4), as only the login nodes have one.
+__DO NOT__ enter interactive mode for commands that require an internet connection (i.e. steps 1-4), as it will not work.
 
 ### 1. Clone the code from GitHub
 
@@ -48,6 +49,8 @@ Python is activated by default, but it is good practice to manually select the v
 
 >module load anaconda/py3.10
 
+This will be different on each cluster. Iridis 6 is `conda/python3` for example.
+
 You may also need to run the following to use some conda commands:
 
 >conda init bash
@@ -62,19 +65,19 @@ You can check the current version using:
 
 #### 3.1. Set up scratch symbolic link for conda
 
-Installing complex conda packages on your main home drive will quickly see you hitting the limit on the number of files you can store. To avoid this, it is recommended you create a symbolic link to your scratch storage.
+Installing complex conda packages on your main home drive will quickly see you hitting the limit on the number of files you can store. To avoid this, it is recommended you create a symbolic link to your scratch storage (this assumes you are in your home directory and there is a symlink to your scratch drive).
 
 >mkdir /scratch/<username>/.conda
 
 >ln -s /scratch/<username>/.conda ~/.conda
 
-Hitting this limit is very annoying, as it will prevent you from creating new conda environments or installing new packages (or doing anything really).
+Hitting this limit is very annoying, as it will prevent you from creating new conda environments, installing new packages or saving results file (or doing anything really).
 
-For conda related storage guidance, see the [related HPC webpage](https://sotonac.sharepoint.com/teams/HPCCommunityWiki/SitePages/Conda.aspx#conda-and-inodes)
+For conda related storage guidance, see the [related HPC webpage](https://sotonac.sharepoint.com/teams/HPCCommunityWiki/SitePages/Conda.aspx#conda-and-inodes).
 
-### 3.2. Create environment
+#### 3.2. Create environment
 
-Create a new environment with a name of your choice. Replace PYTHON_VERSION with 3.11.
+Create a new environment with a name of your choice. Replace PYTHON_VERSION with 3.12 by default.
 
 >conda create -n ENV_NAME python=PYTHON_VERSION
 
@@ -86,6 +89,13 @@ Your environment should be listed now when you use the following command:
 
 >conda info --envs
 
+#### 3.3. Removing an environment (not required for first setup)
+
+At some point you may want to remove an environment, either because it is no longer
+needed or you want to start fresh. You can do this with the following command:
+
+>conda remove -n ENV_NAME --all
+
 ### 4. Install package and dependencies
 
 Install the package and required dependencies. The following are examples for a few packages and scenarios.
@@ -96,7 +106,7 @@ After installation, the installed packages can be viewed with:
 
 >conda list
 
-Note that you can install a specific GitHub branch for packages such as `aeon` like so
+Note that you can install a specific GitHub branch for packages such as `aeon` like so. It is important to uninstall any existing version first.
 
 >pip uninstall aeon
 
@@ -108,11 +118,15 @@ or
 
 #### 4.1. tsml-eval CPU
 
-Move to the package directory and run:
+Move to the package directory i.e.
+
+>cd tsml-eval
+
+This will have a `pyproject.toml` file. Run:
 
 >pip install --editable .
 
-For release specific dependency versions you can also run:
+For release specific dependency versions you can also run (replace `requirements.txt` with the relevant file):
 
 >pip install -r requirements.txt
 
@@ -124,7 +138,7 @@ For some extras you may need a gcc installation i.e.:
 
 >module add gcc/11.1.0
 
-Most extra dependencies can be installed with the all_extras dependency set:
+Most extra dependencies can be installed with the `all_extras` dependency set:
 
 >pip install -e .[all_extras]
 
@@ -132,23 +146,49 @@ Some dependencies are unstable, so the following may fail to install.
 
 >pip install -e .[all_extras,unstable_extras]
 
-If any a dependency install is "Killed", it is likely the interactive session has run out of memory. Either give it more memory, or use a non-cached package i.e.
+If any a dependency install is "Killed", it is likely the session has run out of memory. Either give it more memory, or use a non-cached package i.e.
 
 >pip install PACKAGE_NAME --no-cache-dir
 
 #### 5.1. tsml-eval GPU
 
-It is recommended to use a different environment for GPU jobs. Move to the package directory and install the required packages for GPU jobs:
+Currently the recommended way to run GPU jobs on Iridis is using an apptainer container built from an NVIDIA tensorflow docker image. Pulling the docker image will likely require an [NVIDIA NGC account](https://catalog.ngc.nvidia.com/) and API key.
 
->pip install --editable . tensorflow[and-cuda] tensorrt
+>module load apptainer/1.3.3
 
-# Running experiments
+>export APPTAINER_DOCKER_USERNAME='$oauthtoken'
 
-For running jobs on Iridis, we recommend using copies of the submission scripts provided in this folder.
+>export APPTAINER_DOCKER_PASSWORD=PUT_YOUR_API_KEY_HERE
+
+Pull the image you want, this can be image which has the necessary dependencies but was last tested with:
+
+>apptainer pull docker://nvcr.io/nvidia/tensorflow:25.02-tf2-py3
+
+Create a writable sandbox from the image. This is probably large with a lot of files so will be best on scratch:
+
+>apptainer build --sandbox scratch/tensorflow_sandbox/ tensorflow_25.02-tf2-py3.sif
+
+Open a shell in the container:
+
+>apptainer shell --writable scratch/tensorflow_sandbox
+
+Install `tsml-eval` like the above instructions, this does not have to be in the sandbox:
+
+>cd tsml-eval
+
+>pip install --editable .
+
+## Running experiments
+
+For running jobs on Iridis, we recommend using *copies* of the submission scripts provided in this folder.
 
 **NOTE: Scripts will not run properly if done whilst the conda environment is active.**
 
-## Running `tsml-eval` CPU experiments
+Disable the conda environment before running scripts if you have installed packages:
+
+>conda deactivate
+
+### Running `tsml-eval` CPU experiments
 
 For CPU experiments start with one of the following scripts:
 
@@ -158,7 +198,7 @@ For CPU experiments start with one of the following scripts:
 
 >clustering_experiments.sh
 
-These scrips can be run from the command line with the following command:
+These scripts can be run from the command line with the following command:
 
 >sh classification_experiments.sh
 
@@ -166,12 +206,25 @@ You may need to use `dos2unix` to convert the line endings to unix format.
 
 The default queue for CPU jobs is _batch_. Be sure to swap the _queue_alias_ to _serial_ in the script if you want to use this, as the number of jobs submitted won't be tracked properly otherwise.
 
-Do not run threaded code on the cluster without reserving whole nodes, as there is nothing to stop the job from using
-the CPU resources allocated to others. The default python file in the scripts attempts to avoid threading as much as possible. You should ensure processes are not intentionally using multiple threads if you change it.
+Do not run threaded code on the cluster without requesting the correct amount of CPUs or reserving a whole node, as there is nothing to stop the job from using the CPU resources allocated to others. The default python file in the scripts attempts to avoid threading as much as possible. You should ensure processes are not intentionally using multiple threads if you change it.
 
 Requesting memory for a job will allocate it all on the jobs assigned node. New jobs will not be submitted to a node if the total allocated memory exceeds the amount available for the node. As such, requesting too much memory can block new jobs from using the node. This is ok if the memory is actually being used, but large amounts of memory should not be requested unless you know it will be required for the jobs you are submitting. Iridis is a shared resource, and instantly requesting hundreds of GB will hurt the overall efficiency of the cluster.
 
-## Running `tsml-eval` GPU experiments
+### Running `tsml-eval` CPU experiments on the Iridis 5 batch queue
+
+If you submit less than 20 tasks when requesting the _batch_ queue, your job will be redirected to the _serial_ queue. This has a much smaller job limit which you will reach quickly when submitting a lot of jobs. If you submit a single task in each submission, you will only be running ~32 jobs at once.
+
+To get around this, you can use the batch submission scripts provided in the `batch_scripts` folder. These scripts submit multiple tasks in a single job, allowing you to run many more experiments at once.
+
+>taskfarm_classification_experiments.sh
+
+>taskfarm_regression_experiments.sh
+
+>taskfarm_clustering_experiments.sh
+
+They are named this as they use the `staskfarm` utility to run different processes over multiple threads. Read through the configuration as it is slightly different to the serial scripts. You can split task groupings by dataset by loading from a directory of submission scripts and keep classifiers separate with a variable.
+
+### Running `tsml-eval` GPU experiments
 
 For GPU experiments use one of the following scripts:
 
@@ -181,7 +234,7 @@ For GPU experiments use one of the following scripts:
 
 >gpu_clustering_experiments.sh
 
-It is recommended you use different environments for CPU and GPU jobs.
+It is recommended you use different environments for CPU and GPU jobs. Using an apptainer container this will be standard, make sure to set the path to your sandbox in the script.
 
 The default queue for GPU jobs is _gpu_.
 
@@ -195,7 +248,7 @@ __Tip__: to simplify and just use 'queue' in the terminal to run the above comma
 
 >alias queue='squeue -u USERNAME --format="%12i %15P %20j %10u %10t %10M %10D %20R" -r'
 
-To kill all user jobs
+To kill all user jobs:
 
 >scancel -u USERNAME
 
@@ -206,6 +259,10 @@ To delete all jobs on a queue it’s:
 To delete one job it’s:
 
 >scancel 11133013_1
+
+To delete jobs in a specific job ID range use the `range_scancel` script:
+
+>sh range_scancel.sh
 
 ## Helpful links
 

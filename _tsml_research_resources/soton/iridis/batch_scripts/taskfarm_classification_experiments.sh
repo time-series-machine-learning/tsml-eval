@@ -12,8 +12,18 @@ max_num_submitted=900
 # Queue options are https://sotonac.sharepoint.com/teams/HPCCommunityWiki/SitePages/Iridis%205%20Job-submission-and-Limits-Quotas.aspx
 queue="batch"
 
-# The number of tasks/threads to use in each job. 40 is the number of cores on batch nodes
+# The number of tasks to submit in each job. This can be larger than the number of cores, but tasks will be delayed until a core is free
 n_tasks_per_node=40
+
+# The number of cores to request from the node. Don't go over the number of cores for the node. 40 is the number of cores on batch nodes
+# If you are not using the whole node, please make sure you are requesting memory correctly
+max_cpus_to_use=40
+
+# Create a separate submission list for each classifier. This will stop the mixing of
+# large and small jobs in the same node, but results in some smaller scripts submitted
+# to serial when moving between classifiers.
+# For small workloads i.e. single resample 10 datasets, turning this off will be the only way to get on the batch queue realistically
+split_classifiers="true"
 
 # Enter your username and email here
 username="ajb2u23"
@@ -29,7 +39,7 @@ start_point=1
 # Put your home directory here
 local_path="/mainfs/home/$username/"
 
-# Datasets to use and directory of data files. This can either be a text file or directory of text files
+# Datasets to use and directory of data files. Dataset list can either be a text file or directory of text files
 # Separate text files will not run jobs of the same dataset in the same node. This is good to keep large and small datasets separate
 data_dir="$local_path/Data/"
 dataset_list="$local_path/DataSetLists/ClassificationBatch/"
@@ -45,7 +55,7 @@ script_file_path="$local_path/tsml-eval/tsml_eval/experiments/classification_exp
 # Separate environments for GPU and CPU are recommended
 env_name="eval-py11"
 
-# Classifiers to loop over. Must be seperated by a space. Different classifiers will not run in the same node
+# Classifiers to loop over. Must be separated by a space. Different classifiers will not run in the same node by default
 # See list of potential classifiers in set_classifier
 classifiers_to_run="ROCKET DrCIF"
 
@@ -62,11 +72,9 @@ predefined_folds="false"
 # Normalise data before fit/predict
 normalise_data="false"
 
-
 # ======================================================================================
 # 	Experiment configuration end
 # ======================================================================================
-
 
 # Set to -tr to generate test files
 generate_train_files=$([ "${generate_train_files,,}" == "true" ] && echo "-tr" || echo "")
@@ -80,23 +88,29 @@ normalise_data=$([ "${normalise_data,,}" == "true" ] && echo "-rn" || echo "")
 # This creates the submission file to run and does clean up
 submit_jobs () {
 
+if ((cmdCount>=max_cpus_to_use)); then
+    cpuCount=$max_cpus_to_use
+else
+    cpuCount=$cmdCount
+fi
+
 echo "#!/bin/bash
 #SBATCH --mail-type=${mail}
 #SBATCH --mail-user=${mailto}
 #SBATCH --job-name=batch-${dt}
 #SBATCH -p ${queue}
 #SBATCH -t ${max_time}
-#SBATCH -o ${out_dir}/${classifier}/%A-${dt}.out
-#SBATCH -e ${out_dir}/${classifier}/%A-${dt}.err
+#SBATCH -o ${outDir}/%A-${dt}.out
+#SBATCH -e ${outDir}/%A-${dt}.err
 #SBATCH --nodes=1
-#SBATCH --ntasks=${cmdCount}
+#SBATCH --ntasks=${cpuCount}
 
 . /etc/profile
 
 module load anaconda/py3.10
 source activate $env_name
 
-staskfarm ${out_dir}/${classifier}/generatedCommandList-${dt}.txt" > generatedSubmissionFile-${dt}.sub
+staskfarm ${outDir}/generatedCommandList-${dt}.txt" > generatedSubmissionFile-${dt}.sub
 
 echo "At experiment ${expCount}, ${totalCount} jobs submitted total"
 
@@ -108,6 +122,7 @@ rm generatedSubmissionFile-${dt}.sub
 
 totalCount=0
 expCount=0
+dt=$(date +%Y%m%d%H%M%S)
 
 # turn a directory of files into a list
 if [[ -d $dataset_list ]]; then
@@ -126,11 +141,15 @@ for classifier in $classifiers_to_run; do
 
 mkdir -p "${out_dir}/${classifier}/"
 
-# create a new command list for each classifier and dataset list
-# we use time for unique names
-sleep 1
-cmdCount=0
-dt=$(date +%Y%m%d%H%M%S)
+if [ "${split_classifiers,,}" == "true" ]; then
+    # we use time for unique names
+    sleep 1
+    cmdCount=0
+    dt=$(date +%Y%m%d%H%M%S)
+    outDir=${out_dir}/${classifier}
+else
+    outDir=${out_dir}
+fi
 
 while read dataset; do
 
@@ -162,7 +181,7 @@ if ((cmdCount>=n_tasks_per_node)); then
     num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue}" -e "PD ${queue}" | wc -l)
     while [ "${num_jobs}" -ge "${max_num_submitted}" ]
     do
-        echo Waiting 60s, "${num_jobs}" currently submitted on ${queue}, user-defined max is ${max_num_submitted}
+        echo Waiting 60s, ${num_jobs} currently submitted on ${queue}, user-defined max is ${max_num_submitted}
         sleep 60
         num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue}" -e "PD ${queue}" | wc -l)
     done
@@ -174,7 +193,7 @@ fi
 
 # Input args to the default classification_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/classification_experiments.py
-echo "python -u ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} ${resample} ${generate_train_files} ${predefined_folds} ${normalise_data}" >> ${out_dir}/${classifier}/generatedCommandList-${dt}.txt
+echo "python -u ${script_file_path} ${data_dir} ${results_dir} ${classifier} ${dataset} ${resample} ${generate_train_files} ${predefined_folds} ${normalise_data} > ${out_dir}/${classifier}/output-${dataset}-${resample}-${dt}.txt 2>&1" >> ${outDir}/generatedCommandList-${dt}.txt
 
 ((cmdCount++))
 ((totalCount++))
@@ -183,12 +202,18 @@ done
 fi
 done < ${dataset_file}
 
-if ((cmdCount>0)); then
-    # final submit for this dataset list and classifier
+if [[ "${split_classifiers,,}" == "true" && $cmdCount -gt 0 ]]; then
+    # final submit for this classifier
     submit_jobs
 fi
 
 done
+
+if [[ "${split_classifiers,,}" != "true" && $cmdCount -gt 0 ]]; then
+    # final submit for this dataset list
+    submit_jobs
+fi
+
 done
 
 echo Finished submitting jobs

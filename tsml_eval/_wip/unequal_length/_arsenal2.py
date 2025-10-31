@@ -308,6 +308,8 @@ class Arsenal(BaseClassifier):
                         _clone_estimator(
                             base_rocket, rng.randint(np.iinfo(np.int32).max)
                         ),
+                        base_rocket,
+                        rng.randint(np.iinfo(np.int32).max),
                         X,
                         y,
                         keep_transformed_data=keep_transformed_data,
@@ -372,7 +374,6 @@ class Arsenal(BaseClassifier):
                     attemps += 1
                     rng += 1
                     pass
-
 
     def _predict_proba_for_estimator(self, X, transform, classifier, idx):
         Xt = transform.transform(X)

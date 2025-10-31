@@ -225,6 +225,7 @@ def test_aeon_classifiers_available():
         "OrdinalTDE",
         "IndividualOrdinalTDE",
         # just missing
+        "TDMVDCClassifier",
     ]
 
     est = [e for e, _ in all_estimators(type_filter="classifier")]

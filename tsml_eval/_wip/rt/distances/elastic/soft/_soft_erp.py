@@ -24,11 +24,11 @@ from aeon.utils.validation.collection import _is_numpy_list_multivariate
 def soft_erp_distance(
     x: np.ndarray,
     y: np.ndarray,
-    window: Optional[float] = None,
+    window: float | None = None,
     gamma: float = 1.0,
     g: float = 0.0,
-    g_arr: Optional[np.ndarray] = None,
-    itakura_max_slope: Optional[float] = None,
+    g_arr: np.ndarray | None = None,
+    itakura_max_slope: float | None = None,
 ) -> float:
     if x.ndim == 1 and y.ndim == 1:
         _x = x.reshape((1, x.shape[0]))
@@ -49,11 +49,11 @@ def soft_erp_distance(
 def soft_erp_cost_matrix(
     x: np.ndarray,
     y: np.ndarray,
-    window: Optional[float] = None,
+    window: float | None = None,
     gamma: float = 1.0,
     g: float = 0.0,
-    g_arr: Optional[np.ndarray] = None,
-    itakura_max_slope: Optional[float] = None,
+    g_arr: np.ndarray | None = None,
+    itakura_max_slope: float | None = None,
 ) -> np.ndarray:
     if x.ndim == 1 and y.ndim == 1:
         _x = x.reshape((1, x.shape[0]))
@@ -76,7 +76,7 @@ def _soft_erp_distance(
     y: np.ndarray,
     bounding_matrix: np.ndarray,
     g: float,
-    g_arr: Optional[np.ndarray],
+    g_arr: np.ndarray | None,
     gamma: float,
 ) -> float:
     return abs(
@@ -92,7 +92,7 @@ def _soft_erp_cost_matrix(
     y: np.ndarray,
     bounding_matrix: np.ndarray,
     g: float,
-    g_arr: Optional[np.ndarray],
+    g_arr: np.ndarray | None,
     gamma: float,
 ) -> np.ndarray:
     x_size = x.shape[1]
@@ -122,7 +122,7 @@ def _soft_erp_cost_matrix(
 
 @njit(cache=True, fastmath=True)
 def _precompute_g(
-    x: np.ndarray, g: float, g_array: Optional[np.ndarray]
+    x: np.ndarray, g: float, g_array: np.ndarray | None
 ) -> tuple[np.ndarray, float]:
     gx_distance = np.zeros(x.shape[1])
     if g_array is None:
@@ -142,13 +142,13 @@ def _precompute_g(
 
 @threaded
 def soft_erp_pairwise_distance(
-    X: Union[np.ndarray, list[np.ndarray]],
-    y: Optional[Union[np.ndarray, list[np.ndarray]]] = None,
-    window: Optional[float] = None,
+    X: np.ndarray | list[np.ndarray],
+    y: np.ndarray | list[np.ndarray] | None = None,
+    window: float | None = None,
     gamma: float = 1.0,
     g: float = 0.0,
-    g_arr: Optional[np.ndarray] = None,
-    itakura_max_slope: Optional[float] = None,
+    g_arr: np.ndarray | None = None,
+    itakura_max_slope: float | None = None,
     n_jobs: int = 1,
     **kwargs,
 ) -> np.ndarray:
@@ -171,10 +171,10 @@ def soft_erp_pairwise_distance(
 @njit(cache=True, fastmath=True, parallel=True)
 def _soft_erp_pairwise_distance(
     X: NumbaList[np.ndarray],
-    window: Optional[float],
+    window: float | None,
     g: float,
-    g_arr: Optional[np.ndarray],
-    itakura_max_slope: Optional[float],
+    g_arr: np.ndarray | None,
+    itakura_max_slope: float | None,
     unequal_length: bool,
     gamma: float,
 ) -> np.ndarray:
@@ -206,10 +206,10 @@ def _soft_erp_pairwise_distance(
 def _soft_erp_from_multiple_to_multiple_distance(
     x: NumbaList[np.ndarray],
     y: NumbaList[np.ndarray],
-    window: Optional[float],
+    window: float | None,
     g: float,
-    g_arr: Optional[np.ndarray],
-    itakura_max_slope: Optional[float],
+    g_arr: np.ndarray | None,
+    itakura_max_slope: float | None,
     unequal_length: bool,
     gamma: float,
 ) -> np.ndarray:
@@ -241,11 +241,11 @@ MAX_NP_FLOAT = np.finfo(np.float64).max
 def soft_erp_alignment_path(
     x: np.ndarray,
     y: np.ndarray,
-    window: Optional[float] = None,
+    window: float | None = None,
     gamma: float = 1.0,
     g: float = 0.0,
-    g_arr: Optional[np.ndarray] = None,
-    itakura_max_slope: Optional[float] = None,
+    g_arr: np.ndarray | None = None,
+    itakura_max_slope: float | None = None,
 ) -> tuple[list[tuple[int, int]], float]:
     cost_matrix = soft_erp_cost_matrix(
         x,
@@ -269,7 +269,7 @@ def _soft_erp_cost_matrix_with_arrs(
     bounding_matrix: np.ndarray,
     gamma: float,
     g: float = 0.0,
-    g_arr: Optional[np.ndarray] = None,
+    g_arr: np.ndarray | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     x_size = x.shape[1]
     y_size = y.shape[1]
@@ -320,11 +320,11 @@ def _soft_erp_cost_matrix_with_arrs(
 def soft_erp_gradient(
     x: np.ndarray,
     y: np.ndarray,
-    window: Optional[float] = None,
+    window: float | None = None,
     gamma: float = 1.0,
     g: float = 0.0,
-    g_arr: Optional[np.ndarray] = None,
-    itakura_max_slope: Optional[float] = None,
+    g_arr: np.ndarray | None = None,
+    itakura_max_slope: float | None = None,
 ) -> tuple[np.ndarray, float]:
     return _compute_soft_gradient(
         x,

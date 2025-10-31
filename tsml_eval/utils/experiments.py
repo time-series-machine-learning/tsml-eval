@@ -160,7 +160,7 @@ def estimator_attributes_to_file(
 
     Write the attributes of an estimator to file at a given directory. The function
     will recursively write the attributes of any estimators or non-string sequences
-    containing estimators found in the attributes of the input estimator to spearate
+    containing estimators found in the attributes of the input estimator to separate
     files.
 
     Parameters

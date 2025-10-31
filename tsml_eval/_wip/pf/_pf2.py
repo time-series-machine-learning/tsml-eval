@@ -1,6 +1,7 @@
 """Proximity Forest 2.0 Classifier."""
 
-from typing import Any, Callable, Optional, TypedDict, Union
+from typing import Any, Optional, TypedDict, Union
+from collections.abc import Callable
 
 import numpy as np
 from joblib import Parallel, delayed
@@ -72,7 +73,6 @@ class ProximityForest2(BaseClassifier):
     Examples
     --------
     >>> from aeon.datasets import load_unit_test
-    >>> from aeon.classification.distance_based import ProximityForest
     >>> X_train, y_train = load_unit_test(split="train")
     >>> X_test, y_test = load_unit_test(split="test")
     >>> classifier = ProximityForest2(n_trees = 10, n_splitters = 3)
@@ -95,7 +95,7 @@ class ProximityForest2(BaseClassifier):
         n_splitters: int = 5,
         max_depth: int = None,
         min_samples_split: int = 2,
-        random_state: Union[int, type[np.random.RandomState], None] = None,
+        random_state: int | type[np.random.RandomState] | None = None,
         n_jobs: int = 1,
         parallel_backend=None,
     ):
@@ -263,7 +263,7 @@ class ProximityTree2(BaseClassifier):
         n_splitters: int = 5,
         max_depth: int = None,
         min_samples_split: int = 2,
-        random_state: Union[int, type[np.random.RandomState], None] = None,
+        random_state: int | type[np.random.RandomState] | None = None,
     ) -> None:
         self.n_splitters = n_splitters
         self.max_depth = max_depth
@@ -762,8 +762,8 @@ def first_order_derivative(q: np.ndarray) -> np.ndarray:
 
 
 class DistanceKwargs(TypedDict, total=False):
-    window: Optional[float]
-    itakura_max_slope: Optional[float]
+    window: float | None
+    itakura_max_slope: float | None
     p: float
     w: np.ndarray
     epsilon: float
@@ -777,7 +777,7 @@ DistanceFunction = Callable[[np.ndarray, np.ndarray, Any], float]
 def distance(
     x: np.ndarray,
     y: np.ndarray,
-    metric: Union[str, DistanceFunction],
+    metric: str | DistanceFunction,
     **kwargs: Unpack[DistanceKwargs],
 ) -> float:
     r"""Compute the distance between two time series.
@@ -852,9 +852,9 @@ def _dtw_distance(
     x: np.ndarray,
     y: np.ndarray,
     p: float = 2.0,
-    window: Optional[float] = None,
-    itakura_max_slope: Optional[float] = None,
-    threshold: Optional[float] = np.inf,
+    window: float | None = None,
+    itakura_max_slope: float | None = None,
+    threshold: float | None = np.inf,
 ) -> float:
     r"""Return parameterised DTW distance for PF 2.0.
 
@@ -982,10 +982,10 @@ def _adtw_distance(
     x: np.ndarray,
     y: np.ndarray,
     p: float = 2.0,
-    window: Optional[float] = None,
-    itakura_max_slope: Optional[float] = None,
+    window: float | None = None,
+    itakura_max_slope: float | None = None,
     warp_penalty: float = 1.0,
-    threshold: Optional[float] = np.inf,
+    threshold: float | None = np.inf,
 ) -> float:
     """Parameterised version of ADTW distance for PF 2.0.
 

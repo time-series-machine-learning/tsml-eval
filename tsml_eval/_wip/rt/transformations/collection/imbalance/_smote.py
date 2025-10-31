@@ -12,6 +12,8 @@ original authors:
 from collections import OrderedDict
 from typing import Optional, Union
 
+from collections.abc import Callable
+
 import numpy as np
 from sklearn.utils import check_random_state
 
@@ -63,9 +65,9 @@ class SMOTE(BaseCollectionTransformer):
     def __init__(
         self,
         n_neighbors=5,
-        distance: Union[str, callable] = "euclidean",
-        distance_params: Optional[dict] = None,
-        weights: Union[str, callable] = "uniform",
+        distance: str | Callable = "euclidean",
+        distance_params: dict | None = None,
+        weights: str | Callable = "uniform",
         n_jobs: int = 1,
         random_state=None,
     ):
@@ -179,7 +181,7 @@ class SMOTE(BaseCollectionTransformer):
             low=0, high=nn_num.size, size=n_samples
         )
 
-        # np.newaxis for backwards compatability with random_state
+        # np.newaxis for backwards compatibility with random_state
         steps = step_size * self._random_state.uniform(size=n_samples)[:, np.newaxis]
         rows = np.floor_divide(samples_indices, nn_num.shape[1])
         cols = np.mod(samples_indices, nn_num.shape[1])

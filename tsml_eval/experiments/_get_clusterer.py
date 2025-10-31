@@ -455,7 +455,7 @@ def _get_distance_default_params(
         if data_vars is not None:
             X_train, _, _, _, _ = load_experiment_data(*data_vars)
 
-            # cant handle unequal length series
+            # can't handle unequal length series
             if isinstance(X_train, np.ndarray):
                 if row_normalise:
                     scaler = Normalizer()

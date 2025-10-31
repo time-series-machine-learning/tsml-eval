@@ -105,7 +105,8 @@ pr.create_issue_comment(
 
 The [Checks](https://github.com/time-series-machine-learning/tsml-eval/pull/{pr_number}/checks) tab will show the status of our automated tests. You can click on individual test runs in the tab or "Details" in the panel below to see more information if there is a failure.
 
-### PR CI actions
+<details><summary>PR CI actions</summary>
+<p>
 
 These checkboxes will add labels to enable/disable CI functionality for this PR. This may not take effect immediately, and a new commit may be required to run the new configuration.
 
@@ -114,5 +115,8 @@ These checkboxes will add labels to enable/disable CI functionality for this PR.
 - [ ] Run all notebook example tests
 - [ ] Stop automatic `pre-commit` fixes (always disabled for drafts)
 - [ ] Push an empty commit to re-run CI checks
+
+</p>
+</details>
     """  # noqa
 )

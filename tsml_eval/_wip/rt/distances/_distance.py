@@ -1,7 +1,8 @@
 __maintainer__ = []
 
 from enum import Enum
-from typing import Any, Callable, Optional, TypedDict, Union
+from typing import Any, Optional, TypedDict, Union
+from collections.abc import Callable
 
 import numpy as np
 from joblib import Parallel, delayed
@@ -122,8 +123,8 @@ from aeon.utils.validation.collection import _is_numpy_list_multivariate
 
 
 class DistanceKwargs(TypedDict, total=False):
-    window: Optional[float]
-    itakura_max_slope: Optional[float]
+    window: float | None
+    itakura_max_slope: float | None
     p: float
     w: np.ndarray
     g: float
@@ -138,7 +139,7 @@ class DistanceKwargs(TypedDict, total=False):
     warp_penalty: float
     standardize: bool
     m: int
-    max_shift: Optional[int]
+    max_shift: int | None
     gamma: float
 
 
@@ -153,7 +154,7 @@ PairwiseFunction = Callable[[np.ndarray, np.ndarray, Any], np.ndarray]
 def distance(
     x: np.ndarray,
     y: np.ndarray,
-    method: Union[str, DistanceFunction],
+    method: str | DistanceFunction,
     **kwargs: Unpack[DistanceKwargs],
 ) -> float:
     """Compute the distance between two time series.
@@ -205,8 +206,8 @@ def distance(
 
 def pairwise_distance(
     x: np.ndarray,
-    y: Optional[np.ndarray] = None,
-    method: Union[str, DistanceFunction, None] = None,
+    y: np.ndarray | None = None,
+    method: str | DistanceFunction | None = None,
     symmetric: bool = True,
     n_jobs: int = 1,
     **kwargs: Unpack[DistanceKwargs],
@@ -293,9 +294,9 @@ def pairwise_distance(
 
 @threaded
 def _custom_func_pairwise(
-    X: Optional[Union[np.ndarray, list[np.ndarray]]],
-    y: Optional[Union[np.ndarray, list[np.ndarray]]] = None,
-    dist_func: Union[DistanceFunction, None] = None,
+    X: np.ndarray | list[np.ndarray] | None,
+    y: np.ndarray | list[np.ndarray] | None = None,
+    dist_func: DistanceFunction | None = None,
     n_jobs: int = 1,
     **kwargs: Unpack[DistanceKwargs],
 ) -> np.ndarray:
@@ -320,7 +321,7 @@ def _custom_func_pairwise(
 
 
 def _custom_pairwise_distance(
-    X: Union[np.ndarray, list[np.ndarray]],
+    X: np.ndarray | list[np.ndarray],
     dist_func: DistanceFunction,
     n_jobs: int = 1,
     **kwargs: Unpack[DistanceKwargs],
@@ -350,8 +351,8 @@ def _custom_pairwise_distance(
 
 
 def _custom_from_multiple_to_multiple_distance(
-    x: Union[np.ndarray, list[np.ndarray]],
-    y: Union[np.ndarray, list[np.ndarray]],
+    x: np.ndarray | list[np.ndarray],
+    y: np.ndarray | list[np.ndarray],
     dist_func: DistanceFunction,
     n_jobs: int = 1,
     **kwargs: Unpack[DistanceKwargs],
@@ -382,7 +383,7 @@ def _custom_from_multiple_to_multiple_distance(
 def alignment_path(
     x: np.ndarray,
     y: np.ndarray,
-    method: Union[str, DistanceFunction, None] = None,
+    method: str | DistanceFunction | None = None,
     **kwargs: Unpack[DistanceKwargs],
 ) -> tuple[list[tuple[int, int]], float]:
     """Compute the alignment path and distance between two time series.
@@ -437,7 +438,7 @@ def alignment_path(
 def cost_matrix(
     x: np.ndarray,
     y: np.ndarray,
-    method: Union[str, DistanceFunction, None] = None,
+    method: str | DistanceFunction | None = None,
     **kwargs: Unpack[DistanceKwargs],
 ) -> np.ndarray:
     """Compute the alignment path and distance between two time series.
@@ -520,7 +521,7 @@ def get_distance_function_names() -> list[str]:
     return sorted(DISTANCES_DICT.keys())
 
 
-def get_distance_function(method: Union[str, DistanceFunction]) -> DistanceFunction:
+def get_distance_function(method: str | DistanceFunction) -> DistanceFunction:
     """Get the distance function for a given distance string or callable.
 
     =============== ========================================
@@ -578,7 +579,7 @@ def get_distance_function(method: Union[str, DistanceFunction]) -> DistanceFunct
 
 
 def get_pairwise_distance_function(
-    method: Union[str, PairwiseFunction],
+    method: str | PairwiseFunction,
 ) -> PairwiseFunction:
     """Get the pairwise distance function for a given method string or callable.
 
@@ -741,7 +742,7 @@ def get_cost_matrix_function(method: str) -> CostMatrixFunction:
     return _resolve_key_from_distance(method, "cost_matrix")
 
 
-def _resolve_key_from_distance(method: Union[str, Callable], key: str) -> Any:
+def _resolve_key_from_distance(method: str | Callable, key: str) -> Any:
     if isinstance(method, Callable):
         return method
     if method == "mpdist":

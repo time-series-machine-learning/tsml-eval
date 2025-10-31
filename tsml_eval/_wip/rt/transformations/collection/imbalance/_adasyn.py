@@ -2,6 +2,8 @@
 
 from typing import Optional, Union
 
+from collections.abc import Callable
+
 import numpy as np
 from sklearn import clone
 
@@ -29,9 +31,9 @@ class ADASYN(SMOTE):
     def __init__(
         self,
         n_neighbors=5,
-        distance: Union[str, callable] = "euclidean",
-        distance_params: Optional[dict] = None,
-        weights: Union[str, callable] = "uniform",
+        distance: str | Callable = "euclidean",
+        distance_params: dict | None = None,
+        weights: str | Callable = "uniform",
         n_jobs: int = 1,
         random_state=None,
     ):
@@ -64,7 +66,7 @@ class ADASYN(SMOTE):
             ratio_nn = np.sum(y[nns] != class_sample, axis=1) / n_neighbors
             if not np.sum(ratio_nn):
                 raise RuntimeError(
-                    "Not any neigbours belong to the majority"
+                    "Not any neighbours belong to the majority"
                     " class. This case will induce a NaN case"
                     " with a division by zero. ADASYN is not"
                     " suited for this specific dataset."

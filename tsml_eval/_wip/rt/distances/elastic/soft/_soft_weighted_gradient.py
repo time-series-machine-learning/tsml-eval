@@ -29,8 +29,8 @@ def gradient_weighted_distance(
     y: np.ndarray,
     soft_method: str = "soft_dtw",
     gamma: float = 1.0,
-    window: Optional[float] = None,
-    itakura_max_slope: Optional[float] = None,
+    window: float | None = None,
+    itakura_max_slope: float | None = None,
     **kwargs,
 ) -> float:
     if x.ndim == 1 and y.ndim == 1:
@@ -70,8 +70,8 @@ def _gradient_weighted_distance(
     reach: int = 15,
     warp_penalty: float = 1.0,
     transformation_precomputed: bool = False,
-    transformed_x: Optional[np.ndarray] = None,
-    transformed_y: Optional[np.ndarray] = None,
+    transformed_x: np.ndarray | None = None,
+    transformed_y: np.ndarray | None = None,
 ) -> float:
     x_size = x.shape[1]
     y_size = y.shape[1]
@@ -188,12 +188,12 @@ def _gradient_weighted_distance(
 
 @threaded
 def gradient_weighted_pairwise_distance(
-    X: Union[np.ndarray, list[np.ndarray]],
-    y: Optional[Union[np.ndarray, list[np.ndarray]]] = None,
+    X: np.ndarray | list[np.ndarray],
+    y: np.ndarray | list[np.ndarray] | None = None,
     soft_method: str = "soft_dtw",
     gamma: float = 1.0,
-    window: Optional[float] = None,
-    itakura_max_slope: Optional[float] = None,
+    window: float | None = None,
+    itakura_max_slope: float | None = None,
     n_jobs: int = 1,
     **kwargs,
 ) -> np.ndarray:
@@ -234,8 +234,8 @@ def _gradient_weighted_pairwise_distance(
     X: NumbaList[np.ndarray],
     soft_method: str,
     gamma: float,
-    window: Optional[float],
-    itakura_max_slope: Optional[float],
+    window: float | None,
+    itakura_max_slope: float | None,
     unequal_length: bool,
     g: float = 0.0,
     nu: float = 0.001,
@@ -245,8 +245,8 @@ def _gradient_weighted_pairwise_distance(
     reach: int = 15,
     warp_penalty: float = 1.0,
     transformation_precomputed: bool = False,
-    transformed_x: Optional[np.ndarray] = None,
-    transformed_y: Optional[np.ndarray] = None,
+    transformed_x: np.ndarray | None = None,
+    transformed_y: np.ndarray | None = None,
 ) -> np.ndarray:
     n_cases = len(X)
     distances = np.zeros((n_cases, n_cases))
@@ -302,8 +302,8 @@ def _gradient_weighted_from_multiple_to_multiple_distance(
     y: NumbaList[np.ndarray],
     soft_method: str,
     gamma: float,
-    window: Optional[float],
-    itakura_max_slope: Optional[float],
+    window: float | None,
+    itakura_max_slope: float | None,
     unequal_length: bool,
     g: float = 0.0,
     nu: float = 0.001,
@@ -313,8 +313,8 @@ def _gradient_weighted_from_multiple_to_multiple_distance(
     reach: int = 15,
     warp_penalty: float = 1.0,
     transformation_precomputed: bool = False,
-    transformed_x: Optional[np.ndarray] = None,
-    transformed_y: Optional[np.ndarray] = None,
+    transformed_x: np.ndarray | None = None,
+    transformed_y: np.ndarray | None = None,
 ) -> np.ndarray:
     n_cases_x = len(x)
     n_cases_y = len(y)

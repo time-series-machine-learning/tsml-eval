@@ -48,7 +48,7 @@ script_file_path="$local_path/tsml-eval/tsml_eval/experiments/regression_experim
 # Separate environments for GPU and CPU are recommended
 env_name="tsml-eval-gpu"
 
-# Regressors to loop over. Must be seperated by a space
+# Regressors to loop over. Must be separated by a space
 # See list of potential regressors in set_regressor
 regressors_to_run="CNNRegressor"
 
@@ -102,7 +102,7 @@ array_jobs=""
 for (( i=start_fold-1; i<max_folds; i++ ))
 do
     if [ -f "${results_dir}${regressor}/Predictions/${dataset}/testResample${i}.csv" ]; then
-        if [ "${generate_train_files}" == "true" ] && ! [ -f "${results_dir}${regressor}/Predictions/${dataset}/trainResample${i}.csv" ]; then
+        if [ "${generate_train_files}" == "-tr" ] && ! [ -f "${results_dir}${regressor}/Predictions/${dataset}/trainResample${i}.csv" ]; then
             array_jobs="${array_jobs}${array_jobs:+,}$((i + 1))"
         fi
     else
@@ -112,7 +112,7 @@ done
 
 if [ "${array_jobs}" != "" ]; then
 
-# This creates the scrip to run the job based on the info above
+# This creates the script to run the job based on the info above
 echo "#!/bin/bash
 #SBATCH --qos=gpu-rtx #gpu-rtx-reserved
 #SBATCH --gres=gpu:1
