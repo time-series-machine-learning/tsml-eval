@@ -20,9 +20,16 @@ iridis_version="5"
 # The number of tasks/threads to use in each job. 40 is the number of cores on batch nodes
 n_tasks_per_node=40
 
+# The number of threads per task. Usually 1 unless using a regressor that can multithread internally 
+# use with threaded_regression_experiments.py
+n_threads_per_task=1
+
 # The number of cores to request from the node. Don't go over the number of cores for the node. 40 is the number of cores on batch nodes
 # If you are not using the whole node, please make sure you are requesting memory correctly
 max_cpus_to_use=40
+
+# MB for jobs, increase incrementally and try not to use more than you need. If you need hundreds of GB consider the huge memory queue
+max_memory=8000
 
 # Create a separate submission list for each regressor. This will stop the mixing of
 # large and small jobs in the same node, but results in some smaller scripts submitted
@@ -54,6 +61,7 @@ relative_script_file_path="tsml-eval/tsml_eval/experiments/forecasting_experimen
 # Environment name, change accordingly, for set up, see https://github.com/time-series-machine-learning/tsml-eval/blob/main/_tsml_research_resources/soton/iridis/iridis_python.md
 # Separate environments for GPU and CPU are recommended #regress_gpu regression_experiments
 # env_name="regression_experiments"
+container_path="scratch/tensorflow_sandbox/"
 
 # Regressors to loop over. Must be seperated by a space. Different regressors will not run in the same node
 # See list of potential regressors in set_regressor  InceptionTimeRegressor
@@ -137,7 +145,7 @@ fi
 if [ "${iridis_version}" == "5" ]; then
     taskfarm_file_path="staskfarm"
 else
-    taskfarm_file_path="$local_path/tsml-eval/_tsml_research_resources/soton/iridis/batch_scripts/staskfarm.sh"
+    taskfarm_file_path="$local_path/tsml-eval/_tsml_research_resources/soton/iridis/staskfarm.sh"
 fi
 
 # The python script we are running
@@ -184,6 +192,14 @@ else
     cpuCount=$cmdCount
 fi
 
+if [ "${gpu_job}" == "true" ]; then
+    environment_instructions="module load apptainer/1.3.3"
+    apptainer_instruction="apptainer exec --nv ${container_path} echo "Running Apptainer job."; "
+else
+    environment_instructions="module load $conda_instruction && source activate $env_name"
+    apptainer_instruction=""
+fi
+
 echo "#!/bin/bash
 ${gpu_instruction}
 #SBATCH --mail-type=${mail}
@@ -195,12 +211,13 @@ ${gpu_instruction}
 #SBATCH -e ${out_dir}/%A-${dt}.err
 #SBATCH --nodes=1
 #SBATCH --ntasks=${cpuCount}
-#SBATCH --mem=80G
+#SBATCH --mem=${max_memory}M
 
 . /etc/profile
 
-module load $conda_instruction
-source activate $env_name
+${environment_instructions}
+
+
 
 ${taskfarm_file_path} ${out_dir}/generatedCommandList-${dt}.txt" > generatedSubmissionFile-${dt}.sub
 
@@ -266,7 +283,7 @@ done
 for resample in $resamples_to_run; do
 
 # add to the command list if
-if ((cmdCount>=n_tasks_per_node)); then
+if ((cmdCount>(n_tasks_per_node-n_threads_per_task))); then
     submit_jobs
 
     # This is the loop to stop you from dumping everything in the queue at once, see max_num_submitted jobs
@@ -286,9 +303,9 @@ fi
 
 # Input args to the default classification_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/classification_experiments.py
-echo "python -u ${full_script_file_path} ${data_dir} ${results_dir} ${regressor} ${dataset} ${resample} ${generate_train_files} ${predefined_folds} ${normalise_data} > ${out_dir}/${regressor}/output-${dataset}-${resample}-${dt}.txt 2>&1" >> ${out_dir}/generatedCommandList-${dt}.txt
+echo "${apptainer_instruction}python -u ${full_script_file_path} ${data_dir} ${results_dir} ${regressor} ${dataset} ${resample} ${generate_train_files} ${predefined_folds} ${normalise_data} > ${out_dir}/${regressor}/output-${dataset}-${resample}-${dt}.txt 2>&1" >> ${out_dir}/generatedCommandList-${dt}.txt
 
-((cmdCount++))
+((cmdCount=cmdCount+n_threads_per_task))
 ((totalCount++))
 
 done
