@@ -133,7 +133,7 @@ else
     local_path="/home/$username"
 fi
 
-# staskfarm doesn't exist on iridis6 or iridisX 
+# staskfarm doesn't exist on iridis6 or iridisX
 if [ "${iridis_version}" == "5" ]; then
     taskfarm_file_path="staskfarm"
 else
