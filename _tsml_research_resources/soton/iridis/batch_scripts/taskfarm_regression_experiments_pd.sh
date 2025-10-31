@@ -67,8 +67,8 @@ fi
 env_name="regression_experiments"
 
 # Regressors to loop over. Must be seperated by a space. Different regressors will not run in the same node
-# See list of potential regressors in set_regressor  
-regressors_to_run="Ridge" # RocketRegressor MultiRocketRegressor TimeCNNRegressor 1nn-ed 1nn-dtw 5nn-ed 5nn-dtw FreshPRINCERegressor DrCIFRegressor TimeSeriesForestRegressor SVR RandomForestRegressor RotationForestRegressor xgboost FCNRegressor fpcregressor fpcr-b-spline InceptionTimeRegressor IndividualInceptionRegressor ResNetRegressor ETSForecaster AutoETSForecaster AutoARIMA AutoSARIMA  NaiveForecaster SktimeETS StatsForecastETS 
+# See list of potential regressors in set_regressor
+regressors_to_run="Ridge" # RocketRegressor MultiRocketRegressor TimeCNNRegressor 1nn-ed 1nn-dtw 5nn-ed 5nn-dtw FreshPRINCERegressor DrCIFRegressor TimeSeriesForestRegressor SVR RandomForestRegressor RotationForestRegressor xgboost FCNRegressor fpcregressor fpcr-b-spline InceptionTimeRegressor IndividualInceptionRegressor ResNetRegressor ETSForecaster AutoETSForecaster AutoARIMA AutoSARIMA  NaiveForecaster SktimeETS StatsForecastETS
 
 # You can add extra arguments here. See tsml_eval/utils/arguments.py parse_args
 # You will have to add any variable to the python call close to the bottom of the script

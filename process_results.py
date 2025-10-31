@@ -66,7 +66,6 @@ if __name__ == "__main__":
             "pd-DrCIFRegressor",
             # "pd-RandomForestRegressor",
             # "pd-xgboost",
-
         ],
         "../aeon/aeon/datasets/local_data/forecasting/windowed_series.txt",
         "../Plots/Comparisons",

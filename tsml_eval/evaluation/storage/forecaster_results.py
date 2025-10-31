@@ -213,7 +213,7 @@ class ForecasterResults(EstimatorResults):
             self.mean_absolute_percentage_error = mean_absolute_percentage_error(
                 self.target_labels, self.predictions
             )
-        
+
         if self.mean_absolute_squared_error is None or overwrite:
             self.mean_absolute_squared_error = mean_squared_error(
                 self.target_labels, self.predictions
