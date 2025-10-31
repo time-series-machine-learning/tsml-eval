@@ -1,7 +1,12 @@
 #!/bin/bash
 # Check and edit all options before the first run!
 # While reading is fine, please dont write anything to the default directories in this script
-
+set -eu
+# ======================================================================================
+# 	Default experiment configuration start
+#   Create your own config.local or pass in --config <config_file> to override these settings
+#   Use config.local.example as a template
+# ======================================================================================
 # Start and end for resamples
 max_folds=10
 start_fold=1
@@ -11,17 +16,6 @@ max_num_submitted=900
 
 gpu_job="false"
 iridis_version="5"
-
-# Queue options are https://sotonac.sharepoint.com/teams/HPCCommunityWiki/SitePages/Iridis%205%20Job-submission-and-Limits-Quotas.aspx
-if [ "${gpu_job}" == "true" ]; then
-    if [ "${iridis_version}" == "5" ]; then
-        queue="gpu"
-    else
-        queue="a100"
-    fi
-else
-    queue="batch"
-fi
 
 # The number of tasks/threads to use in each job. 40 is the number of cores on batch nodes
 n_tasks_per_node=40
@@ -37,9 +31,7 @@ max_cpus_to_use=40
 split_regressors="true"
 
 # Enter your username and email here
-username="arb1g19"
 mail="NONE"
-mailto=$username"@soton.ac.uk"
 
 # Max allowable is 60 hours
 max_time="60:00:00"
@@ -47,38 +39,25 @@ max_time="60:00:00"
 # Start point for the script i.e. 3 datasets, 3 regressorss = 9 experiments to submit, start_point=5 will skip to job 5
 start_point=1
 
-# Put your home directory here
-if [ "${iridis_version}" == "5" ]; then
-    local_path="/ECShome/$username"
-else
-    local_path="/home/$username"
-fi
-
 # Datasets to use and directory of data files. This can either be a text file or directory of text files
 # Separate text files will not run jobs of the same dataset in the same node. This is good to keep large and small datasets separate
-data_dir="$local_path/Data/forecasting"
-dataset_list="$local_path/Data/windowed_series.txt"
+relative_data_dir="Data/forecasting"
+relative_dataset_list="Data/windowed_series.txt"
 
 # Results and output file write location. Change these to reflect your own file structure
-results_dir="$local_path/RegressionResults/results/"
-out_dir="$local_path/RegressionResults/output/"
+relative_results_dir="RegressionResults/results/"
+relative_out_dir="RegressionResults/output/"
 
 # The python script we are running
-script_file_path="$local_path/tsml-eval/tsml_eval/experiments/forecasting_experiments.py"
-
-if [ "${iridis_version}" == "5" ]; then
-    taskfarm_file_path="staskfarm"
-else
-    taskfarm_file_path="$local_path/tsml-eval/_tsml_research_resources/soton/iridis/batch_scripts/staskfarm.sh"
-fi
+relative_script_file_path="tsml-eval/tsml_eval/experiments/forecasting_experiments.py"
 
 # Environment name, change accordingly, for set up, see https://github.com/time-series-machine-learning/tsml-eval/blob/main/_tsml_research_resources/soton/iridis/iridis_python.md
 # Separate environments for GPU and CPU are recommended #regress_gpu regression_experiments
-env_name="regression_experiments"
+# env_name="regression_experiments"
 
 # Regressors to loop over. Must be seperated by a space. Different regressors will not run in the same node
 # See list of potential regressors in set_regressor  InceptionTimeRegressor
-regressors_to_run="ETSForecaster, AutoETSForecaster, SktimeETS, StatsForecastETS" # RocketRegressor MultiRocketRegressor ResNetRegressor fpcregressor fpcr-b-spline TimeCNNRegressor FCNRegressor 1nn-ed 1nn-dtw 5nn-ed 5nn-dtw FreshPRINCERegressor TimeSeriesForestRegressor DrCIFRegressor Ridge SVR RandomForestRegressor RotationForestRegressor xgboost
+# regressors_to_run="ETSForecaster, AutoETSForecaster, SktimeETS, StatsForecastETS" # RocketRegressor MultiRocketRegressor ResNetRegressor fpcregressor fpcr-b-spline TimeCNNRegressor FCNRegressor 1nn-ed 1nn-dtw 5nn-ed 5nn-dtw FreshPRINCERegressor TimeSeriesForestRegressor DrCIFRegressor Ridge SVR RandomForestRegressor RotationForestRegressor xgboost
 
 # You can add extra arguments here. See tsml_eval/utils/arguments.py parse_args
 # You will have to add any variable to the python call close to the bottom of the script
@@ -92,12 +71,86 @@ predefined_folds="false"
 
 # Normalise data before fit/predict
 normalise_data="false"
-
-
 # ======================================================================================
 # 	Experiment configuration end
 # ======================================================================================
 
+# ======================================================================================
+# 	Read in config files and CLI args
+# ======================================================================================
+
+# Helper
+maybe_source() { [ -f "$1" ] && . "$1"; }
+
+# Resolve script dir
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+
+# 1) Load configs in increasing priority
+maybe_source "$SCRIPT_DIR/../../config.default"
+maybe_source "$SCRIPT_DIR/../../config.local"
+
+# 2) Parse CLI overrides (highest priority)
+CONFIG_FILE=""
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --config) CONFIG_FILE=$2; shift 2 ;;
+    --regressors_to_run) regressors_to_run=$2; shift 2 ;;
+    --debug) DEBUG=1; shift ;;
+    --) shift; break ;;
+    *) echo "Unknown option: $1" >&2; exit 2 ;;
+  esac
+done
+[ -n "${CONFIG_FILE:-}" ] && maybe_source "$CONFIG_FILE"
+
+# 3) Validate required vars
+: "${username:?Set username in config file}"
+: "${env_name:?Set env_name in config file}"
+: "${regressors_to_run:?Set regressors_to_run in config file or CLI}"
+
+[ "$DEBUG" = "1" ] && echo "Running $regressors_to_run"
+
+# ======================================================================================
+# 	Read in config files and CLI args
+# ======================================================================================
+
+mailto=$username"@soton.ac.uk"
+
+# Queue options are https://sotonac.sharepoint.com/teams/HPCCommunityWiki/SitePages/Iridis%205%20Job-submission-and-Limits-Quotas.aspx
+if [ "${gpu_job}" == "true" ]; then
+    if [ "${iridis_version}" == "5" ]; then
+        queue="gpu"
+    else
+        queue="a100"
+    fi
+else
+    queue="batch"
+fi
+
+# Different home paths on iridis5 and iridis6/iridisX
+if [ "${iridis_version}" == "5" ]; then
+    local_path="/ECShome/$username"
+else
+    local_path="/home/$username"
+fi
+
+# staskfarm doesn't exist on iridis6 or iridisX 
+if [ "${iridis_version}" == "5" ]; then
+    taskfarm_file_path="staskfarm"
+else
+    taskfarm_file_path="$local_path/tsml-eval/_tsml_research_resources/soton/iridis/batch_scripts/staskfarm.sh"
+fi
+
+# The python script we are running
+full_script_file_path="$local_path/$relative_script_file_path"
+
+# Datasets to use and directory of data files. This can either be a text file or directory of text files
+# Separate text files will not run jobs of the same dataset in the same node. This is good to keep large and small datasets separate
+data_dir="$local_path/$relative_data_dir"
+dataset_list="$local_path/$relative_dataset_list"
+
+# Results and output file write location.
+results_dir="$local_path/$relative_results_dir"
+out_dir="$local_path/$relative_out_dir"
 
 # Set to -tr to generate test files
 generate_train_files=$([ "${generate_train_files,,}" == "true" ] && echo "-tr" || echo "")
@@ -229,7 +282,7 @@ fi
 
 # Input args to the default classification_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/classification_experiments.py
-echo "python -u ${script_file_path} ${data_dir} ${results_dir} ${regressor} ${dataset} ${resample} ${generate_train_files} ${predefined_folds} ${normalise_data}" >> ${out_dir}/generatedCommandList-${dt}.txt
+echo "python -u ${full_script_file_path} ${data_dir} ${results_dir} ${regressor} ${dataset} ${resample} ${generate_train_files} ${predefined_folds} ${normalise_data}" >> ${out_dir}/generatedCommandList-${dt}.txt
 
 ((cmdCount++))
 ((totalCount++))

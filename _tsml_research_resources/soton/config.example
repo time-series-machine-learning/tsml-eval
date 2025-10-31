@@ -1,0 +1,10 @@
+username="arb1g19"
+gpu_job="false"
+iridis_version="5"
+env_name="regression_experiments"
+max_folds=1
+relative_script_file_path="tsml-eval/tsml_eval/experiments/forecasting_experiments.py"
+relative_data_dir="Data/forecasting"
+relative_dataset_list="Data/windowed_series.txt"
+relative_results_dir="RegressionResults/results/"
+relative_out_dir="RegressionResults/output/"

@@ -144,6 +144,7 @@ local.py
 local_code/
 local_code.py
 debug.py
+*.local*
 
 # MacOs files
 .DS_Store
