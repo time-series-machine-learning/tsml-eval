@@ -27,8 +27,8 @@ from aeon.benchmarking.metrics.clustering import clustering_accuracy_score
 from aeon.classification import BaseClassifier
 from aeon.clustering import BaseClusterer
 from aeon.forecasting import BaseForecaster
-from aeon.transformations.series import TrainTestTransformer
 from aeon.regression.base import BaseRegressor
+from aeon.transformations.series import TrainTestTransformer
 from aeon.utils.validation import get_n_cases
 from sklearn import preprocessing
 from sklearn.base import BaseEstimator, is_classifier, is_regressor
@@ -1227,7 +1227,9 @@ def run_forecasting_experiment(
         - start
         + int(round(getattr(forecaster, "_predict_time_milli", 0)))
     )
-    test_preds = test_preds.flatten()[:-1]  # Remove last value as we have no actual data for it
+    test_preds = test_preds.flatten()[
+        :-1
+    ]  # Remove last value as we have no actual data for it
 
     test_mape = mean_absolute_percentage_error(test, test_preds)
 
@@ -1315,7 +1317,7 @@ def load_and_run_forecasting_experiment(
         attribute_file_path = f"{results_path}/{forecaster_name}/Workspace/{dataset}/"
     else:
         attribute_file_path = None
-    
+
     tmpdir = tempfile.mkdtemp()
     dataset = load_forecasting(dataset, tmpdir)
     series = (
@@ -1324,6 +1326,7 @@ def load_and_run_forecasting_experiment(
         .to_numpy()
     )
     from aeon.transformations.series import TrainTestTransformer
+
     dataset = f"{dataset}_{series_name}"
     train, test = TrainTestTransformer().fit_transform(series)
     train = train.astype(float).to_numpy()

@@ -3,9 +3,9 @@
 __maintainer__ = ["MatthewMiddlehurst"]
 
 from aeon.forecasting import (
-    AutoSARIMAForecaster,
     AutoARIMAForecaster,
     AutoETSForecaster,
+    AutoSARIMAForecaster,
     ETSForecaster,
     NaiveForecaster,
 )
