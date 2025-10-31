@@ -177,6 +177,7 @@ fi
 
 # This creates the submission file to run and does clean up
 submit_jobs () {
+
 if ((cmdCount>=max_cpus_to_use)); then
     cpuCount=$max_cpus_to_use
 else
@@ -193,7 +194,8 @@ ${gpu_instruction}
 #SBATCH -o ${out_dir}/%A-${dt}.out
 #SBATCH -e ${out_dir}/%A-${dt}.err
 #SBATCH --nodes=1
-#SBATCH --ntasks=${cmdCount}
+#SBATCH --ntasks=${cpuCount}
+#SBATCH --mem=80G
 
 . /etc/profile
 
@@ -212,6 +214,7 @@ rm generatedSubmissionFile-${dt}.sub
 
 totalCount=0
 expCount=0
+dt=$(date +%Y%m%d%H%M%S)
 
 # turn a directory of files into a list
 if [[ -d $dataset_list ]]; then
@@ -247,6 +250,7 @@ while read dataset; do
 if ((expCount>=start_point)); then
 
 # This finds the resamples to run and skips jobs which have test/train files already written to the results directory.
+# This can result in uneven sized command lists
 resamples_to_run=""
 for (( i=start_fold-1; i<max_folds; i++ ))
 do
@@ -270,7 +274,7 @@ if ((cmdCount>=n_tasks_per_node)); then
     echo "Number of Jobs currently running on the cluster: ${num_jobs}"
     while [ "${num_jobs}" -ge "${max_num_submitted}" ]
     do
-        echo Waiting 60s, "${num_jobs}" currently submitted on ${queue}, user-defined max is ${max_num_submitted}
+        echo Waiting 60s, ${num_jobs} currently submitted on ${queue}, user-defined max is ${max_num_submitted}
         sleep 60
         num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue}" -e "PD ${queue}" | wc -l)
     done
@@ -282,7 +286,7 @@ fi
 
 # Input args to the default classification_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/classification_experiments.py
-echo "python -u ${full_script_file_path} ${data_dir} ${results_dir} ${regressor} ${dataset} ${resample} ${generate_train_files} ${predefined_folds} ${normalise_data}" >> ${out_dir}/generatedCommandList-${dt}.txt
+echo "python -u ${full_script_file_path} ${data_dir} ${results_dir} ${regressor} ${dataset} ${resample} ${generate_train_files} ${predefined_folds} ${normalise_data} > ${out_dir}/${regressor}/output-${dataset}-${resample}-${dt}.txt 2>&1" >> ${out_dir}/generatedCommandList-${dt}.txt
 
 ((cmdCount++))
 ((totalCount++))
@@ -302,6 +306,7 @@ if [[ "${split_regressors,,}" != "true" && $cmdCount -gt 0 ]]; then
     # final submit for this dataset list
     submit_jobs
 fi
+
 done
 
 echo Finished submitting jobs
