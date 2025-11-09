@@ -10,7 +10,7 @@ from sklearn.metrics import (
 )
 
 from tsml_eval.evaluation.storage.estimator_results import EstimatorResults
-from tsml_eval.utils.results_writing import write_regression_results
+from tsml_eval.utils.results_writing import regression_results_third_line, write_results_to_tsml_format
 
 
 class RegressorResults(EstimatorResults):
@@ -180,8 +180,18 @@ class RegressorResults(EstimatorResults):
             self.mean_squared_error = mean_squared_error(
                 self.target_labels, self.predictions
             )
-
-        write_regression_results(
+        third_line = regression_results_third_line(
+            mape=self.mean_absolute_percentage_error,
+            mse=self.mean_squared_error,
+            fit_time=self.fit_time,
+            predict_time=self.predict_time,
+            benchmark_time=self.benchmark_time,
+            memory_usage=self.memory_usage,
+            train_estimate_method=self.train_estimate_method,
+            train_estimate_time=self.train_estimate_time,
+            fit_and_estimate_time=self.fit_and_estimate_time,
+        )
+        write_results_to_tsml_format(
             self.predictions,
             self.target_labels,
             self.estimator_name,
@@ -192,15 +202,8 @@ class RegressorResults(EstimatorResults):
             resample_id=self.resample_id,
             time_unit=self.time_unit,
             first_line_comment=self.description,
-            parameter_info=self.parameter_info,
-            mse=self.mean_squared_error,
-            fit_time=self.fit_time,
-            predict_time=self.predict_time,
-            benchmark_time=self.benchmark_time,
-            memory_usage=self.memory_usage,
-            train_estimate_method=self.train_estimate_method,
-            train_estimate_time=self.train_estimate_time,
-            fit_and_estimate_time=self.fit_and_estimate_time,
+            second_line=self.parameter_info,
+            third_line=third_line,
         )
 
     def load_from_file(self, file_path, verify_values=True):

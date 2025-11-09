@@ -4,15 +4,14 @@ __maintainer__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 __all__ = [
     "write_classification_results",
-    "write_regression_results",
     "write_clustering_results",
-    "write_forecasting_results",
     "write_results_to_tsml_format",
 ]
 
 import os
 
 import numpy as np
+from sklearn.metrics import mean_absolute_percentage_error, mean_squared_error
 
 
 def write_classification_results(
@@ -147,21 +146,50 @@ def write_classification_results(
         third_line=third_line,
     )
 
+def results_third_line(
+    y=None,
+    preds=None,
+    fit_time=-1,
+    predict_time=-1,
+    benchmark_time=-1,
+    memory_usage=-1,
+):
+    """Create the third line for forecasting results files.
 
-def write_regression_results(
-    predictions,
-    labels,
-    regressor_name,
-    dataset_name,
-    file_path,
-    full_path=True,
-    first_line_regressor_name=None,
-    split=None,
-    resample_id=None,
-    time_unit="N/A",
-    first_line_comment=None,
-    parameter_info="No Parameter Info",
-    mse=-1,
+    Parameters
+    ----------
+    y: np.array, default=None
+        The true data
+    preds: np.array, default=None
+        The predicted data
+    fit_time : int, default=-1
+        The time taken to fit the estimator.
+    predict_time : int, default=-1
+        The time taken to predict the labels.
+    benchmark_time : int, default=-1
+        A benchmark time for the hardware used to scale other timings.
+    memory_usage : int, default=-1
+        The memory usage of the estimator.
+    """
+    mape = -1
+    mse = -1
+    if y is not None and preds is not None:
+        # The mean absolute percentage error of the predictions.
+        mape = mean_absolute_percentage_error(y, preds)
+        # The mean squared error of the predictions.
+        mse = mean_squared_error(y, preds)
+    return (
+        f"{mape},"
+        f"{mse},"
+        f"{fit_time},"
+        f"{predict_time},"
+        f"{benchmark_time},"
+        f"{memory_usage}"
+    )
+
+def regression_results_third_line(
+    y=None,
+    preds=None,
     fit_time=-1,
     predict_time=-1,
     benchmark_time=-1,
@@ -170,61 +198,28 @@ def write_regression_results(
     train_estimate_time=-1,
     fit_and_estimate_time=-1,
 ):
-    """Write the predictions for a regression experiment in the format used by tsml.
+    """Create the third line for regression results files.
 
     Parameters
     ----------
-    predictions : np.array
-        The predicted values to write to file. Must be the same length as labels.
-    labels : np.array
-        The actual label values written to file with the predicted values.
-    regressor_name : str
-        Name of the regressor that made the predictions. Written to file and can
-        determine file structure if full_path is False.
-    dataset_name : str
-        Name of the problem the regressor was built on.
-    file_path : str
-        Path to write the results file to or the directory to build the default file
-        structure if full_path is False.
-    full_path : boolean, default=True
-        If True, results are written directly to the directory passed in file_path.
-        If False, then a standard file structure using the regressor and dataset names
-        is created and used to write the results file.
-    first_line_regressor_name : str or None, default=None
-        Alternative name for the regressor to be written to the file. If None, the
-        regressor_name is used. Useful if full_path is False and extra information is
-        wanted in the regressor name (i.e. and alias and class name)
-    split : str or None, default=None
-        Either None, 'TRAIN' or 'TEST'. Influences the result file name and first line
-        of the file.
-    resample_id : int or None, default=None
-        Indicates what random seed was used to resample the data or used as a
-        random_state for the regressor.
-    time_unit : str, default="N/A"
-        The format used for timings in the file, i.e. 'Seconds', 'Milliseconds',
-        'Nanoseconds'
-    first_line_comment : str or None, default=None
-        Optional comment appended to the end of the first line, i.e. the file used to
-        generate the results.
-    parameter_info : str, default="No Parameter Info"
-        Unstructured estimator dependent information, i.e. estimator parameters or
-        values from the model build.
-    mse: float, default=-1
-        The mean squared error of the predictions.
+    y: np.array, default=None
+        The true data
+    preds: np.array, default=None
+        The predicted data
     fit_time : int, default=-1
-        The time taken to fit the regressor.
+        The time taken to fit the estimator.
     predict_time : int, default=-1
-        The time taken to predict the regression labels.
+        The time taken to predict the labels.
     benchmark_time : int, default=-1
         A benchmark time for the hardware used to scale other timings.
     memory_usage : int, default=-1
-        The memory usage of the regressor.
+        The memory usage of the estimator.
     train_estimate_method : str, default=""
         The method used to generate predictions for results on training data.
     train_estimate_time : int, default=-1
         The time taken to generate predictions for results on training data.
     fit_and_estimate_time : int, default=-1
-        The time taken to fit the regressor to build and generate predictions for
+        The time taken to fit the estimator to build and generate predictions for
         results on training data.
 
         This is not necessarily always going to be fit_time + train_estimate_time,
@@ -232,33 +227,20 @@ def write_regression_results(
         included in the train_estimate_time value. In this case fit_time +
         train_estimate_time would time fitting the model twice.
     """
-    third_line = (
-        f"{mse},"
-        f"{fit_time},"
-        f"{predict_time},"
-        f"{benchmark_time},"
-        f"{memory_usage},"
+    base_third_line = results_third_line(
+        y=y,
+        preds=preds,
+        fit_time=fit_time,
+        predict_time=predict_time,
+        benchmark_time=benchmark_time,
+        memory_usage=memory_usage
+    )
+    return (
+        f"{base_third_line},"
         f"{train_estimate_method},"
         f"{train_estimate_time},"
         f"{fit_and_estimate_time}"
     )
-
-    write_results_to_tsml_format(
-        predictions,
-        labels,
-        regressor_name,
-        dataset_name,
-        file_path,
-        full_path=full_path,
-        first_line_estimator_name=first_line_regressor_name,
-        split=split,
-        resample_id=resample_id,
-        time_unit=time_unit,
-        first_line_comment=first_line_comment,
-        second_line=parameter_info,
-        third_line=third_line,
-    )
-
 
 def write_clustering_results(
     cluster_predictions,
@@ -378,104 +360,6 @@ def write_clustering_results(
         second_line=parameter_info,
         third_line=third_line,
     )
-
-
-def write_forecasting_results(
-    predictions,
-    labels,
-    forecaster_name,
-    dataset_name,
-    file_path,
-    full_path=True,
-    first_line_forecaster_name=None,
-    split=None,
-    random_seed=None,
-    time_unit="N/A",
-    first_line_comment=None,
-    parameter_info="No Parameter Info",
-    mape=-1,
-    mase=-1,
-    fit_time=-1,
-    predict_time=-1,
-    benchmark_time=-1,
-    memory_usage=-1,
-):
-    """Write the predictions for a forecasting experiment in the format used by tsml.
-
-    Parameters
-    ----------
-    predictions : np.array
-        The predicted values to write to file. Must be the same length as labels.
-    labels : np.array
-        The actual label values written to file with the predicted values.
-    forecaster_name : str
-        Name of the forecaster that made the predictions. Written to file and can
-        determine file structure if full_path is False.
-    dataset_name : str
-        Name of the problem the forecaster was built on.
-    file_path : str
-        Path to write the results file to or the directory to build the default file
-        structure if full_path is False.
-    full_path : boolean, default=True
-        If True, results are written directly to the directory passed in file_path.
-        If False, then a standard file structure using the forecaster and dataset names
-        is created and used to write the results file.
-    first_line_forecaster_name : str or None, default=None
-        Alternative name for the forecaster to be written to the file. If None, the
-        forecaster_name is used. Useful if full_path is False and extra information is
-        wanted in the forecaster name (i.e. and alias and class name)
-    split : str or None, default=None
-        Either None, 'TRAIN' or 'TEST'. Influences the result file name and first line
-        of the file.
-    random_seed : int or None, default=None
-        Indicates what random seed was used as a random_state for the forecaster.
-    time_unit : str, default="N/A"
-        The format used for timings in the file, i.e. 'Seconds', 'Milliseconds',
-        'Nanoseconds'
-    first_line_comment : str or None, default=None
-        Optional comment appended to the end of the first line, i.e. the file used to
-        generate the results.
-    parameter_info : str, default="No Parameter Info"
-        Unstructured estimator dependent information, i.e. estimator parameters or
-        values from the model build.
-    mape: float, default=-1
-        The mean absolute percentage error of the predictions.
-    mase: float, default=-1
-        The mean absolute percentage error of the predictions.
-    fit_time : int, default=-1
-        The time taken to fit the forecaster.
-    predict_time : int, default=-1
-        The time taken to predict the forecasting labels.
-    benchmark_time : int, default=-1
-        A benchmark time for the hardware used to scale other timings.
-    memory_usage : int, default=-1
-        The memory usage of the forecaster.
-    """
-    third_line = (
-        f"{mape},"
-        f"{mase},"
-        f"{fit_time},"
-        f"{predict_time},"
-        f"{benchmark_time},"
-        f"{memory_usage}"
-    )
-
-    write_results_to_tsml_format(
-        predictions,
-        labels,
-        forecaster_name,
-        dataset_name,
-        file_path,
-        full_path=full_path,
-        first_line_estimator_name=first_line_forecaster_name,
-        split=split,
-        resample_id=random_seed,
-        time_unit=time_unit,
-        first_line_comment=first_line_comment,
-        second_line=parameter_info,
-        third_line=third_line,
-    )
-
 
 def write_results_to_tsml_format(
     predictions,

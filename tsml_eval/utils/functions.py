@@ -7,6 +7,7 @@ __all__ = [
     "rank_array",
 ]
 
+import time
 import numpy as np
 
 
@@ -100,3 +101,8 @@ def rank_array(arr, higher_better=True):
         ranks = len(arr) + 1 - ranks
 
     return ranks
+
+def time_function(function, args=None, kwargs=None):
+    start = int(round(time.time() * 1000))
+    output = function(*args, **kwargs)
+    return int(round(time.time() * 1000)) - start, output
