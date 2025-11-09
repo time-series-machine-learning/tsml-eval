@@ -2,6 +2,16 @@
 
 __maintainer__ = ["MatthewMiddlehurst"]
 
+from aeon.forecasting import (
+    AutoARIMAForecaster,
+    AutoETSForecaster,
+    AutoSARIMAForecaster,
+    ETSForecaster,
+    NaiveForecaster,
+)
+from aeon.forecasting._sktime_autoets import SktimeAutoETSForecaster
+from aeon.forecasting._statsforecast_autoets import StatsForecastAutoETSForecaster
+
 from tsml_eval.utils.functions import str_in_nested_list
 
 deep_forecasters = [
@@ -16,7 +26,11 @@ stats_forecasters = [
     "autoarima",
     ["etsforecaster", "ets"],
     ["tarforecaster", "tar"],
+    ["autoetsforecaster", "autoets"],
+    ["autosarima", "sarima"],
     "autotar",
+    "sktimeets",
+    "statsforecastets",
     ["setarforecaster", "setar"],
     ["thetaforecaster", "theta"],
     ["tvpforecaster", "tvp"],
@@ -123,6 +137,16 @@ def _set_forecaster_stats(f, random_state, n_jobs, kwargs):
         from aeon.forecasting.stats import TVP
 
         return TVP(**kwargs)
+    elif f == "autoetsforecaster" or f == "autoets":
+        return AutoETSForecaster(**kwargs)
+    elif f == "sktimeets":
+        return SktimeAutoETSForecaster(**kwargs)
+    elif f == "statsforecastets":
+        return StatsForecastAutoETSForecaster(**kwargs)
+    elif f == "autosarima" or f == "sarima":
+        return AutoSARIMAForecaster(**kwargs)
+    elif f == "autoarima":
+        return AutoARIMAForecaster(**kwargs)
 
 
 def _set_forecaster_regression(f, random_state, n_jobs, kwargs):

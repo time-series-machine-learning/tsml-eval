@@ -16,6 +16,7 @@ __all__ = [
 ]
 
 import os
+import tempfile
 import time
 import warnings
 from datetime import datetime
@@ -25,8 +26,9 @@ import pandas as pd
 from aeon.benchmarking.metrics.clustering import clustering_accuracy_score
 from aeon.classification import BaseClassifier
 from aeon.clustering import BaseClusterer
-from aeon.forecasting import BaseForecaster
+from aeon.forecasting import BaseForecaster, RegressionForecaster
 from aeon.regression.base import BaseRegressor
+from aeon.transformations.series import TrainTestTransformer
 from aeon.utils.validation import get_n_cases
 from sklearn import preprocessing
 from sklearn.base import BaseEstimator, is_classifier, is_regressor
@@ -50,13 +52,15 @@ from tsml_eval.utils.experiments import (
     estimator_attributes_to_file,
     timing_benchmark,
 )
+from tsml_eval.utils.functions import time_function
 from tsml_eval.utils.memory_recorder import record_max_memory
 from tsml_eval.utils.resampling import resample_data, stratified_resample_data
 from tsml_eval.utils.results_writing import (
+    regression_results_third_line,
+    results_third_line,
     write_classification_results,
     write_clustering_results,
-    write_forecasting_results,
-    write_regression_results,
+    write_results_to_tsml_format,
 )
 
 MEMRECORD_ENV = os.getenv("MEMRECORD_INTERVAL")
@@ -440,28 +444,37 @@ def load_and_run_classification_experiment(
     )
 
 
-def run_regression_experiment(
-    X_train: np.ndarray | list,
-    y_train: np.ndarray,
-    X_test: np.ndarray | list,
-    y_test: np.ndarray,
-    regressor,
-    results_path,
-    regressor_name=None,
-    dataset_name="",
-    resample_id=None,
-    data_transforms=None,
-    build_test_file=True,
-    build_train_file=False,
-    ignore_custom_train_estimate=False,
-    attribute_file_path=None,
-    att_max_shape=0,
-    benchmark_time=True,
+def transform_input(
+    data_transforms,
+    x_train: np.ndarray,
+    x_test: np.ndarray,
+    y_train: np.ndarray = None,
+    y_test: np.ndarray = None,
 ):
-    """Run a regression experiment and save the results to file.
+    if data_transforms is not None:
+        if not isinstance(data_transforms, list):
+            data_transforms = [data_transforms]
 
-    Function to run a basic regression experiment for a
-    <dataset>/<regressor>/<resample> combination and write the results to csv file(s)
+        for transform in data_transforms:
+            x_train = transform.fit_transform(x_train, y_train)
+            x_test = transform.transform(x_test, y_test)
+    return x_train, x_test
+
+
+def cross_validate_train_data(estimator, y_train, X_train):
+    cv_size = min(10, len(y_train))
+    start = int(round(time.time() * 1000))
+    train_preds = cross_val_predict(estimator, X_train, y=y_train, cv=cv_size)
+    train_time = int(round(time.time() * 1000)) - start
+    train_estimate_method = f"{cv_size}F-CV"
+    return train_preds, train_time, train_estimate_method
+
+
+class Experiment:
+    """Run an experiment and save the results to file.
+
+    Function to run a basic experiment for a
+    <dataset>/<estimator>/<resample> combination and write the results to csv file(s)
     at a given location.
 
     Parameters
@@ -478,13 +491,13 @@ def run_regression_experiment(
     y_test : np.array
         Testing data class labels. One label per case in the testing data using the
         same ordering.
-    regressor : BaseRegressor
-        Regressor to be used in the experiment.
+    estimator : BaseRegressor
+        Estimator to be used in the experiment.
     results_path : str
         Location of where to write results. Any required directories will be created.
-    regressor_name : str or None, default=None
-        Name of regressor used in writing results. If None, the name is taken from
-        the regressor.
+    estimator_name : str or None, default=None
+        Name of estimator used in writing results. If None, the name is taken from
+        the estimator.
     dataset_name : str, default="N/A"
         Name of dataset.
     resample_id : int or None, default=None
@@ -496,11 +509,11 @@ def run_regression_experiment(
         If None, no transformation is applied.
         Calls fit_transform on the training data and transform on the test data.
     build_test_file : bool, default=True:
-        Whether to generate test files or not. If the regressor can generate its own
+        Whether to generate test files or not. If the estimator can generate its own
         train predictions, the classifier will be built but no file will be output.
     build_train_file : bool, default=False
         Whether to generate train files or not. If true, it performs a 10-fold
-        cross-validation on the train data and saves. If the regressor can produce its
+        cross-validation on the train data and saves. If the estimator can produce its
         own estimates, those are used instead.
     ignore_custom_train_estimate : bool, default=False
         todo
@@ -512,150 +525,298 @@ def run_regression_experiment(
         Whether to benchmark the hardware used with a simple function and write the
         results. This will typically take ~2 seconds, but is hardware dependent.
     """
-    if not build_test_file and not build_train_file:
-        raise ValueError(
-            "Both test_file and train_file are set to False. "
-            "At least one must be written."
+
+    def __init__(
+        self,
+        estimator,
+        results_path,
+        estimator_name=None,
+        dataset_name="",
+        resample_id=None,
+        data_transforms=None,
+        overwrite=False,
+        build_train_file=False,
+        write_attributes=False,
+        att_max_shape=0,
+        benchmark_time=True,
+    ):
+        build_test_file, build_train_file = _check_existing_results(
+            results_path,
+            estimator_name,
+            dataset_name,
+            resample_id,
+            overwrite,
+            True,
+            build_train_file,
         )
 
-    if regressor_name is None:
-        regressor_name = type(regressor).__name__
+        if not build_test_file and not build_train_file:
+            warnings.warn(
+                "All files exist and not overwriting, skipping.", stacklevel=1
+            )
+            return None
 
-    use_fit_predict = False
-    if isinstance(regressor, BaseRegressor):
-        if not ignore_custom_train_estimate and regressor.get_tag(
-            "capability:train_estimate", False, False
-        ):
-            use_fit_predict = True
-    elif isinstance(regressor, BaseTimeSeriesEstimator) and is_regressor(regressor):
+        if write_attributes:
+            attribute_file_path = (
+                f"{results_path}/{estimator_name}/Workspace/{dataset_name}/"
+            )
+        else:
+            attribute_file_path = None
+
+        # Ensure labels are floats
+        y_train = y_train.astype(float)
+        y_test = y_test.astype(float)
+        self.build_train_file = build_train_file
+        self.build_test_file = build_test_file
+        self.data_transforms = data_transforms
+        self.benchmark_time = benchmark_time
+        self.results_path = results_path
+        self.dataset_name = dataset_name
+        self.resample_id = resample_id
+        self.benchmark = -1
+        if estimator_name is None:
+            self.estimator_name = type(estimator).__name__
+        else:
+            self.estimator_name = estimator_name
+        self.estimator = self.validate_estimator(estimator=estimator)
+        self.second_comment = (
+            str(estimator.get_params()).replace("\n", " ").replace("\r", " ")
+        )
+        if attribute_file_path is not None:
+            estimator_attributes_to_file(
+                self.estimator, attribute_file_path, max_list_shape=att_max_shape
+            )
+
+    def run_experiment(self):
+        x_train, y_train, x_test, y_test = self.load_experimental_data()
+
+        self.first_comment = (
+            "Generated by run_experiment on "
+            f"{datetime.now().strftime('%m/%d/%Y, %H:%M:%S')}"
+        )
+
+        x_train, x_test = transform_input(
+            data_transforms=self.data_transforms,
+            x_train=x_train,
+            x_test=x_test,
+            y_train=y_train,
+            y_test=y_test,
+        )
+        if self.benchmark_time:
+            self.benchmark = timing_benchmark(random_state=self.resample_id)
+
+        if self.build_train_file:
+            train_preds, train_time = self.generate_train_preds(x_train, y_train)
+            self.write_results(
+                "TRAIN", y_train, train_preds, train_time, -1, self.benchmark, -1
+            )
+
+        if self.build_test_file:
+            if self.needs_fit():
+                mem_usage, fit_time = record_max_memory(
+                    self.estimator.fit,
+                    args=(x_train, y_train),
+                    interval=MEMRECORD_INTERVAL,
+                    return_func_time=True,
+                )
+                fit_time += int(round(getattr(self.estimator, "_fit_time_milli", 0)))
+            test_preds, test_time = self.generate_test_preds(x_test, y_test)
+            test_time += int(round(getattr(self.estimator, "_predict_time_milli", 0)))
+            self.write_results(
+                "TEST",
+                y_test,
+                test_preds,
+                fit_time,
+                test_time,
+                self.benchmark,
+                mem_usage,
+            )
+
+    def load_experimental_data(self):
+        return None, None, None, None
+
+    def validate_estimator(self, estimator):
+        estimator
+
+    def generate_train_preds(self, X_train, y_train):
+        return time_function(self.estimator.fit_predict, (X_train, y_train))
+
+    def generate_test_preds(self, x_test, y_test):
+        return time_function(self.estimator.predict, x_test)
+
+    def needs_fit(self):
+        return False
+
+    def write_results(
+        self, split, y, preds, fit_time, predict_time, benchmark_time, memory_usage
+    ):
+        third_line = self.get_third_line(
+            y, preds, fit_time, predict_time, benchmark_time, memory_usage
+        )
+        write_results_to_tsml_format(
+            preds,
+            y,
+            self.estimator_name,
+            self.dataset_name,
+            self.results_path,
+            full_path=False,
+            first_line_estimator_name=f"{self.estimator_name} ({type(self.estimator).__name__})",
+            split=split,
+            resample_id=self.resample_id,
+            time_unit="MILLISECONDS",
+            first_line_comment=self.first_comment,
+            second_line=self.second_comment,
+            third_line=third_line,
+        )
+
+    def get_third_line(
+        self, y, preds, fit_time, predict_time, benchmark_time, memory_usage
+    ):
+        return results_third_line(
+            y=y,
+            preds=preds,
+            fit_time=fit_time,
+            predict_time=predict_time,
+            benchmark_time=benchmark_time,
+            memory_usage=memory_usage,
+        )
+
+
+class ForecastingExperiment(Experiment):
+    def __init__(self):
         pass
-    elif isinstance(regressor, BaseEstimator) and is_regressor(regressor):
-        regressor = SklearnToTsmlRegressor(
-            regressor=regressor,
-            pad_unequal=True,
-            concatenate_channels=True,
-            clone_estimator=False,
-            random_state=(
-                regressor.random_state if hasattr(regressor, "random_state") else None
+
+    def load_experimental_data(self):
+        train = pd.read_csv(
+            f"{self.problem_path}/{self.dataset_name}/{self.dataset_name}_TRAIN.csv",
+            index_col=0,
+        ).squeeze("columns")
+        train = train.astype(float).to_numpy()
+        test = pd.read_csv(
+            f"{self.problem_path}/{self.dataset_name}/{self.dataset_name}_TEST.csv",
+            index_col=0,
+        ).squeeze("columns")
+        test = test.astype(float).to_numpy()
+        return train, None, test, None
+
+    def generate_test_preds(self, x_test, y_test):
+        # TODO Implement this and train_preds properly
+        # Remove last value as we have no actual data for it
+        test_preds, test_time = time_function(self.estimator.predict, x_test)
+        test_preds = test_preds.flatten()[:-1]
+        return test_preds, test_time
+
+    def validate_estimator(self, estimator):
+        return validate_forecaster(estimator)
+
+
+class RegressionExperiment(Experiment):
+    def __init__(
+        self,
+        ignore_custom_train_estimate=False,
+        predefined_resample=False,
+        problem_path="",
+    ):
+        self.is_fitted = False
+        self.ignore_custom_train_estimate = ignore_custom_train_estimate
+        self.problem_path = problem_path
+        self.predefined_resample = predefined_resample
+
+    def load_experimental_data(self):
+        X_train, y_train, X_test, y_test, resample = load_experiment_data(
+            self.problem_path,
+            self.dataset_name,
+            self.resample_id,
+            self.predefined_resample,
+        )
+
+        if resample:
+            X_train, y_train, X_test, y_test = resample_data(
+                X_train, y_train, X_test, y_test, random_state=self.resample_id
+            )
+        return X_train, y_train, X_test, y_test
+
+    def generate_train_preds(self, X_train, y_train):
+        if self.estimate_train_data and not self.ignore_custom_train_estimate:
+            self.train_estimate_method = "Custom"
+            train_preds, train_time = time_function(
+                self.estimator.fit_predict, (X_train, y_train)
+            )
+            self.is_fitted = True
+        else:
+            train_preds, train_time, self.train_estimate_method = (
+                cross_validate_train_data(self.estimator, y_train, X_train)
+            )
+        return train_preds, train_time
+
+    def needs_fit(self):
+        return not self.is_fitted
+
+    def get_third_line(
+        self, y, preds, fit_time, predict_time, benchmark_time, memory_usage
+    ):
+        return regression_results_third_line(
+            y=y,
+            preds=preds,
+            fit_time=fit_time,
+            predict_time=predict_time,
+            benchmark_time=benchmark_time,
+            memory_usage=memory_usage,
+            train_estimate_method=self.train_estimate_method,
+        )
+
+    def validate_estimator(self, estimator):
+        estimator, estimate_train_data = validate_regressor(estimator)
+        self.estimate_train_data = estimate_train_data
+        return estimator
+
+
+def validate_forecaster(estimator):
+    if isinstance(estimator, BaseForecaster):
+        return estimator
+    else:
+        try:
+            estimator, _ = validate_regressor(estimator)
+            return RegressionForecaster(regressor=estimator)
+        except TypeError:
+            raise TypeError(
+                "forecaster must be an aeon forecaster or a tsml, aeon or sklearn regressor."
+            )
+
+
+def validate_regressor(estimator):
+    estimate_train_data = False
+    if isinstance(estimator, BaseRegressor):
+        if estimator.get_tag("capability:train_estimate", False, False):
+            estimate_train_data = True
+        return estimator, estimate_train_data
+    elif isinstance(estimator, BaseTimeSeriesEstimator) and is_regressor(estimator):
+        return estimator, estimate_train_data
+    elif isinstance(estimator, BaseEstimator) and is_regressor(estimator):
+        return (
+            SklearnToTsmlRegressor(
+                regressor=estimator,
+                pad_unequal=True,
+                concatenate_channels=True,
+                clone_estimator=False,
+                random_state=(
+                    estimator.random_state
+                    if hasattr(estimator, "random_state")
+                    else None
+                ),
             ),
+            estimate_train_data,
         )
     else:
         raise TypeError("regressor must be a tsml, aeon or sklearn regressor.")
-
-    if data_transforms is not None:
-        if not isinstance(data_transforms, list):
-            data_transforms = [data_transforms]
-
-        for transform in data_transforms:
-            X_train = transform.fit_transform(X_train, y_train)
-            X_test = transform.transform(X_test, y_test)
-
-    needs_fit = True
-    fit_time = -1
-    mem_usage = -1
-    benchmark = -1
-    train_time = -1
-    fit_and_train_time = -1
-
-    if benchmark_time:
-        benchmark = timing_benchmark(random_state=resample_id)
-
-    first_comment = (
-        "Generated by run_regression_experiment on "
-        f"{datetime.now().strftime('%m/%d/%Y, %H:%M:%S')}"
-    )
-
-    second = str(regressor.get_params()).replace("\n", " ").replace("\r", " ")
-
-    if build_train_file:
-        cv_size = min(10, len(y_train))
-        start = int(round(time.time() * 1000))
-        if use_fit_predict:
-            train_preds = regressor.fit_predict(X_train, y_train)
-            needs_fit = False
-            fit_and_train_time = int(round(time.time() * 1000)) - start
-        else:
-            train_preds = cross_val_predict(regressor, X_train, y=y_train, cv=cv_size)
-            train_time = int(round(time.time() * 1000)) - start
-
-        train_mse = mean_squared_error(y_train, train_preds)
-
-        write_regression_results(
-            train_preds,
-            y_train,
-            regressor_name,
-            dataset_name,
-            results_path,
-            full_path=False,
-            first_line_regressor_name=f"{regressor_name} ({type(regressor).__name__})",
-            split="TRAIN",
-            resample_id=resample_id,
-            time_unit="MILLISECONDS",
-            first_line_comment=first_comment,
-            parameter_info=second,
-            mse=train_mse,
-            fit_time=fit_time,
-            predict_time=-1,
-            benchmark_time=benchmark,
-            memory_usage=mem_usage,
-            train_estimate_method="Custom" if use_fit_predict else f"{cv_size}F-CV",
-            train_estimate_time=train_time,
-            fit_and_estimate_time=fit_and_train_time,
-        )
-
-    if build_test_file:
-        if needs_fit:
-            mem_usage, fit_time = record_max_memory(
-                regressor.fit,
-                args=(X_train, y_train),
-                interval=MEMRECORD_INTERVAL,
-                return_func_time=True,
-            )
-            fit_time += int(round(getattr(regressor, "_fit_time_milli", 0)))
-
-        if attribute_file_path is not None:
-            estimator_attributes_to_file(
-                regressor, attribute_file_path, max_list_shape=att_max_shape
-            )
-
-        start = int(round(time.time() * 1000))
-        test_preds = regressor.predict(X_test)
-        test_time = (int(round(time.time() * 1000)) - start) + int(
-            round(getattr(regressor, "_predict_time_milli", 0))
-        )
-
-        test_mse = mean_squared_error(y_test, test_preds)
-
-        write_regression_results(
-            test_preds,
-            y_test,
-            regressor_name,
-            dataset_name,
-            results_path,
-            full_path=False,
-            first_line_regressor_name=f"{regressor_name} ({type(regressor).__name__})",
-            split="TEST",
-            resample_id=resample_id,
-            time_unit="MILLISECONDS",
-            first_line_comment=first_comment,
-            parameter_info=second,
-            mse=test_mse,
-            fit_time=fit_time,
-            predict_time=test_time,
-            benchmark_time=benchmark,
-            memory_usage=mem_usage,
-            train_estimate_method="N/A",
-            train_estimate_time=-1,
-            fit_and_estimate_time=fit_and_train_time,
-        )
 
 
 def load_and_run_regression_experiment(
     problem_path,
     results_path,
     dataset,
-    regressor,
-    regressor_name=None,
+    estimator,
+    estimator_name=None,
     resample_id=0,
     data_transforms=None,
     build_train_file=False,
@@ -665,10 +826,10 @@ def load_and_run_regression_experiment(
     overwrite=False,
     predefined_resample=False,
 ):
-    """Load a dataset and run a regression experiment.
+    """Load a dataset and run an experiment.
 
-    Function to load a dataset, run a basic regression experiment for a
-    <dataset>/<regressor>/<resample> combination, and write the results to csv file(s)
+    Function to load a dataset, run a basic experiment for a
+    <dataset>/<estimator>/<resample> combination, and write the results to csv file(s)
     at a given location.
 
     Parameters
@@ -680,11 +841,11 @@ def load_and_run_regression_experiment(
     dataset : str
         Name of problem. Files must be <problem_path>/<dataset>/<dataset>+"_TRAIN.ts",
         same for "_TEST.ts".
-    regressor : BaseRegressor
-        Regressor to be used in the experiment.
-    regressor_name : str or None, default=None
-        Name of regressor used in writing results. If None, the name is taken from
-        the regressor.
+    estimator : BaseRegressor
+        Estimator to be used in the experiment.
+    estimator_name : str or None, default=None
+        Name of estimator used in writing results. If None, the name is taken from
+        the estimator.
     resample_id : int, default=0
         Seed for resampling. If set to 0, the default train/test split from file is
         used. Also used in output file name.
@@ -695,7 +856,7 @@ def load_and_run_regression_experiment(
         Calls fit_transform on the training data and transform on the test data.
     build_train_file : bool, default=False
         Whether to generate train files or not. If true, it performs a 10-fold
-        cross-validation on the train data and saves. If the regressor can produce its
+        cross-validation on the train data and saves. If the estimator can produce its
         own estimates, those are used instead.
     benchmark_time : bool, default=True
         Whether to benchmark the hardware used with a simple function and write the
@@ -708,58 +869,7 @@ def load_and_run_regression_experiment(
         the file format must include the resample_id at the end of the dataset name i.e.
         <problem_path>/<dataset>/<dataset>+<resample_id>+"_TRAIN.ts".
     """
-    if regressor_name is None:
-        regressor_name = type(regressor).__name__
-
-    build_test_file, build_train_file = _check_existing_results(
-        results_path,
-        regressor_name,
-        dataset,
-        resample_id,
-        overwrite,
-        True,
-        build_train_file,
-    )
-
-    if not build_test_file and not build_train_file:
-        warnings.warn("All files exist and not overwriting, skipping.", stacklevel=1)
-        return
-
-    X_train, y_train, X_test, y_test, resample = load_experiment_data(
-        problem_path, dataset, resample_id, predefined_resample
-    )
-
-    if resample:
-        X_train, y_train, X_test, y_test = resample_data(
-            X_train, y_train, X_test, y_test, random_state=resample_id
-        )
-
-    if write_attributes:
-        attribute_file_path = f"{results_path}/{regressor_name}/Workspace/{dataset}/"
-    else:
-        attribute_file_path = None
-
-    # Ensure labels are floats
-    y_train = y_train.astype(float)
-    y_test = y_test.astype(float)
-
-    run_regression_experiment(
-        X_train,
-        y_train,
-        X_test,
-        y_test,
-        regressor,
-        results_path,
-        regressor_name=regressor_name,
-        dataset_name=dataset,
-        resample_id=resample_id,
-        data_transforms=data_transforms,
-        build_test_file=build_test_file,
-        build_train_file=build_train_file,
-        attribute_file_path=attribute_file_path,
-        att_max_shape=att_max_shape,
-        benchmark_time=benchmark_time,
-    )
+    pass
 
 
 def run_clustering_experiment(
@@ -1150,122 +1260,71 @@ def load_and_run_clustering_experiment(
 
 def run_forecasting_experiment(
     train,
-    test,
-    forecaster,
+    y_test,
+    estimator,
     results_path,
-    forecaster_name=None,
-    dataset_name="N/A",
-    random_seed=None,
+    estimator_name=None,
+    dataset_name="",
+    resample_id=None,
+    data_transforms=None,
+    build_test_file=True,
+    build_train_file=False,
     attribute_file_path=None,
     att_max_shape=0,
     benchmark_time=True,
 ):
-    """Run a forecasting experiment and save the results to file.
+    """Run an experiment and save the results to file.
 
-    Function to run a basic forecasting experiment for a
-    <dataset>/<forecaster>/<resample> combination and write the results to csv file(s)
+    Function to run a basic experiment for a
+    <dataset>/<estimator>/<resample> combination and write the results to csv file(s)
     at a given location.
 
     Parameters
     ----------
     train : pd.DataFrame or np.array
-        The series used to train the forecaster.
-    test : pd.DataFrame or np.array
-        The series used to test the trained forecaster.
-    forecaster : BaseForecaster
-        Regressor to be used in the experiment.
+        The series used to train the estimator.
+    y_test : pd.DataFrame or np.array
+        The series used to y_test the trained estimator.
+    estimator : BaseForecaster
+        Estimator to be used in the experiment.
     results_path : str
         Location of where to write results. Any required directories will be created.
-    forecaster_name : str or None, default=None
-        Name of forecaster used in writing results. If None, the name is taken from
-        the forecaster.
+    estimator_name : str or None, default=None
+        Name of estimator used in writing results. If None, the name is taken from
+        the estimator.
     dataset_name : str, default="N/A"
         Name of dataset.
-    random_seed : int or None, default=None
-        Indicates what random seed was used as a random_state for the forecaster. Only
+    resample_id : int or None, default=None
+        Indicates what random seed was used as a random_state for the estimator. Only
         used for the results file name.
+    data_transforms : transformer, list of transformers or None, default=None
+        Transformer(s) to apply to the data before running the experiment.
+        If a list, the transformers are applied in order.
+        If None, no transformation is applied.
+        Calls fit_transform on the training data and transform on the test data.
     benchmark_time : bool, default=True
         Whether to benchmark the hardware used with a simple function and write the
         results. This will typically take ~2 seconds, but is hardware dependent.
     """
-    if not isinstance(forecaster, BaseForecaster):
-        raise TypeError("forecaster must be an aeon forecaster.")
-
-    if forecaster_name is None:
-        forecaster_name = type(forecaster).__name__
-
-    benchmark = -1
-    if benchmark_time:
-        benchmark = timing_benchmark(random_state=random_seed)
-
-    first_comment = (
-        "Generated by run_forecasting_experiment on "
-        f"{datetime.now().strftime('%m/%d/%Y, %H:%M:%S')}"
-    )
-
-    second = str(forecaster.get_params()).replace("\n", " ").replace("\r", " ")
-
-    mem_usage, fit_time = record_max_memory(
-        forecaster.fit,
-        args=(train,),
-        interval=MEMRECORD_INTERVAL,
-        return_func_time=True,
-    )
-    fit_time += int(round(getattr(forecaster, "_fit_time_milli", 0)))
-
-    if attribute_file_path is not None:
-        estimator_attributes_to_file(
-            forecaster, attribute_file_path, max_list_shape=att_max_shape
-        )
-
-    start = int(round(time.time() * 1000))
-    test_preds = forecaster.predict(np.arange(1, len(test) + 1))
-    test_time = (
-        int(round(time.time() * 1000))
-        - start
-        + int(round(getattr(forecaster, "_predict_time_milli", 0)))
-    )
-    test_preds = test_preds.flatten()
-
-    test_mape = mean_absolute_percentage_error(test, test_preds)
-
-    write_forecasting_results(
-        test_preds,
-        test,
-        forecaster_name,
-        dataset_name,
-        results_path,
-        full_path=False,
-        first_line_forecaster_name=f"{forecaster_name} ({type(forecaster).__name__})",
-        split="TEST",
-        random_seed=random_seed,
-        time_unit="MILLISECONDS",
-        first_line_comment=first_comment,
-        parameter_info=second,
-        mape=test_mape,
-        fit_time=fit_time,
-        predict_time=test_time,
-        benchmark_time=benchmark,
-        memory_usage=mem_usage,
-    )
+    pass
 
 
 def load_and_run_forecasting_experiment(
     problem_path,
     results_path,
     dataset,
-    forecaster,
-    forecaster_name=None,
-    random_seed=None,
+    estimator,
+    estimator_name=None,
+    resample_id=None,
     write_attributes=False,
     att_max_shape=0,
     benchmark_time=True,
     overwrite=False,
 ):
-    """Load a dataset and run a regression experiment.
+    """Load a dataset and run an experiment.
 
-    Function to load a dataset, run a basic regression experiment for a
-    <dataset>/<regressor/<resample> combination, and write the results to csv file(s)
+    Function to load a dataset, run a basic experiment for a
+    <dataset>/<estimator/<resample> combination, and write the results to csv file(s)
     at a given location.
 
     Parameters
@@ -1277,13 +1336,13 @@ def load_and_run_forecasting_experiment(
     dataset : str
         Name of problem. Files must be <problem_path>/<dataset>/<dataset>+"_TRAIN.csv",
         same for "_TEST.csv".
-    forecaster : BaseForecaster
-        Regressor to be used in the experiment.
-    forecaster_name : str or None, default=None
-        Name of forecaster used in writing results. If None, the name is taken from
-        the forecaster.
-    random_seed : int or None, default=None
-        Indicates what random seed was used as a random_state for the forecaster. Only
+    estimator : BaseForecaster
+        Estimator to be used in the experiment.
+    estimator_name : str or None, default=None
+        Name of estimator used in writing results. If None, the name is taken from
+        the estimator.
+    resample_id : int or None, default=None
+        Indicates what random seed was used as a random_state for the estimator. Only
         used for the results file name.
     benchmark_time : bool, default=True
         Whether to benchmark the hardware used with a simple function and write the
@@ -1292,45 +1351,28 @@ def load_and_run_forecasting_experiment(
         If set to False, this will only build results if there is not a result file
         already present. If True, it will overwrite anything already there.
     """
-    if forecaster_name is None:
-        forecaster_name = type(forecaster).__name__
-
-    build_test_file, _ = _check_existing_results(
-        results_path,
-        forecaster_name,
-        dataset,
-        random_seed,
-        overwrite,
-        True,
-        False,
+    tmpdir = tempfile.mkdtemp()
+    dataset = load_forecasting(dataset, tmpdir)
+    series = (
+        dataset[dataset["series_name"] == series_name]["series_value"]
+        .iloc[0]
+        .to_numpy()
     )
+    from aeon.transformations.series import TrainTestTransformer
 
-    if not build_test_file:
-        warnings.warn("All files exist and not overwriting, skipping.", stacklevel=1)
-        return
-
-    if write_attributes:
-        attribute_file_path = f"{results_path}/{forecaster_name}/Workspace/{dataset}/"
-    else:
-        attribute_file_path = None
-
-    train = pd.read_csv(
-        f"{problem_path}/{dataset}/{dataset}_TRAIN.csv", index_col=0
-    ).squeeze("columns")
+    dataset = f"{dataset}_{series_name}"
+    train, test = TrainTestTransformer().fit_transform(series)
     train = train.astype(float).to_numpy()
-    test = pd.read_csv(
-        f"{problem_path}/{dataset}/{dataset}_TEST.csv", index_col=0
-    ).squeeze("columns")
     test = test.astype(float).to_numpy()
 
     run_forecasting_experiment(
         train,
         test,
-        forecaster,
+        estimator,
         results_path,
-        forecaster_name=forecaster_name,
+        estimator_name=estimator_name,
         dataset_name=dataset,
-        random_seed=random_seed,
+        resample_id=resample_id,
         attribute_file_path=attribute_file_path,
         att_max_shape=att_max_shape,
         benchmark_time=benchmark_time,
