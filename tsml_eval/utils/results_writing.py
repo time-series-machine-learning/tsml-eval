@@ -146,6 +146,7 @@ def write_classification_results(
         third_line=third_line,
     )
 
+
 def results_third_line(
     y=None,
     preds=None,
@@ -186,6 +187,7 @@ def results_third_line(
         f"{benchmark_time},"
         f"{memory_usage}"
     )
+
 
 def regression_results_third_line(
     y=None,
@@ -233,7 +235,7 @@ def regression_results_third_line(
         fit_time=fit_time,
         predict_time=predict_time,
         benchmark_time=benchmark_time,
-        memory_usage=memory_usage
+        memory_usage=memory_usage,
     )
     return (
         f"{base_third_line},"
@@ -241,6 +243,7 @@ def regression_results_third_line(
         f"{train_estimate_time},"
         f"{fit_and_estimate_time}"
     )
+
 
 def write_clustering_results(
     cluster_predictions,
@@ -360,6 +363,7 @@ def write_clustering_results(
         second_line=parameter_info,
         third_line=third_line,
     )
+
 
 def write_results_to_tsml_format(
     predictions,

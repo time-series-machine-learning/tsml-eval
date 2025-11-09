@@ -102,7 +102,7 @@ def test_write_regression_results():
         _REGRESSOR_RESULTS_PATH,
         full_path=False,
         first_line_comment="test_write_regression_results",
-        third_line=third_line
+        third_line=third_line,
     )
 
     _check_regression_file_format(
@@ -137,7 +137,7 @@ def test_write_forecasting_results():
         _FORECASTER_RESULTS_PATH,
         full_path=False,
         first_line_comment="test_write_forecasting_results",
-        third_line=third_line
+        third_line=third_line,
     )
 
     _check_forecasting_file_format(

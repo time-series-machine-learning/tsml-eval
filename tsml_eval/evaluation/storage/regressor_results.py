@@ -10,7 +10,10 @@ from sklearn.metrics import (
 )
 
 from tsml_eval.evaluation.storage.estimator_results import EstimatorResults
-from tsml_eval.utils.results_writing import regression_results_third_line, write_results_to_tsml_format
+from tsml_eval.utils.results_writing import (
+    regression_results_third_line,
+    write_results_to_tsml_format,
+)
 
 
 class RegressorResults(EstimatorResults):
