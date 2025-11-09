@@ -20,7 +20,7 @@ iridis_version="5"
 # The number of tasks/threads to use in each job. 40 is the number of cores on batch nodes
 n_tasks_per_node=40
 
-# The number of threads per task. Usually 1 unless using a regressor that can multithread internally 
+# The number of threads per task. Usually 1 unless using a regressor that can multithread internally
 # use with threaded_regression_experiments.py
 n_threads_per_task=1
 
