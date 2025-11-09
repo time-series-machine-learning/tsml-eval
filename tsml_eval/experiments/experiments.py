@@ -688,11 +688,13 @@ class ForecastingExperiment(Experiment):
 
     def load_experimental_data(self):
         train = pd.read_csv(
-            f"{self.problem_path}/{self.dataset_name}/{self.dataset_name}_TRAIN.csv", index_col=0
+            f"{self.problem_path}/{self.dataset_name}/{self.dataset_name}_TRAIN.csv",
+            index_col=0,
         ).squeeze("columns")
         train = train.astype(float).to_numpy()
         test = pd.read_csv(
-            f"{self.problem_path}/{self.dataset_name}/{self.dataset_name}_TEST.csv", index_col=0
+            f"{self.problem_path}/{self.dataset_name}/{self.dataset_name}_TEST.csv",
+            index_col=0,
         ).squeeze("columns")
         test = test.astype(float).to_numpy()
         return train, None, test, None
