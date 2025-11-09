@@ -4,7 +4,10 @@ import numpy as np
 from sklearn.metrics import mean_absolute_percentage_error, mean_squared_error
 
 from tsml_eval.evaluation.storage.estimator_results import EstimatorResults
-from tsml_eval.utils.results_writing import results_third_line, write_results_to_tsml_format
+from tsml_eval.utils.results_writing import (
+    results_third_line,
+    write_results_to_tsml_format,
+)
 
 
 class ForecasterResults(EstimatorResults):
@@ -157,7 +160,7 @@ class ForecasterResults(EstimatorResults):
             benchmark_time=self.benchmark_time,
             memory_usage=self.memory_usage,
         )
-        write_results_to_tsml_format (
+        write_results_to_tsml_format(
             self.predictions,
             self.target_labels,
             self.estimator_name,
@@ -169,7 +172,7 @@ class ForecasterResults(EstimatorResults):
             time_unit=self.time_unit,
             first_line_comment=self.description,
             second_line=self.parameter_info,
-            third_line=third_line
+            third_line=third_line,
         )
 
     def load_from_file(self, file_path, verify_values=True):
