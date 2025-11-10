@@ -15,6 +15,7 @@ __all__ = [
     "load_and_run_forecasting_experiment",
 ]
 
+import math
 import os
 import time
 import warnings
@@ -26,6 +27,7 @@ from aeon.benchmarking.metrics.clustering import clustering_accuracy_score
 from aeon.classification import BaseClassifier
 from aeon.clustering import BaseClusterer
 from aeon.forecasting import BaseForecaster
+from aeon.datasets import load_forecasting
 from aeon.regression.base import BaseRegressor
 from aeon.utils.validation import get_n_cases
 from sklearn import preprocessing
@@ -1330,6 +1332,136 @@ def load_and_run_forecasting_experiment(
         results_path,
         forecaster_name=forecaster_name,
         dataset_name=dataset,
+        random_seed=random_seed,
+        attribute_file_path=attribute_file_path,
+        att_max_shape=att_max_shape,
+        benchmark_time=benchmark_time,
+    )
+
+def train_test_split(x, train_proportion=0.7, max_series_length=10000, max_test_values=None):
+    """
+    Transform X and return a transformed version.
+    private _transform containing core logic, called from transform
+    Parameters
+    ----------
+    x : np.ndarray
+        Data to be transformed
+    train_proportion : float, optional (default=0.7)
+        The proportion of the time series to use for training,
+        with the remaining used for test.
+    max_series_length : int, optional (default=10000)
+        The maximum length of the series to consider. If the series is longer
+        than this value, it will be truncated.
+    max_test_values : int, optional (default=None)
+        The maximum number of test values to generate. If the test proportion is larger than
+        this, it will be adjusted to be equal to this.
+    Returns
+    -------
+    Xt: np.ndarray
+        transformed version of X
+    """
+    # Compute split index
+    if len(x) < max_series_length or max_series_length == -1:
+        end_location = len(x)
+    else:
+        end_location = max_series_length
+    train_test_split_location = math.ceil(end_location * train_proportion)
+    if max_test_values and end_location - train_test_split_location > max_test_values:
+        train_test_split_location = end_location - max_test_values
+
+    # Split into train and test sets
+    train_series = x[:train_test_split_location]
+    test_series = x[train_test_split_location:end_location]
+
+    # Generate windowed versions of train and test sets
+    return train_series, test_series
+
+def load_and_run_remote_forecasting_experiment(
+    data_path,
+    dataset_name,
+    results_path,
+    forecaster,
+    forecaster_name=None,
+    random_seed=None,
+    write_attributes=False,
+    att_max_shape=0,
+    benchmark_time=True,
+    overwrite=False,
+):
+    """Load a dataset and run a regression experiment.
+
+    Function to load a dataset, run a basic regression experiment for a
+    <dataset>/<regressor/<resample> combination, and write the results to csv file(s)
+    at a given location.
+
+    Parameters
+    ----------
+    problem_path : str
+        Location of problem files, full path.
+    results_path : str
+        Location of where to write results. Any required directories will be created.
+    dataset : str
+        Name of problem. Files must be <problem_path>/<dataset>/<dataset>+"_TRAIN.csv",
+        same for "_TEST.csv".
+    forecaster : BaseForecaster
+        Regressor to be used in the experiment.
+    forecaster_name : str or None, default=None
+        Name of forecaster used in writing results. If None, the name is taken from
+        the forecaster.
+    random_seed : int or None, default=None
+        Indicates what random seed was used as a random_state for the forecaster. Only
+        used for the results file name.
+    benchmark_time : bool, default=True
+        Whether to benchmark the hardware used with a simple function and write the
+        results. This will typically take ~2 seconds, but is hardware dependent.
+    overwrite : bool, default=False
+        If set to False, this will only build results if there is not a result file
+        already present. If True, it will overwrite anything already there.
+    """
+    if forecaster_name is None:
+        forecaster_name = type(forecaster).__name__
+
+    build_test_file, _ = _check_existing_results(
+        results_path,
+        forecaster_name,
+        dataset_name,
+        random_seed,
+        overwrite,
+        True,
+        False,
+    )
+
+    if not build_test_file:
+        warnings.warn("All files exist and not overwriting, skipping.", stacklevel=1)
+        return
+
+    if write_attributes:
+        attribute_file_path = f"{results_path}/{forecaster_name}/Workspace/{dataset_name}/"
+    else:
+        attribute_file_path = None
+
+    if "_" in dataset_name:
+        dataset, series_name = dataset_name.rsplit("_", 1)
+    else:
+        raise ValueError(f"Dataset {dataset_name} given, but has no series attached when remote_forecasting_experiment called.")
+
+    data_full_path = f"{data_path}/{dataset}/{dataset}.csv"
+    if not os.path.exists(data_full_path):
+        x = load_forecasting(dataset, data_full_path)
+        series = x[series_name]
+    else:
+        series = pd.read_csv(data_full_path, index_col=0).squeeze("columns")[series_name]
+    series.astype(float).to_numpy()
+
+    train, test = train_test_split(series)
+
+    run_forecasting_experiment(
+        train,
+        test,
+        forecaster,
+        results_path,
+        forecaster_name=forecaster_name,
+        dataset_name=dataset_name,
         random_seed=random_seed,
         attribute_file_path=attribute_file_path,
         att_max_shape=att_max_shape,
