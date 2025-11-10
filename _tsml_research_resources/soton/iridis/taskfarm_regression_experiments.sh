@@ -96,8 +96,8 @@ maybe_source() { [ -f "$1" ] && . "$1"; }
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 
 # 1) Load configs in increasing priority
-maybe_source "$SCRIPT_DIR/../../config.default"
-maybe_source "$SCRIPT_DIR/../../config.local"
+maybe_source "$SCRIPT_DIR/../config.default"
+maybe_source "$SCRIPT_DIR/../config.local"
 
 # 2) Parse CLI overrides (highest priority)
 CONFIG_FILE=""
