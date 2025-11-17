@@ -62,7 +62,7 @@ def run_experiment(args, overwrite=False):
         if not overwrite and _results_present(
             args.results_path,
             args.estimator_name,
-            args.dataset_name,
+            args.dataset_name.strip(),
             resample_id=args.resample_id,
             split="TEST",
         ):
@@ -70,7 +70,7 @@ def run_experiment(args, overwrite=False):
         else:
             load_and_run_remote_forecasting_experiment(
                 args.data_path,
-                args.dataset_name,
+                args.dataset_name.strip(),
                 args.results_path,
                 get_forecaster_by_name(
                     args.estimator_name,

@@ -58,6 +58,8 @@ relative_out_dir="RegressionResults/output/"
 # The python script we are running
 relative_script_file_path="tsml-eval/tsml_eval/experiments/forecasting_experiments.py"
 
+relative_preprocessing_file_path=""
+
 extra_args=""
 
 # Environment name, change accordingly, for set up, see https://github.com/time-series-machine-learning/tsml-eval/blob/main/_tsml_research_resources/soton/iridis/iridis_python.md
@@ -88,9 +90,12 @@ normalise_data="false"
 # ======================================================================================
 # 	Read in config files and CLI args
 # ======================================================================================
-
 # Helper
-maybe_source() { [ -f "$1" ] && . "$1"; }
+maybe_source() {
+  if [ -f "$1" ]; then
+    . "$1"
+  fi
+}
 
 # Resolve script dir
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
@@ -101,6 +106,7 @@ maybe_source "$SCRIPT_DIR/../config.local"
 
 # 2) Parse CLI overrides (highest priority)
 CONFIG_FILE=""
+DEBUG=0
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --config) CONFIG_FILE=$2; shift 2 ;;
@@ -153,6 +159,8 @@ fi
 # The python script we are running
 full_script_file_path="$local_path/$relative_script_file_path"
 
+full_preprocessing_file_path="$local_path/$relative_preprocessing_file_path"
+
 # Datasets to use and directory of data files. This can either be a text file or directory of text files
 # Separate text files will not run jobs of the same dataset in the same node. This is good to keep large and small datasets separate
 data_dir="$local_path/$relative_data_dir"
@@ -185,6 +193,15 @@ else
     gpu_instruction=""
 fi
 
+apptainer_instruction=""
+environment_instructions=""
+if [ "${gpu_job}" == "true" ]; then
+    environment_instructions="module load apptainer/1.3.3"
+    apptainer_instruction="apptainer exec --nv ${container_path} echo Running Apptainer job.; "
+else
+    environment_instructions="module load $conda_instruction && source activate $env_name"
+fi
+
 # This creates the submission file to run and does clean up
 submit_jobs () {
 
@@ -192,14 +209,6 @@ if ((cmdCount>=max_cpus_to_use)); then
     cpuCount=$max_cpus_to_use
 else
     cpuCount=$cmdCount
-fi
-
-if [ "${gpu_job}" == "true" ]; then
-    environment_instructions="module load apptainer/1.3.3"
-    apptainer_instruction="apptainer exec --nv ${container_path} echo "Running Apptainer job."; "
-else
-    environment_instructions="module load $conda_instruction && source activate $env_name"
-    apptainer_instruction=""
 fi
 
 echo "#!/bin/bash
@@ -218,8 +227,6 @@ ${gpu_instruction}
 . /etc/profile
 
 ${environment_instructions}
-
-
 
 ${taskfarm_file_path} ${out_dir}/generatedCommandList-${dt}.txt" > generatedSubmissionFile-${dt}.sub
 
@@ -245,8 +252,16 @@ if [[ -d $dataset_list ]]; then
 fi
 
 for dataset_file in $dataset_list; do
-
-echo "Dataset list ${dataset_file}"
+if [ -n "${relative_preprocessing_file_path:-}" ]; then
+    (
+        module load $conda_instruction
+        eval "$(conda shell.bash hook)"
+        conda activate "$env_name"
+        while read dataset; do
+            python -u ${full_preprocessing_file_path} ${data_dir} ${dataset}
+        done < ${dataset_file}
+    )
+fi
 
 for regressor in $regressors_to_run; do
 
@@ -261,13 +276,11 @@ if [ "${split_regressors,,}" == "true" ]; then
 else
     outDir=${out_dir}
 fi
-
 while read dataset; do
-
 # Skip to the script start point
-((expCount++))
-if ((expCount>=start_point)); then
+expCount=$((expCount + 1))
 
+if ((expCount>=start_point)); then
 # This finds the resamples to run and skips jobs which have test/train files already written to the results directory.
 # This can result in uneven sized command lists
 resamples_to_run=""
@@ -281,9 +294,7 @@ do
         resamples_to_run="${resamples_to_run}${i} "
     fi
 done
-
 for resample in $resamples_to_run; do
-
 # add to the command list if
 if ((cmdCount>(n_tasks_per_node-n_threads_per_task))); then
     submit_jobs
@@ -302,14 +313,11 @@ if ((cmdCount>(n_tasks_per_node-n_threads_per_task))); then
     cmdCount=0
     dt=$(date +%Y%m%d%H%M%S)
 fi
-
 # Input args to the default classification_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/classification_experiments.py
 echo "${apptainer_instruction}python -u ${full_script_file_path} ${data_dir} ${results_dir} ${regressor} ${dataset} ${resample} ${generate_train_files} ${predefined_folds} ${normalise_data} ${extra_args} > ${out_dir}/${regressor}/output-${dataset}-${resample}-${dt}.txt 2>&1" >> ${out_dir}/generatedCommandList-${dt}.txt
-
 ((cmdCount=cmdCount+n_threads_per_task))
-((totalCount++))
-
+totalCount=$((totalCount + 1))
 done
 fi
 done < ${dataset_file}

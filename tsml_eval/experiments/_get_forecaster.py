@@ -71,10 +71,11 @@ def get_forecaster_by_name(forecaster_name, random_state=None, n_jobs=1, **kwarg
         return _set_forecaster_other(f, random_state, n_jobs, kwargs)
     else:
         window = 100
+        print(kwargs)
         if 'window' in kwargs:
             window = kwargs.pop('window')
         try:
-            regressor = get_regressor_by_name(f, random_state, n_jobs, kwargs=kwargs)
+            regressor = get_regressor_by_name(f, random_state, n_jobs, **kwargs)
         except ValueError:
             raise ValueError(f"UNKNOWN FORECASTER: {f} in get_forecaster_by_name")
         from aeon.forecasting import RegressionForecaster

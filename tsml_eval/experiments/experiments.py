@@ -26,8 +26,8 @@ import pandas as pd
 from aeon.benchmarking.metrics.clustering import clustering_accuracy_score
 from aeon.classification import BaseClassifier
 from aeon.clustering import BaseClusterer
-from aeon.forecasting import BaseForecaster
-from aeon.datasets import load_forecasting
+from aeon.forecasting import BaseForecaster, RegressionForecaster
+from aeon.datasets import load_from_tsf_file
 from aeon.regression.base import BaseRegressor
 from aeon.utils.validation import get_n_cases
 from sklearn import preprocessing
@@ -1220,8 +1220,16 @@ def run_forecasting_experiment(
             forecaster, attribute_file_path, max_list_shape=att_max_shape
         )
 
+    test_true = np.empty(len(test), dtype=test.dtype)
+    test_preds = np.empty(len(test), dtype=test.dtype)
     start = int(round(time.time() * 1000))
-    test_preds = forecaster.predict(np.arange(1, len(test) + 1))
+    if test.ndim == 2:
+        for index, prediction in enumerate(test):
+            test_true[index] = prediction[-1]
+            test_preds[index] = forecaster.predict(prediction[:-1])
+        print(test_true)
+        print(test_preds)
+
     test_time = (
         int(round(time.time() * 1000))
         - start
@@ -1445,15 +1453,20 @@ def load_and_run_remote_forecasting_experiment(
     else:
         raise ValueError(f"Dataset {dataset_name} given, but has no series attached when remote_forecasting_experiment called.")
 
-    data_full_path = f"{data_path}/{dataset}/{dataset}.csv"
+    data_full_path = f"{data_path}/{dataset}/{dataset}.tsf"
     if not os.path.exists(data_full_path):
-        x = load_forecasting(dataset, data_full_path)
-        series = x[series_name]
+        raise FileExistsError(f"Cannot load {data_full_path} for dataset {dataset}. Did you run download_datasets.py beforehand?")
     else:
-        series = pd.read_csv(data_full_path, index_col=0).squeeze("columns")[series_name]
-    series.astype(float).to_numpy()
+        df, _ = load_from_tsf_file(data_full_path)
+        series = df.loc[df['series_name'].eq(series_name), 'series_value'].iat[0]
+    series = np.asarray(series, dtype=float)
 
     train, test = train_test_split(series)
+    if isinstance(forecaster, RegressionForecaster) and len(test) > forecaster.window + 1:
+        test = np.lib.stride_tricks.sliding_window_view(
+            test, window_shape=(test.shape[0], forecaster.window + 1)
+        )
+    print(test)
 
     run_forecasting_experiment(
         train,
