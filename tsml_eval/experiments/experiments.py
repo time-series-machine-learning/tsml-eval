@@ -1227,8 +1227,6 @@ def run_forecasting_experiment(
         for index, prediction in enumerate(test):
             test_true[index] = prediction[-1]
             test_preds[index] = forecaster.predict(prediction[:-1])
-        print(test_true)
-        print(test_preds)
 
     test_time = (
         int(round(time.time() * 1000))
@@ -1237,11 +1235,11 @@ def run_forecasting_experiment(
     )
     test_preds = test_preds.flatten()
 
-    test_mape = mean_absolute_percentage_error(test, test_preds)
+    test_mape = mean_absolute_percentage_error(test_true, test_preds)
 
     write_forecasting_results(
         test_preds,
-        test,
+        test_true,
         forecaster_name,
         dataset_name,
         results_path,
@@ -1464,9 +1462,8 @@ def load_and_run_remote_forecasting_experiment(
     train, test = train_test_split(series)
     if isinstance(forecaster, RegressionForecaster) and len(test) > forecaster.window + 1:
         test = np.lib.stride_tricks.sliding_window_view(
-            test, window_shape=(test.shape[0], forecaster.window + 1)
+            test, window_shape=(forecaster.window + 1)
         )
-    print(test)
 
     run_forecasting_experiment(
         train,
