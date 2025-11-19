@@ -65,7 +65,7 @@ extra_args=""
 # Environment name, change accordingly, for set up, see https://github.com/time-series-machine-learning/tsml-eval/blob/main/_tsml_research_resources/soton/iridis/iridis_python.md
 # Separate environments for GPU and CPU are recommended #regress_gpu regression_experiments
 # env_name="regression_experiments"
-container_path="scratch/tensorflow_sandbox/"
+container_path="/scratch/tensorflow_sandbox/"
 
 # Regressors to loop over. Must be seperated by a space. Different regressors will not run in the same node
 # See list of potential regressors in set_regressor  InceptionTimeRegressor
