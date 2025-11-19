@@ -18,8 +18,6 @@ def check_and_download_datasets(args):
             if not os.path.exists(data_full_path):
                 print(f"Downloading {dataset}")
                 load_forecasting(dataset, data_path)
-            else:
-                print(f"Skipping {dataset}")
 
 if __name__ == "__main__":
     """
