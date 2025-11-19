@@ -251,17 +251,16 @@ if [[ -d $dataset_list ]]; then
     dataset_list=$file_names
 fi
 
-for dataset_file in $dataset_list; do
 if [ -n "${relative_preprocessing_file_path:-}" ]; then
     (
         module load $conda_instruction
         eval "$(conda shell.bash hook)"
         conda activate "$env_name"
-        while read dataset; do
-            python -u ${full_preprocessing_file_path} ${data_dir} ${dataset}
-        done < ${dataset_file}
+        python -u ${full_preprocessing_file_path} ${data_dir} ${dataset_file}
     )
 fi
+
+for dataset_file in $dataset_list; do
 
 for regressor in $regressors_to_run; do
 
