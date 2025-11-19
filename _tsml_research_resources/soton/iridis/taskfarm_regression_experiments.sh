@@ -251,6 +251,8 @@ if [[ -d $dataset_list ]]; then
     dataset_list=$file_names
 fi
 
+for dataset_file in $dataset_list; do
+
 if [ -n "${relative_preprocessing_file_path:-}" ]; then
     (
         module load $conda_instruction
@@ -259,8 +261,6 @@ if [ -n "${relative_preprocessing_file_path:-}" ]; then
         python -u ${full_preprocessing_file_path} ${data_dir} ${dataset_file}
     )
 fi
-
-for dataset_file in $dataset_list; do
 
 for regressor in $regressors_to_run; do
 
