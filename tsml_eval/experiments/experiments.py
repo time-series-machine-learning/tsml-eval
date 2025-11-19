@@ -1207,33 +1207,56 @@ def run_forecasting_experiment(
 
     second = str(forecaster.get_params()).replace("\n", " ").replace("\r", " ")
 
-    mem_usage, fit_time = record_max_memory(
-        forecaster.fit,
-        args=(train,),
-        interval=MEMRECORD_INTERVAL,
-        return_func_time=True,
-    )
-    fit_time += int(round(getattr(forecaster, "_fit_time_milli", 0)))
+    test_true = np.empty(len(test), dtype=test.dtype)
+    test_preds = np.empty(len(test), dtype=test.dtype)
+    if train.ndim == 2 and test.ndim == 2:
+        fit_time = 0
+        test_time = 0
+        for index, (train_series, test_series) in enumerate(zip(train, test)):
+            mem_usage, fit_time_measured = record_max_memory(
+                forecaster.fit,
+                args=(train_series,),
+                interval=MEMRECORD_INTERVAL,
+                return_func_time=True,
+            )
+            fit_time += int(round(getattr(forecaster, "_fit_time_milli", 0))) + fit_time_measured
+            start = int(round(time.time() * 1000))
+            test_true[index] = test_series[-1]
+            test_preds[index] = forecaster.predict(test_series[:-1])
+            test_time += (
+                int(round(time.time() * 1000))
+                - start
+                + int(round(getattr(forecaster, "_predict_time_milli", 0)))
+            )
+    else:
+        mem_usage, fit_time = record_max_memory(
+            forecaster.fit,
+            args=(train,),
+            interval=MEMRECORD_INTERVAL,
+            return_func_time=True,
+        )
+        fit_time += int(round(getattr(forecaster, "_fit_time_milli", 0)))
+
+        start = int(round(time.time() * 1000))
+        if test.ndim == 2:
+            for index, prediction in enumerate(test):
+                test_true[index] = prediction[-1]
+                test_preds[index] = forecaster.predict(prediction[:-1])
+        else:
+            test_true = test
+            test_preds = forecaster.predict(test)
+
+        test_time = (
+            int(round(time.time() * 1000))
+            - start
+            + int(round(getattr(forecaster, "_predict_time_milli", 0)))
+        )
+        test_preds = test_preds.flatten()
 
     if attribute_file_path is not None:
         estimator_attributes_to_file(
             forecaster, attribute_file_path, max_list_shape=att_max_shape
         )
-
-    test_true = np.empty(len(test), dtype=test.dtype)
-    test_preds = np.empty(len(test), dtype=test.dtype)
-    start = int(round(time.time() * 1000))
-    if test.ndim == 2:
-        for index, prediction in enumerate(test):
-            test_true[index] = prediction[-1]
-            test_preds[index] = forecaster.predict(prediction[:-1])
-
-    test_time = (
-        int(round(time.time() * 1000))
-        - start
-        + int(round(getattr(forecaster, "_predict_time_milli", 0)))
-    )
-    test_preds = test_preds.flatten()
 
     test_mape = mean_absolute_percentage_error(test_true, test_preds)
 
@@ -1393,6 +1416,7 @@ def load_and_run_remote_forecasting_experiment(
     att_max_shape=0,
     benchmark_time=True,
     overwrite=False,
+    retrain=False,
 ):
     """Load a dataset and run a regression experiment.
 
@@ -1459,11 +1483,25 @@ def load_and_run_remote_forecasting_experiment(
         series = df.loc[df['series_name'].eq(series_name), 'series_value'].iat[0]
     series = np.asarray(series, dtype=float)
 
-    train, test = train_test_split(series)
-    if isinstance(forecaster, RegressionForecaster) and len(test) > forecaster.window + 1:
-        test = np.lib.stride_tricks.sliding_window_view(
-            test, window_shape=(forecaster.window + 1)
-        )
+    if retrain:
+        train = np.empty(30, dtype=series.dtype)
+        test = np.empty(30, dtype=series.dtype)
+        for i in range(1, 31):
+            train_item, test_item = train_test_split(series, 0, max_test_values=i)
+            train[i] = train_item
+            if isinstance(forecaster, RegressionForecaster):
+                test_array = np.empty(forecaster.window, dtype=series.dtype)
+                test_array[:-1] = train_item[-forecaster.window + 1:]
+                test_array[-1] = test_item[0]
+                test[i] = test_array
+            else:
+                test[i] = test_item[0]
+    else:
+        train, test = train_test_split(series)
+        if isinstance(forecaster, RegressionForecaster) and len(test) > forecaster.window + 1:
+            test = np.lib.stride_tricks.sliding_window_view(
+                test, window_shape=(forecaster.window + 1)
+            )
 
     run_forecasting_experiment(
         train,
