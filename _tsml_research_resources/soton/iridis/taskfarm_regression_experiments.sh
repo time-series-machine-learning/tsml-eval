@@ -54,6 +54,8 @@ relative_dataset_list="Data/windowed_series.txt"
 # Results and output file write location. Change these to reflect your own file structure
 relative_results_dir="RegressionResults/results/"
 relative_out_dir="RegressionResults/output/"
+relative_aeon_dir="aeon-src/"
+relative_tsml_eval_dir="tsml-eval/"
 
 # The python script we are running
 relative_script_file_path="tsml-eval/tsml_eval/experiments/forecasting_experiments.py"
@@ -65,7 +67,7 @@ extra_args=""
 # Environment name, change accordingly, for set up, see https://github.com/time-series-machine-learning/tsml-eval/blob/main/_tsml_research_resources/soton/iridis/iridis_python.md
 # Separate environments for GPU and CPU are recommended #regress_gpu regression_experiments
 # env_name="regression_experiments"
-container_path="scratch/tensorflow_sandbox/"
+container_path="/scratch/arb1g19/tensorflow_sandbox/"
 
 # Regressors to loop over. Must be seperated by a space. Different regressors will not run in the same node
 # See list of potential regressors in set_regressor  InceptionTimeRegressor
@@ -161,6 +163,9 @@ full_script_file_path="$local_path/$relative_script_file_path"
 
 full_preprocessing_file_path="$local_path/$relative_preprocessing_file_path"
 
+full_aeon_path="$local_path/$relative_aeon_dir"
+full_tsml_eval_path="$local_path/$relative_tsml_eval_dir"
+
 # Datasets to use and directory of data files. This can either be a text file or directory of text files
 # Separate text files will not run jobs of the same dataset in the same node. This is good to keep large and small datasets separate
 data_dir="$local_path/$relative_data_dir"
@@ -192,14 +197,26 @@ if [ "${gpu_job}" == "true" ]; then
 else
     gpu_instruction=""
 fi
-
 apptainer_instruction=""
 environment_instructions=""
 if [ "${gpu_job}" == "true" ]; then
-    environment_instructions="module load apptainer/1.3.3"
-    apptainer_instruction="apptainer exec --nv ${container_path} echo Running Apptainer job.; "
+  environment_instructions=$(cat <<'EOV'
+module load apptainer/1.3.3
+module load cuda/13.0.0
+export CUDA_HOME=/iridisfs/ixsoftware/cuda/13.0.0
+export APPTAINER_BINDPATH="$CUDA_HOME:$CUDA_HOME"
+export APPTAINERENV_PREPEND_PATH="$CUDA_HOME/bin"
+export APPTAINERENV_LD_LIBRARY_PATH="$CUDA_HOME/lib64:$LD_LIBRARY_PATH"
+export APPTAINERENV_XLA_FLAGS="--xla_gpu_cuda_data_dir=$CUDA_HOME"
+EOV
+)
+  apptainer_instruction="apptainer exec --bind '${full_aeon_path}:/opt/src/aeon-src' --bind '${full_tsml_eval_path}:/opt/src/tsml-eval-src' --nv ${container_path} "
 else
-    environment_instructions="module load $conda_instruction && source activate $env_name"
+  environment_instructions=$(cat <<EOV
+module load ${conda_instruction}
+source activate ${env_name}
+EOV
+)
 fi
 
 # This creates the submission file to run and does clean up

@@ -79,7 +79,7 @@ def run_experiment(args, overwrite=False):
                         if args.random_seed is None
                         else args.random_seed
                     ),
-                    n_jobs=1,
+                    n_jobs=args.n_jobs,
                     **args.kwargs,
                 ),
                 forecaster_name=args.estimator_name,

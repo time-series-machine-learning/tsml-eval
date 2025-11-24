@@ -84,7 +84,7 @@ def run_experiment(args):
                         if args.random_seed is None
                         else args.random_seed
                     ),
-                    n_jobs=1,
+                    n_jobs=args.n_jobs,
                     fit_contract=args.fit_contract,
                     checkpoint=args.checkpoint,
                     **args.kwargs,
@@ -99,7 +99,7 @@ def run_experiment(args):
                         if args.random_seed is None
                         else args.random_seed
                     ),
-                    n_jobs=1,
+                    n_jobs=args.n_jobs,
                 ),
                 build_train_file=args.train_fold,
                 write_attributes=args.write_attributes,
