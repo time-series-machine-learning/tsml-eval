@@ -33,6 +33,5 @@ jobs:
           days-before-delete: 455
           comment-updates: true
           tag-committer: true
-          stale-branch-label: "stale branch"
           compare-branches: "info"
           pr-check: true

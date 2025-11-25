@@ -120,6 +120,15 @@ def results_table_from_evaluation_csv(
     df = pd.read_csv(eval_csv_path)
     df.set_index(df.columns[0], inplace=True)
     df.index.name = None
+
+    def escape_underscores(s):
+        if isinstance(s, str):
+            return s.replace("_", r"\_")
+        return s
+
+    df.index = df.index.map(escape_underscores)
+    df.columns = df.columns.map(escape_underscores)
+
     df = df.round(round_digits)
     best = df.eq(df.max(axis=0) if higher_is_better else df.min(axis=0))
     ranks = df.rank(method="min", ascending=False if higher_is_better else True)
