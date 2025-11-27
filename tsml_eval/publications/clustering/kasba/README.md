@@ -1,4 +1,4 @@
-# 📘 KASBA: k-means Accelerated Stochastic Subgradient Barycentre Average
+# 📘 KASBA: k-means Accelerated Stochastic Subgradient Barycentre Averaging
 **Official Repository for the KASBA Time Series Clustering Paper**
 
 This repository accompanies the paper:
