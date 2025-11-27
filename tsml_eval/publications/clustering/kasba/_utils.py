@@ -8,7 +8,7 @@ from aeon.transformations.collection import Normalizer
 from tsml_eval.utils.resampling import stratified_resample_data
 
 
-def load_results_from_csv(path: str) -> dict:
+def load_results_from_csv(path: str) -> dict[str, dict[str, float]]:
     """
     Load results from custom CSV format.
 
@@ -28,7 +28,7 @@ def load_results_from_csv(path: str) -> dict:
             raise ValueError("First row must begin with 'Estimators:'")
 
         # Output structure
-        results = {est: {} for est in estimators}
+        results: dict[str, dict[str, float]] = {est: {} for est in estimators}
 
         # Process remaining rows
         for row in reader:
@@ -45,16 +45,26 @@ def load_results_from_csv(path: str) -> dict:
                 )
 
             for est, val in zip(estimators, values):
-                # Convert scientific notation or normal float
                 results[est][dataset] = float(val)
 
     return results
 
 
-def results_to_matrix(results: dict):
-    estimators = sorted(results.keys())
+def results_to_matrix(
+    results: dict[str, dict[str, float]],
+) -> tuple[np.ndarray, list[str], list[str]]:
+    """
+    Convert results dict into a (n_datasets, n_estimators) matrix.
 
-    datasets = sorted({d for est in estimators for d in results[est]})
+    Returns
+    -------
+    matrix : np.ndarray
+        Shape (n_datasets, n_estimators)
+    datasets : list[str]
+    estimators : list[str]
+    """
+    estimators: list[str] = sorted(results.keys())
+    datasets: list[str] = sorted({d for est in estimators for d in results[est]})
 
     matrix = np.zeros((len(datasets), len(estimators)), dtype=float)
 
@@ -83,27 +93,14 @@ def check_experiment_results_exist(
     combine_test_train: bool,
     path_to_results: str,
     resample_id: int = 0,
-):
-    """Check if the results of the experiment already exist.
-
-    Parameters
-    ----------
-    model_name: str
-        Name of the model.
-    dataset: str
-        Dataset name.
-    combine_test_train: bool
-        Boolean indicating if results for test train or combined should be checked.
-    path_to_results: str
-        Base path to the results.
-    resample_id: int
-        Integer indicating the resample id.
-
+) -> bool:
+    """
+    Check if the results of the experiment already exist.
 
     Returns
     -------
     bool
-        Boolean indicating if the results already exist.
+        True if results already exist.
     """
     path_to_train = os.path.join(
         path_to_results,
@@ -121,15 +118,13 @@ def check_experiment_results_exist(
     )
 
     if combine_test_train:
-        if os.path.exists(path_to_train):
-            return True
+        return os.path.exists(path_to_train)
     else:
-        if os.path.exists(path_to_train) and os.path.exists(path_to_test):
-            return True
-    return False
+        return os.path.exists(path_to_train) and os.path.exists(path_to_test)
 
 
-def _normalize_data(X):
+def _normalize_data(X: np.ndarray) -> np.ndarray:
+    """Normalize time series collection data."""
     scaler = Normalizer()
     return scaler.fit_transform(X)
 
@@ -140,23 +135,19 @@ def load_dataset_from_file(
     normalize: bool = True,
     combine_test_train: bool = False,
     resample_id: int | None = None,
-):
-    """Load dataset from file, optionally doing stratified resampling.
+) -> tuple[
+    np.ndarray | None,
+    np.ndarray | None,
+    np.ndarray | None,
+    np.ndarray | None,
+]:
+    """
+    Load dataset from file, optionally doing stratified resampling.
 
-    Parameters
-    ----------
-    dataset_name : str
-        Name of the dataset to load.
-    path_to_data : str
-        Path to the data.
-    normalize : bool, default=True
-        Whether to normalize the data.
-    combine_test_train : bool, default=False
-        Whether to combine the test and train data.
-    resample_id : int or None, default=None
-        If > 0 and combine_test_train is False, perform a stratified resample of the
-        original TRAIN/TEST pair using this as the random seed.
-        If 0 or None, use the original train/test split.
+    Returns
+    -------
+    (X_train, y_train, X_test, y_test)
+        Or (X, y, None, None) if combine_test_train=True
     """
     path_to_train_data = os.path.join(
         path_to_data, f"{dataset_name}/{dataset_name}_TRAIN.ts"
@@ -176,12 +167,14 @@ def load_dataset_from_file(
             y_test,
             random_state=resample_id,
         )
+
     if combine_test_train:
         X = np.concatenate((X_train, X_test), axis=0)
         y = np.concatenate((y_train, y_test), axis=0)
         if normalize:
             X = _normalize_data(X)
         return X, y, None, None
+
     else:
         if normalize:
             X_train = _normalize_data(X_train)
