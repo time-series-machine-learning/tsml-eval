@@ -331,7 +331,7 @@ if ((cmdCount>(n_tasks_per_node-n_threads_per_task))); then
 fi
 # Input args to the default classification_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/classification_experiments.py
-echo "${apptainer_instruction}python -u ${full_script_file_path} ${data_dir} ${results_dir} ${regressor} ${dataset} ${resample} ${generate_train_files} ${predefined_folds} ${normalise_data} ${extra_args} > ${out_dir}/${regressor}/output-${dataset}-${resample}-${dt}.txt 2>&1" >> ${out_dir}/generatedCommandList-${dt}.txt
+echo "${apptainer_instruction}python -u ${full_script_file_path} ${data_dir} ${results_dir} ${regressor} ${dataset} ${resample} ${generate_train_files} ${predefined_folds} ${normalise_data} -nj ${n_threads_per_task} ${extra_args} > ${out_dir}/${regressor}/output-${dataset}-${resample}-${dt}.txt 2>&1" >> ${out_dir}/generatedCommandList-${dt}.txt
 ((cmdCount=cmdCount+n_threads_per_task))
 totalCount=$((totalCount + 1))
 done

@@ -1482,7 +1482,7 @@ def load_and_run_remote_forecasting_experiment(
         df, _ = load_from_tsf_file(data_full_path)
         series = df.loc[df['series_name'].eq(series_name), 'series_value'].iat[0]
     series = np.asarray(series, dtype=float)
-
+    assert(np.isfinite(series).all())
     if retrain:
         train = np.empty(30, dtype=series.dtype)
         test = np.empty(30, dtype=series.dtype)
