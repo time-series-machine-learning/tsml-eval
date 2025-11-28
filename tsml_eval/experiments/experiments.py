@@ -1257,8 +1257,10 @@ def run_forecasting_experiment(
         estimator_attributes_to_file(
             forecaster, attribute_file_path, max_list_shape=att_max_shape
         )
-
-    test_mape = mean_absolute_percentage_error(test_true, test_preds)
+    if (np.isfinite(test_preds).all() is False):
+        test_mape = np.inf
+    else:
+        test_mape = mean_absolute_percentage_error(test_true, test_preds)
 
     write_forecasting_results(
         test_preds,
