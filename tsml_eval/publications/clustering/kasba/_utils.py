@@ -135,12 +135,7 @@ def load_dataset_from_file(
     normalize: bool = True,
     combine_test_train: bool = False,
     resample_id: int | None = None,
-) -> tuple[
-    np.ndarray | None,
-    np.ndarray | None,
-    np.ndarray | None,
-    np.ndarray | None,
-]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray | None, np.ndarray | None]:
     """
     Load dataset from file, optionally doing stratified resampling.
 
@@ -174,7 +169,6 @@ def load_dataset_from_file(
         if normalize:
             X = _normalize_data(X)
         return X, y, None, None
-
     else:
         if normalize:
             X_train = _normalize_data(X_train)
