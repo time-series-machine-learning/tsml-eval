@@ -70,7 +70,7 @@ def run_experiment(args, overwrite=False):
         else:
             retrain = False
             if 'retrain' in args.kwargs:
-                retrain = kwargs.pop('retrain')
+                retrain = args.kwargs.pop('retrain')
             load_and_run_remote_forecasting_experiment(
                 args.data_path,
                 args.dataset_name.strip(),
