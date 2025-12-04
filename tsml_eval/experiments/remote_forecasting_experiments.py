@@ -68,6 +68,9 @@ def run_experiment(args, overwrite=False):
         ):
             print("Ignoring, results already present")
         else:
+            retrain = False
+            if 'retrain' in args.kwargs:
+                retrain = True
             load_and_run_remote_forecasting_experiment(
                 args.data_path,
                 args.dataset_name.strip(),
@@ -90,6 +93,7 @@ def run_experiment(args, overwrite=False):
                 att_max_shape=args.att_max_shape,
                 benchmark_time=args.benchmark_time,
                 overwrite=args.overwrite,
+                retrain=retrain,
             )
     # local run (no args)
     else:
