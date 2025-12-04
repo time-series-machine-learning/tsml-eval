@@ -1486,9 +1486,9 @@ def load_and_run_remote_forecasting_experiment(
     series = np.asarray(series, dtype=float)
     assert(np.isfinite(series).all())
     if retrain:
-        train = np.empty(30, dtype=series.dtype)
+        train = np.empty((30,len(series)), dtype=series.dtype)
         test = np.empty(30, dtype=series.dtype)
-        for i in range(1, 31):
+        for i in range(30, 0, -1):
             train_item, test_item = train_test_split(series, 0, max_test_values=i)
             train[i] = train_item
             if isinstance(forecaster, RegressionForecaster):
