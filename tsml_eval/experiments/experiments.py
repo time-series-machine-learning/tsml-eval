@@ -1496,8 +1496,9 @@ def load_and_run_remote_forecasting_experiment(
             train_item, test_item = train_test_split(series, 0, max_test_values=(30-i))
             train[i] = train_item[i:]
             if isinstance(forecaster, RegressionForecaster):
-                test_array = np.empty(forecaster.window, dtype=series.dtype)
-                test_array[:-1] = train_item[-forecaster.window + 1:]
+                # Add 1 for the test data item
+                test_array = np.empty(forecaster.window + 1, dtype=series.dtype)
+                test_array[:-1] = train_item[-forecaster.window:]
                 test_array[-1] = test_item[0]
                 test[i] = test_array
             else:
