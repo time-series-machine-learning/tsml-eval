@@ -1487,7 +1487,7 @@ def load_and_run_remote_forecasting_experiment(
     assert(np.isfinite(series).all())
     if retrain:
         train_item, test_item = train_test_split(series, 0, max_test_values=30)
-        train = np.empty((30,len(train_item)-30), dtype=series.dtype)
+        train = np.empty((30,len(train_item)), dtype=series.dtype)
         test = np.empty(30, dtype=series.dtype)
         for i in range(0, 30):
             train_item, test_item = train_test_split(series, 0, max_test_values=(30-i))
