@@ -95,7 +95,7 @@ def _set_unequal_transformer(t, random_state, n_jobs):
     if t == "padder" or t == "zero-padder":
         from aeon.transformations.collection.unequal_length import Padder
 
-        return Padder()
+        return Padder(random_state=random_state)
     elif t == "zero-padder-min":
         from aeon.transformations.collection.unequal_length import Padder
 
