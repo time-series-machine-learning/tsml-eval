@@ -20,6 +20,9 @@ os.environ["LOKY_MAX_CPU_COUNT"] = "1"
 os.environ["TF_NUM_INTEROP_THREADS"] = "1"
 os.environ["TF_NUM_INTRAOP_THREADS"] = "1"
 
+sys.path.append("C:/Users/alexb/Documents/University/PhD/aeon/aeon")
+sys.path.append("C:/Users/alexb/Documents/University/PhD/aeon/tsml-eval")
+
 import numba
 from aeon.utils.validation._dependencies import _check_soft_dependencies
 
