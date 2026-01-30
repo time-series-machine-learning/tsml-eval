@@ -94,6 +94,7 @@ def results_table_from_evaluation_csv(
     round_digits: int = 4,
     rank_columns: bool = False,
     higher_is_better: bool = True,
+    drop_classifiers: str | list[str] | None = None,
 ) -> str:
     """Create a table of results from an evaluation CSV file in LaTeX format.
 
@@ -109,6 +110,8 @@ def results_table_from_evaluation_csv(
         Append competition rank per column in brackets, e.g. ``0.9123 (1)``.
     higher_is_better : bool, default=True
         Whether higher values are better for determining the best score.
+    drop_classifiers : str or list of str or None, default=None
+        Classifier name or list of classifier names to drop from the table.
 
     Returns
     -------
@@ -120,6 +123,23 @@ def results_table_from_evaluation_csv(
     df = pd.read_csv(eval_csv_path)
     df.set_index(df.columns[0], inplace=True)
     df.index.name = None
+
+    if drop_classifiers is not None:
+        cols = (
+            [drop_classifiers]
+            if isinstance(drop_classifiers, str)
+            else list(drop_classifiers)
+        )
+        df = df.drop(columns=cols, errors="ignore")
+
+    def escape_underscores(s):
+        if isinstance(s, str):
+            return s.replace("_", r"\_")
+        return s
+
+    df.index = df.index.map(escape_underscores)
+    df.columns = df.columns.map(escape_underscores)
+
     df = df.round(round_digits)
     best = df.eq(df.max(axis=0) if higher_is_better else df.min(axis=0))
     ranks = df.rank(method="min", ascending=False if higher_is_better else True)

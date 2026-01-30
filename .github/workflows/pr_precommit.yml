@@ -23,7 +23,7 @@ jobs:
           app-id: ${{ vars.PR_APP_ID }}
           private-key: ${{ secrets.PR_APP_KEY }}
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.head_ref }}
@@ -33,7 +33,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - uses: tj-actions/changed-files@v47.0.0
+      - uses: tj-actions/changed-files@v47.0.1
         id: changed-files
 
       - name: List changed files
@@ -70,7 +70,7 @@ jobs:
           app-id: ${{ vars.PR_APP_ID }}
           private-key: ${{ secrets.PR_APP_KEY }}
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.head_ref }}
