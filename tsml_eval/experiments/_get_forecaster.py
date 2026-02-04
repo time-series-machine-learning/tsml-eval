@@ -21,6 +21,7 @@ stats_forecasters = [
     ["setarforecaster", "setar"],
     ["thetaforecaster", "theta"],
     ["tvpforecaster", "tvp"],
+    ["averagestats", "average", "hybridaverage"],
 ]
 regression_forecasters = [
     "randomforest",
@@ -133,6 +134,10 @@ def _set_forecaster_stats(f, random_state, n_jobs, kwargs):
         from aeon.forecasting.stats import TVP
 
         return TVP(**kwargs)
+    elif f == "averagestats" or f == "average" or f == "hybridaverage":
+        from tsml_eval.estimators.forecasting.HybridStats import AverageStats
+
+        return AverageStats(**kwargs)
 
 
 def _set_forecaster_regression(f, random_state, n_jobs, kwargs):

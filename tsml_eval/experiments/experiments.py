@@ -16,6 +16,7 @@ __all__ = [
 ]
 
 import math
+import multiprocessing
 import os
 import time
 import warnings
@@ -1149,6 +1150,9 @@ def load_and_run_clustering_experiment(
         benchmark_time=benchmark_time,
     )
 
+def fit_predict_forecaster(forecaster, train_series, test_series, test_preds, index):
+    forecaster.fit(train_series)
+    test_preds[index] = forecaster.predict(test_series[:-1])
 
 def run_forecasting_experiment(
     train,
@@ -1212,22 +1216,25 @@ def run_forecasting_experiment(
     if train.ndim == 2 and test.ndim == 2:
         fit_time = 0
         test_time = 0
+        test_preds = multiprocessing.Array('i', len(test))
+        processes = []
         for index, (train_series, test_series) in enumerate(zip(train, test)):
-            mem_usage, fit_time_measured = record_max_memory(
-                forecaster.fit,
-                args=(train_series,),
-                interval=MEMRECORD_INTERVAL,
-                return_func_time=True,
-            )
-            fit_time += int(round(getattr(forecaster, "_fit_time_milli", 0))) + fit_time_measured
-            start = int(round(time.time() * 1000))
+            # Creating a process for each segment
+            p = multiprocessing.Process(target=fit_predict_forecaster, args=(forecaster.clone(), train_series, test_series, test_preds, index))
+            processes.append(p)
+            p.start()
             test_true[index] = test_series[-1]
-            test_preds[index] = forecaster.predict(test_series[:-1])
-            test_time += (
-                int(round(time.time() * 1000))
-                - start
-                + int(round(getattr(forecaster, "_predict_time_milli", 0)))
-            )
+
+        for p in processes:
+            p.join()
+        test_preds = np.frombuffer(test_preds.get_obj()).reshape(test.shape)
+    elif train.ndim == 2:
+        fit_time = 0
+        test_time = 0
+        test_true = test
+        for index, train_series in enumerate(train):
+            test_preds[index] = forecaster.forecast(train_series)
+        test_preds = test_preds.flatten()
     else:
         mem_usage, fit_time = record_max_memory(
             forecaster.fit,
@@ -1509,7 +1516,12 @@ def load_and_run_remote_forecasting_experiment(
             test = np.lib.stride_tricks.sliding_window_view(
                 test, window_shape=(forecaster.window + 1)
             )
-
+        elif isinstance(forecaster, RegressionForecaster) and len(test) < forecaster.window:
+            test_array = np.empty(forecaster.window + 1, dtype=series.dtype)
+            test_array[-len(test):] = test
+            test_array[:-len(test)+1] = train[forecaster.window - len(test) + 1:]
+            test = test_array
+            
     run_forecasting_experiment(
         train,
         test,

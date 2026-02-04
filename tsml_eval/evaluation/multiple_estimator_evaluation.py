@@ -1501,9 +1501,9 @@ def _figures_for_statistic(
         formats="pdf",
         pvalue_test_params={"zero_method": "pratt", "alternative": "two-sided"},
         pvalue_correction=None,
-        show_symetry=True,
+        show_symmetry=True,
         higher_stat_better=higher_better,
-        used_statistic=statistic_name,
+        statistic_name=statistic_name,
     )
     pickle.dump(
         mcm,

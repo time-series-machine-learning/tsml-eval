@@ -1,0 +1,5 @@
+Cluster
+python -u ./tsml-eval/tsml_eval/experiments/remote_forecasting_experiments.py ./Data/forecasting/ ./RegressionResults/results_refit/ Ridge australian_electricity_demand_dataset_T1 0 -kw window 100 int -kw retrain true bool
+
+Local
+python -u ./tsml_eval/experiments/remote_forecasting_experiments.py ..\ForecastingResults\Data\forecasting\ ..\ForecastingResults\results_refit\ Average australian_electricity_demand_dataset_T1 0 -kw window 100 int -kw retrain true bool
