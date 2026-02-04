@@ -16,6 +16,7 @@ stats_forecasters = [
     ["arimaforecaster", "arima"],
     "autoarima",
     ["etsforecaster", "ets"],
+    "autoets",
     ["tarforecaster", "tar"],
     "autotar",
     ["setarforecaster", "setar"],
@@ -114,6 +115,10 @@ def _set_forecaster_stats(f, random_state, n_jobs, kwargs):
         from aeon.forecasting.stats import ETS
 
         return ETS(**kwargs)
+    elif f == "autoets":
+        from aeon.forecasting.stats import AutoETS
+
+        return AutoETS
     elif f == "tarforecaster" or f == "tar":
         from aeon.forecasting.stats import TAR
 
