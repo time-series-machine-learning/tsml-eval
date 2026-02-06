@@ -1231,6 +1231,7 @@ def run_forecasting_experiment(
     elif train.ndim == 2:
         fit_time = 0
         test_time = 0
+        mem_usage = 0
         test_true = test
         for index, train_series in enumerate(train):
             test_preds[index] = forecaster.forecast(train_series)
