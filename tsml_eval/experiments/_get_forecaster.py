@@ -118,7 +118,7 @@ def _set_forecaster_stats(f, random_state, n_jobs, kwargs):
     elif f == "autoets":
         from aeon.forecasting.stats import AutoETS
 
-        return AutoETS
+        return AutoETS(**kwargs)
     elif f == "tarforecaster" or f == "tar":
         from aeon.forecasting.stats import TAR
 
