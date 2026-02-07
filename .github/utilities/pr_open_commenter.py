@@ -96,8 +96,7 @@ elif title_labels_str == "":
         "update the labels accordingly."
     )
 
-pr.create_issue_comment(
-    f"""
+pr.create_issue_comment(f"""
 ## Thank you for contributing to `tsml-eval`
 
 {title_labels_str}
@@ -118,5 +117,4 @@ These checkboxes will add labels to enable/disable CI functionality for this PR.
 
 </p>
 </details>
-    """  # noqa
-)
+    """)  # noqa
