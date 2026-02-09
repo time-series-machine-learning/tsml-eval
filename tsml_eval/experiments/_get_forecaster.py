@@ -159,3 +159,7 @@ def _set_forecaster_other(f, random_state, n_jobs, kwargs):
         from aeon.forecasting import NaiveForecaster
 
         return NaiveForecaster(**kwargs)
+    elif f == "ensemble1":
+        from tsml_eval.estimators.forecasting.HybridStats import Ensemble1
+
+        return Ensemble1(**kwargs)
