@@ -29,6 +29,7 @@ regression_forecasters = [
 ]
 other_forecasters = [
     ["naiveforecaster", "naive"],
+    "ensemble1",
 ]
 
 
