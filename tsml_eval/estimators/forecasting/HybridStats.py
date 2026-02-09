@@ -52,7 +52,7 @@ class Ensemble1(BaseForecaster):
         self.ets_model_.fit(y, exog=exog)
         self.arima_model_ = AutoARIMA()
         self.arima_model_.fit(y, exog=exog)
-        self.random_forest_model_ = RegressionForecaster(regressor=RandomForestRegressor())
+        self.random_forest_model_ = RegressionForecaster(window=100, regressor=RandomForestRegressor())
         self.random_forest_model_.fit(y, exog=exog)
         return self
 
