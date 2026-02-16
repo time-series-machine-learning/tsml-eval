@@ -33,7 +33,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - uses: tj-actions/changed-files@v47.0.1
+      - uses: tj-actions/changed-files@v47.0.2
         id: changed-files
 
       - name: List changed files
