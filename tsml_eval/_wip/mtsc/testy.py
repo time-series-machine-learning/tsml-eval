@@ -167,6 +167,7 @@ def write_test_resample_csv(
 trainX, trainy = load_classification(name=data, extract_path=path,split="train")
 testX, testy = load_classification(name=data, extract_path=path, split="test")
 print("Train shape = ",trainX.shape)
+print("Test shape = ",trainX.shape)
 from aeon.classification.dictionary_based import TemporalDictionaryEnsemble
 
 cls = TemporalDictionaryEnsemble(n_jobs=-1,time_limit_in_minutes=60)
