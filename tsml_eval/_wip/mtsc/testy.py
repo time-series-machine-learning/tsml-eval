@@ -9,5 +9,5 @@ load_and_run_classification_experiment(
     problem_path=path,
     results_path=results,
     dataset=data,
-    classifier="arsenal",
+    classifier="rocket",
 )
