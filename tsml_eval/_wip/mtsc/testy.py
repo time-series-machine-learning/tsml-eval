@@ -1,5 +1,3 @@
-from local.classification import trainy
-
 print("Hello world, up the arsenal")
 from aeon.datasets import load_classification
 from tsml_eval.experiments import load_and_run_classification_experiment
