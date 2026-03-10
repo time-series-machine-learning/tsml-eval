@@ -400,14 +400,14 @@ def load_classifier_results(file_path, calculate_stats=True, verify_values=True)
                 pred_descriptions.append(",".join(line[6 + n_classes :]).strip())
 
         # compatibility with old results files
-        if len(line3) > 6:
-            error_estimate_method = line3[6]
-            error_estimate_time = float(line3[7])
-            build_plus_estimate_time = float(line3[8])
-        else:
-            error_estimate_method = "N/A"
-            error_estimate_time = -1.0
-            build_plus_estimate_time = -1.0
+        # if len(line3) > 6:
+        #     error_estimate_method = line3[6]
+        #     error_estimate_time = float(line3[7])
+        #     build_plus_estimate_time = float(line3[8])
+        # else:
+        error_estimate_method = "N/A"
+        error_estimate_time = -1.0
+        build_plus_estimate_time = -1.0
 
     cr = ClassifierResults(
         dataset_name=line1[0],
@@ -419,8 +419,10 @@ def load_classifier_results(file_path, calculate_stats=True, verify_values=True)
         parameter_info=lines[1].strip(),
         fit_time=float(line3[1]),
         predict_time=float(line3[2]),
-        benchmark_time=float(line3[3]),
-        memory_usage=float(line3[4]),
+        benchmark_time=-1,
+        # benchmark_time=float(line3[3]),
+        memory_usage=-1,
+        # memory_usage=float(line3[4]),
         n_classes=n_classes,
         error_estimate_method=error_estimate_method,
         error_estimate_time=error_estimate_time,
