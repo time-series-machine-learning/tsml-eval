@@ -167,17 +167,30 @@ print("Train shape = ",trainX.shape)
 print("Test shape = ",testX.shape)
 from aeon.classification.dictionary_based import TemporalDictionaryEnsemble
 
-cls = TemporalDictionaryEnsemble(n_jobs=-1,time_limit_in_minutes=60)
-cls.fit(trainX,trainy)
+
+cls = TemporalDictionaryEnsemble(n_jobs=-1, time_limit_in_minutes=60)
+
+start = time.perf_counter()
+cls.fit(trainX, trainy)
+fit_time_ms = (time.perf_counter() - start) * 1000
+
 train_classes = np.unique(trainy)
+
+start = time.perf_counter()
 preds_proba = cls.predict_proba(testX)
+predict_proba_time_ms = (time.perf_counter() - start) * 1000
+
 preds = cls.classes_[np.argmax(preds_proba, axis=1)]
+
 write_test_resample_csv(
     results_path=results_path,
     classifier_name="TDE",
-    data_name = data,
-    y_true= testy,
-    y_pred = preds,
-    y_proba = preds_proba,
-    classes = train_classes ,
-    resample_id = 0,)
+    data_name=dataset,
+    y_true=testy,
+    y_pred=preds,
+    y_proba=preds_proba,
+    classes=train_classes,
+    fit_time=int(fit_time_ms),
+    predict_time=int(predict_proba_time_ms),
+    resample_id=0,
+)
