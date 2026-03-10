@@ -9,17 +9,14 @@ import numpy as np
 from aeon.datasets import load_classification
 from aeon.classification.feature_based import FreshPRINCEClassifier
 from aeon.classification.convolution_based import RocketClassifier
-data = "BeijingPM10Quality_disc"
+dataset = "BeijingPM10Quality_disc"
 
-path = str(Path("~/Data").expanduser())
-results = str(Path("~/Results").expanduser())
-dataset_path = path / data
-dataset_results = results / data
-
-# path = "C:/Temp/Classification/"
-# results = "C:/Temp/"
-dataset_path = path + data
-dataset_results = results + data
+data_path = "C:/Temp/Classification/"
+results_path = "C:/Temp/"
+data_path = str(Path("~/Data").expanduser())
+results_path = str(Path("~/Results").expanduser())
+# dataset_path = path + data
+# dataset_results = results + data
 
 
 
@@ -164,20 +161,20 @@ def write_test_resample_csv(
 
 
 
-trainX, trainy = load_classification(name=data, extract_path=path,split="train")
-testX, testy = load_classification(name=data, extract_path=path, split="test")
+trainX, trainy = load_classification(name=dataset, extract_path=data_path,split="train")
+testX, testy = load_classification(name=dataset, extract_path=data_path, split="test")
 print("Train shape = ",trainX.shape)
-print("Test shape = ",trainX.shape)
+print("Test shape = ",testX.shape)
 from aeon.classification.dictionary_based import TemporalDictionaryEnsemble
 
 cls = TemporalDictionaryEnsemble(n_jobs=-1,time_limit_in_minutes=60)
-cls.fit(trainX[:100],trainy[:100])
+cls.fit(trainX,trainy)
 train_classes = np.unique(trainy)
 preds_proba = cls.predict_proba(testX)
 preds = cls.classes_[np.argmax(preds_proba, axis=1)]
 write_test_resample_csv(
-    results_path = results,
-    classifier_name = "TDE",
+    results_path=results_path,
+    classifier_name="TDE",
     data_name = data,
     y_true= testy,
     y_pred = preds,
