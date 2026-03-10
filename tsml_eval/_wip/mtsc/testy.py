@@ -13,11 +13,11 @@ data = "BeijingPM10Quality_disc"
 
 path = str(Path("~/Data").expanduser())
 results = str(Path("~/Results").expanduser())
-# dataset_path = path / data
-# dataset_results = results / data
+dataset_path = path / data
+dataset_results = results / data
 
-path = "C:/Temp/Classification/"
-results = "C:/Temp/"
+# path = "C:/Temp/Classification/"
+# results = "C:/Temp/"
 dataset_path = path + data
 dataset_results = results + data
 
