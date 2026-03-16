@@ -26,14 +26,14 @@ jobs:
 
       - uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: "3.13"
 
       - name: Restore numba cache
         uses: ./.github/actions/numba_cache
         with:
             cache_name: "run-notebook-examples"
             runner_os: ${{ runner.os }}
-            python_version: "3.12"
+            python_version: "3.13"
 
       - name: Install
         uses: nick-fields/retry@v3
