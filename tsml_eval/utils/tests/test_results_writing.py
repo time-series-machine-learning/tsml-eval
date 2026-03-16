@@ -23,10 +23,10 @@ from tsml_eval.utils.results_validation import (
     _check_second_line,
 )
 from tsml_eval.utils.results_writing import (
+    regression_results_third_line,
+    results_third_line,
     write_classification_results,
     write_clustering_results,
-    write_forecasting_results,
-    write_regression_results,
     write_results_to_tsml_format,
 )
 
@@ -93,8 +93,8 @@ def test_write_classification_results_invalid():
 def test_write_regression_results():
     """Test writing of regression results files."""
     labels, predictions, _ = _generate_labels_and_predictions()
-
-    write_regression_results(
+    third_line = regression_results_third_line()
+    write_results_to_tsml_format(
         predictions,
         labels,
         "Test",
@@ -102,6 +102,7 @@ def test_write_regression_results():
         _REGRESSOR_RESULTS_PATH,
         full_path=False,
         first_line_comment="test_write_regression_results",
+        third_line=third_line,
     )
 
     _check_regression_file_format(
@@ -127,8 +128,8 @@ def _check_regression_file_format(file_path, num_results_lines=None):
 def test_write_forecasting_results():
     """Test writing of forecasting results files."""
     labels, predictions, _ = _generate_labels_and_predictions()
-
-    write_forecasting_results(
+    third_line = results_third_line()
+    write_results_to_tsml_format(
         predictions,
         labels,
         "Test",
@@ -136,6 +137,7 @@ def test_write_forecasting_results():
         _FORECASTER_RESULTS_PATH,
         full_path=False,
         first_line_comment="test_write_forecasting_results",
+        third_line=third_line,
     )
 
     _check_forecasting_file_format(
