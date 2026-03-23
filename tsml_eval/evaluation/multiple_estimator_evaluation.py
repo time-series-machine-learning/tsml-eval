@@ -290,6 +290,8 @@ def evaluate_classifiers_by_problem(
                                 raise FileNotFoundError(msg)
                             elif verbose:
                                 print(msg)  # noqa: T201
+                        except ValueError as e:
+                            print(f"{e}\n for classifier {classifier_name} on dataset {dataset_name}")
 
             if not found_estimator:
                 print(f"Classifier {classifier_eval_name} not found.")  # noqa: T201

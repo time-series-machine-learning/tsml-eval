@@ -9,9 +9,10 @@ import numpy as np
 from aeon.datasets import load_classification
 from aeon.classification.feature_based import FreshPRINCEClassifier
 from aeon.classification.convolution_based import RocketClassifier
+from aeon.classification import DummyClassifier
 dataset = "BeijingPM10Quality_disc"
 
-data_path = "C:/Temp/Classification/"
+data_path = "C:/Data/Multiverse"
 results_path = "C:/Temp/"
 data_path = str(Path("~/Data").expanduser())
 results_path = str(Path("~/Results").expanduser())
@@ -34,9 +35,9 @@ def write_test_resample_csv(
     time_unit: str = "MILLISECONDS",
     description: str | None = None,
     classifier_params: dict | None = None,
-    fit_time_ms: int = -1,
-    predict_time_ms: int = -1,
-    benchmark_time_ms: int = -1,
+    fit_time: int = -1,
+    predict_time: int = -1,
+    benchmark_time: int = -1,
     memory_usage: int = -1,
     train_estimate_method: str = "N/A",
     train_estimate_time_ms: int = -1,
@@ -74,7 +75,7 @@ def write_test_resample_csv(
         Optional free-text description.
     classifier_params : dict | None, default=None
         Parameters to write on line 2, usually `cls.get_params(deep=False)`.
-    fit_time_ms, predict_time_ms, benchmark_time_ms, memory_usage,
+    fit_time, predict_time, benchmark_time, memory_usage,
     train_estimate_method, train_estimate_time_ms, fit_and_estimate_time_ms
         Summary metadata for line 3.
 
@@ -143,9 +144,9 @@ def write_test_resample_csv(
         writer.writerow(
             [
                 accuracy,
-                fit_time_ms,
-                predict_time_ms,
-                benchmark_time_ms,
+                fit_time,
+                predict_time,
+                benchmark_time,
                 memory_usage,
                 n_classes,
                 train_estimate_method,
@@ -169,7 +170,7 @@ from aeon.classification.dictionary_based import TemporalDictionaryEnsemble
 
 
 cls = TemporalDictionaryEnsemble(n_jobs=-1, time_limit_in_minutes=60)
-
+cls = DummyClassifier()
 start = time.perf_counter()
 cls.fit(trainX, trainy)
 fit_time_ms = (time.perf_counter() - start) * 1000
@@ -184,7 +185,7 @@ preds = cls.classes_[np.argmax(preds_proba, axis=1)]
 
 write_test_resample_csv(
     results_path=results_path,
-    classifier_name="TDE",
+    classifier_name="Dummy",
     data_name=dataset,
     y_true=testy,
     y_pred=preds,
