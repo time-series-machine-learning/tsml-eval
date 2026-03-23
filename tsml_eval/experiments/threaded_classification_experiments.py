@@ -85,12 +85,13 @@ def run_experiment(args):
         # Do not include paths to your local directories here in PRs
         data_path = _TEST_DATA_PATH
         results_path = _CLASSIFIER_RESULTS_PATH
+
         estimator_name = "ROCKET"
         dataset_name = "MinimalChinatown"
         row_normalise = False
         transform_name = None
         resample_id = 0
-        n_jobs = 1
+        n_jobs = -1
         train_fold = False
         write_attributes = True
         att_max_shape = 0
