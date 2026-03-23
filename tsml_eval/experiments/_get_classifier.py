@@ -710,7 +710,6 @@ def _set_classifier_interval_based(
             random_state=random_state,
             n_jobs=n_jobs,
             time_limit_in_minutes=fit_contract,
-            parallel_backend="loky",
             **kwargs,
         )
     elif c == "drcif" or c == "drcifclassifier":
