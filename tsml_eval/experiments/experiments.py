@@ -27,7 +27,6 @@ from aeon.classification import BaseClassifier
 from aeon.clustering import BaseClusterer
 from aeon.forecasting import BaseForecaster
 from aeon.regression.base import BaseRegressor
-from aeon.utils.validation import get_n_cases
 from sklearn import preprocessing
 from sklearn.base import BaseEstimator, is_classifier, is_regressor
 from sklearn.metrics import (
@@ -37,11 +36,6 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import cross_val_predict
 from tsml.base import BaseTimeSeriesEstimator
-from tsml.compose import (
-    SklearnToTsmlClassifier,
-    SklearnToTsmlClusterer,
-    SklearnToTsmlRegressor,
-)
 from tsml.utils.validation import is_clusterer
 
 from tsml_eval.utils.datasets import load_experiment_data
@@ -158,20 +152,10 @@ def run_classification_experiment(
             use_fit_predict = True
     elif isinstance(classifier, BaseTimeSeriesEstimator) and is_classifier(classifier):
         pass
-    elif isinstance(classifier, BaseEstimator) and is_classifier(classifier):
-        classifier = SklearnToTsmlClassifier(
-            classifier=classifier,
-            pad_unequal=True,
-            concatenate_channels=True,
-            clone_estimator=False,
-            random_state=(
-                classifier.random_state if hasattr(classifier, "random_state") else None
-            ),
-        )
     else:
         raise TypeError("classifier must be a tsml, aeon or sklearn classifier.")
 
-    n_cases_test = get_n_cases(X_test)
+    n_cases_test = len(X_test)
     if data_transforms is not None:
         if not isinstance(data_transforms, list):
             data_transforms = [data_transforms]
@@ -193,7 +177,7 @@ def run_classification_experiment(
 
                 # If we have edited the number of cases in test something has gone
                 # wrong i.e. we have applied SMOTE to the test set
-                new_n_cases_test = get_n_cases(X_test)
+                new_n_cases_test = len(X_test)
                 assert new_n_cases_test == n_cases_test, (
                     f"Error: X_test sample size changed from {n_cases_test} to "
                     f"{new_n_cases_test} after transformation "
@@ -529,16 +513,6 @@ def run_regression_experiment(
             use_fit_predict = True
     elif isinstance(regressor, BaseTimeSeriesEstimator) and is_regressor(regressor):
         pass
-    elif isinstance(regressor, BaseEstimator) and is_regressor(regressor):
-        regressor = SklearnToTsmlRegressor(
-            regressor=regressor,
-            pad_unequal=True,
-            concatenate_channels=True,
-            clone_estimator=False,
-            random_state=(
-                regressor.random_state if hasattr(regressor, "random_state") else None
-            ),
-        )
     else:
         raise TypeError("regressor must be a tsml, aeon or sklearn regressor.")
 
@@ -850,16 +824,6 @@ def run_clustering_experiment(
         isinstance(clusterer, BaseTimeSeriesEstimator) and is_clusterer(clusterer)
     ):
         pass
-    elif isinstance(clusterer, BaseEstimator) and is_clusterer(clusterer):
-        clusterer = SklearnToTsmlClusterer(
-            clusterer=clusterer,
-            pad_unequal=True,
-            concatenate_channels=True,
-            clone_estimator=False,
-            random_state=(
-                clusterer.random_state if hasattr(clusterer, "random_state") else None
-            ),
-        )
     else:
         raise TypeError("clusterer must be a tsml, aeon or sklearn clusterer.")
 
