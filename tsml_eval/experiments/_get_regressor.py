@@ -468,6 +468,7 @@ def _set_regressor_interval_based(
         return DrCIFRegressor(
             random_state=random_state,
             n_jobs=n_jobs,
+            parallel_backend="loky",
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
@@ -478,6 +479,7 @@ def _set_regressor_interval_based(
             n_estimators=500,
             random_state=random_state,
             n_jobs=n_jobs,
+            parallel_backend="loky",
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
