@@ -1213,7 +1213,6 @@ def run_forecasting_experiment(
         fit_time = 0
         test_time = 0
         for index, (train_series, test_series) in enumerate(zip(train, test)):
-            # Creating a process for each segment
             forecaster.fit(train_series)
             test_preds[index] = forecaster.predict(test_series[:-1])
             test_true[index] = test_series[-1]
