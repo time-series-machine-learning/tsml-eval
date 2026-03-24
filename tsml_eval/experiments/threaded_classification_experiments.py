@@ -90,7 +90,7 @@ def run_experiment(args):
         row_normalise = False
         transform_name = None
         resample_id = 0
-        n_jobs = 1
+        n_jobs = -1
         train_fold = False
         write_attributes = True
         att_max_shape = 0
