@@ -125,7 +125,7 @@ mkdir -p "${out_dir}"
 
 # -----------------------------
 # Activate Python venv
-source /path/to/your/venv/bin/activate
+source "$aeon_path/$env_name/bin/activate"
 
 # -----------------------------
 # Turn a directory into a list if needed
