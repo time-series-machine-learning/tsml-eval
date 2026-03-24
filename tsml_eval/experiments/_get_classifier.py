@@ -864,11 +864,10 @@ def _set_classifier_shapelet_based(
             transform_limit_in_minutes=120,
             random_state=random_state,
             n_jobs=n_jobs,
-            parallel_backend="loky",
             **kwargs,
         )
     elif c == "shapelettransformclassifier" or c == "stc":
-        from tsml_eval._wip.shapelets.early_abandon._stc3 import (
+        from aeon.classification.shapelet_based import (
             ShapeletTransformClassifier,
         )
 
@@ -886,7 +885,6 @@ def _set_classifier_shapelet_based(
             random_state=random_state,
             n_jobs=n_jobs,
             time_limit_in_minutes=fit_contract,
-            parallel_backend="loky",
             **kwargs,
         )
     elif c == "rdstclassifier" or c == "rdst":
