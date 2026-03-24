@@ -78,10 +78,9 @@ class _FunctionThread(Thread):
 
     def run(self):
         """Overloads the threading.Thread.run."""
-        start = int(round(time.time() * 1000))
+        start = time.perf_counter()
         try:
             self.function(*self.args, **self.kwargs)
         except Exception as e:
             self.exception = e
-        end = int(round(time.time() * 1000))
-        self.function_time = end - start
+        self.function_time = int((time.perf_counter() - start) * 1000)

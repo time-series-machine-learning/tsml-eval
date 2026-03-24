@@ -232,6 +232,8 @@ def run_classification_experiment(
         if use_fit_predict:
             train_probs = classifier.fit_predict_proba(X_train, y_train)
             needs_fit = False
+            if hasattr(classifier, "fit_time_millis_"):
+                fit_time = classifier.fit_time_millis_
             fit_and_train_time = int(round(time.time() * 1000)) - start
         else:
             _, counts = np.unique(y_train, return_counts=True)
@@ -282,7 +284,8 @@ def run_classification_experiment(
                 interval=MEMRECORD_INTERVAL,
                 return_func_time=True,
             )
-            fit_time += int(round(getattr(classifier, "_fit_time_milli", 0)))
+            if hasattr(classifier, "fit_time_millis_"):
+                fit_time = classifier.fit_time_millis_
 
         if attribute_file_path is not None:
             estimator_attributes_to_file(

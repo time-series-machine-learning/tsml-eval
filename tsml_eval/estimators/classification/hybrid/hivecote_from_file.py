@@ -4,8 +4,10 @@ Hybrid ensemble of classifiers from separate time series classification
 representations, using the weighted probabilistic CAWPE as an ensemble controller.
 """
 
-__maintainer__ = ["MatthewMiddlehurst", "ander-hg"]
+__maintainer__ = ["MatthewMiddlehurst"]
 __all__ = ["FromFileHIVECOTE"]
+
+import time
 
 import numpy as np
 from aeon.classification import BaseClassifier
@@ -13,6 +15,9 @@ from sklearn import preprocessing
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import StratifiedKFold
 from sklearn.utils import check_random_state
+
+from tsml_eval.evaluation.storage import ClassifierResults
+from tsml_eval.utils.functions import time_to_milliseconds
 
 
 class FromFileHIVECOTE(BaseClassifier):
@@ -34,7 +39,7 @@ class FromFileHIVECOTE(BaseClassifier):
     tune_alpha : bool, default=False
         Tests alpha [1..10] and uses the best value.
     new_weights : list, default=None
-        The list of weights to use. Skips finding of weights if not None.
+        An alternative list of weights to use. Replaces accuracy weights if not None.
     acc_filter : (str, float) tuple, default=None
         Removes the worst component based or on accuracies on
         training data if first item is "train" or test data if first item is "test".
@@ -101,65 +106,68 @@ class FromFileHIVECOTE(BaseClassifier):
 
     def _fit(self, X, y):
         self.weights_ = []
+        self.fit_time_millis_ = 0
+
+        n_instances = len(X)
+        acc_list = []
+
+        # load train file at path (trainResample.csv if random_state is None,
+        # trainResample{self.random_state}.csv otherwise)
+        if self.random_state is not None:
+            file_name = f"trainResample{self.random_state}.csv"
+        else:
+            file_name = "trainResample.csv"
+
+        if self.tune_alpha:
+            X_probas = np.zeros((n_instances, len(self.classifiers), self.n_classes_))
+
+        for i, path in enumerate(self.classifiers):
+            cr = ClassifierResults().load_from_file(path + file_name)
+
+            if cr.fit_and_estimate_time == -1:
+                self.fit_time_millis_ = -1
+            elif self.fit_time_millis_ != -1:
+                self.fit_time_millis_ += time_to_milliseconds(
+                    cr.fit_and_estimate_time, cr.time_unit
+                )
+
+            # verify file matches data
+            if not self.skip_shape_check:
+                if cr.n_cases != n_instances:
+                    raise ValueError(
+                        f"n_instances of {path + file_name} does not match X, "
+                        f"expected {n_instances}, got {cr.n_cases}"
+                    )
+                if not self.skip_y_check and cr.n_classes != self.n_classes_:
+                    raise ValueError(
+                        f"n_classes of {path + file_name} does not match X, "
+                        f"expected {self.n_classes_}, got {cr.n_classes}"
+                    )
+
+            for j in range(n_instances):
+                if self.overwrite_y:
+                    if i == 0:
+                        y[j] = cr.class_labels[j]
+                    elif not self.skip_y_check:
+                        assert cr.class_labels[j] == y[j]
+                elif not self.skip_y_check:
+                    if i == 0:
+                        le = preprocessing.LabelEncoder()
+                        y = le.fit_transform(y)
+                    assert cr.class_labels[j] == y[j]
+
+                if self.tune_alpha:
+                    X_probas[j][i] = cr.probabilities[j]
+
+            acc_list.append(cr.accuracy)
+
+        start = int(round(time.time() * 1000))
+
+        self._alpha = self._tune_alpha(X_probas, y) if self.tune_alpha else self.alpha
 
         if self.new_weights:
             acc_list = self.new_weights
-        else:
-            n_instances = len(X)
-            acc_list = []
-
-            # load train file at path (trainResample.csv if random_state is None,
-            # trainResample{self.random_state}.csv otherwise)
-            if self.random_state is not None:
-                file_name = f"trainResample{self.random_state}.csv"
-            else:
-                file_name = "trainResample.csv"
-
-            if self.tune_alpha:
-                X_probas = np.zeros(
-                    (n_instances, len(self.classifiers), self.n_classes_)
-                )
-
-            for i, path in enumerate(self.classifiers):
-                f = open(path + file_name)
-                lines = f.readlines()
-                line2 = lines[2].split(",")
-
-                # verify file matches data
-                if not self.skip_shape_check:
-                    if len(lines) - 3 != n_instances:
-                        raise ValueError(
-                            f"n_instances of {path + file_name} does not match X, "
-                            f"expected {n_instances}, got {len(lines) - 3}"
-                        )
-                    if not self.skip_y_check and self.n_classes_ != int(line2[5]):
-                        raise ValueError(
-                            f"n_classes of {path + file_name} does not match X, "
-                            f"expected {len(np.unique(y))}, got {line2[5]}"
-                        )
-
-                for j in range(n_instances):
-                    line = lines[j + 3].split(",")
-
-                    if self.overwrite_y:
-                        if i == 0:
-                            y[j] = float(line[0])
-                        elif not self.skip_y_check:
-                            assert y[j] == float(line[0])
-                    elif not self.skip_y_check:
-                        if i == 0:
-                            le = preprocessing.LabelEncoder()
-                            y = le.fit_transform(y)
-                        assert float(line[0]) == y[j]
-
-                    if self.tune_alpha:
-                        X_probas[j][i] = [float(k) for k in (line[3:])]
-
-                acc_list.append(float(line2[0]))
-
-            self._alpha = (
-                self._tune_alpha(X_probas, y) if self.tune_alpha else self.alpha
-            )
+            assert len(acc_list) == len(self.classifiers)
 
         # add a weight to the weight list based on the files accuracy
         for acc in acc_list:
@@ -194,11 +202,8 @@ class FromFileHIVECOTE(BaseClassifier):
 
                 acc_list = []
                 for path in self.classifiers:
-                    f = open(path + file_name)
-                    lines = f.readlines()
-                    line2 = lines[2].split(",")
-
-                    acc_list.append(float(line2[0]))
+                    cr = ClassifierResults().load_from_file(path + file_name)
+                    acc_list.append(cr.accuracy)
 
             argmax = np.argmax(acc_list)
 
@@ -206,6 +211,9 @@ class FromFileHIVECOTE(BaseClassifier):
             for i, acc in enumerate(acc_list):
                 if i != argmax and acc < acc_list[argmax] * self._acc_filter[1]:
                     self._use_classifier[i] = False
+
+        if self.fit_time_millis_ != -1:
+            self.fit_time_millis_ += int(round(time.time() * 1000)) - start
 
     def _predict(self, X):
         rng = check_random_state(self.random_state)
@@ -232,37 +240,33 @@ class FromFileHIVECOTE(BaseClassifier):
             y = np.zeros(n_instances)
 
         for i, path in enumerate(self.classifiers):
-            f = open(path + file_name)
-            lines = f.readlines()
-            line2 = lines[2].split(",")
+            cr = ClassifierResults().load_from_file(path + file_name)
 
             # verify file matches data
             if not self.skip_shape_check:
-                if len(lines) - 3 != n_instances:
+                if cr.n_cases != n_instances:
                     raise ValueError(
                         f"n_instances of {path + file_name} does not match X, "
-                        f"expected {n_instances}, got {len(lines) - 3}"
+                        f"expected {n_instances}, got {cr.n_cases}"
                     )
-                if not self.skip_y_check and self.n_classes_ != int(line2[5]):
+                if not self.skip_y_check and cr.n_classes != self.n_classes_:
                     raise ValueError(
                         f"n_classes of {path + file_name} does not match X, "
-                        f"expected {self.n_classes_}, got {line2[5]}"
+                        f"expected {self.n_classes_}, got {cr.n_classes}"
                     )
 
             # apply this files weights to the probabilities in the test file
             for j in range(n_instances):
-                line = lines[j + 3].split(",")
-
                 if not self.skip_y_check:
                     if i == 0:
-                        y[j] = float(line[0])
+                        y[j] = cr.class_labels[j]
                     else:
-                        assert y[j] == float(line[0])
+                        assert cr.class_labels[j] == y[j]
 
                 if self._use_classifier[i]:
                     dists[j] = np.add(
                         dists[j],
-                        [float(k) for k in (line[3:])]
+                        cr.probabilities[j]
                         * (np.ones(self.n_classes_) * self.weights_[i]),
                     )
 
