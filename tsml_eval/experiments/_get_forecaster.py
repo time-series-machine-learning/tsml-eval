@@ -7,6 +7,7 @@ from tsml_eval.utils.functions import str_in_nested_list
 
 deep_forecasters = [
     ["tcnforecaster", "tcn"],
+    ["nbeats", "nbeatsforecaster"],
 ]
 ml_forecasters = [
     "setartree",
