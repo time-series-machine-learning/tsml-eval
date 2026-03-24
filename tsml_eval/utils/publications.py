@@ -141,8 +141,8 @@ def results_table_from_evaluation_csv(
     df.columns = df.columns.map(escape_underscores)
 
     df = df.round(round_digits)
-    best = df.eq(df.max(axis=0) if higher_is_better else df.min(axis=0))
-    ranks = df.rank(method="min", ascending=False if higher_is_better else True)
+    best = df.eq(df.max(axis=1) if higher_is_better else df.min(axis=1), axis=0)
+    ranks = df.rank(method="min", ascending=False if higher_is_better else True, axis=1)
 
     out = pd.DataFrame(index=df.index, columns=df.columns, dtype="object")
     for c in df.columns:
