@@ -1150,10 +1150,6 @@ def load_and_run_clustering_experiment(
         benchmark_time=benchmark_time,
     )
 
-def fit_predict_forecaster(forecaster, train_series, test_series, test_preds, index):
-    forecaster.fit(train_series)
-    test_preds[index] = forecaster.predict(test_series[:-1])
-
 def run_forecasting_experiment(
     train,
     test,
@@ -1216,18 +1212,11 @@ def run_forecasting_experiment(
     if train.ndim == 2 and test.ndim == 2:
         fit_time = 0
         test_time = 0
-        test_preds = multiprocessing.Array('i', len(test))
-        processes = []
         for index, (train_series, test_series) in enumerate(zip(train, test)):
             # Creating a process for each segment
-            p = multiprocessing.Process(target=fit_predict_forecaster, args=(forecaster.clone(), train_series, test_series, test_preds, index))
-            processes.append(p)
-            p.start()
+            forecaster.fit(train_series)
+            test_preds[index] = forecaster.predict(test_series[:-1])
             test_true[index] = test_series[-1]
-
-        for p in processes:
-            p.join()
-        test_preds = np.frombuffer(test_preds.get_obj()).reshape(test.shape)
     elif train.ndim == 2:
         fit_time = 0
         test_time = 0
