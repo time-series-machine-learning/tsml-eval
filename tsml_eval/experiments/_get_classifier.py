@@ -864,6 +864,7 @@ def _set_classifier_shapelet_based(
             transform_limit_in_minutes=120,
             random_state=random_state,
             n_jobs=n_jobs,
+            parallel_backend="loky",
             **kwargs,
         )
     elif c == "shapelettransformclassifier" or c == "stc":
@@ -875,6 +876,7 @@ def _set_classifier_shapelet_based(
             random_state=random_state,
             n_jobs=n_jobs,
             time_limit_in_minutes=fit_contract,
+            parallel_backend="loky",
             **kwargs,
         )
     elif c == "stc-unequal":
@@ -884,6 +886,7 @@ def _set_classifier_shapelet_based(
             random_state=random_state,
             n_jobs=n_jobs,
             time_limit_in_minutes=fit_contract,
+            parallel_backend="loky",
             **kwargs,
         )
     elif c == "rdstclassifier" or c == "rdst":
