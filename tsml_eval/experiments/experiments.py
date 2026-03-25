@@ -1212,6 +1212,7 @@ def run_forecasting_experiment(
     if train.ndim == 2 and test.ndim == 2:
         fit_time = 0
         test_time = 0
+        mem_usage = 0
         for index, (train_series, test_series) in enumerate(zip(train, test)):
             forecaster.fit(train_series)
             test_preds[index] = forecaster.predict(test_series[:-1])
