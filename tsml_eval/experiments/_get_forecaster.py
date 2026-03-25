@@ -94,7 +94,7 @@ def _set_forecaster_deep(f, random_state, n_jobs, kwargs):
     elif f == "nbeats" or f == "nbeatsforecaster":
         from aeon.forecasting.deep_learning import NBeatsForecaster
 
-        return NBeatsForecaster(random_state=random_state, **kwargs)
+        return NBeatsForecaster(random_state=random_state, window=100, **kwargs)
 
 
 def _set_forecaster_ml(f, random_state, n_jobs, kwargs):
