@@ -235,9 +235,7 @@ def run_classification_experiment(
             fit_and_train_time = int(round(time.time() * 1000)) - start
         else:
             _, counts = np.unique(y_train, return_counts=True)
-            min_class = max(2, np.min(counts))
-            if min_class < cv_size:
-                cv_size = min_class
+            cv_size = min(cv_size, max(2, int(np.min(counts))))
 
             train_probs = cross_val_predict(
                 classifier, X_train, y=y_train, cv=cv_size, method="predict_proba"
