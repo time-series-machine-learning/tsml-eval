@@ -287,7 +287,7 @@ def load_unequal_minimal_cardano_sentiment(
 def _load_provided_dataset(
     name: str,
     split: None | str = None,
-) -> tuple[np.ndarray, np.ndarray] | tuple[list[np.ndarray], np.ndarray]:
+):
     """Load baked in time series datasets.
 
     Loads data from the provided tsml dataset files only.
