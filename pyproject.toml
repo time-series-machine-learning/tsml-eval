@@ -147,15 +147,10 @@ per-file-ignores = [
     "tsml_eval/publications/*:E402,T201",
 ]
 
-[tool.mypy]
-ignore_missing_imports = true
-follow_imports = "silent"
+[tool.ty.src]
 exclude = [
-    "_wip/",
-    # Ignore the publications symlinks and its contents
-    "tsml_eval/publications/2023",
+    "tsml_eval/_wip/**",
 ]
-
 
 [tool.pytest.ini_options]
 testpaths = "tsml_eval"

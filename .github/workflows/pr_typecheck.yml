@@ -26,15 +26,15 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Install tsml-eval, dependencies and mypy
+      - name: Install tsml-eval, dependencies and ty
         uses: nick-fields/retry@v4
         with:
           timeout_minutes: 30
           max_attempts: 3
-          command: python -m pip install .[all_extras,unstable_extras,dev] mypy
+          command: python -m pip install .[all_extras,unstable_extras,dev] ty
 
       - name: Show dependencies
         run: python -m pip list
 
-      - name: Run mypy typecheck
-        run: mypy tsml_eval/
+      - name: Run typecheck
+        run: ty check --output-format github tsml_eval/

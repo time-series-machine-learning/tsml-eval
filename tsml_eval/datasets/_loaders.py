@@ -54,7 +54,7 @@ def load_minimal_chinatown(
 
 def load_unequal_minimal_chinatown(
     split: None | str = None,
-) -> tuple[list, np.ndarray]:
+) -> tuple[list[np.ndarray], np.ndarray]:
     """Load UnequalMinimalChinatown time series classification problem.
 
     This is an unequal length univariate time series classification problem. It is a
@@ -125,7 +125,7 @@ def load_equal_minimal_japanese_vowels(
 
 def load_minimal_japanese_vowels(
     split: None | str = None,
-) -> tuple[list, np.ndarray]:
+) -> tuple[list[np.ndarray], np.ndarray]:
     """Load the MinimalJapaneseVowels time series classification problem.
 
     This is an unequal length multivariate time series classification problem. It is a
@@ -191,7 +191,7 @@ def load_minimal_gas_prices(
 
 def load_unequal_minimal_gas_prices(
     split: None | str = None,
-) -> tuple[list, np.ndarray]:
+) -> tuple[list[np.ndarray], np.ndarray]:
     """Load the UnequalMinimalGasPrices time series extrinsic regression problem.
 
     This is an unequal length univariate time series regression problem. It is a
@@ -254,7 +254,7 @@ def load_minimal_cardano_sentiment(
 
 def load_unequal_minimal_cardano_sentiment(
     split: None | str = None,
-) -> tuple[list, np.ndarray]:
+) -> tuple[list[np.ndarray], np.ndarray]:
     """Load the MinimalCardanoSentiment time series extrinsic regression problem.
 
     This is an unequal length multivariate time series regression problem. It is a
@@ -287,7 +287,7 @@ def load_unequal_minimal_cardano_sentiment(
 def _load_provided_dataset(
     name: str,
     split: None | str = None,
-) -> tuple[np.ndarray, np.ndarray] | tuple[list, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray] | tuple[list[np.ndarray], np.ndarray]:
     """Load baked in time series datasets.
 
     Loads data from the provided tsml dataset files only.
