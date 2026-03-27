@@ -27,7 +27,7 @@ from aeon.classification import BaseClassifier
 from aeon.clustering import BaseClusterer
 from aeon.forecasting import BaseForecaster
 from aeon.regression.base import BaseRegressor
-from aeon.utils.validation import get_n_cases
+from aeon.utils.validation.collection import get_n_cases
 from sklearn import preprocessing
 from sklearn.base import BaseEstimator, is_classifier, is_regressor
 from sklearn.metrics import (
@@ -237,9 +237,7 @@ def run_classification_experiment(
             fit_and_train_time = int(round(time.time() * 1000)) - start
         else:
             _, counts = np.unique(y_train, return_counts=True)
-            min_class = max(2, np.min(counts))
-            if min_class < cv_size:
-                cv_size = min_class
+            cv_size = min(cv_size, max(2, int(np.min(counts))))
 
             train_probs = cross_val_predict(
                 classifier, X_train, y=y_train, cv=cv_size, method="predict_proba"

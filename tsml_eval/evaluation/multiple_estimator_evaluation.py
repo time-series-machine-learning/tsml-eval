@@ -3,6 +3,7 @@
 import os
 import pickle
 import re
+import sys
 import warnings
 from datetime import datetime
 
@@ -1450,14 +1451,15 @@ def _figures_for_statistic(
         f"{eval_name}_{statistic_name.lower()}_critical_difference.pdf",
         bbox_inches="tight",
     )
-    pickle.dump(
-        cd,
-        open(
-            f"{save_path}/{statistic_name}/figures/"
-            f"{eval_name}_{statistic_name.lower()}_critical_difference.pickle",
-            "wb",
-        ),
-    )
+    if sys.version_info < (3, 14):  # skip 3.14, revisit later
+        pickle.dump(
+            cd,
+            open(
+                f"{save_path}/{statistic_name}/figures/"
+                f"{eval_name}_{statistic_name.lower()}_critical_difference.pickle",
+                "wb",
+            ),
+        )
     plt.close()
 
     box, _ = plot_boxplot(scores, estimators, plot_type="boxplot")
@@ -1466,14 +1468,15 @@ def _figures_for_statistic(
         f"{eval_name}_{statistic_name.lower()}_boxplot.pdf",
         bbox_inches="tight",
     )
-    pickle.dump(
-        box,
-        open(
-            f"{save_path}/{statistic_name}/figures/"
-            f"{eval_name}_{statistic_name.lower()}_boxplot.pickle",
-            "wb",
-        ),
-    )
+    if sys.version_info < (3, 14):  # skip 3.14, revisit later
+        pickle.dump(
+            box,
+            open(
+                f"{save_path}/{statistic_name}/figures/"
+                f"{eval_name}_{statistic_name.lower()}_boxplot.pickle",
+                "wb",
+            ),
+        )
     plt.close()
 
     boxr, _ = plot_boxplot(scores, estimators, relative=True, plot_type="boxplot")
@@ -1482,14 +1485,15 @@ def _figures_for_statistic(
         f"{eval_name}_{statistic_name.lower()}_boxplot_relative.pdf",
         bbox_inches="tight",
     )
-    pickle.dump(
-        boxr,
-        open(
-            f"{save_path}/{statistic_name}/figures/"
-            f"{eval_name}_{statistic_name.lower()}_boxplot_relative.pickle",
-            "wb",
-        ),
-    )
+    if sys.version_info < (3, 14):  # skip 3.14, revisit later
+        pickle.dump(
+            boxr,
+            open(
+                f"{save_path}/{statistic_name}/figures/"
+                f"{eval_name}_{statistic_name.lower()}_boxplot_relative.pickle",
+                "wb",
+            ),
+        )
     plt.close()
 
     df = pd.DataFrame(scores)
@@ -1501,18 +1505,19 @@ def _figures_for_statistic(
         formats="pdf",
         pvalue_test_params={"zero_method": "pratt", "alternative": "two-sided"},
         pvalue_correction=None,
-        show_symetry=True,
+        show_symmetry=True,
         higher_stat_better=higher_better,
-        used_statistic=statistic_name,
+        statistic_name=statistic_name,
     )
-    pickle.dump(
-        mcm,
-        open(
-            f"{save_path}/{statistic_name}/figures/"
-            f"{eval_name}_{statistic_name.lower()}_mcm.pickle",
-            "wb",
-        ),
-    )
+    if sys.version_info < (3, 14):  # skip 3.14, revisit later
+        pickle.dump(
+            mcm,
+            open(
+                f"{save_path}/{statistic_name}/figures/"
+                f"{eval_name}_{statistic_name.lower()}_mcm.pickle",
+                "wb",
+            ),
+        )
     plt.close()
 
     for i, est1 in enumerate(estimators):
@@ -1539,15 +1544,16 @@ def _figures_for_statistic(
                 f"{eval_name}_{statistic_name.lower()}_scatter_{est1}_{est2}.pdf",
                 bbox_inches="tight",
             )
-            pickle.dump(
-                scatter,
-                open(
-                    f"{save_path}/{statistic_name}/figures/scatters/{est1}/"
-                    f"{eval_name}_{statistic_name.lower()}_scatter_{est1}_{est2}"
-                    f".pickle",
-                    "wb",
-                ),
-            )
+            if sys.version_info < (3, 14):  # skip 3.14, revisit later
+                pickle.dump(
+                    scatter,
+                    open(
+                        f"{save_path}/{statistic_name}/figures/scatters/{est1}/"
+                        f"{eval_name}_{statistic_name.lower()}_scatter_{est1}_{est2}"
+                        f".pickle",
+                        "wb",
+                    ),
+                )
             plt.close()
 
 
