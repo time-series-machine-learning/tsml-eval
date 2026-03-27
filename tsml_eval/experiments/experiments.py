@@ -150,10 +150,6 @@ def run_classification_experiment(
             "capability:train_estimate", False, False
         ):
             use_fit_predict = True
-    elif isinstance(classifier, BaseTimeSeriesEstimator) and is_classifier(classifier):
-        pass
-    else:
-        raise TypeError("classifier must be a tsml, aeon or sklearn classifier.")
 
     n_cases_test = len(X_test)
     if data_transforms is not None:
