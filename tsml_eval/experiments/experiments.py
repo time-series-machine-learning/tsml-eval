@@ -155,14 +155,16 @@ def run_classification_experiment(
         ):
             use_fit_predict = True
     elif isinstance(classifier, BaseEstimator) and is_classifier(classifier):
+        is_sklearn = True
         if _check_soft_dependencies("tsml", severity="none"):
             from tsml.base import BaseTimeSeriesEstimator
 
-        # tsml classifier
-        if isinstance(classifier, BaseTimeSeriesEstimator):
-            pass
+            # tsml classifier
+            if isinstance(classifier, BaseTimeSeriesEstimator):
+                is_sklearn = False
+
         # assumed sklearn classifier
-        else:
+        if is_sklearn:
             classifier = SklearnToAeonClassifier(
                 classifier=classifier,
                 pad_unequal=True,
@@ -535,14 +537,16 @@ def run_regression_experiment(
         ):
             use_fit_predict = True
     elif isinstance(regressor, BaseEstimator) and is_regressor(regressor):
+        is_sklearn = True
         if _check_soft_dependencies("tsml", severity="none"):
             from tsml.base import BaseTimeSeriesEstimator
 
-        # tsml regressor
-        if isinstance(regressor, BaseTimeSeriesEstimator):
-            pass
+            # tsml regressor
+            if isinstance(regressor, BaseTimeSeriesEstimator):
+                is_sklearn = False
+
         # assumed sklearn regressor
-        else:
+        if is_sklearn:
             regressor = SklearnToAeonRegressor(
                 regressor=regressor,
                 pad_unequal=True,
@@ -864,14 +868,16 @@ def run_clustering_experiment(
     if isinstance(clusterer, BaseClusterer):
         pass
     elif isinstance(clusterer, BaseEstimator) and is_clusterer(clusterer):
+        is_sklearn = True
         if _check_soft_dependencies("tsml", severity="none"):
             from tsml.base import BaseTimeSeriesEstimator
 
-        # tsml clusterer
-        if isinstance(clusterer, BaseTimeSeriesEstimator):
-            pass
+            # tsml clusterer
+            if isinstance(clusterer, BaseTimeSeriesEstimator):
+                is_sklearn = False
+
         # assumed sklearn clusterer
-        else:
+        if is_sklearn:
             clusterer = SklearnToAeonClusterer(
                 clusterer=clusterer,
                 pad_unequal=True,
