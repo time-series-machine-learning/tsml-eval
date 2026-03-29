@@ -155,7 +155,7 @@ def run_classification_experiment(
         ):
             use_fit_predict = True
     elif isinstance(classifier, BaseEstimator) and is_classifier(classifier):
-        if _check_soft_dependencies("tsml", severity=None):
+        if _check_soft_dependencies("tsml", severity="none"):
             from tsml.base import BaseTimeSeriesEstimator
 
         # tsml classifier
@@ -535,7 +535,7 @@ def run_regression_experiment(
         ):
             use_fit_predict = True
     elif isinstance(regressor, BaseEstimator) and is_regressor(regressor):
-        if _check_soft_dependencies("tsml", severity=None):
+        if _check_soft_dependencies("tsml", severity="none"):
             from tsml.base import BaseTimeSeriesEstimator
 
         # tsml regressor
@@ -864,7 +864,7 @@ def run_clustering_experiment(
     if isinstance(clusterer, BaseClusterer):
         pass
     elif isinstance(clusterer, BaseEstimator) and is_clusterer(clusterer):
-        if _check_soft_dependencies("tsml", severity=None):
+        if _check_soft_dependencies("tsml", severity="none"):
             from tsml.base import BaseTimeSeriesEstimator
 
         # tsml clusterer
