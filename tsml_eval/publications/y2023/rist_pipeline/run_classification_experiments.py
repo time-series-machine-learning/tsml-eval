@@ -9,7 +9,7 @@ os.environ["MKL_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["NUMEXPR_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
 
-from tsml.base import _clone_estimator
+from aeon.base._base import _clone_estimator
 
 from tsml_eval.experiments import load_and_run_classification_experiment
 from tsml_eval.publications.y2023.rist_pipeline.set_rist_classifier import (

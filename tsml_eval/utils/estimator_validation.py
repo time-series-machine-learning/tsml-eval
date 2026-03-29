@@ -8,12 +8,18 @@ __all__ = [
 ]
 
 from aeon.base import BaseAeonEstimator
+from aeon.utils.validation._dependencies import _check_soft_dependencies
 from sklearn.base import BaseEstimator, is_classifier, is_clusterer, is_regressor
-from tsml.base import BaseTimeSeriesEstimator
 
 
 def is_sklearn_estimator(estimator):
     """Check if estimator is a scikit-learn estimator."""
+    if _check_soft_dependencies("tsml", severity=None):
+        from tsml.base import BaseTimeSeriesEstimator
+
+        if isinstance(estimator, BaseTimeSeriesEstimator):
+            return False
+
     return (
         isinstance(estimator, BaseEstimator)
         and not isinstance(estimator, BaseAeonEstimator)

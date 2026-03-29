@@ -27,23 +27,20 @@ from aeon.classification import BaseClassifier
 from aeon.clustering import BaseClusterer
 from aeon.forecasting import BaseForecaster
 from aeon.regression.base import BaseRegressor
+from aeon.utils.validation._dependencies import _check_soft_dependencies
 from aeon.utils.validation.collection import get_n_cases
 from sklearn import preprocessing
-from sklearn.base import BaseEstimator, is_classifier, is_regressor
+from sklearn.base import BaseEstimator, is_classifier, is_clusterer, is_regressor
 from sklearn.metrics import (
     accuracy_score,
     mean_absolute_percentage_error,
     mean_squared_error,
 )
 from sklearn.model_selection import cross_val_predict
-from tsml.base import BaseTimeSeriesEstimator
-from tsml.compose import (
-    SklearnToTsmlClassifier,
-    SklearnToTsmlClusterer,
-    SklearnToTsmlRegressor,
-)
-from tsml.utils.validation import is_clusterer
 
+from tsml_eval.estimators.classification._sklearn import SklearnToAeonClassifier
+from tsml_eval.estimators.clustering._sklearn import SklearnToAeonClusterer
+from tsml_eval.estimators.regression._sklearn import SklearnToAeonRegressor
 from tsml_eval.utils.datasets import load_experiment_data
 from tsml_eval.utils.experiments import (
     _check_existing_results,
@@ -151,25 +148,33 @@ def run_classification_experiment(
         classifier_name = type(classifier).__name__
 
     use_fit_predict = False
+    # aeon classifier
     if isinstance(classifier, BaseClassifier):
         if not ignore_custom_train_estimate and classifier.get_tag(
             "capability:train_estimate", False, False
         ):
             use_fit_predict = True
-    elif isinstance(classifier, BaseTimeSeriesEstimator) and is_classifier(classifier):
-        pass
     elif isinstance(classifier, BaseEstimator) and is_classifier(classifier):
-        classifier = SklearnToTsmlClassifier(
-            classifier=classifier,
-            pad_unequal=True,
-            concatenate_channels=True,
-            clone_estimator=False,
-            random_state=(
-                classifier.random_state if hasattr(classifier, "random_state") else None
-            ),
-        )
+        if _check_soft_dependencies("tsml", severity=None):
+            from tsml.base import BaseTimeSeriesEstimator
+
+        # tsml classifier
+        if isinstance(classifier, BaseTimeSeriesEstimator):
+            pass
+        # assumed sklearn classifier
+        else:
+            classifier = SklearnToAeonClassifier(
+                classifier=classifier,
+                pad_unequal=True,
+                concatenate_channels=True,
+                random_state=(
+                    classifier.random_state
+                    if hasattr(classifier, "random_state")
+                    else None
+                ),
+            )
     else:
-        raise TypeError("classifier must be a tsml, aeon or sklearn classifier.")
+        raise TypeError("classifier must be an aeon, tsml or sklearn classifier.")
 
     n_cases_test = get_n_cases(X_test)
     if data_transforms is not None:
@@ -523,23 +528,31 @@ def run_regression_experiment(
         regressor_name = type(regressor).__name__
 
     use_fit_predict = False
+    # aeon regressor
     if isinstance(regressor, BaseRegressor):
         if not ignore_custom_train_estimate and regressor.get_tag(
             "capability:train_estimate", False, False
         ):
             use_fit_predict = True
-    elif isinstance(regressor, BaseTimeSeriesEstimator) and is_regressor(regressor):
-        pass
     elif isinstance(regressor, BaseEstimator) and is_regressor(regressor):
-        regressor = SklearnToTsmlRegressor(
-            regressor=regressor,
-            pad_unequal=True,
-            concatenate_channels=True,
-            clone_estimator=False,
-            random_state=(
-                regressor.random_state if hasattr(regressor, "random_state") else None
-            ),
-        )
+        if _check_soft_dependencies("tsml", severity=None):
+            from tsml.base import BaseTimeSeriesEstimator
+
+        # tsml regressor
+        if isinstance(regressor, BaseTimeSeriesEstimator):
+            pass
+        # assumed sklearn regressor
+        else:
+            regressor = SklearnToAeonRegressor(
+                regressor=regressor,
+                pad_unequal=True,
+                concatenate_channels=True,
+                random_state=(
+                    regressor.random_state
+                    if hasattr(regressor, "random_state")
+                    else None
+                ),
+            )
     else:
         raise TypeError("regressor must be a tsml, aeon or sklearn regressor.")
 
@@ -847,20 +860,28 @@ def run_clustering_experiment(
     if clusterer_name is None:
         clusterer_name = type(clusterer).__name__
 
-    if isinstance(clusterer, BaseClusterer) or (
-        isinstance(clusterer, BaseTimeSeriesEstimator) and is_clusterer(clusterer)
-    ):
+    # aeon clusterer
+    if isinstance(clusterer, BaseClusterer):
         pass
     elif isinstance(clusterer, BaseEstimator) and is_clusterer(clusterer):
-        clusterer = SklearnToTsmlClusterer(
-            clusterer=clusterer,
-            pad_unequal=True,
-            concatenate_channels=True,
-            clone_estimator=False,
-            random_state=(
-                clusterer.random_state if hasattr(clusterer, "random_state") else None
-            ),
-        )
+        if _check_soft_dependencies("tsml", severity=None):
+            from tsml.base import BaseTimeSeriesEstimator
+
+        # tsml clusterer
+        if isinstance(clusterer, BaseTimeSeriesEstimator):
+            pass
+        # assumed sklearn clusterer
+        else:
+            clusterer = SklearnToAeonClusterer(
+                clusterer=clusterer,
+                pad_unequal=True,
+                concatenate_channels=True,
+                random_state=(
+                    clusterer.random_state
+                    if hasattr(clusterer, "random_state")
+                    else None
+                ),
+            )
     else:
         raise TypeError("clusterer must be a tsml, aeon or sklearn clusterer.")
 

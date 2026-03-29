@@ -328,7 +328,7 @@ class FromFileHIVECOTE(BaseClassifier):
         return best_alpha
 
     @classmethod
-    def get_test_params(cls, parameter_set="default"):
+    def _get_test_params(cls, parameter_set="default"):
         """Return testing parameter settings for the estimator.
 
         Parameters
