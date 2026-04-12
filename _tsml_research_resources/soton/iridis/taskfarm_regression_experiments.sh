@@ -271,12 +271,16 @@ fi
 for dataset_file in $dataset_list; do
 
 if [ -n "${relative_preprocessing_file_path:-}" ]; then
+    list_of_series="${dataset_file}_compiled.txt"
     (
         module load $conda_instruction
         eval "$(conda shell.bash hook)"
         conda activate "$env_name"
-        python -u ${full_preprocessing_file_path} ${data_dir} ${dataset_file}
+        python -u ${full_preprocessing_file_path} ${data_dir} ${dataset_file} ${list_of_series}
     )
+    if [[ -s $list_of_series ]]; then
+        dataset_file=$list_of_series
+    fi
 fi
 
 for regressor in $regressors_to_run; do
@@ -348,6 +352,10 @@ done
 if [[ "${split_regressors,,}" != "true" && $cmdCount -gt 0 ]]; then
     # final submit for this dataset list
     submit_jobs
+fi
+
+if [[ -s "$list_of_series" && "$dataset_file" == "$list_of_series" ]]; then
+    rm -f -- "$list_of_series"
 fi
 
 done
