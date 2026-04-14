@@ -125,12 +125,13 @@ def copy_dataset_ts_files(
 def save_merged_dataset_splits(
     problem_path: str,
     dataset: str,
+    label_type: str,
     save_path: str | None = None,
 ):
     """Merge the TRAIN and TEST .ts files of a dataset and save the merged file.
 
-    Expects files to be present at {path}/{dataset}/{dataset}_TRAIN.ts and
-    {path}/{dataset}/{dataset}_TEST.ts.
+    Expects files to be present at ``{path}/{dataset}/{dataset}_TRAIN.ts`` and
+    ``{path}/{dataset}/{dataset}_TEST.ts``.
 
     Parameters
     ----------
@@ -138,9 +139,12 @@ def save_merged_dataset_splits(
         Path to the problem folder.
     dataset : str
         Name of the dataset.
+    label_type: str
+        Either ``"classification"`` or ``"regression"`` to ensure the correct header
+        is written.
     save_path : str, default=None
-        Path to save the merged dataset to. If None, the merged dataset will be saved
-        in the same folder as the original datasets.
+        Path to save the merged dataset to. If ``None``, the merged dataset will be
+        saved in the same folder as the original datasets.
     """
     if save_path is None:
         save_path = problem_path
@@ -152,4 +156,10 @@ def save_merged_dataset_splits(
     X = np.concatenate([X_train, X_test], axis=0)
     y = np.concatenate([y_train, y_test], axis=0)
 
-    save_to_ts_file(X, y, path=f"{save_path}/{dataset}/", problem_name=dataset)
+    save_to_ts_file(
+        X,
+        y,
+        path=f"{save_path}/{dataset}/",
+        problem_name=dataset,
+        label_type=label_type,
+    )

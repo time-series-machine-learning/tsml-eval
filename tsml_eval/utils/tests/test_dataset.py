@@ -63,6 +63,7 @@ def test_save_merged_dataset_splits(save_path):
     save_merged_dataset_splits(
         copy_path,
         "MinimalChinatown",
+        "classification",
         save_path,
     )
 

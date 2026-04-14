@@ -8,7 +8,7 @@ __maintainer__ = []
 __all__ = ["DrCIFClassifier"]
 
 import numpy as np
-from aeon.utils.validation import is_equal_length
+from aeon.utils.validation.collection import is_equal_length
 from sklearn.preprocessing import FunctionTransformer
 
 from aeon.classification.base import BaseClassifier

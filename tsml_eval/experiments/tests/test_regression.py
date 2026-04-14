@@ -6,8 +6,8 @@ import os
 import runpy
 
 import pytest
+from aeon.classification import DummyClassifier
 from aeon.utils.discovery import all_estimators
-from tsml.dummy import DummyClassifier
 
 from tsml_eval.datasets._test_data._data_sizes import DATA_TEST_SIZES
 from tsml_eval.experiments import (

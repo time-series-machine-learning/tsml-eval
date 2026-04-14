@@ -8,9 +8,8 @@ __all__ = [
 ]
 
 from aeon.base import BaseAeonEstimator
-from sklearn.base import BaseEstimator, is_classifier, is_regressor
+from sklearn.base import BaseEstimator, is_classifier, is_clusterer, is_regressor
 from tsml.base import BaseTimeSeriesEstimator
-from tsml.utils.validation import is_clusterer
 
 
 def is_sklearn_estimator(estimator):
