@@ -11,7 +11,6 @@ from aeon.clustering import (
     TimeSeriesKernelKMeans,
     TimeSeriesKMeans,
     TimeSeriesKMedoids,
-    TimeSeriesKShape,
 )
 from aeon.transformations.collection import Normalizer
 from sklearn.cluster import KMeans
@@ -127,7 +126,6 @@ distance_based_clusterers = [
     "som-shape_dtw",
     "som-soft_dtw",
     ["kspectralcentroid", "ksc"],
-    ["timeserieskshape", "kshape"],
     "kasba",
 ]
 feature_based_clusterers = [
@@ -412,15 +410,6 @@ def _set_clusterer_distance_based(
             max_shift=None,
             max_iter=50,
             init=init_algorithm,
-            tol=1e-06,
-            random_state=random_state,
-            **kwargs,
-        )
-    elif "kshape" in c:
-        return TimeSeriesKShape(
-            init=init_algorithm,
-            max_iter=50,
-            n_init=10,
             tol=1e-06,
             random_state=random_state,
             **kwargs,
