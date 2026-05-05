@@ -1,6 +1,7 @@
 from sklearn.ensemble import RandomForestRegressor
 from aeon.forecasting import BaseForecaster, RegressionForecaster
 from aeon.forecasting.stats import AutoETS, AutoARIMA, AutoTAR
+import numpy as np
 
 class AverageStats(BaseForecaster):
     """Test Hybrid Forecaster."""
@@ -35,7 +36,7 @@ class AverageStats(BaseForecaster):
         """Combine the forecasts from the ETS and ARIMA models."""
         return (ets_forecast + arima_forecast) / 2
     
-class AverageStatsAIC2(BaseForecaster):
+class AverageStatsAIC(BaseForecaster):
     """Test Hybrid Forecaster."""
 
     _tags = {
@@ -69,14 +70,23 @@ class AverageStatsAIC2(BaseForecaster):
 
     def _combine_forecasts(self, ets_forecast, arima_forecast, auto_tar_forecast):
         """Combine the forecasts from the ETS, ARIMA, and AutoTAR models."""
-        ets_aic = self.ets_model_.wrapped_model_.aic_
-        arima_aic = self.arima_model_.final_model_.aic_
-        auto_tar_aic = self.auto_tar_model_.params_["selection"]["value"]
-        total_aic = ets_aic + arima_aic + auto_tar_aic
-        ets_scaled = ets_aic / total_aic
-        arima_scaled = arima_aic / total_aic
-        auto_tar_scaled = auto_tar_aic / total_aic
-        return ets_forecast * ets_scaled + arima_forecast * arima_scaled + auto_tar_forecast * auto_tar_scaled
+        aics = np.array([
+            self.ets_model_.wrapped_model_.aic_,
+            self.arima_model_.final_model_.aic_,
+            self.auto_tar_model_.params_["selection"]["value"]
+        ])
+
+        forecasts = np.array([
+            ets_forecast,
+            arima_forecast,
+            auto_tar_forecast
+        ])
+
+        # convert AIC → weights (lower AIC = higher weight)
+        weights = np.exp(-aics)
+        weights /= weights.sum()
+
+        return np.dot(weights, forecasts)
 
 class Ensemble1(BaseForecaster):
     """Test Hybrid Forecaster."""
