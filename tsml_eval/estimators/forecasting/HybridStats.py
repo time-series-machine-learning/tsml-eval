@@ -53,14 +53,14 @@ class AverageStatsAIC(BaseForecaster):
         self.ets_model_.fit(y, exog=exog)
         self.arima_model_ = AutoARIMA()
         self.arima_model_.fit(y, exog=exog)
-        self.auto_tar_model_ = AutoTAR()
-        self.auto_tar_model_.fit(y, exog=exog)
+        # self.auto_tar_model_ = AutoTAR()
+        # self.auto_tar_model_.fit(y, exog=exog)
         return self
 
     def _predict(self, y, exog=None):
         ets_pred = self.ets_model_.predict(y, exog=exog)
         arima_pred = self.arima_model_.predict(y, exog=exog)
-        auto_tar_pred = self.auto_tar_model_.predict(y, exog=exog)
+        # auto_tar_pred = self.auto_tar_model_.predict(y, exog=exog)
         return self._combine_forecasts(ets_pred, arima_pred, auto_tar_pred)
 
     def _forecast(self, y, exog=None):
@@ -73,13 +73,13 @@ class AverageStatsAIC(BaseForecaster):
         aics = np.array([
             self.ets_model_.wrapped_model_.aic_,
             self.arima_model_.final_model_.aic_,
-            self.auto_tar_model_.params_["selection"]["value"]
+            # self.auto_tar_model_.params_["selection"]["value"]
         ])
 
         forecasts = np.array([
             ets_forecast,
             arima_forecast,
-            auto_tar_forecast
+            # auto_tar_forecast
         ])
 
         # convert AIC → weights (lower AIC = higher weight)
