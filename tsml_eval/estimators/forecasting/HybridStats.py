@@ -1,6 +1,6 @@
 from sklearn.ensemble import RandomForestRegressor
 from aeon.forecasting import BaseForecaster, RegressionForecaster
-from aeon.forecasting.stats import AutoETS, AutoARIMA
+from aeon.forecasting.stats import AutoETS, AutoARIMA, AutoTAR
 
 class AverageStats(BaseForecaster):
     """Test Hybrid Forecaster."""
@@ -35,7 +35,7 @@ class AverageStats(BaseForecaster):
         """Combine the forecasts from the ETS and ARIMA models."""
         return (ets_forecast + arima_forecast) / 2
     
-class AverageStatsAIC(BaseForecaster):
+class AverageStatsAIC2(BaseForecaster):
     """Test Hybrid Forecaster."""
 
     _tags = {
@@ -52,26 +52,31 @@ class AverageStatsAIC(BaseForecaster):
         self.ets_model_.fit(y, exog=exog)
         self.arima_model_ = AutoARIMA()
         self.arima_model_.fit(y, exog=exog)
+        self.auto_tar_model_ = AutoTAR()
+        self.auto_tar_model_.fit(y, exog=exog)
         return self
 
     def _predict(self, y, exog=None):
         ets_pred = self.ets_model_.predict(y, exog=exog)
         arima_pred = self.arima_model_.predict(y, exog=exog)
-        return self._combine_forecasts(ets_pred, arima_pred)
+        auto_tar_pred = self.auto_tar_model_.predict(y, exog=exog)
+        return self._combine_forecasts(ets_pred, arima_pred, auto_tar_pred)
 
     def _forecast(self, y, exog=None):
         """Forecast one ahead for time series y."""
         self._fit(y, exog)
-        return self._combine_forecasts(self.ets_model_.forecast_, self.arima_model_.forecast_)
+        return self._combine_forecasts(self.ets_model_.forecast_, self.arima_model_.forecast_, self.auto_tar_model_.forecast_)
 
-    def _combine_forecasts(self, ets_forecast, arima_forecast):
-        """Combine the forecasts from the ETS and ARIMA models."""
+    def _combine_forecasts(self, ets_forecast, arima_forecast, auto_tar_forecast):
+        """Combine the forecasts from the ETS, ARIMA, and AutoTAR models."""
         ets_aic = self.ets_model_.wrapped_model_.aic_
         arima_aic = self.arima_model_.final_model_.aic_
-        total_aic = ets_aic + arima_aic
+        auto_tar_aic = self.auto_tar_model_.params_["selection"]["value"]
+        total_aic = ets_aic + arima_aic + auto_tar_aic
         ets_scaled = ets_aic / total_aic
         arima_scaled = arima_aic / total_aic
-        return ets_forecast * ets_scaled + arima_forecast * arima_scaled
+        auto_tar_scaled = auto_tar_aic / total_aic
+        return ets_forecast * ets_scaled + arima_forecast * arima_scaled + auto_tar_forecast * auto_tar_scaled
 
 class Ensemble1(BaseForecaster):
     """Test Hybrid Forecaster."""
