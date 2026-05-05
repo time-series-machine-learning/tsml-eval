@@ -24,6 +24,7 @@ stats_forecasters = [
     ["thetaforecaster", "theta"],
     ["tvpforecaster", "tvp"],
     ["averagestats", "average", "hybridaverage"],
+    ["averagestatsaic", "averageaic", "hybridaverageaic"],
 ]
 regression_forecasters = [
     "randomforest",
@@ -31,6 +32,7 @@ regression_forecasters = [
 other_forecasters = [
     ["naiveforecaster", "naive"],
     "ensemble1",
+    "ensembleaic1"
 ]
 
 
@@ -149,6 +151,10 @@ def _set_forecaster_stats(f, random_state, n_jobs, kwargs):
         from tsml_eval.estimators.forecasting.HybridStats import AverageStats
 
         return AverageStats(**kwargs)
+    elif f == "averagestatsaic" or f == "averageaic" or f == "hybridaverageaic":
+        from tsml_eval.estimators.forecasting.HybridStats import AverageStatsAIC
+
+        return AverageStatsAIC(**kwargs)
 
 
 def _set_forecaster_regression(f, random_state, n_jobs, kwargs):
@@ -169,3 +175,7 @@ def _set_forecaster_other(f, random_state, n_jobs, kwargs):
         from tsml_eval.estimators.forecasting.HybridStats import Ensemble1
 
         return Ensemble1(**kwargs)
+    elif f == "ensembleaic1":
+        from tsml_eval.estimators.forecasting.HybridStats import EnsembleAIC1
+
+        return EnsembleAIC1(**kwargs)
