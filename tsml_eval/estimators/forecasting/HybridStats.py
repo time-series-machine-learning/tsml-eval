@@ -1,6 +1,6 @@
 from sklearn.ensemble import RandomForestRegressor
 from aeon.forecasting import BaseForecaster, RegressionForecaster
-from aeon.forecasting.stats import AutoETS, AutoARIMA, AutoTAR
+from aeon.forecasting.stats import AutoETS, AutoARIMA
 import numpy as np
 
 class AverageStats(BaseForecaster):
