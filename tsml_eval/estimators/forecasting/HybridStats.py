@@ -66,8 +66,8 @@ class AverageStatsAIC(BaseForecaster):
 
     def _combine_forecasts(self, ets_forecast, arima_forecast):
         """Combine the forecasts from the ETS and ARIMA models."""
-        ets_aic = self.ets_model_.aic_
-        arima_aic = self.arima_model_.aic_
+        ets_aic = self.ets_model_.wrapped_model_.aic_
+        arima_aic = self.arima_model_.final_model_.aic_
         total_aic = ets_aic + arima_aic
         ets_scaled = ets_aic / total_aic
         arima_scaled = arima_aic / total_aic
