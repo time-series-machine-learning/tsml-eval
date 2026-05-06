@@ -61,7 +61,7 @@ class AverageStatsAIC(BaseForecaster):
         ets_pred = self.ets_model_.predict(y, exog=exog)
         arima_pred = self.arima_model_.predict(y, exog=exog)
         # auto_tar_pred = self.auto_tar_model_.predict(y, exog=exog)
-        return self._combine_forecasts(ets_pred, arima_pred, auto_tar_pred)
+        return self._combine_forecasts(ets_pred, arima_pred)
 
     def _forecast(self, y, exog=None):
         """Forecast one ahead for time series y."""
@@ -85,6 +85,8 @@ class AverageStatsAIC(BaseForecaster):
         # convert AIC → weights (lower AIC = higher weight)
         weights = np.exp(-aics)
         weights /= weights.sum()
+        print(weights)
+        print(forecasts)
 
         return np.dot(weights, forecasts)
 
