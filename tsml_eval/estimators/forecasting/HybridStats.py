@@ -66,9 +66,9 @@ class AverageStatsAIC(BaseForecaster):
     def _forecast(self, y, exog=None):
         """Forecast one ahead for time series y."""
         self._fit(y, exog)
-        return self._combine_forecasts(self.ets_model_.forecast_, self.arima_model_.forecast_, self.auto_tar_model_.forecast_)
+        return self._combine_forecasts(self.ets_model_.forecast_, self.arima_model_.forecast_)
 
-    def _combine_forecasts(self, ets_forecast, arima_forecast, auto_tar_forecast):
+    def _combine_forecasts(self, ets_forecast, arima_forecast):
         """Combine the forecasts from the ETS, ARIMA, and AutoTAR models."""
         aics = np.array([
             self.ets_model_.wrapped_model_.aic_,
