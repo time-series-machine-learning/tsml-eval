@@ -83,7 +83,7 @@ class AverageStatsAIC(BaseForecaster):
         ])
 
         # convert AIC → weights (lower AIC = higher weight)
-        weights = np.exp(-(aics - np.min(aics)))
+        weights = np.exp(-(aics - np.min(aics)) / 20)
         weights /= weights.sum()
         print(weights)
         print(forecasts)
