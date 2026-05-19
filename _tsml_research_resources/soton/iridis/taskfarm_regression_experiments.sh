@@ -145,11 +145,7 @@ else
 fi
 
 # Different home paths on iridis5 and iridis6/iridisX
-if [ "${iridis_version}" == "5" ]; then
-    local_path="/ECShome/$username"
-else
-    local_path="/home/$username"
-fi
+local_path="/scratch/$username"
 
 # staskfarm doesn't exist on iridis6 or iridisX
 if [ "${iridis_version}" == "5" ]; then
