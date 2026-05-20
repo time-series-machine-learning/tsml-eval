@@ -107,8 +107,8 @@ class Ensemble1(BaseForecaster):
     def _fit(self, y, exog=None):
         self.ets_model_ = AutoETS()
         self.ets_model_.fit(y, exog=exog)
-        self.arima_model_ = AutoARIMA()
-        self.arima_model_.fit(y, exog=exog)
+        # self.arima_model_ = AutoARIMA()
+        # self.arima_model_.fit(y, exog=exog)
         self.random_forest_model_ = RegressionForecaster(window=100, regressor=RandomForestRegressor())
         self.random_forest_model_.fit(y, exog=exog)
         self.ridge_model_ = RegressionForecaster(window=100, regressor=RidgeCV(fit_intercept=True, alphas=np.logspace(-3, 3, 10)))
@@ -119,20 +119,19 @@ class Ensemble1(BaseForecaster):
 
     def _predict(self, y, exog=None):
         ets_pred = self.ets_model_.predict(y, exog=exog)
-        arima_pred = self.arima_model_.predict(y, exog=exog)
         rf_pred = self.random_forest_model_.predict(y, exog=exog)
         ridge_pred = self.ridge_model_.predict(y, exog=exog)
         xgboost_pred = self.xgboost_model_.predict(y, exog=exog)
-        return self._combine_forecasts(ets_pred, arima_pred, rf_pred, ridge_pred, xgboost_pred)
+        return self._combine_forecasts(ets_pred, rf_pred, ridge_pred, xgboost_pred)
 
     def _forecast(self, y, exog=None):
         """Forecast one ahead for time series y."""
         self._fit(y, exog)
-        return self._combine_forecasts(self.ets_model_.forecast_, self.arima_model_.forecast_, self.random_forest_model_.forecast_, self.ridge_model_.forecast_, self.xgboost_model_.forecast_)
+        return self._combine_forecasts(self.ets_model_.forecast_, self.random_forest_model_.forecast_, self.ridge_model_.forecast_, self.xgboost_model_.forecast_)
 
-    def _combine_forecasts(self, ets_forecast, arima_forecast, rf_forecast, ridge_forecast, xgboost_forecast):
+    def _combine_forecasts(self, ets_forecast, rf_forecast, ridge_forecast, xgboost_forecast):
         """Combine the forecasts from the ETS, ARIMA, Random Forest, Ridge, and XGBoost models."""
-        return (ets_forecast + arima_forecast + rf_forecast + ridge_forecast + xgboost_forecast) / 5
+        return (ets_forecast + rf_forecast + ridge_forecast + xgboost_forecast) / 4
 
 class EnsembleAIC1(BaseForecaster):
     """Test Hybrid Forecaster with alternate combination methods based on AIC."""
