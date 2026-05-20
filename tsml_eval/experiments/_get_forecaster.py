@@ -32,6 +32,10 @@ regression_forecasters = [
 other_forecasters = [
     ["naiveforecaster", "naive"],
     "ensemble1",
+    "ensemble2",
+    "ensemble3",
+    "ensemble4",
+    "ensemble5",
     "ensembleaic1"
 ]
 
@@ -175,6 +179,22 @@ def _set_forecaster_other(f, random_state, n_jobs, kwargs):
         from tsml_eval.estimators.forecasting.HybridStats import Ensemble1
 
         return Ensemble1(**kwargs)
+    elif f == "ensemble2":
+        from tsml_eval.estimators.forecasting.HybridStats import Ensemble2
+
+        return Ensemble2(**kwargs)
+    elif f == "ensemble3":
+        from tsml_eval.estimators.forecasting.HybridStats import Ensemble3
+
+        return Ensemble3(**kwargs)
+    elif f == "ensemble4":
+        from tsml_eval.estimators.forecasting.HybridStats import Ensemble4
+
+        return Ensemble4(**kwargs)
+    elif f == "ensemble5":
+        from tsml_eval.estimators.forecasting.HybridStats import Ensemble5
+
+        return Ensemble5(**kwargs)
     elif f == "ensembleaic1":
         from tsml_eval.estimators.forecasting.HybridStats import EnsembleAIC1
 
