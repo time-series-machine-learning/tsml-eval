@@ -92,7 +92,7 @@ class AverageStatsAIC(BaseForecaster):
 
         return np.dot(weights, forecasts)
 
-class Ensemble3(BaseForecaster):
+class Ensemble4(BaseForecaster):
     """Test Hybrid Forecaster."""
 
     _tags = {
@@ -109,8 +109,8 @@ class Ensemble3(BaseForecaster):
         self.models.append(AutoETS())
         self.models.append(AutoARIMA())
         self.models.append(RegressionForecaster(window=100, regressor=RandomForestRegressor()))
-        # self.models.append(RegressionForecaster(window=100, regressor=RidgeCV(fit_intercept=True, alphas=np.logspace(-3, 3, 10))))
-        self.models.append(RegressionForecaster(window=100, regressor=XGBRegressor()))
+        self.models.append(RegressionForecaster(window=100, regressor=RidgeCV(fit_intercept=True, alphas=np.logspace(-3, 3, 10))))
+        # self.models.append(RegressionForecaster(window=100, regressor=XGBRegressor()))
         for model in self.models:
             model.fit(y, exog=exog)
         return self
