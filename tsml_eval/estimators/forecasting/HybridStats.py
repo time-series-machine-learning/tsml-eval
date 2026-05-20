@@ -105,33 +105,27 @@ class Ensemble1(BaseForecaster):
         super().__init__(horizon=1, axis=1)
 
     def _fit(self, y, exog=None):
-        self.ets_model_ = AutoETS()
-        self.ets_model_.fit(y, exog=exog)
-        # self.arima_model_ = AutoARIMA()
-        # self.arima_model_.fit(y, exog=exog)
-        self.random_forest_model_ = RegressionForecaster(window=100, regressor=RandomForestRegressor())
-        self.random_forest_model_.fit(y, exog=exog)
-        self.ridge_model_ = RegressionForecaster(window=100, regressor=RidgeCV(fit_intercept=True, alphas=np.logspace(-3, 3, 10)))
-        self.ridge_model_.fit(y, exog=exog)
-        self.xgboost_model_ = RegressionForecaster(window=100, regressor=XGBRegressor())
-        self.xgboost_model_.fit(y, exog=exog)
+        self.models = []
+        # self.models.append(AutoETS())
+        self.models.append(AutoARIMA())
+        self.models.append(RegressionForecaster(window=100, regressor=RandomForestRegressor()))
+        self.models.append(RegressionForecaster(window=100, regressor=RidgeCV(fit_intercept=True, alphas=np.logspace(-3, 3, 10))))
+        self.models.append(RegressionForecaster(window=100, regressor=XGBRegressor()))
+        for model in self.models:
+            model.fit(y, exog=exog)
         return self
 
     def _predict(self, y, exog=None):
-        ets_pred = self.ets_model_.predict(y, exog=exog)
-        rf_pred = self.random_forest_model_.predict(y, exog=exog)
-        ridge_pred = self.ridge_model_.predict(y, exog=exog)
-        xgboost_pred = self.xgboost_model_.predict(y, exog=exog)
-        return self._combine_forecasts(ets_pred, rf_pred, ridge_pred, xgboost_pred)
+        return self._combine_forecasts([model.predict(y, exog=exog) for model in self.models])
 
     def _forecast(self, y, exog=None):
         """Forecast one ahead for time series y."""
         self._fit(y, exog)
-        return self._combine_forecasts(self.ets_model_.forecast_, self.random_forest_model_.forecast_, self.ridge_model_.forecast_, self.xgboost_model_.forecast_)
+        return self._combine_forecasts([model.forecast_ for model in self.models])
 
-    def _combine_forecasts(self, ets_forecast, rf_forecast, ridge_forecast, xgboost_forecast):
+    def _combine_forecasts(self, forecasts):
         """Combine the forecasts from the ETS, ARIMA, Random Forest, Ridge, and XGBoost models."""
-        return (ets_forecast + rf_forecast + ridge_forecast + xgboost_forecast) / 4
+        return sum(forecasts) / len(forecasts)
 
 class EnsembleAIC1(BaseForecaster):
     """Test Hybrid Forecaster with alternate combination methods based on AIC."""
