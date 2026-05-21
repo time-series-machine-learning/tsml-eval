@@ -106,10 +106,10 @@ class Ensemble4(BaseForecaster):
 
     def _fit(self, y, exog=None):
         self.models = []
-        self.models.append(AutoETS())
+        # self.models.append(AutoETS())
         self.models.append(AutoARIMA())
         self.models.append(RegressionForecaster(window=100, regressor=RandomForestRegressor()))
-        # self.models.append(RegressionForecaster(window=100, regressor=RidgeCV(fit_intercept=True, alphas=np.logspace(-3, 3, 10))))
+        self.models.append(RegressionForecaster(window=100, regressor=RidgeCV(fit_intercept=True, alphas=np.logspace(-3, 3, 10))))
         self.models.append(RegressionForecaster(window=100, regressor=XGBRegressor()))
         for model in self.models:
             model.fit(y, exog=exog)
