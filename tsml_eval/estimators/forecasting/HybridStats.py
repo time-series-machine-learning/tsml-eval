@@ -92,6 +92,111 @@ class AverageStatsAIC(BaseForecaster):
 
         return np.dot(weights, forecasts)
 
+class Ensemble1(BaseForecaster):
+    """Test Hybrid Forecaster."""
+
+    _tags = {
+        "capability:horizon": False,  # cannot fit to a horizon other than 1
+    }
+
+    def __init__(
+        self,
+    ):
+        super().__init__(horizon=1, axis=1)
+
+    def _fit(self, y, exog=None):
+        self.models = []
+        # self.models.append(AutoETS())
+        # self.models.append(AutoARIMA())
+        self.models.append(RegressionForecaster(window=100, regressor=RandomForestRegressor()))
+        self.models.append(RegressionForecaster(window=100, regressor=RidgeCV(fit_intercept=True, alphas=np.logspace(-3, 3, 10))))
+        self.models.append(RegressionForecaster(window=100, regressor=XGBRegressor()))
+        for model in self.models:
+            model.fit(y, exog=exog)
+        return self
+
+    def _predict(self, y, exog=None):
+        return self._combine_forecasts([model.predict(y, exog=exog) for model in self.models])
+
+    def _forecast(self, y, exog=None):
+        """Forecast one ahead for time series y."""
+        self._fit(y, exog)
+        return self._combine_forecasts([model.forecast_ for model in self.models])
+
+    def _combine_forecasts(self, forecasts):
+        """Combine the forecasts from the ETS, ARIMA, Random Forest, Ridge, and XGBoost models."""
+        return sum(forecasts) / len(forecasts)
+
+class Ensemble2(BaseForecaster):
+    """Test Hybrid Forecaster."""
+
+    _tags = {
+        "capability:horizon": False,  # cannot fit to a horizon other than 1
+    }
+
+    def __init__(
+        self,
+    ):
+        super().__init__(horizon=1, axis=1)
+
+    def _fit(self, y, exog=None):
+        self.models = []
+        self.models.append(AutoETS())
+        self.models.append(AutoARIMA())
+        # self.models.append(RegressionForecaster(window=100, regressor=RandomForestRegressor()))
+        # self.models.append(RegressionForecaster(window=100, regressor=RidgeCV(fit_intercept=True, alphas=np.logspace(-3, 3, 10))))
+        # self.models.append(RegressionForecaster(window=100, regressor=XGBRegressor()))
+        for model in self.models:
+            model.fit(y, exog=exog)
+        return self
+
+    def _predict(self, y, exog=None):
+        return self._combine_forecasts([model.predict(y, exog=exog) for model in self.models])
+
+    def _forecast(self, y, exog=None):
+        """Forecast one ahead for time series y."""
+        self._fit(y, exog)
+        return self._combine_forecasts([model.forecast_ for model in self.models])
+
+    def _combine_forecasts(self, forecasts):
+        """Combine the forecasts from the ETS, ARIMA, Random Forest, Ridge, and XGBoost models."""
+        return sum(forecasts) / len(forecasts)
+    
+class Ensemble3(BaseForecaster):
+    """Test Hybrid Forecaster."""
+
+    _tags = {
+        "capability:horizon": False,  # cannot fit to a horizon other than 1
+    }
+
+    def __init__(
+        self,
+    ):
+        super().__init__(horizon=1, axis=1)
+
+    def _fit(self, y, exog=None):
+        self.models = []
+        self.models.append(AutoETS())
+        # self.models.append(AutoARIMA())
+        # self.models.append(RegressionForecaster(window=100, regressor=RandomForestRegressor()))
+        self.models.append(RegressionForecaster(window=100, regressor=RidgeCV(fit_intercept=True, alphas=np.logspace(-3, 3, 10))))
+        self.models.append(RegressionForecaster(window=100, regressor=XGBRegressor()))
+        for model in self.models:
+            model.fit(y, exog=exog)
+        return self
+
+    def _predict(self, y, exog=None):
+        return self._combine_forecasts([model.predict(y, exog=exog) for model in self.models])
+
+    def _forecast(self, y, exog=None):
+        """Forecast one ahead for time series y."""
+        self._fit(y, exog)
+        return self._combine_forecasts([model.forecast_ for model in self.models])
+
+    def _combine_forecasts(self, forecasts):
+        """Combine the forecasts from the ETS, ARIMA, Random Forest, Ridge, and XGBoost models."""
+        return sum(forecasts) / len(forecasts)
+
 class Ensemble4(BaseForecaster):
     """Test Hybrid Forecaster."""
 
@@ -110,7 +215,7 @@ class Ensemble4(BaseForecaster):
         self.models.append(AutoARIMA())
         self.models.append(RegressionForecaster(window=100, regressor=RandomForestRegressor()))
         self.models.append(RegressionForecaster(window=100, regressor=RidgeCV(fit_intercept=True, alphas=np.logspace(-3, 3, 10))))
-        self.models.append(RegressionForecaster(window=100, regressor=XGBRegressor()))
+        # self.models.append(RegressionForecaster(window=100, regressor=XGBRegressor()))
         for model in self.models:
             model.fit(y, exog=exog)
         return self
