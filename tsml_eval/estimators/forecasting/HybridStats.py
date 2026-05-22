@@ -125,7 +125,8 @@ class Ensemble1(BaseForecaster):
 
     def _combine_forecasts(self, forecasts):
         """Combine the forecasts from the ETS, ARIMA, Random Forest, Ridge, and XGBoost models."""
-        return forecasts.sort()[2]
+        forecasts.sort()
+        return forecasts[2]
 
 class Ensemble2(BaseForecaster):
     """Test Hybrid Forecaster."""
@@ -160,8 +161,9 @@ class Ensemble2(BaseForecaster):
 
     def _combine_forecasts(self, forecasts):
         """Combine the forecasts from the ETS, ARIMA, Random Forest, Ridge, and XGBoost models."""
-        return sum(forecasts.sort()[1:3]) / 3
-    
+        forecasts.sort()
+        return sum(forecasts[1:3]) / 3
+
 class Ensemble3(BaseForecaster):
     """Test Hybrid Forecaster."""
 
@@ -195,7 +197,8 @@ class Ensemble3(BaseForecaster):
 
     def _combine_forecasts(self, forecasts):
         """Combine the forecasts from the ETS, ARIMA, Random Forest, Ridge, and XGBoost models."""
-        return forecasts.sort()[2]
+        forecasts.sort()
+        return forecasts[2]
 
 class Ensemble4(BaseForecaster):
     """Test Hybrid Forecaster."""
@@ -230,7 +233,8 @@ class Ensemble4(BaseForecaster):
 
     def _combine_forecasts(self, forecasts):
         """Combine the forecasts from the ETS, ARIMA, Random Forest, Ridge, and XGBoost models."""
-        return sum(forecasts.sort()[1:2]) / 2
+        forecasts.sort()
+        return sum(forecasts[1:2]) / 2
 
 class EnsembleAIC1(BaseForecaster):
     """Test Hybrid Forecaster with alternate combination methods based on AIC."""
