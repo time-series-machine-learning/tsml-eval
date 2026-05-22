@@ -106,8 +106,8 @@ class Ensemble1(BaseForecaster):
 
     def _fit(self, y, exog=None):
         self.models = []
-        # self.models.append(AutoETS())
-        # self.models.append(AutoARIMA())
+        self.models.append(AutoETS())
+        self.models.append(AutoARIMA())
         self.models.append(RegressionForecaster(window=100, regressor=RandomForestRegressor()))
         self.models.append(RegressionForecaster(window=100, regressor=RidgeCV(fit_intercept=True, alphas=np.logspace(-3, 3, 10))))
         self.models.append(RegressionForecaster(window=100, regressor=XGBRegressor()))
@@ -125,7 +125,7 @@ class Ensemble1(BaseForecaster):
 
     def _combine_forecasts(self, forecasts):
         """Combine the forecasts from the ETS, ARIMA, Random Forest, Ridge, and XGBoost models."""
-        return sum(forecasts) / len(forecasts)
+        return forecasts.sort_values()[2]
 
 class Ensemble2(BaseForecaster):
     """Test Hybrid Forecaster."""
@@ -143,9 +143,9 @@ class Ensemble2(BaseForecaster):
         self.models = []
         self.models.append(AutoETS())
         self.models.append(AutoARIMA())
-        # self.models.append(RegressionForecaster(window=100, regressor=RandomForestRegressor()))
-        # self.models.append(RegressionForecaster(window=100, regressor=RidgeCV(fit_intercept=True, alphas=np.logspace(-3, 3, 10))))
-        # self.models.append(RegressionForecaster(window=100, regressor=XGBRegressor()))
+        self.models.append(RegressionForecaster(window=100, regressor=RandomForestRegressor()))
+        self.models.append(RegressionForecaster(window=100, regressor=RidgeCV(fit_intercept=True, alphas=np.logspace(-3, 3, 10))))
+        self.models.append(RegressionForecaster(window=100, regressor=XGBRegressor()))
         for model in self.models:
             model.fit(y, exog=exog)
         return self
@@ -160,7 +160,7 @@ class Ensemble2(BaseForecaster):
 
     def _combine_forecasts(self, forecasts):
         """Combine the forecasts from the ETS, ARIMA, Random Forest, Ridge, and XGBoost models."""
-        return sum(forecasts) / len(forecasts)
+        return sum(forecasts.sort_values()[1:3]) / 3
     
 class Ensemble3(BaseForecaster):
     """Test Hybrid Forecaster."""
@@ -195,7 +195,7 @@ class Ensemble3(BaseForecaster):
 
     def _combine_forecasts(self, forecasts):
         """Combine the forecasts from the ETS, ARIMA, Random Forest, Ridge, and XGBoost models."""
-        return sum(forecasts) / len(forecasts)
+        return forecasts.sort_values()[2]
 
 class Ensemble4(BaseForecaster):
     """Test Hybrid Forecaster."""
@@ -211,11 +211,11 @@ class Ensemble4(BaseForecaster):
 
     def _fit(self, y, exog=None):
         self.models = []
-        # self.models.append(AutoETS())
+        self.models.append(AutoETS())
         self.models.append(AutoARIMA())
-        self.models.append(RegressionForecaster(window=100, regressor=RandomForestRegressor()))
+        # self.models.append(RegressionForecaster(window=100, regressor=RandomForestRegressor()))
         self.models.append(RegressionForecaster(window=100, regressor=RidgeCV(fit_intercept=True, alphas=np.logspace(-3, 3, 10))))
-        # self.models.append(RegressionForecaster(window=100, regressor=XGBRegressor()))
+        self.models.append(RegressionForecaster(window=100, regressor=XGBRegressor()))
         for model in self.models:
             model.fit(y, exog=exog)
         return self
@@ -230,7 +230,7 @@ class Ensemble4(BaseForecaster):
 
     def _combine_forecasts(self, forecasts):
         """Combine the forecasts from the ETS, ARIMA, Random Forest, Ridge, and XGBoost models."""
-        return sum(forecasts) / len(forecasts)
+        return sum(forecasts.sort_values()[1:2]) / 2
 
 class EnsembleAIC1(BaseForecaster):
     """Test Hybrid Forecaster with alternate combination methods based on AIC."""
