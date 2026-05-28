@@ -4,6 +4,16 @@ from aeon.forecasting.stats import AutoETS, AutoARIMA, AutoTAR, Theta, TVP
 import numpy as np
 from xgboost import XGBRegressor
 from sklearn.linear_model import RidgeCV
+from aeon.regression.sklearn import RotationForestRegressor
+from aeon.regression.interval_based import TimeSeriesForestRegressor
+from aeon.regression.deep_learning import InceptionTimeRegressor
+from aeon.regression.deep_learning import ResNetRegressor
+from aeon.regression.deep_learning import TimeCNNRegressor
+from aeon.regression.deep_learning import LITETimeRegressor
+from aeon.regression.deep_learning import DisjointCNNRegressor
+from aeon.regression.convolution_based import MultiRocketRegressor
+from aeon.regression.convolution_based import HydraRegressor
+from aeon.regression.feature_based import FreshPRINCERegressor
 
 class AverageStats(BaseForecaster):
     """Test Hybrid Forecaster."""
@@ -116,18 +126,20 @@ class Ensemble1(BaseForecaster):
         self,
     ):
         super().__init__(horizon=1, axis=1)
-        self.combination_method = mean
+        self.combination_method = median
 
     def _fit(self, y, exog=None):
         self.models = []
-        self.models.append(AutoETS())
-        self.models.append(AutoARIMA())
-        self.models.append(AutoTAR(None, None, None))
-        self.models.append(Theta())
-        self.models.append(TVP(window=100))
-        # self.models.append(RegressionForecaster(window=100, regressor=RandomForestRegressor()))
-        # self.models.append(RegressionForecaster(window=100, regressor=RidgeCV(fit_intercept=True, alphas=np.logspace(-3, 3, 10))))
-        # self.models.append(RegressionForecaster(window=100, regressor=XGBRegressor()))
+        # self.models.append(AutoETS())
+        # self.models.append(AutoARIMA())
+        # self.models.append(AutoTAR(None, None, None))
+        # self.models.append(Theta())
+        # self.models.append(TVP(window=100))
+        self.models.append(RegressionForecaster(window=100, regressor=RandomForestRegressor()))
+        self.models.append(RegressionForecaster(window=100, regressor=RidgeCV(fit_intercept=True, alphas=np.logspace(-3, 3, 10))))
+        self.models.append(RegressionForecaster(window=100, regressor=XGBRegressor()))
+        self.models.append(RegressionForecaster(window=100, regressor=RotationForestRegressor()))
+        self.models.append(RegressionForecaster(window=100, regressor=TimeSeriesForestRegressor()))
         for model in self.models:
             model.fit(y, exog=exog)
         return self
@@ -155,15 +167,18 @@ class Ensemble2(BaseForecaster):
         self,
     ):
         super().__init__(horizon=1, axis=1)
-        self.combination_method = middle
+        self.combination_method = median
 
     def _fit(self, y, exog=None):
         self.models = []
-        self.models.append(AutoETS())
-        self.models.append(AutoARIMA())
-        self.models.append(RegressionForecaster(window=100, regressor=RandomForestRegressor()))
-        self.models.append(RegressionForecaster(window=100, regressor=RidgeCV(fit_intercept=True, alphas=np.logspace(-3, 3, 10))))
-        self.models.append(RegressionForecaster(window=100, regressor=XGBRegressor()))
+        # self.models.append(AutoETS())
+        # self.models.append(AutoARIMA())
+        # self.models.append(RegressionForecaster(window=100, regressor=RandomForestRegressor()))
+        # self.models.append(RegressionForecaster(window=100, regressor=RidgeCV(fit_intercept=True, alphas=np.logspace(-3, 3, 10))))
+        # self.models.append(RegressionForecaster(window=100, regressor=XGBRegressor()))
+        self.models.append(RegressionForecaster(window=100, regressor=MultiRocketRegressor()))
+        self.models.append(RegressionForecaster(window=100, regressor=HydraRegressor()))
+        self.models.append(RegressionForecaster(window=100, regressor=FreshPRINCERegressor()))
         for model in self.models:
             model.fit(y, exog=exog)
         return self
@@ -195,14 +210,19 @@ class Ensemble3(BaseForecaster):
 
     def _fit(self, y, exog=None):
         self.models = []
-        self.models.append(AutoETS())
-        self.models.append(AutoARIMA())
-        self.models.append(AutoTAR(None, None, None))
-        self.models.append(Theta())
-        self.models.append(TVP(window=100))
+        # self.models.append(AutoETS())
+        # self.models.append(AutoARIMA())
+        # self.models.append(AutoTAR(None, None, None))
+        # self.models.append(Theta())
+        # self.models.append(TVP(window=100))
         # self.models.append(RegressionForecaster(window=100, regressor=RandomForestRegressor()))
         # self.models.append(RegressionForecaster(window=100, regressor=RidgeCV(fit_intercept=True, alphas=np.logspace(-3, 3, 10))))
         # self.models.append(RegressionForecaster(window=100, regressor=XGBRegressor()))
+        self.models.append(RegressionForecaster(window=100, regressor=InceptionTimeRegressor()))
+        self.models.append(RegressionForecaster(window=100, regressor=ResNetRegressor()))
+        self.models.append(RegressionForecaster(window=100, regressor=TimeCNNRegressor()))
+        self.models.append(RegressionForecaster(window=100, regressor=LITETimeRegressor()))
+        self.models.append(RegressionForecaster(window=100, regressor=DisjointCNNRegressor()))
         for model in self.models:
             model.fit(y, exog=exog)
         return self
