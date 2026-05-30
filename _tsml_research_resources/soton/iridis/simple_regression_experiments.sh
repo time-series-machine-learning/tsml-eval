@@ -147,8 +147,9 @@ for dataset_file in $dataset_list; do
 
     # Optional preprocessing
     if [ -n "${preprocessing_file_path:-}" ]; then
+        list_of_series="${dataset_file}_compiled.txt"
         echo "Running preprocessing for $dataset_file..."
-        python -u "${preprocessing_file_path}" "${data_dir}" "${dataset_file}"
+        python -u "${preprocessing_file_path}" "${data_dir}" "${dataset_file}" "${list_of_series}"
     fi
 
     for regressor in $regressors_to_run; do
