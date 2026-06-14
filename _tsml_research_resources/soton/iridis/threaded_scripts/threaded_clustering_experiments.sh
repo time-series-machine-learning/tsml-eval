@@ -143,7 +143,7 @@ echo "#!/bin/bash
 
 . /etc/profile
 
-module load anaconda/py3.10
+module load conda/python3
 source activate $env_name
 
 # Input args to the default threaded_clustering_experiments are in main method of

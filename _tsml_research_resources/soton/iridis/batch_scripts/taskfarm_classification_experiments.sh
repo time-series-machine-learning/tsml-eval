@@ -107,7 +107,7 @@ echo "#!/bin/bash
 
 . /etc/profile
 
-module load anaconda/py3.10
+module load conda/python3
 source activate $env_name
 
 staskfarm ${outDir}/generatedCommandList-${dt}.txt" > generatedSubmissionFile-${dt}.sub

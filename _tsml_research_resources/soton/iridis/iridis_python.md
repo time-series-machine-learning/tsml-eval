@@ -1,29 +1,23 @@
-# Iridis 5 Python
-##### Last updated: 07/09/2025
+# Iridis 6 Python
+##### Last updated: 14/06/2026
 
-Installation guide for Python packages on Iridis 5 and useful slurm commands.
+Installation guide for Python packages on Iridis 6 and useful Slurm commands.
 
 The [Iridis wiki](https://sotonac.sharepoint.com/teams/HPCCommunityWiki) provides a lot of useful information and getting started guides for using Iridis.
 
-Server address: iridis5.soton.ac.uk
+Server address: iridis6.soton.ac.uk
 
-Alternatively, you can connect to one of the specific login nodes:
-- iridis5_a.soton.ac.uk (usually busy)
-- iridis5_b.soton.ac.uk
-- iridis5_c.soton.ac.uk
-- iridis5_d.soton.ac.uk (AMD CPU architecture)
-
-This guide only covers Iridis 5 currently, but should be applicable to Iridis 6 or X.
+This guide only covers Iridis 6 currently, but parts should be useful for Iridis X.
 
 There is a Southampton Microsoft Teams group called "HPC Community" where you can ask questions if needed.
 
 ## Windows interaction with Iridis
 
-You need to be on a Soton network machine or have the VPN running to connect to Iridis. Connect to one of the addresses listed above.
+You need to be on a Soton network machine or have the VPN running to connect to Iridis. Connect the address listed above.
 
 The recommended way of connecting to Iridis in our group is using Putty for a SSH command-line interface and WinSCP for FTP file management.
 
-Copies of data files used in experiments must be stored on the cluster, the best place to put these files is on your user area scratch storage. It is a good idea to create shortcuts to and from your scratch drive. Alternatively, you can read from someone else's directory (i.e. `/mainfs/scratch/mbm1g23/`).
+Copies of data files used in experiments must be stored on the cluster, the best place to put these files is on your user area *scratch* storage. It is a good idea to create shortcuts to and from your *scratch* drive. Alternatively, you can read from someone else's directory (i.e. `/iridisfs/scratch/mbm1g23/`).
 
 ## Installing on the cluster
 
@@ -47,9 +41,7 @@ e.g. https://github.com/time-series-machine-learning/tsml-eval
 
 Python is activated by default, but it is good practice to manually select the version used. The Iridis module should be loaded before creating and editing an environment.
 
->module load anaconda/py3.10
-
-This will be different on each cluster. Iridis 6 is `conda/python3` for example.
+>module load conda/python3
 
 You may also need to run the following to use some conda commands:
 
@@ -65,11 +57,11 @@ You can check the current version using:
 
 #### 3.1. Set up scratch symbolic link for conda
 
-Installing complex conda packages on your main home drive will quickly see you hitting the limit on the number of files you can store. To avoid this, it is recommended you create a symbolic link to your scratch storage (this assumes you are in your home directory and there is a symlink to your scratch drive).
+Installing complex conda packages on your main *home* drive will quickly see you hitting the limit on the number of files you can store. To avoid this, it is recommended you create a symbolic link to your *scratch* storage (this assumes you are in your *home* directory and there is a symlink present to your *scratch* drive).
 
->mkdir /scratch/<username>/.conda
+>mkdir ./scratch/<username>/.conda
 
->ln -s /scratch/<username>/.conda ~/.conda
+>ln -s ./scratch/<username>/.conda ~/.conda
 
 Hitting this limit is very annoying, as it will prevent you from creating new conda environments, installing new packages or saving results file (or doing anything really).
 
@@ -77,7 +69,7 @@ For conda related storage guidance, see the [related HPC webpage](https://sotona
 
 #### 3.2. Create environment
 
-Create a new environment with a name of your choice. Replace PYTHON_VERSION with 3.12 by default.
+Create a new environment with a name of your choice. Replace PYTHON_VERSION with 3.13 by default.
 
 >conda create -n ENV_NAME python=PYTHON_VERSION
 
@@ -154,7 +146,7 @@ If any a dependency install is "Killed", it is likely the session has run out of
 
 Currently the recommended way to run GPU jobs on Iridis is using an apptainer container built from an NVIDIA tensorflow docker image. Pulling the docker image will likely require an [NVIDIA NGC account](https://catalog.ngc.nvidia.com/) and API key.
 
->module load apptainer/1.3.3
+>module load apptainer/1.5.0
 
 >export APPTAINER_DOCKER_USERNAME='$oauthtoken'
 
@@ -204,17 +196,15 @@ These scripts can be run from the command line with the following command:
 
 You may need to use `dos2unix` to convert the line endings to unix format.
 
-The default queue for CPU jobs is _batch_. Be sure to swap the _queue_alias_ to _serial_ in the script if you want to use this, as the number of jobs submitted won't be tracked properly otherwise.
+The default queue for CPU jobs is *batch*.
 
-Do not run threaded code on the cluster without requesting the correct amount of CPUs or reserving a whole node, as there is nothing to stop the job from using the CPU resources allocated to others. The default python file in the scripts attempts to avoid threading as much as possible. You should ensure processes are not intentionally using multiple threads if you change it.
+Do not run threaded code on the cluster without requesting the correct amount of CPUs or reserving a whole node, as there is nothing to stop the job from using the CPU resources allocated to others. The default Python file in the scripts attempts to avoid threading as much as possible. You should ensure processes are not intentionally using multiple threads if you change it.
 
 Requesting memory for a job will allocate it all on the jobs assigned node. New jobs will not be submitted to a node if the total allocated memory exceeds the amount available for the node. As such, requesting too much memory can block new jobs from using the node. This is ok if the memory is actually being used, but large amounts of memory should not be requested unless you know it will be required for the jobs you are submitting. Iridis is a shared resource, and instantly requesting hundreds of GB will hurt the overall efficiency of the cluster.
 
-### Running `tsml-eval` CPU experiments on the Iridis 5 batch queue
+### Running `tsml-eval` CPU experiments in batch jobs
 
-If you submit less than 20 tasks when requesting the _batch_ queue, your job will be redirected to the _serial_ queue. This has a much smaller job limit which you will reach quickly when submitting a lot of jobs. If you submit a single task in each submission, you will only be running ~32 jobs at once.
-
-To get around this, you can use the batch submission scripts provided in the `batch_scripts` folder. These scripts submit multiple tasks in a single job, allowing you to run many more experiments at once.
+You can use the batch submission scripts provided in the `batch_scripts` folder to submit multiple tasks in a single job, allowing you to run more experiments in a single submission. Be careful as the requested cores will not be released until every experiment has finished.
 
 >taskfarm_classification_experiments.sh
 
@@ -236,7 +226,7 @@ For GPU experiments use one of the following scripts:
 
 It is recommended you use different environments for CPU and GPU jobs. Using an apptainer container this will be standard, make sure to set the path to your sandbox in the script.
 
-The default queue for GPU jobs is _gpu_.
+The default queue for GPU jobs is *gpu*.
 
 ## Monitoring jobs on Iridis
 
@@ -268,6 +258,3 @@ To delete jobs in a specific job ID range use the `range_scancel` script:
 
 conda cheat sheet:
 https://docs.conda.io/projects/conda/en/4.6.0/_downloads/52a95608c49671267e40c689e0bc00ca/conda-cheatsheet.pdf
-
-Queue names:
-https://sotonac.sharepoint.com/teams/HPCCommunityWiki/SitePages/Iridis%205%20Job-submission-and-Limits-Quotas.aspx

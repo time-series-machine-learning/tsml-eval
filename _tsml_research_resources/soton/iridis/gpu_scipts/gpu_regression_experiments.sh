@@ -123,7 +123,7 @@ echo "#!/bin/bash
 
 . /etc/profile
 
-module load apptainer/1.3.3
+module load apptainer/1.5.0
 
 # Input args to the default regression_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/regression_experiments.py
