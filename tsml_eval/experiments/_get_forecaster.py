@@ -23,6 +23,7 @@ stats_forecasters = [
     ["setarforecaster", "setar"],
     ["thetaforecaster", "theta"],
     ["tvpforecaster", "tvp"],
+    "scum",
     ["averagestats", "average", "hybridaverage"],
     ["averagestatsaic", "averageaic", "hybridaverageaic"],
 ]
@@ -151,6 +152,10 @@ def _set_forecaster_stats(f, random_state, n_jobs, kwargs):
         from aeon.forecasting.stats import TVP
 
         return TVP(**kwargs)
+    elif f == "scum":
+        from aeon.forecasting.stats import SCUM
+
+        return SCUM(**kwargs)
     elif f == "averagestats" or f == "average" or f == "hybridaverage":
         from tsml_eval.estimators.forecasting.HybridStats import AverageStats
 
