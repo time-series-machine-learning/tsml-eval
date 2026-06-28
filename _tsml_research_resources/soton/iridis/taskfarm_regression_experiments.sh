@@ -64,6 +64,13 @@ relative_preprocessing_file_path=""
 
 extra_args=""
 
+# Optional seasonal period/frequency to pass to forecasting estimators.
+# SCUM uses aeon's "season_length" parameter; override seasonal_period_parameter
+# in a config file if a different forecaster expects another parameter name.
+seasonal_period=""
+seasonal_period_parameter="season_length"
+relative_seasonal_period_file="tsml-eval/_tsml_research_resources/soton/seasonal_periods.windowed_series.txt"
+
 # Environment name, change accordingly, for set up, see https://github.com/time-series-machine-learning/tsml-eval/blob/main/_tsml_research_resources/soton/iridis/iridis_python.md
 # Separate environments for GPU and CPU are recommended #regress_gpu regression_experiments
 # env_name="regression_experiments"
@@ -106,19 +113,38 @@ SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 maybe_source "$SCRIPT_DIR/../config.default"
 maybe_source "$SCRIPT_DIR/../config.local"
 
-# 2) Parse CLI overrides (highest priority)
+# 2) Load any CLI-provided config, then parse all CLI overrides.
+ORIGINAL_ARGS=("$@")
 CONFIG_FILE=""
+for (( arg_i=0; arg_i<${#ORIGINAL_ARGS[@]}; arg_i++ )); do
+  if [ "${ORIGINAL_ARGS[$arg_i]}" = "--config" ]; then
+    CONFIG_FILE="${ORIGINAL_ARGS[$((arg_i + 1))]:-}"
+    break
+  fi
+done
+[ -n "${CONFIG_FILE:-}" ] && maybe_source "$CONFIG_FILE"
+
+set -- "${ORIGINAL_ARGS[@]}"
 DEBUG=0
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --config) CONFIG_FILE=$2; shift 2 ;;
     --regressors_to_run) regressors_to_run=$2; shift 2 ;;
-    --debug) DEBUG=1; shift ;;
+    --seasonal_period|--seasonal-period) seasonal_period=$2; shift 2 ;;
+    --seasonal_period_parameter|--seasonal-period-parameter) seasonal_period_parameter=$2; shift 2 ;;
+    --seasonal_period_file|--seasonal-period-file) relative_seasonal_period_file=$2; shift 2 ;;
+    --debug)
+      DEBUG=1
+      if [ "${2:-}" = "on" ] || [ "${2:-}" = "true" ] || [ "${2:-}" = "1" ]; then
+        shift 2
+      else
+        shift
+      fi
+      ;;
     --) shift; break ;;
     *) echo "Unknown option: $1" >&2; exit 2 ;;
   esac
 done
-[ -n "${CONFIG_FILE:-}" ] && maybe_source "$CONFIG_FILE"
 
 # 3) Validate required vars
 : "${username:?Set username in config file}"
@@ -161,6 +187,15 @@ full_preprocessing_file_path="$local_path/$relative_preprocessing_file_path"
 
 full_aeon_path="$local_path/$relative_aeon_dir"
 full_tsml_eval_path="$local_path/$relative_tsml_eval_dir"
+
+if [ -n "${relative_seasonal_period_file:-}" ]; then
+    case "$relative_seasonal_period_file" in
+        /*) seasonal_period_file_path="$relative_seasonal_period_file" ;;
+        *) seasonal_period_file_path="$local_path/$relative_seasonal_period_file" ;;
+    esac
+else
+    seasonal_period_file_path=""
+fi
 
 # Datasets to use and directory of data files. This can either be a text file or directory of text files
 # Separate text files will not run jobs of the same dataset in the same node. This is good to keep large and small datasets separate
@@ -252,6 +287,17 @@ rm generatedSubmissionFile-${dt}.sub
 
 }
 
+get_seasonal_period () {
+    series_name=$1
+    if [ -n "${seasonal_period:-}" ]; then
+        echo "$seasonal_period"
+    elif [ -n "${seasonal_period_file_path:-}" ] && [ -f "$seasonal_period_file_path" ]; then
+        awk -v series="$series_name" '$1 == series { print $2; exit }' "$seasonal_period_file_path"
+    else
+        echo ""
+    fi
+}
+
 totalCount=0
 expCount=0
 dt=$(date +%Y%m%d%H%M%S)
@@ -332,7 +378,13 @@ if ((cmdCount>(n_tasks_per_node-n_threads_per_task))); then
 fi
 # Input args to the default classification_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/classification_experiments.py
-echo "${apptainer_instruction}conda run -p ${env_name} python -u ${full_script_file_path} ${data_dir} ${results_dir} ${regressor} ${dataset} ${resample} ${generate_train_files} ${predefined_folds} ${normalise_data} -nj ${n_threads_per_task} ${extra_args} > ${out_dir}/${regressor}/output-${dataset}-${resample}-${dt}.txt 2>&1" >> ${out_dir}/generatedCommandList-${dt}.txt
+dataset_seasonal_period=$(get_seasonal_period "$dataset")
+if [ -n "${dataset_seasonal_period:-}" ]; then
+    seasonal_period_args="-kw ${seasonal_period_parameter} ${dataset_seasonal_period} int"
+else
+    seasonal_period_args=""
+fi
+echo "${apptainer_instruction}conda run -p ${env_name} python -u ${full_script_file_path} ${data_dir} ${results_dir} ${regressor} ${dataset} ${resample} ${generate_train_files} ${predefined_folds} ${normalise_data} -nj ${n_threads_per_task} ${seasonal_period_args} ${extra_args} > ${out_dir}/${regressor}/output-${dataset}-${resample}-${dt}.txt 2>&1" >> ${out_dir}/generatedCommandList-${dt}.txt
 ((cmdCount=cmdCount+n_threads_per_task))
 totalCount=$((totalCount + 1))
 done

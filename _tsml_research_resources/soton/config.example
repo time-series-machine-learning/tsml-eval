@@ -9,3 +9,11 @@ relative_dataset_list="Data/windowed_series.txt"
 relative_results_dir="RegressionResults/results/"
 relative_out_dir="RegressionResults/output/"
 extra_args="-kw window 500 int"
+
+# Seasonal period/frequency for forecasting estimators.
+# By default this reads per-series values from the Monash windowed-series mapping.
+# Set seasonal_period=12 to force one value for all series, or override the
+# parameter name for other models.
+seasonal_period=""
+seasonal_period_parameter="season_length"
+relative_seasonal_period_file="tsml-eval/_tsml_research_resources/soton/seasonal_periods.windowed_series.txt"

@@ -41,6 +41,13 @@ relative_preprocessing_file_path=""
 
 extra_args=""
 
+# Optional seasonal period/frequency to pass to forecasting estimators.
+# SCUM uses aeon's "season_length" parameter; override seasonal_period_parameter
+# in a config file if a different forecaster expects another parameter name.
+seasonal_period=""
+seasonal_period_parameter="season_length"
+relative_seasonal_period_file="tsml-eval/_tsml_research_resources/soton/seasonal_periods.windowed_series.txt"
+
 # Regressors to loop over. Must be seperated by a space. Different regressors will not run in the same node
 # See list of potential regressors in set_regressor  InceptionTimeRegressor
 # regressors_to_run="ETSForecaster, AutoETSForecaster, SktimeETS, StatsForecastETS" # RocketRegressor MultiRocketRegressor ResNetRegressor fpcregressor fpcr-b-spline TimeCNNRegressor FCNRegressor 1nn-ed 1nn-dtw 5nn-ed 5nn-dtw FreshPRINCERegressor TimeSeriesForestRegressor DrCIFRegressor Ridge SVR RandomForestRegressor RotationForestRegressor xgboost
@@ -78,19 +85,38 @@ SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 maybe_source "$SCRIPT_DIR/../config.default"
 maybe_source "$SCRIPT_DIR/../config.local"
 
-# CLI override
+# Load any CLI-provided config, then parse all CLI overrides.
+ORIGINAL_ARGS=("$@")
 CONFIG_FILE=""
+for (( arg_i=0; arg_i<${#ORIGINAL_ARGS[@]}; arg_i++ )); do
+    if [ "${ORIGINAL_ARGS[$arg_i]}" = "--config" ]; then
+        CONFIG_FILE="${ORIGINAL_ARGS[$((arg_i + 1))]:-}"
+        break
+    fi
+done
+[ -n "${CONFIG_FILE:-}" ] && maybe_source "$CONFIG_FILE"
+
+set -- "${ORIGINAL_ARGS[@]}"
 DEBUG=0
 while [ "$#" -gt 0 ]; do
     case "$1" in
         --config) CONFIG_FILE=$2; shift 2 ;;
         --regressors_to_run) regressors_to_run=$2; shift 2 ;;
-        --debug) DEBUG=1; shift ;;
+        --seasonal_period|--seasonal-period) seasonal_period=$2; shift 2 ;;
+        --seasonal_period_parameter|--seasonal-period-parameter) seasonal_period_parameter=$2; shift 2 ;;
+        --seasonal_period_file|--seasonal-period-file) relative_seasonal_period_file=$2; shift 2 ;;
+        --debug)
+          DEBUG=1
+          if [ "${2:-}" = "on" ] || [ "${2:-}" = "true" ] || [ "${2:-}" = "1" ]; then
+            shift 2
+          else
+            shift
+          fi
+          ;;
         --) shift; break ;;
         *) echo "Unknown option: $1" >&2; exit 2 ;;
     esac
 done
-[ -n "${CONFIG_FILE:-}" ] && maybe_source "$CONFIG_FILE"
 
 # -----------------------------
 # Validate required variables
@@ -110,6 +136,15 @@ preprocessing_file_path="$local_path/$relative_preprocessing_file_path"
 aeon_path="$local_path/$relative_aeon_dir"
 tsml_eval_path="$local_path/$relative_tsml_eval_dir"
 
+if [ -n "${relative_seasonal_period_file:-}" ]; then
+    case "$relative_seasonal_period_file" in
+        /*) seasonal_period_file_path="$relative_seasonal_period_file" ;;
+        *) seasonal_period_file_path="$local_path/$relative_seasonal_period_file" ;;
+    esac
+else
+    seasonal_period_file_path=""
+fi
+
 data_dir="$local_path/$relative_data_dir"
 dataset_list="$local_path/$relative_dataset_list"
 results_dir="$local_path/$relative_results_dir"
@@ -126,6 +161,17 @@ mkdir -p "${out_dir}"
 # -----------------------------
 # Activate Python venv
 source "$aeon_path/$env_name/bin/activate"
+
+get_seasonal_period () {
+    series_name=$1
+    if [ -n "${seasonal_period:-}" ]; then
+        echo "$seasonal_period"
+    elif [ -n "${seasonal_period_file_path:-}" ] && [ -f "$seasonal_period_file_path" ]; then
+        awk -v series="$series_name" '$1 == series { print $2; exit }' "$seasonal_period_file_path"
+    else
+        echo ""
+    fi
+}
 
 # -----------------------------
 # Turn a directory into a list if needed
@@ -174,9 +220,15 @@ for dataset_file in $dataset_list; do
             done
 
             for resample in $resamples_to_run; do
+                dataset_seasonal_period=$(get_seasonal_period "$dataset")
+                if [ -n "${dataset_seasonal_period:-}" ]; then
+                    seasonal_period_args="-kw ${seasonal_period_parameter} ${dataset_seasonal_period} int"
+                else
+                    seasonal_period_args=""
+                fi
                 echo "Running $regressor on $dataset fold $resample..."
                 python -u "${script_file_path}" "${data_dir}" "${results_dir}" "${regressor}" "${dataset}" "${resample}" \
-                    ${generate_train_files_flag} ${predefined_folds_flag} ${normalise_data_flag} -nj ${n_threads_per_job} ${extra_args} \
+                    ${generate_train_files_flag} ${predefined_folds_flag} ${normalise_data_flag} -nj ${n_threads_per_job} ${seasonal_period_args} ${extra_args} \
                     > "${out_dir}/${regressor}/output-${dataset}-${resample}-${dt}.txt" 2>&1 &
                 
                 totalCount=$((totalCount + 1))
