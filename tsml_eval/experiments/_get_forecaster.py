@@ -27,6 +27,7 @@ stats_forecasters = [
     "scum",
     "dotm",
     "dotm5000",
+    "scumplusplus",
     ["averagestats", "average", "hybridaverage"],
     ["averagestatsaic", "averageaic", "hybridaverageaic"],
 ]
@@ -172,6 +173,36 @@ def _set_forecaster_stats(f, random_state, n_jobs, kwargs):
         from aeon.forecasting.stats._scum import _RecentWindowForecaster
 
         return _RecentWindowForecaster(DOTM(**kwargs) , max_length=5000)
+    elif f == "scumplusplus":
+        from aeon.forecasting import RegressionForecaster
+        from aeon.forecasting.stats import SCUM, AutoETS, AutoCES, AutoARIMA, DOTM
+        from aeon.forecasting.stats._scum import _RecentWindowForecaster
+        from sklearn.ensemble import RandomForestRegressor
+        from sklearn.linear_model import RidgeCV
+        from xgboost import XGBRegressor
+        import numpy as np
+
+        if not 'season_length' in kwargs or not 'window' in kwargs:
+            raise ValueError("Both 'season_length' and 'window' must be provided.")
+        
+        season_length = kwargs.pop('season_length')
+        window = kwargs.pop('window')
+        forecasters = [
+            ("ets", AutoETS(seasonal_period=int(season_length))),
+            ("ces", AutoCES(season_length=int(season_length))),
+            ("arima", AutoARIMA()),
+            ("randomforest", RegressionForecaster(window=window, regressor=RandomForestRegressor(random_state=random_state, n_jobs=n_jobs, **kwargs))),
+            ("ridge", RegressionForecaster(window=window, regressor=RidgeCV(fit_intercept=True, alphas=np.logspace(-3, 3, 10), **kwargs))),
+            ("xgboost", RegressionForecaster(window=window, regressor=XGBRegressor(random_state=random_state, n_jobs=n_jobs, **kwargs))),           
+            ("dotm", DOTM(season_length=int(season_length))),
+        ]
+        forecasters[-1] = (
+            "dotm",
+            _RecentWindowForecaster(
+                forecasters[-1][1], max_length=5000
+            ),
+        )
+        return SCUM(season_length=season_length, forecasters=forecasters, **kwargs)
     elif f == "averagestats" or f == "average" or f == "hybridaverage":
         from tsml_eval.estimators.forecasting.HybridStats import AverageStats
 
