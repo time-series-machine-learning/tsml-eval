@@ -171,7 +171,7 @@ def _set_forecaster_stats(f, random_state, n_jobs, kwargs):
         from aeon.forecasting.stats import DOTM
         from aeon.forecasting.stats._scum import _RecentWindowForecaster
 
-        return _RecentWindowForecaster(DOTM(**kwargs) , max_length=5000), 
+        return _RecentWindowForecaster(DOTM(**kwargs) , max_length=5000)
     elif f == "averagestats" or f == "average" or f == "hybridaverage":
         from tsml_eval.estimators.forecasting.HybridStats import AverageStats
 
