@@ -18,12 +18,15 @@ stats_forecasters = [
     "autoarima",
     ["etsforecaster", "ets"],
     "autoets",
+    ["autoces", "ces", "cets", "autocets"],
     ["tarforecaster", "tar"],
     "autotar",
     ["setarforecaster", "setar"],
     ["thetaforecaster", "theta"],
     ["tvpforecaster", "tvp"],
     "scum",
+    "dotm",
+    "dotm5000",
     ["averagestats", "average", "hybridaverage"],
     ["averagestatsaic", "averageaic", "hybridaverageaic"],
 ]
@@ -132,6 +135,10 @@ def _set_forecaster_stats(f, random_state, n_jobs, kwargs):
         from aeon.forecasting.stats import AutoETS
 
         return AutoETS(**kwargs)
+    elif f == "autoces" or f == "ces" or f == "cets" or f == "autocets":
+        from aeon.forecasting.stats import AutoCES
+
+        return AutoCES(**kwargs)
     elif f == "tarforecaster" or f == "tar":
         from aeon.forecasting.stats import TAR
 
@@ -156,6 +163,15 @@ def _set_forecaster_stats(f, random_state, n_jobs, kwargs):
         from aeon.forecasting.stats import SCUM
 
         return SCUM(**kwargs)
+    elif f == "dotm":
+        from aeon.forecasting.stats import DOTM
+
+        return DOTM(**kwargs)
+    elif f == "dotm5000":
+        from aeon.forecasting.stats import DOTM
+        from aeon.forecasting.stats._scum import _RecentWindowForecaster
+
+        return _RecentWindowForecaster(DOTM(**kwargs) , max_length=5000), 
     elif f == "averagestats" or f == "average" or f == "hybridaverage":
         from tsml_eval.estimators.forecasting.HybridStats import AverageStats
 
