@@ -1402,6 +1402,12 @@ def train_test_split(x, train_proportion=0.7, max_series_length=10000, max_test_
     # Generate windowed versions of train and test sets
     return train_series, test_series
 
+# Number of rolling one-step-ahead test points used when retrain=True. The last
+# N_RETRAIN_POINTS values of a series are held out and forecast one at a time, with
+# the model retrained on all data up to each point.
+N_RETRAIN_POINTS = 30
+
+
 def load_and_run_remote_forecasting_experiment(
     data_path,
     dataset_name,
@@ -1414,6 +1420,8 @@ def load_and_run_remote_forecasting_experiment(
     benchmark_time=True,
     overwrite=False,
     retrain=False,
+    start=None,
+    end=None,
 ):
     """Load a dataset and run a regression experiment.
 
@@ -1444,14 +1452,49 @@ def load_and_run_remote_forecasting_experiment(
     overwrite : bool, default=False
         If set to False, this will only build results if there is not a result file
         already present. If True, it will overwrite anything already there.
+    retrain : bool, default=False
+        If True, hold out the last ``N_RETRAIN_POINTS`` values of the series and, for
+        each held-out point, retrain the forecaster on all data up to that point and
+        make a one-step-ahead forecast.
+    start : int or None, default=None
+        The first (0-indexed, inclusive) held-out point to run when ``retrain`` is True.
+        If None, defaults to 0. Only used when ``retrain`` is True.
+    end : int or None, default=None
+        The last (0-indexed, inclusive) held-out point to run when ``retrain`` is True.
+        If None, defaults to ``N_RETRAIN_POINTS - 1``. Only used when ``retrain`` is
+        True. When ``start``/``end`` select a subset of points, results are written to
+        a point-specific dataset name (i.e. ``{dataset_name}_point{start}`` for a single
+        point or ``{dataset_name}_points{start}-{end}`` for a range) so that separate
+        per-point jobs do not overwrite each other.
     """
     if forecaster_name is None:
         forecaster_name = type(forecaster).__name__
 
+    # When running a subset of retrain points, write results under a point-specific
+    # dataset name so per-point jobs do not clobber each other's result files. The
+    # original dataset_name is still used below to locate the source series.
+    if retrain and (start is not None or end is not None):
+        if start is None:
+            start = 0
+        if end is None:
+            end = N_RETRAIN_POINTS - 1
+        if not 0 <= start <= end < N_RETRAIN_POINTS:
+            raise ValueError(
+                f"Invalid retrain point range start={start}, end={end}. Must satisfy "
+                f"0 <= start <= end < {N_RETRAIN_POINTS}."
+            )
+        results_dataset_name = (
+            f"{dataset_name}_point{start}"
+            if start == end
+            else f"{dataset_name}_points{start}-{end}"
+        )
+    else:
+        results_dataset_name = dataset_name
+
     build_test_file, _ = _check_existing_results(
         results_path,
         forecaster_name,
-        dataset_name,
+        results_dataset_name,
         random_seed,
         overwrite,
         True,
@@ -1463,7 +1506,9 @@ def load_and_run_remote_forecasting_experiment(
         return
 
     if write_attributes:
-        attribute_file_path = f"{results_path}/{forecaster_name}/Workspace/{dataset_name}/"
+        attribute_file_path = (
+            f"{results_path}/{forecaster_name}/Workspace/{results_dataset_name}/"
+        )
     else:
         attribute_file_path = None
 
@@ -1481,23 +1526,34 @@ def load_and_run_remote_forecasting_experiment(
     series = np.asarray(series, dtype=float)
     assert(np.isfinite(series).all())
     if retrain:
-        train_item, test_item = train_test_split(series, 0, max_test_values=30)
-        train = np.empty((30,len(train_item)), dtype=series.dtype)
+        if start is None:
+            start = 0
+        if end is None:
+            end = N_RETRAIN_POINTS - 1
+        n_selected = end - start + 1
+        # The training window length is kept constant across points (equal to the
+        # length when all N_RETRAIN_POINTS points are held out).
+        base_train_item, _ = train_test_split(
+            series, 0, max_test_values=N_RETRAIN_POINTS
+        )
+        train = np.empty((n_selected, len(base_train_item)), dtype=series.dtype)
         if isinstance(forecaster, RegressionForecaster):
-            test = np.empty((30,forecaster.window + 1), dtype=series.dtype)
+            test = np.empty((n_selected, forecaster.window + 1), dtype=series.dtype)
         else:
-            test = np.empty(30, dtype=series.dtype)
-        for i in range(0, 30):
-            train_item, test_item = train_test_split(series, 0, max_test_values=(30-i))
-            train[i] = train_item[i:]
+            test = np.empty(n_selected, dtype=series.dtype)
+        for out_idx, i in enumerate(range(start, end + 1)):
+            train_item, test_item = train_test_split(
+                series, 0, max_test_values=(N_RETRAIN_POINTS - i)
+            )
+            train[out_idx] = train_item[i:]
             if isinstance(forecaster, RegressionForecaster):
                 # Add 1 for the test data item
                 test_array = np.empty(forecaster.window + 1, dtype=series.dtype)
                 test_array[:-1] = train_item[-forecaster.window:]
                 test_array[-1] = test_item[0]
-                test[i] = test_array
+                test[out_idx] = test_array
             else:
-                test[i] = test_item[0]
+                test[out_idx] = test_item[0]
     else:
         train, test = train_test_split(series)
         if isinstance(forecaster, RegressionForecaster) and len(test) > forecaster.window + 1:
@@ -1509,14 +1565,14 @@ def load_and_run_remote_forecasting_experiment(
             test_array[-len(test):] = test
             test_array[:-len(test)+1] = train[forecaster.window - len(test) + 1:]
             test = test_array
-            
+
     run_forecasting_experiment(
         train,
         test,
         forecaster,
         results_path,
         forecaster_name=forecaster_name,
-        dataset_name=dataset_name,
+        dataset_name=results_dataset_name,
         random_seed=random_seed,
         attribute_file_path=attribute_file_path,
         att_max_shape=att_max_shape,

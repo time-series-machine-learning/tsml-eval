@@ -64,6 +64,18 @@ relative_preprocessing_file_path=""
 
 extra_args=""
 
+# Retrain point selection for forecasting (only used with "-kw retrain true bool" in
+# extra_args). Selects which of the rolling one-step-ahead held-out points to run.
+# Format: "" (all points, default framework behaviour), a single 0-indexed point "3",
+# or an inclusive 0-indexed range "4-8".
+retrain_points=""
+
+# If "true", submit a separate job/command for each individual point in retrain_points
+# instead of a single command covering the whole range. Each point writes its own
+# results file (dataset name suffixed with _point{p}), so they do not overwrite each
+# other. Has no effect if retrain_points is empty.
+split_retrain_points="false"
+
 # Optional seasonal period/frequency to pass to forecasting estimators.
 # SCUM uses aeon's "season_length" parameter; override seasonal_period_parameter
 # in a config file if a different forecaster expects another parameter name.
@@ -298,6 +310,36 @@ get_seasonal_period () {
     fi
 }
 
+# -----------------------------
+# Parse retrain_points into an inclusive 0-indexed start/end range.
+retrain_start=""
+retrain_end=""
+if [ -n "${retrain_points:-}" ]; then
+    case "$retrain_points" in
+        *-*)
+            retrain_start="${retrain_points%%-*}"
+            retrain_end="${retrain_points##*-}"
+            ;;
+        *)
+            retrain_start="$retrain_points"
+            retrain_end="$retrain_points"
+            ;;
+    esac
+fi
+
+# Mirror the results dataset-name suffix used by
+# load_and_run_remote_forecasting_experiment so we can check for existing per-point
+# result files. Args: base_dataset start end (start/end empty for the full run).
+retrain_dataset_dir () {
+    if [ -z "${2:-}" ]; then
+        echo "$1"
+    elif [ "$2" == "$3" ]; then
+        echo "${1}_point${2}"
+    else
+        echo "${1}_points${2}-${3}"
+    fi
+}
+
 totalCount=0
 expCount=0
 dt=$(date +%Y%m%d%H%M%S)
@@ -357,36 +399,76 @@ do
         resamples_to_run="${resamples_to_run}${i} "
     fi
 done
-for resample in $resamples_to_run; do
-# add to the command list if
-if ((cmdCount>(n_tasks_per_node-n_threads_per_task))); then
-    submit_jobs
-
-    # This is the loop to stop you from dumping everything in the queue at once, see max_num_submitted jobs
-    num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue}" -e "PD ${queue}" | wc -l)
-    echo "Number of Jobs currently running on the cluster: ${num_jobs}"
-    while [ "${num_jobs}" -ge "${max_num_submitted}" ]
-    do
-        echo Waiting 60s, ${num_jobs} currently submitted on ${queue}, user-defined max is ${max_num_submitted}
-        sleep 60
-        num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue}" -e "PD ${queue}" | wc -l)
-    done
-
-    sleep 1
-    cmdCount=0
-    dt=$(date +%Y%m%d%H%M%S)
-fi
-# Input args to the default classification_experiments are in main method of
-# https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/classification_experiments.py
+# Seasonal period is per-dataset, so compute it once for all points/resamples.
 dataset_seasonal_period=$(get_seasonal_period "$dataset")
 if [ -n "${dataset_seasonal_period:-}" ]; then
     seasonal_period_args="-kw ${seasonal_period_parameter} ${dataset_seasonal_period} int"
 else
     seasonal_period_args=""
 fi
-echo "${apptainer_instruction}conda run -p ${env_name} python -u ${full_script_file_path} ${data_dir} ${results_dir} ${regressor} ${dataset} ${resample} ${generate_train_files} ${predefined_folds} ${normalise_data} -nj ${n_threads_per_task} ${seasonal_period_args} ${extra_args} > ${out_dir}/${regressor}/output-${dataset}-${resample}-${dt}.txt 2>&1" >> ${out_dir}/generatedCommandList-${dt}.txt
-((cmdCount=cmdCount+n_threads_per_task))
-totalCount=$((totalCount + 1))
+
+# Determine the retrain point-jobs to emit. "all" is a single command (the full run,
+# or a single command covering the whole retrain_points range). When splitting, each
+# individual point becomes its own command.
+if [ -n "${retrain_start:-}" ] && [ "${split_retrain_points,,}" == "true" ]; then
+    point_jobs=""
+    for (( p=retrain_start; p<=retrain_end; p++ )); do
+        point_jobs="${point_jobs}${p} "
+    done
+else
+    point_jobs="all"
+fi
+
+for resample in $resamples_to_run; do
+for point in $point_jobs; do
+    # Resolve the point range, results dataset dir and output-file suffix.
+    if [ "$point" == "all" ]; then
+        pt_start="${retrain_start:-}"
+        pt_end="${retrain_end:-}"
+        output_suffix=""
+    else
+        pt_start="$point"
+        pt_end="$point"
+        output_suffix="-point${point}"
+    fi
+
+    if [ -n "${pt_start:-}" ]; then
+        retrain_args="-kw start ${pt_start} int -kw end ${pt_end} int"
+    else
+        retrain_args=""
+    fi
+
+    # Skip if this point's result file already exists. Per-point/subset runs write to
+    # a point-specific dataset directory, mirrored here by retrain_dataset_dir.
+    point_dataset=$(retrain_dataset_dir "$dataset" "${pt_start:-}" "${pt_end:-}")
+    if [ -f "${results_dir}${regressor}/Predictions/${point_dataset}/testResample${resample}.csv" ]; then
+        continue
+    fi
+
+    # submit the current command list if the node is full
+    if ((cmdCount>(n_tasks_per_node-n_threads_per_task))); then
+        submit_jobs
+
+        # This is the loop to stop you from dumping everything in the queue at once, see max_num_submitted jobs
+        num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue}" -e "PD ${queue}" | wc -l)
+        echo "Number of Jobs currently running on the cluster: ${num_jobs}"
+        while [ "${num_jobs}" -ge "${max_num_submitted}" ]
+        do
+            echo Waiting 60s, ${num_jobs} currently submitted on ${queue}, user-defined max is ${max_num_submitted}
+            sleep 60
+            num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue}" -e "PD ${queue}" | wc -l)
+        done
+
+        sleep 1
+        cmdCount=0
+        dt=$(date +%Y%m%d%H%M%S)
+    fi
+    # Input args to the default classification_experiments are in main method of
+    # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/classification_experiments.py
+    echo "${apptainer_instruction}conda run -p ${env_name} python -u ${full_script_file_path} ${data_dir} ${results_dir} ${regressor} ${dataset} ${resample} ${generate_train_files} ${predefined_folds} ${normalise_data} -nj ${n_threads_per_task} ${seasonal_period_args} ${extra_args} ${retrain_args} > ${out_dir}/${regressor}/output-${dataset}-${resample}${output_suffix}-${dt}.txt 2>&1" >> ${out_dir}/generatedCommandList-${dt}.txt
+    ((cmdCount=cmdCount+n_threads_per_task))
+    totalCount=$((totalCount + 1))
+done
 done
 fi
 done < ${dataset_file}

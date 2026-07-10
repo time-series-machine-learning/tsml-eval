@@ -26,7 +26,11 @@ from aeon.utils.validation._dependencies import _check_soft_dependencies
 from tsml_eval.experiments._get_forecaster import get_forecaster_by_name
 
 # todo replace when added back to init
-from tsml_eval.experiments.experiments import load_and_run_forecasting_experiment, load_and_run_remote_forecasting_experiment
+from tsml_eval.experiments.experiments import (
+    N_RETRAIN_POINTS,
+    load_and_run_forecasting_experiment,
+    load_and_run_remote_forecasting_experiment,
+)
 from tsml_eval.experiments.tests import _FORECASTER_RESULTS_PATH
 from tsml_eval.testing.testing_utils import _TEST_DATA_PATH
 from tsml_eval.utils.arguments import parse_args
@@ -57,23 +61,42 @@ def run_experiment(args, overwrite=False):
         print("Input args = ", args)
         args = parse_args(args)
 
+        # retrain and the optional point-subset selectors are passed via -kw but are
+        # not estimator parameters, so pop them before constructing the forecaster.
+        retrain = False
+        if 'retrain' in args.kwargs:
+            retrain = args.kwargs.pop('retrain')
+        start = args.kwargs.pop('start', None)
+        end = args.kwargs.pop('end', None)
+
+        # When running a subset of retrain points, results are written under a
+        # point-specific dataset name (see load_and_run_remote_forecasting_experiment),
+        # so mirror that here for the early "already present" check.
+        dataset_name = args.dataset_name.strip()
+        results_dataset_name = dataset_name
+        if retrain and (start is not None or end is not None):
+            _start = 0 if start is None else start
+            _end = N_RETRAIN_POINTS - 1 if end is None else end
+            results_dataset_name = (
+                f"{dataset_name}_point{_start}"
+                if _start == _end
+                else f"{dataset_name}_points{_start}-{_end}"
+            )
+
         # this is also checked in load_and_run, but doing a quick check here so can
         # print a message and make sure data is not loaded
         if not overwrite and _results_present(
             args.results_path,
             args.estimator_name,
-            args.dataset_name.strip(),
+            results_dataset_name,
             resample_id=args.resample_id,
             split="TEST",
         ):
             print("Ignoring, results already present")
         else:
-            retrain = False
-            if 'retrain' in args.kwargs:
-                retrain = args.kwargs.pop('retrain')
             load_and_run_remote_forecasting_experiment(
                 args.data_path,
-                args.dataset_name.strip(),
+                dataset_name,
                 args.results_path,
                 get_forecaster_by_name(
                     args.estimator_name,
@@ -94,6 +117,8 @@ def run_experiment(args, overwrite=False):
                 benchmark_time=args.benchmark_time,
                 overwrite=args.overwrite,
                 retrain=retrain,
+                start=start,
+                end=end,
             )
     # local run (no args)
     else:

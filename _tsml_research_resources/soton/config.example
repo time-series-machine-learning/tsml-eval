@@ -10,6 +10,16 @@ relative_results_dir="RegressionResults/results/"
 relative_out_dir="RegressionResults/output/"
 extra_args="-kw window 500 int"
 
+# Retrain point selection for forecasting (only used with "-kw retrain true bool" in
+# extra_args). Selects which of the rolling one-step-ahead held-out points to run.
+#   ""      -> all points (default framework behaviour)
+#   "3"     -> only the 4th point (0-indexed)
+#   "4-8"   -> points 4 through 8 inclusive (0-indexed)
+retrain_points=""
+# If "true", submit a separate job for each individual point in retrain_points, each
+# writing its own results file. Only affects the taskfarm submission script.
+split_retrain_points="false"
+
 # Seasonal period/frequency for forecasting estimators.
 # By default this reads per-series values from the Monash windowed-series mapping.
 # Set seasonal_period=12 to force one value for all series, or override the
