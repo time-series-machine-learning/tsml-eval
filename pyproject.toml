@@ -40,7 +40,7 @@ classifiers = [
 ]
 requires-python = ">=3.12,<3.15"
 dependencies = [
-    "aeon>=1.0.0,<1.5.0",
+    "aeon>=1.0.0,<1.6.0",
     "scikit-learn>=1.4.0,<1.9.0",
     "matplotlib",
     "seaborn",
@@ -76,7 +76,7 @@ binder = [
     "jupyterlab",
 ]
 docs = [
-    "sphinx<8.3.0",
+    "sphinx<9.2.0",
     "sphinx-design",
     "sphinx-version-warning",
     "sphinx_issues",

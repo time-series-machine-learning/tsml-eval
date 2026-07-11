@@ -10,6 +10,7 @@ __all__ = ["ShapeletTransformClassifier"]
 from typing import Union
 
 import numpy as np
+from aeon.utils.validation import check_n_jobs
 from sklearn.model_selection import cross_val_predict
 from sklearn.utils import check_random_state
 
@@ -279,6 +280,7 @@ class ShapeletTransformClassifier(BaseClassifier):
 
     def _fit_stc_shared(self, X, y):
         self.n_cases_, self.n_channels_, self.n_timepoints_ = X.shape
+        self._n_jobs = check_n_jobs(self.n_jobs)
 
         if self.time_limit_in_minutes > 0:
             # contracting 2/3 transform (with 1/5 of that taken away for final
