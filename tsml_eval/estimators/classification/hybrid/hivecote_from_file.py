@@ -104,9 +104,16 @@ class FromFileHIVECOTE(BaseClassifier):
 
         super().__init__()
 
+    # todo remove this when aeon stops overriding this attribute
+    def fit(self, X, y):  # type: ignore[misc]
+        """Fit method."""
+        super().fit(X, y)
+        self.fit_time_millis_ = self._file_fit_time_millis_
+        return self
+
     def _fit(self, X, y):
         self.weights_ = []
-        self.fit_time_millis_ = 0
+        self._file_fit_time_millis_ = 0
 
         n_instances = len(X)
         acc_list = []
@@ -125,9 +132,9 @@ class FromFileHIVECOTE(BaseClassifier):
             cr = ClassifierResults().load_from_file(path + file_name)
 
             if cr.fit_and_estimate_time == -1:
-                self.fit_time_millis_ = -1
-            elif self.fit_time_millis_ != -1:
-                self.fit_time_millis_ += time_to_milliseconds(
+                self._file_fit_time_millis_ = -1
+            elif self._file_fit_time_millis_ != -1:
+                self._file_fit_time_millis_ += time_to_milliseconds(
                     cr.fit_and_estimate_time, cr.time_unit
                 )
 
@@ -212,8 +219,8 @@ class FromFileHIVECOTE(BaseClassifier):
                 if i != argmax and acc < acc_list[argmax] * self._acc_filter[1]:
                     self._use_classifier[i] = False
 
-        if self.fit_time_millis_ != -1:
-            self.fit_time_millis_ += int(round(time.time() * 1000)) - start
+        if self._file_fit_time_millis_ != -1:
+            self._file_fit_time_millis_ += int(round(time.time() * 1000)) - start
 
     def _predict(self, X):
         rng = check_random_state(self.random_state)

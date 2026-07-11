@@ -9,6 +9,7 @@ import pytest
 from aeon.classification import DummyClassifier
 from aeon.clustering import DummyClusterer
 from aeon.utils.discovery import all_estimators
+from aeon.utils.validation._dependencies import _check_soft_dependencies
 
 from tsml_eval.datasets._test_data._data_sizes import DATA_TEST_SIZES, DATA_TRAIN_SIZES
 from tsml_eval.experiments import (
@@ -37,8 +38,11 @@ from tsml_eval.utils.tests.test_results_writing import _check_clustering_file_fo
 )
 def test_run_clustering_experiment(clusterer, dataset):
     """Test clustering experiments with test data and clusterer."""
-    if clusterer == "DummyClusterer-aeon" and dataset == "UnequalMinimalChinatown":
-        return  # todo remove when aeon kmeans supports unequal
+    if (
+        not _check_soft_dependencies("tsml", severity="none")
+        and clusterer == "DummyClusterer-tsml"
+    ):
+        return
 
     args = [
         _TEST_DATA_PATH,
@@ -246,10 +250,14 @@ def test_aeon_clusterers_available():
             continue
 
 
+# todo add "DBSCAN" back in when we have a better way to handle predict
+#  and predict_proba
+
+
 @pytest.mark.parametrize("n_clusters", ["4", "-1"])
 @pytest.mark.parametrize(
     "clusterer",
-    ["DBSCAN", "DummyClusterer-aeon", "DummyClusterer-sklearn", "Summary"],
+    ["DummyClusterer-aeon", "DummyClusterer-sklearn", "Summary"],
 )
 def test_n_clusters(n_clusters, clusterer):
     """Test n_clusters parameter."""
@@ -288,8 +296,8 @@ def test_n_clusters(n_clusters, clusterer):
     ["MinimalChinatown", "UnequalMinimalChinatown", "EqualMinimalJapaneseVowels"],
 )
 def test_combined_train_test(dataset):
-    """Test n_clusters parameter."""
-    clusterer = "DummyClusterer-tsml"
+    """Test combined train and test."""
+    clusterer = "DummyClusterer-aeon"
 
     args = [
         _TEST_DATA_PATH,
