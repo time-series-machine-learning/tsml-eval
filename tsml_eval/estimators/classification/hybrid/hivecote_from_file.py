@@ -105,6 +105,7 @@ class FromFileHIVECOTE(BaseClassifier):
         super().__init__()
 
     # todo remove this when aeon stops overriding this attribute
+    # todo also remove test skip in all_aeon_estimators
     def fit(self, X, y):  # type: ignore[misc]
         """Fit method."""
         super().fit(X, y)

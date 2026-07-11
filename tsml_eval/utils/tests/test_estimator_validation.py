@@ -34,3 +34,12 @@ def test_is_sklearn_clusterer():
     """Test is_sklearn_clusterer."""
     assert is_sklearn_clusterer(KMeans())
     assert not is_sklearn_clusterer(DummyClassifier())
+
+
+def test_is_sklearn_estimator_without_tsml(monkeypatch):
+    """Test sklearn validation when tsml is unavailable."""
+    monkeypatch.setattr(
+        "tsml_eval.utils.estimator_validation._check_soft_dependencies",
+        lambda *args, **kwargs: False,
+    )
+    assert is_sklearn_estimator(DummyClassifier())

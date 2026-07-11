@@ -9,6 +9,8 @@ from aeon.testing.estimator_checking import parametrize_with_checks
 
 import tsml_eval.estimators as estimators_pkg
 
+_SKIP_ESTIMATORS = ["FromFileHIVECOTE"]
+
 
 def _get_estimators():
     estimators = []
@@ -24,7 +26,8 @@ def _get_estimators():
         for _, cls in inspect.getmembers(module, inspect.isclass):
             if (
                 issubclass(cls, BaseAeonEstimator)
-                and cls.__name__[0] != "_"
+                and not cls.__name__.startswith("_")
+                and cls.__name__ not in _SKIP_ESTIMATORS
                 and cls.__module__ == module.__name__
             ):
                 estimators.append(cls)

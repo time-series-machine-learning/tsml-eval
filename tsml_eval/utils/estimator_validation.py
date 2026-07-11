@@ -20,10 +20,8 @@ def is_sklearn_estimator(estimator):
         if isinstance(estimator, BaseTimeSeriesEstimator):
             return False
 
-    return (
-        isinstance(estimator, BaseEstimator)
-        and not isinstance(estimator, BaseAeonEstimator)
-        and not isinstance(estimator, BaseTimeSeriesEstimator)
+    return isinstance(estimator, BaseEstimator) and not isinstance(
+        estimator, BaseAeonEstimator
     )
 
 
