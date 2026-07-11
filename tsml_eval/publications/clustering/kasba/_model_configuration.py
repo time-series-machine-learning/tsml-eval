@@ -1,10 +1,10 @@
 from aeon.clustering import (
     KASBA,
     BaseClusterer,
+    KShape,
     KSpectralCentroid,
     TimeSeriesKMeans,
     TimeSeriesKMedoids,
-    TimeSeriesKShape,
 )
 
 
@@ -218,7 +218,7 @@ def pam_clusterer(n_clusters: int, random_state: int, n_jobs: int) -> BaseCluste
 
 
 def kshape_clusterer(n_clusters: int, random_state: int, n_jobs: int) -> BaseClusterer:
-    return TimeSeriesKShape(
+    return KShape(
         n_clusters=n_clusters,
         centroid_init="kmeans++",
         max_iter=300,
@@ -232,7 +232,7 @@ def kshape_clusterer(n_clusters: int, random_state: int, n_jobs: int) -> BaseClu
 def kshape_clusterer_vldb(
     n_clusters: int, random_state: int, n_jobs: int
 ) -> BaseClusterer:
-    return TimeSeriesKShape(
+    return KShape(
         n_clusters=n_clusters,
         centroid_init="random",
         max_iter=100,
