@@ -629,7 +629,7 @@ def run_regression_experiment(
                 interval=MEMRECORD_INTERVAL,
                 return_func_time=True,
             )
-            fit_time += int(round(getattr(regressor, "_fit_time_milli", 0)))
+            fit_time += int(round(getattr(regressor, "fit_time_milli_", 0)))
 
         if attribute_file_path is not None:
             estimator_attributes_to_file(
@@ -639,7 +639,7 @@ def run_regression_experiment(
         start = int(round(time.time() * 1000))
         test_preds = regressor.predict(X_test)
         test_time = (int(round(time.time() * 1000)) - start) + int(
-            round(getattr(regressor, "_predict_time_milli", 0))
+            round(getattr(regressor, "predict_time_milli_", 0))
         )
 
         test_mse = mean_squared_error(y_test, test_preds)
@@ -944,7 +944,7 @@ def run_clustering_experiment(
         interval=MEMRECORD_INTERVAL,
         return_func_time=True,
     )
-    fit_time += int(round(getattr(clusterer, "_fit_time_milli", 0)))
+    fit_time += int(round(getattr(clusterer, "fit_time_milli_", 0)))
 
     if attribute_file_path is not None:
         estimator_attributes_to_file(
@@ -1239,7 +1239,7 @@ def run_forecasting_experiment(
         interval=MEMRECORD_INTERVAL,
         return_func_time=True,
     )
-    fit_time += int(round(getattr(forecaster, "_fit_time_milli", 0)))
+    fit_time += int(round(getattr(forecaster, "fit_time_milli_", 0)))
 
     if attribute_file_path is not None:
         estimator_attributes_to_file(
@@ -1251,7 +1251,7 @@ def run_forecasting_experiment(
     test_time = (
         int(round(time.time() * 1000))
         - start
-        + int(round(getattr(forecaster, "_predict_time_milli", 0)))
+        + int(round(getattr(forecaster, "predict_time_milli_", 0)))
     )
     test_preds = test_preds.flatten()
 

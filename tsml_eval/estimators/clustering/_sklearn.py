@@ -10,7 +10,7 @@ from aeon.base._base import _clone_estimator
 from aeon.clustering import BaseClusterer
 from aeon.transformations.collection.unequal_length import Padder
 from aeon.utils.conversion import convert_collection
-from aeon.utils.validation.collection import is_equal_length, is_univariate
+from aeon.utils.validation.collection import is_univariate
 from sklearn.cluster import KMeans
 
 
@@ -90,7 +90,7 @@ class SklearnToAeonClusterer(BaseClusterer):
         return super()._predict_proba(X)
 
     def _check_and_convert(self, X):
-        if self.pad_unequal and not is_equal_length(X):
+        if self.pad_unequal:
             if not hasattr(self, "_padder"):
                 self._padder = Padder()
                 self._padder.fit(X)

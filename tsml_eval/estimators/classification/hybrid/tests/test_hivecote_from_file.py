@@ -59,7 +59,7 @@ def test_hivecote_from_file():
     # Arsenal: 7722
     # within 1% of 7529790
 
-    assert 7454493 <= hc2._file_fit_time_millis_ <= 7605087
+    assert 7454493 <= hc2.fit_time_millis_ <= 7605087
 
 
 def test_tuned_hivecote_from_file():
