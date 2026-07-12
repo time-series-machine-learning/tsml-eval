@@ -9,7 +9,6 @@ import pytest
 from aeon.classification import DummyClassifier
 from aeon.clustering import DummyClusterer
 from aeon.utils.discovery import all_estimators
-from aeon.utils.validation._dependencies import _check_soft_dependencies
 
 from tsml_eval.datasets._test_data._data_sizes import DATA_TEST_SIZES, DATA_TRAIN_SIZES
 from tsml_eval.experiments import (
@@ -38,11 +37,8 @@ from tsml_eval.utils.tests.test_results_writing import _check_clustering_file_fo
 )
 def test_run_clustering_experiment(clusterer, dataset):
     """Test clustering experiments with test data and clusterer."""
-    if (
-        not _check_soft_dependencies("tsml", severity="none")
-        and clusterer == "DummyClusterer-tsml"
-    ):
-        return
+    if clusterer == "DummyClusterer-tsml":
+        pytest.importorskip("tsml")
 
     args = [
         _TEST_DATA_PATH,
