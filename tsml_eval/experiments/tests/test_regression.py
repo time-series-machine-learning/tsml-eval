@@ -36,8 +36,8 @@ from tsml_eval.utils.tests.test_results_writing import _check_regression_file_fo
 )
 def test_run_regression_experiment(regressor, dataset):
     """Test regression experiments with test data and regressor."""
-    if regressor == "DummyRegressor-aeon" and dataset == "UnequalMinimalGasPrices":
-        return  # todo remove when aeon dummy supports unequal
+    if regressor == "DummyRegressor-tsml":
+        pytest.importorskip("tsml")
 
     args = [
         _TEST_DATA_PATH,

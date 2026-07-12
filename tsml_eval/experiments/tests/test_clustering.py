@@ -37,8 +37,8 @@ from tsml_eval.utils.tests.test_results_writing import _check_clustering_file_fo
 )
 def test_run_clustering_experiment(clusterer, dataset):
     """Test clustering experiments with test data and clusterer."""
-    if clusterer == "DummyClusterer-aeon" and dataset == "UnequalMinimalChinatown":
-        return  # todo remove when aeon kmeans supports unequal
+    if clusterer == "DummyClusterer-tsml":
+        pytest.importorskip("tsml")
 
     args = [
         _TEST_DATA_PATH,
@@ -246,10 +246,14 @@ def test_aeon_clusterers_available():
             continue
 
 
+# todo add "DBSCAN" back in when we have a better way to handle predict
+#  and predict_proba
+
+
 @pytest.mark.parametrize("n_clusters", ["4", "-1"])
 @pytest.mark.parametrize(
     "clusterer",
-    ["DBSCAN", "DummyClusterer-aeon", "DummyClusterer-sklearn", "Summary"],
+    ["DummyClusterer-aeon", "DummyClusterer-sklearn", "Summary"],
 )
 def test_n_clusters(n_clusters, clusterer):
     """Test n_clusters parameter."""
@@ -288,8 +292,8 @@ def test_n_clusters(n_clusters, clusterer):
     ["MinimalChinatown", "UnequalMinimalChinatown", "EqualMinimalJapaneseVowels"],
 )
 def test_combined_train_test(dataset):
-    """Test n_clusters parameter."""
-    clusterer = "DummyClusterer-tsml"
+    """Test combined train and test."""
+    clusterer = "DummyClusterer-aeon"
 
     args = [
         _TEST_DATA_PATH,

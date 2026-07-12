@@ -27,23 +27,20 @@ from aeon.classification import BaseClassifier
 from aeon.clustering import BaseClusterer
 from aeon.forecasting import BaseForecaster
 from aeon.regression.base import BaseRegressor
+from aeon.utils.validation._dependencies import _check_soft_dependencies
 from aeon.utils.validation.collection import get_n_cases
 from sklearn import preprocessing
-from sklearn.base import BaseEstimator, is_classifier, is_regressor
+from sklearn.base import BaseEstimator, is_classifier, is_clusterer, is_regressor
 from sklearn.metrics import (
     accuracy_score,
     mean_absolute_percentage_error,
     mean_squared_error,
 )
 from sklearn.model_selection import cross_val_predict
-from tsml.base import BaseTimeSeriesEstimator
-from tsml.compose import (
-    SklearnToTsmlClassifier,
-    SklearnToTsmlClusterer,
-    SklearnToTsmlRegressor,
-)
-from tsml.utils.validation import is_clusterer
 
+from tsml_eval.estimators.classification._sklearn import SklearnToAeonClassifier
+from tsml_eval.estimators.clustering._sklearn import SklearnToAeonClusterer
+from tsml_eval.estimators.regression._sklearn import SklearnToAeonRegressor
 from tsml_eval.utils.datasets import load_experiment_data
 from tsml_eval.utils.experiments import (
     _check_existing_results,
@@ -151,25 +148,35 @@ def run_classification_experiment(
         classifier_name = type(classifier).__name__
 
     use_fit_predict = False
+    # aeon classifier
     if isinstance(classifier, BaseClassifier):
         if not ignore_custom_train_estimate and classifier.get_tag(
             "capability:train_estimate", False, False
         ):
             use_fit_predict = True
-    elif isinstance(classifier, BaseTimeSeriesEstimator) and is_classifier(classifier):
-        pass
     elif isinstance(classifier, BaseEstimator) and is_classifier(classifier):
-        classifier = SklearnToTsmlClassifier(
-            classifier=classifier,
-            pad_unequal=True,
-            concatenate_channels=True,
-            clone_estimator=False,
-            random_state=(
-                classifier.random_state if hasattr(classifier, "random_state") else None
-            ),
-        )
+        is_sklearn = True
+        if _check_soft_dependencies("tsml", severity="none"):
+            from tsml.base import BaseTimeSeriesEstimator
+
+            # tsml classifier
+            if isinstance(classifier, BaseTimeSeriesEstimator):
+                is_sklearn = False
+
+        # assumed sklearn classifier
+        if is_sklearn:
+            classifier = SklearnToAeonClassifier(
+                classifier=classifier,
+                pad_unequal=True,
+                concatenate_channels=True,
+                random_state=(
+                    classifier.random_state
+                    if hasattr(classifier, "random_state")
+                    else None
+                ),
+            )
     else:
-        raise TypeError("classifier must be a tsml, aeon or sklearn classifier.")
+        raise TypeError("classifier must be an aeon, tsml or sklearn classifier.")
 
     n_cases_test = get_n_cases(X_test)
     if data_transforms is not None:
@@ -232,6 +239,8 @@ def run_classification_experiment(
         if use_fit_predict:
             train_probs = classifier.fit_predict_proba(X_train, y_train)
             needs_fit = False
+            if hasattr(classifier, "fit_time_millis_"):
+                fit_time = classifier.fit_time_millis_
             fit_and_train_time = int(round(time.time() * 1000)) - start
         else:
             _, counts = np.unique(y_train, return_counts=True)
@@ -280,7 +289,8 @@ def run_classification_experiment(
                 interval=MEMRECORD_INTERVAL,
                 return_func_time=True,
             )
-            fit_time += int(round(getattr(classifier, "_fit_time_milli", 0)))
+            if hasattr(classifier, "fit_time_millis_"):
+                fit_time = classifier.fit_time_millis_
 
         if attribute_file_path is not None:
             estimator_attributes_to_file(
@@ -520,23 +530,33 @@ def run_regression_experiment(
         regressor_name = type(regressor).__name__
 
     use_fit_predict = False
+    # aeon regressor
     if isinstance(regressor, BaseRegressor):
         if not ignore_custom_train_estimate and regressor.get_tag(
             "capability:train_estimate", False, False
         ):
             use_fit_predict = True
-    elif isinstance(regressor, BaseTimeSeriesEstimator) and is_regressor(regressor):
-        pass
     elif isinstance(regressor, BaseEstimator) and is_regressor(regressor):
-        regressor = SklearnToTsmlRegressor(
-            regressor=regressor,
-            pad_unequal=True,
-            concatenate_channels=True,
-            clone_estimator=False,
-            random_state=(
-                regressor.random_state if hasattr(regressor, "random_state") else None
-            ),
-        )
+        is_sklearn = True
+        if _check_soft_dependencies("tsml", severity="none"):
+            from tsml.base import BaseTimeSeriesEstimator
+
+            # tsml regressor
+            if isinstance(regressor, BaseTimeSeriesEstimator):
+                is_sklearn = False
+
+        # assumed sklearn regressor
+        if is_sklearn:
+            regressor = SklearnToAeonRegressor(
+                regressor=regressor,
+                pad_unequal=True,
+                concatenate_channels=True,
+                random_state=(
+                    regressor.random_state
+                    if hasattr(regressor, "random_state")
+                    else None
+                ),
+            )
     else:
         raise TypeError("regressor must be a tsml, aeon or sklearn regressor.")
 
@@ -609,7 +629,7 @@ def run_regression_experiment(
                 interval=MEMRECORD_INTERVAL,
                 return_func_time=True,
             )
-            fit_time += int(round(getattr(regressor, "_fit_time_milli", 0)))
+            fit_time += int(round(getattr(regressor, "fit_time_milli_", 0)))
 
         if attribute_file_path is not None:
             estimator_attributes_to_file(
@@ -619,7 +639,7 @@ def run_regression_experiment(
         start = int(round(time.time() * 1000))
         test_preds = regressor.predict(X_test)
         test_time = (int(round(time.time() * 1000)) - start) + int(
-            round(getattr(regressor, "_predict_time_milli", 0))
+            round(getattr(regressor, "predict_time_milli_", 0))
         )
 
         test_mse = mean_squared_error(y_test, test_preds)
@@ -844,20 +864,30 @@ def run_clustering_experiment(
     if clusterer_name is None:
         clusterer_name = type(clusterer).__name__
 
-    if isinstance(clusterer, BaseClusterer) or (
-        isinstance(clusterer, BaseTimeSeriesEstimator) and is_clusterer(clusterer)
-    ):
+    # aeon clusterer
+    if isinstance(clusterer, BaseClusterer):
         pass
     elif isinstance(clusterer, BaseEstimator) and is_clusterer(clusterer):
-        clusterer = SklearnToTsmlClusterer(
-            clusterer=clusterer,
-            pad_unequal=True,
-            concatenate_channels=True,
-            clone_estimator=False,
-            random_state=(
-                clusterer.random_state if hasattr(clusterer, "random_state") else None
-            ),
-        )
+        is_sklearn = True
+        if _check_soft_dependencies("tsml", severity="none"):
+            from tsml.base import BaseTimeSeriesEstimator
+
+            # tsml clusterer
+            if isinstance(clusterer, BaseTimeSeriesEstimator):
+                is_sklearn = False
+
+        # assumed sklearn clusterer
+        if is_sklearn:
+            clusterer = SklearnToAeonClusterer(
+                clusterer=clusterer,
+                pad_unequal=True,
+                concatenate_channels=True,
+                random_state=(
+                    clusterer.random_state
+                    if hasattr(clusterer, "random_state")
+                    else None
+                ),
+            )
     else:
         raise TypeError("clusterer must be a tsml, aeon or sklearn clusterer.")
 
@@ -914,7 +944,7 @@ def run_clustering_experiment(
         interval=MEMRECORD_INTERVAL,
         return_func_time=True,
     )
-    fit_time += int(round(getattr(clusterer, "_fit_time_milli", 0)))
+    fit_time += int(round(getattr(clusterer, "fit_time_milli_", 0)))
 
     if attribute_file_path is not None:
         estimator_attributes_to_file(
@@ -1209,7 +1239,7 @@ def run_forecasting_experiment(
         interval=MEMRECORD_INTERVAL,
         return_func_time=True,
     )
-    fit_time += int(round(getattr(forecaster, "_fit_time_milli", 0)))
+    fit_time += int(round(getattr(forecaster, "fit_time_milli_", 0)))
 
     if attribute_file_path is not None:
         estimator_attributes_to_file(
@@ -1221,7 +1251,7 @@ def run_forecasting_experiment(
     test_time = (
         int(round(time.time() * 1000))
         - start
-        + int(round(getattr(forecaster, "_predict_time_milli", 0)))
+        + int(round(getattr(forecaster, "predict_time_milli_", 0)))
     )
     test_preds = test_preds.flatten()
 

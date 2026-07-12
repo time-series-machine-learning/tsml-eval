@@ -6,12 +6,12 @@ __maintainer__ = ["TonyBagnall", "MatthewMiddlehurst"]
 import numpy as np
 import pandas as pd
 import pytest
-from tsml.datasets import (
+
+from tsml_eval.datasets._loaders import (
     load_equal_minimal_japanese_vowels,
     load_minimal_chinatown,
     load_unequal_minimal_chinatown,
 )
-
 from tsml_eval.testing.testing_utils import _TEST_RESULTS_PATH
 from tsml_eval.utils.resampling import (
     resample_data,
