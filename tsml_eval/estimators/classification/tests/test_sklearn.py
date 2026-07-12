@@ -132,6 +132,25 @@ def test_predict_proba_fall_back():
     assert set(np.unique(proba)).issubset({0.0, 1.0})
 
 
+def test_predict_proba_fall_back_multivariate():
+    """Fallback predict_proba should convert multivariate data only once."""
+    X, y = make_example_3d_numpy(
+        n_cases=6, n_channels=2, n_timepoints=4, random_state=0
+    )
+
+    clf = SklearnToAeonClassifier(
+        classifier=_SklearnMockClassifier(),
+        pad_unequal=True,
+        concatenate_channels=True,
+    )
+    clf.fit(X, y)
+    proba = clf.predict_proba(X)
+
+    assert clf.classifier_.predict_shape_ == (6, 8)
+    assert proba.shape == (6, 2)
+    np.testing.assert_allclose(proba.sum(axis=1), 1.0)
+
+
 def test_rejects_multivariate_without_concatenation():
     """Multivariate data should be rejected when concatenate_channels is False."""
     X, y = make_example_3d_numpy(

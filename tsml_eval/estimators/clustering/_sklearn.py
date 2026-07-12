@@ -81,10 +81,9 @@ class SklearnToAeonClusterer(BaseClusterer):
         return self.clusterer_.predict(X)
 
     def _predict_proba(self, X):
-        X = self._check_and_convert(X)
-
         m = getattr(self.clusterer_, "predict_proba", None)
         if callable(m):
+            X = self._check_and_convert(X)
             return m(X)
 
         return super()._predict_proba(X)
