@@ -123,7 +123,7 @@ echo "#!/bin/bash
 #SBATCH -o ${out_dir}/${classifier}/${dataset}/%A-%a.out
 #SBATCH -e ${out_dir}/${classifier}/${dataset}/%A-%a.err
 #SBATCH --nodes=1
-#SBATCH --tasks-per-node=1
+#SBATCH --ntasks=1
 #SBATCH --cpus-per-task=${n_threads}
 
 . /etc/profile
