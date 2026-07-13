@@ -13,7 +13,7 @@ There is a Southampton Microsoft Teams group called "HPC Community" where you ca
 
 ## Windows interaction with Iridis
 
-You need to be on a Soton network machine or have the VPN running to connect to Iridis. Connect the address listed above.
+You need to be on a Soton network machine or have the VPN running to connect to Iridis. Connect to the address listed above.
 
 The recommended way of connecting to Iridis in our group is using Putty for a SSH command-line interface and WinSCP for FTP file management.
 

@@ -1,5 +1,8 @@
 ACSF1
 Adiac
+AllGestureWiimoteX
+AllGestureWiimoteY
+AllGestureWiimoteZ
 ArrowHead
 Beef
 BeetleFly
@@ -20,6 +23,9 @@ DiatomSizeReduction
 DistalPhalanxOutlineAgeGroup
 DistalPhalanxOutlineCorrect
 DistalPhalanxTW
+DodgerLoopDay
+DodgerLoopGame
+DodgerLoopWeekend
 Earthquakes
 ECG200
 ECG5000
@@ -37,6 +43,12 @@ FordA
 FordB
 FreezerRegularTrain
 FreezerSmallTrain
+Fungi
+GestureMidAirD1
+GestureMidAirD2
+GestureMidAirD3
+GesturePebbleZ1
+GesturePebbleZ2
 GunPoint
 GunPointAgeSpan
 GunPointMaleVersusFemale
@@ -57,8 +69,9 @@ Lightning7
 Mallat
 Meat
 MedicalImages
-MiddlePhalanxOutlineAgeGroup
+MelbournePedestrian
 MiddlePhalanxOutlineCorrect
+MiddlePhalanxOutlineAgeGroup
 MiddlePhalanxTW
 MixedShapesRegularTrain
 MixedShapesSmallTrain
@@ -69,13 +82,15 @@ OliveOil
 OSULeaf
 PhalangesOutlinesCorrect
 Phoneme
+PickupGestureWiimoteZ
 PigAirwayPressure
 PigArtPressure
 PigCVP
+PLAID
 Plane
 PowerCons
-ProximalPhalanxOutlineAgeGroup
 ProximalPhalanxOutlineCorrect
+ProximalPhalanxOutlineAgeGroup
 ProximalPhalanxTW
 RefrigerationDevices
 Rock
@@ -83,6 +98,7 @@ ScreenType
 SemgHandGenderCh2
 SemgHandMovementCh2
 SemgHandSubjectCh2
+ShakeGestureWiimoteZ
 ShapeletSim
 ShapesAll
 SmallKitchenAppliances

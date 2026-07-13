@@ -9,7 +9,7 @@ start_fold=1
 # To avoid hitting the cluster queue limit we have a higher level queue
 max_num_submitted=100
 
-# Queue options are https://sotonac.sharepoint.com/teams/HPCCommunityWiki/SitePages/Iridis%205%20Job-submission-and-Limits-Quotas.aspx
+# Queue options are https://sotonac.sharepoint.com/teams/HPCCommunityWiki/SitePages/Submitting-Jobs-Slurm.aspx
 queue="batch"
 
 # The number of threads to request. Please check the number of cores for the node you are using, some are exclusive (i.e. batch) so you should request all cores or a taskfarm script
