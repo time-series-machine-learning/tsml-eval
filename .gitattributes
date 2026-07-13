@@ -1,1 +1,6 @@
 *.ts linguist-detectable=false
+
+# Shell scripts must keep LF endings so they run on the Linux cluster even when the
+# repo is checked out on Windows (core.autocrlf=true would otherwise convert them to
+# CRLF, which breaks bash with "invalid arithmetic operator" and similar errors).
+*.sh text eol=lf
