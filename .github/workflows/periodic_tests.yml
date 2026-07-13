@@ -229,7 +229,7 @@ jobs:
         run: python -m pip list
 
       - name: Run tests
-        run: python -m pytest -n logical --cov=tsml-eval --cov-report=xml --timeout 1800
+        run: python -m pytest -n logical --cov=tsml_eval --cov-report=xml --timeout 1800
 
       - uses: codecov/codecov-action@v7
         env:
