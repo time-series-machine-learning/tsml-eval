@@ -81,7 +81,8 @@ split_retrain_points="false"
 # in a config file if a different forecaster expects another parameter name.
 seasonal_period=""
 seasonal_period_parameter="season_length"
-relative_seasonal_period_file="tsml-eval/_tsml_research_resources/soton/seasonal_periods.windowed_series.txt"
+# relative_seasonal_period_file="tsml-eval/_tsml_research_resources/soton/seasonal_periods.windowed_series.txt"
+relative_seasonal_period_file=""
 
 # Environment name, change accordingly, for set up, see https://github.com/time-series-machine-learning/tsml-eval/blob/main/_tsml_research_resources/soton/iridis/iridis_python.md
 # Separate environments for GPU and CPU are recommended #regress_gpu regression_experiments
