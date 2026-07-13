@@ -92,6 +92,10 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install OpenMP
+        if: runner.os == 'macOS'
+        run: brew install libomp
+
       - name: Restore numba cache
         uses: ./.github/actions/numba_cache
         with:

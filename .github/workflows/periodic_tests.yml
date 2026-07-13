@@ -95,7 +95,7 @@ jobs:
         uses: actions/cache/save@v6
         with:
           path: ${{ github.workspace }}/.numba_cache
-          key: numba-run-notebook-examples-${{ runner.os }}-3.12-${{ env.CURRENT_DATE }}
+          key: numba-run-notebook-examples-${{ runner.os }}-3.13-${{ env.CURRENT_DATE }}
 
   test-no-soft-deps:
     runs-on: ubuntu-24.04
@@ -133,7 +133,7 @@ jobs:
         with:
           path: ${{ github.workspace }}/.numba_cache
           # Save cache with the current date (ENV set in numba_cache action)
-          key: numba-test-no-soft-deps-${{ runner.os }}-3.12-${{ env.CURRENT_DATE }}
+          key: numba-test-no-soft-deps-${{ runner.os }}-3.13-${{ env.CURRENT_DATE }}
 
   test-core-imports:
     runs-on: ubuntu-24.04
@@ -173,6 +173,10 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
+
+      - name: Install OpenMP
+        if: runner.os == 'macOS'
+        run: brew install libomp
 
       - name: Use numba cache to set env variables but not restore cache
         uses: ./.github/actions/numba_cache
@@ -214,7 +218,7 @@ jobs:
       - name: Disable Numba JIT
         run: echo "NUMBA_DISABLE_JIT=1" >> $GITHUB_ENV
 
-      - name: Install aeon and dependencies
+      - name: Install tsml-eval and dependencies
         uses: nick-fields/retry@v4
         with:
           timeout_minutes: 30
@@ -225,7 +229,7 @@ jobs:
         run: python -m pip list
 
       - name: Run tests
-        run: python -m pytest -n logical --cov=aeon --cov-report=xml --timeout 1800
+        run: python -m pytest -n logical --cov=tsml-eval --cov-report=xml --timeout 1800
 
       - uses: codecov/codecov-action@v7
         env:
