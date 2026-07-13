@@ -6,7 +6,7 @@ from collections.abc import Callable
 
 import numpy as np
 from joblib import Parallel, delayed
-from typing_extensions import Unpack
+from typing import Unpack
 
 from tsml_eval._wip.rt.distances._mpdist import mp_distance, mp_pairwise_distance
 from tsml_eval._wip.rt.distances._sbd import sbd_distance, sbd_pairwise_distance
