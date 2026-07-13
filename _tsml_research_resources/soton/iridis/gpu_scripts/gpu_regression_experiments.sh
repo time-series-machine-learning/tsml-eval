@@ -23,71 +23,59 @@ max_memory=8000
 # Max allowable is 60 hours
 max_time="60:00:00"
 
-# Start point for the script i.e. 3 datasets, 3 clusterers = 9 jobs to submit, start_point=5 will skip to job 5
+# Start point for the script i.e. 3 datasets, 3 regressors = 9 jobs to submit, start_point=5 will skip to job 5
 start_point=1
 
 # Put your home directory here
-local_path="/mainfs/home/$username/"
+local_path="/iridisfs/home/$username/"
 
 # Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
 data_dir="$local_path/Data/"
-datasets="$local_path/DataSetLists/Clustering.txt"
+datasets="$local_path/DataSetLists/Regression.txt"
 
 # Results and output file write location. Change these to reflect your own file structure
-results_dir="$local_path/ClusteringResults/results/"
-out_dir="$local_path/ClusteringResults/output/"
+results_dir="$local_path/RegressionResults/results/"
+out_dir="$local_path/RegressionResults/output/"
 
 # The python script we are running
-script_file_path="$local_path/tsml-eval/tsml_eval/experiments/clustering_experiments.py"
+script_file_path="$local_path/tsml-eval/tsml_eval/experiments/regression_experiments.py"
 
 # the path to the apptainer sandbox. The above script or most other files do not need to be in the sandbox
 container_path="scratch/tensorflow_sandbox/"
 
-# Clusterers to loop over. Must be separated by a space
-# See list of potential clusterers in set_clusterer
-clusterers_to_run="kmedoids-squared kmedoids-euclidean"
+# Regressors to loop over. Must be separated by a space
+# See list of potential regressors in set_regressor
+regressors_to_run="RocketRegressor TimeSeriesForestRegressor"
 
 # You can add extra arguments here. See tsml_eval/utils/arguments.py parse_args
 # You will have to add any variable to the python call close to the bottom of the script
 # and possibly to the options handling below
 
-# generate a results file for the test data as well as train, usually slower
-generate_test_files="true"
+# generate a results file for the train data as well as test, usually slower
+generate_train_files="false"
 
 # If set for true, looks for <problem><fold>_TRAIN.ts file. This is useful for running tsml-java resamples
 predefined_folds="false"
 
-# Boolean on if to combine the test/train split
-combine_test_train_split="false"
-
 # Normalise data before fit/predict
-normalise_data="true"
+normalise_data="false"
 
 # ======================================================================================
 # 	Experiment configuration end
 # ======================================================================================
 
-# Set to -te to generate test files
-generate_test_files=$([ "${generate_test_files,,}" == "true" ] && echo "-te" || echo "")
+# Set to -tr to generate test files
+generate_train_files=$([ "${generate_train_files,,}" == "true" ] && echo "-tr" || echo "")
 
 # Set to -pr to use predefined folds
 predefined_folds=$([ "${predefined_folds,,}" == "true" ] && echo "-pr" || echo "")
-
-# Update result path to split combined test train split and test train split
-results_dir="${results_dir}$([ "${combine_test_train_split,,}" == "true" ] && echo "combine-test-train-split/" || echo "test-train-split/")"
-
-# Update out path to split combined test train split and test train split
-out_dir="${out_dir}$([ "${combine_test_train_split,,}" == "true" ] && echo "combine-test-train-split/" || echo "test-train-split/")"
-
-# Set to -utts to combine test train split
-combine_test_train_split=$([ "${combine_test_train_split,,}" == "true" ] && echo "-ctts" || echo "")
 
 # Set to -rn to normalise data
 normalise_data=$([ "${normalise_data,,}" == "true" ] && echo "-rn" || echo "")
 
 count=0
 while read dataset; do
-for clusterer in $clusterers_to_run; do
+for regressor in $regressors_to_run; do
 
 # Skip to the script start point
 ((count++))
@@ -102,14 +90,14 @@ do
     num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue}" -e "PD ${queue}" | wc -l)
 done
 
-mkdir -p "${out_dir}${clusterer}/${dataset}/"
+mkdir -p "${out_dir}${regressor}/${dataset}/"
 
 # This skips jobs which have test/train files already written to the results directory. Only looks for Resamples, not Folds (old file name)
 array_jobs=""
 for (( i=start_fold-1; i<max_folds; i++ ))
 do
-    if [ -f "${results_dir}${clusterer}/Predictions/${dataset}/trainResample${i}.csv" ]; then
-        if [ "${generate_test_files}" == "-te" ] && ! [ -f "${results_dir}${clusterer}/Predictions/${dataset}/testResample${i}.csv" ]; then
+    if [ -f "${results_dir}${regressor}/Predictions/${dataset}/testResample${i}.csv" ]; then
+        if [ "${generate_train_files}" == "-tr" ] && ! [ -f "${results_dir}${regressor}/Predictions/${dataset}/trainResample${i}.csv" ]; then
             array_jobs="${array_jobs}${array_jobs:+,}$((i + 1))"
         fi
     else
@@ -126,27 +114,28 @@ echo "#!/bin/bash
 #SBATCH --mail-user=${mailto}
 #SBATCH -p ${queue}
 #SBATCH -t ${max_time}
-#SBATCH --job-name=${clusterer}${dataset}
+#SBATCH --job-name=${regressor}${dataset}
 #SBATCH --array=${array_jobs}
 #SBATCH --mem=${max_memory}M
-#SBATCH -o ${out_dir}/${clusterer}/${dataset}/%A-%a.out
-#SBATCH -e ${out_dir}/${clusterer}/${dataset}/%A-%a.err
+#SBATCH -o ${out_dir}/${regressor}/${dataset}/%A-%a.out
+#SBATCH -e ${out_dir}/${regressor}/${dataset}/%A-%a.err
 #SBATCH --nodes=1
 
 . /etc/profile
 
 module load apptainer/1.5.0
 
-# Input args to the default clustering_experiments are in main method of
-# https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/clustering_experiments.py
-apptainer exec --nv ${container_path} echo "Running Apptainer job."; python -u ${script_file_path} ${data_dir} ${results_dir} ${clusterer} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_test_files} ${predefined_folds} ${combine_test_train_split} ${normalise_data}" > generatedFile.sub
+# Input args to the default regression_experiments are in main method of
+# https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/regression_experiments.py
+echo "Running Apptainer job."
+apptainer exec --nv "${container_path}" python -u ${script_file_path} ${data_dir} ${results_dir} ${regressor} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_train_files} ${predefined_folds} ${normalise_data}" > generatedFile.sub
 
-echo "${count} ${clusterer}/${dataset}"
+echo "${count} ${regressor}/${dataset}"
 
 sbatch < generatedFile.sub
 
 else
-    echo "${count} ${clusterer}/${dataset}" has finished all required resamples, skipping
+    echo "${count} ${regressor}/${dataset}" has finished all required resamples, skipping
 fi
 
 fi

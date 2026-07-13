@@ -8,7 +8,7 @@ batch_scripts:
     more setup to work efficiently and can waste resources if there is a large difference
     in completion time for experiments.
 
-thread_scripts:
+threaded_scripts:
     Similar to serial_scripts and batch_scripts but for multithreaded jobs requesting
     multiple cores per experiment.
 

@@ -59,9 +59,9 @@ You can check the current version using:
 
 Installing complex conda packages on your main *home* drive will quickly see you hitting the limit on the number of files you can store. To avoid this, it is recommended you create a symbolic link to your *scratch* storage (this assumes you are in your *home* directory and there is a symlink present to your *scratch* drive).
 
->mkdir ./scratch/<username>/.conda
+>mkdir -p ~/scratch/.conda
 
->ln -s ./scratch/<username>/.conda ~/.conda
+>ln -s ~/scratch/.conda ~/.conda
 
 Hitting this limit is very annoying, as it will prevent you from creating new conda environments, installing new packages or saving results file (or doing anything really).
 
