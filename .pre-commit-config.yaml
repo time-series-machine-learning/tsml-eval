@@ -27,7 +27,7 @@ repos:
         args: [ "--create", "--python-folders", "tsml_eval" ]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.16
+    rev: v0.15.21
     hooks:
       - id: ruff
         args: [ "--fix"]
@@ -36,10 +36,10 @@ repos:
     rev: v3.21.2
     hooks:
       - id: pyupgrade
-        args: [ "--py310-plus" ]
+        args: [ "--py312-plus" ]
 
   - repo: https://github.com/pycqa/isort
-    rev: 9.0.0a3
+    rev: 9.0.0b1
     hooks:
       - id: isort
         name: isort (python)

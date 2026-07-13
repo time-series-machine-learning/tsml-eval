@@ -5,13 +5,13 @@ __maintainer__ = ["TonyBagnall", "MatthewMiddlehurst"]
 import numpy as np
 from aeon.clustering import (
     ElasticSOM,
+    KShape,
     KSpectralCentroid,
     TimeSeriesCLARA,
     TimeSeriesCLARANS,
     TimeSeriesKernelKMeans,
     TimeSeriesKMeans,
     TimeSeriesKMedoids,
-    TimeSeriesKShape,
 )
 from aeon.transformations.collection import Normalizer
 from sklearn.cluster import KMeans
@@ -417,7 +417,7 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif "kshape" in c:
-        return TimeSeriesKShape(
+        return KShape(
             init=init_algorithm,
             max_iter=50,
             n_init=10,
