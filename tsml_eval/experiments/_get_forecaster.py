@@ -36,6 +36,7 @@ regression_forecasters = [
 ]
 other_forecasters = [
     ["naiveforecaster", "naive"],
+    ["ddrcif", "ddrcifregressor", "ddrcifforecaster"],
     "ensemble1",
     "ensemble2",
     "ensemble3",
@@ -227,6 +228,10 @@ def _set_forecaster_other(f, random_state, n_jobs, kwargs):
         from aeon.forecasting import NaiveForecaster
 
         return NaiveForecaster(**kwargs)
+    elif f == "ddrcif" or f == "ddrcifregressor" or f == "ddrcifforecaster":
+        from tsml_eval.estimators.forecasting.DDrCIF import DDrCIF
+
+        return DDrCIF(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif f == "ensemble1":
         from tsml_eval.estimators.forecasting.HybridStats import Ensemble1
 
