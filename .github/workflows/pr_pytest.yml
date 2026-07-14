@@ -84,6 +84,7 @@ jobs:
         exclude:
           - pr-testing: true
             python-version: "3.13"
+          - pr-testing: true
             os: macos-14
 
     steps:

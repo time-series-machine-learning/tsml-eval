@@ -9,7 +9,7 @@ start_fold=1
 # To avoid hitting the cluster queue limit we have a higher level queue
 max_num_submitted=100
 
-# Queue options are https://sotonac.sharepoint.com/teams/HPCCommunityWiki/SitePages/Iridis%205%20Job-submission-and-Limits-Quotas.aspx
+# Queue options are https://sotonac.sharepoint.com/teams/HPCCommunityWiki/SitePages/Submitting-Jobs-Slurm.aspx
 queue="batch"
 
 # Enter your username and email here
@@ -27,7 +27,7 @@ max_time="60:00:00"
 start_point=1
 
 # Put your home directory here
-local_path="/mainfs/home/$username/"
+local_path="/iridisfs/home/$username/"
 
 # Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
 data_dir="$local_path/Data/"
@@ -74,10 +74,6 @@ predefined_folds=$([ "${predefined_folds,,}" == "true" ] && echo "-pr" || echo "
 # Set to -rn to normalise data
 normalise_data=$([ "${normalise_data,,}" == "true" ] && echo "-rn" || echo "")
 
-# dont submit to serial directly
-queue=$([ "$queue" == "serial" ] && echo "batch" || echo "$queue")
-queue_alias=$([ "$queue" == "batch" ] && echo "serial" || echo "$queue")
-
 count=0
 while read dataset; do
 for regressor in $regressors_to_run; do
@@ -87,12 +83,12 @@ for regressor in $regressors_to_run; do
 if ((count>=start_point)); then
 
 # This is the loop to keep from dumping everything in the queue which is maintained around max_num_submitted jobs
-num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue_alias}" -e "PD ${queue_alias}" | wc -l)
+num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue}" -e "PD ${queue}" | wc -l)
 while [ "${num_jobs}" -ge "${max_num_submitted}" ]
 do
     echo Waiting 60s, ${num_jobs} currently submitted on ${queue}, user-defined max is ${max_num_submitted}
     sleep 60
-    num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue_alias}" -e "PD ${queue_alias}" | wc -l)
+    num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue}" -e "PD ${queue}" | wc -l)
 done
 
 mkdir -p "${out_dir}${regressor}/${dataset}/"
@@ -127,7 +123,7 @@ echo "#!/bin/bash
 
 . /etc/profile
 
-module load anaconda/py3.10
+module load conda/python3
 source activate $env_name
 
 # Input args to the default regression_experiments are in main method of
