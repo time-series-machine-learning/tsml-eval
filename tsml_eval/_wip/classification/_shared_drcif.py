@@ -43,10 +43,17 @@ class SharedDrCIF(BaseClassifier):
     max_interval_prop : float, default=0.5
         Maximum interval length as a proportion of series length for the
         "random" scheme (DrCIF's default is 0.5). Ignored for "dyadic".
+    train_estimate : bool, default=False
+        If True, the default ExtraTreesClassifier is built with bootstrap
+        sampling and OOB scoring so fit_predict can return an out-of-bag train
+        estimate (DrCIF-style). If False (default), the deployed forest trains
+        each tree on all cases, matching DrCIF's and QUANT's deployment — the
+        right choice for test-only runs, where bagging only costs accuracy.
+        Ignored when a custom estimator is supplied.
     estimator : sklearn estimator or None, default=None
-        If None, an ExtraTreesClassifier with 200 trees, bootstrap sampling
-        and OOB scoring is used. A user-supplied estimator must set
-        bootstrap=True and oob_score=True for train estimates.
+        If None, an ExtraTreesClassifier with 200 trees is used (bootstrap and
+        OOB scoring controlled by train_estimate). A user-supplied estimator
+        must set bootstrap=True and oob_score=True for train estimates.
     class_weight : dict, "balanced", "balanced_subsample" or None, default=None
         Only applies to the default ExtraTreesClassifier.
     random_state : int, RandomState instance or None, default=None
@@ -67,7 +74,7 @@ class SharedDrCIF(BaseClassifier):
 
     _tags = {
         "capability:multivariate": True,
-        "capability:train_estimate": True,
+        "capability:train_estimate": False,
         "capability:multithreading": True,
         "algorithm_type": "interval",
     }
@@ -79,6 +86,7 @@ class SharedDrCIF(BaseClassifier):
         min_interval_length=3,
         max_interval_depth=6,
         max_interval_prop=0.5,
+        train_estimate=False,
         estimator=None,
         class_weight=None,
         random_state=None,
@@ -89,11 +97,16 @@ class SharedDrCIF(BaseClassifier):
         self.min_interval_length = min_interval_length
         self.max_interval_depth = max_interval_depth
         self.max_interval_prop = max_interval_prop
+        self.train_estimate = train_estimate
         self.estimator = estimator
         self.class_weight = class_weight
         self.random_state = random_state
         self.n_jobs = n_jobs
         super().__init__()
+
+        # only advertise train estimates when the deployed forest is bagged
+        if train_estimate:
+            self.set_tags(**{"capability:train_estimate": True})
 
     def _fit(self, X, y):
         start = time.time()
@@ -115,8 +128,8 @@ class SharedDrCIF(BaseClassifier):
                     max_features=0.1,
                     criterion="entropy",
                     class_weight=self.class_weight,
-                    bootstrap=True,
-                    oob_score=True,
+                    bootstrap=self.train_estimate,
+                    oob_score=self.train_estimate,
                     n_jobs=self._n_jobs,
                     random_state=self.random_state,
                 )

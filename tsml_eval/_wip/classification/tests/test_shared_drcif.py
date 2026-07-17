@@ -109,19 +109,19 @@ def test_shared_drcif2_matches_shared_drcif_feature_dim():
     assert np.array_equal(p1, p2)
 
 
-def test_shared_drcif_end_to_end():
-    """Fit/predict, OOB train estimates, determinism and the fit time hook."""
+def test_shared_drcif_unbagged_by_default():
+    """Default deployment is unbagged (bootstrap off) and does not advertise a
+    train estimate; test-only fit/predict, determinism and the fit time hook."""
     X, y, X2 = _data()
 
-    clf = SharedDrCIF(max_interval_depth=2, random_state=0)
-    train_probs = clf.fit_predict_proba(X, y)
-    assert train_probs.shape == (20, 2)
-    assert np.allclose(train_probs.sum(axis=1), 1)
-    assert np.isfinite(train_probs).all()
+    clf = SharedDrCIF(max_interval_depth=2, random_state=0).fit(X, y)
+    assert clf._estimator.bootstrap is False
+    assert clf.get_tag("capability:train_estimate") is False
     assert clf.fit_time_millis_ >= 0
 
     p1 = clf.predict_proba(X2)
     assert p1.shape == (10, 2)
+    assert np.allclose(p1.sum(axis=1), 1)
 
     p2 = (
         SharedDrCIF(max_interval_depth=2, random_state=0)
@@ -129,6 +129,19 @@ def test_shared_drcif_end_to_end():
         .predict_proba(X2)
     )
     assert np.array_equal(p1, p2)
+
+
+def test_shared_drcif_train_estimate_opt_in():
+    """train_estimate=True re-enables bagging and OOB train estimates."""
+    X, y, X2 = _data()
+
+    clf = SharedDrCIF(max_interval_depth=2, train_estimate=True, random_state=0)
+    train_probs = clf.fit_predict_proba(X, y)
+    assert clf._estimator.bootstrap is True
+    assert clf.get_tag("capability:train_estimate") is True
+    assert train_probs.shape == (20, 2)
+    assert np.allclose(train_probs.sum(axis=1), 1)
+    assert np.isfinite(train_probs).all()
 
 
 def test_shared_drcif_variants_fit():
