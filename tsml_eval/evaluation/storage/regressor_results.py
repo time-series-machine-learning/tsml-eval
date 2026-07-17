@@ -158,6 +158,7 @@ class RegressorResults(EstimatorResults):
         "r2_score": ("R2", True, False),
         "mean_absolute_percentage_error": ("MAPE", False, False),
         **EstimatorResults.statistics,
+        "fit_and_estimate_time": ("FitAndEstimateTime", False, True),
     }
 
     def save_to_file(self, file_path, full_path=True):

@@ -180,6 +180,7 @@ class ClassifierResults(EstimatorResults):
         "specificity": ("Specificity", True, False),
         "f1_score": ("F1", True, False),
         **EstimatorResults.statistics,
+        "fit_and_estimate_time": ("FitAndEstimateTime", False, True),
     }
 
     def save_to_file(self, file_path, full_path=True):

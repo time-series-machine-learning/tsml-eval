@@ -75,6 +75,7 @@ feature_based_classifiers = [
 hybrid_classifiers = [
     ["hivecotev1", "hc1"],
     ["hivecotev2", "hc2"],
+    ["hc2-quant", "hc2quant"],
     ["ristclassifier", "rist", "rist-extrat"],
 ]
 interval_based_classifiers = [
@@ -93,11 +94,14 @@ interval_based_classifiers = [
     "drcif-unequal",
     ["newdrcif", "new-drcif"],
     "newdrcif-500",
+    ["quantdrcif", "quant-drcif"],
+    "quantdrcif-12",
     "summary-intervals",
     ["randomintervals-500", "catch22-intervals-500"],
     ["randomintervalclassifier", "randomintervals", "catch22-intervals"],
     ["supervisedintervalclassifier", "supervisedintervals"],
     ["quantclassifier", "quant"],
+    ["baggedquant", "bagged-quant", "quant-bagged"],
     "drcif-pipeline",
 ]
 other_classifiers = [
@@ -605,6 +609,15 @@ def _set_classifier_hybrid(c, random_state, n_jobs, fit_contract, checkpoint, kw
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
+    elif c == "hc2-quant" or c == "hc2quant":
+        from tsml_eval._wip.classification import HC2Quant
+
+        return HC2Quant(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
     elif c == "ristclassifier" or c == "rist" or c == "rist-extrat":
         from aeon.classification.hybrid import RISTClassifier
         from sklearn.ensemble import ExtraTreesClassifier
@@ -753,6 +766,25 @@ def _set_classifier_interval_based(
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
+    elif c == "quantdrcif" or c == "quant-drcif":
+        from tsml_eval._wip.classification import QuantDrCIF
+
+        return QuantDrCIF(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "quantdrcif-12":
+        from tsml_eval._wip.classification import QuantDrCIF
+
+        return QuantDrCIF(
+            att_subsample_size=12,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
     elif c == "summary-intervals":
         from aeon.classification.interval_based import RandomIntervalClassifier
         from aeon.transformations.collection.feature_based import SevenNumberSummary
@@ -795,6 +827,10 @@ def _set_classifier_interval_based(
         from aeon.classification.interval_based import QUANTClassifier
 
         return QUANTClassifier(random_state=random_state, **kwargs)
+    elif c == "baggedquant" or c == "bagged-quant" or c == "quant-bagged":
+        from tsml_eval._wip.classification import BaggedQUANT
+
+        return BaggedQUANT(random_state=random_state, **kwargs)
 
     elif c == "drcif-pipeline":
         import numpy as np
