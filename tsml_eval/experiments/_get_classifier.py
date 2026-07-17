@@ -96,6 +96,10 @@ interval_based_classifiers = [
     "newdrcif-500",
     ["quantdrcif", "quant-drcif"],
     "quantdrcif-12",
+    ["shareddrcif", "shared-drcif"],
+    "shareddrcif-q35",
+    ["shareddrcif2", "shared-drcif2"],
+    "shareddrcif2-q35",
     "summary-intervals",
     ["randomintervals-500", "catch22-intervals-500"],
     ["randomintervalclassifier", "randomintervals", "catch22-intervals"],
@@ -784,6 +788,26 @@ def _set_classifier_interval_based(
             n_jobs=n_jobs,
             time_limit_in_minutes=fit_contract,
             **kwargs,
+        )
+    elif c == "shareddrcif" or c == "shared-drcif":
+        from tsml_eval._wip.classification import SharedDrCIF
+
+        return SharedDrCIF(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "shareddrcif-q35":
+        from tsml_eval._wip.classification import SharedDrCIF
+
+        return SharedDrCIF(
+            features="union35", random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
+    elif c == "shareddrcif2" or c == "shared-drcif2":
+        from tsml_eval._wip.classification import SharedDrCIF2
+
+        return SharedDrCIF2(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "shareddrcif2-q35":
+        from tsml_eval._wip.classification import SharedDrCIF2
+
+        return SharedDrCIF2(
+            features="union35", random_state=random_state, n_jobs=n_jobs, **kwargs
         )
     elif c == "summary-intervals":
         from aeon.classification.interval_based import RandomIntervalClassifier
