@@ -8,6 +8,7 @@ __maintainer__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 import os
 import sys
+import warnings
 
 # Do these before any other imports in i.e. numpy. This includes imports from other
 # files.
@@ -44,6 +45,7 @@ def run_experiment(args):
 
     Attempts to avoid the use of threading as much as possible.
     """
+    warnings.filterwarnings("ignore")
     numba.set_num_threads(1)
     if _check_soft_dependencies("torch", severity="none"):
         import torch

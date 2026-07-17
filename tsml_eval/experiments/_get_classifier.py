@@ -91,6 +91,8 @@ interval_based_classifiers = [
     "drcif-500",
     ["drcif", "drcifclassifier"],
     "drcif-unequal",
+    ["newdrcif", "new-drcif"],
+    "newdrcif-500",
     "summary-intervals",
     ["randomintervals-500", "catch22-intervals-500"],
     ["randomintervalclassifier", "randomintervals", "catch22-intervals"],
@@ -725,6 +727,25 @@ def _set_classifier_interval_based(
         from tsml_eval._wip.unequal_length._drcif6 import DrCIFClassifier
 
         return DrCIFClassifier(
+            n_estimators=500,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "newdrcif" or c == "new-drcif":
+        from tsml_eval._wip.classification import NewDrCIF
+
+        return NewDrCIF(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "newdrcif-500":
+        from tsml_eval._wip.classification import NewDrCIF
+
+        return NewDrCIF(
             n_estimators=500,
             random_state=random_state,
             n_jobs=n_jobs,
