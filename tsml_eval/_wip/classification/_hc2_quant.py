@@ -1,9 +1,8 @@
 """HIVE-COTE V2 variant with QUANT replacing the DrCIF component.
 
 Clone of aeon's HIVECOTEV2 (aeon 1.4.0) where the interval-based module is
-BaggedQUANT (QUANT with bootstrap sampling and OOB train estimates) instead of
-DrCIF. All other components (STC, Arsenal, TDE) and the CAWPE weighting are
-unchanged.
+QUANTClassifier instead of DrCIF. All other components (STC, Arsenal, TDE) and
+the CAWPE weighting are unchanged.
 """
 
 __maintainer__ = ["TonyBagnall"]
@@ -18,10 +17,9 @@ from sklearn.utils import check_random_state
 from aeon.classification.base import BaseClassifier
 from aeon.classification.convolution_based import Arsenal
 from aeon.classification.dictionary_based import TemporalDictionaryEnsemble
+from aeon.classification.interval_based import QUANTClassifier
 from aeon.classification.shapelet_based import ShapeletTransformClassifier
 from aeon.utils.validation import check_n_jobs
-
-from tsml_eval._wip.classification._bagged_quant import BaggedQUANT
 
 
 class HC2Quant(BaseClassifier):
@@ -37,10 +35,10 @@ class HC2Quant(BaseClassifier):
         Parameters for the ShapeletTransformClassifier module. If None, uses the
         default parameters with 10,000 shapelet samples.
     quant_params : dict or None, default=None
-        Parameters for the BaggedQUANT module. If None, uses the QUANT defaults
-        (interval_depth=6, quantile_divisor=4, 200 bagged extra trees). Note
+        Parameters for the QUANTClassifier module. If None, uses the QUANT
+        defaults (interval_depth=6, quantile_divisor=4, 200 extra trees). Note
         the QUANT module is not contractable and has no n_jobs parameter; its
-        CAWPE weight comes from its out-of-bag train estimate.
+        CAWPE weight comes from a 10-fold cross-validation train estimate.
     arsenal_params : dict or None, default=None
         Parameters for the Arsenal module. If None, uses the default parameters.
     tde_params : dict or None, default=None
@@ -177,9 +175,9 @@ class HC2Quant(BaseClassifier):
             print("STC ", datetime.now().strftime("%H:%M:%S %d/%m/%Y"))  # noqa
             print("STC weight = " + str(self.stc_weight_))  # noqa
 
-        # Build QUANT (bagged variant, so the CAWPE weight comes from an
-        # out-of-bag train estimate as DrCIF's does, not 10-fold CV)
-        self._quant = BaggedQUANT(
+        # Build QUANT (stock; its CAWPE weight comes from 10-fold CV, which is
+        # cheap for QUANT and avoids the bagged-deployment accuracy confound)
+        self._quant = QUANTClassifier(
             **self._quant_params,
             random_state=self.random_state,
         )
