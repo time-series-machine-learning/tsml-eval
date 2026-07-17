@@ -737,6 +737,7 @@ def _set_classifier_interval_based(
         from tsml_eval._wip.classification import NewDrCIF
 
         return NewDrCIF(
+            att_subsample_size=6,
             random_state=random_state,
             n_jobs=n_jobs,
             time_limit_in_minutes=fit_contract,
