@@ -43,6 +43,11 @@ class SharedDrCIF(BaseClassifier):
     max_interval_prop : float, default=0.5
         Maximum interval length as a proportion of series length for the
         "random" scheme (DrCIF's default is 0.5). Ignored for "dyadic".
+    banded : bool, default=False
+        If True, each interval computes only the catch22 features whose length
+        threshold it clears (length-gated feature scaling); summary and
+        quantile stats are always computed. Cuts cost and avoids degenerate
+        catch22 values on short intervals.
     train_estimate : bool, default=False
         If True, the default ExtraTreesClassifier is built with bootstrap
         sampling and OOB scoring so fit_predict can return an out-of-bag train
@@ -86,6 +91,7 @@ class SharedDrCIF(BaseClassifier):
         min_interval_length=3,
         max_interval_depth=6,
         max_interval_prop=0.5,
+        banded=False,
         train_estimate=False,
         estimator=None,
         class_weight=None,
@@ -97,6 +103,7 @@ class SharedDrCIF(BaseClassifier):
         self.min_interval_length = min_interval_length
         self.max_interval_depth = max_interval_depth
         self.max_interval_prop = max_interval_prop
+        self.banded = banded
         self.train_estimate = train_estimate
         self.estimator = estimator
         self.class_weight = class_weight
@@ -118,6 +125,7 @@ class SharedDrCIF(BaseClassifier):
             min_interval_length=self.min_interval_length,
             max_depth=self.max_interval_depth,
             max_interval_prop=self.max_interval_prop,
+            banded=self.banded,
             random_state=self.random_state,
         )
 

@@ -100,6 +100,7 @@ interval_based_classifiers = [
     "shareddrcif-q35",
     ["shareddrcif2", "shared-drcif2"],
     "shareddrcif2-q35",
+    "shareddrcif2-banded",
     "summary-intervals",
     ["randomintervals-500", "catch22-intervals-500"],
     ["randomintervalclassifier", "randomintervals", "catch22-intervals"],
@@ -808,6 +809,12 @@ def _set_classifier_interval_based(
 
         return SharedDrCIF2(
             features="union35", random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
+    elif c == "shareddrcif2-banded":
+        from tsml_eval._wip.classification import SharedDrCIF2
+
+        return SharedDrCIF2(
+            banded=True, random_state=random_state, n_jobs=n_jobs, **kwargs
         )
     elif c == "summary-intervals":
         from aeon.classification.interval_based import RandomIntervalClassifier

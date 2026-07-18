@@ -19,6 +19,7 @@ from sklearn.utils import check_random_state
 
 from aeon.transformations.collection import PeriodogramTransformer
 from aeon.transformations.collection.feature_based import Catch22
+from aeon.transformations.collection.feature_based._catch22 import feature_names
 from aeon.utils.numba.general import first_order_differences_3d
 from aeon.utils.numba.stats import (
     row_iqr,
@@ -56,6 +57,38 @@ _STAT_FUNCS_35 = _STAT_FUNCS_29 + [
     row_quantile_25_centred,
     row_quantile_75_centred,
 ]
+
+# Minimum interval length at which each catch22 feature is meaningful, keyed by
+# the aeon full feature name. Below the threshold the feature is degenerate or
+# truncated (e.g. dfa/rs need windows to 50, the AMI feature searches lags to
+# 40, periodicity's ACF only reaches m/3), so it is skipped in banded mode. The
+# 7 summary stats and 6 quantiles have no threshold (valid at any length).
+CATCH22_LENGTH_THRESHOLDS = {
+    "CO_trev_1_num": 5,
+    "MD_hrv_classic_pnn40": 5,
+    "FC_LocalSimple_mean3_stderr": 8,
+    # histogram modes are cheap and, per the importance-by-length validation,
+    # carry signal even on short intervals, so they are effectively always on
+    "DN_HistogramMode_5": 3,
+    "DN_HistogramMode_10": 3,
+    "SB_BinaryStats_mean_longstretch1": 15,
+    "SB_BinaryStats_diff_longstretch0": 15,
+    "CO_f1ecac": 25,
+    "CO_FirstMin_ac": 25,
+    "CO_HistogramAMI_even_2_5": 30,
+    "FC_LocalSimple_mean1_tauresrat": 30,
+    "SB_MotifThree_quantile_hh": 30,
+    "CO_Embed2_Dist_tau_d_expfit_meandiff": 30,
+    "SB_TransitionMatrix_3ac_sumdiagcov": 35,
+    "DN_OutlierInclude_p_001_mdrmd": 35,
+    "DN_OutlierInclude_n_001_mdrmd": 35,
+    "IN_AutoMutualInfoStats_40_gaussian_fmmi": 40,
+    "SP_Summaries_welch_rect_area_5_1": 45,
+    "SP_Summaries_welch_rect_centroid": 45,
+    "SC_FluctAnal_2_rsrangefit_50_1_logi_prop_r1": 50,
+    "SC_FluctAnal_2_dfa_50_1_2_logi_prop_r1": 50,
+    "PD_PeriodicityWang_th0_01": 50,
+}
 
 
 def dyadic_intervals(m, min_interval_length=3, max_depth=6):
@@ -141,8 +174,29 @@ class SharedIntervalTransform:
     max_interval_prop : float, default=0.5
         Maximum interval length as a proportion of the series length, used by
         the "random" scheme (DrCIF's default is 0.5).
+    banded : bool, default=False
+        If True, each interval computes only the catch22 features whose length
+        threshold (CATCH22_LENGTH_THRESHOLDS) it clears; summary and quantile
+        stats are always computed. Longer intervals therefore contribute more
+        catch22 columns than short ones, cutting cost and avoiding degenerate
+        feature values on short intervals.
+    feature_thresholds : dict or None, default=None
+        Override the per-feature length thresholds used when banded. If None,
+        CATCH22_LENGTH_THRESHOLDS is used.
     random_state : int, RandomState instance or None, default=None
         Only used by the "random" interval scheme.
+
+    Attributes
+    ----------
+    intervals_ : list of list of (start, end)
+        The fixed interval set per representation.
+    column_meta_ : list of tuple
+        One entry per output column: (rep_index, interval_index, start, end,
+        length, kind, name), where kind is "catch22"/"summary"/"quantile" and
+        name is the feature/stat name. Univariate layout; used for the
+        importance-by-length validation.
+    n_features_ : int
+        Number of output columns.
     """
 
     def __init__(
@@ -152,6 +206,8 @@ class SharedIntervalTransform:
         min_interval_length=3,
         max_depth=6,
         max_interval_prop=0.5,
+        banded=False,
+        feature_thresholds=None,
         random_state=None,
     ):
         if features not in ("drcif29", "union35"):
@@ -163,18 +219,40 @@ class SharedIntervalTransform:
         self.min_interval_length = min_interval_length
         self.max_depth = max_depth
         self.max_interval_prop = max_interval_prop
+        self.banded = banded
+        self.feature_thresholds = (
+            CATCH22_LENGTH_THRESHOLDS if feature_thresholds is None
+            else feature_thresholds
+        )
         self.random_state = random_state
 
         self._stat_funcs = (
             _STAT_FUNCS_29 if features == "drcif29" else _STAT_FUNCS_35
         )
-        self._catch22 = Catch22(outlier_norm=True)
+        self._stat_names = [f.__name__ for f in self._stat_funcs]
+        self._c22_cache = {}
         self._periodogram = PeriodogramTransformer()
 
+    def _eligible_catch22(self, length):
+        """catch22 feature names computable at this interval length."""
+        if not self.banded:
+            return feature_names
+        return [f for f in feature_names if length >= self.feature_thresholds[f]]
+
+    def _catch22_for(self, eligible):
+        """Cached Catch22 transformer for a given eligible-feature tuple."""
+        key = tuple(eligible)
+        tr = self._c22_cache.get(key)
+        if tr is None:
+            tr = Catch22(features=list(eligible), outlier_norm=True)
+            self._c22_cache[key] = tr
+        return tr
+
     def fit(self, X):
-        """Fix the interval sets from the training data shape."""
+        """Fix the interval sets and column layout from the training shape."""
         reps = self._representations(X, fit_periodogram=True)
         rng = check_random_state(self.random_state)
+        n_channels = X.shape[1]
 
         self.intervals_ = []
         for rep in reps:
@@ -196,10 +274,20 @@ class SharedIntervalTransform:
                     )
                 )
 
-        self.n_features_ = sum(
-            len(ivs) * (22 + len(self._stat_funcs)) * X.shape[1]
-            for ivs in self.intervals_
-        )
+        # column layout (univariate mapping): catch22 (eligible) then stats,
+        # per interval, per representation
+        self.column_meta_ = []
+        for r, intervals in enumerate(self.intervals_):
+            for iv, (s, e) in enumerate(intervals):
+                length = e - s
+                for ch in range(n_channels):
+                    for name in self._eligible_catch22(length):
+                        self.column_meta_.append((r, iv, s, e, length, "catch22", name))
+                for ch in range(n_channels):
+                    for name in self._stat_names:
+                        kind = "quantile" if "quantile" in name else "summary"
+                        self.column_meta_.append((r, iv, s, e, length, kind, name))
+        self.n_features_ = len(self.column_meta_)
         return self
 
     def transform(self, X):
@@ -210,7 +298,9 @@ class SharedIntervalTransform:
         for rep, intervals in zip(reps, self.intervals_):
             for s, e in intervals:
                 sl = rep[:, :, s:e]
-                cols.append(self._catch22.fit_transform(sl))
+                eligible = self._eligible_catch22(e - s)
+                if eligible:
+                    cols.append(self._catch22_for(eligible).fit_transform(sl))
                 for ch in range(rep.shape[1]):
                     rows = np.ascontiguousarray(sl[:, ch, :])
                     for f in self._stat_funcs:

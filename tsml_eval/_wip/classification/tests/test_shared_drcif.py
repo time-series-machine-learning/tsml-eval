@@ -144,6 +144,40 @@ def test_shared_drcif_train_estimate_opt_in():
     assert np.isfinite(train_probs).all()
 
 
+def test_banded_gates_features_by_length():
+    """Banded mode computes only length-eligible catch22 features per interval,
+    yields fewer columns than full, and stays deterministic."""
+    from tsml_eval._wip.classification._shared_interval_transform import (
+        CATCH22_LENGTH_THRESHOLDS,
+        SharedIntervalTransform,
+        feature_names,
+    )
+
+    X, y, X2 = _data()
+    full = SharedIntervalTransform(interval_scheme="random", banded=False, random_state=0).fit(X)
+    band = SharedIntervalTransform(interval_scheme="random", banded=True, random_state=0).fit(X)
+
+    assert band.n_features_ < full.n_features_
+    assert band.transform(X).shape[1] == band.n_features_
+
+    # every interval's catch22 columns are exactly the length-eligible features
+    per_iv = {}
+    for r, iv, s, e, L, kind, name in band.column_meta_:
+        if kind == "catch22":
+            per_iv.setdefault((r, iv, L), []).append(name)
+    for (r, iv, L), names in per_iv.items():
+        assert names == [f for f in feature_names if L >= CATCH22_LENGTH_THRESHOLDS[f]]
+
+    # a length-hungry feature never appears below its threshold
+    for r, iv, s, e, L, kind, name in band.column_meta_:
+        if name == "PD_PeriodicityWang_th0_01":
+            assert L >= 50
+
+    p1 = SharedDrCIF2(banded=True, max_interval_depth=3, random_state=0).fit(X, y).predict_proba(X2)
+    p2 = SharedDrCIF2(banded=True, max_interval_depth=3, random_state=0).fit(X, y).predict_proba(X2)
+    assert np.array_equal(p1, p2)
+
+
 def test_shared_drcif_variants_fit():
     """union35 and random-interval variants build and predict."""
     X, y, X2 = _data()
