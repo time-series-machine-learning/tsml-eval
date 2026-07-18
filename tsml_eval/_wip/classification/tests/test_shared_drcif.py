@@ -266,6 +266,37 @@ def test_representations_configurable():
         assert clf.predict(X2).shape == (10,)
 
 
+def test_tree_type_dt():
+    """tree_type='dt' builds a random-subspace ensemble of proper best-split
+    decision trees, fits, predicts and is deterministic."""
+    from sklearn.ensemble import BaggingClassifier
+    from sklearn.tree import DecisionTreeClassifier
+
+    X, y, X2 = _data()
+
+    clf = SharedDrCIF(tree_type="dt", max_interval_depth=3, random_state=0).fit(X, y)
+    assert isinstance(clf._estimator, BaggingClassifier)
+    assert isinstance(clf._estimator.estimator, DecisionTreeClassifier)
+    assert clf._estimator.estimator.splitter == "best"  # proper, not extra
+    assert clf._estimator.bootstrap is False  # random subspace, no case bagging
+
+    p1 = clf.predict_proba(X2)
+    assert p1.shape == (10, 2)
+    assert np.allclose(p1.sum(axis=1), 1)
+    p2 = (
+        SharedDrCIF(tree_type="dt", max_interval_depth=3, random_state=0)
+        .fit(X, y)
+        .predict_proba(X2)
+    )
+    assert np.array_equal(p1, p2)
+
+    # default is still the extra-trees estimator
+    from sklearn.ensemble import ExtraTreesClassifier
+
+    ex = SharedDrCIF(max_interval_depth=3, random_state=0).fit(X, y)
+    assert isinstance(ex._estimator, ExtraTreesClassifier)
+
+
 def test_drop_constant_features():
     """Constant/all-zero columns are dropped before the forest, the kept mask
     is applied at predict, and toggling the filter changes the count used."""

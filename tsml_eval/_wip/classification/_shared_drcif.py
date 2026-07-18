@@ -59,6 +59,18 @@ class SharedDrCIF(BaseClassifier):
         information but still count toward the forest's max_features sampling,
         so removing them concentrates sampling on informative features. The same
         columns are dropped at predict time.
+    tree_type : "extra" or "dt", default="extra"
+        "extra" uses a single ExtraTreesClassifier (random split thresholds,
+        per-split feature sampling). "dt" uses a random-subspace ensemble of
+        proper best-split DecisionTreeClassifiers, matching DrCIF's tree
+        structure: each tree sees a random subset of the shared columns
+        (max_features) and builds a full tree on them. Ignored if estimator is
+        set.
+    n_estimators : int, default=200
+        Number of trees in the default ensemble.
+    max_features : float, default=0.1
+        Feature sampling fraction: per-split for "extra", per-tree (random
+        subspace) for "dt".
     train_estimate : bool, default=False
         If True, the default ExtraTreesClassifier is built with bootstrap
         sampling and OOB scoring so fit_predict can return an out-of-bag train
@@ -106,6 +118,9 @@ class SharedDrCIF(BaseClassifier):
         dilation=False,
         representations=("base", "diff1", "periodogram"),
         drop_constant=True,
+        tree_type="extra",
+        n_estimators=200,
+        max_features=0.1,
         train_estimate=False,
         estimator=None,
         class_weight=None,
@@ -121,6 +136,9 @@ class SharedDrCIF(BaseClassifier):
         self.dilation = dilation
         self.representations = representations
         self.drop_constant = drop_constant
+        self.tree_type = tree_type
+        self.n_estimators = n_estimators
+        self.max_features = max_features
         self.train_estimate = train_estimate
         self.estimator = estimator
         self.class_weight = class_weight
@@ -131,6 +149,45 @@ class SharedDrCIF(BaseClassifier):
         # only advertise train estimates when the deployed forest is bagged
         if train_estimate:
             self.set_tags(**{"capability:train_estimate": True})
+
+    def _default_estimator(self):
+        """Build the default estimator per tree_type.
+
+        "extra": a single ExtraTreesClassifier (random split thresholds,
+        per-split feature sampling). "dt": a random-subspace ensemble of proper
+        best-split DecisionTreeClassifiers, matching DrCIF's tree structure —
+        each tree sees a random subset of the shared columns (max_features) and
+        builds a full best-split tree on them.
+        """
+        if self.tree_type == "extra":
+            return ExtraTreesClassifier(
+                n_estimators=self.n_estimators,
+                max_features=self.max_features,
+                criterion="entropy",
+                class_weight=self.class_weight,
+                bootstrap=self.train_estimate,
+                oob_score=self.train_estimate,
+                n_jobs=self._n_jobs,
+                random_state=self.random_state,
+            )
+        elif self.tree_type == "dt":
+            from sklearn.ensemble import BaggingClassifier
+            from sklearn.tree import DecisionTreeClassifier
+
+            return BaggingClassifier(
+                estimator=DecisionTreeClassifier(
+                    criterion="entropy", class_weight=self.class_weight
+                ),
+                n_estimators=self.n_estimators,
+                max_features=self.max_features,
+                bootstrap=self.train_estimate,
+                bootstrap_features=False,
+                oob_score=self.train_estimate,
+                n_jobs=self._n_jobs,
+                random_state=self.random_state,
+            )
+        else:
+            raise ValueError(f"Unknown tree_type: {self.tree_type}")
 
     def _fit(self, X, y):
         start = time.time()
@@ -149,20 +206,8 @@ class SharedDrCIF(BaseClassifier):
         )
 
         self._estimator = _clone_estimator(
-            (
-                ExtraTreesClassifier(
-                    n_estimators=200,
-                    max_features=0.1,
-                    criterion="entropy",
-                    class_weight=self.class_weight,
-                    bootstrap=self.train_estimate,
-                    oob_score=self.train_estimate,
-                    n_jobs=self._n_jobs,
-                    random_state=self.random_state,
-                )
-                if self.estimator is None
-                else self.estimator
-            ),
+            self.estimator if self.estimator is not None
+            else self._default_estimator(),
             self.random_state,
         )
 

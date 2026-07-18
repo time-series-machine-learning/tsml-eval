@@ -101,6 +101,9 @@ interval_based_classifiers = [
     ["fastdrcif_d", "fastdrcif-d"],
     "shareddrcif-nopgram",
     "shareddrcif-diff2",
+    "shareddrcif-dt",
+    "fastdrcif-dt",
+    "fastdrcif_d-dt",
     "summary-intervals",
     ["randomintervals-500", "catch22-intervals-500"],
     ["randomintervalclassifier", "randomintervals", "catch22-intervals"],
@@ -824,6 +827,25 @@ def _set_classifier_interval_based(
             random_state=random_state,
             n_jobs=n_jobs,
             **kwargs,
+        )
+    elif c == "shareddrcif-dt":
+        from tsml_eval._wip.classification import SharedDrCIF
+
+        # random-subspace ensemble of proper best-split decision trees
+        return SharedDrCIF(
+            tree_type="dt", random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
+    elif c == "fastdrcif-dt":
+        from tsml_eval._wip.classification import FastDrCIF
+
+        return FastDrCIF(
+            tree_type="dt", random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
+    elif c == "fastdrcif_d-dt":
+        from tsml_eval._wip.classification import FastDrCIF_D
+
+        return FastDrCIF_D(
+            tree_type="dt", random_state=random_state, n_jobs=n_jobs, **kwargs
         )
     elif c == "summary-intervals":
         from aeon.classification.interval_based import RandomIntervalClassifier
