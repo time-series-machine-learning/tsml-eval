@@ -48,6 +48,17 @@ class SharedDrCIF(BaseClassifier):
         threshold it clears (length-gated feature scaling); summary and
         quantile stats are always computed. Cuts cost and avoids degenerate
         catch22 values on short intervals.
+    dilation : bool, default=False
+        Only used with interval_scheme="random". If True, each interval draws a
+        random dilation scaled to its length (geometrically decaying towards
+        d=1), expanding its window for a multi-scale view at no extra feature
+        cost.
+    drop_constant : bool, default=True
+        If True, drop zero-variance (constant, e.g. all-zero) feature columns on
+        the training set before building the forest. Such columns carry no
+        information but still count toward the forest's max_features sampling,
+        so removing them concentrates sampling on informative features. The same
+        columns are dropped at predict time.
     train_estimate : bool, default=False
         If True, the default ExtraTreesClassifier is built with bootstrap
         sampling and OOB scoring so fit_predict can return an out-of-bag train
@@ -92,6 +103,8 @@ class SharedDrCIF(BaseClassifier):
         max_interval_depth=6,
         max_interval_prop=0.5,
         banded=False,
+        dilation=False,
+        drop_constant=True,
         train_estimate=False,
         estimator=None,
         class_weight=None,
@@ -104,6 +117,8 @@ class SharedDrCIF(BaseClassifier):
         self.max_interval_depth = max_interval_depth
         self.max_interval_prop = max_interval_prop
         self.banded = banded
+        self.dilation = dilation
+        self.drop_constant = drop_constant
         self.train_estimate = train_estimate
         self.estimator = estimator
         self.class_weight = class_weight
@@ -126,6 +141,7 @@ class SharedDrCIF(BaseClassifier):
             max_depth=self.max_interval_depth,
             max_interval_prop=self.max_interval_prop,
             banded=self.banded,
+            dilation=self.dilation,
             random_state=self.random_state,
         )
 
@@ -148,10 +164,25 @@ class SharedDrCIF(BaseClassifier):
         )
 
         X_t = self._transformer.fit_transform(X)
-        self._estimator.fit(X_t, y)
+
+        # drop zero-variance (constant / all-zero) columns: no information, but
+        # they still count toward the forest's max_features sampling
+        if self.drop_constant:
+            self._keep_cols_ = X_t.std(axis=0) > 0
+            if not self._keep_cols_.any():  # degenerate guard
+                self._keep_cols_ = np.ones(X_t.shape[1], dtype=bool)
+        else:
+            self._keep_cols_ = np.ones(X_t.shape[1], dtype=bool)
+        self.n_features_used_ = int(self._keep_cols_.sum())
+
+        self._estimator.fit(X_t[:, self._keep_cols_], y)
 
         self.fit_time_millis_ = int(round((time.time() - start) * 1000))
         return self
+
+    def _transform_kept(self, X):
+        """Transform then keep only the columns retained at fit time."""
+        return self._transformer.transform(X)[:, self._keep_cols_]
 
     def _fit_predict(self, X, y) -> np.ndarray:
         probas = self._fit_predict_proba(X, y)
@@ -174,15 +205,15 @@ class SharedDrCIF(BaseClassifier):
         return probas
 
     def _predict(self, X):
-        return self._estimator.predict(self._transformer.transform(X))
+        return self._estimator.predict(self._transform_kept(X))
 
     def _predict_proba(self, X):
         m = getattr(self._estimator, "predict_proba", None)
         if callable(m):
-            return self._estimator.predict_proba(self._transformer.transform(X))
+            return self._estimator.predict_proba(self._transform_kept(X))
         else:
             dists = np.zeros((X.shape[0], self.n_classes_))
-            preds = self._estimator.predict(self._transformer.transform(X))
+            preds = self._estimator.predict(self._transform_kept(X))
             for i in range(0, X.shape[0]):
                 dists[i, self._class_dictionary[preds[i]]] = 1
             return dists

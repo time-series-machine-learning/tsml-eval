@@ -101,6 +101,8 @@ interval_based_classifiers = [
     ["fastdrcif", "fast-drcif"],
     "fastdrcif-q35",
     "fastdrcif-banded",
+    ["fastdrcif_d", "fastdrcif-d"],
+    "fastdrcif_d-banded",
     "summary-intervals",
     ["randomintervals-500", "catch22-intervals-500"],
     ["randomintervalclassifier", "randomintervals", "catch22-intervals"],
@@ -814,6 +816,16 @@ def _set_classifier_interval_based(
         from tsml_eval._wip.classification import FastDrCIF
 
         return FastDrCIF(
+            banded=True, random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
+    elif c == "fastdrcif_d" or c == "fastdrcif-d":
+        from tsml_eval._wip.classification import FastDrCIF_D
+
+        return FastDrCIF_D(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "fastdrcif_d-banded":
+        from tsml_eval._wip.classification import FastDrCIF_D
+
+        return FastDrCIF_D(
             banded=True, random_state=random_state, n_jobs=n_jobs, **kwargs
         )
     elif c == "summary-intervals":

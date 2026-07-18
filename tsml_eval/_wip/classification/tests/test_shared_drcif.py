@@ -50,8 +50,8 @@ def test_transform_values_match_direct_computation():
 
     # first block is the base representation, first interval (0, 50):
     # 22 catch22 columns then the 7 summary stats
-    s, e = t.intervals_[0][0]
-    sl = X[:, :, s:e]
+    s, e, d = t.intervals_[0][0]
+    sl = X[:, :, s:e:d]
     expected_c22 = Catch22(outlier_norm=True).fit_transform(sl)
     np.testing.assert_allclose(Xt[:, :22], expected_c22, rtol=1e-5)
     np.testing.assert_allclose(
@@ -89,10 +89,40 @@ def test_drcif_random_intervals_respect_drcif_rule():
     m = 100
     ivs = drcif_random_intervals(m, 500, rng, min_interval_length=3, max_interval_prop=0.5)
     assert len(ivs) == 500
-    for s, e in ivs:
+    for s, e, d in ivs:
+        assert d == 1  # dilation off by default
         assert 0 <= s < e <= m
         assert e - s >= 3
         assert e - s <= int(0.5 * m)
+
+
+def test_dilation_scales_to_interval_length():
+    """With dilation on, each interval's point count stays within the length
+    cap while its dilated span can reach the whole series; dilation is >=1 and
+    the span always fits."""
+    rng = np.random.RandomState(0)
+    m = 200
+    ivs = drcif_random_intervals(
+        m, 2000, rng, min_interval_length=3, max_interval_prop=0.5, dilation=True
+    )
+    saw_dilated = False
+    for s, e, d in ivs:
+        assert d >= 1
+        assert 0 <= s < e <= m  # dilated span fits the series
+        L = len(range(s, e, d))  # point count
+        assert 3 <= L <= int(0.5 * m)
+        if d > 1:
+            saw_dilated = True
+            # span expands with dilation: (L-1)*d + 1
+            assert e - s == (L - 1) * d + 1
+    assert saw_dilated  # geometric draw should produce some dilation > 1
+
+    # d_max scales with interval length: a half-length interval maxes at d=2
+    X, y, X2 = _data()
+    from tsml_eval._wip.classification import FastDrCIF
+    p1 = FastDrCIF(dilation=True, max_interval_depth=3, random_state=0).fit(X, y).predict_proba(X2)
+    p2 = FastDrCIF(dilation=True, max_interval_depth=3, random_state=0).fit(X, y).predict_proba(X2)
+    assert np.array_equal(p1, p2)  # deterministic
 
 
 def test_shared_drcif2_matches_shared_drcif_feature_dim():
@@ -176,6 +206,24 @@ def test_banded_gates_features_by_length():
     p1 = FastDrCIF(banded=True, max_interval_depth=3, random_state=0).fit(X, y).predict_proba(X2)
     p2 = FastDrCIF(banded=True, max_interval_depth=3, random_state=0).fit(X, y).predict_proba(X2)
     assert np.array_equal(p1, p2)
+
+
+def test_drop_constant_features():
+    """Constant/all-zero columns are dropped before the forest, the kept mask
+    is applied at predict, and toggling the filter changes the count used."""
+    X, y, X2 = _data()
+
+    clf = SharedDrCIF(max_interval_depth=3, drop_constant=True, random_state=0).fit(X, y)
+    Xt = clf._transformer.transform(X)
+    n_constant = int((Xt.std(axis=0) == 0).sum())
+    assert clf.n_features_used_ == Xt.shape[1] - n_constant
+    assert clf._estimator.n_features_in_ == clf.n_features_used_
+    # predict still works with the mask applied
+    assert clf.predict(X2).shape == (10,)
+
+    # with the filter off, all columns are kept
+    clf2 = SharedDrCIF(max_interval_depth=3, drop_constant=False, random_state=0).fit(X, y)
+    assert clf2.n_features_used_ == Xt.shape[1]
 
 
 def test_shared_drcif_variants_fit():

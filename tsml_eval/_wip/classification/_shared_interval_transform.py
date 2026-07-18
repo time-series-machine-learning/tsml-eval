@@ -116,15 +116,29 @@ def dyadic_intervals(m, min_interval_length=3, max_depth=6):
     return intervals
 
 
-def drcif_random_intervals(m, n, rng, min_interval_length=3, max_interval_prop=0.5):
+def drcif_random_intervals(
+    m, n, rng, min_interval_length=3, max_interval_prop=0.5, dilation=False
+):
     """Random intervals matching aeon RandomIntervals / DrCIF's generation rule.
 
     For each interval, with equal probability either the start or the end is
-    drawn uniformly, then the length is drawn uniformly in
+    drawn uniformly, then the length (point count) is drawn uniformly in
     ``[min_interval_length, min(available, max)]`` where ``max`` is
-    ``max_interval_prop * m`` (DrCIF uses 0.5). Dilation is fixed at 1, as in
-    DrCIF. Returns a list of ``n`` (start, end) tuples (duplicates allowed, as
-    the shared forest tolerates repeated columns).
+    ``max_interval_prop * m`` (DrCIF uses 0.5).
+
+    If ``dilation`` is True, each interval also draws a random dilation ``d``
+    scaled to its length, capped at ``d_max = (m - 1) // (L - 1)`` so the
+    dilated span ``(L - 1) * d + 1`` always fits the series (a half-length
+    interval maxes at d=2). The dilation is drawn from a geometrically decaying
+    distribution favouring no/low dilation: P(d=1)=0.5, P(d=2)=0.25,
+    P(d=3)=0.125, ..., with the tail mass beyond d_max accumulating on d_max.
+    The interval keeps its ``L`` points but samples them at stride ``d``, i.e.
+    ``[start:end:d]``, expanding the window. With dilation False, ``d`` is 1 and
+    the draw sequence is identical to the non-dilated version.
+
+    Returns a list of ``n`` (start, end, dilation) tuples; slicing
+    ``series[start:end:dilation]`` yields the interval's points (duplicates
+    allowed, as the shared forest tolerates repeated columns).
     """
     min_l = min_interval_length
     max_l = max(min_l, int(max_interval_prop * m))
@@ -150,7 +164,18 @@ def drcif_random_intervals(m, n, rng, min_interval_length=3, max_interval_prop=0
                 else min_l
             )
             start = end - length
-        intervals.append((start, end))
+        d = 1
+        if dilation and length > 1:
+            d_max = max(1, (m - 1) // (length - 1))
+            # geometric decay: P(d)=0.5,0.25,0.125,... capped at d_max
+            while d < d_max and rng.random() < 0.5:
+                d += 1
+            if d > 1:
+                # reposition so the wider dilated span fits the series
+                span = (length - 1) * d + 1
+                start = rng.randint(0, m - span + 1)
+                end = start + span
+        intervals.append((start, end, d))
     return intervals
 
 
@@ -180,6 +205,12 @@ class SharedIntervalTransform:
         stats are always computed. Longer intervals therefore contribute more
         catch22 columns than short ones, cutting cost and avoiding degenerate
         feature values on short intervals.
+    dilation : bool, default=False
+        Only used by the "random" scheme. If True, each interval draws a random
+        dilation scaled to its length (stride sampling of its points, spanning
+        up to the whole series), adding a multi-scale view at no extra feature
+        cost. Length gating and feature counts use the interval's point count,
+        not its dilated span.
     feature_thresholds : dict or None, default=None
         Override the per-feature length thresholds used when banded. If None,
         CATCH22_LENGTH_THRESHOLDS is used.
@@ -188,13 +219,14 @@ class SharedIntervalTransform:
 
     Attributes
     ----------
-    intervals_ : list of list of (start, end)
-        The fixed interval set per representation.
+    intervals_ : list of list of (start, end, dilation)
+        The fixed interval set per representation; the interval's points are
+        ``series[start:end:dilation]`` (dilation is 1 unless dilation is on).
     column_meta_ : list of tuple
         One entry per output column: (rep_index, interval_index, start, end,
-        length, kind, name), where kind is "catch22"/"summary"/"quantile" and
-        name is the feature/stat name. Univariate layout; used for the
-        importance-by-length validation.
+        length, kind, name), where length is the interval's point count, kind
+        is "catch22"/"summary"/"quantile" and name is the feature/stat name.
+        Univariate layout; used for the importance-by-length validation.
     n_features_ : int
         Number of output columns.
     """
@@ -207,6 +239,7 @@ class SharedIntervalTransform:
         max_depth=6,
         max_interval_prop=0.5,
         banded=False,
+        dilation=False,
         feature_thresholds=None,
         random_state=None,
     ):
@@ -220,6 +253,7 @@ class SharedIntervalTransform:
         self.max_depth = max_depth
         self.max_interval_prop = max_interval_prop
         self.banded = banded
+        self.dilation = dilation
         self.feature_thresholds = (
             CATCH22_LENGTH_THRESHOLDS if feature_thresholds is None
             else feature_thresholds
@@ -259,11 +293,12 @@ class SharedIntervalTransform:
             m = rep.shape[2]
             dyadic = dyadic_intervals(m, self.min_interval_length, self.max_depth)
             if self.interval_scheme == "dyadic":
-                self.intervals_.append(dyadic)
+                # normalise to (start, end, dilation=1)
+                self.intervals_.append([(s, e, 1) for s, e in dyadic])
             else:
                 # DrCIF's random interval model, matched in count to the dyadic
                 # grid so the only variable versus the dyadic scheme is how
-                # interval positions and lengths are chosen
+                # interval positions and lengths are chosen (plus dilation)
                 self.intervals_.append(
                     drcif_random_intervals(
                         m,
@@ -271,15 +306,16 @@ class SharedIntervalTransform:
                         rng,
                         self.min_interval_length,
                         self.max_interval_prop,
+                        self.dilation,
                     )
                 )
 
         # column layout (univariate mapping): catch22 (eligible) then stats,
-        # per interval, per representation
+        # per interval, per representation. length is the interval point count.
         self.column_meta_ = []
         for r, intervals in enumerate(self.intervals_):
-            for iv, (s, e) in enumerate(intervals):
-                length = e - s
+            for iv, (s, e, d) in enumerate(intervals):
+                length = len(range(s, e, d))
                 for ch in range(n_channels):
                     for name in self._eligible_catch22(length):
                         self.column_meta_.append((r, iv, s, e, length, "catch22", name))
@@ -296,9 +332,9 @@ class SharedIntervalTransform:
 
         cols = []
         for rep, intervals in zip(reps, self.intervals_):
-            for s, e in intervals:
-                sl = rep[:, :, s:e]
-                eligible = self._eligible_catch22(e - s)
+            for s, e, d in intervals:
+                sl = np.ascontiguousarray(rep[:, :, s:e:d])
+                eligible = self._eligible_catch22(sl.shape[2])
                 if eligible:
                     cols.append(self._catch22_for(eligible).fit_transform(sl))
                 for ch in range(rep.shape[1]):
