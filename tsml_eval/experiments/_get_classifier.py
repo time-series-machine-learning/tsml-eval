@@ -104,6 +104,7 @@ interval_based_classifiers = [
     "shareddrcif-dt",
     "fastdrcif-dt",
     "fastdrcif_d-dt",
+    ["rdstdrcif", "rdst-drcif"],
     "summary-intervals",
     ["randomintervals-500", "catch22-intervals-500"],
     ["randomintervalclassifier", "randomintervals", "catch22-intervals"],
@@ -847,6 +848,11 @@ def _set_classifier_interval_based(
         return FastDrCIF_D(
             tree_type="dt", random_state=random_state, n_jobs=n_jobs, **kwargs
         )
+    elif c == "rdstdrcif" or c == "rdst-drcif":
+        from tsml_eval._wip.classification import RDSTDrCIF
+
+        # RDST/WEASEL-style: fixed interval lengths + log-uniform dilation
+        return RDSTDrCIF(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "summary-intervals":
         from aeon.classification.interval_based import RandomIntervalClassifier
         from aeon.transformations.collection.feature_based import SevenNumberSummary

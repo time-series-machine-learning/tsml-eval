@@ -117,6 +117,7 @@ class SharedDrCIF(BaseClassifier):
         banded=False,
         dilation=False,
         representations=("base", "diff1", "periodogram"),
+        fixed_lengths=(9, 16, 32),
         drop_constant=True,
         tree_type="extra",
         n_estimators=200,
@@ -135,6 +136,7 @@ class SharedDrCIF(BaseClassifier):
         self.banded = banded
         self.dilation = dilation
         self.representations = representations
+        self.fixed_lengths = fixed_lengths
         self.drop_constant = drop_constant
         self.tree_type = tree_type
         self.n_estimators = n_estimators
@@ -202,6 +204,7 @@ class SharedDrCIF(BaseClassifier):
             banded=self.banded,
             dilation=self.dilation,
             representations=self.representations,
+            fixed_lengths=self.fixed_lengths,
             random_state=self.random_state,
         )
 

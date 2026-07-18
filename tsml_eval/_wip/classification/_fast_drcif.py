@@ -10,7 +10,7 @@ count, and the constant-feature filter.
 """
 
 __maintainer__ = ["TonyBagnall"]
-__all__ = ["FastDrCIF", "FastDrCIF_D"]
+__all__ = ["FastDrCIF", "FastDrCIF_D", "RDSTDrCIF"]
 
 from tsml_eval._wip.classification._shared_drcif import SharedDrCIF
 
@@ -100,6 +100,55 @@ class FastDrCIF_D(FastDrCIF):
             max_interval_prop=max_interval_prop,
             banded=banded,
             dilation=dilation,
+            representations=representations,
+            drop_constant=drop_constant,
+            tree_type=tree_type,
+            n_estimators=n_estimators,
+            max_features=max_features,
+            train_estimate=train_estimate,
+            estimator=estimator,
+            class_weight=class_weight,
+            random_state=random_state,
+            n_jobs=n_jobs,
+        )
+
+
+class RDSTDrCIF(SharedDrCIF):
+    """RDST/WEASEL-style DrCIF: fixed interval lengths with log-uniform dilation.
+
+    Uses ``interval_scheme="fixed"`` — instead of random-length intervals, each
+    interval takes a point count from a small fixed set (``fixed_lengths``) and
+    a log-uniform dilation, decoupling feature quality (point count) from the
+    receptive field (dilation) as RDST and WEASEL-D do. Length gating is on by
+    default (the short fixed lengths make many catch22 features degenerate) and
+    the constant-feature filter is on. See SharedDrCIF for full parameter docs.
+    """
+
+    def __init__(
+        self,
+        features="drcif29",
+        fixed_lengths=(9, 16, 32),
+        min_interval_length=3,
+        max_interval_depth=6,
+        banded=True,
+        representations=("base", "diff1", "periodogram"),
+        drop_constant=True,
+        tree_type="extra",
+        n_estimators=200,
+        max_features=0.1,
+        train_estimate=False,
+        estimator=None,
+        class_weight=None,
+        random_state=None,
+        n_jobs=1,
+    ):
+        super().__init__(
+            features=features,
+            interval_scheme="fixed",
+            fixed_lengths=fixed_lengths,
+            min_interval_length=min_interval_length,
+            max_interval_depth=max_interval_depth,
+            banded=banded,
             representations=representations,
             drop_constant=drop_constant,
             tree_type=tree_type,

@@ -179,6 +179,37 @@ def drcif_random_intervals(
     return intervals
 
 
+def rdst_fixed_intervals(m, n, rng, fixed_lengths=(9, 16, 32)):
+    """RDST/WEASEL-style fixed-length intervals with log-uniform dilation.
+
+    Instead of drawing a random length, each interval takes a point count from
+    a small fixed set (``fixed_lengths``, chosen uniformly at random) and a
+    dilation drawn LOG-UNIFORMLY in ``[1, d_max]`` where
+    ``d_max = (m - 1) // (L - 1)`` — the RDST dilation distribution, spreading
+    dilations across scales (1, 2, 4, 8, ...) rather than favouring d=1. This
+    decouples the point count (feature quality) from the receptive field
+    (dilation), as RDST and WEASEL-D do. The interval keeps its ``L`` points,
+    sampled at stride ``d`` over a span of ``(L - 1) * d + 1``.
+
+    Returns a list of ``n`` (start, end, dilation) tuples.
+    """
+    lengths = [L for L in fixed_lengths if 2 <= L <= m] or [min(max(fixed_lengths), m)]
+    intervals = []
+    for _ in range(n):
+        length = int(rng.choice(lengths))
+        d_max = max(1, (m - 1) // (length - 1))
+        if d_max > 1:
+            # log-uniform dilation: d = floor(2 ** U(0, log2(d_max)))
+            d = int(np.floor(2 ** rng.uniform(0, np.log2(d_max))))
+            d = max(1, min(d, d_max))
+        else:
+            d = 1
+        span = (length - 1) * d + 1
+        start = rng.randint(0, m - span + 1)
+        intervals.append((start, start + span, d))
+    return intervals
+
+
 class SharedIntervalTransform:
     """Fixed-interval DrCIF feature pool transform, computed once and shared.
 
@@ -241,12 +272,13 @@ class SharedIntervalTransform:
         banded=False,
         dilation=False,
         representations=("base", "diff1", "periodogram"),
+        fixed_lengths=(9, 16, 32),
         feature_thresholds=None,
         random_state=None,
     ):
         if features not in ("drcif29", "union35"):
             raise ValueError(f"Unknown features input: {features}")
-        if interval_scheme not in ("dyadic", "random"):
+        if interval_scheme not in ("dyadic", "random", "fixed"):
             raise ValueError(f"Unknown interval_scheme input: {interval_scheme}")
         valid_reps = ("base", "diff1", "diff2", "periodogram")
         for rep in representations:
@@ -262,6 +294,7 @@ class SharedIntervalTransform:
         self.banded = banded
         self.dilation = dilation
         self.representations = tuple(representations)
+        self.fixed_lengths = tuple(fixed_lengths)
         self.feature_thresholds = (
             CATCH22_LENGTH_THRESHOLDS if feature_thresholds is None
             else feature_thresholds
@@ -306,6 +339,12 @@ class SharedIntervalTransform:
             if self.interval_scheme == "dyadic":
                 # normalise to (start, end, dilation=1)
                 self.intervals_.append([(s, e, 1) for s, e in dyadic])
+            elif self.interval_scheme == "fixed":
+                # RDST/WEASEL-style: fixed point-counts + log-uniform dilation,
+                # count matched to the dyadic grid
+                self.intervals_.append(
+                    rdst_fixed_intervals(m, len(dyadic), rng, self.fixed_lengths)
+                )
             else:
                 # DrCIF's random interval model, matched in count to the dyadic
                 # grid so the only variable versus the dyadic scheme is how

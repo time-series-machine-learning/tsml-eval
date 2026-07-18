@@ -266,6 +266,50 @@ def test_representations_configurable():
         assert clf.predict(X2).shape == (10,)
 
 
+def test_rdst_fixed_scheme():
+    """RDST scheme uses fixed point-counts with log-uniform dilation: every
+    interval's point count is from fixed_lengths and spans fit the series."""
+    import numpy as np
+    from tsml_eval._wip.classification import RDSTDrCIF
+    from tsml_eval._wip.classification._shared_interval_transform import (
+        SharedIntervalTransform,
+        rdst_fixed_intervals,
+    )
+
+    rng = np.random.RandomState(0)
+    m = 300
+    fixed = (9, 16, 32)
+    ivs = rdst_fixed_intervals(m, 3000, rng, fixed_lengths=fixed)
+    saw_dilated = False
+    for s, e, d in ivs:
+        assert d >= 1
+        assert 0 <= s < e <= m
+        L = len(range(s, e, d))  # point count
+        assert L in fixed  # fixed length set
+        assert e - s == (L - 1) * d + 1  # dilated span
+        if d > 1:
+            saw_dilated = True
+    assert saw_dilated
+
+    # transform / classifier wiring
+    X, y, X2 = _data()
+    t = SharedIntervalTransform(
+        interval_scheme="fixed", fixed_lengths=(9, 16), random_state=0
+    ).fit(X)
+    lengths = {L for _, _, _, _, L, _, _ in t.column_meta_}
+    assert lengths <= {9, 16}  # only the fixed point counts (capped at m)
+
+    clf = RDSTDrCIF(fixed_lengths=(9, 16), max_interval_depth=3, random_state=0)
+    p1 = clf.fit(X, y).predict_proba(X2)
+    p2 = (
+        RDSTDrCIF(fixed_lengths=(9, 16), max_interval_depth=3, random_state=0)
+        .fit(X, y)
+        .predict_proba(X2)
+    )
+    assert clf.interval_scheme == "fixed"
+    assert np.array_equal(p1, p2)  # deterministic
+
+
 def test_tree_type_dt():
     """tree_type='dt' builds a random-subspace ensemble of proper best-split
     decision trees, fits, predicts and is deterministic."""
