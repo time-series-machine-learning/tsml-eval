@@ -1,13 +1,12 @@
-"""FastDrCIF: SharedDrCIF with DrCIF's random interval model.
+"""FastDrCIF and FastDrCIF_D: length-gated and dilated random-interval DrCIF.
 
-Identical to SharedDrCIF except intervals are drawn once using DrCIF's random
-interval generation rule (50/50 start/end anchor, length in
-[min_interval_length, max_interval_prop * m]) instead of the dyadic
-power-of-two grid. The interval count per representation matches the dyadic
-grid, so SharedDrCIF vs FastDrCIF isolates the interval scheme (fixed dyadic
-positions vs DrCIF-style random positions/lengths) with feature dimensionality
-held constant. FastDrCIF is the random-interval variant that reached accuracy
-parity with QUANT.
+Both build on SharedDrCIF (random-interval DrCIF that reached QUANT accuracy
+parity). FastDrCIF adds length-gated feature scaling (banding): each interval
+computes only the catch22 features whose length threshold it clears. FastDrCIF_D
+adds dilation on top: each random interval also draws a dilation scaled to its
+length, expanding its window for a multi-scale view. All three variants
+(SharedDrCIF, FastDrCIF, FastDrCIF_D) use random intervals, the same interval
+count, and the constant-feature filter.
 """
 
 __maintainer__ = ["TonyBagnall"]
@@ -17,13 +16,12 @@ from tsml_eval._wip.classification._shared_drcif import SharedDrCIF
 
 
 class FastDrCIF(SharedDrCIF):
-    """SharedDrCIF using DrCIF's random interval model instead of a dyadic grid.
+    """Random-interval DrCIF with length-gated feature scaling (banding).
 
-    See SharedDrCIF for the full parameter and attribute documentation. The
-    only behavioural difference is ``interval_scheme="random"`` by default,
-    which draws intervals with DrCIF's generation rule seeded by
-    ``random_state`` (so different resamples get different interval sets, as in
-    DrCIF).
+    Same as SharedDrCIF (random intervals, constant-feature filter) but with
+    ``banded=True`` by default: each interval computes only the catch22 features
+    whose length threshold it clears, so short intervals skip the length-hungry
+    features. See SharedDrCIF for full parameter and attribute documentation.
     """
 
     def __init__(
@@ -32,7 +30,7 @@ class FastDrCIF(SharedDrCIF):
         min_interval_length=3,
         max_interval_depth=6,
         max_interval_prop=0.5,
-        banded=False,
+        banded=True,
         dilation=False,
         drop_constant=True,
         train_estimate=False,
@@ -59,12 +57,13 @@ class FastDrCIF(SharedDrCIF):
 
 
 class FastDrCIF_D(FastDrCIF):
-    """FastDrCIF with dilation on by default.
+    """FastDrCIF with dilation added (length gates AND dilation).
 
-    Identical to FastDrCIF except ``dilation=True`` by default: each random
-    interval draws a dilation scaled to its length (geometrically decaying
-    towards d=1), expanding its window for a multi-scale view at no extra
-    feature cost. See SharedDrCIF/FastDrCIF for full parameter documentation.
+    Same as FastDrCIF (random intervals, length gating, constant-feature filter)
+    but with ``dilation=True`` by default: each random interval also draws a
+    dilation scaled to its length (geometrically decaying towards d=1),
+    expanding its window for a multi-scale view at no extra feature cost. See
+    SharedDrCIF/FastDrCIF for full parameter documentation.
     """
 
     def __init__(
@@ -73,7 +72,7 @@ class FastDrCIF_D(FastDrCIF):
         min_interval_length=3,
         max_interval_depth=6,
         max_interval_prop=0.5,
-        banded=False,
+        banded=True,
         dilation=True,
         drop_constant=True,
         train_estimate=False,

@@ -33,9 +33,9 @@ class SharedDrCIF(BaseClassifier):
     features : "drcif29" or "union35", default="drcif29"
         Per-interval attribute pool: the 29 DrCIF attributes (22 catch22 + 7
         summary stats), or those plus the six quantile features.
-    interval_scheme : "dyadic" or "random", default="dyadic"
-        Fixed QUANT-style dyadic grid, or a seeded random interval set of the
-        same size.
+    interval_scheme : "dyadic" or "random", default="random"
+        Seeded random interval set using DrCIF's generation rule, or the fixed
+        QUANT-style dyadic grid of the same size.
     min_interval_length : int, default=3
         Minimum interval length.
     max_interval_depth : int, default=6
@@ -98,7 +98,7 @@ class SharedDrCIF(BaseClassifier):
     def __init__(
         self,
         features="drcif29",
-        interval_scheme="dyadic",
+        interval_scheme="random",
         min_interval_length=3,
         max_interval_depth=6,
         max_interval_prop=0.5,

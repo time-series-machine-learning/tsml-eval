@@ -97,12 +97,8 @@ interval_based_classifiers = [
     ["quantdrcif", "quant-drcif"],
     "quantdrcif-12",
     ["shareddrcif", "shared-drcif"],
-    "shareddrcif-q35",
     ["fastdrcif", "fast-drcif"],
-    "fastdrcif-q35",
-    "fastdrcif-banded",
     ["fastdrcif_d", "fastdrcif-d"],
-    "fastdrcif_d-banded",
     "summary-intervals",
     ["randomintervals-500", "catch22-intervals-500"],
     ["randomintervalclassifier", "randomintervals", "catch22-intervals"],
@@ -795,39 +791,18 @@ def _set_classifier_interval_based(
     elif c == "shareddrcif" or c == "shared-drcif":
         from tsml_eval._wip.classification import SharedDrCIF
 
+        # random intervals, no gates, no dilation, constant-feature filter on
         return SharedDrCIF(random_state=random_state, n_jobs=n_jobs, **kwargs)
-    elif c == "shareddrcif-q35":
-        from tsml_eval._wip.classification import SharedDrCIF
-
-        return SharedDrCIF(
-            features="union35", random_state=random_state, n_jobs=n_jobs, **kwargs
-        )
     elif c == "fastdrcif" or c == "fast-drcif":
         from tsml_eval._wip.classification import FastDrCIF
 
+        # random intervals + length-gated features + constant filter
         return FastDrCIF(random_state=random_state, n_jobs=n_jobs, **kwargs)
-    elif c == "fastdrcif-q35":
-        from tsml_eval._wip.classification import FastDrCIF
-
-        return FastDrCIF(
-            features="union35", random_state=random_state, n_jobs=n_jobs, **kwargs
-        )
-    elif c == "fastdrcif-banded":
-        from tsml_eval._wip.classification import FastDrCIF
-
-        return FastDrCIF(
-            banded=True, random_state=random_state, n_jobs=n_jobs, **kwargs
-        )
     elif c == "fastdrcif_d" or c == "fastdrcif-d":
         from tsml_eval._wip.classification import FastDrCIF_D
 
+        # random intervals + length gates + dilation + constant filter
         return FastDrCIF_D(random_state=random_state, n_jobs=n_jobs, **kwargs)
-    elif c == "fastdrcif_d-banded":
-        from tsml_eval._wip.classification import FastDrCIF_D
-
-        return FastDrCIF_D(
-            banded=True, random_state=random_state, n_jobs=n_jobs, **kwargs
-        )
     elif c == "summary-intervals":
         from aeon.classification.interval_based import RandomIntervalClassifier
         from aeon.transformations.collection.feature_based import SevenNumberSummary

@@ -125,18 +125,41 @@ def test_dilation_scales_to_interval_length():
     assert np.array_equal(p1, p2)  # deterministic
 
 
-def test_shared_drcif2_matches_shared_drcif_feature_dim():
-    """FastDrCIF (random) and SharedDrCIF (dyadic) share feature dimension
-    and FastDrCIF fits, predicts and is deterministic at a fixed seed."""
-    X, y, X2 = _data()
-    d = SharedDrCIF(max_interval_depth=2, random_state=0).fit(X, y)
-    r = FastDrCIF(max_interval_depth=2, random_state=0).fit(X, y)
-    assert r._transformer.n_features_ == d._transformer.n_features_
-    assert r.interval_scheme == "random"
+def test_family_configuration():
+    """The three-class family: SharedDrCIF (random, no gates, no dilation),
+    FastDrCIF (random + gates), FastDrCIF_D (random + gates + dilation), all
+    with the constant-feature filter on."""
+    from tsml_eval._wip.classification import FastDrCIF_D
 
-    p1 = r.predict_proba(X2)
-    p2 = FastDrCIF(max_interval_depth=2, random_state=0).fit(X, y).predict_proba(X2)
-    assert np.array_equal(p1, p2)
+    X, y, X2 = _data()
+    s = SharedDrCIF(max_interval_depth=2, random_state=0).fit(X, y)
+    f = FastDrCIF(max_interval_depth=2, random_state=0).fit(X, y)
+    fd = FastDrCIF_D(max_interval_depth=2, random_state=0).fit(X, y)
+
+    # all random intervals, all with the constant filter
+    for clf in (s, f, fd):
+        assert clf.interval_scheme == "random"
+        assert clf.drop_constant is True
+
+    # gating: SharedDrCIF is unbanded, Fast* are banded
+    assert s.banded is False and f.banded is True and fd.banded is True
+    # dilation: only FastDrCIF_D
+    assert s.dilation is False and f.dilation is False and fd.dilation is True
+
+    # banding gives FastDrCIF fewer transform columns than SharedDrCIF
+    assert f._transformer.n_features_ < s._transformer.n_features_
+    # dilation adds no columns per interval: unbanded, dilation on vs off gives
+    # the same count (in banded mode the drawn intervals differ, so counts can
+    # differ, but dilation itself never adds columns)
+    s_dil = SharedDrCIF(
+        max_interval_depth=2, dilation=True, random_state=0
+    ).fit(X, y)
+    assert s_dil._transformer.n_features_ == s._transformer.n_features_
+
+    # all fit, predict and are deterministic
+    for clf, ctor in ((s, SharedDrCIF), (f, FastDrCIF), (fd, FastDrCIF_D)):
+        p2 = ctor(max_interval_depth=2, random_state=0).fit(X, y).predict_proba(X2)
+        assert np.array_equal(clf.predict_proba(X2), p2)
 
 
 def test_shared_drcif_unbagged_by_default():

@@ -333,7 +333,11 @@ class SharedIntervalTransform:
         cols = []
         for rep, intervals in zip(reps, self.intervals_):
             for s, e, d in intervals:
-                sl = np.ascontiguousarray(rep[:, :, s:e:d])
+                # contiguous copy only needed for a dilated (strided) slice;
+                # a contiguous slice (d==1) is passed as a view
+                sl = rep[:, :, s:e:d]
+                if d > 1:
+                    sl = np.ascontiguousarray(sl)
                 eligible = self._eligible_catch22(sl.shape[2])
                 if eligible:
                     cols.append(self._catch22_for(eligible).fit_transform(sl))
