@@ -104,6 +104,7 @@ class SharedDrCIF(BaseClassifier):
         max_interval_prop=0.5,
         banded=False,
         dilation=False,
+        representations=("base", "diff1", "periodogram"),
         drop_constant=True,
         train_estimate=False,
         estimator=None,
@@ -118,6 +119,7 @@ class SharedDrCIF(BaseClassifier):
         self.max_interval_prop = max_interval_prop
         self.banded = banded
         self.dilation = dilation
+        self.representations = representations
         self.drop_constant = drop_constant
         self.train_estimate = train_estimate
         self.estimator = estimator
@@ -142,6 +144,7 @@ class SharedDrCIF(BaseClassifier):
             max_interval_prop=self.max_interval_prop,
             banded=self.banded,
             dilation=self.dilation,
+            representations=self.representations,
             random_state=self.random_state,
         )
 

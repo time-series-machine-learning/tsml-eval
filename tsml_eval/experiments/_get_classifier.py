@@ -99,6 +99,8 @@ interval_based_classifiers = [
     ["shareddrcif", "shared-drcif"],
     ["fastdrcif", "fast-drcif"],
     ["fastdrcif_d", "fastdrcif-d"],
+    "shareddrcif-nopgram",
+    "shareddrcif-diff2",
     "summary-intervals",
     ["randomintervals-500", "catch22-intervals-500"],
     ["randomintervalclassifier", "randomintervals", "catch22-intervals"],
@@ -803,6 +805,26 @@ def _set_classifier_interval_based(
 
         # random intervals + length gates + dilation + constant filter
         return FastDrCIF_D(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "shareddrcif-nopgram":
+        from tsml_eval._wip.classification import SharedDrCIF
+
+        # drop periodogram: base + first differences only
+        return SharedDrCIF(
+            representations=("base", "diff1"),
+            random_state=random_state,
+            n_jobs=n_jobs,
+            **kwargs,
+        )
+    elif c == "shareddrcif-diff2":
+        from tsml_eval._wip.classification import SharedDrCIF
+
+        # drop periodogram, add second-order differences
+        return SharedDrCIF(
+            representations=("base", "diff1", "diff2"),
+            random_state=random_state,
+            n_jobs=n_jobs,
+            **kwargs,
+        )
     elif c == "summary-intervals":
         from aeon.classification.interval_based import RandomIntervalClassifier
         from aeon.transformations.collection.feature_based import SevenNumberSummary

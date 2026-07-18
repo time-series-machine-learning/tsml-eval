@@ -240,6 +240,7 @@ class SharedIntervalTransform:
         max_interval_prop=0.5,
         banded=False,
         dilation=False,
+        representations=("base", "diff1", "periodogram"),
         feature_thresholds=None,
         random_state=None,
     ):
@@ -247,6 +248,12 @@ class SharedIntervalTransform:
             raise ValueError(f"Unknown features input: {features}")
         if interval_scheme not in ("dyadic", "random"):
             raise ValueError(f"Unknown interval_scheme input: {interval_scheme}")
+        valid_reps = ("base", "diff1", "diff2", "periodogram")
+        for rep in representations:
+            if rep not in valid_reps:
+                raise ValueError(
+                    f"Unknown representation '{rep}', valid: {valid_reps}"
+                )
         self.features = features
         self.interval_scheme = interval_scheme
         self.min_interval_length = min_interval_length
@@ -254,6 +261,7 @@ class SharedIntervalTransform:
         self.max_interval_prop = max_interval_prop
         self.banded = banded
         self.dilation = dilation
+        self.representations = tuple(representations)
         self.feature_thresholds = (
             CATCH22_LENGTH_THRESHOLDS if feature_thresholds is None
             else feature_thresholds
@@ -265,7 +273,10 @@ class SharedIntervalTransform:
         )
         self._stat_names = [f.__name__ for f in self._stat_funcs]
         self._c22_cache = {}
-        self._periodogram = PeriodogramTransformer()
+        self._periodogram = (
+            PeriodogramTransformer() if "periodogram" in self.representations
+            else None
+        )
 
     def _eligible_catch22(self, length):
         """catch22 feature names computable at this interval length."""
@@ -354,8 +365,21 @@ class SharedIntervalTransform:
 
     def _representations(self, X, fit_periodogram):
         X = np.asarray(X, dtype=np.float64)
-        if fit_periodogram:
-            per = self._periodogram.fit_transform(X)
-        else:
-            per = self._periodogram.transform(X)
-        return [X, first_order_differences_3d(X), np.asarray(per)]
+        reps = []
+        for name in self.representations:
+            if name == "base":
+                reps.append(X)
+            elif name == "diff1":
+                reps.append(first_order_differences_3d(X))
+            elif name == "diff2":
+                reps.append(
+                    first_order_differences_3d(first_order_differences_3d(X))
+                )
+            elif name == "periodogram":
+                per = (
+                    self._periodogram.fit_transform(X)
+                    if fit_periodogram
+                    else self._periodogram.transform(X)
+                )
+                reps.append(np.asarray(per))
+        return reps

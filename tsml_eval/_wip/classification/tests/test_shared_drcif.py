@@ -231,6 +231,41 @@ def test_banded_gates_features_by_length():
     assert np.array_equal(p1, p2)
 
 
+def test_representations_configurable():
+    """Default is the 3 DrCIF representations; dropping periodogram and adding
+    second-order differences change the interval-set structure and still fit."""
+    from tsml_eval._wip.classification._shared_interval_transform import (
+        SharedIntervalTransform,
+    )
+
+    X, y, X2 = _data()
+
+    default = SharedIntervalTransform(interval_scheme="random", random_state=0).fit(X)
+    nopgram = SharedIntervalTransform(
+        interval_scheme="random", representations=("base", "diff1"), random_state=0
+    ).fit(X)
+    diff2 = SharedIntervalTransform(
+        interval_scheme="random",
+        representations=("base", "diff1", "diff2"),
+        random_state=0,
+    ).fit(X)
+
+    assert len(default.intervals_) == 3
+    assert len(nopgram.intervals_) == 2  # periodogram dropped
+    assert len(diff2.intervals_) == 3
+    assert nopgram._periodogram is None
+    # invalid representation rejected
+    with pytest.raises(ValueError, match="Unknown representation"):
+        SharedIntervalTransform(representations=("base", "bogus")).fit(X)
+
+    # classifiers with these representations fit and predict
+    for reps in [("base", "diff1"), ("base", "diff1", "diff2")]:
+        clf = SharedDrCIF(
+            representations=reps, max_interval_depth=3, random_state=0
+        ).fit(X, y)
+        assert clf.predict(X2).shape == (10,)
+
+
 def test_drop_constant_features():
     """Constant/all-zero columns are dropped before the forest, the kept mask
     is applied at predict, and toggling the filter changes the count used."""
