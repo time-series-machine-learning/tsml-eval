@@ -98,9 +98,9 @@ interval_based_classifiers = [
     "quantdrcif-12",
     ["shareddrcif", "shared-drcif"],
     "shareddrcif-q35",
-    ["shareddrcif2", "shared-drcif2"],
-    "shareddrcif2-q35",
-    "shareddrcif2-banded",
+    ["fastdrcif", "fast-drcif"],
+    "fastdrcif-q35",
+    "fastdrcif-banded",
     "summary-intervals",
     ["randomintervals-500", "catch22-intervals-500"],
     ["randomintervalclassifier", "randomintervals", "catch22-intervals"],
@@ -800,20 +800,20 @@ def _set_classifier_interval_based(
         return SharedDrCIF(
             features="union35", random_state=random_state, n_jobs=n_jobs, **kwargs
         )
-    elif c == "shareddrcif2" or c == "shared-drcif2":
-        from tsml_eval._wip.classification import SharedDrCIF2
+    elif c == "fastdrcif" or c == "fast-drcif":
+        from tsml_eval._wip.classification import FastDrCIF
 
-        return SharedDrCIF2(random_state=random_state, n_jobs=n_jobs, **kwargs)
-    elif c == "shareddrcif2-q35":
-        from tsml_eval._wip.classification import SharedDrCIF2
+        return FastDrCIF(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "fastdrcif-q35":
+        from tsml_eval._wip.classification import FastDrCIF
 
-        return SharedDrCIF2(
+        return FastDrCIF(
             features="union35", random_state=random_state, n_jobs=n_jobs, **kwargs
         )
-    elif c == "shareddrcif2-banded":
-        from tsml_eval._wip.classification import SharedDrCIF2
+    elif c == "fastdrcif-banded":
+        from tsml_eval._wip.classification import FastDrCIF
 
-        return SharedDrCIF2(
+        return FastDrCIF(
             banded=True, random_state=random_state, n_jobs=n_jobs, **kwargs
         )
     elif c == "summary-intervals":

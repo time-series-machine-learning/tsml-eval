@@ -6,7 +6,7 @@ from aeon.testing.data_generation import make_example_3d_numpy
 from aeon.transformations.collection.feature_based import Catch22
 from aeon.utils.numba.stats import row_mean
 
-from tsml_eval._wip.classification import SharedDrCIF, SharedDrCIF2
+from tsml_eval._wip.classification import SharedDrCIF, FastDrCIF
 from tsml_eval._wip.classification._shared_interval_transform import (
     SharedIntervalTransform,
     drcif_random_intervals,
@@ -96,16 +96,16 @@ def test_drcif_random_intervals_respect_drcif_rule():
 
 
 def test_shared_drcif2_matches_shared_drcif_feature_dim():
-    """SharedDrCIF2 (random) and SharedDrCIF (dyadic) share feature dimension
-    and SharedDrCIF2 fits, predicts and is deterministic at a fixed seed."""
+    """FastDrCIF (random) and SharedDrCIF (dyadic) share feature dimension
+    and FastDrCIF fits, predicts and is deterministic at a fixed seed."""
     X, y, X2 = _data()
     d = SharedDrCIF(max_interval_depth=2, random_state=0).fit(X, y)
-    r = SharedDrCIF2(max_interval_depth=2, random_state=0).fit(X, y)
+    r = FastDrCIF(max_interval_depth=2, random_state=0).fit(X, y)
     assert r._transformer.n_features_ == d._transformer.n_features_
     assert r.interval_scheme == "random"
 
     p1 = r.predict_proba(X2)
-    p2 = SharedDrCIF2(max_interval_depth=2, random_state=0).fit(X, y).predict_proba(X2)
+    p2 = FastDrCIF(max_interval_depth=2, random_state=0).fit(X, y).predict_proba(X2)
     assert np.array_equal(p1, p2)
 
 
@@ -173,8 +173,8 @@ def test_banded_gates_features_by_length():
         if name == "PD_PeriodicityWang_th0_01":
             assert L >= 50
 
-    p1 = SharedDrCIF2(banded=True, max_interval_depth=3, random_state=0).fit(X, y).predict_proba(X2)
-    p2 = SharedDrCIF2(banded=True, max_interval_depth=3, random_state=0).fit(X, y).predict_proba(X2)
+    p1 = FastDrCIF(banded=True, max_interval_depth=3, random_state=0).fit(X, y).predict_proba(X2)
+    p2 = FastDrCIF(banded=True, max_interval_depth=3, random_state=0).fit(X, y).predict_proba(X2)
     assert np.array_equal(p1, p2)
 
 
