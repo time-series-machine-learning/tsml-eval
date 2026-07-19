@@ -310,6 +310,48 @@ def test_rdst_fixed_scheme():
     assert np.array_equal(p1, p2)  # deterministic
 
 
+def test_minimal_feature_pool():
+    """features='minimal' uses the 14-feature lean pool (5 catch22 + 7 summary +
+    2 PULSAR stats), fewer columns than drcif29, fits and is deterministic."""
+    from tsml_eval._wip.classification._pulsar_stats import (
+        row_mean_crossing,
+        row_prop_above_mean,
+    )
+    from tsml_eval._wip.classification._shared_interval_transform import (
+        MINIMAL_CATCH22,
+        SharedIntervalTransform,
+    )
+
+    # the PULSAR stats behave (order-sensitivity of mean-crossing)
+    a = np.array([[0.0, 2, 0, 2, 0, 2]])  # oscillating -> many crossings
+    b = np.array([[0.0, 0, 0, 2, 2, 2]])  # one crossing
+    assert row_mean_crossing(a)[0] > row_mean_crossing(b)[0]
+    assert np.allclose(row_prop_above_mean(np.array([[1.0, 2, 3, 4]]))[0], 0.5)
+
+    X, y, X2 = _data()
+    tmin = SharedIntervalTransform(
+        interval_scheme="random", features="minimal", random_state=0
+    ).fit(X)
+    tfull = SharedIntervalTransform(
+        interval_scheme="random", features="drcif29", random_state=0
+    ).fit(X)
+    assert len(MINIMAL_CATCH22) == 5
+    # per interval: 5 catch22 + 9 stats = 14 vs drcif29's 29
+    assert tmin.n_features_ < tfull.n_features_
+    # only the minimal catch22 subset appears
+    c22 = {n for _, _, _, _, _, k, n in tmin.column_meta_ if k == "catch22"}
+    assert c22 == set(MINIMAL_CATCH22)
+
+    clf = SharedDrCIF(features="minimal", max_interval_depth=3, random_state=0)
+    p1 = clf.fit(X, y).predict_proba(X2)
+    p2 = (
+        SharedDrCIF(features="minimal", max_interval_depth=3, random_state=0)
+        .fit(X, y)
+        .predict_proba(X2)
+    )
+    assert np.array_equal(p1, p2)
+
+
 def test_tree_type_dt():
     """tree_type='dt' builds a random-subspace ensemble of proper best-split
     decision trees, fits, predicts and is deterministic."""

@@ -39,6 +39,10 @@ from tsml_eval._wip.classification._quantile_stats import (
     row_quantile_75_centred,
     row_quantile_90,
 )
+from tsml_eval._wip.classification._pulsar_stats import (
+    row_mean_crossing,
+    row_prop_above_mean,
+)
 
 _STAT_FUNCS_29 = [
     row_mean,
@@ -56,6 +60,19 @@ _STAT_FUNCS_35 = _STAT_FUNCS_29 + [
     row_quantile_90,
     row_quantile_25_centred,
     row_quantile_75_centred,
+]
+# Minimal pool: the 7 summary stats + PULSAR's two cheap order-aware stats
+_STAT_FUNCS_MINIMAL = _STAT_FUNCS_29 + [row_mean_crossing, row_prop_above_mean]
+
+# Minimal catch22 subset: the cheap, high-importance features from the 27-dataset
+# importance assessment (all above/at uniform, low interval-scale cost). Drops the
+# expensive low-value tail (rs_range/dfa/periodicity/transition_matrix/...).
+MINIMAL_CATCH22 = [
+    "FC_LocalSimple_mean3_stderr",  # forecast_error
+    "CO_trev_1_num",  # trev
+    "SP_Summaries_welch_rect_centroid",  # centroid_freq
+    "CO_f1ecac",  # acf_timescale
+    "CO_FirstMin_ac",  # acf_first_min
 ]
 
 # Minimum interval length at which each catch22 feature is meaningful, keyed by
@@ -276,7 +293,7 @@ class SharedIntervalTransform:
         feature_thresholds=None,
         random_state=None,
     ):
-        if features not in ("drcif29", "union35"):
+        if features not in ("drcif29", "union35", "minimal"):
             raise ValueError(f"Unknown features input: {features}")
         if interval_scheme not in ("dyadic", "random", "fixed"):
             raise ValueError(f"Unknown interval_scheme input: {interval_scheme}")
@@ -301,9 +318,15 @@ class SharedIntervalTransform:
         )
         self.random_state = random_state
 
-        self._stat_funcs = (
-            _STAT_FUNCS_29 if features == "drcif29" else _STAT_FUNCS_35
-        )
+        if features == "drcif29":
+            self._stat_funcs = _STAT_FUNCS_29
+            self._catch22_names = feature_names
+        elif features == "union35":
+            self._stat_funcs = _STAT_FUNCS_35
+            self._catch22_names = feature_names
+        else:  # "minimal": 5 cheap-high-value catch22 + 7 summary + 2 PULSAR stats
+            self._stat_funcs = _STAT_FUNCS_MINIMAL
+            self._catch22_names = MINIMAL_CATCH22
         self._stat_names = [f.__name__ for f in self._stat_funcs]
         self._c22_cache = {}
         self._periodogram = (
@@ -314,8 +337,10 @@ class SharedIntervalTransform:
     def _eligible_catch22(self, length):
         """catch22 feature names computable at this interval length."""
         if not self.banded:
-            return feature_names
-        return [f for f in feature_names if length >= self.feature_thresholds[f]]
+            return self._catch22_names
+        return [
+            f for f in self._catch22_names if length >= self.feature_thresholds[f]
+        ]
 
     def _catch22_for(self, eligible):
         """Cached Catch22 transformer for a given eligible-feature tuple."""

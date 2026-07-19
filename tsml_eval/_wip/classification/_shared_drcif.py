@@ -30,9 +30,11 @@ class SharedDrCIF(BaseClassifier):
 
     Parameters
     ----------
-    features : "drcif29" or "union35", default="drcif29"
-        Per-interval attribute pool: the 29 DrCIF attributes (22 catch22 + 7
-        summary stats), or those plus the six quantile features.
+    features : "drcif29", "union35" or "minimal", default="drcif29"
+        Per-interval attribute pool. "drcif29" = 22 catch22 + 7 summary stats;
+        "union35" = those plus 6 quantile features; "minimal" = the data-driven
+        lean pool of 14 (5 cheap high-importance catch22 + 7 summary + 2 PULSAR
+        order-aware stats), dropping the expensive low-value catch22 tail.
     interval_scheme : "dyadic" or "random", default="random"
         Seeded random interval set using DrCIF's generation rule, or the fixed
         QUANT-style dyadic grid of the same size.

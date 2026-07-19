@@ -104,6 +104,8 @@ interval_based_classifiers = [
     "shareddrcif-dt",
     "fastdrcif-dt",
     "fastdrcif_d-dt",
+    "shareddrcif-min",
+    "rdstdrcif-min",
     ["rdstdrcif", "rdst-drcif"],
     "rdstdrcif-dt",
     ["pulsar", "pulsarclassifier"],
@@ -867,6 +869,19 @@ def _set_classifier_interval_based(
 
         return PULSARClassifier(
             random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
+    elif c == "shareddrcif-min":
+        from tsml_eval._wip.classification import SharedDrCIF
+
+        # lean pool: 5 cheap catch22 + 7 summary + 2 PULSAR stats
+        return SharedDrCIF(
+            features="minimal", random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
+    elif c == "rdstdrcif-min":
+        from tsml_eval._wip.classification import RDSTDrCIF
+
+        return RDSTDrCIF(
+            features="minimal", random_state=random_state, n_jobs=n_jobs, **kwargs
         )
     elif c == "summary-intervals":
         from aeon.classification.interval_based import RandomIntervalClassifier
