@@ -109,6 +109,11 @@ interval_based_classifiers = [
     ["rdstdrcif", "rdst-drcif"],
     "rdstdrcif-dt",
     ["pulsar", "pulsarclassifier"],
+    "pulsar-et",
+    "pulsar-ridge",
+    "pulsar-nopool",
+    "pulsar-nosel",
+    "pulsar-noar",
     "summary-intervals",
     ["randomintervals-500", "catch22-intervals-500"],
     ["randomintervalclassifier", "randomintervals", "catch22-intervals"],
@@ -869,6 +874,56 @@ def _set_classifier_interval_based(
 
         return PULSARClassifier(
             random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
+    elif c == "pulsar-et":
+        from tsml_eval._wip.classification._pulsar import PULSARClassifier
+
+        # ablation: ExtraTrees head only (no Ridge)
+        return PULSARClassifier(
+            classifiers=("extra_trees",),
+            random_state=random_state,
+            n_jobs=n_jobs,
+            **kwargs,
+        )
+    elif c == "pulsar-ridge":
+        from tsml_eval._wip.classification._pulsar import PULSARClassifier
+
+        # ablation: Ridge head only (no ExtraTrees) — is Ridge the secret sauce?
+        return PULSARClassifier(
+            classifiers=("ridge",),
+            random_state=random_state,
+            n_jobs=n_jobs,
+            **kwargs,
+        )
+    elif c == "pulsar-nopool":
+        from tsml_eval._wip.classification._pulsar import PULSARClassifier
+
+        # ablation: no hierarchical pooling (global level only)
+        return PULSARClassifier(
+            hierarchical_depth=1,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            **kwargs,
+        )
+    elif c == "pulsar-nosel":
+        from tsml_eval._wip.classification._pulsar import PULSARClassifier
+
+        # ablation: no Fisher feature selection (keep all candidate features)
+        return PULSARClassifier(
+            feature_selection_percentage=100,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            **kwargs,
+        )
+    elif c == "pulsar-noar":
+        from tsml_eval._wip.classification._pulsar import PULSARClassifier
+
+        # ablation: drop the (slow) autoregressive representation
+        return PULSARClassifier(
+            representations=("original", "periodogram", "derivative"),
+            random_state=random_state,
+            n_jobs=n_jobs,
+            **kwargs,
         )
     elif c == "shareddrcif-min":
         from tsml_eval._wip.classification import SharedDrCIF
