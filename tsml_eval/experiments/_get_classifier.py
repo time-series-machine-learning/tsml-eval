@@ -105,6 +105,8 @@ interval_based_classifiers = [
     "fastdrcif-dt",
     "fastdrcif_d-dt",
     ["rdstdrcif", "rdst-drcif"],
+    "rdstdrcif-dt",
+    ["pulsar", "pulsarclassifier"],
     "summary-intervals",
     ["randomintervals-500", "catch22-intervals-500"],
     ["randomintervalclassifier", "randomintervals", "catch22-intervals"],
@@ -853,6 +855,19 @@ def _set_classifier_interval_based(
 
         # RDST/WEASEL-style: fixed interval lengths + log-uniform dilation
         return RDSTDrCIF(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "rdstdrcif-dt":
+        from tsml_eval._wip.classification import RDSTDrCIF
+
+        # RDSTDrCIF with the random-subspace decision-tree ensemble
+        return RDSTDrCIF(
+            tree_type="dt", random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
+    elif c == "pulsar" or c == "pulsarclassifier":
+        from tsml_eval._wip.classification._pulsar import PULSARClassifier
+
+        return PULSARClassifier(
+            random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
     elif c == "summary-intervals":
         from aeon.classification.interval_based import RandomIntervalClassifier
         from aeon.transformations.collection.feature_based import SevenNumberSummary
