@@ -106,6 +106,7 @@ interval_based_classifiers = [
     "fastdrcif_d-dt",
     "shareddrcif-min",
     "rdstdrcif-min",
+    "fastdrcif_d-min",
     ["rdstdrcif", "rdst-drcif"],
     "rdstdrcif-dt",
     ["pulsar", "pulsarclassifier"],
@@ -936,6 +937,13 @@ def _set_classifier_interval_based(
         from tsml_eval._wip.classification import RDSTDrCIF
 
         return RDSTDrCIF(
+            features="minimal", random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
+    elif c == "fastdrcif_d-min":
+        from tsml_eval._wip.classification import FastDrCIF_D
+
+        # full lean config: dilation + banding + minimal pool
+        return FastDrCIF_D(
             features="minimal", random_state=random_state, n_jobs=n_jobs, **kwargs
         )
     elif c == "summary-intervals":
