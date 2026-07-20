@@ -310,6 +310,38 @@ def test_rdst_fixed_scheme():
     assert np.array_equal(p1, p2)  # deterministic
 
 
+def test_fire_ensemble():
+    """FIRE = settled transform + averaged (ExtraTrees, Ridge) heads. The single
+    ExtraTrees head reproduces FastDrCIF_D(minimal); the two-head default differs
+    from it and stays deterministic."""
+    from sklearn.pipeline import Pipeline
+
+    from tsml_eval._wip.classification import FIRE, FastDrCIF_D
+
+    X, y, X2 = _data()
+
+    f = FIRE(max_interval_depth=3, random_state=0).fit(X, y)
+    # settled architecture is fixed, both heads fitted
+    assert f.interval_scheme == "random"
+    assert f.dilation is True and f.banded is True and f.features == "minimal"
+    assert set(f._heads_) == {"extratrees", "ridge"}
+    assert isinstance(f._heads_["ridge"], Pipeline)  # scaled Ridge
+    p = f.predict_proba(X2)
+    assert p.shape == (10, 2) and np.allclose(p.sum(axis=1), 1)
+
+    # single ExtraTrees head == FastDrCIF_D(minimal)
+    et = FIRE(heads=("extratrees",), max_interval_depth=3, random_state=0).fit(X, y)
+    fd = FastDrCIF_D(features="minimal", max_interval_depth=3, random_state=0).fit(X, y)
+    assert np.array_equal(et.predict_proba(X2), fd.predict_proba(X2))
+
+    # two heads differ from ExtraTrees alone (Ridge changes the output)
+    assert not np.array_equal(p, et.predict_proba(X2))
+
+    # deterministic
+    p2 = FIRE(max_interval_depth=3, random_state=0).fit(X, y).predict_proba(X2)
+    assert np.array_equal(p, p2)
+
+
 def test_minimal_feature_pool():
     """features='minimal' uses the 14-feature lean pool (5 catch22 + 7 summary +
     2 PULSAR stats), fewer columns than drcif29, fits and is deterministic."""

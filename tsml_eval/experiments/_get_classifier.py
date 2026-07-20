@@ -109,6 +109,8 @@ interval_based_classifiers = [
     "fastdrcif_d-min",
     ["rdstdrcif", "rdst-drcif"],
     "rdstdrcif-dt",
+    "fire",
+    "fire-et",
     ["pulsar", "pulsarclassifier"],
     "pulsar-et",
     "pulsar-ridge",
@@ -869,6 +871,19 @@ def _set_classifier_interval_based(
         # RDSTDrCIF with the random-subspace decision-tree ensemble
         return RDSTDrCIF(
             tree_type="dt", random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
+    elif c == "fire":
+        from tsml_eval._wip.classification import FIRE
+
+        # Fast Interval Representation Ensemble: the consolidated DrCIF successor
+        # (ExtraTrees + scaled Ridge heads averaged)
+        return FIRE(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "fire-et":
+        from tsml_eval._wip.classification import FIRE
+
+        # FIRE with the ExtraTrees head only (isolates the Ridge contribution)
+        return FIRE(
+            heads=("extratrees",), random_state=random_state, n_jobs=n_jobs, **kwargs
         )
     elif c == "pulsar" or c == "pulsarclassifier":
         from tsml_eval._wip.classification._pulsar import PULSARClassifier

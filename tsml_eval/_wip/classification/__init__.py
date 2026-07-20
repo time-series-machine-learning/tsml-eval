@@ -10,9 +10,11 @@ __all__ = [
     "FastDrCIF_D",
     "RDSTDrCIF",
     "PULSARClassifier",
+    "FIRE",
 ]
 
 from tsml_eval._wip.classification._bagged_quant import BaggedQUANT
+from tsml_eval._wip.classification._fire import FIRE
 from tsml_eval._wip.classification._pulsar import PULSARClassifier
 from tsml_eval._wip.classification._fast_drcif import (
     FastDrCIF,
