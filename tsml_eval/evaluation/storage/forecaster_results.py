@@ -1,7 +1,7 @@
 """Class for storing and loading results from a forecasting experiment."""
 
 import numpy as np
-from sklearn.metrics import mean_absolute_percentage_error
+from sklearn.metrics import mean_absolute_error, mean_absolute_percentage_error
 
 from tsml_eval.evaluation.storage.estimator_results import EstimatorResults
 from tsml_eval.utils.results_writing import write_forecasting_results
@@ -100,6 +100,21 @@ class ForecasterResults(EstimatorResults):
         self.forecasting_horizon = None
 
         self.mean_absolute_percentage_error = None
+        self.symmetric_mean_absolute_percentage_error = None
+        self.mean_absolute_error = None
+        self.root_mean_squared_error = None
+        self.naive_scaled_mean_absolute_error = None
+
+        # Official M4 statistics. Only computed when a training series context is
+        # attached via set_m4_context (e.g. by passing data_path to
+        # evaluate_forecasters_by_problem); None otherwise, and the OWA statistic is
+        # dropped from evaluations that do not have it.
+        self.m4_mean_absolute_scaled_error = None
+        self.naive2_symmetric_mean_absolute_percentage_error = None
+        self.naive2_mean_absolute_scaled_error = None
+        self.overall_weighted_average = None
+        self._m4_train = None
+        self._m4_seasonal_period = None
 
         super().__init__(
             dataset_name=dataset_name,
@@ -116,9 +131,20 @@ class ForecasterResults(EstimatorResults):
         )
 
     # var_name: (display_name, higher is better, is timing)
+    # To re-enable timing/memory diagrams, add back to _DISABLED_STATISTICS:
+    #   "fit_time", "predict_time", "memory_usage"
     statistics = {
         "mean_absolute_percentage_error": ("MAPE", False, False),
-        **EstimatorResults.statistics,
+        "symmetric_mean_absolute_percentage_error": ("sMAPE", False, False),
+        "mean_absolute_error": ("MAE", False, False),
+        "root_mean_squared_error": ("RMSE", False, False),
+        "naive_scaled_mean_absolute_error": ("MASE", False, False),
+        "overall_weighted_average": ("OWA", False, False),
+        **{
+            k: v
+            for k, v in EstimatorResults.statistics.items()
+            if k not in {"fit_time", "predict_time", "memory_usage"}
+        },
     }
 
     def save_to_file(self, file_path, full_path=True):
@@ -205,6 +231,110 @@ class ForecasterResults(EstimatorResults):
                 self.target_labels, self.predictions
             )
 
+        if self.symmetric_mean_absolute_percentage_error is None or overwrite:
+            denom = np.abs(self.target_labels) + np.abs(self.predictions)
+            # treat both-zero as zero error
+            smape_vals = np.where(
+                denom == 0, 0.0, np.abs(self.target_labels - self.predictions) / denom
+            )
+            self.symmetric_mean_absolute_percentage_error = float(
+                np.mean(smape_vals) * 2
+            )
+
+        if self.mean_absolute_error is None or overwrite:
+            self.mean_absolute_error = float(
+                mean_absolute_error(self.target_labels, self.predictions)
+            )
+
+        if self.root_mean_squared_error is None or overwrite:
+            self.root_mean_squared_error = float(
+                np.sqrt(np.mean((self.target_labels - self.predictions) ** 2))
+            )
+
+        if self._m4_train is not None and (
+            self.overall_weighted_average is None or overwrite
+        ):
+            self._calculate_m4_statistics()
+
+        if self.naive_scaled_mean_absolute_error is None or overwrite:
+            # Approximates MASE using the test set. Denominator is the mean absolute
+            # step change in the test actuals (lag-1 naive MAE on test set).
+            # Falls back to mean(|y[t]|) if the series is constant, and 0.0 if all
+            # actuals are zero. Values <1 mean the model beats naive; >1 means it does not.
+            naive_mae = np.mean(np.abs(np.diff(self.target_labels))) if len(self.target_labels) > 1 else 0.0
+            if naive_mae == 0:
+                naive_mae = np.mean(np.abs(self.target_labels))
+            self.naive_scaled_mean_absolute_error = float(
+                self.mean_absolute_error / naive_mae
+            ) if naive_mae != 0 else 0.0
+
+    def set_m4_context(self, train, seasonal_period):
+        """Attach the training series needed for official M4 statistics (OWA).
+
+        The M4 competition ranked entries by OWA, which requires the training series:
+        MASE is scaled by the in-sample seasonal naive error, and both sMAPE and MASE
+        are expressed relative to the Naive2 benchmark (seasonally adjusted naive).
+        Neither can be derived from the stored predictions alone, so these statistics
+        are only computed when this context is attached.
+
+        Parameters
+        ----------
+        train : np.ndarray
+            The training series the forecaster was fit on, i.e. the full series minus
+            the ``len(target_labels)`` test values.
+        seasonal_period : int
+            The M4 frequency used for MASE scaling and Naive2 (yearly=1, quarterly=4,
+            monthly=12, weekly=1, daily=1, hourly=24 in the original competition).
+        """
+        self._m4_train = np.asarray(train, dtype=float)
+        self._m4_seasonal_period = int(seasonal_period)
+        self.overall_weighted_average = None
+
+    def _calculate_m4_statistics(self):
+        """Compute official M4 MASE, Naive2 baselines and per-series OWA."""
+        train = self._m4_train
+        ppy = self._m4_seasonal_period
+        y = np.asarray(self.target_labels, dtype=float)
+        preds = np.asarray(self.predictions, dtype=float)
+
+        # Official M4 MASE scales by the in-sample seasonal naive MAE, using the
+        # frequency unconditionally (no seasonality test).
+        m = ppy if 0 < ppy < len(train) else 1
+        mase_denominator = np.mean(np.abs(train[m:] - train[:-m]))
+
+        naive2 = _naive2_forecast(train, len(y), ppy)
+        self.naive2_symmetric_mean_absolute_percentage_error = _smape(y, naive2)
+
+        if mase_denominator == 0:
+            self.m4_mean_absolute_scaled_error = np.nan
+            self.naive2_mean_absolute_scaled_error = np.nan
+        else:
+            self.m4_mean_absolute_scaled_error = float(
+                np.mean(np.abs(y - preds)) / mase_denominator
+            )
+            self.naive2_mean_absolute_scaled_error = float(
+                np.mean(np.abs(y - naive2)) / mase_denominator
+            )
+
+        model_smape = _smape(y, preds)
+        if (
+            self.naive2_symmetric_mean_absolute_percentage_error == 0
+            or self.naive2_mean_absolute_scaled_error == 0
+            or not np.isfinite(self.m4_mean_absolute_scaled_error)
+            or not np.isfinite(self.naive2_mean_absolute_scaled_error)
+        ):
+            self.overall_weighted_average = np.nan
+        else:
+            self.overall_weighted_average = float(
+                0.5
+                * (
+                    model_smape
+                    / self.naive2_symmetric_mean_absolute_percentage_error
+                    + self.m4_mean_absolute_scaled_error
+                    / self.naive2_mean_absolute_scaled_error
+                )
+            )
+
     def infer_size(self, overwrite=False):
         """
         Infer and return the size of the dataset used in the results.
@@ -219,6 +349,76 @@ class ForecasterResults(EstimatorResults):
         """
         if self.forecasting_horizon is None or overwrite:
             self.forecasting_horizon = len(self.target_labels)
+
+
+def _smape(y_true, y_pred):
+    """Symmetric MAPE, as a fraction (multiply by 100 for the M4 percentage form)."""
+    denom = np.abs(y_true) + np.abs(y_pred)
+    vals = np.where(denom == 0, 0.0, np.abs(y_true - y_pred) / denom)
+    return float(np.mean(vals) * 2)
+
+
+def _acf(x, max_lag):
+    """Autocorrelation for lags 1..max_lag, R acf-style (biased, overall mean)."""
+    n = len(x)
+    x_bar = np.mean(x)
+    denominator = np.sum((x - x_bar) ** 2)
+    if denominator == 0:
+        return np.zeros(max_lag)
+    return np.array(
+        [
+            np.sum((x[: n - lag] - x_bar) * (x[lag:] - x_bar)) / denominator
+            for lag in range(1, max_lag + 1)
+        ]
+    )
+
+
+def _seasonality_test(x, ppy):
+    """M4 benchmark seasonality test: 90% significance autocorrelation at lag ppy."""
+    if ppy <= 1 or len(x) < 3 * ppy:
+        return False
+    r = _acf(x, ppy)
+    limit = 1.645 / np.sqrt(len(x)) * np.sqrt(1 + 2 * np.sum(r[:-1] ** 2))
+    result = np.abs(r[-1]) > limit
+    return bool(result) if np.isfinite(r[-1]) else False
+
+
+def _seasonal_indices(x, ppy):
+    """Seasonal indices from classical multiplicative decomposition (R decompose).
+
+    Returns indices for seasonal positions 0..ppy-1, where the position of x[t] is
+    t % ppy, normalised to mean 1.
+    """
+    if ppy % 2 == 0:
+        weights = np.concatenate(([0.5], np.ones(ppy - 1), [0.5])) / ppy
+    else:
+        weights = np.ones(ppy) / ppy
+    trend = np.convolve(x, weights, mode="valid")
+    offset = (len(weights) - 1) // 2
+    with np.errstate(divide="ignore", invalid="ignore"):
+        detrended = x[offset : offset + len(trend)] / trend
+    positions = (offset + np.arange(len(detrended))) % ppy
+    indices = np.array(
+        [np.nanmean(np.where(positions == s, detrended, np.nan)) for s in range(ppy)]
+    )
+    return indices / np.mean(indices)
+
+
+def _naive2_forecast(train, horizon, ppy):
+    """The M4 Naive2 benchmark: naive on the seasonally adjusted series.
+
+    If the series tests as seasonal at ppy, it is deseasonalised via classical
+    multiplicative decomposition, the last value is repeated over the horizon, and the
+    forecasts are reseasonalised. Otherwise this is a plain naive forecast.
+    """
+    train = np.asarray(train, dtype=float)
+    if _seasonality_test(train, ppy):
+        indices = _seasonal_indices(train, ppy)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            deseasonalised = train / indices[np.arange(len(train)) % ppy]
+        out_indices = indices[(len(train) + np.arange(horizon)) % ppy]
+        return deseasonalised[-1] * out_indices
+    return np.full(horizon, train[-1])
 
 
 def load_forecaster_results(file_path, calculate_stats=True, verify_values=True):

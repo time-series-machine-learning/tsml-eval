@@ -61,11 +61,14 @@ def run_experiment(args, overwrite=False):
         print("Input args = ", args)
         args = parse_args(args)
 
-        # retrain and the optional point-subset selectors are passed via -kw but are
-        # not estimator parameters, so pop them before constructing the forecaster.
+        # retrain/fixed_horizon and the optional point-subset selectors are passed via
+        # -kw but are not estimator parameters, so pop them before constructing the
+        # forecaster. fixed_horizon selects the M4-style protocol: train once on the
+        # series minus the last @horizon values, then forecast the whole horizon.
         retrain = False
         if 'retrain' in args.kwargs:
             retrain = args.kwargs.pop('retrain')
+        fixed_horizon = args.kwargs.pop('fixed_horizon', False)
         start = args.kwargs.pop('start', None)
         end = args.kwargs.pop('end', None)
 
@@ -119,6 +122,7 @@ def run_experiment(args, overwrite=False):
                 retrain=retrain,
                 start=start,
                 end=end,
+                fixed_horizon=fixed_horizon,
             )
     # local run (no args)
     else:

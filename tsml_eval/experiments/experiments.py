@@ -1159,6 +1159,7 @@ def run_forecasting_experiment(
     attribute_file_path=None,
     att_max_shape=0,
     benchmark_time=True,
+    prediction_horizon=None,
 ):
     """Run a forecasting experiment and save the results to file.
 
@@ -1187,9 +1188,26 @@ def run_forecasting_experiment(
     benchmark_time : bool, default=True
         Whether to benchmark the hardware used with a simple function and write the
         results. This will typically take ~2 seconds, but is hardware dependent.
+    prediction_horizon : int or None, default=None
+        If set, run a fixed-horizon (M4-style) experiment: the forecaster is fit once
+        on ``train`` and then forecasts ``prediction_horizon`` steps recursively,
+        feeding its own predictions back as inputs (the iterative strategy of
+        ``BaseForecaster.iterative_forecast``). ``test`` must be the 1D array of the
+        ``prediction_horizon`` true values following ``train``. If None, the default
+        one-step-ahead evaluation over the test values is used.
     """
     if not isinstance(forecaster, BaseForecaster):
         raise TypeError("forecaster must be an aeon forecaster.")
+
+    if prediction_horizon is not None and (
+        train.ndim != 1 or test.ndim != 1 or len(test) != prediction_horizon
+    ):
+        raise ValueError(
+            "prediction_horizon requires 1D train and test series with "
+            f"len(test) == prediction_horizon, got train.ndim={train.ndim}, "
+            f"test.ndim={test.ndim}, len(test)={len(test)}, "
+            f"prediction_horizon={prediction_horizon}."
+        )
 
     if forecaster_name is None:
         forecaster_name = type(forecaster).__name__
@@ -1233,7 +1251,17 @@ def run_forecasting_experiment(
         fit_time += int(round(getattr(forecaster, "_fit_time_milli", 0)))
 
         start = int(round(time.time() * 1000))
-        if test.ndim == 2:
+        if prediction_horizon is not None:
+            # Fixed-horizon (M4-style) forecasting: fit once on train (above), then
+            # forecast prediction_horizon steps recursively, feeding predictions back
+            # as inputs. Mirrors BaseForecaster.iterative_forecast but keeps the
+            # fit/predict timing split of this function.
+            test_true = test
+            y_hist = train
+            for index in range(prediction_horizon):
+                test_preds[index] = forecaster.predict(y_hist)
+                y_hist = np.append(y_hist, test_preds[index])
+        elif test.ndim == 2:
             for index, prediction in enumerate(test):
                 test_true[index] = prediction[-1]
                 test_preds[index] = forecaster.predict(prediction[:-1])
@@ -1422,6 +1450,7 @@ def load_and_run_remote_forecasting_experiment(
     retrain=False,
     start=None,
     end=None,
+    fixed_horizon=False,
 ):
     """Load a dataset and run a regression experiment.
 
@@ -1466,9 +1495,20 @@ def load_and_run_remote_forecasting_experiment(
         a point-specific dataset name (i.e. ``{dataset_name}_point{start}`` for a single
         point or ``{dataset_name}_points{start}-{end}`` for a range) so that separate
         per-point jobs do not overwrite each other.
+    fixed_horizon : bool, default=False
+        If True, run the M4/Monash-style fixed-horizon protocol instead of the default
+        rolling one-step-ahead evaluation: the last ``@horizon`` values of the series
+        (read from the .tsf metadata, e.g. hourly=48, weekly=13, daily=14, monthly=18,
+        quarterly=8, yearly=6 for M4) are held out as the test set, the forecaster is
+        fit once on the remainder (the original competition training data, untruncated)
+        and then forecasts the whole horizon recursively. Cannot be combined with
+        ``retrain``.
     """
     if forecaster_name is None:
         forecaster_name = type(forecaster).__name__
+
+    if fixed_horizon and retrain:
+        raise ValueError("fixed_horizon and retrain cannot both be True.")
 
     # When running a subset of retrain points, write results under a point-specific
     # dataset name so per-point jobs do not clobber each other's result files. The
@@ -1521,11 +1561,30 @@ def load_and_run_remote_forecasting_experiment(
     if not os.path.exists(data_full_path):
         raise FileExistsError(f"Cannot load {data_full_path} for dataset {dataset}. Did you run download_datasets.py beforehand?")
     else:
-        df, _ = load_from_tsf_file(data_full_path)
+        df, metadata = load_from_tsf_file(data_full_path)
         series = df.loc[df['series_name'].eq(series_name), 'series_value'].iat[0]
     series = np.asarray(series, dtype=float)
     assert(np.isfinite(series).all())
-    if retrain:
+    prediction_horizon = None
+    if fixed_horizon:
+        # M4/Monash fixed-horizon evaluation: the .tsf series contain the full data
+        # (train + test), and the @horizon metadata gives the competition forecast
+        # horizon. Hold out the last horizon values as test and train on the rest,
+        # reproducing the original competition train/test split.
+        prediction_horizon = metadata.get("forecast_horizon")
+        if not prediction_horizon:
+            raise ValueError(
+                f"fixed_horizon requires a @horizon attribute in {data_full_path}, "
+                "but none was found."
+            )
+        if len(series) <= prediction_horizon:
+            raise ValueError(
+                f"Series {dataset_name} (length {len(series)}) is too short for "
+                f"forecast horizon {prediction_horizon}."
+            )
+        train = series[:-prediction_horizon]
+        test = series[-prediction_horizon:]
+    elif retrain:
         if start is None:
             start = 0
         if end is None:
@@ -1577,4 +1636,5 @@ def load_and_run_remote_forecasting_experiment(
         attribute_file_path=attribute_file_path,
         att_max_shape=att_max_shape,
         benchmark_time=benchmark_time,
+        prediction_horizon=prediction_horizon,
     )

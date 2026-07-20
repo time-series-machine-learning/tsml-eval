@@ -891,9 +891,27 @@ def evaluate_forecasters(
         The names of the estimator for each forecaster result. If None, uses
         the estimator_name attribute of each forecaster result.
     """
+    # OWA needs the training series (see ForecasterResults.set_m4_context, attached by
+    # passing data_path to evaluate_forecasters_by_problem). Drop the statistic when
+    # any result is missing it so evaluations without train data work unchanged.
+    statistics = dict(ForecasterResults.statistics)
+    n_missing_owa = sum(
+        1
+        for fr in forecaster_results
+        if getattr(fr, "overall_weighted_average", None) is None
+    )
+    if n_missing_owa > 0:
+        statistics.pop("overall_weighted_average", None)
+        if n_missing_owa < len(forecaster_results):
+            warnings.warn(
+                f"{n_missing_owa} of {len(forecaster_results)} forecaster results "
+                "have no M4 training context, skipping the OWA statistic.",
+                stacklevel=2,
+            )
+
     _evaluate_estimators(
         forecaster_results,
-        ForecasterResults.statistics,
+        statistics,
         save_path,
         error_on_missing,
         continue_on_missing,
@@ -972,6 +990,7 @@ def evaluate_forecasters_by_problem(
     eval_name=None,
     verify_results=True,
     verbose=False,
+    data_path=None,
 ):
     """
     Evaluate multiple forecasters on multiple datasets from file using standard paths.
@@ -1023,6 +1042,17 @@ def evaluate_forecasters_by_problem(
         If the verification should be performed on the loaded results values.
     verbose : bool, default=False
         If verbose output should be printed.
+    data_path : str or None, default=None
+        Optional path to the directory of Monash .tsf data files the experiments were
+        run on (i.e. the data_path given to the fixed-horizon experiments). If set,
+        the training series for each result is reloaded and the official M4 statistics
+        are computed: an OWA statistic is added to the evaluation, and the official
+        aggregate OWA per forecaster (sMAPE and MASE averaged over all series relative
+        to the Naive2 benchmark, as published in the M4 competition) is written to
+        m4_owa_aggregate.csv in save_path. Results whose stored test values do not
+        match the tail of the loaded series (e.g. non fixed-horizon runs) are skipped
+        with a warning. If None (default), evaluation is unchanged and no train/test
+        data is required.
     """
     load_path, forecaster_names, dataset_names, resamples = _load_by_problem_init(
         "forecaster",
@@ -1108,6 +1138,10 @@ def evaluate_forecasters_by_problem(
             else:
                 print("\n\n" + msg)  # noqa: T201
 
+    if data_path is not None:
+        _attach_m4_context(forecaster_results, data_path)
+        _write_m4_aggregate_owa(forecaster_results, names, save_path)
+
     evaluate_forecasters(
         forecaster_results,
         save_path,
@@ -1116,6 +1150,136 @@ def evaluate_forecasters_by_problem(
         eval_name=eval_name,
         estimator_names=names,
     )
+
+
+# The seasonal periods used by the original M4 competition for MASE scaling and the
+# Naive2 benchmark. Note weekly and daily are treated as non-seasonal in M4, unlike
+# the "natural" periods used when fitting seasonal models (weekly=52, daily=7).
+_M4_FREQUENCY_TO_SEASONAL_PERIOD = {
+    "yearly": 1,
+    "quarterly": 4,
+    "monthly": 12,
+    "weekly": 1,
+    "daily": 1,
+    "hourly": 24,
+}
+
+
+def _attach_m4_context(forecaster_results, data_path):
+    """Attach training series from .tsf files so official M4 statistics are computed.
+
+    Each result's dataset name is split into <dataset>_<series> (matching the remote
+    forecasting experiments), the .tsf is loaded once per dataset, and the series minus
+    the stored test values becomes the training context. Results whose stored test
+    values do not match the tail of the series (e.g. non fixed-horizon runs) are
+    skipped.
+    """
+    from aeon.datasets import load_from_tsf_file
+
+    cache = {}
+    n_attached = 0
+    skipped = []
+    for fr in forecaster_results:
+        dataset_name = fr.dataset_name
+        if "_" not in dataset_name:
+            skipped.append(f"{dataset_name}: no series suffix in dataset name")
+            continue
+        dataset, series_name = dataset_name.rsplit("_", 1)
+
+        if dataset not in cache:
+            tsf_path = f"{data_path}/{dataset}/{dataset}.tsf"
+            if not os.path.exists(tsf_path):
+                warnings.warn(
+                    f"No .tsf file at {tsf_path}, cannot compute M4 statistics for "
+                    f"its series.",
+                    stacklevel=2,
+                )
+                cache[dataset] = None
+            else:
+                df, metadata = load_from_tsf_file(tsf_path)
+                frequency = (metadata.get("frequency") or "").strip().lower()
+                if frequency not in _M4_FREQUENCY_TO_SEASONAL_PERIOD:
+                    warnings.warn(
+                        f"Unknown frequency {frequency!r} for {dataset}, using "
+                        "seasonal period 1 for M4 statistics.",
+                        stacklevel=2,
+                    )
+                cache[dataset] = (
+                    dict(zip(df["series_name"], df["series_value"])),
+                    _M4_FREQUENCY_TO_SEASONAL_PERIOD.get(frequency, 1),
+                )
+
+        if cache[dataset] is None:
+            skipped.append(f"{dataset_name}: no .tsf file")
+            continue
+        series_map, seasonal_period = cache[dataset]
+        if series_name not in series_map:
+            skipped.append(f"{dataset_name}: series {series_name} not in {dataset}")
+            continue
+
+        series = np.asarray(series_map[series_name], dtype=float)
+        horizon = len(fr.target_labels)
+        if len(series) <= horizon or not np.allclose(
+            series[-horizon:], fr.target_labels, rtol=1e-6, atol=1e-8
+        ):
+            skipped.append(
+                f"{dataset_name}: stored test values do not match the last "
+                f"{horizon} series values (not a fixed-horizon result?)"
+            )
+            continue
+
+        fr.set_m4_context(series[:-horizon], seasonal_period)
+        fr.calculate_statistics()
+        n_attached += 1
+
+    print(  # noqa: T201
+        f"\nM4 statistics: training context attached for {n_attached} of "
+        f"{len(forecaster_results)} results."
+    )
+    if skipped:
+        examples = "\n".join(skipped[:5])
+        warnings.warn(
+            f"Could not compute M4 statistics for {len(skipped)} results, e.g.:\n"
+            f"{examples}",
+            stacklevel=2,
+        )
+
+
+def _write_m4_aggregate_owa(forecaster_results, names, save_path):
+    """Write the official aggregate M4 OWA per forecaster to a csv.
+
+    The M4 competition OWA is computed at the aggregate level: sMAPE and MASE are
+    averaged over all series first, then divided by the Naive2 benchmark averages.
+    This differs from averaging the per-series OWA statistic, so it is written
+    separately here for direct comparison with published M4 results. sMAPE is written
+    as a percentage, matching the published tables.
+    """
+    groups = {}
+    for fr, name in zip(forecaster_results, names):
+        if getattr(fr, "overall_weighted_average", None) is not None:
+            groups.setdefault(name, []).append(fr)
+    if not groups:
+        return
+
+    os.makedirs(save_path, exist_ok=True)
+    out_file = f"{save_path}/m4_owa_aggregate.csv"
+    with open(out_file, "w") as file:
+        file.write("estimator,n_series,smape_pct,mase,naive2_smape_pct,naive2_mase,owa\n")
+        for name, frs in groups.items():
+            smape = np.nanmean(
+                [fr.symmetric_mean_absolute_percentage_error for fr in frs]
+            )
+            mase = np.nanmean([fr.m4_mean_absolute_scaled_error for fr in frs])
+            n2_smape = np.nanmean(
+                [fr.naive2_symmetric_mean_absolute_percentage_error for fr in frs]
+            )
+            n2_mase = np.nanmean([fr.naive2_mean_absolute_scaled_error for fr in frs])
+            owa = 0.5 * (smape / n2_smape + mase / n2_mase)
+            file.write(
+                f"{name},{len(frs)},{smape * 100},{mase},"
+                f"{n2_smape * 100},{n2_mase},{owa}\n"
+            )
+    print(f"Official M4 aggregate OWA written to {out_file}")  # noqa: T201
 
 
 def _evaluate_estimators(
