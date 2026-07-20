@@ -6,8 +6,9 @@ model, but replaces the per-tree interval forest with a shared-transform
 architecture and an extensible ensemble of classifier heads.
 
 Transform (computed ONCE, not per tree):
-  * random-length intervals drawn once, with dilation (stride sampling scaled to
-    interval length) expanding the receptive field at no extra feature cost;
+  * random-length CONTIGUOUS intervals drawn once (no dilation — dilation is a
+    receptive-field/convolutional idea off-paradigm for interval classifiers,
+    and it was accuracy-neutral in testing);
   * length-gating: short intervals skip catch22 features degenerate at that
     length;
   * a lean 14-feature pool (7 summary stats + 2 order-aware PULSAR stats + the 5
@@ -107,7 +108,7 @@ class FIRE(SharedDrCIF):
             max_interval_depth=max_interval_depth,
             max_interval_prop=max_interval_prop,
             banded=True,
-            dilation=True,
+            dilation=False,
             representations=representations,
             drop_constant=drop_constant,
             tree_type="extra",
@@ -163,7 +164,7 @@ class FIRE(SharedDrCIF):
             max_depth=self.max_interval_depth,
             max_interval_prop=self.max_interval_prop,
             banded=True,
-            dilation=True,
+            dilation=False,
             representations=self.representations,
             random_state=self.random_state,
         )
