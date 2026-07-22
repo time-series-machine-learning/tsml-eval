@@ -8,7 +8,7 @@ from joblib import Parallel, delayed
 from numba import njit
 from numba.typed import List as NumbaList
 from sklearn.utils import check_random_state
-from typing_extensions import Unpack
+from typing import Unpack
 
 from aeon.classification.base import BaseClassifier
 from aeon.distances.elastic._bounding_matrix import create_bounding_matrix

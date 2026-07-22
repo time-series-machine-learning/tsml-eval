@@ -1,8 +1,5 @@
 """Tests for building HIVE-COTE from file."""
 
-__maintainer__ = ["MatthewMiddlehurst"]
-
-
 import numpy as np
 from aeon.datasets import load_arrow_head, load_italy_power_demand
 from numpy.testing import assert_array_almost_equal
@@ -55,6 +52,14 @@ def test_hivecote_from_file():
 
     assert probas.shape == (X_test.shape[0], 2)
     assert_array_almost_equal(probas[0], np.array([0.0785, 0.9215]), decimal=4)
+
+    # TDE: 12797
+    # STC: 7206112
+    # DrCIF: 303159
+    # Arsenal: 7722
+    # within 1% of 7529790
+
+    assert 7454493 <= hc2.fit_time_millis_ <= 7605087
 
 
 def test_tuned_hivecote_from_file():
