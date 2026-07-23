@@ -179,6 +179,7 @@ class ClassifierResults(EstimatorResults):
         "sensitivity": ("Sensitivity", True, False),
         "specificity": ("Specificity", True, False),
         "f1_score": ("F1", True, False),
+        "fit_and_estimate_time": ("FitAndEstimateTime", False, True),
         **EstimatorResults.statistics,
     }
 
