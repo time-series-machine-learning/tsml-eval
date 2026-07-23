@@ -1347,6 +1347,7 @@ def load_and_run_forecasting_experiment(
     att_max_shape=0,
     benchmark_time=True,
     overwrite=False,
+    adaptive_window=False,
 ):
     """Load a dataset and run a regression experiment.
 
@@ -1377,6 +1378,10 @@ def load_and_run_forecasting_experiment(
     overwrite : bool, default=False
         If set to False, this will only build results if there is not a result file
         already present. If True, it will overwrite anything already there.
+    adaptive_window : bool, default=False
+        If True, and the forecaster has a ``window`` attribute, shrink the window to
+        half the training series length whenever the series is shorter than twice the
+        window, so window-based forecasters can run on short series.
     """
     if forecaster_name is None:
         forecaster_name = type(forecaster).__name__
@@ -1408,6 +1413,10 @@ def load_and_run_forecasting_experiment(
         f"{problem_path}/{dataset}/{dataset}_TEST.csv", index_col=0
     ).squeeze("columns")
     test = test.astype(float).to_numpy()
+
+    # Opt-in: shrink a windowed forecaster's window for short training series.
+    if adaptive_window:
+        _maybe_shrink_window(forecaster, len(train))
 
     run_forecasting_experiment(
         train,
@@ -1466,6 +1475,33 @@ def train_test_split(x, train_proportion=0.7, max_series_length=10000, max_test_
 N_RETRAIN_POINTS = 30
 
 
+def _maybe_shrink_window(forecaster, series_length):
+    """Shrink a windowed forecaster's window for short series.
+
+    If ``forecaster`` exposes a ``window`` attribute and ``series_length`` is less
+    than twice that window, the window is set to half the series length (at least
+    1) so the forecaster can still be fit on the short series. Forecasters without a
+    ``window`` attribute are left unchanged. This is applied opt-in via the
+    ``adaptive_window`` flag of the ``load_and_run_*`` functions.
+
+    Parameters
+    ----------
+    forecaster : BaseForecaster
+        The forecaster to (possibly) adjust in place.
+    series_length : int
+        Length of the series the forecaster will be fit on.
+
+    Returns
+    -------
+    forecaster : BaseForecaster
+        The same forecaster, with ``window`` possibly reduced.
+    """
+    window = getattr(forecaster, "window", None)
+    if window is not None and series_length < 2 * window:
+        forecaster.window = max(1, series_length // 2)
+    return forecaster
+
+
 def load_and_run_remote_forecasting_experiment(
     data_path,
     dataset_name,
@@ -1481,6 +1517,7 @@ def load_and_run_remote_forecasting_experiment(
     start=None,
     end=None,
     fixed_horizon=False,
+    adaptive_window=False,
 ):
     """Load a dataset and run a regression experiment.
 
@@ -1533,6 +1570,12 @@ def load_and_run_remote_forecasting_experiment(
         fit once on the remainder (the original competition training data, untruncated)
         and then forecasts the whole horizon recursively. Cannot be combined with
         ``retrain``.
+    adaptive_window : bool, default=False
+        If True, and the forecaster has a ``window`` attribute, shrink the window to
+        half the series length whenever the series is shorter than twice the window.
+        This lets window-based forecasters (e.g. ``RegressionForecaster`` and
+        ``DifferencedForecaster``) run on short series (such as some M4 series) that
+        would otherwise be shorter than the configured window.
     """
     if forecaster_name is None:
         forecaster_name = type(forecaster).__name__
@@ -1595,6 +1638,13 @@ def load_and_run_remote_forecasting_experiment(
         series = df.loc[df['series_name'].eq(series_name), 'series_value'].iat[0]
     series = np.asarray(series, dtype=float)
     assert(np.isfinite(series).all())
+
+    # Opt-in: shrink a windowed forecaster's window for short series (e.g. some M4
+    # series are shorter than the configured window). Done before the train/test
+    # split below so the window used there is consistent with the fitted model.
+    if adaptive_window:
+        _maybe_shrink_window(forecaster, len(series))
+
     prediction_horizon = None
     if fixed_horizon:
         # M4/Monash fixed-horizon evaluation: the .tsf series contain the full data
