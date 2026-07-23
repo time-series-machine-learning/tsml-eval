@@ -77,6 +77,19 @@ hybrid_classifiers = [
     ["hivecotev2", "hc2"],
     ["ristclassifier", "rist", "rist-extrat"],
 ]
+channel_selection_hc2_classifiers = [
+    ["channelselectionclassifierpipeline", "ecs-hc2", "hc2-ecs"],
+    ["ecp-hc2", "hc2-ecp"],
+    ["tselect-hc2", "hc2-tselect"],
+    ["random-hc2", "hc2-random"],
+    ["riemannian-hc2", "hc2-riemannian"],
+    ["detachrocket-hc2", "hc2-detachrocket"],
+    ["csp-hc2", "hc2-csp"],
+    ["casetimereducer-hc2", "hc2-casetimereducer"],
+    ["cleverrank-hc2", "hc2-cleverrank"],
+    ["clevercluster-hc2", "hc2-clevercluster"],
+    ["cleverhybrid-hc2", "hc2-cleverhybrid"],
+]
 interval_based_classifiers = [
     "rstsf-500",
     ["rstsfclassifier", "rstsf", "r-stsf"],
@@ -161,7 +174,11 @@ def get_classifier_by_name(
     """
     c = classifier_name.casefold()
 
-    if str_in_nested_list(convolution_based_classifiers, c):
+    if str_in_nested_list(channel_selection_hc2_classifiers, c):
+        return _set_classifier_channel_selection_hc2(
+            c, random_state, n_jobs, fit_contract, checkpoint, kwargs
+        )
+    elif str_in_nested_list(convolution_based_classifiers, c):
         return _set_classifier_convolution_based(
             c, random_state, n_jobs, fit_contract, checkpoint, kwargs
         )
@@ -203,6 +220,75 @@ def get_classifier_by_name(
         )
     else:
         raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
+
+
+def _set_classifier_channel_selection_hc2(
+    c, random_state, n_jobs, fit_contract, checkpoint, kwargs
+):
+    aliases = {
+        "channelselectionclassifierpipeline": "ECS",
+        "ecs-hc2": "ECS",
+        "hc2-ecs": "ECS",
+        "ecp-hc2": "ECP",
+        "hc2-ecp": "ECP",
+        "tselect-hc2": "TSelect",
+        "hc2-tselect": "TSelect",
+        "random-hc2": "Random",
+        "hc2-random": "Random",
+        "riemannian-hc2": "Riemannian",
+        "hc2-riemannian": "Riemannian",
+        "detachrocket-hc2": "DetachRocket",
+        "hc2-detachrocket": "DetachRocket",
+        "csp-hc2": "CSP",
+        "hc2-csp": "CSP",
+        "casetimereducer-hc2": "CaseTimeReducer",
+        "hc2-casetimereducer": "CaseTimeReducer",
+        "cleverrank-hc2": "CLeVerRank",
+        "hc2-cleverrank": "CLeVerRank",
+        "clevercluster-hc2": "CLeVerCluster",
+        "hc2-clevercluster": "CLeVerCluster",
+        "cleverhybrid-hc2": "CLeVerHybrid",
+        "hc2-cleverhybrid": "CLeVerHybrid",
+    }
+    selector = aliases[c]
+
+    aeon_neuro_selectors = {
+        "Riemannian",
+        "DetachRocket",
+        "CSP",
+        "CaseTimeReducer",
+        "CLeVerRank",
+        "CLeVerCluster",
+        "CLeVerHybrid",
+    }
+    if selector in aeon_neuro_selectors:
+        try:
+            import aeon_neuro  # noqa: F401
+        except ModuleNotFoundError as exc:
+            raise ModuleNotFoundError(
+                "aeon-neuro is an optional dependency for "
+                f"the {selector}-HC2 classifier pipeline."
+            ) from exc
+
+    from aeon.classification.hybrid import HIVECOTEV2
+
+    from tsml_eval.experiments._channel_selection_hc2 import (
+        ChannelSelectionClassifierPipeline,
+    )
+
+    classifier = HIVECOTEV2(
+        random_state=random_state,
+        n_jobs=n_jobs,
+        time_limit_in_minutes=fit_contract,
+        **kwargs,
+    )
+    return ChannelSelectionClassifierPipeline(
+        selector=selector,
+        classifier=classifier,
+        proportion=0.25,
+        random_state=random_state,
+        n_jobs=n_jobs,
+    )
 
 
 def _set_classifier_convolution_based(

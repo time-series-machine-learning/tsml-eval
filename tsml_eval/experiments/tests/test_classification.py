@@ -177,6 +177,7 @@ def test_run_classification_experiment_invalid_estimator():
 def test_get_classifier_by_name():
     """Test get_classifier_by_name method."""
     classifier_name_lists = [
+        _get_classifier.channel_selection_hc2_classifiers,
         _get_classifier.convolution_based_classifiers,
         _get_classifier.deep_learning_classifiers,
         _get_classifier.dictionary_based_classifiers,
