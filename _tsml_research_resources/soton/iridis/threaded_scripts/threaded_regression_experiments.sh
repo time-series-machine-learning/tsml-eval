@@ -6,28 +6,31 @@
 max_folds=30
 start_fold=1
 
-# To avoid dumping 1000s of jobs in the queue we have a higher level queue
+# To avoid hitting the cluster queue limit we have a higher level queue
 max_num_submitted=100
 
-# Queue options are https://my.uea.ac.uk/divisions/it-and-computing-services/service-catalogue/research-it-services/hpc/ada-cluster/using-ada
-queue="compute-64-512"
+# Queue options are https://sotonac.sharepoint.com/teams/HPCCommunityWiki/SitePages/Submitting-Jobs-Slurm.aspx
+queue="batch"
+
+# The number of threads to request. Please check the number of cores for the node you are using, some are exclusive (i.e. batch) so you should request all cores or a taskfarm script
+n_threads=10
 
 # Enter your username and email here
-username="ajb"
+username="ajb2u23"
 mail="NONE"
-mailto="$username@uea.ac.uk"
+mailto="$username@soton.ac.uk"
 
 # MB for jobs, increase incrementally and try not to use more than you need. If you need hundreds of GB consider the huge memory queue
 max_memory=8000
 
-# Max allowable is 7 days - 168 hours
-max_time="168:00:00"
+# Max allowable is 60 hours
+max_time="60:00:00"
 
 # Start point for the script i.e. 3 datasets, 3 regressors = 9 jobs to submit, start_point=5 will skip to job 5
 start_point=1
 
 # Put your home directory here
-local_path="/gpfs/home/$username/"
+local_path="/iridisfs/home/$username/"
 
 # Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
 data_dir="$local_path/Data/"
@@ -38,14 +41,14 @@ results_dir="$local_path/RegressionResults/results/"
 out_dir="$local_path/RegressionResults/output/"
 
 # The python script we are running
-script_file_path="$local_path/tsml-eval/tsml_eval/experiments/regression_experiments.py"
+script_file_path="$local_path/tsml-eval/tsml_eval/experiments/threaded_regression_experiments.py"
 
-# Environment name, change accordingly, for set up, see https://github.com/time-series-machine-learning/tsml-eval/blob/main/_tsml_research_resources/uea/ada/ada_python.md
+# Environment name, change accordingly, for set up, see https://github.com/time-series-machine-learning/tsml-eval/blob/main/_tsml_research_resources/soton/iridis/iridis_python.md
 # Separate environments for GPU and CPU are recommended
 env_name="tsml-eval"
 
 # Regressors to loop over. Must be separated by a space
-# See list of potential regressors in set_classifier
+# See list of potential regressors in set_regressor
 regressors_to_run="RocketRegressor TimeSeriesForestRegressor"
 
 # You can add extra arguments here. See tsml_eval/utils/arguments.py parse_args
@@ -119,15 +122,18 @@ echo "#!/bin/bash
 #SBATCH --mem=${max_memory}M
 #SBATCH -o ${out_dir}/${regressor}/${dataset}/%A-%a.out
 #SBATCH -e ${out_dir}/${regressor}/${dataset}/%A-%a.err
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=${n_threads}
 
 . /etc/profile
 
-module add python/anaconda/2019.10/3.7
+module load conda/python3
 source activate $env_name
 
-# Input args to the default regression_experiments are in main method of
-# https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/regression_experiments.py
-python -u ${script_file_path} ${data_dir} ${results_dir} ${regressor} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_train_files} ${predefined_folds} ${normalise_data}"  > generatedFile.sub
+# Input args to the default threaded_regression_experiments are in main method of
+# https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/threaded_regression_experiments.py
+python -u ${script_file_path} ${data_dir} ${results_dir} ${regressor} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_train_files} ${predefined_folds} ${normalise_data}" > generatedFile.sub
 
 echo "${count} ${regressor}/${dataset}"
 

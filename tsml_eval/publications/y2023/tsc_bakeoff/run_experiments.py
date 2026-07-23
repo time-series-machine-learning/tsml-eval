@@ -11,7 +11,7 @@ os.environ["OMP_NUM_THREADS"] = "1"  # must be done before numpy import!!
 os.environ["TF_NUM_INTEROP_THREADS"] = "1"
 os.environ["TF_NUM_INTRAOP_THREADS"] = "1"
 
-from tsml.base import _clone_estimator
+from aeon.base._base import _clone_estimator
 
 from tsml_eval.experiments import load_and_run_classification_experiment
 from tsml_eval.publications.y2023.tsc_bakeoff.set_bakeoff_classifier import (

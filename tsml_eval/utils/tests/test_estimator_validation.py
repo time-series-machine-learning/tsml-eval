@@ -18,6 +18,15 @@ def test_is_sklearn_estimator():
     assert not is_sklearn_estimator(TimeSeriesForestClassifier())
 
 
+def test_is_sklearn_estimator_without_tsml(monkeypatch):
+    """Test sklearn validation when tsml is unavailable."""
+    monkeypatch.setattr(
+        "tsml_eval.utils.estimator_validation._check_soft_dependencies",
+        lambda *args, **kwargs: False,
+    )
+    assert is_sklearn_estimator(DummyClassifier())
+
+
 def test_is_sklearn_classifier():
     """Test is_sklearn_classifier."""
     assert is_sklearn_classifier(DummyClassifier())

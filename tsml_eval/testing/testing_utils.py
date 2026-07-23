@@ -52,6 +52,7 @@ def _check_set_method(
                     "soft dependency",
                     "python version",
                     "No module named 'xgboost'",
+                    "No module named 'tsml'",
                 ]
                 if any(s in str(err) for s in exempt_errors):
                     continue

@@ -34,6 +34,9 @@ from tsml_eval.utils.tests.test_results_writing import _check_classification_fil
 )
 def test_run_classification_experiment(classifier, dataset):
     """Test classification experiments with test data and classifier."""
+    if classifier == "DummyClassifier-tsml":
+        pytest.importorskip("tsml")
+
     args = [
         _TEST_DATA_PATH,
         _CLASSIFIER_RESULTS_PATH,
@@ -174,6 +177,7 @@ def test_run_classification_experiment_invalid_estimator():
 def test_get_classifier_by_name():
     """Test get_classifier_by_name method."""
     classifier_name_lists = [
+        _get_classifier.channel_selection_hc2_classifiers,
         _get_classifier.convolution_based_classifiers,
         _get_classifier.deep_learning_classifiers,
         _get_classifier.dictionary_based_classifiers,

@@ -9,7 +9,7 @@ start_fold=1
 # To avoid hitting the cluster queue limit we have a higher level queue
 max_num_submitted=12
 
-# Queue options are https://sotonac.sharepoint.com/teams/HPCCommunityWiki/SitePages/Iridis%205%20Job-submission-and-Limits-Quotas.aspx
+# Queue options are https://sotonac.sharepoint.com/teams/HPCCommunityWiki/SitePages/Submitting-Jobs-Slurm.aspx
 queue="gpu"
 
 # Enter your username and email here
@@ -27,7 +27,7 @@ max_time="60:00:00"
 start_point=1
 
 # Put your home directory here
-local_path="/mainfs/home/$username/"
+local_path="/iridisfs/home/$username/"
 
 # Datasets to use and directory of data files. Default is Tony's work space, all should be able to read these. Change if you want to use different data or lists
 data_dir="$local_path/Data/"
@@ -135,11 +135,12 @@ echo "#!/bin/bash
 
 . /etc/profile
 
-module load apptainer/1.3.3
+module load apptainer/1.5.0
 
 # Input args to the default clustering_experiments are in main method of
 # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/clustering_experiments.py
-apptainer exec --nv ${container_path} echo "Running Apptainer job."; python -u ${script_file_path} ${data_dir} ${results_dir} ${clusterer} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_test_files} ${predefined_folds} ${combine_test_train_split} ${normalise_data}" > generatedFile.sub
+echo "Running Apptainer job."
+apptainer exec --nv "${container_path}" python -u ${script_file_path} ${data_dir} ${results_dir} ${clusterer} ${dataset} \$((\$SLURM_ARRAY_TASK_ID - 1)) ${generate_test_files} ${predefined_folds} ${combine_test_train_split} ${normalise_data}" > generatedFile.sub
 
 echo "${count} ${clusterer}/${dataset}"
 

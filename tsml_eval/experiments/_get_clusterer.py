@@ -5,6 +5,7 @@ __maintainer__ = ["TonyBagnall", "MatthewMiddlehurst"]
 import numpy as np
 from aeon.clustering import (
     ElasticSOM,
+    KShape,
     KSpectralCentroid,
     TimeSeriesCLARA,
     TimeSeriesCLARANS,
@@ -126,6 +127,7 @@ distance_based_clusterers = [
     "som-shape_dtw",
     "som-soft_dtw",
     ["kspectralcentroid", "ksc"],
+    ["timeserieskshape", "kshape"],
     "kasba",
 ]
 feature_based_clusterers = [
@@ -317,7 +319,6 @@ def _set_clusterer_distance_based(
                 "method": "subgradient",
             }
             return TimeSeriesKMeans(
-                max_iter=50,
                 n_init=10,
                 init=init_algorithm,
                 distance=distance,
@@ -329,7 +330,6 @@ def _set_clusterer_distance_based(
             )
         elif "ba" in c:
             return TimeSeriesKMeans(
-                max_iter=50,
                 n_init=10,
                 init=init_algorithm,
                 distance=distance,
@@ -341,7 +341,6 @@ def _set_clusterer_distance_based(
             )
         else:
             return TimeSeriesKMeans(
-                max_iter=50,
                 n_init=10,
                 init=init_algorithm,
                 distance=distance,
@@ -352,7 +351,6 @@ def _set_clusterer_distance_based(
             )
     elif "kmedoids" in c or "timeserieskmedoids" in c:
         return TimeSeriesKMedoids(
-            max_iter=50,
             n_init=10,
             init=init_algorithm,
             distance=distance,
@@ -363,7 +361,6 @@ def _set_clusterer_distance_based(
         )
     elif "pam" in c or "timeseriespam" in c:
         return TimeSeriesKMedoids(
-            max_iter=50,
             n_init=10,
             init=init_algorithm,
             distance=distance,
@@ -383,7 +380,6 @@ def _set_clusterer_distance_based(
         )
     elif "clara" in c or "timeseriesclara" in c:
         return TimeSeriesCLARA(
-            max_iter=50,
             init=init_algorithm,
             distance=distance,
             distance_params=distance_params,
@@ -408,15 +404,21 @@ def _set_clusterer_distance_based(
         return KSpectralCentroid(
             # Max shift set to n_timepoints when max_shift is None
             max_shift=None,
-            max_iter=50,
             init=init_algorithm,
+            tol=1e-06,
+            random_state=random_state,
+            **kwargs,
+        )
+    elif "kshape" in c:
+        return KShape(
+            init=init_algorithm,
+            n_init=10,
             tol=1e-06,
             random_state=random_state,
             **kwargs,
         )
     elif "timeserieskernelkmeans" in c:
         return TimeSeriesKernelKMeans(
-            max_iter=50,
             n_init=10,
             tol=1e-06,
             random_state=random_state,
