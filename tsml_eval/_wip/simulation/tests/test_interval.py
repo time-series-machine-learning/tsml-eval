@@ -128,3 +128,31 @@ def test_trend_discriminator_runs():
 def test_invalid_discriminator_raises():
     with pytest.raises(ValueError, match="Unknown discriminator"):
         simulate_interval_shape_data(discriminator="nonsense")
+
+
+def test_random_phase_smears_signal():
+    """random phase: per-case interval positions => class-mean signal is smeared."""
+    import numpy as np
+    from tsml_eval._wip.simulation import simulate_interval_shape_data
+    kw = dict(n_cases_per_class=(200, 200), series_length=400, n_intervals=1,
+              interval_length=30, amplitude=4.0, noise_sigma=0.0, random_state=0)
+    Xf, yf = simulate_interval_shape_data(phase_alignment="fixed", **kw)
+    Xr, yr = simulate_interval_shape_data(phase_alignment="random", **kw)
+    # fixed phase has a sharp class-mean bump; random phase averages it away
+    assert Xf[yf == 0].mean(0)[0].std() > 5 * Xr[yr == 0].mean(0)[0].std()
+
+
+def test_random_phase_intervals_none():
+    from tsml_eval._wip.simulation import simulate_interval_shape_data
+    _, _, p = simulate_interval_shape_data(
+        phase_alignment="random", random_state=0, return_params=True
+    )
+    assert p["intervals"] is None
+    assert p["phase_alignment"] == "random"
+
+
+def test_invalid_phase_alignment_raises():
+    import pytest
+    from tsml_eval._wip.simulation import simulate_interval_shape_data
+    with pytest.raises(ValueError, match="Unknown phase_alignment"):
+        simulate_interval_shape_data(phase_alignment="nonsense")

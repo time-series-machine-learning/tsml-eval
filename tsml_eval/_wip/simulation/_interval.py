@@ -141,11 +141,13 @@ def simulate_interval_shape_data(
     interval_length=None,
     noise_to_signal=4,
     discriminator="shape",
+    phase_alignment="fixed",
     shapes=None,
     amplitude=2.0,
     base=-1.0,
     noise_sigma=1.0,
     interval_scales=None,
+    frequencies=None,
     random_state=None,
     return_params=False,
 ):
@@ -182,6 +184,24 @@ def simulate_interval_shape_data(
           while remaining easy for interval statistics.
         * ``"trend"`` -- the intervals contain a linear ramp of class-specific
           slope: a whole-interval statistic (slope) rather than a local shape.
+        * ``"frequency"`` -- the intervals contain a sinusoid at a class-specific
+          frequency (same amplitude, random phase per case). Mean/variance/slope
+          are identical across classes, so purely time-domain interval features
+          are blind; only spectral representations (periodogram / Fourier /
+          autocorrelation) separate the classes. Probes the representation axis.
+          Requires intervals long enough to hold several cycles.
+    phase_alignment : "fixed" or "random", default="fixed"
+        Whether the intervals are phase aligned across the dataset.
+
+        * ``"fixed"`` -- all cases share the same interval positions (phase
+          aligned). Interval-optimal: fixed-position regional features capture
+          the signal.
+        * ``"random"`` -- each case gets its own random interval positions
+          (phase invariant), so the discriminative pattern can occur anywhere.
+          This is the shapelet/convolution-optimal regime: fixed-position
+          interval features cannot localise the signal, but phase-invariant
+          methods (shapelets, convolution) can. Use it as the contrast to test
+          whether a method's success depends on phase alignment.
     shapes : sequence of str or None, default=None
         Shape name per class, from ``SHAPES``. If None, the first
         ``n_classes`` distinct shapes are assigned. Must all differ (the classes
@@ -219,10 +239,10 @@ def simulate_interval_shape_data(
     if interval_length < 1:
         raise ValueError("Derived interval_length < 1; reduce noise_to_signal.")
 
-    if discriminator not in ("shape", "scale", "trend"):
+    if discriminator not in ("shape", "scale", "trend", "frequency"):
         raise ValueError(
             f"Unknown discriminator '{discriminator}', "
-            "valid: 'shape', 'scale', 'trend'."
+            "valid: 'shape', 'scale', 'trend', 'frequency'."
         )
 
     if discriminator == "shape":
@@ -254,31 +274,96 @@ def simulate_interval_shape_data(
         if len(interval_scales) != n_classes:
             raise ValueError("interval_scales must have one entry per class.")
 
-    # shared interval positions
-    starts = _place_intervals(series_length, n_intervals, interval_length, rng)
+    # per-class sinusoid frequency (cycles per interval) for "frequency"
+    if discriminator == "frequency":
+        if frequencies is None:
+            frequencies = [2 * (c + 1) for c in range(n_classes)]  # 2, 4, 6, ...
+        frequencies = list(frequencies)
+        if len(frequencies) != n_classes:
+            raise ValueError("frequencies must have one entry per class.")
+        if len(set(frequencies)) < n_classes:
+            raise ValueError("class frequencies must be distinct to be separable.")
+        if max(frequencies) >= interval_length / 2:
+            raise ValueError(
+                f"max frequency {max(frequencies)} cycles must be < "
+                f"interval_length/2 ({interval_length / 2}) to be resolvable; "
+                "use longer intervals."
+            )
+
+    if phase_alignment not in ("fixed", "random"):
+        raise ValueError(
+            f"Unknown phase_alignment '{phase_alignment}', "
+            "valid: 'fixed', 'random'."
+        )
     L = interval_length
 
-    # per-class deterministic template and per-class position-wise noise std
-    templates = np.zeros((n_classes, series_length), dtype=float)
-    sigma = np.full((n_classes, series_length), noise_sigma, dtype=float)
+    # per-class deterministic signal (shape/trend); None for stochastic modes
+    signal_by_class = []
     for c in range(n_classes):
         if discriminator == "shape":
-            signal = SHAPES[shapes[c]](L, amplitude, base)
+            signal_by_class.append(SHAPES[shapes[c]](L, amplitude, base))
         elif discriminator == "trend":
-            # class-specific slope, symmetric about zero, zero-mean ramp
-            slope = c - (n_classes - 1) / 2.0
-            signal = amplitude * slope * (np.arange(L) / max(L - 1, 1) - 0.5)
+            slope = c - (n_classes - 1) / 2.0  # symmetric, zero-mean ramp
+            signal_by_class.append(
+                amplitude * slope * (np.arange(L) / max(L - 1, 1) - 0.5)
+            )
+        else:  # scale / frequency carry no fixed template
+            signal_by_class.append(None)
+
+    def _interval_signal(c):
+        """Interval signal for class ``c`` (fresh per call for stochastic modes)."""
+        if discriminator == "frequency":
+            # sinusoid at the class frequency with random phase, so only the
+            # spectral content is discriminative (not a matchable waveform)
+            phase = rng.uniform(0, 2 * np.pi)
+            return amplitude * np.sin(
+                2 * np.pi * frequencies[c] * np.arange(L) / L + phase
+            )
+        return signal_by_class[c]
+
+    def _stamp(starts, c):
+        """Return (template, per-point sigma) for class ``c`` at ``starts``."""
+        template = np.zeros(series_length, dtype=float)
+        sig = np.full(series_length, noise_sigma, dtype=float)
         for s in starts:
             if discriminator == "scale":
-                sigma[c, s : s + L] = interval_scales[c]  # variance burst, no shape
+                sig[s : s + L] = interval_scales[c]  # variance burst, no shape
             else:
-                templates[c, s : s + L] = signal
+                template[s : s + L] = _interval_signal(c)
+        return template, sig
 
-    # assemble cases: template + position-dependent Gaussian noise
+    # In "fixed" alignment the intervals are shared by every case (phase aligned
+    # across the dataset -> interval-optimal). In "random" alignment each case
+    # gets its own random interval positions (phase invariant -> the signal can
+    # occur anywhere, so fixed-position interval features cannot localise it;
+    # this is the shapelet/convolution-optimal regime).
+    shared_starts = (
+        _place_intervals(series_length, n_intervals, L, rng)
+        if phase_alignment == "fixed"
+        else None
+    )
+
+    # a deterministic template shared by all cases of a class is only valid when
+    # positions are fixed AND the signal itself does not vary per case; "random"
+    # phase and "frequency" (random sine phase) both need per-case generation.
+    per_case = phase_alignment == "random" or discriminator == "frequency"
+
     X_list, y_list = [], []
     for c, n in enumerate(n_cases_per_class):
-        noise = rng.normal(0.0, 1.0, size=(n, series_length)) * sigma[c]
-        X_list.append(templates[c] + noise)
+        cases = np.empty((n, series_length), dtype=float)
+        if not per_case:
+            template, sig = _stamp(shared_starts, c)
+            cases[:] = template + rng.normal(0.0, 1.0, size=(n, series_length)) * sig
+        else:
+            for i in range(n):
+                starts_i = (
+                    shared_starts
+                    if phase_alignment == "fixed"
+                    else _place_intervals(series_length, n_intervals, L, rng)
+                )
+                template, sig = _stamp(starts_i, c)
+                cases[i] = template + rng.normal(0.0, 1.0, size=series_length) * sig
+        X_list.append(cases)
         y_list.append(np.full(n, c, dtype=int))
 
     X = np.vstack(X_list)[:, np.newaxis, :]  # (n_cases, 1, series_length)
@@ -290,10 +375,12 @@ def simulate_interval_shape_data(
 
     if return_params:
         return X, y, {
-            "intervals": starts,
+            "intervals": shared_starts,  # None when phase_alignment="random"
             "interval_length": interval_length,
             "discriminator": discriminator,
+            "phase_alignment": phase_alignment,
             "shapes": shapes,
             "interval_scales": interval_scales if discriminator == "scale" else None,
+            "frequencies": frequencies if discriminator == "frequency" else None,
         }
     return X, y
