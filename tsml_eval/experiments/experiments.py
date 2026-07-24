@@ -15,6 +15,7 @@ __all__ = [
     "load_and_run_forecasting_experiment",
 ]
 
+import math
 import os
 import time
 import warnings
@@ -25,7 +26,8 @@ import pandas as pd
 from aeon.benchmarking.metrics.clustering import clustering_accuracy_score
 from aeon.classification import BaseClassifier
 from aeon.clustering import BaseClusterer
-from aeon.forecasting import BaseForecaster
+from aeon.forecasting import BaseForecaster, RegressionForecaster
+from aeon.datasets import load_from_tsf_file
 from aeon.regression.base import BaseRegressor
 from aeon.utils.validation._dependencies import _check_soft_dependencies
 from aeon.utils.validation.collection import get_n_cases
@@ -1187,6 +1189,7 @@ def run_forecasting_experiment(
     attribute_file_path=None,
     att_max_shape=0,
     benchmark_time=True,
+    prediction_horizon=None,
 ):
     """Run a forecasting experiment and save the results to file.
 
@@ -1215,9 +1218,26 @@ def run_forecasting_experiment(
     benchmark_time : bool, default=True
         Whether to benchmark the hardware used with a simple function and write the
         results. This will typically take ~2 seconds, but is hardware dependent.
+    prediction_horizon : int or None, default=None
+        If set, run a fixed-horizon (M4-style) experiment: the forecaster is fit once
+        on ``train`` and then forecasts ``prediction_horizon`` steps recursively,
+        feeding its own predictions back as inputs (the iterative strategy of
+        ``BaseForecaster.iterative_forecast``). ``test`` must be the 1D array of the
+        ``prediction_horizon`` true values following ``train``. If None, the default
+        one-step-ahead evaluation over the test values is used.
     """
     if not isinstance(forecaster, BaseForecaster):
         raise TypeError("forecaster must be an aeon forecaster.")
+
+    if prediction_horizon is not None and (
+        train.ndim != 1 or test.ndim != 1 or len(test) != prediction_horizon
+    ):
+        raise ValueError(
+            "prediction_horizon requires 1D train and test series with "
+            f"len(test) == prediction_horizon, got train.ndim={train.ndim}, "
+            f"test.ndim={test.ndim}, len(test)={len(test)}, "
+            f"prediction_horizon={prediction_horizon}."
+        )
 
     if forecaster_name is None:
         forecaster_name = type(forecaster).__name__
@@ -1233,33 +1253,71 @@ def run_forecasting_experiment(
 
     second = str(forecaster.get_params()).replace("\n", " ").replace("\r", " ")
 
-    mem_usage, fit_time = record_max_memory(
-        forecaster.fit,
-        args=(train,),
-        interval=MEMRECORD_INTERVAL,
-        return_func_time=True,
-    )
-    fit_time += int(round(getattr(forecaster, "fit_time_milli_", 0)))
+    test_true = np.empty(len(test), dtype=test.dtype)
+    test_preds = np.empty(len(test), dtype=test.dtype)
+    if train.ndim == 2 and test.ndim == 2:
+        fit_time = 0
+        test_time = 0
+        mem_usage = 0
+        for index, (train_series, test_series) in enumerate(zip(train, test)):
+            forecaster.fit(train_series)
+            test_preds[index] = forecaster.predict(test_series[:-1])
+            test_true[index] = test_series[-1]
+    elif train.ndim == 2:
+        fit_time = 0
+        test_time = 0
+        mem_usage = 0
+        test_true = test
+        for index, train_series in enumerate(train):
+            test_preds[index] = forecaster.forecast(train_series)
+        test_preds = test_preds.flatten()
+    else:
+        mem_usage, fit_time = record_max_memory(
+            forecaster.fit,
+            args=(train,),
+            interval=MEMRECORD_INTERVAL,
+            return_func_time=True,
+        )
+        fit_time += int(round(getattr(forecaster, "_fit_time_milli", 0)))
+
+        start = int(round(time.time() * 1000))
+        if prediction_horizon is not None:
+            # Fixed-horizon (M4-style) forecasting: fit once on train (above), then
+            # forecast prediction_horizon steps recursively, feeding predictions back
+            # as inputs. Mirrors BaseForecaster.iterative_forecast but keeps the
+            # fit/predict timing split of this function.
+            test_true = test
+            y_hist = train
+            for index in range(prediction_horizon):
+                test_preds[index] = forecaster.predict(y_hist)
+                y_hist = np.append(y_hist, test_preds[index])
+        elif test.ndim == 2:
+            for index, prediction in enumerate(test):
+                test_true[index] = prediction[-1]
+                test_preds[index] = forecaster.predict(prediction[:-1])
+        else:
+            test_true = test
+            test_preds = forecaster.predict(test)
+
+        test_time = (
+            int(round(time.time() * 1000))
+            - start
+            + int(round(getattr(forecaster, "_predict_time_milli", 0)))
+        )
+        test_preds = test_preds.flatten()
 
     if attribute_file_path is not None:
         estimator_attributes_to_file(
             forecaster, attribute_file_path, max_list_shape=att_max_shape
         )
-
-    start = int(round(time.time() * 1000))
-    test_preds = forecaster.predict(np.arange(1, len(test) + 1))
-    test_time = (
-        int(round(time.time() * 1000))
-        - start
-        + int(round(getattr(forecaster, "predict_time_milli_", 0)))
-    )
-    test_preds = test_preds.flatten()
-
-    test_mape = mean_absolute_percentage_error(test, test_preds)
+    if (np.isfinite(test_preds).all() is False):
+        test_mape = np.inf
+    else:
+        test_mape = mean_absolute_percentage_error(test_true, test_preds)
 
     write_forecasting_results(
         test_preds,
-        test,
+        test_true,
         forecaster_name,
         dataset_name,
         results_path,
@@ -1289,6 +1347,7 @@ def load_and_run_forecasting_experiment(
     att_max_shape=0,
     benchmark_time=True,
     overwrite=False,
+    adaptive_window=False,
 ):
     """Load a dataset and run a regression experiment.
 
@@ -1319,6 +1378,10 @@ def load_and_run_forecasting_experiment(
     overwrite : bool, default=False
         If set to False, this will only build results if there is not a result file
         already present. If True, it will overwrite anything already there.
+    adaptive_window : bool, default=False
+        If True, and the forecaster has a ``window`` attribute, shrink the window to
+        half the training series length whenever the series is shorter than twice the
+        window, so window-based forecasters can run on short series.
     """
     if forecaster_name is None:
         forecaster_name = type(forecaster).__name__
@@ -1351,6 +1414,10 @@ def load_and_run_forecasting_experiment(
     ).squeeze("columns")
     test = test.astype(float).to_numpy()
 
+    # Opt-in: shrink a windowed forecaster's window for short training series.
+    if adaptive_window:
+        _maybe_shrink_window(forecaster, len(train))
+
     run_forecasting_experiment(
         train,
         test,
@@ -1362,4 +1429,292 @@ def load_and_run_forecasting_experiment(
         attribute_file_path=attribute_file_path,
         att_max_shape=att_max_shape,
         benchmark_time=benchmark_time,
+    )
+
+def train_test_split(x, train_proportion=0.7, max_series_length=10000, max_test_values=None):
+    """
+    Transform X and return a transformed version.
+    private _transform containing core logic, called from transform
+    Parameters
+    ----------
+    x : np.ndarray
+        Data to be transformed
+    train_proportion : float, optional (default=0.7)
+        The proportion of the time series to use for training,
+        with the remaining used for test.
+    max_series_length : int, optional (default=10000)
+        The maximum length of the series to consider. If the series is longer
+        than this value, it will be truncated.
+    max_test_values : int, optional (default=None)
+        The maximum number of test values to generate. If the test proportion is larger than
+        this, it will be adjusted to be equal to this.
+    Returns
+    -------
+    Xt: np.ndarray
+        transformed version of X
+    """
+    # Compute split index
+    if len(x) < max_series_length or max_series_length == -1:
+        end_location = len(x)
+    else:
+        end_location = max_series_length
+    train_test_split_location = math.ceil(end_location * train_proportion)
+    if max_test_values and end_location - train_test_split_location > max_test_values:
+        train_test_split_location = end_location - max_test_values
+
+    # Split into train and test sets
+    train_series = x[:train_test_split_location]
+    test_series = x[train_test_split_location:end_location]
+
+    # Generate windowed versions of train and test sets
+    return train_series, test_series
+
+# Number of rolling one-step-ahead test points used when retrain=True. The last
+# N_RETRAIN_POINTS values of a series are held out and forecast one at a time, with
+# the model retrained on all data up to each point.
+N_RETRAIN_POINTS = 30
+
+
+def _maybe_shrink_window(forecaster, series_length):
+    """Shrink a windowed forecaster's window for short series.
+
+    If ``forecaster`` exposes a ``window`` attribute and ``series_length`` is less
+    than twice that window, the window is set to half the series length (at least
+    1) so the forecaster can still be fit on the short series. Forecasters without a
+    ``window`` attribute are left unchanged. This is applied opt-in via the
+    ``adaptive_window`` flag of the ``load_and_run_*`` functions.
+
+    Parameters
+    ----------
+    forecaster : BaseForecaster
+        The forecaster to (possibly) adjust in place.
+    series_length : int
+        Length of the series the forecaster will be fit on.
+
+    Returns
+    -------
+    forecaster : BaseForecaster
+        The same forecaster, with ``window`` possibly reduced.
+    """
+    window = getattr(forecaster, "window", None)
+    if window is not None and series_length < 2 * window:
+        forecaster.window = max(1, series_length // 2)
+    return forecaster
+
+
+def load_and_run_remote_forecasting_experiment(
+    data_path,
+    dataset_name,
+    results_path,
+    forecaster,
+    forecaster_name=None,
+    random_seed=None,
+    write_attributes=False,
+    att_max_shape=0,
+    benchmark_time=True,
+    overwrite=False,
+    retrain=False,
+    start=None,
+    end=None,
+    fixed_horizon=False,
+    adaptive_window=False,
+):
+    """Load a dataset and run a regression experiment.
+
+    Function to load a dataset, run a basic regression experiment for a
+    <dataset>/<regressor/<resample> combination, and write the results to csv file(s)
+    at a given location.
+
+    Parameters
+    ----------
+    problem_path : str
+        Location of problem files, full path.
+    results_path : str
+        Location of where to write results. Any required directories will be created.
+    dataset : str
+        Name of problem. Files must be <problem_path>/<dataset>/<dataset>+"_TRAIN.csv",
+        same for "_TEST.csv".
+    forecaster : BaseForecaster
+        Regressor to be used in the experiment.
+    forecaster_name : str or None, default=None
+        Name of forecaster used in writing results. If None, the name is taken from
+        the forecaster.
+    random_seed : int or None, default=None
+        Indicates what random seed was used as a random_state for the forecaster. Only
+        used for the results file name.
+    benchmark_time : bool, default=True
+        Whether to benchmark the hardware used with a simple function and write the
+        results. This will typically take ~2 seconds, but is hardware dependent.
+    overwrite : bool, default=False
+        If set to False, this will only build results if there is not a result file
+        already present. If True, it will overwrite anything already there.
+    retrain : bool, default=False
+        If True, hold out the last ``N_RETRAIN_POINTS`` values of the series and, for
+        each held-out point, retrain the forecaster on all data up to that point and
+        make a one-step-ahead forecast.
+    start : int or None, default=None
+        The first (0-indexed, inclusive) held-out point to run when ``retrain`` is True.
+        If None, defaults to 0. Only used when ``retrain`` is True.
+    end : int or None, default=None
+        The last (0-indexed, inclusive) held-out point to run when ``retrain`` is True.
+        If None, defaults to ``N_RETRAIN_POINTS - 1``. Only used when ``retrain`` is
+        True. When ``start``/``end`` select a subset of points, results are written to
+        a point-specific dataset name (i.e. ``{dataset_name}_point{start}`` for a single
+        point or ``{dataset_name}_points{start}-{end}`` for a range) so that separate
+        per-point jobs do not overwrite each other.
+    fixed_horizon : bool, default=False
+        If True, run the M4/Monash-style fixed-horizon protocol instead of the default
+        rolling one-step-ahead evaluation: the last ``@horizon`` values of the series
+        (read from the .tsf metadata, e.g. hourly=48, weekly=13, daily=14, monthly=18,
+        quarterly=8, yearly=6 for M4) are held out as the test set, the forecaster is
+        fit once on the remainder (the original competition training data, untruncated)
+        and then forecasts the whole horizon recursively. Cannot be combined with
+        ``retrain``.
+    adaptive_window : bool, default=False
+        If True, and the forecaster has a ``window`` attribute, shrink the window to
+        half the series length whenever the series is shorter than twice the window.
+        This lets window-based forecasters (e.g. ``RegressionForecaster`` and
+        ``DifferencedForecaster``) run on short series (such as some M4 series) that
+        would otherwise be shorter than the configured window.
+    """
+    if forecaster_name is None:
+        forecaster_name = type(forecaster).__name__
+
+    if fixed_horizon and retrain:
+        raise ValueError("fixed_horizon and retrain cannot both be True.")
+
+    # When running a subset of retrain points, write results under a point-specific
+    # dataset name so per-point jobs do not clobber each other's result files. The
+    # original dataset_name is still used below to locate the source series.
+    if retrain and (start is not None or end is not None):
+        if start is None:
+            start = 0
+        if end is None:
+            end = N_RETRAIN_POINTS - 1
+        if not 0 <= start <= end < N_RETRAIN_POINTS:
+            raise ValueError(
+                f"Invalid retrain point range start={start}, end={end}. Must satisfy "
+                f"0 <= start <= end < {N_RETRAIN_POINTS}."
+            )
+        results_dataset_name = (
+            f"{dataset_name}_point{start}"
+            if start == end
+            else f"{dataset_name}_points{start}-{end}"
+        )
+    else:
+        results_dataset_name = dataset_name
+
+    build_test_file, _ = _check_existing_results(
+        results_path,
+        forecaster_name,
+        results_dataset_name,
+        random_seed,
+        overwrite,
+        True,
+        False,
+    )
+
+    if not build_test_file:
+        warnings.warn("All files exist and not overwriting, skipping.", stacklevel=1)
+        return
+
+    if write_attributes:
+        attribute_file_path = (
+            f"{results_path}/{forecaster_name}/Workspace/{results_dataset_name}/"
+        )
+    else:
+        attribute_file_path = None
+
+    if "_" in dataset_name:
+        dataset, series_name = dataset_name.rsplit("_", 1)
+    else:
+        raise ValueError(f"Dataset {dataset_name} given, but has no series attached when remote_forecasting_experiment called.")
+
+    data_full_path = f"{data_path}/{dataset}/{dataset}.tsf"
+    if not os.path.exists(data_full_path):
+        raise FileExistsError(f"Cannot load {data_full_path} for dataset {dataset}. Did you run download_datasets.py beforehand?")
+    else:
+        df, metadata = load_from_tsf_file(data_full_path)
+        series = df.loc[df['series_name'].eq(series_name), 'series_value'].iat[0]
+    series = np.asarray(series, dtype=float)
+    assert(np.isfinite(series).all())
+
+    # Opt-in: shrink a windowed forecaster's window for short series (e.g. some M4
+    # series are shorter than the configured window). Done before the train/test
+    # split below so the window used there is consistent with the fitted model.
+    if adaptive_window:
+        _maybe_shrink_window(forecaster, len(series))
+
+    prediction_horizon = None
+    if fixed_horizon:
+        # M4/Monash fixed-horizon evaluation: the .tsf series contain the full data
+        # (train + test), and the @horizon metadata gives the competition forecast
+        # horizon. Hold out the last horizon values as test and train on the rest,
+        # reproducing the original competition train/test split.
+        prediction_horizon = metadata.get("forecast_horizon")
+        if not prediction_horizon:
+            raise ValueError(
+                f"fixed_horizon requires a @horizon attribute in {data_full_path}, "
+                "but none was found."
+            )
+        if len(series) <= prediction_horizon:
+            raise ValueError(
+                f"Series {dataset_name} (length {len(series)}) is too short for "
+                f"forecast horizon {prediction_horizon}."
+            )
+        train = series[:-prediction_horizon]
+        test = series[-prediction_horizon:]
+    elif retrain:
+        if start is None:
+            start = 0
+        if end is None:
+            end = N_RETRAIN_POINTS - 1
+        n_selected = end - start + 1
+        # The training window length is kept constant across points (equal to the
+        # length when all N_RETRAIN_POINTS points are held out).
+        base_train_item, _ = train_test_split(
+            series, 0, max_test_values=N_RETRAIN_POINTS
+        )
+        train = np.empty((n_selected, len(base_train_item)), dtype=series.dtype)
+        if isinstance(forecaster, RegressionForecaster):
+            test = np.empty((n_selected, forecaster.window + 1), dtype=series.dtype)
+        else:
+            test = np.empty(n_selected, dtype=series.dtype)
+        for out_idx, i in enumerate(range(start, end + 1)):
+            train_item, test_item = train_test_split(
+                series, 0, max_test_values=(N_RETRAIN_POINTS - i)
+            )
+            train[out_idx] = train_item[i:]
+            if isinstance(forecaster, RegressionForecaster):
+                # Add 1 for the test data item
+                test_array = np.empty(forecaster.window + 1, dtype=series.dtype)
+                test_array[:-1] = train_item[-forecaster.window:]
+                test_array[-1] = test_item[0]
+                test[out_idx] = test_array
+            else:
+                test[out_idx] = test_item[0]
+    else:
+        train, test = train_test_split(series)
+        if isinstance(forecaster, RegressionForecaster) and len(test) > forecaster.window + 1:
+            test = np.lib.stride_tricks.sliding_window_view(
+                test, window_shape=(forecaster.window + 1)
+            )
+        elif isinstance(forecaster, RegressionForecaster) and len(test) < forecaster.window:
+            test_array = np.empty(forecaster.window + 1, dtype=series.dtype)
+            test_array[-len(test):] = test
+            test_array[:-len(test)+1] = train[forecaster.window - len(test) + 1:]
+            test = test_array
+
+    run_forecasting_experiment(
+        train,
+        test,
+        forecaster,
+        results_path,
+        forecaster_name=forecaster_name,
+        dataset_name=results_dataset_name,
+        random_seed=random_seed,
+        attribute_file_path=attribute_file_path,
+        att_max_shape=att_max_shape,
+        benchmark_time=benchmark_time,
+        prediction_horizon=prediction_horizon,
     )

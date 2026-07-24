@@ -46,7 +46,8 @@ extra_args=""
 # in a config file if a different forecaster expects another parameter name.
 seasonal_period=""
 seasonal_period_parameter="season_length"
-relative_seasonal_period_file="tsml-eval/_tsml_research_resources/soton/seasonal_periods.windowed_series.txt"
+# relative_seasonal_period_file="tsml-eval/_tsml_research_resources/soton/seasonal_periods.windowed_series.txt"
+relative_seasonal_period_file=""
 
 # Regressors to loop over. Must be seperated by a space. Different regressors will not run in the same node
 # See list of potential regressors in set_regressor  InceptionTimeRegressor

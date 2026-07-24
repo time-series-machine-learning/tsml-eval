@@ -90,6 +90,24 @@ def get_forecaster_by_name(forecaster_name, random_state=None, n_jobs=1, **kwarg
         print(kwargs)
         if 'window' in kwargs:
             window = kwargs.pop('window')
+
+        # A "d-" prefix means "difference the data before forecasting": strip the
+        # "d-" and, if the remainder is a known regressor, wrap it in a generic
+        # DifferencedForecaster (e.g. "d-drcif" -> differenced "drcif").
+        if f.startswith("d-"):
+            try:
+                regressor = get_regressor_by_name(
+                    f[2:], random_state, n_jobs, **kwargs
+                )
+            except ValueError:
+                pass
+            else:
+                from tsml_eval.estimators.forecasting.DifferencedForecaster import (
+                    DifferencedForecaster,
+                )
+
+                return DifferencedForecaster(regressor=regressor, window=window)
+
         try:
             regressor = get_regressor_by_name(f, random_state, n_jobs, **kwargs)
         except ValueError:
@@ -261,9 +279,10 @@ def _set_forecaster_other(f, random_state, n_jobs, kwargs):
 
         return NaiveForecaster(**kwargs)
     elif f == "ddrcif" or f == "ddrcifregressor" or f == "ddrcifforecaster":
-        from tsml_eval.estimators.forecasting.DDrCIF import DDrCIF
-
-        return DDrCIF(random_state=random_state, n_jobs=n_jobs, **kwargs)
+        # Backwards-compatible alias for the generic "d-drcif".
+        return get_forecaster_by_name(
+            "d-drcif", random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
     elif f == "ensemble1":
         from tsml_eval.estimators.forecasting.HybridStats import Ensemble1
 
