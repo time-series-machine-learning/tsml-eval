@@ -154,6 +154,21 @@ def _make_channel_transformer(
             random_state=random_state,
             n_jobs=n_jobs,
         )
+    if selector_key == "guardedmultiaxis":
+        from aeon_neuro.transformations.collection.channel_selection import (
+            GuardedMultiAxisReducer,
+        )
+
+        return GuardedMultiAxisReducer(
+            channel_selector="tselect",
+            proxy_component="auto",
+            strategy="auto",
+            max_score_loss=0.01,
+            aggressive_fraction=0.25,
+            aggressive_margin=0.0,
+            random_state=random_state,
+            n_jobs=n_jobs,
+        )
     if selector_key == "cleverrank":
         from aeon_neuro.transformations.collection.channel_selection import CLeVerRank
 

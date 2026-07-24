@@ -57,6 +57,7 @@ class _HalfCaseResampler:
         ("DetachRocket-HC2", "DetachRocket"),
         ("CSP-HC2", "CSP"),
         ("CaseTimeReducer-HC2", "CaseTimeReducer"),
+        ("GuardedMultiAxis-HC2", "GuardedMultiAxis"),
         ("CLeVerRank-HC2", "CLeVerRank"),
         ("CLeVerCluster-HC2", "CLeVerCluster"),
         ("CLeVerHybrid-HC2", "CLeVerHybrid"),
