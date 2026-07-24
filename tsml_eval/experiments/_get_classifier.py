@@ -269,7 +269,6 @@ def _set_classifier_channel_selection_hc2(
         "DetachRocket",
         "CSP",
         "CaseTimeReducer",
-        "GuardedMultiAxis",
         "CLeVerRank",
         "CLeVerCluster",
         "CLeVerHybrid",

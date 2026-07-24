@@ -155,9 +155,7 @@ def _make_channel_transformer(
             n_jobs=n_jobs,
         )
     if selector_key == "guardedmultiaxis":
-        from aeon_neuro.transformations.collection.channel_selection import (
-            GuardedMultiAxisReducer,
-        )
+        from tsml_eval.experiments._guarded_multiaxis import GuardedMultiAxisReducer
 
         return GuardedMultiAxisReducer(
             channel_selector="tselect",
