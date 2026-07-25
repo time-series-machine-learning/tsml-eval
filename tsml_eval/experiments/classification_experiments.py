@@ -8,6 +8,9 @@ __maintainer__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 import os
 import sys
+import warnings
+
+warnings.filterwarnings("ignore")
 
 # Do these before any other imports in i.e. numpy. This includes imports from other
 # files.

@@ -7,6 +7,9 @@ single debugging runs. Results are written in a standard tsml format.
 __maintainer__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 import sys
+import warnings
+
+warnings.filterwarnings("ignore")
 
 from tsml_eval.experiments import (
     get_classifier_by_name,
