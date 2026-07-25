@@ -2,6 +2,7 @@
 
 __maintainer__ = ["TonyBagnall"]
 
+import time
 from math import ceil
 
 from aeon.classification.base import BaseClassifier
@@ -53,6 +54,7 @@ class ChannelSelectionClassifierPipeline(BaseClassifier):
 
     def _fit(self, X, y):
         """Fit the transform and classifier, retaining aligned training labels."""
+        self.train_input_shape_ = tuple(int(v) for v in X.shape)
         self.transformer_ = _make_channel_transformer(
             self.selector,
             n_channels=X.shape[1],
@@ -61,23 +63,156 @@ class ChannelSelectionClassifierPipeline(BaseClassifier):
             n_jobs=self.n_jobs,
         )
 
+        start = time.perf_counter_ns()
         if hasattr(self.transformer_, "fit_resample"):
             Xt, yt = self.transformer_.fit_resample(X, y)
         else:
             Xt = self.transformer_.fit_transform(X, y)
             yt = y
+        self.transform_fit_time_millis_ = (
+            time.perf_counter_ns() - start
+        ) / 1_000_000
+        self.train_output_shape_ = tuple(int(v) for v in Xt.shape)
+        self.n_train_labels_in_ = int(len(y))
+        self.n_train_labels_out_ = int(len(yt))
 
         self.classifier_ = clone(self.classifier)
+        start = time.perf_counter_ns()
         self.classifier_.fit(Xt, yt)
+        self.hc2_fit_time_millis_ = (time.perf_counter_ns() - start) / 1_000_000
         return self
 
     def _predict(self, X):
         """Transform test cases without case subsampling, then predict."""
-        return self.classifier_.predict(self.transformer_.transform(X))
+        Xt = self._time_test_transform(X)
+        start = time.perf_counter_ns()
+        predictions = self.classifier_.predict(Xt)
+        self.hc2_predict_time_millis_ = (
+            time.perf_counter_ns() - start
+        ) / 1_000_000
+        return predictions
 
     def _predict_proba(self, X):
         """Transform test cases without case subsampling, then predict probabilities."""
-        return self.classifier_.predict_proba(self.transformer_.transform(X))
+        Xt = self._time_test_transform(X)
+        start = time.perf_counter_ns()
+        probabilities = self.classifier_.predict_proba(Xt)
+        self.hc2_predict_time_millis_ = (
+            time.perf_counter_ns() - start
+        ) / 1_000_000
+        return probabilities
+
+    def _time_test_transform(self, X):
+        """Transform test data while recording the transform-only wall time."""
+        self.test_input_shape_ = tuple(int(v) for v in X.shape)
+        start = time.perf_counter_ns()
+        Xt = self.transformer_.transform(X)
+        self.transform_predict_time_millis_ = (
+            time.perf_counter_ns() - start
+        ) / 1_000_000
+        self.test_output_shape_ = tuple(int(v) for v in Xt.shape)
+        return Xt
+
+    def get_experiment_metadata(self):
+        """Return compact fitted metadata for inclusion in experiment result files."""
+        if not hasattr(self, "transformer_"):
+            return {}
+
+        metadata = {
+            "transformer_class": type(self.transformer_).__name__,
+            "classifier_class": type(self.classifier_).__name__,
+            "timings_ms": {
+                "transform_fit": getattr(
+                    self, "transform_fit_time_millis_", None
+                ),
+                "hc2_fit": getattr(self, "hc2_fit_time_millis_", None),
+                "transform_predict": getattr(
+                    self, "transform_predict_time_millis_", None
+                ),
+                "hc2_predict": getattr(
+                    self, "hc2_predict_time_millis_", None
+                ),
+            },
+            "train_input_shape": getattr(self, "train_input_shape_", None),
+            "train_output_shape": getattr(self, "train_output_shape_", None),
+            "test_input_shape": getattr(self, "test_input_shape_", None),
+            "test_output_shape": getattr(self, "test_output_shape_", None),
+            "n_train_labels_in": getattr(self, "n_train_labels_in_", None),
+            "n_train_labels_out": getattr(self, "n_train_labels_out_", None),
+        }
+
+        transformer = getattr(self, "transformer_", None)
+        selected_channels = getattr(transformer, "channels_selected_", None)
+        if selected_channels is not None:
+            metadata["channels_selected"] = _metadata_to_builtin(
+                selected_channels
+            )
+
+        if transformer is not None and hasattr(
+            transformer, "get_reduction_summary"
+        ):
+            summary = transformer.get_reduction_summary()
+            large_index_fields = {
+                "case_indices",
+                "time_indices",
+            }
+            metadata["reduction_summary"] = {
+                key: value
+                for key, value in summary.items()
+                if key not in large_index_fields
+            }
+
+        candidate_results = getattr(transformer, "candidate_results_", None)
+        if candidate_results is not None:
+            trace_columns = [
+                "candidate",
+                "family",
+                "fraction",
+                "case_fraction",
+                "n_cases_final_train",
+                "n_channels_final",
+                "n_timepoints_final",
+                "score",
+                "guard_threshold",
+                "aggressive",
+                "eligible",
+                "selected",
+                "fit_time",
+                "predict_time",
+                "error",
+            ]
+            available = [
+                column
+                for column in trace_columns
+                if column in candidate_results.columns
+            ]
+            records = candidate_results[available].to_dict("records")
+            for record in records:
+                if "fit_time" in record:
+                    record["fit_time_seconds"] = record.pop("fit_time")
+                if "predict_time" in record:
+                    record["predict_time_seconds"] = record.pop(
+                        "predict_time"
+                    )
+            metadata["reduction_candidates"] = records
+
+        return _metadata_to_builtin(metadata)
+
+
+def _metadata_to_builtin(value):
+    """Convert NumPy/pandas scalar containers to compact built-in values."""
+    if isinstance(value, dict):
+        return {key: _metadata_to_builtin(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_metadata_to_builtin(item) for item in value]
+    if hasattr(value, "item"):
+        try:
+            return value.item()
+        except (ValueError, AttributeError):
+            pass
+    if hasattr(value, "tolist"):
+        return value.tolist()
+    return value
 
 
 def _make_channel_transformer(

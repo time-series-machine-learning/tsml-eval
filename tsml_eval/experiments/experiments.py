@@ -15,6 +15,7 @@ __all__ = [
     "load_and_run_forecasting_experiment",
 ]
 
+import json
 import os
 import time
 import warnings
@@ -231,7 +232,7 @@ def run_classification_experiment(
         f"Data transformers: {str(data_transforms)}. "
     )
 
-    second = str(classifier.get_params()).replace("\n", " ").replace("\r", " ")
+    second = _get_estimator_parameter_info(classifier)
 
     if build_train_file:
         cv_size = 10
@@ -253,6 +254,7 @@ def run_classification_experiment(
 
         train_preds = np.unique(y_train)[np.argmax(train_probs, axis=1)]
         train_acc = accuracy_score(y_train, train_preds)
+        second = _get_estimator_parameter_info(classifier)
 
         write_classification_results(
             train_preds,
@@ -307,6 +309,7 @@ def run_classification_experiment(
 
         test_preds = classifier.classes_[np.argmax(test_probs, axis=1)]
         test_acc = accuracy_score(y_test, test_preds)
+        second = _get_estimator_parameter_info(classifier)
 
         write_classification_results(
             test_preds,
@@ -334,6 +337,21 @@ def run_classification_experiment(
             train_estimate_time=-1,
             fit_and_estimate_time=fit_and_train_time,
         )
+
+
+def _get_estimator_parameter_info(estimator):
+    """Return parameters plus optional fitted experiment metadata on one line."""
+    parameter_info = str(estimator.get_params())
+    metadata_getter = getattr(estimator, "get_experiment_metadata", None)
+    if callable(metadata_getter):
+        metadata = metadata_getter()
+        if metadata:
+            parameter_info += " | experiment_metadata=" + json.dumps(
+                metadata,
+                separators=(",", ":"),
+                sort_keys=True,
+            )
+    return parameter_info.replace("\n", " ").replace("\r", " ")
 
 
 def load_and_run_classification_experiment(
