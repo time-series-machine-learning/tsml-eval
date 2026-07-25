@@ -5,6 +5,7 @@ __maintainer__ = ["TonyBagnall"]
 import time
 from math import ceil
 
+import numpy as np
 from aeon.classification.base import BaseClassifier
 from sklearn.base import clone
 
@@ -30,6 +31,8 @@ class ChannelSelectionClassifierPipeline(BaseClassifier):
         Random seed passed to stochastic transforms.
     n_jobs : int, default=1
         Number of jobs passed to transforms which support parallelism.
+    proxy_component : str or None, default=None
+        Downstream HC2 component used by component-aware reducers.
     """
 
     _tags = {
@@ -44,12 +47,14 @@ class ChannelSelectionClassifierPipeline(BaseClassifier):
         proportion=0.25,
         random_state=None,
         n_jobs=1,
+        proxy_component=None,
     ):
         self.selector = selector
         self.classifier = classifier
         self.proportion = proportion
         self.random_state = random_state
         self.n_jobs = n_jobs
+        self.proxy_component = proxy_component
         super().__init__()
 
     def _fit(self, X, y):
@@ -61,6 +66,7 @@ class ChannelSelectionClassifierPipeline(BaseClassifier):
             proportion=self.proportion,
             random_state=self.random_state,
             n_jobs=self.n_jobs,
+            proxy_component=self.proxy_component,
         )
 
         start = time.perf_counter_ns()
@@ -75,6 +81,8 @@ class ChannelSelectionClassifierPipeline(BaseClassifier):
         self.train_output_shape_ = tuple(int(v) for v in Xt.shape)
         self.n_train_labels_in_ = int(len(y))
         self.n_train_labels_out_ = int(len(yt))
+        self.train_class_counts_in_ = _class_counts(y)
+        self.train_class_counts_out_ = _class_counts(yt)
 
         self.classifier_ = clone(self.classifier)
         start = time.perf_counter_ns()
@@ -125,9 +133,15 @@ class ChannelSelectionClassifierPipeline(BaseClassifier):
                 "transform_fit": getattr(
                     self, "transform_fit_time_millis_", None
                 ),
+                "classifier_fit": getattr(
+                    self, "hc2_fit_time_millis_", None
+                ),
                 "hc2_fit": getattr(self, "hc2_fit_time_millis_", None),
                 "transform_predict": getattr(
                     self, "transform_predict_time_millis_", None
+                ),
+                "classifier_predict": getattr(
+                    self, "hc2_predict_time_millis_", None
                 ),
                 "hc2_predict": getattr(
                     self, "hc2_predict_time_millis_", None
@@ -139,14 +153,26 @@ class ChannelSelectionClassifierPipeline(BaseClassifier):
             "test_output_shape": getattr(self, "test_output_shape_", None),
             "n_train_labels_in": getattr(self, "n_train_labels_in_", None),
             "n_train_labels_out": getattr(self, "n_train_labels_out_", None),
+            "train_class_counts_in": getattr(
+                self, "train_class_counts_in_", None
+            ),
+            "train_class_counts_out": getattr(
+                self, "train_class_counts_out_", None
+            ),
         }
 
         transformer = getattr(self, "transformer_", None)
-        selected_channels = getattr(transformer, "channels_selected_", None)
-        if selected_channels is not None:
-            metadata["channels_selected"] = _metadata_to_builtin(
-                selected_channels
-            )
+        selector_metadata = _selector_metadata(transformer)
+        if selector_metadata:
+            metadata["selector"] = selector_metadata
+            if "channels_selected" in selector_metadata:
+                metadata["channels_selected"] = selector_metadata[
+                    "channels_selected"
+                ]
+
+        hc2_metadata = _hc2_metadata(getattr(self, "classifier_", None))
+        if hc2_metadata:
+            metadata["hc2"] = hc2_metadata
 
         if transformer is not None and hasattr(
             transformer, "get_reduction_summary"
@@ -169,10 +195,13 @@ class ChannelSelectionClassifierPipeline(BaseClassifier):
                 "family",
                 "fraction",
                 "case_fraction",
+                "use_channels",
                 "n_cases_final_train",
                 "n_channels_final",
                 "n_timepoints_final",
+                "input_size",
                 "score",
+                "full_score",
                 "guard_threshold",
                 "aggressive",
                 "eligible",
@@ -202,7 +231,20 @@ class ChannelSelectionClassifierPipeline(BaseClassifier):
 def _metadata_to_builtin(value):
     """Convert NumPy/pandas scalar containers to compact built-in values."""
     if isinstance(value, dict):
-        return {key: _metadata_to_builtin(item) for key, item in value.items()}
+        converted = {}
+        for key, item in value.items():
+            if hasattr(key, "item"):
+                key = key.item()
+            if not isinstance(key, (str, int, float, bool)) and key is not None:
+                key = str(key)
+            converted[key] = _metadata_to_builtin(item)
+        return converted
+    if isinstance(value, (set, frozenset)):
+        try:
+            value = sorted(value)
+        except TypeError:
+            value = list(value)
+        return [_metadata_to_builtin(item) for item in value]
     if isinstance(value, (list, tuple)):
         return [_metadata_to_builtin(item) for item in value]
     if hasattr(value, "item"):
@@ -215,12 +257,95 @@ def _metadata_to_builtin(value):
     return value
 
 
+def _class_counts(y):
+    """Return compact class frequencies for resampling diagnostics."""
+    labels, counts = np.unique(y, return_counts=True)
+    return {
+        str(label.item() if hasattr(label, "item") else label): int(count)
+        for label, count in zip(labels, counts)
+    }
+
+
+def _selector_metadata(transformer):
+    """Return selected channels and compact fitted selector diagnostics."""
+    if transformer is None:
+        return {}
+
+    selector = getattr(transformer, "channel_selector_", None)
+    if selector is None or isinstance(selector, str):
+        selector = transformer
+    selector_metadata = {"class": type(selector).__name__}
+    attribute_names = (
+        "channels_selected_",
+        "channel_scores_",
+        "scores_",
+        "channel_ranking_",
+        "channel_feature_proportions_",
+        "removed_series_auc_",
+        "removed_series_corr_",
+        "clusters_",
+        "cluster_labels_",
+        "best_score_",
+    )
+    for attribute_name in attribute_names:
+        value = getattr(selector, attribute_name, None)
+        if value is None and selector is not transformer:
+            value = getattr(transformer, attribute_name, None)
+        if value is not None:
+            key = attribute_name.removesuffix("_")
+            selector_metadata[key] = _metadata_to_builtin(value)
+
+    if len(selector_metadata) == 1:
+        return {}
+    return selector_metadata
+
+
+def _hc2_metadata(classifier):
+    """Return fitted HC2 weights, estimates and actual component settings."""
+    if classifier is None:
+        return {}
+
+    component_names = ("stc", "drcif", "arsenal", "tde")
+    weights = {}
+    estimates = {}
+    components = {}
+    for name in component_names:
+        weight = getattr(classifier, f"{name}_weight_", None)
+        if weight is not None:
+            weight = float(weight)
+            weights[name] = weight
+            estimates[name] = weight**0.25
+
+        fitted_component = getattr(classifier, f"_{name}", None)
+        component_params = getattr(classifier, f"_{name}_params", None)
+        if fitted_component is not None:
+            component_info = {"class": type(fitted_component).__name__}
+            if component_params is not None:
+                component_info["params"] = component_params
+            fit_time = getattr(fitted_component, "fit_time_millis_", None)
+            if fit_time is not None:
+                component_info["fit_time_millis"] = fit_time
+            components[name] = component_info
+
+    if not weights and not components:
+        return {}
+
+    return _metadata_to_builtin(
+        {
+            "weights": weights,
+            "training_accuracy_estimates": estimates,
+            "components": components,
+        }
+    )
+
+
 def _make_channel_transformer(
     selector,
     n_channels,
     proportion=0.25,
     random_state=None,
     n_jobs=1,
+    proxy_component=None,
 ):
     """Construct a channel transform after the input channel count is known."""
     if not 0 < proportion <= 1:
@@ -296,6 +421,28 @@ def _make_channel_transformer(
             channel_selector="tselect",
             proxy_component="auto",
             strategy="auto",
+            max_score_loss=0.01,
+            aggressive_fraction=0.25,
+            aggressive_margin=0.0,
+            random_state=random_state,
+            n_jobs=n_jobs,
+        )
+    if selector_key == "guardedmultiaxisv2":
+        from tsml_eval.experiments._guarded_multiaxis import GuardedMultiAxisReducer
+
+        component = (
+            "auto"
+            if proxy_component is None or proxy_component.casefold() == "hc2"
+            else proxy_component.casefold()
+        )
+        return GuardedMultiAxisReducer(
+            channel_selector="tselect",
+            proxy_component=component,
+            strategy="all",
+            reference="raw",
+            separate_proxy_selection=True,
+            evaluate_combinations=True,
+            refit_channel_selector=False,
             max_score_loss=0.01,
             aggressive_fraction=0.25,
             aggressive_margin=0.0,

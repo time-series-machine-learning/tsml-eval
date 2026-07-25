@@ -32,6 +32,31 @@ class _ConstantClassifier(ClassifierMixin, BaseEstimator):
         return np.repeat(self.class_, len(X))
 
 
+class _FirstChannelClassifier(ClassifierMixin, BaseEstimator):
+    """Classify using the sign of the first channel only."""
+
+    def fit(self, X, y):
+        """Return the fitted proxy."""
+        return self
+
+    def predict(self, X):
+        """Predict from the retained first channel."""
+        return (X[:, 0].mean(axis=1) > 0).astype(int)
+
+
+class _SecondChannelSelector(BaseEstimator):
+    """Deliberately retain only the uninformative second channel."""
+
+    def fit(self, X, y):
+        """Store the selected original channel."""
+        self.channels_selected_ = np.asarray([1])
+        return self
+
+    def transform(self, X):
+        """Return only the second channel."""
+        return X[:, [1], :]
+
+
 def _make_data(n_cases=40, n_channels=3, n_timepoints=40):
     rng = np.random.RandomState(7)
     y = np.asarray([0, 1] * (n_cases // 2))
@@ -124,3 +149,53 @@ def test_slice_indices_are_contiguous():
 
     assert reducer.route_ == "slice"
     assert np.all(np.diff(reducer.time_indices_) == 1)
+
+
+def test_raw_reference_can_reject_channel_selection():
+    """The v2 raw guard falls back to all channels if selection loses accuracy."""
+    rng = np.random.RandomState(3)
+    y = np.asarray([0, 1] * 30)
+    X = rng.normal(scale=0.1, size=(60, 2, 20))
+    X[y == 1, 0] += 1
+    X[y == 0, 0] -= 1
+    reducer = GuardedMultiAxisReducer(
+        channel_selector=_SecondChannelSelector(),
+        proxy_estimator=_FirstChannelClassifier(),
+        strategy="case",
+        reference="raw",
+        case_fractions=(1.0,),
+        random_state=0,
+    ).fit(X, y)
+
+    channel_row = reducer.candidate_results_.query("family == 'channel'").iloc[0]
+    assert not channel_row["eligible"]
+    assert reducer.route_ == "raw_full"
+    assert reducer.channels_selected_.tolist() == [0, 1]
+
+
+def test_controlled_combined_case_time_candidate():
+    """V2 evaluates and can select one guarded case-time combination."""
+    X, y = _make_data(n_cases=40, n_timepoints=40)
+    reducer = GuardedMultiAxisReducer(
+        channel_selector="none",
+        proxy_estimator=_SignalClassifier(),
+        strategy="all",
+        reference="raw",
+        evaluate_combinations=True,
+        case_fractions=(0.5, 1.0),
+        time_fractions=(0.5, 1.0),
+        slice_fractions=(1.0,),
+        min_cases_per_class=1,
+        min_timepoints=1,
+        max_score_loss=0,
+        random_state=0,
+    ).fit(X, y)
+
+    combined = reducer.candidate_results_.query(
+        "family == 'case_downsample'"
+    )
+    assert len(combined) == 1
+    assert combined.iloc[0]["eligible"]
+    assert reducer.route_ == "case_downsample"
+    assert reducer.n_cases_selected_ == 20
+    assert reducer.n_timepoints_selected_ == 20

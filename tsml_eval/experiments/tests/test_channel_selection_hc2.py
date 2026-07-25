@@ -66,6 +66,7 @@ class _HalfCaseResampler:
         ("CSP-HC2", "CSP"),
         ("CaseTimeReducer-HC2", "CaseTimeReducer"),
         ("GuardedMultiAxis-HC2", "GuardedMultiAxis"),
+        ("GMARv2-HC2", "GuardedMultiAxisV2"),
         ("CLeVerRank-HC2", "CLeVerRank"),
         ("CLeVerCluster-HC2", "CLeVerCluster"),
         ("CLeVerHybrid-HC2", "CLeVerHybrid"),
@@ -86,6 +87,54 @@ def test_channel_selection_hc2_factory_options(classifier_name, selector, monkey
     assert pipeline.proportion == 0.25
     assert pipeline.random_state == 7
     assert pipeline.classifier.random_state == 7
+
+
+@pytest.mark.parametrize(
+    "classifier_name, expected_class, parameter, expected_value",
+    [
+        ("ECS-Arsenal", "Arsenal", "n_kernels", 2000),
+        ("ECS-DrCIF", "DrCIFClassifier", "n_estimators", 500),
+        ("ECS-STC", "ShapeletTransformClassifier", "n_shapelet_samples", 10000),
+        ("ECS-TDE", "TemporalDictionaryEnsemble", "n_parameter_samples", 250),
+        ("GMARv2-Arsenal", "Arsenal", "n_kernels", 2000),
+    ],
+)
+def test_channel_selection_component_pipeline_options(
+    classifier_name,
+    expected_class,
+    parameter,
+    expected_value,
+):
+    """Component pipelines use the same budgets as the HC2 components."""
+    pipeline = get_classifier_by_name(
+        classifier_name,
+        random_state=7,
+        n_jobs=1,
+    )
+
+    assert isinstance(pipeline, ChannelSelectionClassifierPipeline)
+    expected_selector = (
+        "GuardedMultiAxisV2"
+        if classifier_name.startswith("GMARv2")
+        else "ECS"
+    )
+    assert pipeline.selector == expected_selector
+    assert type(pipeline.classifier).__name__ == expected_class
+    assert pipeline.classifier.get_params()[parameter] == expected_value
+    if classifier_name.startswith("GMARv2"):
+        assert pipeline.proxy_component == "arsenal"
+
+
+def test_full_hc2_stc_component_option():
+    """The full-data STC baseline uses aeon's exact HC2 component."""
+    classifier = get_classifier_by_name(
+        "Full-STC",
+        random_state=7,
+        n_jobs=1,
+    )
+
+    assert type(classifier).__name__ == "ShapeletTransformClassifier"
+    assert classifier.n_shapelet_samples == 10000
 
 
 def test_resampling_pipeline_keeps_training_labels_aligned(monkeypatch):
@@ -123,6 +172,8 @@ def test_resampling_pipeline_keeps_training_labels_aligned(monkeypatch):
     decoded_metadata = json.loads(encoded_metadata)
     assert "transform_fit" in decoded_metadata["timings_ms"]
     assert "hc2_fit" in decoded_metadata["timings_ms"]
+    assert decoded_metadata["train_class_counts_in"] == {"0": 5, "1": 5}
+    assert decoded_metadata["train_class_counts_out"] == {"0": 3, "1": 2}
 
 
 def test_guarded_reduction_trace_is_in_experiment_metadata(monkeypatch):
@@ -209,6 +260,12 @@ def test_pipeline_timings_are_written_to_result_file(monkeypatch, tmp_path):
         " | experiment_metadata=", maxsplit=1
     )[1]
     metadata = json.loads(encoded_metadata)
+    assert metadata["run"]["experiment"]["classifier"] == "TimedPipeline"
+    assert metadata["run"]["experiment"]["dataset"] == "Toy"
+    assert metadata["run"]["data"]["train"]["shape"] == [10, 3, 8]
+    assert metadata["run"]["data"]["train_class_counts"] == {"0": 5, "1": 5}
+    assert "python" in metadata["run"]["environment"]
+    assert "tsml-eval" in metadata["run"]["environment"]["packages"]
     assert "transform_fit" in metadata["timings_ms"]
     assert "hc2_fit" in metadata["timings_ms"]
     assert "transform_predict" in metadata["timings_ms"]
@@ -227,3 +284,22 @@ def test_guarded_multiaxis_transformer_is_local_to_tsml_eval():
     )
 
     assert isinstance(transformer, GuardedMultiAxisReducer)
+
+
+def test_guarded_multiaxis_v2_uses_component_proxy():
+    """GMARv2 uses the matching proxy and raw guarded integrated search."""
+    transformer = _make_channel_transformer(
+        selector="GuardedMultiAxisV2",
+        n_channels=4,
+        random_state=0,
+        n_jobs=1,
+        proxy_component="DrCIF",
+    )
+
+    assert isinstance(transformer, GuardedMultiAxisReducer)
+    assert transformer.proxy_component == "drcif"
+    assert transformer.strategy == "all"
+    assert transformer.reference == "raw"
+    assert transformer.separate_proxy_selection
+    assert transformer.evaluate_combinations
+    assert not transformer.refit_channel_selector

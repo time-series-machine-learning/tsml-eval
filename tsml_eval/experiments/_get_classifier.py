@@ -96,7 +96,34 @@ channel_selection_hc2_classifiers = [
     ["cleverrank-hc2", "hc2-cleverrank"],
     ["clevercluster-hc2", "hc2-clevercluster"],
     ["cleverhybrid-hc2", "hc2-cleverhybrid"],
+    ["gmarv2-hc2", "guardedmultiaxisv2-hc2"],
 ]
+_channel_selection_pipeline_selectors = (
+    "ecs",
+    "ecp",
+    "tselect",
+    "random",
+    "riemannian",
+    "detachrocket",
+    "csp",
+    "casetimereducer",
+    "guardedmultiaxis",
+    "cleverrank",
+    "clevercluster",
+    "cleverhybrid",
+    "gmarv2",
+)
+_channel_selection_pipeline_components = ("hc2", "arsenal", "drcif", "stc", "tde")
+channel_selection_hc2_classifiers.extend(
+    f"{selector}-{component}"
+    for selector in _channel_selection_pipeline_selectors
+    for component in _channel_selection_pipeline_components
+    if component != "hc2"
+)
+# The standard HC2, Arsenal, DrCIF-500 and TDE factory options already provide
+# the other full-data baselines. This explicit option avoids the experimental
+# STC factory variant and uses the exact aeon STC included in HC2.
+channel_selection_hc2_classifiers.append("full-stc")
 interval_based_classifiers = [
     "rstsf-500",
     ["rstsfclassifier", "rstsf", "r-stsf"],
@@ -232,37 +259,57 @@ def get_classifier_by_name(
 def _set_classifier_channel_selection_hc2(
     c, random_state, n_jobs, fit_contract, checkpoint, kwargs
 ):
-    aliases = {
+    selector_aliases = {
         "channelselectionclassifierpipeline": "ECS",
-        "ecs-hc2": "ECS",
-        "hc2-ecs": "ECS",
-        "ecp-hc2": "ECP",
-        "hc2-ecp": "ECP",
-        "tselect-hc2": "TSelect",
-        "hc2-tselect": "TSelect",
-        "random-hc2": "Random",
-        "hc2-random": "Random",
-        "riemannian-hc2": "Riemannian",
-        "hc2-riemannian": "Riemannian",
-        "detachrocket-hc2": "DetachRocket",
-        "hc2-detachrocket": "DetachRocket",
-        "csp-hc2": "CSP",
-        "hc2-csp": "CSP",
-        "casetimereducer-hc2": "CaseTimeReducer",
-        "hc2-casetimereducer": "CaseTimeReducer",
-        "guardedmultiaxis-hc2": "GuardedMultiAxis",
-        "guardedmultiaxisreducer-hc2": "GuardedMultiAxis",
-        "guarded-multiaxis-hc2": "GuardedMultiAxis",
-        "hc2-guardedmultiaxis": "GuardedMultiAxis",
-        "gmar-hc2": "GuardedMultiAxis",
-        "cleverrank-hc2": "CLeVerRank",
-        "hc2-cleverrank": "CLeVerRank",
-        "clevercluster-hc2": "CLeVerCluster",
-        "hc2-clevercluster": "CLeVerCluster",
-        "cleverhybrid-hc2": "CLeVerHybrid",
-        "hc2-cleverhybrid": "CLeVerHybrid",
+        "ecs": "ECS",
+        "ecp": "ECP",
+        "tselect": "TSelect",
+        "random": "Random",
+        "riemannian": "Riemannian",
+        "detachrocket": "DetachRocket",
+        "csp": "CSP",
+        "casetimereducer": "CaseTimeReducer",
+        "guardedmultiaxis": "GuardedMultiAxis",
+        "guardedmultiaxisreducer": "GuardedMultiAxis",
+        "guarded-multiaxis": "GuardedMultiAxis",
+        "gmar": "GuardedMultiAxis",
+        "cleverrank": "CLeVerRank",
+        "clevercluster": "CLeVerCluster",
+        "cleverhybrid": "CLeVerHybrid",
+        "gmarv2": "GuardedMultiAxisV2",
+        "guardedmultiaxisv2": "GuardedMultiAxisV2",
     }
-    selector = aliases[c]
+    legacy_reverse_aliases = {
+        "hc2-ecs": "ecs-hc2",
+        "hc2-ecp": "ecp-hc2",
+        "hc2-tselect": "tselect-hc2",
+        "hc2-random": "random-hc2",
+        "hc2-riemannian": "riemannian-hc2",
+        "hc2-detachrocket": "detachrocket-hc2",
+        "hc2-csp": "csp-hc2",
+        "hc2-casetimereducer": "casetimereducer-hc2",
+        "hc2-guardedmultiaxis": "guardedmultiaxis-hc2",
+        "hc2-cleverrank": "cleverrank-hc2",
+        "hc2-clevercluster": "clevercluster-hc2",
+        "hc2-cleverhybrid": "cleverhybrid-hc2",
+    }
+    c = legacy_reverse_aliases.get(c, c)
+    if c == "channelselectionclassifierpipeline":
+        selector_key, component = c, "hc2"
+    else:
+        selector_key, component = c.rsplit("-", maxsplit=1)
+
+    classifier = _make_hc2_or_component(
+        component=component,
+        random_state=random_state,
+        n_jobs=n_jobs,
+        fit_contract=fit_contract,
+        kwargs=kwargs,
+    )
+    if selector_key == "full":
+        return classifier
+
+    selector = selector_aliases[selector_key]
 
     aeon_neuro_selectors = {
         "Riemannian",
@@ -279,28 +326,78 @@ def _set_classifier_channel_selection_hc2(
         except ModuleNotFoundError as exc:
             raise ModuleNotFoundError(
                 "aeon-neuro is an optional dependency for "
-                f"the {selector}-HC2 classifier pipeline."
+                f"the {selector}-{component} classifier pipeline."
             ) from exc
-
-    from aeon.classification.hybrid import HIVECOTEV2
 
     from tsml_eval.experiments._channel_selection_hc2 import (
         ChannelSelectionClassifierPipeline,
     )
 
-    classifier = HIVECOTEV2(
-        random_state=random_state,
-        n_jobs=n_jobs,
-        time_limit_in_minutes=fit_contract,
-        **kwargs,
-    )
     return ChannelSelectionClassifierPipeline(
         selector=selector,
         classifier=classifier,
         proportion=0.25,
         random_state=random_state,
         n_jobs=n_jobs,
+        proxy_component=component if selector == "GuardedMultiAxisV2" else None,
     )
+
+
+def _make_hc2_or_component(component, random_state, n_jobs, fit_contract, kwargs):
+    """Construct HC2 or one component using HC2's full default budget."""
+    if component == "hc2":
+        from aeon.classification.hybrid import HIVECOTEV2
+
+        return HIVECOTEV2(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    if component == "arsenal":
+        from aeon.classification.convolution_based import Arsenal
+
+        return Arsenal(
+            n_kernels=2000,
+            n_estimators=25,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    if component == "drcif":
+        from aeon.classification.interval_based import DrCIFClassifier
+
+        return DrCIFClassifier(
+            n_estimators=500,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    if component == "stc":
+        from aeon.classification.shapelet_based import ShapeletTransformClassifier
+
+        return ShapeletTransformClassifier(
+            n_shapelet_samples=10000,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    if component == "tde":
+        from aeon.classification.dictionary_based import TemporalDictionaryEnsemble
+
+        return TemporalDictionaryEnsemble(
+            n_parameter_samples=250,
+            max_ensemble_size=50,
+            randomly_selected_params=50,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    raise ValueError(f"Unknown HC2 component: {component}")
 
 
 def _set_classifier_convolution_based(

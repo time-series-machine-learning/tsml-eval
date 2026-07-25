@@ -52,6 +52,22 @@ class GuardedMultiAxisReducer(BaseEstimator):
         time points after channel selection, otherwise temporal downsampling and
         slicing. ``"time"`` evaluates both temporal families. ``"all"`` evaluates
         every family.
+    reference : {"channel", "raw"}, default="channel"
+        Validation reference used by the score guard. ``"channel"`` preserves the
+        original behaviour and guards case/time reduction relative to channel
+        selection alone. ``"raw"`` guards every candidate, including channel
+        selection, relative to the unreduced collection.
+    separate_proxy_selection : bool, default=False
+        If True, automatic proxy-component selection uses a split nested inside the
+        internal training fold, leaving the outer validation fold exclusively for
+        reduction decisions.
+    evaluate_combinations : bool, default=False
+        If True, evaluate one controlled joint candidate combining the smallest
+        eligible case candidate with the smallest eligible temporal candidate.
+    refit_channel_selector : bool, default=True
+        If True, refit the selected channel selector on all training cases after
+        tuning. If False, retain the selector fitted on the internal training fold,
+        so the final channel transformation is exactly the one validated.
     case_fractions : tuple of float, default=(0.25, 0.5, 1.0)
         Candidate fractions of training cases.
     time_fractions : tuple of float, default=(0.125, 0.25, 0.5, 1.0)
@@ -123,6 +139,10 @@ class GuardedMultiAxisReducer(BaseEstimator):
         proxy_estimator: Any | None = None,
         proxy_component: str = "auto",
         strategy: str = "auto",
+        reference: str = "channel",
+        separate_proxy_selection: bool = False,
+        evaluate_combinations: bool = False,
+        refit_channel_selector: bool = True,
         case_fractions: tuple[float, ...] = (0.25, 0.5, 1.0),
         time_fractions: tuple[float, ...] = (0.125, 0.25, 0.5, 1.0),
         slice_fractions: tuple[float, ...] = (0.25, 0.5, 0.75, 1.0),
@@ -144,6 +164,10 @@ class GuardedMultiAxisReducer(BaseEstimator):
         self.proxy_estimator = proxy_estimator
         self.proxy_component = proxy_component
         self.strategy = strategy
+        self.reference = reference
+        self.separate_proxy_selection = separate_proxy_selection
+        self.evaluate_combinations = evaluate_combinations
+        self.refit_channel_selector = refit_channel_selector
         self.case_fractions = case_fractions
         self.time_fractions = time_fractions
         self.slice_fractions = slice_fractions
@@ -179,23 +203,50 @@ class GuardedMultiAxisReducer(BaseEstimator):
         self.n_channels_tuning_ = X_channels.shape[1]
         self.n_channels_selected_ = self.n_channels_tuning_
 
+        proxy_selection_X = X if self.reference == "raw" else X_channels
         self.proxy_component_, self.proxy_component_scores_ = (
-            self._select_proxy_component(X_channels, y, train_idx, val_idx)
+            self._select_proxy_component(
+                proxy_selection_X, y, train_idx, val_idx
+            )
         )
 
-        full_candidate = self._candidate(
-            family="full",
+        full_time = np.arange(self.n_timepoints_in_, dtype=int)
+        reference_uses_channels = self.reference == "channel"
+        reference_X = X_channels if reference_uses_channels else X
+        reference_candidate = self._candidate(
+            family="full" if reference_uses_channels else "raw_full",
             fraction=1.0,
             case_fraction=1.0,
-            time_indices=np.arange(self.n_timepoints_in_, dtype=int),
+            time_indices=full_time,
             slice_start=None,
+            use_channels=reference_uses_channels,
         )
         rows = [
-            self._evaluate_candidate(X_channels, y, train_idx, val_idx, full_candidate)
+            self._evaluate_candidate(
+                reference_X, y, train_idx, val_idx, reference_candidate
+            )
         ]
         self.full_score_ = float(rows[0]["score"])
         if not np.isfinite(self.full_score_):
             raise RuntimeError("The full-data proxy evaluation failed.")
+
+        if self.reference == "raw":
+            channel_candidate = self._candidate(
+                family="channel",
+                fraction=1.0,
+                case_fraction=1.0,
+                time_indices=full_time,
+                slice_start=None,
+                use_channels=True,
+            )
+            rows.append(
+                self._evaluate_candidate(
+                    X_channels, y, train_idx, val_idx, channel_candidate
+                )
+            )
+            self.channel_score_ = float(rows[-1]["score"])
+        else:
+            self.channel_score_ = self.full_score_
 
         families = self._resolve_families()
         if "case" in families:
@@ -238,19 +289,20 @@ class GuardedMultiAxisReducer(BaseEstimator):
                 )
             )
 
-        self.channel_selector_ = self._make_channel_selector()
-        _, self.channels_selected_ = self._fit_channel_selector(
-            self.channel_selector_, X, y
-        )
-        self.n_channels_selected_ = len(self.channels_selected_)
+        if self.evaluate_combinations:
+            combined_candidate = self._make_combined_candidate(rows)
+            if combined_candidate is not None:
+                rows.append(
+                    self._evaluate_candidate(
+                        X_channels,
+                        y,
+                        train_idx,
+                        val_idx,
+                        combined_candidate,
+                    )
+                )
 
         self.candidate_results_ = pd.DataFrame(rows)
-        self.candidate_results_["n_channels_final"] = self.n_channels_selected_
-        self.candidate_results_["input_size"] = (
-            self.candidate_results_["n_cases_final_train"]
-            * self.n_channels_selected_
-            * self.candidate_results_["n_timepoints_final"]
-        )
         selected = self._select_candidate(self.candidate_results_)
         self.selected_candidate_ = selected
         self.route_ = str(selected["family"])
@@ -264,6 +316,20 @@ class GuardedMultiAxisReducer(BaseEstimator):
             np.isfinite(self.candidate_results_["score"]), "score"
         ]
         self.best_score_ = float(finite_scores.max())
+
+        if bool(selected["use_channels"]):
+            if self.refit_channel_selector:
+                self.channel_selector_ = self._make_channel_selector()
+                _, self.channels_selected_ = self._fit_channel_selector(
+                    self.channel_selector_, X, y
+                )
+            else:
+                self.channel_selector_ = self.tuning_channel_selector_
+                self.channels_selected_ = self.tuning_channels_selected_.copy()
+        else:
+            self.channel_selector_ = None
+            self.channels_selected_ = np.arange(self.n_channels_in_, dtype=int)
+        self.n_channels_selected_ = len(self.channels_selected_)
 
         self.case_indices_ = self._sample_case_indices(
             y, self.case_fraction_, np.arange(len(y), dtype=int)
@@ -307,8 +373,18 @@ class GuardedMultiAxisReducer(BaseEstimator):
         check_is_fitted(self, "selected_candidate_")
         return {
             "route": self.route_,
+            "reference": self.reference,
+            "separate_proxy_selection": self.separate_proxy_selection,
+            "evaluate_combinations": self.evaluate_combinations,
+            "refit_channel_selector": self.refit_channel_selector,
             "proxy_component": self.proxy_component_,
             "proxy_component_scores": dict(self.proxy_component_scores_),
+            "n_proxy_selection_train": len(
+                getattr(self, "proxy_train_indices_", [])
+            ),
+            "n_proxy_selection_validation": len(
+                getattr(self, "proxy_validation_indices_", [])
+            ),
             "n_cases_in": self.n_cases_in_,
             "n_cases_selected": self.n_cases_selected_,
             "n_channels_in": self.n_channels_in_,
@@ -323,6 +399,7 @@ class GuardedMultiAxisReducer(BaseEstimator):
             "time_indices": self.time_indices_.tolist(),
             "slice_start": self.slice_start_,
             "full_score": self.full_score_,
+            "channel_score": self.channel_score_,
             "best_score": self.best_score_,
             "selection_score": self.selection_score_,
             "score_is_tuning_score": True,
@@ -346,6 +423,8 @@ class GuardedMultiAxisReducer(BaseEstimator):
             )
         if self.strategy not in {"auto", "case", "time", "all"}:
             raise ValueError("strategy must be one of {'auto', 'case', 'time', 'all'}.")
+        if self.reference not in {"channel", "raw"}:
+            raise ValueError("reference must be 'channel' or 'raw'.")
         if self.scoring not in {"balanced_accuracy", "accuracy"}:
             raise ValueError("scoring must be 'balanced_accuracy' or 'accuracy'.")
         if not 0 < self.validation_size < 1:
@@ -404,10 +483,14 @@ class GuardedMultiAxisReducer(BaseEstimator):
             )
         return transformed, np.asarray(selected, dtype=int)
 
-    def _make_train_val_indices(self, y):
-        indices = np.arange(len(y), dtype=int)
-        _, counts = np.unique(y, return_counts=True)
-        stratify = y if np.min(counts) >= 2 else None
+    def _make_train_val_indices(self, y, available_indices=None):
+        indices = (
+            np.arange(len(y), dtype=int)
+            if available_indices is None
+            else np.asarray(available_indices, dtype=int)
+        )
+        _, counts = np.unique(y[indices], return_counts=True)
+        stratify = y[indices] if np.min(counts) >= 2 else None
         try:
             train, validation = train_test_split(
                 indices,
@@ -426,6 +509,20 @@ class GuardedMultiAxisReducer(BaseEstimator):
     def _select_proxy_component(self, X, y, train_idx, val_idx):
         if self.proxy_estimator is not None:
             return "custom", {}
+        if self.separate_proxy_selection and self.proxy_component != "auto":
+            self.proxy_train_indices_ = np.asarray(train_idx, dtype=int)
+            self.proxy_validation_indices_ = np.asarray([], dtype=int)
+            return self.proxy_component, {}
+
+        proxy_train_idx = train_idx
+        proxy_val_idx = val_idx
+        if self.separate_proxy_selection:
+            proxy_train_idx, proxy_val_idx = self._make_train_val_indices(
+                y, available_indices=train_idx
+            )
+        self.proxy_train_indices_ = np.asarray(proxy_train_idx, dtype=int)
+        self.proxy_validation_indices_ = np.asarray(proxy_val_idx, dtype=int)
+
         components = (
             ("tde", "arsenal", "drcif", "stc")
             if self.proxy_component == "auto"
@@ -435,9 +532,9 @@ class GuardedMultiAxisReducer(BaseEstimator):
         for component in components:
             estimator = self._make_component_proxy(component)
             try:
-                estimator.fit(X[train_idx], y[train_idx])
+                estimator.fit(X[proxy_train_idx], y[proxy_train_idx])
                 scores[component] = self._score(
-                    y[val_idx], estimator.predict(X[val_idx])
+                    y[proxy_val_idx], estimator.predict(X[proxy_val_idx])
                 )
             except Exception:
                 if self.fail_fast:
@@ -580,7 +677,14 @@ class GuardedMultiAxisReducer(BaseEstimator):
         ]
 
     @staticmethod
-    def _candidate(family, fraction, case_fraction, time_indices, slice_start):
+    def _candidate(
+        family,
+        fraction,
+        case_fraction,
+        time_indices,
+        slice_start,
+        use_channels=True,
+    ):
         suffix = "" if slice_start is None else f"_start_{slice_start}"
         return {
             "family": family,
@@ -589,6 +693,7 @@ class GuardedMultiAxisReducer(BaseEstimator):
             "case_fraction": float(case_fraction),
             "time_indices": np.asarray(time_indices, dtype=int),
             "slice_start": slice_start,
+            "use_channels": bool(use_channels),
         }
 
     def _evaluate_candidate(self, X, y, train_idx, val_idx, candidate):
@@ -629,7 +734,7 @@ class GuardedMultiAxisReducer(BaseEstimator):
         final_time = len(candidate["time_indices"])
         fraction = candidate["fraction"]
         aggressive = fraction < self.aggressive_fraction
-        if candidate["family"] == "full":
+        if candidate["family"] in {"full", "raw_full"}:
             guard_threshold = score
             eligible = bool(np.isfinite(score))
         else:
@@ -640,27 +745,61 @@ class GuardedMultiAxisReducer(BaseEstimator):
             )
             eligible = bool(np.isfinite(score) and score >= guard_threshold)
         recorded_full_score = (
-            score if candidate["family"] == "full" else self.full_score_
+            score
+            if candidate["family"] in {"full", "raw_full"}
+            else self.full_score_
         )
         return {
             **candidate,
             "time_indices": candidate["time_indices"].tolist(),
             "n_cases_proxy_train": len(proxy_train),
             "n_cases_final_train": final_cases,
-            "n_channels_final": self.n_channels_selected_,
+            "n_channels_final": X.shape[1],
             "n_timepoints_final": final_time,
             "score": score,
             "full_score": recorded_full_score,
             "guard_threshold": guard_threshold,
             "aggressive": aggressive,
             "eligible": eligible,
-            "input_size": final_cases * self.n_channels_selected_ * final_time,
+            "input_size": final_cases * X.shape[1] * final_time,
             "fit_time": fit_time,
             "predict_time": predict_time,
             "total_time": fit_time + (0.0 if np.isnan(predict_time) else predict_time),
             "selected": False,
             "error": error,
         }
+
+    def _make_combined_candidate(self, rows):
+        """Combine the smallest eligible case and temporal candidates once."""
+        eligible_case = [
+            row
+            for row in rows
+            if row["family"] == "case" and row["eligible"]
+        ]
+        eligible_time = [
+            row
+            for row in rows
+            if row["family"] in {"downsample", "slice"} and row["eligible"]
+        ]
+        if not eligible_case or not eligible_time:
+            return None
+
+        def ordering(row):
+            return row["input_size"], -row["score"], row["total_time"]
+
+        case_candidate = min(eligible_case, key=ordering)
+        time_candidate = min(eligible_time, key=ordering)
+        return self._candidate(
+            family=f"case_{time_candidate['family']}",
+            fraction=(
+                float(case_candidate["case_fraction"])
+                * float(time_candidate["fraction"])
+            ),
+            case_fraction=float(case_candidate["case_fraction"]),
+            time_indices=np.asarray(time_candidate["time_indices"], dtype=int),
+            slice_start=time_candidate["slice_start"],
+            use_channels=True,
+        )
 
     def _select_candidate(self, results):
         finite = results[np.isfinite(results["score"])].copy()
@@ -704,7 +843,7 @@ class GuardedMultiAxisReducer(BaseEstimator):
         time_indices = np.asarray(time_indices, dtype=int)
         if len(time_indices) >= X.shape[2]:
             return X
-        if family == "slice" or self.time_reduction == "subsample":
+        if "slice" in family or self.time_reduction == "subsample":
             return X[:, :, time_indices]
         return resample(X, num=len(time_indices), axis=2)
 

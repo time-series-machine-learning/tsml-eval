@@ -17,9 +17,14 @@ __all__ = [
 
 import json
 import os
+import platform
+import subprocess
+import sys
 import time
 import warnings
 from datetime import datetime
+from importlib import import_module, metadata
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -214,6 +219,16 @@ def run_classification_experiment(
 
     encoder_dict = {label: i for i, label in enumerate(le.classes_)}
     n_classes = len(np.unique(y_train))
+    run_metadata = _get_classification_run_metadata(
+        X_train=X_train,
+        y_train=y_train,
+        X_test=X_test,
+        y_test=y_test,
+        classifier_name=classifier_name,
+        dataset_name=dataset_name,
+        resample_id=resample_id,
+        benchmark_time=benchmark_time,
+    )
 
     needs_fit = True
     fit_time = -1
@@ -232,7 +247,7 @@ def run_classification_experiment(
         f"Data transformers: {str(data_transforms)}. "
     )
 
-    second = _get_estimator_parameter_info(classifier)
+    second = _get_estimator_parameter_info(classifier, run_metadata)
 
     if build_train_file:
         cv_size = 10
@@ -254,7 +269,7 @@ def run_classification_experiment(
 
         train_preds = np.unique(y_train)[np.argmax(train_probs, axis=1)]
         train_acc = accuracy_score(y_train, train_preds)
-        second = _get_estimator_parameter_info(classifier)
+        second = _get_estimator_parameter_info(classifier, run_metadata)
 
         write_classification_results(
             train_preds,
@@ -309,7 +324,7 @@ def run_classification_experiment(
 
         test_preds = classifier.classes_[np.argmax(test_probs, axis=1)]
         test_acc = accuracy_score(y_test, test_preds)
-        second = _get_estimator_parameter_info(classifier)
+        second = _get_estimator_parameter_info(classifier, run_metadata)
 
         write_classification_results(
             test_preds,
@@ -339,19 +354,215 @@ def run_classification_experiment(
         )
 
 
-def _get_estimator_parameter_info(estimator):
+def _get_estimator_parameter_info(estimator, run_metadata=None):
     """Return parameters plus optional fitted experiment metadata on one line."""
     parameter_info = str(estimator.get_params())
+    metadata_fields = {}
+    if run_metadata:
+        metadata_fields["run"] = run_metadata
+
     metadata_getter = getattr(estimator, "get_experiment_metadata", None)
     if callable(metadata_getter):
-        metadata = metadata_getter()
-        if metadata:
-            parameter_info += " | experiment_metadata=" + json.dumps(
-                metadata,
-                separators=(",", ":"),
-                sort_keys=True,
-            )
+        estimator_metadata = metadata_getter()
+        if estimator_metadata:
+            metadata_fields.update(estimator_metadata)
+
+    if metadata_fields:
+        parameter_info += " | experiment_metadata=" + json.dumps(
+            metadata_fields,
+            separators=(",", ":"),
+            sort_keys=True,
+        )
     return parameter_info.replace("\n", " ").replace("\r", " ")
+
+
+def _get_classification_run_metadata(
+    X_train,
+    y_train,
+    X_test,
+    y_test,
+    classifier_name,
+    dataset_name,
+    resample_id,
+    benchmark_time,
+):
+    """Collect compact data, software and execution provenance for a result."""
+    return {
+        "experiment": {
+            "classifier": classifier_name,
+            "dataset": dataset_name,
+            "resample_id": resample_id,
+            "benchmark_enabled": bool(benchmark_time),
+            "command": list(sys.argv),
+        },
+        "data": {
+            "train": _collection_metadata(X_train),
+            "test": _collection_metadata(X_test),
+            "train_class_counts": _class_counts(y_train),
+            "test_class_counts": _class_counts(y_test),
+        },
+        "environment": _environment_metadata(),
+    }
+
+
+def _collection_metadata(X):
+    """Summarise an aeon collection without serialising the collection itself."""
+    if isinstance(X, np.ndarray):
+        return {
+            "container": "ndarray",
+            "shape": [int(value) for value in X.shape],
+            "dtype": str(X.dtype),
+        }
+
+    n_cases = int(get_n_cases(X))
+    channel_counts = []
+    timepoint_counts = []
+    for case in X:
+        case_array = np.asarray(case)
+        if case_array.ndim == 1:
+            channel_counts.append(1)
+            timepoint_counts.append(int(case_array.shape[0]))
+        else:
+            channel_counts.append(int(case_array.shape[-2]))
+            timepoint_counts.append(int(case_array.shape[-1]))
+
+    return {
+        "container": type(X).__name__,
+        "n_cases": n_cases,
+        "n_channels_min": min(channel_counts, default=0),
+        "n_channels_max": max(channel_counts, default=0),
+        "n_timepoints_min": min(timepoint_counts, default=0),
+        "n_timepoints_max": max(timepoint_counts, default=0),
+        "equal_length": len(set(timepoint_counts)) <= 1,
+    }
+
+
+def _class_counts(y):
+    """Return JSON-safe class frequencies."""
+    labels, counts = np.unique(y, return_counts=True)
+    return {
+        str(label.item() if hasattr(label, "item") else label): int(count)
+        for label, count in zip(labels, counts)
+    }
+
+
+def _environment_metadata():
+    """Return software, Git, scheduler and thread provenance."""
+    environment = {
+        "host": platform.node(),
+        "platform": platform.platform(),
+        "machine": platform.machine(),
+        "processor": platform.processor(),
+        "python": platform.python_version(),
+        "python_executable": sys.executable,
+        "logical_cpus": os.cpu_count(),
+        "packages": {},
+    }
+
+    package_specs = (
+        ("tsml_eval", "tsml-eval"),
+        ("aeon", "aeon"),
+        ("aeon_neuro", "aeon-neuro"),
+        ("numpy", "numpy"),
+        ("scipy", "scipy"),
+        ("sklearn", "scikit-learn"),
+        ("pandas", "pandas"),
+        ("numba", "numba"),
+    )
+    repositories = {}
+    for module_name, distribution_name in package_specs:
+        package_info = _package_metadata(module_name, distribution_name)
+        if package_info is None:
+            continue
+        environment["packages"][distribution_name] = package_info
+
+        git_info = _git_metadata(package_info.get("path"))
+        if git_info is not None:
+            repositories[distribution_name] = git_info
+
+    if repositories:
+        environment["git"] = repositories
+
+    variable_names = (
+        "SLURM_JOB_ID",
+        "SLURM_JOB_NAME",
+        "SLURM_CLUSTER_NAME",
+        "SLURM_JOB_PARTITION",
+        "SLURM_NODELIST",
+        "SLURM_JOB_CPUS_PER_NODE",
+        "SLURM_CPUS_PER_TASK",
+        "SLURM_MEM_PER_CPU",
+        "SLURM_MEM_PER_NODE",
+        "OMP_NUM_THREADS",
+        "MKL_NUM_THREADS",
+        "OPENBLAS_NUM_THREADS",
+        "NUMEXPR_NUM_THREADS",
+        "NUMBA_NUM_THREADS",
+        "LOKY_MAX_CPU_COUNT",
+        "CUDA_VISIBLE_DEVICES",
+    )
+    variables = {
+        name: os.environ[name] for name in variable_names if name in os.environ
+    }
+    if variables:
+        environment["variables"] = variables
+    return environment
+
+
+def _package_metadata(module_name, distribution_name):
+    """Return the installed version and imported source path, if available."""
+    try:
+        module = import_module(module_name)
+    except (ImportError, ModuleNotFoundError):
+        return None
+
+    try:
+        version = metadata.version(distribution_name)
+    except metadata.PackageNotFoundError:
+        version = getattr(module, "__version__", "unknown")
+
+    module_path = getattr(module, "__file__", None)
+    return {
+        "version": str(version),
+        "path": str(Path(module_path).resolve()) if module_path else None,
+    }
+
+
+def _git_metadata(module_path):
+    """Return commit, branch and tracked dirty state for a source checkout."""
+    if module_path is None:
+        return None
+
+    path = Path(module_path).resolve().parent
+    repository = next(
+        (parent for parent in (path, *path.parents) if (parent / ".git").exists()),
+        None,
+    )
+    if repository is None:
+        return None
+
+    def _git(*args):
+        return subprocess.run(
+            ["git", "-C", str(repository), *args],
+            capture_output=True,
+            check=True,
+            text=True,
+            timeout=5,
+        ).stdout.strip()
+
+    try:
+        commit = _git("rev-parse", "HEAD")
+        branch = _git("branch", "--show-current") or "detached"
+        status = _git("status", "--porcelain", "--untracked-files=no")
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+    return {
+        "root": str(repository),
+        "commit": commit,
+        "branch": branch,
+        "tracked_changes": bool(status),
+    }
 
 
 def load_and_run_classification_experiment(
