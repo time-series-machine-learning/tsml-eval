@@ -97,6 +97,7 @@ channel_selection_hc2_classifiers = [
     ["clevercluster-hc2", "hc2-clevercluster"],
     ["cleverhybrid-hc2", "hc2-cleverhybrid"],
     ["gmarv2-hc2", "guardedmultiaxisv2-hc2"],
+    ["gmarv3-hc2", "guardedtemporalv3-hc2"],
 ]
 _channel_selection_pipeline_selectors = (
     "ecs",
@@ -112,6 +113,7 @@ _channel_selection_pipeline_selectors = (
     "clevercluster",
     "cleverhybrid",
     "gmarv2",
+    "gmarv3",
 )
 _channel_selection_pipeline_components = ("hc2", "arsenal", "drcif", "stc", "tde")
 channel_selection_hc2_classifiers.extend(
@@ -278,6 +280,8 @@ def _set_classifier_channel_selection_hc2(
         "cleverhybrid": "CLeVerHybrid",
         "gmarv2": "GuardedMultiAxisV2",
         "guardedmultiaxisv2": "GuardedMultiAxisV2",
+        "gmarv3": "GuardedTemporalV3",
+        "guardedtemporalv3": "GuardedTemporalV3",
     }
     legacy_reverse_aliases = {
         "hc2-ecs": "ecs-hc2",
@@ -339,7 +343,11 @@ def _set_classifier_channel_selection_hc2(
         proportion=0.25,
         random_state=random_state,
         n_jobs=n_jobs,
-        proxy_component=component if selector == "GuardedMultiAxisV2" else None,
+        proxy_component=(
+            component
+            if selector in {"GuardedMultiAxisV2", "GuardedTemporalV3"}
+            else None
+        ),
     )
 
 

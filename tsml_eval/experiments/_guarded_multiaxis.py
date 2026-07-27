@@ -57,6 +57,11 @@ class GuardedMultiAxisReducer(BaseEstimator):
         original behaviour and guards case/time reduction relative to channel
         selection alone. ``"raw"`` guards every candidate, including channel
         selection, relative to the unreduced collection.
+    raw_fallback : bool, default=False
+        If True with ``reference="channel"``, first guard the channel-selected
+        representation against the raw collection. If channel selection is unsafe,
+        return the raw collection without evaluating further reductions. Otherwise,
+        guard temporal candidates relative to channel selection alone.
     separate_proxy_selection : bool, default=False
         If True, automatic proxy-component selection uses a split nested inside the
         internal training fold, leaving the outer validation fold exclusively for
@@ -77,6 +82,9 @@ class GuardedMultiAxisReducer(BaseEstimator):
     slice_positions : tuple of float, default=(0.0, 0.5, 1.0)
         Relative start positions for slices, where zero is the start and one is the
         latest valid start.
+    min_slice_timepoints : int, default=1
+        Minimum original series length for evaluating contiguous slice candidates.
+        Downsampling candidates are unaffected.
     validation_size : float, default=0.33
         Fraction of training cases assigned to the fixed internal validation split.
     scoring : {"balanced_accuracy", "accuracy"}, default="balanced_accuracy"
@@ -140,6 +148,7 @@ class GuardedMultiAxisReducer(BaseEstimator):
         proxy_component: str = "auto",
         strategy: str = "auto",
         reference: str = "channel",
+        raw_fallback: bool = False,
         separate_proxy_selection: bool = False,
         evaluate_combinations: bool = False,
         refit_channel_selector: bool = True,
@@ -147,6 +156,7 @@ class GuardedMultiAxisReducer(BaseEstimator):
         time_fractions: tuple[float, ...] = (0.125, 0.25, 0.5, 1.0),
         slice_fractions: tuple[float, ...] = (0.25, 0.5, 0.75, 1.0),
         slice_positions: tuple[float, ...] = (0.0, 0.5, 1.0),
+        min_slice_timepoints: int = 1,
         validation_size: float = 0.33,
         scoring: str = "balanced_accuracy",
         max_score_loss: float = 0.01,
@@ -165,6 +175,7 @@ class GuardedMultiAxisReducer(BaseEstimator):
         self.proxy_component = proxy_component
         self.strategy = strategy
         self.reference = reference
+        self.raw_fallback = raw_fallback
         self.separate_proxy_selection = separate_proxy_selection
         self.evaluate_combinations = evaluate_combinations
         self.refit_channel_selector = refit_channel_selector
@@ -172,6 +183,7 @@ class GuardedMultiAxisReducer(BaseEstimator):
         self.time_fractions = time_fractions
         self.slice_fractions = slice_fractions
         self.slice_positions = slice_positions
+        self.min_slice_timepoints = min_slice_timepoints
         self.validation_size = validation_size
         self.scoring = scoring
         self.max_score_loss = max_score_loss
@@ -211,26 +223,32 @@ class GuardedMultiAxisReducer(BaseEstimator):
         )
 
         full_time = np.arange(self.n_timepoints_in_, dtype=int)
-        reference_uses_channels = self.reference == "channel"
-        reference_X = X_channels if reference_uses_channels else X
-        reference_candidate = self._candidate(
-            family="full" if reference_uses_channels else "raw_full",
-            fraction=1.0,
-            case_fraction=1.0,
-            time_indices=full_time,
-            slice_start=None,
-            use_channels=reference_uses_channels,
-        )
-        rows = [
-            self._evaluate_candidate(
-                reference_X, y, train_idx, val_idx, reference_candidate
-            )
-        ]
-        self.full_score_ = float(rows[0]["score"])
-        if not np.isfinite(self.full_score_):
-            raise RuntimeError("The full-data proxy evaluation failed.")
+        rows = []
+        self.raw_score_ = np.nan
+        self.channel_safe_ = True
 
-        if self.reference == "raw":
+        if self.raw_fallback:
+            raw_candidate = self._candidate(
+                family="raw_full",
+                fraction=1.0,
+                case_fraction=1.0,
+                time_indices=full_time,
+                slice_start=None,
+                use_channels=False,
+            )
+            rows.append(
+                self._evaluate_candidate(
+                    X, y, train_idx, val_idx, raw_candidate
+                )
+            )
+            self.raw_score_ = float(rows[-1]["score"])
+            if not np.isfinite(self.raw_score_):
+                raise RuntimeError("The raw-data proxy evaluation failed.")
+
+            # Temporarily use the raw score to guard TSelect itself. Once that
+            # decision is made, temporal candidates are guarded against the
+            # TSelect-only score below.
+            self.full_score_ = self.raw_score_
             channel_candidate = self._candidate(
                 family="channel",
                 fraction=1.0,
@@ -245,10 +263,49 @@ class GuardedMultiAxisReducer(BaseEstimator):
                 )
             )
             self.channel_score_ = float(rows[-1]["score"])
+            self.channel_safe_ = bool(rows[-1]["eligible"])
+            self.full_score_ = self.channel_score_
         else:
-            self.channel_score_ = self.full_score_
+            reference_uses_channels = self.reference == "channel"
+            reference_X = X_channels if reference_uses_channels else X
+            reference_candidate = self._candidate(
+                family="full" if reference_uses_channels else "raw_full",
+                fraction=1.0,
+                case_fraction=1.0,
+                time_indices=full_time,
+                slice_start=None,
+                use_channels=reference_uses_channels,
+            )
+            rows.append(
+                self._evaluate_candidate(
+                    reference_X, y, train_idx, val_idx, reference_candidate
+                )
+            )
+            self.full_score_ = float(rows[-1]["score"])
+            if not np.isfinite(self.full_score_):
+                raise RuntimeError("The full-data proxy evaluation failed.")
 
-        families = self._resolve_families()
+            if self.reference == "raw":
+                self.raw_score_ = self.full_score_
+                channel_candidate = self._candidate(
+                    family="channel",
+                    fraction=1.0,
+                    case_fraction=1.0,
+                    time_indices=full_time,
+                    slice_start=None,
+                    use_channels=True,
+                )
+                rows.append(
+                    self._evaluate_candidate(
+                        X_channels, y, train_idx, val_idx, channel_candidate
+                    )
+                )
+                self.channel_score_ = float(rows[-1]["score"])
+                self.channel_safe_ = bool(rows[-1]["eligible"])
+            else:
+                self.channel_score_ = self.full_score_
+
+        families = self._resolve_families() if self.channel_safe_ else ()
         if "case" in families:
             rows.extend(
                 self._evaluate_monotone_family(
@@ -374,6 +431,9 @@ class GuardedMultiAxisReducer(BaseEstimator):
         return {
             "route": self.route_,
             "reference": self.reference,
+            "raw_fallback": self.raw_fallback,
+            "raw_score": self.raw_score_,
+            "channel_safe": self.channel_safe_,
             "separate_proxy_selection": self.separate_proxy_selection,
             "evaluate_combinations": self.evaluate_combinations,
             "refit_channel_selector": self.refit_channel_selector,
@@ -398,6 +458,7 @@ class GuardedMultiAxisReducer(BaseEstimator):
             "case_indices": self.case_indices_.tolist(),
             "time_indices": self.time_indices_.tolist(),
             "slice_start": self.slice_start_,
+            "min_slice_timepoints": self.min_slice_timepoints,
             "full_score": self.full_score_,
             "channel_score": self.channel_score_,
             "best_score": self.best_score_,
@@ -425,6 +486,10 @@ class GuardedMultiAxisReducer(BaseEstimator):
             raise ValueError("strategy must be one of {'auto', 'case', 'time', 'all'}.")
         if self.reference not in {"channel", "raw"}:
             raise ValueError("reference must be 'channel' or 'raw'.")
+        if self.raw_fallback and self.reference != "channel":
+            raise ValueError(
+                "raw_fallback=True requires reference='channel'."
+            )
         if self.scoring not in {"balanced_accuracy", "accuracy"}:
             raise ValueError("scoring must be 'balanced_accuracy' or 'accuracy'.")
         if not 0 < self.validation_size < 1:
@@ -435,7 +500,11 @@ class GuardedMultiAxisReducer(BaseEstimator):
             raise ValueError("aggressive_fraction must be in the interval (0, 1].")
         if self.min_improvement < 0:
             raise ValueError("min_improvement must be non-negative.")
-        if self.min_cases_per_class < 1 or self.min_timepoints < 1:
+        if (
+            self.min_cases_per_class < 1
+            or self.min_timepoints < 1
+            or self.min_slice_timepoints < 1
+        ):
             raise ValueError("minimum retained sizes must be positive.")
         if self.time_reduction not in {"resample", "subsample"}:
             raise ValueError("time_reduction must be 'resample' or 'subsample'.")
@@ -602,15 +671,19 @@ class GuardedMultiAxisReducer(BaseEstimator):
         raise RuntimeError(f"Unknown proxy component: {component}")
 
     def _resolve_families(self):
+        temporal_families = ["downsample"]
+        if self.n_timepoints_in_ >= self.min_slice_timepoints:
+            temporal_families.append("slice")
+
         if self.strategy == "case":
             return ("case",)
         if self.strategy == "time":
-            return ("downsample", "slice")
+            return tuple(temporal_families)
         if self.strategy == "all":
-            return ("case", "downsample", "slice")
+            return ("case", *temporal_families)
         if self.n_cases_in_ > self.n_timepoints_in_:
             return ("case",)
-        return ("downsample", "slice")
+        return tuple(temporal_families)
 
     def _evaluate_monotone_family(self, X, y, train_idx, val_idx, family, fractions):
         rows = []

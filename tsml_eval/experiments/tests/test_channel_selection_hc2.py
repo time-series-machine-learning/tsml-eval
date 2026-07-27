@@ -67,6 +67,7 @@ class _HalfCaseResampler:
         ("CaseTimeReducer-HC2", "CaseTimeReducer"),
         ("GuardedMultiAxis-HC2", "GuardedMultiAxis"),
         ("GMARv2-HC2", "GuardedMultiAxisV2"),
+        ("GMARv3-HC2", "GuardedTemporalV3"),
         ("CLeVerRank-HC2", "CLeVerRank"),
         ("CLeVerCluster-HC2", "CLeVerCluster"),
         ("CLeVerHybrid-HC2", "CLeVerHybrid"),
@@ -97,6 +98,7 @@ def test_channel_selection_hc2_factory_options(classifier_name, selector, monkey
         ("ECS-STC", "ShapeletTransformClassifier", "n_shapelet_samples", 10000),
         ("ECS-TDE", "TemporalDictionaryEnsemble", "n_parameter_samples", 250),
         ("GMARv2-Arsenal", "Arsenal", "n_kernels", 2000),
+        ("GMARv3-Arsenal", "Arsenal", "n_kernels", 2000),
     ],
 )
 def test_channel_selection_component_pipeline_options(
@@ -113,15 +115,16 @@ def test_channel_selection_component_pipeline_options(
     )
 
     assert isinstance(pipeline, ChannelSelectionClassifierPipeline)
-    expected_selector = (
-        "GuardedMultiAxisV2"
-        if classifier_name.startswith("GMARv2")
-        else "ECS"
-    )
+    if classifier_name.startswith("GMARv2"):
+        expected_selector = "GuardedMultiAxisV2"
+    elif classifier_name.startswith("GMARv3"):
+        expected_selector = "GuardedTemporalV3"
+    else:
+        expected_selector = "ECS"
     assert pipeline.selector == expected_selector
     assert type(pipeline.classifier).__name__ == expected_class
     assert pipeline.classifier.get_params()[parameter] == expected_value
-    if classifier_name.startswith("GMARv2"):
+    if classifier_name.startswith(("GMARv2", "GMARv3")):
         assert pipeline.proxy_component == "arsenal"
 
 
@@ -303,3 +306,24 @@ def test_guarded_multiaxis_v2_uses_component_proxy():
     assert transformer.separate_proxy_selection
     assert transformer.evaluate_combinations
     assert not transformer.refit_channel_selector
+
+
+def test_guarded_temporal_v3_uses_channel_guard_and_long_slices():
+    """GMARv3 removes case reduction and guards long-series time choices."""
+    transformer = _make_channel_transformer(
+        selector="GuardedTemporalV3",
+        n_channels=4,
+        random_state=0,
+        n_jobs=1,
+        proxy_component="DrCIF",
+    )
+
+    assert isinstance(transformer, GuardedMultiAxisReducer)
+    assert transformer.proxy_component == "drcif"
+    assert transformer.strategy == "time"
+    assert transformer.reference == "channel"
+    assert transformer.raw_fallback
+    assert transformer.separate_proxy_selection
+    assert not transformer.evaluate_combinations
+    assert transformer.refit_channel_selector
+    assert transformer.min_slice_timepoints == 1000

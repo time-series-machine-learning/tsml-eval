@@ -173,6 +173,72 @@ def test_raw_reference_can_reject_channel_selection():
     assert reducer.channels_selected_.tolist() == [0, 1]
 
 
+def test_channel_reference_raw_fallback_rejects_unsafe_tselect():
+    """A temporal search falls back to raw data when channel selection is unsafe."""
+    rng = np.random.RandomState(3)
+    y = np.asarray([0, 1] * 30)
+    X = rng.normal(scale=0.1, size=(60, 2, 20))
+    X[y == 1, 0] += 1
+    X[y == 0, 0] -= 1
+
+    reducer = GuardedMultiAxisReducer(
+        channel_selector=_SecondChannelSelector(),
+        proxy_estimator=_FirstChannelClassifier(),
+        strategy="time",
+        reference="channel",
+        raw_fallback=True,
+        time_fractions=(0.5, 1.0),
+        slice_fractions=(0.5, 1.0),
+        min_timepoints=1,
+        random_state=0,
+    ).fit(X, y)
+
+    assert not reducer.channel_safe_
+    assert reducer.route_ == "raw_full"
+    assert reducer.channels_selected_.tolist() == [0, 1]
+    assert set(reducer.candidate_results_["family"]) == {"raw_full", "channel"}
+
+
+def test_temporal_only_search_limits_slices_to_long_series():
+    """Downsampling is always assessed, while slicing has a length threshold."""
+    X, y = _make_data(n_timepoints=40)
+    reducer = GuardedMultiAxisReducer(
+        channel_selector="none",
+        proxy_estimator=_SignalClassifier(),
+        strategy="time",
+        reference="channel",
+        raw_fallback=True,
+        time_fractions=(0.5, 1.0),
+        slice_fractions=(0.5, 1.0),
+        min_slice_timepoints=100,
+        min_timepoints=1,
+        max_score_loss=0,
+        random_state=0,
+    ).fit(X, y)
+
+    families = set(reducer.candidate_results_["family"])
+    assert "downsample" in families
+    assert "slice" not in families
+    assert not any(family.startswith("case") for family in families)
+    assert reducer.n_cases_selected_ == len(X)
+
+    long_reducer = GuardedMultiAxisReducer(
+        channel_selector="none",
+        proxy_estimator=_SignalClassifier(),
+        strategy="time",
+        reference="channel",
+        raw_fallback=True,
+        time_fractions=(0.5, 1.0),
+        slice_fractions=(0.5, 1.0),
+        min_slice_timepoints=40,
+        min_timepoints=1,
+        max_score_loss=0,
+        random_state=0,
+    ).fit(X, y)
+
+    assert "slice" in set(long_reducer.candidate_results_["family"])
+
+
 def test_controlled_combined_case_time_candidate():
     """V2 evaluates and can select one guarded case-time combination."""
     X, y = _make_data(n_cases=40, n_timepoints=40)
