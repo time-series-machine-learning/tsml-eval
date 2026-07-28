@@ -74,6 +74,10 @@ class ComponentAwareGMARHIVECOTEV2(HIVECOTEV2):
         self.component_train_output_shapes_ = {}
         self.component_test_input_shapes_ = {}
         self.component_test_output_shapes_ = {}
+        self.component_weights_ = {}
+        self.component_names_ = []
+        self.fitted_estimators_ = []
+        self.weights_ = []
 
         components = self._make_components()
         for name in ("stc", "drcif", "arsenal", "tde"):
@@ -106,7 +110,7 @@ class ComponentAwareGMARHIVECOTEV2(HIVECOTEV2):
             weight = accuracy_score(yt, train_predictions) ** 4
 
             setattr(self, f"_{name}", component)
-            setattr(self, f"{name}_weight_", weight)
+            self._store_component_weight(name, component, weight)
             self.component_timings_millis_[name] = {
                 "transform_fit": transform_fit,
                 "classifier_fit": classifier_fit,
@@ -121,6 +125,18 @@ class ComponentAwareGMARHIVECOTEV2(HIVECOTEV2):
 
     def _predict_proba(self, X, return_component_probas=False):
         """Combine probabilities obtained from each component-specific view."""
+        probabilities, component_probabilities = self._component_probabilities(X)
+        if self.save_component_probas or return_component_probas:
+            self.component_probas = component_probabilities
+        return probabilities
+
+    def predict_proba_with_components(self, X):
+        """Return ensemble and component probabilities from their learned views."""
+        self._check_is_fitted()
+        return self._component_probabilities(X)
+
+    def _component_probabilities(self, X):
+        """Compute component probabilities and their weighted combination."""
         distributions = np.zeros((X.shape[0], self.n_classes_))
         component_probabilities = {}
 
@@ -148,20 +164,34 @@ class ComponentAwareGMARHIVECOTEV2(HIVECOTEV2):
                 "classifier_predict"
             ] += classifier_predict
 
-            weight = getattr(self, f"{name}_weight_")
+            weight = self.component_weights_[name]
             distributions += probabilities * weight
-            component_probabilities[name.upper()] = probabilities
-
-        if self.save_component_probas or return_component_probas:
-            self.component_probas = component_probabilities
+            component_probabilities[_COMPONENT_DISPLAY_NAMES[name]] = probabilities
 
         totals = distributions.sum(axis=1, keepdims=True)
-        return np.divide(
+        final_probabilities = np.divide(
             distributions,
             totals,
             out=np.full_like(distributions, 1 / self.n_classes_),
             where=totals != 0,
         )
+        return final_probabilities, component_probabilities
+
+    def _store_component_weight(self, name, component, weight):
+        """Store weights using both current and legacy aeon representations."""
+        self.component_weights_[name] = weight
+        self.component_names_.append(_COMPONENT_DISPLAY_NAMES[name])
+        self.fitted_estimators_.append(component)
+        self.weights_.append(weight)
+
+        attribute_name = f"{name}_weight_"
+        descriptor = getattr(type(self), attribute_name, None)
+        if not isinstance(descriptor, property) or descriptor.fset is not None:
+            setattr(self, attribute_name, weight)
+
+    def get_component_weights(self):
+        """Return fitted weights using aeon's public HC2 component names."""
+        return dict(zip(self.component_names_, self.weights_))
 
     def _make_components(self):
         """Construct exact HC2-budget components or supplied test components."""
@@ -338,3 +368,11 @@ def _reduction_candidate_records(reducer):
         if "predict_time" in record:
             record["predict_time_seconds"] = record.pop("predict_time")
     return records
+
+
+_COMPONENT_DISPLAY_NAMES = {
+    "stc": "STC",
+    "drcif": "DrCIF",
+    "arsenal": "Arsenal",
+    "tde": "TDE",
+}

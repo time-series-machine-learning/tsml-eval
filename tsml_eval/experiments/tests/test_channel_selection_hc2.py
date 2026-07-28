@@ -459,10 +459,15 @@ def test_component_aware_gmar_fits_distinct_views(monkeypatch):
 
     classifier.fit(X, y)
     probabilities = classifier.predict_proba(X)
+    combined, component_probabilities = classifier.predict_proba_with_components(
+        X
+    )
     metadata = classifier.get_experiment_metadata()
 
     assert probabilities.shape == (12, 2)
     assert np.allclose(probabilities.sum(axis=1), 1)
+    assert np.allclose(combined, probabilities)
+    assert set(component_probabilities) == {"STC", "DrCIF", "Arsenal", "TDE"}
     assert {
         name: getattr(classifier, f"_{name}").n_timepoints_fit_
         for name in ("stc", "drcif", "arsenal", "tde")
@@ -490,3 +495,28 @@ def test_component_aware_gmar_fits_distinct_views(monkeypatch):
     ]
     assert metadata["timings_ms"]["hc2_fit"] >= 0
     assert metadata["timings_ms"]["hc2_predict"] >= 0
+
+
+def test_component_weights_support_read_only_aeon_properties(monkeypatch):
+    """New aeon HC2 weight properties are backed by names and weight lists."""
+    classifier = ComponentAwareGMARHIVECOTEV2(random_state=0)
+    classifier.component_weights_ = {}
+    classifier.component_names_ = []
+    classifier.fitted_estimators_ = []
+    classifier.weights_ = []
+    monkeypatch.setattr(
+        ComponentAwareGMARHIVECOTEV2,
+        "stc_weight_",
+        property(
+            lambda self: self.get_component_weights().get("STC", 0.0)
+        ),
+        raising=False,
+    )
+    component = _PerfectTrainEstimateClassifier()
+
+    classifier._store_component_weight("stc", component, 0.625)
+
+    assert classifier.stc_weight_ == 0.625
+    assert classifier.component_names_ == ["STC"]
+    assert classifier.fitted_estimators_ == [component]
+    assert classifier.weights_ == [0.625]
