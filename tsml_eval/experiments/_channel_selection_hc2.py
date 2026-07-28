@@ -473,6 +473,17 @@ def _make_channel_transformer(
             random_state=random_state,
             n_jobs=n_jobs,
         )
+    if selector_key == "guardedtemporalv4":
+        component = (
+            "arsenal"
+            if proxy_component is None or proxy_component.casefold() == "hc2"
+            else proxy_component.casefold()
+        )
+        return _make_gmarv4_transformer(
+            component=component,
+            random_state=random_state,
+            n_jobs=n_jobs,
+        )
     if selector_key == "cleverrank":
         from aeon_neuro.transformations.collection.channel_selection import CLeVerRank
 
@@ -497,3 +508,63 @@ def _make_channel_transformer(
         )
 
     raise ValueError(f"Unknown channel selector: {selector}")
+
+
+def _make_gmarv4_transformer(component, random_state=None, n_jobs=1):
+    """Construct the component-specific guarded temporal reducer for GMARv4."""
+    from tsml_eval.experiments._guarded_multiaxis import GuardedMultiAxisReducer
+
+    component = component.casefold()
+    if component not in {"arsenal", "drcif", "stc", "tde"}:
+        raise ValueError(
+            "GMARv4 component must be one of "
+            "{'arsenal', 'drcif', 'stc', 'tde'}."
+        )
+
+    parameters = {
+        "channel_selector": "tselect",
+        "proxy_component": component,
+        "strategy": "time",
+        "reference": "channel",
+        "raw_fallback": True,
+        "separate_proxy_selection": True,
+        "evaluate_combinations": False,
+        "refit_channel_selector": True,
+        "min_slice_timepoints": 1000,
+        "random_state": random_state,
+        "n_jobs": n_jobs,
+    }
+
+    if component in {"arsenal", "drcif"}:
+        # The empirical GMARv3 results show that both components benefit from
+        # strong temporal reduction, particularly downsampling.
+        parameters.update(
+            time_fractions=(0.125, 0.25, 0.5, 1.0),
+            slice_fractions=(0.25, 0.5, 0.75, 1.0),
+            max_score_loss=0.01,
+            aggressive_fraction=0.25,
+            aggressive_margin=0.0,
+        )
+    elif component == "stc":
+        # STC receives a smaller accuracy allowance and does not evaluate the
+        # most aggressive temporal candidates.
+        parameters.update(
+            time_fractions=(0.5, 0.75, 1.0),
+            slice_fractions=(0.5, 0.75, 1.0),
+            max_score_loss=0.005,
+            aggressive_fraction=0.5,
+            aggressive_margin=0.0,
+        )
+    else:
+        # TDE was the only component for which GMARv3 temporal reduction
+        # reduced accuracy overall. Retain it for ensemble diversity, but only
+        # accept a temporal reduction when its proxy score improves.
+        parameters.update(
+            time_fractions=(0.5, 0.75, 1.0),
+            slice_fractions=(0.5, 0.75, 1.0),
+            max_score_loss=0.0,
+            aggressive_fraction=1.0,
+            aggressive_margin=0.0025,
+        )
+
+    return GuardedMultiAxisReducer(**parameters)

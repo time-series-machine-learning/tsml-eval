@@ -98,6 +98,11 @@ channel_selection_hc2_classifiers = [
     ["cleverhybrid-hc2", "hc2-cleverhybrid"],
     ["gmarv2-hc2", "guardedmultiaxisv2-hc2"],
     ["gmarv3-hc2", "guardedtemporalv3-hc2"],
+    [
+        "componentawaregmarhivecotev2",
+        "gmarv4-hc2",
+        "guardedtemporalv4-hc2",
+    ],
 ]
 _channel_selection_pipeline_selectors = (
     "ecs",
@@ -114,6 +119,7 @@ _channel_selection_pipeline_selectors = (
     "cleverhybrid",
     "gmarv2",
     "gmarv3",
+    "gmarv4",
 )
 _channel_selection_pipeline_components = ("hc2", "arsenal", "drcif", "stc", "tde")
 channel_selection_hc2_classifiers.extend(
@@ -282,6 +288,8 @@ def _set_classifier_channel_selection_hc2(
         "guardedmultiaxisv2": "GuardedMultiAxisV2",
         "gmarv3": "GuardedTemporalV3",
         "guardedtemporalv3": "GuardedTemporalV3",
+        "gmarv4": "GuardedTemporalV4",
+        "guardedtemporalv4": "GuardedTemporalV4",
     }
     legacy_reverse_aliases = {
         "hc2-ecs": "ecs-hc2",
@@ -300,8 +308,32 @@ def _set_classifier_channel_selection_hc2(
     c = legacy_reverse_aliases.get(c, c)
     if c == "channelselectionclassifierpipeline":
         selector_key, component = c, "hc2"
+    elif c == "componentawaregmarhivecotev2":
+        selector_key, component = "gmarv4", "hc2"
     else:
         selector_key, component = c.rsplit("-", maxsplit=1)
+
+    if selector_key == "full":
+        return _make_hc2_or_component(
+            component=component,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            fit_contract=fit_contract,
+            kwargs=kwargs,
+        )
+
+    selector = selector_aliases[selector_key]
+    if selector == "GuardedTemporalV4" and component == "hc2":
+        from tsml_eval.experiments._component_aware_gmar import (
+            ComponentAwareGMARHIVECOTEV2,
+        )
+
+        return ComponentAwareGMARHIVECOTEV2(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
 
     classifier = _make_hc2_or_component(
         component=component,
@@ -310,11 +342,6 @@ def _set_classifier_channel_selection_hc2(
         fit_contract=fit_contract,
         kwargs=kwargs,
     )
-    if selector_key == "full":
-        return classifier
-
-    selector = selector_aliases[selector_key]
-
     aeon_neuro_selectors = {
         "Riemannian",
         "DetachRocket",
@@ -345,7 +372,12 @@ def _set_classifier_channel_selection_hc2(
         n_jobs=n_jobs,
         proxy_component=(
             component
-            if selector in {"GuardedMultiAxisV2", "GuardedTemporalV3"}
+            if selector
+            in {
+                "GuardedMultiAxisV2",
+                "GuardedTemporalV3",
+                "GuardedTemporalV4",
+            }
             else None
         ),
     )

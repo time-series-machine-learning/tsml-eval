@@ -16,6 +16,10 @@ from tsml_eval.experiments import (
 from tsml_eval.experiments._channel_selection_hc2 import (
     ChannelSelectionClassifierPipeline,
     _make_channel_transformer,
+    _make_gmarv4_transformer,
+)
+from tsml_eval.experiments._component_aware_gmar import (
+    ComponentAwareGMARHIVECOTEV2,
 )
 from tsml_eval.experiments._guarded_multiaxis import GuardedMultiAxisReducer
 from tsml_eval.experiments.experiments import _get_estimator_parameter_info
@@ -54,6 +58,63 @@ class _HalfCaseResampler:
         return X
 
 
+class _PerfectTrainEstimateClassifier(BaseClassifier):
+    """Small classifier with a deterministic perfect training estimate."""
+
+    _tags = {
+        "capability:multivariate": True,
+        "capability:train_estimate": True,
+    }
+
+    def __init__(self):
+        super().__init__()
+
+    def _fit(self, X, y):
+        self.n_timepoints_fit_ = X.shape[2]
+        return self
+
+    def _fit_predict(self, X, y, **kwargs):
+        self._fit(X, y)
+        return np.asarray(y)
+
+    def _predict(self, X):
+        return np.repeat(self.classes_[0], X.shape[0])
+
+    def _predict_proba(self, X):
+        probabilities = np.zeros((X.shape[0], self.n_classes_))
+        probabilities[:, 0] = 1
+        return probabilities
+
+
+class _ComponentTestReducer:
+    """Identity-like reducer retaining a component-specific temporal length."""
+
+    def __init__(self, component):
+        self.component = component
+        self.n_timepoints = {
+            "stc": 5,
+            "drcif": 6,
+            "arsenal": 7,
+            "tde": 8,
+        }[component]
+
+    def fit_resample(self, X, y):
+        self.channels_selected_ = np.arange(X.shape[1])
+        return X[:, :, : self.n_timepoints], y
+
+    def transform(self, X):
+        return X[:, :, : self.n_timepoints]
+
+    def get_reduction_summary(self):
+        return {
+            "route": "downsample",
+            "proxy_component": self.component,
+            "n_timepoints_selected": self.n_timepoints,
+            "case_indices": np.arange(2),
+            "time_indices": np.arange(self.n_timepoints),
+        }
+
+
 @pytest.mark.parametrize(
     "classifier_name, selector",
     [
@@ -90,6 +151,19 @@ def test_channel_selection_hc2_factory_options(classifier_name, selector, monkey
     assert pipeline.classifier.random_state == 7
 
 
+def test_gmarv4_hc2_factory_is_component_aware():
+    """GMARv4-HC2 places a separate reducer inside every HC2 component."""
+    classifier = get_classifier_by_name(
+        "GMARv4-HC2",
+        random_state=7,
+        n_jobs=1,
+    )
+
+    assert isinstance(classifier, ComponentAwareGMARHIVECOTEV2)
+    assert classifier.random_state == 7
+    assert classifier.n_jobs == 1
+
+
 @pytest.mark.parametrize(
     "classifier_name, expected_class, parameter, expected_value",
     [
@@ -99,6 +173,7 @@ def test_channel_selection_hc2_factory_options(classifier_name, selector, monkey
         ("ECS-TDE", "TemporalDictionaryEnsemble", "n_parameter_samples", 250),
         ("GMARv2-Arsenal", "Arsenal", "n_kernels", 2000),
         ("GMARv3-Arsenal", "Arsenal", "n_kernels", 2000),
+        ("GMARv4-Arsenal", "Arsenal", "n_kernels", 2000),
     ],
 )
 def test_channel_selection_component_pipeline_options(
@@ -119,12 +194,14 @@ def test_channel_selection_component_pipeline_options(
         expected_selector = "GuardedMultiAxisV2"
     elif classifier_name.startswith("GMARv3"):
         expected_selector = "GuardedTemporalV3"
+    elif classifier_name.startswith("GMARv4"):
+        expected_selector = "GuardedTemporalV4"
     else:
         expected_selector = "ECS"
     assert pipeline.selector == expected_selector
     assert type(pipeline.classifier).__name__ == expected_class
     assert pipeline.classifier.get_params()[parameter] == expected_value
-    if classifier_name.startswith(("GMARv2", "GMARv3")):
+    if classifier_name.startswith(("GMARv2", "GMARv3", "GMARv4")):
         assert pipeline.proxy_component == "arsenal"
 
 
@@ -327,3 +404,89 @@ def test_guarded_temporal_v3_uses_channel_guard_and_long_slices():
     assert not transformer.evaluate_combinations
     assert transformer.refit_channel_selector
     assert transformer.min_slice_timepoints == 1000
+
+
+@pytest.mark.parametrize(
+    "component, time_fractions, max_score_loss, aggressive_fraction",
+    [
+        ("Arsenal", (0.125, 0.25, 0.5, 1.0), 0.01, 0.25),
+        ("DrCIF", (0.125, 0.25, 0.5, 1.0), 0.01, 0.25),
+        ("STC", (0.5, 0.75, 1.0), 0.005, 0.5),
+        ("TDE", (0.5, 0.75, 1.0), 0.0, 1.0),
+    ],
+)
+def test_gmarv4_component_policies(
+    component,
+    time_fractions,
+    max_score_loss,
+    aggressive_fraction,
+):
+    """GMARv4 uses empirically motivated guards for each HC2 component."""
+    transformer = _make_gmarv4_transformer(
+        component=component,
+        random_state=0,
+        n_jobs=1,
+    )
+
+    assert isinstance(transformer, GuardedMultiAxisReducer)
+    assert transformer.proxy_component == component.casefold()
+    assert transformer.strategy == "time"
+    assert transformer.time_fractions == time_fractions
+    assert transformer.max_score_loss == max_score_loss
+    assert transformer.aggressive_fraction == aggressive_fraction
+    assert transformer.raw_fallback
+    assert transformer.min_slice_timepoints == 1000
+
+
+def test_component_aware_gmar_fits_distinct_views(monkeypatch):
+    """Each HC2 component is fitted and queried on its own learned view."""
+    monkeypatch.setattr(
+        "tsml_eval.experiments._component_aware_gmar."
+        "_make_gmarv4_transformer",
+        lambda component, **kwargs: _ComponentTestReducer(component),
+    )
+    component_estimators = {
+        name: _PerfectTrainEstimateClassifier()
+        for name in ("stc", "drcif", "arsenal", "tde")
+    }
+    classifier = ComponentAwareGMARHIVECOTEV2(
+        component_estimators=component_estimators,
+        random_state=0,
+        n_jobs=1,
+    )
+    X = np.zeros((12, 2, 8))
+    y = np.asarray([0, 1] * 6)
+
+    classifier.fit(X, y)
+    probabilities = classifier.predict_proba(X)
+    metadata = classifier.get_experiment_metadata()
+
+    assert probabilities.shape == (12, 2)
+    assert np.allclose(probabilities.sum(axis=1), 1)
+    assert {
+        name: getattr(classifier, f"_{name}").n_timepoints_fit_
+        for name in ("stc", "drcif", "arsenal", "tde")
+    } == {
+        "stc": 5,
+        "drcif": 6,
+        "arsenal": 7,
+        "tde": 8,
+    }
+    assert all(
+        getattr(classifier, f"{name}_weight_") == 1
+        for name in ("stc", "drcif", "arsenal", "tde")
+    )
+    assert metadata["component_aware_reduction"]
+    assert set(metadata["components"]) == {
+        "stc",
+        "drcif",
+        "arsenal",
+        "tde",
+    }
+    assert metadata["components"]["stc"]["test_output_shape"] == [12, 2, 5]
+    assert metadata["components"]["tde"]["test_output_shape"] == [12, 2, 8]
+    assert "case_indices" not in metadata["components"]["stc"][
+        "reduction_summary"
+    ]
+    assert metadata["timings_ms"]["hc2_fit"] >= 0
+    assert metadata["timings_ms"]["hc2_predict"] >= 0
