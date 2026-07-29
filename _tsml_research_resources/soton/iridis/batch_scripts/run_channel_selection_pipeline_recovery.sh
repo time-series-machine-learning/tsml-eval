@@ -17,8 +17,8 @@ set -euo pipefail
 #   The 17 component results whose old and new predictions agreed on every
 #   overlapping problem. Rerunning these gives definitive full-pipeline timing
 #   instead of copying classifier-only timings from the old result files.
-# or reconstructable_components
-recovery_set="missing_hc2"
+# missing_hc2 or reconstructable_components
+recovery_set="reconstructable_components"
 
 # ==============================================================================
 # Experiment configuration
@@ -29,9 +29,9 @@ start_fold=1
 
 max_num_submitted=200
 queue="batch"
-max_cpus_to_use=9
+max_cpus_to_use=17
 
-memory_per_cpu_gib=60
+memory_per_cpu_gib=35
 memory_per_cpu="${memory_per_cpu_gib}G"
 max_time="60:00:00"
 
@@ -40,7 +40,7 @@ mail="NONE"
 mailto="${username}@soton.ac.uk"
 
 local_path="/iridisfs/home/${username}"
-job_name_prefix="eeg-pipeline-recovery"
+job_name_prefix="eeg-reconstruct17"
 
 generate_train_files="false"
 predefined_folds="false"
