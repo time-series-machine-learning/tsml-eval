@@ -473,11 +473,10 @@ print_current_activity() {
     local state
     local job_id
     local status
-    local count=0
-
-    echo "Current experiment activity"
-    echo "---------------------------"
-    printf '%-10s %-27s %-28s %s\n' "STATE" "PIPELINE" "DATASET" "JOBID"
+    local record
+    local running_count=0
+    local displayed_count=0
+    local -a activity_records=()
 
     for key in "${!slurm_combo_state[@]}"; do
         IFS='|' read -r pipeline dataset <<< "${key}"
@@ -487,14 +486,28 @@ print_current_activity() {
             RUNNING|QUEUED|PENDING)
                 state="${status}"
                 job_id="${slurm_combo_job[${key}]}"
-                printf '%-10s %-27s %-28s %s\n' \
-                    "${state}" "${pipeline}" "${dataset}" "${job_id}"
-                count=$((count + 1))
+                activity_records+=(
+                    "${state}|${pipeline}|${dataset}|${job_id}"
+                )
+                displayed_count=$((displayed_count + 1))
+                if [[ "${state}" == "RUNNING" ]]; then
+                    running_count=$((running_count + 1))
+                fi
                 ;;
         esac
     done
 
-    if ((count == 0)); then
+    echo "Current experiment activity - ${running_count}"
+    echo "--------------------------------"
+    printf '%-10s %-27s %-28s %s\n' "STATE" "PIPELINE" "DATASET" "JOBID"
+
+    for record in "${activity_records[@]}"; do
+        IFS='|' read -r state pipeline dataset job_id <<< "${record}"
+        printf '%-10s %-27s %-28s %s\n' \
+            "${state}" "${pipeline}" "${dataset}" "${job_id}"
+    done
+
+    if ((displayed_count == 0)); then
         echo "No incomplete experiments could be mapped to an active Slurm job."
     fi
     echo
