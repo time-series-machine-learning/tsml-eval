@@ -26,7 +26,7 @@ resample=0
 #   "gmarv3"    : submit only GMARv3-HC2
 #   "reductions": submit TSelect-HC2 and GMARv3-HC2
 #   "all"       : submit HC2 and all three comparisons
-run_set="gmarv3"
+run_set="tselect"
 
 # classifier|memory|wall-time
 case "${run_set}" in
