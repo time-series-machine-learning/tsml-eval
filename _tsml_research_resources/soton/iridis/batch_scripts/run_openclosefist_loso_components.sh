@@ -153,6 +153,13 @@ echo "tsml-eval commit:  ${tsml_eval_commit}"
 echo "aeon commit:       ${aeon_commit}"
 echo
 
+# Use the exact source checkouts for submission-time validation as well as in
+# the generated Slurm job. Without this, a login shell can resolve ``aeon`` as
+# an incomplete namespace package and leave ``aeon.__file__`` as None.
+unset PYTHONHOME
+export PYTHONNOUSERSITE=1
+export PYTHONPATH="${aeon_dir}:${tsml_eval_dir}"
+
 # Validate IDs and classifier factories before creating the command list.
 "${python_path}" "${script_file_path}" \
     "${data_dir}" \
