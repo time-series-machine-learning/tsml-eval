@@ -467,6 +467,22 @@ print_relevant_queue() {
     echo
 }
 
+pipeline_is_monitored() {
+    local candidate="$1"
+    local transform
+    local classifier
+
+    for classifier in "${classifiers[@]}"; do
+        for transform in "${transforms[@]}"; do
+            if [[ "${candidate}" == "${transform}-${classifier}" ]]; then
+                return 0
+            fi
+        done
+    done
+
+    return 1
+}
+
 print_current_activity() {
     local key
     local pipeline
@@ -481,6 +497,12 @@ print_current_activity() {
 
     for key in "${!slurm_combo_state[@]}"; do
         IFS='|' read -r pipeline dataset <<< "${key}"
+        # Use the same scope as the summary table. Active jobs can contain
+        # historical variants such as GMARv2 or GMARv4, but those variants are
+        # deliberately excluded from the monitored paper results.
+        if ! pipeline_is_monitored "${pipeline}"; then
+            continue
+        fi
         status_for "${pipeline}" "${dataset}"
         status="${status_result}"
         case "${status}" in
@@ -543,6 +565,8 @@ scan_once() {
     local total_logged=0
     local total_waiting=0
     local total_not_started=0
+    local detail_key
+    local detail_log
     local -a incomplete_details=()
 
     if [[ ! -d "${results_root}" ]]; then
@@ -599,7 +623,18 @@ scan_once() {
                 esac
 
                 if [[ "${details}" == "true" && "${status}" != "COMPLETE" ]]; then
-                    incomplete_details+=("${pipeline}|${dataset}|${status}")
+                    detail_key="${pipeline}|${dataset}"
+                    detail_log="${slurm_combo_log[${detail_key}]-}"
+                    if [[ -z "${detail_log}" ]]; then
+                        latest_log_for "${pipeline}" "${dataset}"
+                        detail_log="${latest_log_result}"
+                    fi
+                    if [[ -z "${detail_log}" ]]; then
+                        detail_log="-"
+                    fi
+                    incomplete_details+=(
+                        "${pipeline}|${dataset}|${status}|${detail_log}"
+                    )
                 fi
             done
 
@@ -642,10 +677,12 @@ scan_once() {
         echo
         echo "Incomplete classifier/problem pairs"
         echo "-----------------------------------"
-        printf '%-27s %-28s %s\n' "PIPELINE" "DATASET" "STATUS"
+        printf '%-27s %-28s %-12s %s\n' \
+            "PIPELINE" "DATASET" "STATUS" "EVIDENCE LOG"
         for line in "${incomplete_details[@]}"; do
-            IFS='|' read -r pipeline dataset status <<< "${line}"
-            printf '%-27s %-28s %s\n' "${pipeline}" "${dataset}" "${status}"
+            IFS='|' read -r pipeline dataset status detail_log <<< "${line}"
+            printf '%-27s %-28s %-12s %s\n' \
+                "${pipeline}" "${dataset}" "${status}" "${detail_log}"
         done
     else
         echo
