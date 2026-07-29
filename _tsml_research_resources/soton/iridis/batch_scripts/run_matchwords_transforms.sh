@@ -2,8 +2,9 @@
 
 set -euo pipefail
 
-# Fit the shared TSelect representation and four component-specific GMARv4
-# representations for the participant-disjoint MatchWords MEG case study.
+# Fit the shared TSelect and GMARv3 representations and four
+# component-specific GMARv4 representations for the participant-disjoint
+# MatchWords MEG case study.
 
 # ==============================================================================
 # Experiment configuration
@@ -11,7 +12,7 @@ set -euo pipefail
 
 queue="batch"
 max_num_submitted=200
-max_cpus_to_use=5
+max_cpus_to_use=6
 memory_per_cpu_gib=32
 memory_per_cpu="${memory_per_cpu_gib}G"
 max_time="12:00:00"
@@ -28,6 +29,7 @@ overwrite="false"
 
 variants_to_run=(
     "TSelect"
+    "GMARv3"
     "GMARv4-Arsenal"
     "GMARv4-DrCIF"
     "GMARv4-STC"
@@ -141,6 +143,7 @@ import aeon
 import tsml_eval
 from aeon.transformations.collection.channel_selection import TSelect
 from tsml_eval.experiments._channel_selection_hc2 import (
+    _make_channel_transformer,
     _make_gmarv4_transformer,
 )
 
@@ -152,6 +155,14 @@ print("TSelect:  ", TSelect)
 for variant in sys.argv[1:]:
     if variant == "TSelect":
         transformer = TSelect(random_state=0)
+    elif variant == "GMARv3":
+        transformer = _make_channel_transformer(
+            selector="GuardedTemporalV3",
+            n_channels=157,
+            random_state=0,
+            n_jobs=1,
+            proxy_component="HC2",
+        )
     else:
         transformer = _make_gmarv4_transformer(
             component=variant.removeprefix("GMARv4-"),

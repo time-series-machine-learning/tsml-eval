@@ -31,6 +31,7 @@ DEFAULT_OUTPUT_ROOT = Path("/iridisfs/home/ajb2u23/Data/EEGTransforms")
 DEFAULT_PROBLEM = "MatchWords"
 SUPPORTED_VARIANTS = (
     "TSelect",
+    "GMARv3",
     "GMARv4-Arsenal",
     "GMARv4-DrCIF",
     "GMARv4-STC",
@@ -59,6 +60,14 @@ def _make_transformer(variant: str, n_channels: int, random_state: int):
             n_channels=n_channels,
             random_state=random_state,
             n_jobs=1,
+        )
+    if variant == "GMARv3":
+        return _make_channel_transformer(
+            selector="GuardedTemporalV3",
+            n_channels=n_channels,
+            random_state=random_state,
+            n_jobs=1,
+            proxy_component="HC2",
         )
     if variant.startswith("GMARv4-"):
         return _make_gmarv4_transformer(
