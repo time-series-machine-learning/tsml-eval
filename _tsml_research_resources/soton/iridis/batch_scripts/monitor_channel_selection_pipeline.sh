@@ -56,9 +56,9 @@ datasets=(
     "LongIntervalTask"
 )
 
-# Include every transform family used in the original pipeline experiments and
-# the subsequent guarded-reducer revisions. Remove a row here only when that
-# family has deliberately been retired from the result archive.
+# Include the transform families retained for the paper summary. GMARv2 and
+# GMARv4 are deliberately excluded; GMARv3 remains the guarded-reducer result
+# being monitored.
 transforms=(
     "CSP"
     "ECS"
@@ -68,12 +68,10 @@ transforms=(
     "Riemannian"
     "DetachRocket"
     "CaseTimeReducer"
-    "GMARv2"
     "CLeVerRank"
     "CLeVerCluster"
     "CLeVerHybrid"
     "GMARv3"
-    "GMARv4"
 )
 
 # HC2 and the four classifiers from which it is built.
@@ -284,6 +282,9 @@ refresh_slurm_activity() {
         job_id partition job_name job_state elapsed nodes reason; do
         [[ -z "${job_id}" ]] && continue
         lower_name="${job_name,,}"
+        # This explicitly includes task farms such as eeg-gmarv3-batch3. The
+        # command file is inspected below, so every outstanding experiment in
+        # the allocation is mapped to its pipeline/problem pair.
         if [[ "${lower_name}" != *eeg* \
             && "${lower_name}" != *channel* \
             && "${lower_name}" != *gmar* ]]; then
