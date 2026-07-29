@@ -17,6 +17,7 @@ set -euo pipefail
 #   The 17 component results whose old and new predictions agreed on every
 #   overlapping problem. Rerunning these gives definitive full-pipeline timing
 #   instead of copying classifier-only timings from the old result files.
+# or reconstructable_components
 recovery_set="missing_hc2"
 
 # ==============================================================================
@@ -28,9 +29,9 @@ start_fold=1
 
 max_num_submitted=200
 queue="batch"
-max_cpus_to_use=10
+max_cpus_to_use=9
 
-memory_per_cpu_gib=40
+memory_per_cpu_gib=60
 memory_per_cpu="${memory_per_cpu_gib}G"
 max_time="60:00:00"
 
