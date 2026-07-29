@@ -26,7 +26,7 @@ resample=0
 #   "gmarv3"    : submit only GMARv3-HC2
 #   "reductions": submit TSelect-HC2 and GMARv3-HC2
 #   "all"       : submit HC2 and all three comparisons
-run_set="tselect"
+run_set="gmarv3"
 
 # classifier|memory|wall-time
 case "${run_set}" in
@@ -37,26 +37,26 @@ case "${run_set}" in
         ;;
     tselect)
         experiments=(
-            "TSelect-HC2|200G|60:00:00"
+            "TSelect-HC2|30G|60:00:00"
         )
         ;;
     gmarv3)
         experiments=(
-            "GMARv3-HC2|200G|60:00:00"
+            "GMARv3-HC2|30G|60:00:00"
         )
         ;;
     reductions)
         experiments=(
-            "TSelect-HC2|200G|60:00:00"
-            "GMARv3-HC2|200G|60:00:00"
+            "TSelect-HC2|30G|60:00:00"
+            "GMARv3-HC2|30G|60:00:00"
         )
         ;;
     all)
         experiments=(
             "HC2|300G|60:00:00"
             "MRHydra|30G|60:00:00"
-            "TSelect-HC2|200G|60:00:00"
-            "GMARv3-HC2|200G|60:00:00"
+            "TSelect-HC2|30G|60:00:00"
+            "GMARv3-HC2|30G|60:00:00"
         )
         ;;
     *)
