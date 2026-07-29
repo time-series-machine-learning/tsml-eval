@@ -15,7 +15,7 @@ max_num_submitted=200
 max_cpus_to_use=6
 memory_per_cpu_gib=32
 memory_per_cpu="${memory_per_cpu_gib}G"
-max_time="12:00:00"
+max_time="60:00:00"
 
 username="ajb2u23"
 mail="NONE"

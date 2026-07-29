@@ -22,15 +22,27 @@ resample=0
 
 # Change this hard-coded value to select the submission stage:
 #   "mrhydra"   : submit only MrHydra
+#   "tselect"   : submit only TSelect-HC2
+#   "gmarv3"    : submit only GMARv3-HC2
 #   "reductions": submit TSelect-HC2 and GMARv3-HC2
 #   "all"       : submit HC2 and all three comparisons
-run_set="mrhydra"
+run_set="tselect"
 
 # classifier|memory|wall-time
 case "${run_set}" in
     mrhydra)
         experiments=(
-            "MRHydra|30G|12:00:00"
+            "MRHydra|30G|60:00:00"
+        )
+        ;;
+    tselect)
+        experiments=(
+            "TSelect-HC2|200G|60:00:00"
+        )
+        ;;
+    gmarv3)
+        experiments=(
+            "GMARv3-HC2|200G|60:00:00"
         )
         ;;
     reductions)
@@ -42,14 +54,14 @@ case "${run_set}" in
     all)
         experiments=(
             "HC2|300G|60:00:00"
-            "MRHydra|30G|12:00:00"
+            "MRHydra|30G|60:00:00"
             "TSelect-HC2|200G|60:00:00"
             "GMARv3-HC2|200G|60:00:00"
         )
         ;;
     *)
         echo "ERROR: unknown run_set: ${run_set}"
-        echo "Use mrhydra, reductions, or all."
+        echo "Use mrhydra, tselect, gmarv3, reductions, or all."
         exit 1
         ;;
 esac
