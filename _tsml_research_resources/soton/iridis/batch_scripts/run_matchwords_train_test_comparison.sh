@@ -2,31 +2,60 @@
 
 set -euo pipefail
 
-# Run the unreduced HIVECOTEV2 baseline on the participant-disjoint MatchWords
-# MEG split. This is deliberately separate from the transform task farm so its
-# fit time and peak memory describe full HC2 on the raw data.
+# Run a selected stage of the end-to-end participant-disjoint MatchWords
+# TRAIN/TEST case-study comparison. Each estimator receives its own Slurm job.
 
 # ==============================================================================
-# Experiment configuration
+# Configuration
 # ==============================================================================
 
 queue="batch"
 max_num_submitted=200
-memory="300G"
-max_time="60:00:00"
 
 username="ajb2u23"
 mail="NONE"
 mailto="${username}@soton.ac.uk"
 local_path="/iridisfs/home/${username}"
-job_name="meg-matchwords-full-hc2"
 
 problem="MatchWords"
-classifier="HC2"
 resample=0
 
+# Change this hard-coded value to select the submission stage:
+#   "mrhydra"   : submit only MrHydra
+#   "reductions": submit TSelect-HC2 and GMARv3-HC2
+#   "all"       : submit HC2 and all three comparisons
+run_set="mrhydra"
+
+# classifier|memory|wall-time
+case "${run_set}" in
+    mrhydra)
+        experiments=(
+            "MRHydra|30G|12:00:00"
+        )
+        ;;
+    reductions)
+        experiments=(
+            "TSelect-HC2|200G|60:00:00"
+            "GMARv3-HC2|200G|60:00:00"
+        )
+        ;;
+    all)
+        experiments=(
+            "HC2|300G|60:00:00"
+            "MRHydra|30G|12:00:00"
+            "TSelect-HC2|200G|60:00:00"
+            "GMARv3-HC2|200G|60:00:00"
+        )
+        ;;
+    *)
+        echo "ERROR: unknown run_set: ${run_set}"
+        echo "Use mrhydra, reductions, or all."
+        exit 1
+        ;;
+esac
+
 # ==============================================================================
-# Repository, environment, data, and result locations
+# Repository, environment, data, and output locations
 # ==============================================================================
 
 tsml_eval_dir="${local_path}/Code/tsml-eval"
@@ -42,7 +71,7 @@ output_root="${results_root}/output"
 numba_cache_dir="${local_path}/Code/.cache/${env_name}"
 
 # ==============================================================================
-# Validate and, if necessary, provide standard .ts filename aliases
+# Validation and standard filename aliases
 # ==============================================================================
 
 if [[ ! -x "${python_path}" ]]; then
@@ -59,6 +88,14 @@ for repository in "${tsml_eval_dir}" "${aeon_dir}"; do
         exit 1
     fi
 done
+for required_command in sbatch squeue; do
+    if ! command -v "${required_command}" > /dev/null 2>&1; then
+        echo "ERROR: required cluster command is unavailable: ${required_command}"
+        exit 1
+    fi
+done
+
+mkdir -p "${results_root}" "${output_root}" "${numba_cache_dir}"
 
 source_problem="${source_data_root}/${problem}"
 standard_train="${source_problem}/${problem}_TRAIN.ts"
@@ -67,14 +104,9 @@ duplicated_train="${standard_train}.ts"
 duplicated_test="${standard_test}.ts"
 data_root="${source_data_root}"
 
-mkdir -p "${results_root}" "${output_root}" "${numba_cache_dir}"
-
-# Some downloaded copies used .ts.ts. tsml-eval expects the standard names, so
-# provide aliases under the result area without modifying or copying raw data.
 if [[ ! -s "${standard_train}" || ! -s "${standard_test}" ]]; then
     if [[ ! -s "${duplicated_train}" || ! -s "${duplicated_test}" ]]; then
         echo "ERROR: MatchWords TRAIN/TEST files are missing."
-        echo "Expected standard .ts files or the known .ts.ts variants."
         exit 1
     fi
 
@@ -85,65 +117,112 @@ if [[ ! -s "${standard_train}" || ! -s "${standard_test}" ]]; then
     ln -sfn "${duplicated_test}" "${link_problem}/${problem}_TEST.ts"
 fi
 
-test_result="${results_root}/${classifier}/Predictions/${problem}/testResample${resample}.csv"
-if [[ -s "${test_result}" ]]; then
-    echo "Full HC2 result already exists; no job submitted:"
-    echo "  ${test_result}"
-    exit 0
-fi
-
 tsml_eval_commit=$(git -C "${tsml_eval_dir}" rev-parse HEAD)
 aeon_commit=$(git -C "${aeon_dir}" rev-parse HEAD)
 tsml_eval_branch=$(git -C "${tsml_eval_dir}" branch --show-current)
 aeon_branch=$(git -C "${aeon_dir}" branch --show-current)
 
+classifiers=()
+for specification in "${experiments[@]}"; do
+    IFS="|" read -r classifier memory walltime <<< "${specification}"
+    if [[ -z "${classifier}" || -z "${memory}" || -z "${walltime}" ]]; then
+        echo "ERROR: malformed experiment specification: ${specification}"
+        exit 1
+    fi
+    classifiers+=("${classifier}")
+done
+
 echo "Problem:           ${problem}"
-echo "Classifier:        ${classifier}"
+echo "Run set:           ${run_set}"
+echo "Cases:             360 TRAIN / 360 TEST"
+echo "Participant split: 9 TRAIN / 9 TEST"
+echo "Classifiers:       ${classifiers[*]}"
 echo "Data root:         ${data_root}"
 echo "Results:           ${results_root}"
-echo "Memory:            ${memory}"
-echo "Wall time:         ${max_time}"
 echo "tsml-eval branch:  ${tsml_eval_branch}"
 echo "tsml-eval commit:  ${tsml_eval_commit}"
 echo "aeon branch:       ${aeon_branch}"
 echo "aeon commit:       ${aeon_commit}"
 echo
 
-# Verify that the exact checkout used for submission can build full HC2.
 PYTHONNOUSERSITE=1 \
 PYTHONPATH="${aeon_dir}:${tsml_eval_dir}" \
-"${python_path}" - <<'PY'
+"${python_path}" - "${classifiers[@]}" <<'PY'
+import sys
+
 import aeon
 import tsml_eval
-from tsml_eval.experiments._get_classifier import get_classifier_by_name
+from tsml_eval.experiments import get_classifier_by_name
 
-classifier = get_classifier_by_name("HC2", random_state=0, n_jobs=1)
+print("Python:   ", sys.executable)
 print("aeon:     ", aeon.__file__)
 print("tsml-eval:", tsml_eval.__file__)
-print("HC2:      ", type(classifier).__name__)
+
+for name in sys.argv[1:]:
+    classifier = get_classifier_by_name(name, random_state=0, n_jobs=1)
+    print(f"{name}: {type(classifier).__name__}")
+
 print("Factory check succeeded")
 PY
 
 # ==============================================================================
-# Build and submit the single experiment
+# Submit one independent job per incomplete estimator
 # ==============================================================================
 
 run_id=$(date +%Y%m%d%H%M%S)
 submission_dir="${results_root}/batch-submissions/${run_id}"
-submission_file="${submission_dir}/generatedSubmissionFile-${run_id}.sub"
-experiment_output="${output_root}/output-${problem}-${resample}-${run_id}.txt"
-
 mkdir -p "${submission_dir}"
 
-cat > "${submission_file}" <<EOF
+submitted=0
+skipped=0
+
+wait_for_queue_slot() {
+    local num_jobs
+
+    while true; do
+        num_jobs=$(
+            squeue \
+                --noheader \
+                --user="${username}" \
+                --partition="${queue}" \
+                --states=RUNNING,PENDING |
+                wc -l
+        )
+        if ((num_jobs < max_num_submitted)); then
+            return
+        fi
+        echo "Waiting 60 seconds: ${num_jobs} jobs are running or pending."
+        sleep 60
+    done
+}
+
+for specification in "${experiments[@]}"; do
+    IFS="|" read -r classifier memory walltime <<< "${specification}"
+
+    result_file="${results_root}/${classifier}/Predictions/${problem}/testResample${resample}.csv"
+    if [[ -s "${result_file}" ]]; then
+        echo "${classifier}: complete result exists; skipping."
+        skipped=$((skipped + 1))
+        continue
+    fi
+
+    safe_classifier="${classifier//[^[:alnum:]]/-}"
+    job_name="meg-matchwords-${safe_classifier}"
+    classifier_output="${output_root}/${classifier}"
+    experiment_output="${classifier_output}/output-${run_id}.txt"
+    submission_file="${submission_dir}/generatedSubmissionFile-${safe_classifier}-${run_id}.sub"
+
+    mkdir -p "${classifier_output}"
+
+    cat > "${submission_file}" <<EOF
 #!/bin/bash
 #SBATCH --mail-type=${mail}
 #SBATCH --mail-user=${mailto}
 #SBATCH --job-name=${job_name}
 #SBATCH --partition=${queue}
-#SBATCH --time=${max_time}
-#SBATCH --output=${submission_dir}/%A-${run_id}.out
-#SBATCH --error=${submission_dir}/%A-${run_id}.err
+#SBATCH --time=${walltime}
+#SBATCH --output=${submission_dir}/%A-${safe_classifier}-${run_id}.out
+#SBATCH --error=${submission_dir}/%A-${safe_classifier}-${run_id}.err
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
@@ -173,26 +252,24 @@ current_aeon_commit=\$(git -C "${aeon_dir}" rev-parse HEAD)
 
 if [[ "\${current_tsml_eval_commit}" != "${tsml_eval_commit}" ]]; then
     echo "ERROR: tsml-eval changed after submission."
-    echo "Expected: ${tsml_eval_commit}"
-    echo "Current:  \${current_tsml_eval_commit}"
     exit 1
 fi
 if [[ "\${current_aeon_commit}" != "${aeon_commit}" ]]; then
     echo "ERROR: aeon changed after submission."
-    echo "Expected: ${aeon_commit}"
-    echo "Current:  \${current_aeon_commit}"
     exit 1
 fi
 
+echo "Classifier:       ${classifier}"
 echo "Host:             \$(hostname)"
 echo "Slurm job ID:     \${SLURM_JOB_ID}"
 echo "Memory request:   ${memory}"
+echo "Wall time:        ${walltime}"
 echo "tsml-eval commit: \${current_tsml_eval_commit}"
 echo "aeon commit:      \${current_aeon_commit}"
 echo
 
-# resample 0 uses the supplied TRAIN/TEST split unchanged. Do not add -pr:
-# that option asks for MatchWords0_TRAIN.ts/MatchWords0_TEST.ts instead.
+# Resample zero preserves the supplied participant-disjoint TRAIN/TEST split.
+# Do not add -pr: that option expects MatchWords0_TRAIN.ts and _TEST.ts.
 "${python_path}" \
     -u \
     "${experiment_script}" \
@@ -204,33 +281,23 @@ echo
     > "${experiment_output}" 2>&1
 EOF
 
-while true; do
-    num_jobs=$(
-        squeue \
-            --noheader \
-            --user="${username}" \
-            --partition="${queue}" \
-            --states=RUNNING,PENDING |
-            wc -l
-    )
-    if ((num_jobs < max_num_submitted)); then
-        break
+    wait_for_queue_slot
+    if ! sbatch_output=$(sbatch "${submission_file}"); then
+        echo "ERROR: failed to submit ${classifier}." >&2
+        exit 1
     fi
-    echo "Waiting 60 seconds: ${num_jobs} jobs are running or pending."
-    sleep 60
+
+    submitted=$((submitted + 1))
+    echo "${sbatch_output}"
+    echo "Submitted ${classifier}: memory=${memory}, wall-time=${walltime}"
+
+    # Slurm has copied the submission program; no command-list file is needed.
+    rm -f "${submission_file}"
 done
 
-if ! sbatch_output=$(sbatch "${submission_file}"); then
-    echo "ERROR: failed to submit ${submission_file}" >&2
-    exit 1
-fi
-
-echo "${sbatch_output}"
-echo "Submitted raw MatchWords full-HC2 baseline:"
-echo "  Memory:             ${memory}"
-echo "  Wall time:          ${max_time}"
-echo "  Experiment log:     ${experiment_output}"
-echo "  Expected result:    ${test_result}"
-echo "  Submission records: ${submission_dir}"
-
-rm -f "${submission_file}"
+echo
+echo "Finished MatchWords train/test submissions."
+echo "Submitted:          ${submitted}"
+echo "Already complete:   ${skipped}"
+echo "Results:            ${results_root}"
+echo "Submission records: ${submission_dir}"
