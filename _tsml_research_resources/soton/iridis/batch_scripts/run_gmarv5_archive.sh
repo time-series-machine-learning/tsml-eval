@@ -12,4 +12,4 @@ export job_name_prefix="eeg-gmarv5"
 export max_cpus_to_use=20
 export memory_per_cpu_gib=30
 
-exec "${script_dir}/run_gmar_archive_prefix.sh"
+exec bash "${script_dir}/run_gmar_archive_prefix.sh"
