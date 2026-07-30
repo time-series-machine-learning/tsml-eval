@@ -4,6 +4,7 @@ __all__ = [
     "evaluate_classifiers",
     "evaluate_classifiers_from_file",
     "evaluate_classifiers_by_problem",
+    "evaluate_classifiers_by_problem_lightweight",
     "evaluate_clusterers",
     "evaluate_clusterers_from_file",
     "evaluate_clusterers_by_problem",
@@ -18,6 +19,7 @@ __all__ = [
 from tsml_eval.evaluation.multiple_estimator_evaluation import (
     evaluate_classifiers,
     evaluate_classifiers_by_problem,
+    evaluate_classifiers_by_problem_lightweight,
     evaluate_classifiers_from_file,
     evaluate_clusterers,
     evaluate_clusterers_by_problem,

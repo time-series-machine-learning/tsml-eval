@@ -1,7 +1,9 @@
 """Tests for the multiple estimator evaluation functionality."""
 
+import tsml_eval.evaluation.multiple_estimator_evaluation as evaluation
 from tsml_eval.evaluation.multiple_estimator_evaluation import (
     evaluate_classifiers_by_problem,
+    evaluate_classifiers_by_problem_lightweight,
     evaluate_clusterers_by_problem,
     evaluate_forecasters_by_problem,
     evaluate_regressors_by_problem,
@@ -23,6 +25,33 @@ def test_evaluate_classifiers_by_problem():
         resamples=resamples,
         eval_name="test0",
     )
+
+
+def test_evaluate_classifiers_by_problem_lightweight(monkeypatch):
+    """Test that the lightweight function disables high-volume figures."""
+    call = {}
+
+    def _mock_evaluate_classifiers_by_problem(*args, **kwargs):
+        call["args"] = args
+        call["kwargs"] = kwargs
+
+    monkeypatch.setattr(
+        evaluation,
+        "evaluate_classifiers_by_problem",
+        _mock_evaluate_classifiers_by_problem,
+    )
+
+    evaluate_classifiers_by_problem_lightweight(
+        "load",
+        ["Classifier"],
+        ["Dataset"],
+        "save",
+        eval_name="lightweight",
+    )
+
+    assert call["kwargs"]["save_boxplots"] is False
+    assert call["kwargs"]["save_pairwise_scatter"] is False
+    assert call["kwargs"]["eval_name"] == "lightweight"
 
 
 def test_evaluate_clusterers_by_problem():

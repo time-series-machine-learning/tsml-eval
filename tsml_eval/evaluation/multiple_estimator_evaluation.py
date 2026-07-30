@@ -30,6 +30,7 @@ __all__ = [
     "evaluate_classifiers",
     "evaluate_classifiers_from_file",
     "evaluate_classifiers_by_problem",
+    "evaluate_classifiers_by_problem_lightweight",
     "evaluate_clusterers",
     "evaluate_clusterers_from_file",
     "evaluate_clusterers_by_problem",
@@ -54,6 +55,8 @@ def evaluate_classifiers(
     continue_on_missing=False,
     eval_name=None,
     estimator_names=None,
+    save_boxplots=True,
+    save_pairwise_scatter=True,
 ):
     """
     Evaluate multiple classifiers on multiple datasets.
@@ -80,6 +83,10 @@ def evaluate_classifiers(
     estimator_names : list of str, default=None
         The names of the estimator for each classifier result. If None, uses
         the estimator_name attribute of each classifier result.
+    save_boxplots : bool, default=True
+        Whether to save absolute and relative boxplots for each statistic.
+    save_pairwise_scatter : bool, default=True
+        Whether to save the full set of directed pairwise scatter plots.
     """
     _evaluate_estimators(
         classifier_results,
@@ -89,6 +96,8 @@ def evaluate_classifiers(
         continue_on_missing,
         eval_name,
         estimator_names,
+        save_boxplots=save_boxplots,
+        save_pairwise_scatter=save_pairwise_scatter,
     )
 
 
@@ -100,6 +109,8 @@ def evaluate_classifiers_from_file(
     eval_name=None,
     verify_results=True,
     estimator_names=None,
+    save_boxplots=True,
+    save_pairwise_scatter=True,
 ):
     """
     Evaluate multiple classifiers on multiple datasets from file.
@@ -128,6 +139,10 @@ def evaluate_classifiers_from_file(
     estimator_names : list of str, default=None
         The names of the estimator for each classifier result. If None, uses
         the estimator_name attribute of each classifier result.
+    save_boxplots : bool, default=True
+        Whether to save absolute and relative boxplots for each statistic.
+    save_pairwise_scatter : bool, default=True
+        Whether to save the full set of directed pairwise scatter plots.
     """
     classifier_results = []
     for load_path in load_paths:
@@ -148,6 +163,8 @@ def evaluate_classifiers_from_file(
         continue_on_missing=continue_on_missing,
         eval_name=eval_name,
         estimator_names=estimator_names,
+        save_boxplots=save_boxplots,
+        save_pairwise_scatter=save_pairwise_scatter,
     )
 
 
@@ -163,6 +180,8 @@ def evaluate_classifiers_by_problem(
     eval_name=None,
     verify_results=True,
     verbose=False,
+    save_boxplots=True,
+    save_pairwise_scatter=True,
 ):
     """
     Evaluate multiple classifiers on multiple datasets from file using standard paths.
@@ -216,6 +235,10 @@ def evaluate_classifiers_by_problem(
         If the verification should be performed on the loaded results values.
     verbose : bool, default=False
         If verbose output should be printed.
+    save_boxplots : bool, default=True
+        Whether to save absolute and relative boxplots for each statistic.
+    save_pairwise_scatter : bool, default=True
+        Whether to save the full set of directed pairwise scatter plots.
     """
     load_path, classifier_names, dataset_names, resamples = _load_by_problem_init(
         "classifier",
@@ -314,6 +337,49 @@ def evaluate_classifiers_by_problem(
         continue_on_missing=continue_on_missing,
         eval_name=eval_name,
         estimator_names=names,
+        save_boxplots=save_boxplots,
+        save_pairwise_scatter=save_pairwise_scatter,
+    )
+
+
+def evaluate_classifiers_by_problem_lightweight(
+    load_path,
+    classifier_names,
+    dataset_names,
+    save_path,
+    resamples=1,
+    load_train_results=False,
+    error_on_missing=True,
+    continue_on_missing=False,
+    eval_name=None,
+    verify_results=True,
+    verbose=False,
+):
+    """
+    Evaluate classifiers by problem without high-volume diagnostic figures.
+
+    This is the lightweight counterpart to
+    :func:`evaluate_classifiers_by_problem`. It writes the same statistic,
+    rank, p-value, summary, critical-difference, and multi-comparison-matrix
+    outputs, but omits absolute and relative boxplots and the full set of
+    directed pairwise scatter plots.
+
+    Parameters are identical to :func:`evaluate_classifiers_by_problem`.
+    """
+    return evaluate_classifiers_by_problem(
+        load_path=load_path,
+        classifier_names=classifier_names,
+        dataset_names=dataset_names,
+        save_path=save_path,
+        resamples=resamples,
+        load_train_results=load_train_results,
+        error_on_missing=error_on_missing,
+        continue_on_missing=continue_on_missing,
+        eval_name=eval_name,
+        verify_results=verify_results,
+        verbose=verbose,
+        save_boxplots=False,
+        save_pairwise_scatter=False,
     )
 
 
@@ -1126,6 +1192,8 @@ def _evaluate_estimators(
     continue_with_missing,
     eval_name,
     estimator_names,
+    save_boxplots=True,
+    save_pairwise_scatter=True,
 ):
     estimators = set()
     datasets = set()
@@ -1312,6 +1380,8 @@ def _evaluate_estimators(
                 save_path,
                 eval_name,
                 continue_with_missing and missing,
+                save_boxplots,
+                save_pairwise_scatter,
             )
             stats.append((average, rank, stat, ascending, split))
 
@@ -1332,6 +1402,8 @@ def _create_directory_for_statistic(
     save_path,
     eval_name,
     has_missing,
+    save_boxplots=True,
+    save_pairwise_scatter=True,
 ):
     os.makedirs(f"{save_path}/{statistic_name}/all_resamples/", exist_ok=True)
 
@@ -1430,6 +1502,8 @@ def _create_directory_for_statistic(
                 higher_better,
                 save_path,
                 eval_name,
+                save_boxplots,
+                save_pairwise_scatter,
             )
         except ValueError as e:
             warnings.warn(
@@ -1441,7 +1515,14 @@ def _create_directory_for_statistic(
 
 
 def _figures_for_statistic(
-    scores, estimators, statistic_name, higher_better, save_path, eval_name
+    scores,
+    estimators,
+    statistic_name,
+    higher_better,
+    save_path,
+    eval_name,
+    save_boxplots=True,
+    save_pairwise_scatter=True,
 ):
     os.makedirs(f"{save_path}/{statistic_name}/figures/", exist_ok=True)
 
@@ -1462,39 +1543,42 @@ def _figures_for_statistic(
         )
     plt.close()
 
-    box, _ = plot_boxplot(scores, estimators, plot_type="boxplot")
-    box.savefig(
-        f"{save_path}/{statistic_name}/figures/"
-        f"{eval_name}_{statistic_name.lower()}_boxplot.pdf",
-        bbox_inches="tight",
-    )
-    if sys.version_info < (3, 14):  # skip 3.14, revisit later
-        pickle.dump(
-            box,
-            open(
-                f"{save_path}/{statistic_name}/figures/"
-                f"{eval_name}_{statistic_name.lower()}_boxplot.pickle",
-                "wb",
-            ),
+    if save_boxplots:
+        box, _ = plot_boxplot(scores, estimators, plot_type="boxplot")
+        box.savefig(
+            f"{save_path}/{statistic_name}/figures/"
+            f"{eval_name}_{statistic_name.lower()}_boxplot.pdf",
+            bbox_inches="tight",
         )
-    plt.close()
+        if sys.version_info < (3, 14):  # skip 3.14, revisit later
+            pickle.dump(
+                box,
+                open(
+                    f"{save_path}/{statistic_name}/figures/"
+                    f"{eval_name}_{statistic_name.lower()}_boxplot.pickle",
+                    "wb",
+                ),
+            )
+        plt.close()
 
-    boxr, _ = plot_boxplot(scores, estimators, relative=True, plot_type="boxplot")
-    boxr.savefig(
-        f"{save_path}/{statistic_name}/figures/"
-        f"{eval_name}_{statistic_name.lower()}_boxplot_relative.pdf",
-        bbox_inches="tight",
-    )
-    if sys.version_info < (3, 14):  # skip 3.14, revisit later
-        pickle.dump(
-            boxr,
-            open(
-                f"{save_path}/{statistic_name}/figures/"
-                f"{eval_name}_{statistic_name.lower()}_boxplot_relative.pickle",
-                "wb",
-            ),
+        boxr, _ = plot_boxplot(
+            scores, estimators, relative=True, plot_type="boxplot"
         )
-    plt.close()
+        boxr.savefig(
+            f"{save_path}/{statistic_name}/figures/"
+            f"{eval_name}_{statistic_name.lower()}_boxplot_relative.pdf",
+            bbox_inches="tight",
+        )
+        if sys.version_info < (3, 14):  # skip 3.14, revisit later
+            pickle.dump(
+                boxr,
+                open(
+                    f"{save_path}/{statistic_name}/figures/"
+                    f"{eval_name}_{statistic_name.lower()}_boxplot_relative.pickle",
+                    "wb",
+                ),
+            )
+        plt.close()
 
     df = pd.DataFrame(scores)
     df.columns = estimators
@@ -1520,41 +1604,43 @@ def _figures_for_statistic(
         )
     plt.close()
 
-    for i, est1 in enumerate(estimators):
-        for n, est2 in enumerate(estimators):
-            if i == n:
-                continue
+    if save_pairwise_scatter:
+        for i, est1 in enumerate(estimators):
+            for n, est2 in enumerate(estimators):
+                if i == n:
+                    continue
 
-            os.makedirs(
-                f"{save_path}/{statistic_name}/figures/scatters/{est1}/", exist_ok=True
-            )
-
-            scatter, _ = plot_pairwise_scatter(
-                scores[:, i],
-                scores[:, n],
-                est1,
-                est2,
-                metric=statistic_name.upper(),
-                lower_better=not higher_better,
-                figsize=(8, 8),
-                statistic_tests=False,
-            )
-            scatter.savefig(
-                f"{save_path}/{statistic_name}/figures/scatters/{est1}/"
-                f"{eval_name}_{statistic_name.lower()}_scatter_{est1}_{est2}.pdf",
-                bbox_inches="tight",
-            )
-            if sys.version_info < (3, 14):  # skip 3.14, revisit later
-                pickle.dump(
-                    scatter,
-                    open(
-                        f"{save_path}/{statistic_name}/figures/scatters/{est1}/"
-                        f"{eval_name}_{statistic_name.lower()}_scatter_{est1}_{est2}"
-                        f".pickle",
-                        "wb",
-                    ),
+                os.makedirs(
+                    f"{save_path}/{statistic_name}/figures/scatters/{est1}/",
+                    exist_ok=True,
                 )
-            plt.close()
+
+                scatter, _ = plot_pairwise_scatter(
+                    scores[:, i],
+                    scores[:, n],
+                    est1,
+                    est2,
+                    metric=statistic_name.upper(),
+                    lower_better=not higher_better,
+                    figsize=(8, 8),
+                    statistic_tests=False,
+                )
+                scatter.savefig(
+                    f"{save_path}/{statistic_name}/figures/scatters/{est1}/"
+                    f"{eval_name}_{statistic_name.lower()}_scatter_{est1}_{est2}.pdf",
+                    bbox_inches="tight",
+                )
+                if sys.version_info < (3, 14):  # skip 3.14, revisit later
+                    pickle.dump(
+                        scatter,
+                        open(
+                            f"{save_path}/{statistic_name}/figures/scatters/{est1}/"
+                            f"{eval_name}_{statistic_name.lower()}_scatter_"
+                            f"{est1}_{est2}.pickle",
+                            "wb",
+                        ),
+                    )
+                plt.close()
 
 
 def _summary_evaluation(stats, estimators, save_path, eval_name):
