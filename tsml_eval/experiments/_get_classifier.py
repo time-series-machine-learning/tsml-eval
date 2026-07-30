@@ -103,6 +103,7 @@ channel_selection_hc2_classifiers = [
         "gmarv4-hc2",
         "guardedtemporalv4-hc2",
     ],
+    ["gmarv5-hc2", "guardedtemporalv5-hc2"],
 ]
 _channel_selection_pipeline_selectors = (
     "ecs",
@@ -120,6 +121,7 @@ _channel_selection_pipeline_selectors = (
     "gmarv2",
     "gmarv3",
     "gmarv4",
+    "gmarv5",
 )
 _channel_selection_pipeline_components = ("hc2", "arsenal", "drcif", "stc", "tde")
 channel_selection_hc2_classifiers.extend(
@@ -290,6 +292,8 @@ def _set_classifier_channel_selection_hc2(
         "guardedtemporalv3": "GuardedTemporalV3",
         "gmarv4": "GuardedTemporalV4",
         "guardedtemporalv4": "GuardedTemporalV4",
+        "gmarv5": "GuardedTemporalV5",
+        "guardedtemporalv5": "GuardedTemporalV5",
     }
     legacy_reverse_aliases = {
         "hc2-ecs": "ecs-hc2",
@@ -350,6 +354,7 @@ def _set_classifier_channel_selection_hc2(
         "CLeVerRank",
         "CLeVerCluster",
         "CLeVerHybrid",
+        "GuardedTemporalV5",
     }
     if selector in aeon_neuro_selectors:
         try:
@@ -377,6 +382,7 @@ def _set_classifier_channel_selection_hc2(
                 "GuardedMultiAxisV2",
                 "GuardedTemporalV3",
                 "GuardedTemporalV4",
+                "GuardedTemporalV5",
             }
             else None
         ),

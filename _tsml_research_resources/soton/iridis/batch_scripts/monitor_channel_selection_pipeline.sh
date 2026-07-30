@@ -57,8 +57,8 @@ datasets=(
 )
 
 # Include the transform families retained for the paper summary. GMARv2 and
-# GMARv4 are deliberately excluded; GMARv3 remains the guarded-reducer result
-# being monitored.
+# GMARv4 are deliberately excluded. GMARv3 is retained for comparison with
+# GMARv5, which replaces its TSelect stage with DetachRocket.
 transforms=(
     "CSP"
     "ECS"
@@ -72,6 +72,7 @@ transforms=(
     "CLeVerCluster"
     "CLeVerHybrid"
     "GMARv3"
+    "GMARv5"
 )
 
 # HC2 and the four classifiers from which it is built.

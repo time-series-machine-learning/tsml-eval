@@ -129,6 +129,7 @@ class _ComponentTestReducer:
         ("GuardedMultiAxis-HC2", "GuardedMultiAxis"),
         ("GMARv2-HC2", "GuardedMultiAxisV2"),
         ("GMARv3-HC2", "GuardedTemporalV3"),
+        ("GMARv5-HC2", "GuardedTemporalV5"),
         ("CLeVerRank-HC2", "CLeVerRank"),
         ("CLeVerCluster-HC2", "CLeVerCluster"),
         ("CLeVerHybrid-HC2", "CLeVerHybrid"),
@@ -174,6 +175,7 @@ def test_gmarv4_hc2_factory_is_component_aware():
         ("GMARv2-Arsenal", "Arsenal", "n_kernels", 2000),
         ("GMARv3-Arsenal", "Arsenal", "n_kernels", 2000),
         ("GMARv4-Arsenal", "Arsenal", "n_kernels", 2000),
+        ("GMARv5-Arsenal", "Arsenal", "n_kernels", 2000),
     ],
 )
 def test_channel_selection_component_pipeline_options(
@@ -181,8 +183,12 @@ def test_channel_selection_component_pipeline_options(
     expected_class,
     parameter,
     expected_value,
+    monkeypatch,
 ):
     """Component pipelines use the same budgets as the HC2 components."""
+    if classifier_name.startswith("GMARv5"):
+        monkeypatch.setitem(sys.modules, "aeon_neuro", ModuleType("aeon_neuro"))
+
     pipeline = get_classifier_by_name(
         classifier_name,
         random_state=7,
@@ -196,12 +202,14 @@ def test_channel_selection_component_pipeline_options(
         expected_selector = "GuardedTemporalV3"
     elif classifier_name.startswith("GMARv4"):
         expected_selector = "GuardedTemporalV4"
+    elif classifier_name.startswith("GMARv5"):
+        expected_selector = "GuardedTemporalV5"
     else:
         expected_selector = "ECS"
     assert pipeline.selector == expected_selector
     assert type(pipeline.classifier).__name__ == expected_class
     assert pipeline.classifier.get_params()[parameter] == expected_value
-    if classifier_name.startswith(("GMARv2", "GMARv3", "GMARv4")):
+    if classifier_name.startswith(("GMARv2", "GMARv3", "GMARv4", "GMARv5")):
         assert pipeline.proxy_component == "arsenal"
 
 
@@ -396,6 +404,28 @@ def test_guarded_temporal_v3_uses_channel_guard_and_long_slices():
     )
 
     assert isinstance(transformer, GuardedMultiAxisReducer)
+    assert transformer.proxy_component == "drcif"
+    assert transformer.strategy == "time"
+    assert transformer.reference == "channel"
+    assert transformer.raw_fallback
+    assert transformer.separate_proxy_selection
+    assert not transformer.evaluate_combinations
+    assert transformer.refit_channel_selector
+    assert transformer.min_slice_timepoints == 1000
+
+
+def test_guarded_temporal_v5_replaces_tselect_with_detachrocket():
+    """GMARv5 retains the V3 guard but uses DetachRocket channel selection."""
+    transformer = _make_channel_transformer(
+        selector="GuardedTemporalV5",
+        n_channels=4,
+        random_state=0,
+        n_jobs=1,
+        proxy_component="DrCIF",
+    )
+
+    assert isinstance(transformer, GuardedMultiAxisReducer)
+    assert transformer.channel_selector == "detachrocket"
     assert transformer.proxy_component == "drcif"
     assert transformer.strategy == "time"
     assert transformer.reference == "channel"

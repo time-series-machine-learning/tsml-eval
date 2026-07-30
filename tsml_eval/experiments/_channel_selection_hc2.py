@@ -473,6 +473,30 @@ def _make_channel_transformer(
             random_state=random_state,
             n_jobs=n_jobs,
         )
+    if selector_key == "guardedtemporalv5":
+        from tsml_eval.experiments._guarded_multiaxis import GuardedMultiAxisReducer
+
+        component = (
+            "auto"
+            if proxy_component is None or proxy_component.casefold() == "hc2"
+            else proxy_component.casefold()
+        )
+        return GuardedMultiAxisReducer(
+            channel_selector="detachrocket",
+            proxy_component=component,
+            strategy="time",
+            reference="channel",
+            raw_fallback=True,
+            separate_proxy_selection=True,
+            evaluate_combinations=False,
+            refit_channel_selector=True,
+            min_slice_timepoints=1000,
+            max_score_loss=0.01,
+            aggressive_fraction=0.25,
+            aggressive_margin=0.0,
+            random_state=random_state,
+            n_jobs=n_jobs,
+        )
     if selector_key == "guardedtemporalv4":
         component = (
             "arsenal"

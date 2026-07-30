@@ -38,9 +38,12 @@ class GuardedMultiAxisReducer(BaseEstimator):
 
     Parameters
     ----------
-    channel_selector : {"tselect", "none"}, estimator, or None, default="tselect"
+    channel_selector : {"tselect", "detachrocket", "none"}, estimator, or None, \
+            default="tselect"
         Channel selector fitted before the other reductions. An estimator must
-        implement ``fit`` and ``transform``.
+        implement ``fit`` and ``transform``. ``"detachrocket"`` uses the same
+        25% channel proportion and 2,000 kernels as the standalone experimental
+        pipeline.
     proxy_estimator : estimator or None, default=None
         Explicit lightweight classifier used for candidate evaluation. When supplied,
         ``proxy_component`` is ignored.
@@ -108,7 +111,8 @@ class GuardedMultiAxisReducer(BaseEstimator):
     fail_fast : bool, default=False
         If True, re-raise proxy errors. Otherwise failed candidates are recorded.
     random_state : int or None, default=None
-        Random seed used for splitting, nested case sampling, TSelect, and proxies.
+        Random seed used for splitting, nested case sampling, channel selection,
+        and proxies.
     n_jobs : int, default=1
         Thread count passed to lightweight proxies that support it.
 
@@ -534,7 +538,21 @@ class GuardedMultiAxisReducer(BaseEstimator):
                 from aeon.transformations.collection.channel_selection import TSelect
 
                 return TSelect(random_state=self.random_state)
-            raise ValueError("channel_selector string must be 'tselect' or 'none'.")
+            if key == "detachrocket":
+                from aeon_neuro.transformations.collection.channel_selection import (
+                    DetachRocketChannelSelector,
+                )
+
+                return DetachRocketChannelSelector(
+                    proportion=0.25,
+                    n_kernels=2000,
+                    n_jobs=self.n_jobs,
+                    random_state=self.random_state,
+                )
+            raise ValueError(
+                "channel_selector string must be 'tselect', 'detachrocket', "
+                "or 'none'."
+            )
         return self._safe_clone(self.channel_selector)
 
     def _fit_channel_selector(self, selector, X, y, fit_indices=None):
