@@ -7,14 +7,17 @@ set -euo pipefail
 # train and test predictions for later HC2-from-file construction.
 
 # ==============================================================================
-# Run set: override with RUN_SET=fast, RUN_SET=drcif, RUN_SET=tde, or
-# RUN_SET=mrhydra
+# Run set: override with RUN_SET=fast, drcif, tde, mrhydra,
+# tselect-fast, tselect-drcif, tselect-tde, gmarv3-fast, gmarv3-drcif, or
+# gmarv3-tde.
 # ==============================================================================
 
 # fast:  Arsenal and STC, 8 GiB/process, up to 76 concurrent processes.
 # drcif: DrCIF only, 10 GiB/process, up to 60 concurrent processes.
 # tde:   TDE only, 30 GiB/process, up to 20 concurrent processes.
 # mrhydra: MrHydra only, 30 GiB/process, up to 20 concurrent processes.
+# The TSelect and GMARv3 sets use the corresponding flat transform-component
+# pipelines and retain train files so HC2 can later be reconstructed by fold.
 run_set="${RUN_SET:-fast}"
 run_set="${run_set,,}"
 
@@ -70,9 +73,54 @@ case "${run_set}" in
         max_cpus_to_use=20
         memory_per_cpu_gib=30
         ;;
+    tselect-fast)
+        component_specs=(
+            "TSelect-Arsenal|TSelect-Arsenal"
+            "TSelect-STC|TSelect-STC"
+        )
+        max_cpus_to_use=76
+        memory_per_cpu_gib=8
+        ;;
+    tselect-drcif)
+        component_specs=(
+            "TSelect-DrCIF|TSelect-DrCIF"
+        )
+        max_cpus_to_use=60
+        memory_per_cpu_gib=10
+        ;;
+    tselect-tde)
+        component_specs=(
+            "TSelect-TDE|TSelect-TDE"
+        )
+        max_cpus_to_use=20
+        memory_per_cpu_gib=30
+        ;;
+    gmarv3-fast)
+        component_specs=(
+            "GMARv3-Arsenal|GMARv3-Arsenal"
+            "GMARv3-STC|GMARv3-STC"
+        )
+        max_cpus_to_use=76
+        memory_per_cpu_gib=8
+        ;;
+    gmarv3-drcif)
+        component_specs=(
+            "GMARv3-DrCIF|GMARv3-DrCIF"
+        )
+        max_cpus_to_use=60
+        memory_per_cpu_gib=10
+        ;;
+    gmarv3-tde)
+        component_specs=(
+            "GMARv3-TDE|GMARv3-TDE"
+        )
+        max_cpus_to_use=20
+        memory_per_cpu_gib=30
+        ;;
     *)
         echo "ERROR: unknown run_set: ${run_set}"
-        echo "Use fast, drcif, tde, or mrhydra."
+        echo "Use fast, drcif, tde, mrhydra, tselect-fast, tselect-drcif,"
+        echo "tselect-tde, gmarv3-fast, gmarv3-drcif, or gmarv3-tde."
         exit 1
         ;;
 esac
