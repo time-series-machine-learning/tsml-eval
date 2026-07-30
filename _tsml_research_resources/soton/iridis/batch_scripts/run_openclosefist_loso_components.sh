@@ -7,13 +7,13 @@ set -euo pipefail
 # train and test predictions for later HC2-from-file construction.
 
 # ==============================================================================
-# Run set: change this one hard-coded value for later stages
+# Run set: override with RUN_SET=fast, RUN_SET=drcif, or RUN_SET=tde
 # ==============================================================================
 
 # fast:  Arsenal and STC, 8 GiB/process, up to 76 concurrent processes.
 # drcif: DrCIF only, 10 GiB/process, up to 60 concurrent processes.
 # tde:   TDE only, 30 GiB/process, up to 20 concurrent processes.
-run_set="fast"
+run_set="${RUN_SET:-fast}"
 
 # ==============================================================================
 # Experiment and Slurm configuration
