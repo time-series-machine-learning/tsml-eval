@@ -8,16 +8,17 @@ set -euo pipefail
 
 # ==============================================================================
 # Run set: override with RUN_SET=fast, drcif, tde, mrhydra,
-# tselect-fast, tselect-drcif, tselect-tde, gmarv3-fast, gmarv3-drcif, or
-# gmarv3-tde.
+# tselect-fast, tselect-drcif, tselect-tde, detachrocket-fast,
+# detachrocket-drcif, detachrocket-tde, gmarv3-fast, gmarv3-drcif,
+# gmarv3-tde, gmarv5-fast, gmarv5-drcif, or gmarv5-tde.
 # ==============================================================================
 
 # fast:  Arsenal and STC, 8 GiB/process, up to 76 concurrent processes.
 # drcif: DrCIF only, 10 GiB/process, up to 60 concurrent processes.
 # tde:   TDE only, 30 GiB/process, up to 20 concurrent processes.
 # mrhydra: MrHydra only, 30 GiB/process, up to 20 concurrent processes.
-# The TSelect and GMARv3 sets use the corresponding flat transform-component
-# pipelines and retain train files so HC2 can later be reconstructed by fold.
+# The selector sets use the corresponding flat transform-component pipelines
+# and retain train files so HC2 can later be reconstructed by fold.
 run_set="${RUN_SET:-fast}"
 run_set="${run_set,,}"
 
@@ -95,6 +96,28 @@ case "${run_set}" in
         max_cpus_to_use=20
         memory_per_cpu_gib=30
         ;;
+    detachrocket-fast)
+        component_specs=(
+            "DetachRocket-Arsenal|DetachRocket-Arsenal"
+            "DetachRocket-STC|DetachRocket-STC"
+        )
+        max_cpus_to_use=30
+        memory_per_cpu_gib=20
+        ;;
+    detachrocket-drcif)
+        component_specs=(
+            "DetachRocket-DrCIF|DetachRocket-DrCIF"
+        )
+        max_cpus_to_use=30
+        memory_per_cpu_gib=20
+        ;;
+    detachrocket-tde)
+        component_specs=(
+            "DetachRocket-TDE|DetachRocket-TDE"
+        )
+        max_cpus_to_use=20
+        memory_per_cpu_gib=30
+        ;;
     gmarv3-fast)
         component_specs=(
             "GMARv3-Arsenal|GMARv3-Arsenal"
@@ -117,10 +140,34 @@ case "${run_set}" in
         max_cpus_to_use=20
         memory_per_cpu_gib=30
         ;;
+    gmarv5-fast)
+        component_specs=(
+            "GMARv5-Arsenal|GMARv5-Arsenal"
+            "GMARv5-STC|GMARv5-STC"
+        )
+        max_cpus_to_use=30
+        memory_per_cpu_gib=20
+        ;;
+    gmarv5-drcif)
+        component_specs=(
+            "GMARv5-DrCIF|GMARv5-DrCIF"
+        )
+        max_cpus_to_use=30
+        memory_per_cpu_gib=20
+        ;;
+    gmarv5-tde)
+        component_specs=(
+            "GMARv5-TDE|GMARv5-TDE"
+        )
+        max_cpus_to_use=20
+        memory_per_cpu_gib=30
+        ;;
     *)
         echo "ERROR: unknown run_set: ${run_set}"
         echo "Use fast, drcif, tde, mrhydra, tselect-fast, tselect-drcif,"
-        echo "tselect-tde, gmarv3-fast, gmarv3-drcif, or gmarv3-tde."
+        echo "tselect-tde, detachrocket-fast, detachrocket-drcif,"
+        echo "detachrocket-tde, gmarv3-fast, gmarv3-drcif, gmarv3-tde,"
+        echo "gmarv5-fast, gmarv5-drcif, or gmarv5-tde."
         exit 1
         ;;
 esac
