@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-# Submit one of two explicit ChannelSelectionPipeline recovery sets.
+# Submit one of three explicit ChannelSelectionPipeline recovery sets.
 # This uses aeon-neuro from the tsml-eval environment, not a source checkout.
 
 # ==============================================================================
@@ -17,8 +17,14 @@ set -euo pipefail
 #   The 17 component results whose old and new predictions agreed on every
 #   overlapping problem. Rerunning these gives definitive full-pipeline timing
 #   instead of copying classifier-only timings from the old result files.
-# missing_hc2 or reconstructable_components
-recovery_set="reconstructable_components"
+#
+# "oom_failures":
+#   The 33 retained-paper results still absent from the 30 July cluster pull
+#   whose latest completed attempt raised MemoryError or an array-allocation
+#   error. Run this only after current recovery jobs have finished; completed
+#   files are skipped automatically.
+# missing_hc2, reconstructable_components, or oom_failures
+recovery_set="oom_failures"
 
 # ==============================================================================
 # Experiment configuration
@@ -40,7 +46,7 @@ mail="NONE"
 mailto="${username}@soton.ac.uk"
 
 local_path="/iridisfs/home/${username}"
-job_name_prefix="eeg-reconstruct17"
+job_name_prefix="eeg-pipeline-recovery"
 
 generate_train_files="false"
 predefined_folds="false"
@@ -82,6 +88,42 @@ reconstructable_component_tasks=(
     "Riemannian-TDE|ShortIntervalTask"
 )
 
+oom_failure_tasks=(
+    "CSP-HC2|ShortIntervalTask"
+    "CSP-HC2|LongIntervalTask"
+    "CSP-TDE|ShortIntervalTask"
+    "CSP-TDE|MatchingPennies"
+    "CSP-TDE|LongIntervalTask"
+    "ECS-HC2|LongIntervalTask"
+    "ECP-HC2|SitStand"
+    "ECP-HC2|ShortIntervalTask"
+    "ECP-HC2|LongIntervalTask"
+    "TSelect-HC2|ShortIntervalTask"
+    "TSelect-HC2|LongIntervalTask"
+    "TSelect-TDE|ShortIntervalTask"
+    "TSelect-TDE|MatchingPennies"
+    "TSelect-TDE|LongIntervalTask"
+    "Random-HC2|SitStand"
+    "Random-HC2|ShortIntervalTask"
+    "Random-HC2|LongIntervalTask"
+    "Riemannian-HC2|ShortIntervalTask"
+    "Riemannian-HC2|LongIntervalTask"
+    "DetachRocket-HC2|LongIntervalTask"
+    "DetachRocket-TDE|FaceDetection"
+    "DetachRocket-TDE|ShortIntervalTask"
+    "DetachRocket-TDE|MatchingPennies"
+    "DetachRocket-TDE|LongIntervalTask"
+    "CaseTimeReducer-HC2|ShortIntervalTask"
+    "CaseTimeReducer-TDE|LongIntervalTask"
+    "CLeVerRank-HC2|LongIntervalTask"
+    "CLeVerCluster-HC2|ShortIntervalTask"
+    "CLeVerCluster-HC2|LongIntervalTask"
+    "CLeVerCluster-TDE|SitStand"
+    "CLeVerCluster-TDE|ShortIntervalTask"
+    "CLeVerHybrid-HC2|ShortIntervalTask"
+    "CLeVerHybrid-HC2|LongIntervalTask"
+)
+
 case "${recovery_set}" in
     missing_hc2)
         tasks_to_run=("${missing_hc2_tasks[@]}")
@@ -91,9 +133,13 @@ case "${recovery_set}" in
         tasks_to_run=("${reconstructable_component_tasks[@]}")
         expected_task_count=17
         ;;
+    oom_failures)
+        tasks_to_run=("${oom_failure_tasks[@]}")
+        expected_task_count=33
+        ;;
     *)
         echo "ERROR: unknown recovery_set: ${recovery_set}"
-        echo "Use missing_hc2 or reconstructable_components."
+        echo "Use missing_hc2, reconstructable_components, or oom_failures."
         exit 1
         ;;
 esac
