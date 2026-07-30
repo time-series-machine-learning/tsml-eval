@@ -7,7 +7,7 @@ from aeon.datasets.tsc_datasets import multiverse_core
 
 path = "/gpfs/home/ajb/Data/Multiverse"
 
-
+multiverse_core = ["FeedbackButton"]
 def _series_characteristics(X):
     if isinstance(X, np.ndarray):
         if X.ndim == 3:
