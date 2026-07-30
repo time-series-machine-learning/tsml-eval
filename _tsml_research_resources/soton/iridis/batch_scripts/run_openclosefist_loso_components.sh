@@ -7,13 +7,16 @@ set -euo pipefail
 # train and test predictions for later HC2-from-file construction.
 
 # ==============================================================================
-# Run set: override with RUN_SET=fast, RUN_SET=drcif, or RUN_SET=tde
+# Run set: override with RUN_SET=fast, RUN_SET=drcif, RUN_SET=tde, or
+# RUN_SET=mrhydra
 # ==============================================================================
 
 # fast:  Arsenal and STC, 8 GiB/process, up to 76 concurrent processes.
 # drcif: DrCIF only, 10 GiB/process, up to 60 concurrent processes.
 # tde:   TDE only, 30 GiB/process, up to 20 concurrent processes.
+# mrhydra: MrHydra only, 30 GiB/process, up to 20 concurrent processes.
 run_set="${RUN_SET:-fast}"
+run_set="${run_set,,}"
 
 # ==============================================================================
 # Experiment and Slurm configuration
@@ -60,9 +63,16 @@ case "${run_set}" in
         max_cpus_to_use=20
         memory_per_cpu_gib=30
         ;;
+    mrhydra)
+        component_specs=(
+            "MrHydra|MrHydra"
+        )
+        max_cpus_to_use=20
+        memory_per_cpu_gib=30
+        ;;
     *)
         echo "ERROR: unknown run_set: ${run_set}"
-        echo "Use fast, drcif, or tde."
+        echo "Use fast, drcif, tde, or mrhydra."
         exit 1
         ;;
 esac
@@ -207,8 +217,16 @@ for ((subject = first_subject; subject <= last_subject; subject++)); do
         test_file="${results_dir}/${result_name}/Predictions/${result_dataset}/testResample${subject}.csv"
         train_file="${results_dir}/${result_name}/Predictions/${result_dataset}/trainResample${subject}.csv"
 
-        # Both files are required for HC2-from-file.
-        if [[ -s "${test_file}" && -s "${train_file}" ]]; then
+        # HC2 components need train and test files. MrHydra is an external
+        # comparator, so avoid the unnecessary train-estimate build.
+        require_train_file=true
+        if [[ "${result_name}" == "MrHydra" ]]; then
+            require_train_file=false
+        fi
+
+        if [[ -s "${test_file}" ]] &&
+            { [[ "${require_train_file}" == false ]] ||
+              [[ -s "${train_file}" ]]; }; then
             continue
         fi
 
@@ -227,6 +245,9 @@ for ((subject = first_subject; subject <= last_subject; subject++)); do
             --dataset "${dataset}"
             --classifier-name "${result_name}"
         )
+        if [[ "${require_train_file}" == false ]]; then
+            command+=("--no-train-file")
+        fi
 
         printf -v command_line '%q ' "${command[@]}"
         printf '%s> %q 2>&1\n' \
@@ -257,6 +278,13 @@ fi
 # ==============================================================================
 # Create and submit the one-node task farm
 # ==============================================================================
+
+preflight_factories=()
+for specification in "${component_specs[@]}"; do
+    IFS='|' read -r factory_name _ <<< "${specification}"
+    preflight_factories+=("${factory_name}")
+done
+printf -v preflight_factory_args '%q ' "${preflight_factories[@]}"
 
 cat > "${submission_file}" <<EOF
 #!/bin/bash
@@ -323,7 +351,7 @@ echo "aeon commit:       \${current_aeon_commit}"
 echo "Command file:      ${command_file}"
 echo
 
-"${python_path}" - <<'PY'
+"${python_path}" - ${preflight_factory_args} <<'PY'
 import sys
 
 import aeon
@@ -333,7 +361,7 @@ from tsml_eval.experiments import get_classifier_by_name
 print("Python:   ", sys.executable)
 print("aeon:     ", aeon.__file__)
 print("tsml-eval:", tsml_eval.__file__)
-for name in ("Arsenal", "Full-STC"):
+for name in sys.argv[1:]:
     classifier = get_classifier_by_name(name, random_state=0, n_jobs=1)
     print(f"{name}: {classifier.__class__.__name__}")
 print("Import and classifier-factory checks succeeded")

@@ -63,6 +63,22 @@ for ((subject = first_subject; subject <= last_subject; subject++)); do
 done
 
 printf "\nHC2-from-file ready: %d/%d folds\n" "${hc2_ready}" "${expected}"
+
+mrhydra_complete=0
+mrhydra_started=0
+for ((subject = first_subject; subject <= last_subject; subject++)); do
+    test_file="${results_dir}/MrHydra/Predictions/${dataset}/testResample${subject}.csv"
+    if [[ -s "${test_file}" ]]; then
+        mrhydra_complete=$((mrhydra_complete + 1))
+    elif compgen -G \
+        "${results_dir}/output/MrHydra/output-${dataset}-${subject}-*.txt" \
+        > /dev/null; then
+        mrhydra_started=$((mrhydra_started + 1))
+    fi
+done
+printf "MrHydra complete:    %d/%d folds (%d started)\n" \
+    "${mrhydra_complete}" "${expected}" "${mrhydra_started}"
+
 printf "\nActive LOSO Slurm jobs\n"
 printf "%-12s %-2s %-10s %-32s %s\n" "JOBID" "ST" "TIME" "NAME" "NODE/REASON"
 squeue --user="${username}" --noheader \
