@@ -1,0 +1,70 @@
+#!/bin/bash
+
+set -u
+
+username="${USER:-ajb2u23}"
+results_dir="/iridisfs/home/${username}/Results/ChannelSelectionLOSO"
+dataset="OpenCloseFistLOSO"
+components=("Arsenal" "STC" "DrCIF" "TDE")
+first_subject=0
+last_subject=104
+expected=$((last_subject - first_subject + 1))
+
+printf "OpenCloseFist LOSO progress - %s\n" "$(date)"
+printf "%-10s %9s %9s %10s %9s %11s\n" \
+    "COMPONENT" "COMPLETE" "TEST_ONLY" "TRAIN_ONLY" "STARTED" "NOT_STARTED"
+
+for component in "${components[@]}"; do
+    complete=0
+    test_only=0
+    train_only=0
+    started=0
+    not_started=0
+
+    for ((subject = first_subject; subject <= last_subject; subject++)); do
+        prediction_dir="${results_dir}/${component}/Predictions/${dataset}"
+        test_file="${prediction_dir}/testResample${subject}.csv"
+        train_file="${prediction_dir}/trainResample${subject}.csv"
+
+        if [[ -s "${test_file}" && -s "${train_file}" ]]; then
+            complete=$((complete + 1))
+        elif [[ -s "${test_file}" ]]; then
+            test_only=$((test_only + 1))
+        elif [[ -s "${train_file}" ]]; then
+            train_only=$((train_only + 1))
+        elif compgen -G \
+            "${results_dir}/output/${component}/output-${dataset}-${subject}-*.txt" \
+            > /dev/null; then
+            started=$((started + 1))
+        else
+            not_started=$((not_started + 1))
+        fi
+    done
+
+    printf "%-10s %4d/%-4d %9d %10d %9d %11d\n" \
+        "${component}" "${complete}" "${expected}" "${test_only}" \
+        "${train_only}" "${started}" "${not_started}"
+done
+
+hc2_ready=0
+for ((subject = first_subject; subject <= last_subject; subject++)); do
+    ready=true
+    for component in "${components[@]}"; do
+        prediction_dir="${results_dir}/${component}/Predictions/${dataset}"
+        if [[ ! -s "${prediction_dir}/testResample${subject}.csv" ||
+              ! -s "${prediction_dir}/trainResample${subject}.csv" ]]; then
+            ready=false
+            break
+        fi
+    done
+    if [[ "${ready}" == true ]]; then
+        hc2_ready=$((hc2_ready + 1))
+    fi
+done
+
+printf "\nHC2-from-file ready: %d/%d folds\n" "${hc2_ready}" "${expected}"
+printf "\nActive LOSO Slurm jobs\n"
+printf "%-12s %-2s %-10s %-32s %s\n" "JOBID" "ST" "TIME" "NAME" "NODE/REASON"
+squeue --user="${username}" --noheader \
+    --format="%.12i %.2t %.10M %.32j %R" |
+    grep -E "eeg-ocf-loso-" || true
