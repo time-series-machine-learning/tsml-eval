@@ -19,10 +19,11 @@ set -euo pipefail
 #   instead of copying classifier-only timings from the old result files.
 #
 # "oom_failures":
-#   The 33 retained-paper results still absent from the 30 July cluster pull
-#   whose latest completed attempt raised MemoryError or an array-allocation
-#   error. Run this only after current recovery jobs have finished; completed
-#   files are skipped automatically.
+#   The 31 inactive retained-paper results still absent from the 30 July cluster
+#   pull whose latest completed attempt raised MemoryError or an
+#   array-allocation error. The active CaseTimeReducer-HC2/ShortIntervalTask and
+#   CLeVerCluster-HC2/LongIntervalTask runs are deliberately excluded.
+#   Completed files are skipped automatically.
 # missing_hc2, reconstructable_components, or oom_failures
 recovery_set="oom_failures"
 
@@ -113,11 +114,9 @@ oom_failure_tasks=(
     "DetachRocket-TDE|ShortIntervalTask"
     "DetachRocket-TDE|MatchingPennies"
     "DetachRocket-TDE|LongIntervalTask"
-    "CaseTimeReducer-HC2|ShortIntervalTask"
     "CaseTimeReducer-TDE|LongIntervalTask"
     "CLeVerRank-HC2|LongIntervalTask"
     "CLeVerCluster-HC2|ShortIntervalTask"
-    "CLeVerCluster-HC2|LongIntervalTask"
     "CLeVerCluster-TDE|SitStand"
     "CLeVerCluster-TDE|ShortIntervalTask"
     "CLeVerHybrid-HC2|ShortIntervalTask"
@@ -135,7 +134,7 @@ case "${recovery_set}" in
         ;;
     oom_failures)
         tasks_to_run=("${oom_failure_tasks[@]}")
-        expected_task_count=33
+        expected_task_count=31
         ;;
     *)
         echo "ERROR: unknown recovery_set: ${recovery_set}"
