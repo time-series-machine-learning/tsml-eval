@@ -3,11 +3,12 @@ from time import perf_counter
 import numpy as np
 
 from aeon.datasets import load_classification
-from aeon.datasets.tsc_datasets import multiverse_core
+from aeon.datasets.tsc_datasets import multiverse_core, multiverse2026
 
 path = "/gpfs/home/ajb/Data/Multiverse"
 
-multiverse_core = ["FeedbackButton"]
+datasets = multiverse2026
+
 def _series_characteristics(X):
     if isinstance(X, np.ndarray):
         if X.ndim == 3:
@@ -25,7 +26,7 @@ def _series_characteristics(X):
     return n_channels, length
 
 
-for problem in multiverse_core:
+for problem in datasets:
     print(f"Loading {problem}...", flush=True)  # noqa: T201
     start = perf_counter()
     X, y, metadata = load_classification(
