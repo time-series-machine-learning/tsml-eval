@@ -25,6 +25,7 @@ import pandas as pd
 from aeon.benchmarking.metrics.clustering import clustering_accuracy_score
 from aeon.classification import BaseClassifier
 from aeon.clustering import BaseClusterer
+from aeon.datasets import load_classification
 from aeon.forecasting import BaseForecaster
 from aeon.regression.base import BaseRegressor
 from aeon.utils.validation._dependencies import _check_soft_dependencies
@@ -351,6 +352,8 @@ def load_and_run_classification_experiment(
     benchmark_time=True,
     overwrite=False,
     predefined_resample=False,
+    load_equal_length=False,
+    load_no_missing=False,
 ):
     """Load a dataset and run a classification experiment.
 
@@ -396,6 +399,10 @@ def load_and_run_classification_experiment(
         Read a predefined resample from file instead of performing a resample. If True
         the file format must include the resample_id at the end of the dataset name i.e.
         <problem_path>/<dataset>/<dataset>+<resample_id>+"_TRAIN.ts".
+    load_equal_length : bool, default=False
+        Load an equal-length version of the classification dataset when available.
+    load_no_missing : bool, default=False
+        Load a no-missing-values version of the classification dataset when available.
     """
     if classifier_name is None:
         classifier_name = type(classifier).__name__
@@ -414,9 +421,26 @@ def load_and_run_classification_experiment(
         warnings.warn("All files exist and not overwriting, skipping.", stacklevel=1)
         return
 
-    X_train, y_train, X_test, y_test, resample = load_experiment_data(
-        problem_path, dataset, resample_id, predefined_resample
-    )
+    if predefined_resample or not (load_equal_length or load_no_missing):
+        X_train, y_train, X_test, y_test, resample = load_experiment_data(
+            problem_path, dataset, resample_id, predefined_resample
+        )
+    else:
+        X_train, y_train = load_classification(
+            dataset,
+            split="train",
+            extract_path=problem_path,
+            load_equal_length=load_equal_length,
+            load_no_missing=load_no_missing,
+        )
+        X_test, y_test = load_classification(
+            dataset,
+            split="test",
+            extract_path=problem_path,
+            load_equal_length=load_equal_length,
+            load_no_missing=load_no_missing,
+        )
+        resample = resample_id != 0
 
     if resample:
         X_train, y_train, X_test, y_test = stratified_resample_data(

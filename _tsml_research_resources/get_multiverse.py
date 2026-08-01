@@ -9,7 +9,7 @@ from aeon.datasets.tsc_datasets import multiverse_core, multiverse2026
 
 path = "/gpfs/home/ajb/Data/Multiverse"
 
-datasets = multiverse2026
+datasets = multiverse_core
 
 
 def _is_unequal_or_missing(train_file):

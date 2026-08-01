@@ -111,6 +111,8 @@ def run_experiment(args):
                 benchmark_time=args.benchmark_time,
                 overwrite=args.overwrite,
                 predefined_resample=args.predefined_resample,
+                load_equal_length=True,
+                load_no_missing=True,
             )
     # local run (no args)
     else:
@@ -165,6 +167,8 @@ def run_experiment(args):
             benchmark_time=benchmark_time,
             overwrite=overwrite,
             predefined_resample=predefined_resample,
+            load_equal_length=True,
+            load_no_missing=True,
         )
 
 
