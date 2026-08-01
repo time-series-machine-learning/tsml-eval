@@ -10,6 +10,7 @@ from aeon.datasets.tsc_datasets import multiverse_core, multiverse2026
 path = "/gpfs/home/ajb/Data/Multiverse"
 
 datasets = multiverse2026
+datasets_to_skip = {"S2Agri-34"}
 
 
 def _is_unequal_or_missing(train_file):
@@ -46,6 +47,8 @@ def delete_downloaded_unequal_or_missing(extract_path):
     for problem_dir in root.iterdir():
         if not problem_dir.is_dir() or problem_dir.is_symlink():
             continue
+        if problem_dir.name in datasets_to_skip:
+            continue
 
         train_file = problem_dir / f"{problem_dir.name}_TRAIN.ts"
         if train_file.is_file() and _is_unequal_or_missing(train_file):
@@ -77,6 +80,10 @@ def _series_characteristics(X):
 delete_downloaded_unequal_or_missing(path)
 
 for problem in datasets:
+    if problem in datasets_to_skip:
+        print(f"Skipping excluded problem: {problem}", flush=True)  # noqa: T201
+        continue
+
     problem_path = Path(path) / problem
     if problem_path.exists():
         print(  # noqa: T201
