@@ -1,0 +1,11 @@
+AsphaltObstaclesCoordinates
+AsphaltRegularityCoordinates
+BeijingPM10Quality_disc
+BeijingPM25Quality_disc
+BenzeneConcentration_disc
+CharacterTrajectories
+CounterMovementJump
+HouseholdPowerConsumption1_disc
+HouseholdPowerConsumption2_disc
+JapaneseVowels
+SpokenArabicDigits
