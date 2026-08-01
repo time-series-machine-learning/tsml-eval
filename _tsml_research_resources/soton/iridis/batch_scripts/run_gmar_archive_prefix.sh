@@ -33,9 +33,14 @@ local_path="/iridisfs/home/${username}"
 classifier_prefix="${classifier_prefix:-GMARv3}"
 job_name_prefix="${job_name_prefix:-eeg-gmarv3}"
 
-generate_train_files="false"
+generate_train_files="${generate_train_files:-false}"
 predefined_folds="false"
 normalise_data="false"
+
+# Optional wrapper controls. Defaults preserve the original three-job archive
+# run containing HC2 and all four components.
+components_only="${components_only:-false}"
+batch_mode="${batch_mode:-three_batches}"
 
 # ==============================================================================
 # Runtime batches
@@ -77,8 +82,30 @@ batch3_datasets=(
     "LongIntervalTask"
 )
 
-batch_labels=("batch1" "batch2" "batch3")
-batch_walltimes=("60:00:00" "60:00:00" "60:00:00")
+fast_datasets=(
+    "${batch1_datasets[@]}"
+    "${batch2_datasets[@]}"
+)
+
+slow_datasets=(
+    "${batch3_datasets[@]}"
+)
+
+case "${batch_mode}" in
+    three_batches)
+        batch_labels=("batch1" "batch2" "batch3")
+        batch_walltimes=("60:00:00" "60:00:00" "60:00:00")
+        ;;
+    fast_slow)
+        batch_labels=("fast" "slow")
+        batch_walltimes=("60:00:00" "60:00:00")
+        ;;
+    *)
+        echo "ERROR: unknown batch_mode: ${batch_mode}"
+        echo "Use three_batches or fast_slow."
+        exit 1
+        ;;
+esac
 
 # ==============================================================================
 # Repository, data, and result locations
@@ -101,13 +128,22 @@ numba_cache_dir="${local_path}/Code/.cache/${env_name}"
 # Pipeline variants
 # ==============================================================================
 
-components_to_run=(
-    "Arsenal"
-    "DrCIF"
-    "STC"
-    "HC2"
-    "TDE"
-)
+if [[ "${components_only,,}" == "true" ]]; then
+    components_to_run=(
+        "Arsenal"
+        "DrCIF"
+        "STC"
+        "TDE"
+    )
+else
+    components_to_run=(
+        "Arsenal"
+        "DrCIF"
+        "STC"
+        "HC2"
+        "TDE"
+    )
+fi
 
 classifiers_to_run=()
 for component in "${components_to_run[@]}"; do
@@ -172,6 +208,12 @@ for batch_label in "${batch_labels[@]}"; do
         batch3)
             datasets=("${batch3_datasets[@]}")
             ;;
+        fast)
+            datasets=("${fast_datasets[@]}")
+            ;;
+        slow)
+            datasets=("${slow_datasets[@]}")
+            ;;
         *)
             echo "ERROR: unknown batch label: ${batch_label}"
             exit 1
@@ -214,14 +256,17 @@ echo "Classifier prefix: ${classifier_prefix}"
 echo "Pipeline variants: ${#classifiers_to_run[@]}"
 echo "Datasets:          ${dataset_count}"
 echo "Expected results:  $((${#classifiers_to_run[@]} * dataset_count))"
+echo "Generate train:    ${generate_train_files}"
+echo "Batch mode:        ${batch_mode}"
 echo "Memory per CPU:    ${memory_per_cpu}"
 echo "Maximum CPUs:      ${max_cpus_to_use}"
 echo "tsml-eval commit:  ${tsml_eval_commit}"
 echo "aeon commit:       ${aeon_commit}"
 echo
 
-# Confirm all five factory names before submitting any job. aeon-neuro resolves
-# from the active conda environment, while aeon and tsml-eval use these checkouts.
+# Confirm every configured factory name before submitting any job. aeon-neuro
+# resolves from the active conda environment, while aeon and tsml-eval use
+# these checkouts.
 PYTHONNOUSERSITE=1 \
 PYTHONPATH="${aeon_dir}:${tsml_eval_dir}" \
 "${python_path}" - "${classifiers_to_run[@]}" <<'PY'
@@ -324,7 +369,7 @@ submit_batch() {
 
     : > "${command_file}"
 
-    # Dataset is the outer loop, keeping the five component variants adjacent.
+    # Dataset is the outer loop, keeping the configured variants adjacent.
     for dataset in "${datasets[@]}"; do
         for classifier in "${classifiers_to_run[@]}"; do
             mkdir -p "${out_dir}/${classifier}"
@@ -509,6 +554,12 @@ for batch_index in "${!batch_labels[@]}"; do
             ;;
         batch3)
             datasets=("${batch3_datasets[@]}")
+            ;;
+        fast)
+            datasets=("${fast_datasets[@]}")
+            ;;
+        slow)
+            datasets=("${slow_datasets[@]}")
             ;;
     esac
 

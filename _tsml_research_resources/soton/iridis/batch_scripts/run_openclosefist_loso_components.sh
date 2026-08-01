@@ -13,10 +13,10 @@ set -euo pipefail
 # gmarv3-tde, gmarv5-fast, gmarv5-drcif, or gmarv5-tde.
 # ==============================================================================
 
-# fast:  Arsenal and STC, 8 GiB/process, up to 76 concurrent processes.
-# drcif: DrCIF only, 10 GiB/process, up to 60 concurrent processes.
+# fast:  Arsenal and STC, 6 GiB/process, up to 96 concurrent processes.
+# drcif: DrCIF only, 22 GiB/process, up to 28 concurrent processes.
 # tde:   TDE only, 30 GiB/process, up to 20 concurrent processes.
-# mrhydra: MrHydra only, 30 GiB/process, up to 20 concurrent processes.
+# mrhydra: MrHydra only, 19 GiB/process, up to 32 concurrent processes.
 # The selector sets use the corresponding flat transform-component pipelines
 # and retain train files so HC2 can later be reconstructed by fold.
 run_set="${RUN_SET:-fast}"
@@ -50,15 +50,15 @@ case "${run_set}" in
             "Arsenal|Arsenal"
             "Full-STC|STC"
         )
-        max_cpus_to_use=76
-        memory_per_cpu_gib=8
+        max_cpus_to_use=96
+        memory_per_cpu_gib=6
         ;;
     drcif)
         component_specs=(
             "DrCIF|DrCIF"
         )
-        max_cpus_to_use=60
-        memory_per_cpu_gib=10
+        max_cpus_to_use=28
+        memory_per_cpu_gib=22
         ;;
     tde)
         component_specs=(
@@ -71,16 +71,16 @@ case "${run_set}" in
         component_specs=(
             "MrHydra|MrHydra"
         )
-        max_cpus_to_use=20
-        memory_per_cpu_gib=30
+        max_cpus_to_use=32
+        memory_per_cpu_gib=19
         ;;
     tselect-fast)
         component_specs=(
             "TSelect-Arsenal|TSelect-Arsenal"
             "TSelect-STC|TSelect-STC"
         )
-        max_cpus_to_use=76
-        memory_per_cpu_gib=8
+        max_cpus_to_use=96
+        memory_per_cpu_gib=6
         ;;
     tselect-drcif)
         component_specs=(
