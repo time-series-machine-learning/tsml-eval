@@ -8,22 +8,47 @@ set -euo pipefail
 # and writes only trainResample0.csv. If a test file is genuinely missing, the
 # same run safely produces both test and train files.
 #
-# Exactly two Slurm task-farm jobs are submitted:
-#   fast: archive batches 1 and 2 (21 datasets x 4 components = 84 commands)
-#   slow: archive batch 3       ( 4 datasets x 4 components = 16 commands)
+# Eight component/runtime-specific Slurm task farms are submitted. This allows
+# Slurm to pack the smaller jobs together on the two available nodes without
+# forcing every process to inherit TDE's much larger memory request.
 
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 
 export classifier_prefix="GMARv5"
-export job_name_prefix="eeg-gmarv5-train"
 export generate_train_files="true"
-export components_only="true"
-export batch_mode="fast_slow"
 
-# Match the memory allocation used for the completed GMARv5 component runs.
-# The fast job uses at most 20 concurrent processes (600 GiB). The slow job has
-# only 16 commands and therefore requests 480 GiB.
-export max_cpus_to_use=20
-export memory_per_cpu_gib=30
+# component|runtime group|maximum concurrent tasks|GiB per task
+#
+# Requests include headroom over the peak fit memory recorded in the completed
+# GMARv5 test runs. Observed fast/slow maxima in GiB were Arsenal 2.8/11.7,
+# DrCIF 6.4/21.2, STC 2.0/4.7, and TDE 20.7/117.2. There are 21 commands per
+# fast component and four per slow component, so requesting more tasks would
+# not increase concurrency.
+run_specs=(
+    "Arsenal|fast_only|21|6"
+    "DrCIF|fast_only|21|12"
+    "STC|fast_only|21|6"
+    "TDE|fast_only|20|30"
+    "Arsenal|slow_only|4|20"
+    "DrCIF|slow_only|4|35"
+    "STC|slow_only|4|10"
+    "TDE|slow_only|4|150"
+)
 
-exec bash "${script_dir}/run_gmar_archive_prefix.sh"
+for spec in "${run_specs[@]}"; do
+    IFS="|" read -r component runtime_group cpu_count memory_gib <<< "${spec}"
+
+    component_slug="${component,,}"
+    group_slug="${runtime_group%_only}"
+
+    echo "Submitting ${component} ${group_slug}: " \
+        "${cpu_count} tasks at ${memory_gib} GiB/task"
+
+    component_to_run="${component}" \
+    batch_mode="${runtime_group}" \
+    max_cpus_to_use="${cpu_count}" \
+    memory_per_cpu_gib="${memory_gib}" \
+    job_name_prefix="eeg-gmarv5-train-${component_slug}" \
+    submission_label="GMARv5-${component}-${group_slug}" \
+        bash "${script_dir}/run_gmar_archive_prefix.sh"
+done

@@ -41,6 +41,8 @@ normalise_data="false"
 # run containing HC2 and all four components.
 components_only="${components_only:-false}"
 batch_mode="${batch_mode:-three_batches}"
+component_to_run="${component_to_run:-}"
+submission_label="${submission_label:-${classifier_prefix}}"
 
 # ==============================================================================
 # Runtime batches
@@ -100,9 +102,17 @@ case "${batch_mode}" in
         batch_labels=("fast" "slow")
         batch_walltimes=("60:00:00" "60:00:00")
         ;;
+    fast_only)
+        batch_labels=("fast")
+        batch_walltimes=("60:00:00")
+        ;;
+    slow_only)
+        batch_labels=("slow")
+        batch_walltimes=("60:00:00")
+        ;;
     *)
         echo "ERROR: unknown batch_mode: ${batch_mode}"
-        echo "Use three_batches or fast_slow."
+        echo "Use three_batches, fast_slow, fast_only, or slow_only."
         exit 1
         ;;
 esac
@@ -128,7 +138,18 @@ numba_cache_dir="${local_path}/Code/.cache/${env_name}"
 # Pipeline variants
 # ==============================================================================
 
-if [[ "${components_only,,}" == "true" ]]; then
+if [[ -n "${component_to_run}" ]]; then
+    case "${component_to_run}" in
+        Arsenal|DrCIF|STC|HC2|TDE)
+            components_to_run=("${component_to_run}")
+            ;;
+        *)
+            echo "ERROR: unknown component_to_run: ${component_to_run}"
+            echo "Use Arsenal, DrCIF, STC, HC2, or TDE."
+            exit 1
+            ;;
+    esac
+elif [[ "${components_only,,}" == "true" ]]; then
     components_to_run=(
         "Arsenal"
         "DrCIF"
@@ -239,8 +260,21 @@ for batch_label in "${batch_labels[@]}"; do
     done
 done
 
-if ((dataset_count != 25)); then
-    echo "ERROR: expected 25 unique EEG datasets but found ${dataset_count}."
+case "${batch_mode}" in
+    three_batches|fast_slow)
+        expected_dataset_count=25
+        ;;
+    fast_only)
+        expected_dataset_count=21
+        ;;
+    slow_only)
+        expected_dataset_count=4
+        ;;
+esac
+
+if ((dataset_count != expected_dataset_count)); then
+    echo "ERROR: expected ${expected_dataset_count} unique EEG datasets "
+    echo "for ${batch_mode}, but found ${dataset_count}."
     exit 1
 fi
 
@@ -258,6 +292,7 @@ echo "Datasets:          ${dataset_count}"
 echo "Expected results:  $((${#classifiers_to_run[@]} * dataset_count))"
 echo "Generate train:    ${generate_train_files}"
 echo "Batch mode:        ${batch_mode}"
+echo "Submission label:  ${submission_label}"
 echo "Memory per CPU:    ${memory_per_cpu}"
 echo "Maximum CPUs:      ${max_cpus_to_use}"
 echo "tsml-eval commit:  ${tsml_eval_commit}"
@@ -352,7 +387,7 @@ submit_batch() {
     shift 2
     local -a datasets=("$@")
 
-    local batch_id="${run_id}-${classifier_prefix}-${batch_label}"
+    local batch_id="${run_id}-${submission_label}-${batch_label}"
     local command_file="${submission_dir}/generatedCommandList-${batch_id}.txt"
     local submission_file="${submission_dir}/generatedSubmissionFile-${batch_id}.sub"
     local cmd_count=0
