@@ -1,3 +1,4 @@
+from pathlib import Path
 from time import perf_counter
 
 import numpy as np
@@ -8,6 +9,7 @@ from aeon.datasets.tsc_datasets import multiverse_core, multiverse2026
 path = "/gpfs/home/ajb/Data/Multiverse"
 
 datasets = multiverse2026
+
 
 def _series_characteristics(X):
     if isinstance(X, np.ndarray):
@@ -27,6 +29,13 @@ def _series_characteristics(X):
 
 
 for problem in datasets:
+    problem_path = Path(path) / problem
+    if problem_path.exists():
+        print(  # noqa: T201
+            f"Skipping {problem}: already exists at {problem_path}", flush=True
+        )
+        continue
+
     print(f"Loading {problem}...", flush=True)  # noqa: T201
     start = perf_counter()
     X, y, metadata = load_classification(
@@ -44,4 +53,3 @@ for problem in datasets:
         f"equal_length={metadata['equallength']}, missing={metadata['missing']}",
         flush=True,
     )
-
