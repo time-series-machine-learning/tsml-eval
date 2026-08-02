@@ -64,7 +64,7 @@ done
 
 printf "\nHC2-from-file ready: %d/%d folds\n" "${hc2_ready}" "${expected}"
 
-for selector in TSelect DetachRocket GMARv5; do
+for selector in DetachRocket GMARv5; do
     printf "\n%s component progress\n" "${selector}"
     printf "%-22s %9s %9s %10s %9s %11s\n" \
         "COMPONENT" "COMPLETE" "TEST_ONLY" "TRAIN_ONLY" "STARTED" "NOT_STARTED"
