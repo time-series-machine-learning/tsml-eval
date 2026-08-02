@@ -58,7 +58,7 @@ datasets=(
 
 # Include the transform families retained for the paper summary. GMARv2 and
 # GMARv4 are deliberately excluded. GMARv3 is retained for comparison with
-# GMARv5, which replaces its TSelect stage with DetachRocket.
+# GEAR, which uses DetachRocket channel selection and guarded time reduction.
 transforms=(
     "CSP"
     "ECS"
@@ -74,7 +74,8 @@ transforms=(
     "CLeVerCluster"
     "CLeVerHybrid"
     "GMARv3"
-    "GMARv5"
+    "GEAR-Auto"
+    "GEAR-Comp"
 )
 
 # HC2 and the four classifiers from which it is built.
@@ -477,6 +478,10 @@ pipeline_is_monitored() {
 
     for classifier in "${classifiers[@]}"; do
         for transform in "${transforms[@]}"; do
+            if [[ ("${transform}" == "GEAR-Auto" && "${classifier}" != "HC2") ||
+                  ("${transform}" == "GEAR-Comp" && "${classifier}" == "HC2") ]]; then
+                continue
+            fi
             if [[ "${candidate}" == "${transform}-${classifier}" ]]; then
                 return 0
             fi
@@ -556,8 +561,8 @@ scan_once() {
     local waiting
     local not_started
     local expected_per_pipeline=${#datasets[@]}
-    local total_pipelines=$((${#transforms[@]} * ${#classifiers[@]}))
-    local total_expected=$((total_pipelines * expected_per_pipeline))
+    local total_pipelines=0
+    local total_expected=0
     local total_complete=0
     local total_running=0
     local total_queued=0
@@ -580,9 +585,20 @@ scan_once() {
 
     refresh_slurm_activity
 
+    for classifier in "${classifiers[@]}"; do
+        for transform in "${transforms[@]}"; do
+            if [[ ("${transform}" == "GEAR-Auto" && "${classifier}" != "HC2") ||
+                  ("${transform}" == "GEAR-Comp" && "${classifier}" == "HC2") ]]; then
+                continue
+            fi
+            total_pipelines=$((total_pipelines + 1))
+        done
+    done
+    total_expected=$((total_pipelines * expected_per_pipeline))
+
     printf 'ChannelSelectionPipeline monitor - %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')"
     echo "Results: ${results_root}"
-    echo "Scope: ${#datasets[@]} datasets x ${#transforms[@]} transforms x ${#classifiers[@]} classifiers"
+    echo "Scope: ${#datasets[@]} datasets x ${total_pipelines} valid pipelines"
     echo
 
     print_relevant_queue
@@ -597,6 +613,10 @@ scan_once() {
 
     for classifier in "${classifiers[@]}"; do
         for transform in "${transforms[@]}"; do
+            if [[ ("${transform}" == "GEAR-Auto" && "${classifier}" != "HC2") ||
+                  ("${transform}" == "GEAR-Comp" && "${classifier}" == "HC2") ]]; then
+                continue
+            fi
             pipeline="${transform}-${classifier}"
             complete=0
             running=0

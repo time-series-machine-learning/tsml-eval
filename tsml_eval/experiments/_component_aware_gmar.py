@@ -16,12 +16,13 @@ from sklearn.metrics import accuracy_score
 
 from tsml_eval.experiments._channel_selection_hc2 import (
     _hc2_metadata,
+    _make_gear_transformer,
     _make_gmarv4_transformer,
     _metadata_to_builtin,
     _selector_metadata,
 )
 
-__all__ = ["ComponentAwareGMARHIVECOTEV2"]
+__all__ = ["ComponentAwareGEARHIVECOTEV2", "ComponentAwareGMARHIVECOTEV2"]
 
 
 class ComponentAwareGMARHIVECOTEV2(HIVECOTEV2):
@@ -36,6 +37,8 @@ class ComponentAwareGMARHIVECOTEV2(HIVECOTEV2):
     for lightweight testing. If supplied, it must contain estimators named
     ``"stc"``, ``"drcif"``, ``"arsenal"`` and ``"tde"``.
     """
+
+    _reducer_name = "GMARv4"
 
     def __init__(
         self,
@@ -81,7 +84,7 @@ class ComponentAwareGMARHIVECOTEV2(HIVECOTEV2):
 
         components = self._make_components()
         for name in ("stc", "drcif", "arsenal", "tde"):
-            reducer = _make_gmarv4_transformer(
+            reducer = self._make_component_reducer(
                 component=name,
                 random_state=self.random_state,
                 n_jobs=self._n_jobs,
@@ -96,7 +99,8 @@ class ComponentAwareGMARHIVECOTEV2(HIVECOTEV2):
             transform_fit = (time.perf_counter_ns() - start) / 1_000_000
             if len(yt) != len(y) or not np.array_equal(yt, y):
                 raise RuntimeError(
-                    "GMARv4 temporal reducers must retain all training labels "
+                    f"{self._reducer_name} temporal reducers must retain all "
+                    "training labels "
                     "in their original order."
                 )
             self.component_train_output_shapes_[name] = tuple(
@@ -119,9 +123,17 @@ class ComponentAwareGMARHIVECOTEV2(HIVECOTEV2):
             }
 
             if self.verbose > 0:
-                print(f"GMARv4 {name} weight = {weight}")  # noqa: T201
+                print(f"{self._reducer_name} {name} weight = {weight}")  # noqa: T201
 
         return self
+
+    def _make_component_reducer(self, component, random_state, n_jobs):
+        """Construct the historical GMARv4 reducer for one HC2 component."""
+        return _make_gmarv4_transformer(
+            component=component,
+            random_state=random_state,
+            n_jobs=n_jobs,
+        )
 
     def _predict_proba(self, X, return_component_probas=False):
         """Combine probabilities obtained from each component-specific view."""
@@ -329,6 +341,48 @@ class ComponentAwareGMARHIVECOTEV2(HIVECOTEV2):
                 "components": components,
                 "hc2": _hc2_metadata(self),
             }
+        )
+
+
+class ComponentAwareGEARHIVECOTEV2(ComponentAwareGMARHIVECOTEV2):
+    """HIVE-COTE 2.0 using a tailored GEAR reduction for each component."""
+
+    _reducer_name = "GEAR-Comp"
+
+    def __init__(
+        self,
+        stc_params=None,
+        drcif_params=None,
+        arsenal_params=None,
+        tde_params=None,
+        time_limit_in_minutes=0,
+        save_component_probas=False,
+        verbose=0,
+        random_state=None,
+        n_jobs=1,
+        parallel_backend=None,
+        component_estimators=None,
+    ):
+        super().__init__(
+            stc_params=stc_params,
+            drcif_params=drcif_params,
+            arsenal_params=arsenal_params,
+            tde_params=tde_params,
+            time_limit_in_minutes=time_limit_in_minutes,
+            save_component_probas=save_component_probas,
+            verbose=verbose,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            parallel_backend=parallel_backend,
+            component_estimators=component_estimators,
+        )
+
+    def _make_component_reducer(self, component, random_state, n_jobs):
+        """Construct the component-specific GEAR reducer."""
+        return _make_gear_transformer(
+            component=component,
+            random_state=random_state,
+            n_jobs=n_jobs,
         )
 
 

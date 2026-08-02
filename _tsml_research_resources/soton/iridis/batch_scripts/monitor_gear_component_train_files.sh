@@ -2,7 +2,7 @@
 
 set -uo pipefail
 
-# Monitor the four GMARv5 component train/test result sets used to construct
+# Monitor the four GEAR-Comp train/test result sets used to construct
 # component-aware V6 over the 25-problem EEG archive.
 
 username="${USER:-ajb2u23}"
@@ -49,7 +49,7 @@ components=("Arsenal" "DrCIF" "STC" "TDE")
 usage() {
     printf '%s\n' \
         "Usage:" \
-        "  monitor_gmarv5_component_train_files.sh [--details] [--watch SECONDS]" \
+        "  monitor_gear_component_train_files.sh [--details] [--watch SECONDS]" \
         "" \
         "Options:" \
         "  --details        List every incomplete component/dataset pair." \
@@ -110,7 +110,7 @@ refresh_jobs() {
 
     while IFS='|' read -r id state elapsed name location; do
         [[ -z "${id}" ]] && continue
-        [[ "${name}" != eeg-gmarv5-train-* ]] && continue
+        [[ "${name}" != eeg-gear-comp-train-* ]] && continue
 
         active_jobs+=("${id}|${state}|${elapsed}|${name}|${location}")
         key="${name}"
@@ -143,7 +143,7 @@ find_latest_log() {
 
     shopt -s nullglob
     candidates=(
-        "${output_dir}"/output-"${dataset}"-"${resample}"-*-GMARv5-"${component}"-"${group}"-"${group}".txt
+        "${output_dir}"/output-"${dataset}"-"${resample}"-*-GEAR-Comp-"${component}"-"${group}"-"${group}".txt
     )
     shopt -u nullglob
 
@@ -167,11 +167,11 @@ status_for() {
     local component="$1"
     local group="$2"
     local dataset="$3"
-    local pipeline="GMARv5-${component}"
+    local pipeline="GEAR-Comp-${component}"
     local prediction_dir="${results_dir}/${pipeline}/Predictions/${dataset}"
     local test_file="${prediction_dir}/testResample${resample}.csv"
     local train_file="${prediction_dir}/trainResample${resample}.csv"
-    local job_name="eeg-gmarv5-train-${component,,}-${group}"
+    local job_name="eeg-gear-comp-train-${component,,}-${group}"
     local state="${job_state[${job_name}]-}"
 
     if [[ -s "${test_file}" && -s "${train_file}" ]]; then
@@ -209,10 +209,10 @@ print_snapshot() {
 
     refresh_jobs
 
-    printf "GMARv5 component train/test progress - %s\n" "$(date)"
+    printf "GEAR-Comp train/test progress - %s\n" "$(date)"
     printf "Results: %s\n\n" "${results_dir}"
 
-    printf "Active GMARv5 train jobs - %d\n" "${#active_jobs[@]}"
+    printf "Active GEAR-Comp train jobs - %d\n" "${#active_jobs[@]}"
     printf '%-12s %-2s %-10s %-42s %s\n' \
         "JOBID" "ST" "TIME" "NAME" "NODE/REASON"
     if ((${#active_jobs[@]} == 0)); then
@@ -273,7 +273,7 @@ print_snapshot() {
     for dataset in "${fast_datasets[@]}" "${slow_datasets[@]}"; do
         ready=true
         for component in "${components[@]}"; do
-            prediction_dir="${results_dir}/GMARv5-${component}/Predictions/${dataset}"
+            prediction_dir="${results_dir}/GEAR-Comp-${component}/Predictions/${dataset}"
             if [[ ! -s "${prediction_dir}/testResample${resample}.csv" ||
                   ! -s "${prediction_dir}/trainResample${resample}.csv" ]]; then
                 ready=false
@@ -301,7 +301,7 @@ print_snapshot() {
                     status=$(status_for "${component}" "${group}" "${dataset}")
                     if [[ "${status}" != "COMPLETE" ]]; then
                         printf '%-11s %-22s %-5s %s\n' \
-                            "${status}" "GMARv5-${component}" "${group}" "${dataset}"
+                            "${status}" "GEAR-Comp-${component}" "${group}" "${dataset}"
                     fi
                 done
             done

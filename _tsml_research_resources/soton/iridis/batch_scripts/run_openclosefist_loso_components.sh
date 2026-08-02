@@ -10,7 +10,7 @@ set -euo pipefail
 # Run set: override with RUN_SET=fast, drcif, tde, mrhydra,
 # tselect-fast, tselect-drcif, tselect-tde, detachrocket-fast,
 # detachrocket-drcif, detachrocket-tde, gmarv3-fast, gmarv3-drcif,
-# gmarv3-tde, gmarv5-fast, gmarv5-drcif, or gmarv5-tde.
+# gmarv3-tde, gear-comp-fast, gear-comp-drcif, gear-comp-tde, or gear-auto.
 # ==============================================================================
 
 # fast:  Arsenal and STC, 6 GiB/process, up to 96 concurrent processes.
@@ -140,24 +140,31 @@ case "${run_set}" in
         max_cpus_to_use=20
         memory_per_cpu_gib=30
         ;;
-    gmarv5-fast)
+    gear-comp-fast)
         component_specs=(
-            "GMARv5-Arsenal|GMARv5-Arsenal"
-            "GMARv5-STC|GMARv5-STC"
+            "GEAR-Comp-Arsenal|GEAR-Comp-Arsenal"
+            "GEAR-Comp-STC|GEAR-Comp-STC"
         )
         max_cpus_to_use=30
         memory_per_cpu_gib=20
         ;;
-    gmarv5-drcif)
+    gear-comp-drcif)
         component_specs=(
-            "GMARv5-DrCIF|GMARv5-DrCIF"
+            "GEAR-Comp-DrCIF|GEAR-Comp-DrCIF"
         )
         max_cpus_to_use=30
         memory_per_cpu_gib=20
         ;;
-    gmarv5-tde)
+    gear-comp-tde)
         component_specs=(
-            "GMARv5-TDE|GMARv5-TDE"
+            "GEAR-Comp-TDE|GEAR-Comp-TDE"
+        )
+        max_cpus_to_use=20
+        memory_per_cpu_gib=30
+        ;;
+    gear-auto)
+        component_specs=(
+            "GEAR-Auto-HC2|GEAR-Auto-HC2"
         )
         max_cpus_to_use=20
         memory_per_cpu_gib=30
@@ -167,7 +174,7 @@ case "${run_set}" in
         echo "Use fast, drcif, tde, mrhydra, tselect-fast, tselect-drcif,"
         echo "tselect-tde, detachrocket-fast, detachrocket-drcif,"
         echo "detachrocket-tde, gmarv3-fast, gmarv3-drcif, gmarv3-tde,"
-        echo "gmarv5-fast, gmarv5-drcif, or gmarv5-tde."
+        echo "gear-comp-fast, gear-comp-drcif, gear-comp-tde, or gear-auto."
         exit 1
         ;;
 esac

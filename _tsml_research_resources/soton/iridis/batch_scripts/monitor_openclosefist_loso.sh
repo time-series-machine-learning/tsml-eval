@@ -64,7 +64,7 @@ done
 
 printf "\nHC2-from-file ready: %d/%d folds\n" "${hc2_ready}" "${expected}"
 
-for selector in DetachRocket GMARv5; do
+for selector in DetachRocket GEAR-Comp; do
     printf "\n%s component progress\n" "${selector}"
     printf "%-22s %9s %9s %10s %9s %11s\n" \
         "COMPONENT" "COMPLETE" "TEST_ONLY" "TRAIN_ONLY" "STARTED" "NOT_STARTED"
@@ -120,6 +120,22 @@ for selector in DetachRocket GMARv5; do
     printf "%s HC2-from-file ready: %d/%d folds\n" \
         "${selector}" "${selector_hc2_ready}" "${expected}"
 done
+
+printf "\nGEAR-Auto progress\n"
+gear_auto_complete=0
+gear_auto_started=0
+for ((subject = first_subject; subject <= last_subject; subject++)); do
+    test_file="${results_dir}/GEAR-Auto-HC2/Predictions/${dataset}/testResample${subject}.csv"
+    if [[ -s "${test_file}" ]]; then
+        gear_auto_complete=$((gear_auto_complete + 1))
+    elif compgen -G \
+        "${results_dir}/output/GEAR-Auto-HC2/output-${dataset}-${subject}-*.txt" \
+        > /dev/null; then
+        gear_auto_started=$((gear_auto_started + 1))
+    fi
+done
+printf "GEAR-Auto-HC2:      %d/%d folds (%d started)\n" \
+    "${gear_auto_complete}" "${expected}" "${gear_auto_started}"
 
 mrhydra_complete=0
 mrhydra_started=0

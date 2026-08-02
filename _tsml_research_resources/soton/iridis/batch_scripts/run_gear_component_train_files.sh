@@ -3,7 +3,7 @@
 set -euo pipefail
 
 # Generate the missing train prediction files for the four component-specific
-# GMARv5 pipelines over the 25-problem EEG archive. Existing non-empty test
+# GEAR-Comp pipelines over the 25-problem EEG archive. Existing non-empty test
 # files are retained: tsml-eval refits the pipeline, disables test-file output,
 # and writes only trainResample0.csv. If a test file is genuinely missing, the
 # same run safely produces both test and train files.
@@ -20,13 +20,13 @@ run_set="${run_set,,}"
 
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 
-export classifier_prefix="GMARv5"
+export classifier_prefix="GEAR-Comp"
 export generate_train_files="true"
 
 # component|runtime group|maximum concurrent tasks|GiB per task
 #
 # Requests include headroom over the peak fit memory recorded in the completed
-# GMARv5 test runs. Observed fast/slow maxima in GiB were Arsenal 2.8/11.7,
+# GEAR-Comp test runs. Observed fast/slow maxima in GiB were Arsenal 2.8/11.7,
 # DrCIF 6.4/21.2, STC 2.0/4.7, and TDE 20.7/117.2. There are 21 commands per
 # fast component and four per slow component, so requesting more tasks would
 # not increase concurrency.
@@ -80,7 +80,7 @@ case "${run_set}" in
         ;;
 esac
 
-echo "GMARv5 component train-file run set: ${run_set}"
+echo "GEAR-Comp train-file run set: ${run_set}"
 
 for spec in "${run_specs[@]}"; do
     IFS="|" read -r component runtime_group cpu_count memory_gib <<< "${spec}"
@@ -95,7 +95,7 @@ for spec in "${run_specs[@]}"; do
     batch_mode="${runtime_group}" \
     max_cpus_to_use="${cpu_count}" \
     memory_per_cpu_gib="${memory_gib}" \
-    job_name_prefix="eeg-gmarv5-train-${component_slug}" \
-    submission_label="GMARv5-${component}-${group_slug}" \
+    job_name_prefix="eeg-gear-comp-train-${component_slug}" \
+    submission_label="GEAR-Comp-${component}-${group_slug}" \
         bash "${script_dir}/run_gmar_archive_prefix.sh"
 done

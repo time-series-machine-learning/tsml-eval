@@ -16,9 +16,11 @@ from tsml_eval.experiments import (
 from tsml_eval.experiments._channel_selection_hc2 import (
     ChannelSelectionClassifierPipeline,
     _make_channel_transformer,
+    _make_gear_transformer,
     _make_gmarv4_transformer,
 )
 from tsml_eval.experiments._component_aware_gmar import (
+    ComponentAwareGEARHIVECOTEV2,
     ComponentAwareGMARHIVECOTEV2,
 )
 from tsml_eval.experiments._guarded_multiaxis import GuardedMultiAxisReducer
@@ -131,7 +133,8 @@ class _ComponentTestReducer:
         ("GuardedMultiAxis-HC2", "GuardedMultiAxis"),
         ("GMARv2-HC2", "GuardedMultiAxisV2"),
         ("GMARv3-HC2", "GuardedTemporalV3"),
-        ("GMARv5-HC2", "GuardedTemporalV5"),
+        ("GEAR-Auto-HC2", "GEARAuto"),
+        ("GMARv5-HC2", "GEARAuto"),
         ("CLeVerRank-HC2", "CLeVerRank"),
         ("CLeVerCluster-HC2", "CLeVerCluster"),
         ("CLeVerHybrid-HC2", "CLeVerHybrid"),
@@ -167,6 +170,19 @@ def test_gmarv4_hc2_factory_is_component_aware():
     assert classifier.n_jobs == 1
 
 
+def test_gear_comp_hc2_factory_is_component_aware():
+    """GEAR-Comp-HC2 places a tailored GEAR reducer in every component."""
+    classifier = get_classifier_by_name(
+        "GEAR-Comp-HC2",
+        random_state=7,
+        n_jobs=1,
+    )
+
+    assert isinstance(classifier, ComponentAwareGEARHIVECOTEV2)
+    assert classifier.random_state == 7
+    assert classifier.n_jobs == 1
+
+
 @pytest.mark.parametrize(
     "classifier_name, expected_class, parameter, expected_value",
     [
@@ -184,6 +200,7 @@ def test_gmarv4_hc2_factory_is_component_aware():
         ("GMARv2-Arsenal", "Arsenal", "n_kernels", 2000),
         ("GMARv3-Arsenal", "Arsenal", "n_kernels", 2000),
         ("GMARv4-Arsenal", "Arsenal", "n_kernels", 2000),
+        ("GEAR-Comp-Arsenal", "Arsenal", "n_kernels", 2000),
         ("GMARv5-Arsenal", "Arsenal", "n_kernels", 2000),
     ],
 )
@@ -195,7 +212,7 @@ def test_channel_selection_component_pipeline_options(
     monkeypatch,
 ):
     """Component pipelines use the same budgets as the HC2 components."""
-    if classifier_name.startswith(("BPSO", "GMARv5")):
+    if classifier_name.startswith(("BPSO", "GEAR", "GMARv5")):
         monkeypatch.setitem(sys.modules, "aeon_neuro", ModuleType("aeon_neuro"))
 
     pipeline = get_classifier_by_name(
@@ -211,8 +228,8 @@ def test_channel_selection_component_pipeline_options(
         expected_selector = "GuardedTemporalV3"
     elif classifier_name.startswith("GMARv4"):
         expected_selector = "GuardedTemporalV4"
-    elif classifier_name.startswith("GMARv5"):
-        expected_selector = "GuardedTemporalV5"
+    elif classifier_name.startswith(("GEAR-Comp", "GMARv5")):
+        expected_selector = "GEARComp"
     else:
         if classifier_name.startswith("ChannelScorer"):
             expected_selector = "ChannelScorer"
@@ -223,7 +240,9 @@ def test_channel_selection_component_pipeline_options(
     assert pipeline.selector == expected_selector
     assert type(pipeline.classifier).__name__ == expected_class
     assert pipeline.classifier.get_params()[parameter] == expected_value
-    if classifier_name.startswith(("GMARv2", "GMARv3", "GMARv4", "GMARv5")):
+    if classifier_name.startswith(
+        ("GMARv2", "GMARv3", "GMARv4", "GMARv5", "GEAR-Comp")
+    ):
         assert pipeline.proxy_component == "arsenal"
 
 
@@ -466,14 +485,12 @@ def test_guarded_temporal_v3_uses_channel_guard_and_long_slices():
     assert transformer.min_slice_timepoints == 1000
 
 
-def test_guarded_temporal_v5_replaces_tselect_with_detachrocket():
-    """GMARv5 retains the V3 guard but uses DetachRocket channel selection."""
-    transformer = _make_channel_transformer(
-        selector="GuardedTemporalV5",
-        n_channels=4,
+def test_gear_replaces_tselect_with_detachrocket():
+    """GEAR retains the temporal guard but uses DetachRocket selection."""
+    transformer = _make_gear_transformer(
+        component="DrCIF",
         random_state=0,
         n_jobs=1,
-        proxy_component="DrCIF",
     )
 
     assert isinstance(transformer, GuardedMultiAxisReducer)

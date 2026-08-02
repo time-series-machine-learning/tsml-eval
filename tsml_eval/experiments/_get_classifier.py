@@ -105,7 +105,13 @@ channel_selection_hc2_classifiers = [
         "gmarv4-hc2",
         "guardedtemporalv4-hc2",
     ],
-    ["gmarv5-hc2", "guardedtemporalv5-hc2"],
+    [
+        "gear-auto-hc2",
+        "gearauto-hc2",
+        "gmarv5-hc2",
+        "guardedtemporalv5-hc2",
+    ],
+    ["gear-comp-hc2", "gearcomp-hc2"],
 ]
 _channel_selection_pipeline_selectors = (
     "ecs",
@@ -125,12 +131,18 @@ _channel_selection_pipeline_selectors = (
     "gmarv2",
     "gmarv3",
     "gmarv4",
-    "gmarv5",
+    "gear-comp",
 )
 _channel_selection_pipeline_components = ("hc2", "arsenal", "drcif", "stc", "tde")
 channel_selection_hc2_classifiers.extend(
     f"{selector}-{component}"
     for selector in _channel_selection_pipeline_selectors
+    for component in _channel_selection_pipeline_components
+    if component != "hc2"
+)
+# Deprecated GMARv5 component names remain accepted for reproducibility.
+channel_selection_hc2_classifiers.extend(
+    f"gmarv5-{component}"
     for component in _channel_selection_pipeline_components
     if component != "hc2"
 )
@@ -298,8 +310,13 @@ def _set_classifier_channel_selection_hc2(
         "guardedtemporalv3": "GuardedTemporalV3",
         "gmarv4": "GuardedTemporalV4",
         "guardedtemporalv4": "GuardedTemporalV4",
-        "gmarv5": "GuardedTemporalV5",
-        "guardedtemporalv5": "GuardedTemporalV5",
+        "gear-auto": "GEARAuto",
+        "gearauto": "GEARAuto",
+        "gear-comp": "GEARComp",
+        "gearcomp": "GEARComp",
+        # Deprecated compatibility spellings. GMARv5 mode is resolved below.
+        "gmarv5": "GEARComp",
+        "guardedtemporalv5": "GEARAuto",
     }
     legacy_reverse_aliases = {
         "hc2-ecs": "ecs-hc2",
@@ -325,6 +342,11 @@ def _set_classifier_channel_selection_hc2(
     else:
         selector_key, component = c.rsplit("-", maxsplit=1)
 
+    # GMARv5-HC2 used automatic proxy selection, while GMARv5 component
+    # pipelines used the proxy corresponding to that component.
+    if selector_key == "gmarv5":
+        selector_key = "gear-auto" if component == "hc2" else "gear-comp"
+
     if selector_key == "full":
         return _make_hc2_or_component(
             component=component,
@@ -335,6 +357,17 @@ def _set_classifier_channel_selection_hc2(
         )
 
     selector = selector_aliases[selector_key]
+    if selector == "GEARComp" and component == "hc2":
+        from tsml_eval.experiments._component_aware_gmar import (
+            ComponentAwareGEARHIVECOTEV2,
+        )
+
+        return ComponentAwareGEARHIVECOTEV2(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
     if selector == "GuardedTemporalV4" and component == "hc2":
         from tsml_eval.experiments._component_aware_gmar import (
             ComponentAwareGMARHIVECOTEV2,
@@ -363,7 +396,8 @@ def _set_classifier_channel_selection_hc2(
         "CLeVerRank",
         "CLeVerCluster",
         "CLeVerHybrid",
-        "GuardedTemporalV5",
+        "GEARAuto",
+        "GEARComp",
     }
     if selector in aeon_neuro_selectors:
         try:
@@ -391,7 +425,8 @@ def _set_classifier_channel_selection_hc2(
                 "GuardedMultiAxisV2",
                 "GuardedTemporalV3",
                 "GuardedTemporalV4",
-                "GuardedTemporalV5",
+                "GEARAuto",
+                "GEARComp",
             }
             else None
         ),
