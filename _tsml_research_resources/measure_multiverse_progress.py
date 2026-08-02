@@ -2,9 +2,11 @@
 
 import argparse
 import getpass
+import re
 import shutil
 import subprocess
 import time
+from collections import Counter
 from datetime import datetime
 from pathlib import Path
 
@@ -13,6 +15,7 @@ from tsml_eval.utils.results_validation import validate_results_file
 
 DEFAULT_CLASSIFIERS = (
     "CIF",
+    "HC2",
     "FreshPRINCE",
     "QUANT",
     "RDST",
@@ -71,8 +74,72 @@ def _is_valid_result(result_file):
         return False
 
 
-def _progress_rows(results_dir, classifiers, datasets, fold, active_jobs):
+def _latest_log_text(output_dir, classifier, dataset):
+    log_dir = output_dir / classifier / dataset
+    try:
+        log_files = list(log_dir.glob("*.out")) + list(log_dir.glob("*.err"))
+    except OSError:
+        return None
+    if not log_files:
+        return None
+
+    attempts = {}
+    for log_file in log_files:
+        attempts.setdefault(log_file.stem, []).append(log_file)
+
+    try:
+        latest = max(
+            attempts.values(),
+            key=lambda files: max(file.stat().st_mtime for file in files),
+        )
+    except OSError:
+        return None
+
+    contents = []
+    for log_file in latest:
+        try:
+            contents.append(
+                log_file.read_text(encoding="utf-8", errors="replace")
+            )
+        except OSError:
+            pass
+    return "\n".join(contents) if contents else None
+
+
+def _failure_reason(output_dir, classifier, dataset):
+    text = _latest_log_text(output_dir, classifier, dataset)
+    if text is None:
+        return "No logs"
+
+    lower = text.lower()
+    if re.search(r"oom[_ -]?kill|out[ -]?of[ -]?memory", lower):
+        return "OOM"
+    if "missing values" in lower and "cannot handle" in lower:
+        return "Unsupported missing values"
+    if "unequal length" in lower and "cannot handle" in lower:
+        return "Unsupported unequal length"
+    if "n_timepoints must be >=" in lower:
+        return "Series too short"
+    if "smaller than the min shapelet length" in lower:
+        return "Minimum shapelet length"
+    if "due to time limit" in lower or "time limit exceeded" in lower:
+        return "Time limit"
+    if "cancelled" in lower:
+        return "Cancelled"
+    if "traceback (most recent call last)" in lower:
+        return "Python exception"
+    if re.search(r"\bkilled\b", lower):
+        return "Killed"
+    if re.search(r"(^|\n).*error:", lower):
+        return "Slurm/runtime error"
+    return "No terminal status"
+
+
+def _progress_rows(
+    results_dir, output_dir, classifiers, datasets, fold, active_jobs
+):
     rows = []
+    failures = []
     filename = f"testResample{fold}.csv"
 
     for classifier in classifiers:
@@ -80,6 +147,9 @@ def _progress_rows(results_dir, classifiers, datasets, fold, active_jobs):
         invalid = 0
         running = 0
         pending = 0
+        oom = 0
+        failed = 0
+        unknown = 0
 
         for dataset in datasets:
             result_file = (
@@ -100,49 +170,105 @@ def _progress_rows(results_dir, classifiers, datasets, fold, active_jobs):
                 states = active_jobs.get(f"{classifier}_{dataset}", ())
                 if any(state == "RUNNING" for state in states):
                     running += 1
+                    continue
                 elif any(state == "PENDING" for state in states):
                     pending += 1
+                    continue
 
-        missing = len(datasets) - complete - invalid
-        inactive = missing - running - pending
+            reason = _failure_reason(output_dir, classifier, dataset)
+            failures.append((classifier, dataset, reason))
+            if reason == "OOM":
+                oom += 1
+            elif reason in {"No logs", "No terminal status"}:
+                unknown += 1
+            else:
+                failed += 1
+
         rows.append(
-            (classifier, complete, invalid, running, pending, inactive, len(datasets))
+            (
+                classifier,
+                complete,
+                invalid,
+                running,
+                pending,
+                oom,
+                failed,
+                unknown,
+                len(datasets),
+            )
         )
 
-    return rows
+    return rows, failures
 
 
-def _print_report(results_dir, dataset_file, rows, active_jobs):
+def _print_report(
+    results_dir,
+    output_dir,
+    dataset_file,
+    rows,
+    failures,
+    active_jobs,
+    show_failures,
+):
     print(f"Updated:      {datetime.now().astimezone().isoformat(timespec='seconds')}")
     print(f"Results:      {results_dir}")
+    print(f"Output logs:  {output_dir}")
     print(f"Dataset list: {dataset_file}")
     print()
     print(
         f"{'Classifier':<18} {'Complete':>8} {'Invalid':>7} "
-        f"{'Running':>7} {'Pending':>7} {'Inactive':>8} {'Progress':>9}"
+        f"{'Running':>7} {'Pending':>7} {'OOM':>5} {'Failed':>6} "
+        f"{'Unknown':>7} {'Progress':>9}"
     )
-    print("-" * 80)
+    print("-" * 101)
 
-    totals = [0] * 6
-    for classifier, complete, invalid, running, pending, inactive, total in rows:
+    totals = [0] * 8
+    for row in rows:
+        (
+            classifier,
+            complete,
+            invalid,
+            running,
+            pending,
+            oom,
+            failed,
+            unknown,
+            total,
+        ) = row
         progress = 100 * complete / total if total else 100.0
         print(
             f"{classifier:<18} {complete:>8} {invalid:>7} "
-            f"{running:>7} {pending:>7} {inactive:>8} {progress:>8.1f}%"
+            f"{running:>7} {pending:>7} {oom:>5} {failed:>6} "
+            f"{unknown:>7} {progress:>8.1f}%"
         )
         for index, value in enumerate(
-            (complete, invalid, running, pending, inactive, total)
+            (complete, invalid, running, pending, oom, failed, unknown, total)
         ):
             totals[index] += value
 
-    progress = 100 * totals[0] / totals[5] if totals[5] else 100.0
-    print("-" * 80)
+    progress = 100 * totals[0] / totals[7] if totals[7] else 100.0
+    print("-" * 101)
     print(
         f"{'TOTAL':<18} {totals[0]:>8} {totals[1]:>7} "
-        f"{totals[2]:>7} {totals[3]:>7} {totals[4]:>8} {progress:>8.1f}%"
+        f"{totals[2]:>7} {totals[3]:>7} {totals[4]:>5} {totals[5]:>6} "
+        f"{totals[6]:>7} {progress:>8.1f}%"
     )
+
+    if failures:
+        print("\nInactive missing-result diagnoses:")
+        reasons = Counter(reason for _, _, reason in failures)
+        for reason, count in reasons.most_common():
+            print(f"  {reason}: {count}")
+
+    if show_failures and failures:
+        print("\nInactive missing-result details:")
+        for classifier, dataset, reason in failures:
+            print(f"  {classifier}/{dataset}: {reason}")
+
     if active_jobs is None:
-        print("\nSlurm status unavailable; Running and Pending are shown as zero.")
+        print(
+            "\nSlurm status unavailable; live jobs may appear as No terminal status."
+        )
 
 
 def _parse_args():
@@ -159,6 +285,11 @@ def _parse_args():
         type=Path,
         default=local_path / "DataSetLists/MultiverseCore.txt",
     )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        help="Slurm output root; defaults to <results-dir>/output.",
+    )
     parser.add_argument("--fold", type=int, default=0)
     parser.add_argument(
         "--classifiers", nargs="+", default=list(DEFAULT_CLASSIFIERS)
@@ -170,25 +301,40 @@ def _parse_args():
         default=0,
         help="Refresh continuously at this interval; zero prints once.",
     )
+    parser.add_argument(
+        "--show-failures",
+        action="store_true",
+        help="List every inactive classifier/dataset pair and its diagnosis.",
+    )
     return parser.parse_args()
 
 
 def main():
     args = _parse_args()
     datasets = _read_datasets(args.dataset_file)
+    output_dir = args.output_dir or args.results_dir / "output"
 
     while True:
         if args.watch:
             print("\033[2J\033[H", end="")
         active_jobs = _active_jobs(getpass.getuser())
-        rows = _progress_rows(
+        rows, failures = _progress_rows(
             args.results_dir,
+            output_dir,
             args.classifiers,
             datasets,
             args.fold,
             active_jobs,
         )
-        _print_report(args.results_dir, args.dataset_file, rows, active_jobs)
+        _print_report(
+            args.results_dir,
+            output_dir,
+            args.dataset_file,
+            rows,
+            failures,
+            active_jobs,
+            args.show_failures,
+        )
         if not args.watch:
             break
         time.sleep(args.watch)
