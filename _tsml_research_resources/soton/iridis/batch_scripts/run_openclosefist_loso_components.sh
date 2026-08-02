@@ -145,8 +145,11 @@ case "${run_set}" in
             "GEAR-Comp-Arsenal|GEAR-Comp-Arsenal"
             "GEAR-Comp-STC|GEAR-Comp-STC"
         )
-        max_cpus_to_use=30
-        memory_per_cpu_gib=20
+        # The completed LOSO folds peaked at 4.14 GiB for Arsenal and
+        # 1.94 GiB for STC. Eight GiB leaves a substantial safety margin while
+        # allowing 76 independent folds to use one 620-GiB node efficiently.
+        max_cpus_to_use=76
+        memory_per_cpu_gib=8
         ;;
     gear-comp-drcif)
         component_specs=(
@@ -319,10 +322,12 @@ for ((subject = first_subject; subject <= last_subject; subject++)); do
         test_file="${results_dir}/${result_name}/Predictions/${result_dataset}/testResample${subject}.csv"
         train_file="${results_dir}/${result_name}/Predictions/${result_dataset}/trainResample${subject}.csv"
 
-        # HC2 components need train and test files. MrHydra is an external
-        # comparator, so avoid the unnecessary train-estimate build.
+        # HC2 components need train and test files for later from-file
+        # construction. MrHydra and the final GEAR-Auto HC2 pipeline require
+        # only test predictions, so avoid writing an unnecessary train file.
         require_train_file=true
-        if [[ "${result_name}" == "MrHydra" ]]; then
+        if [[ "${result_name}" == "MrHydra" ||
+              "${result_name}" == "GEAR-Auto-HC2" ]]; then
             require_train_file=false
         fi
 
