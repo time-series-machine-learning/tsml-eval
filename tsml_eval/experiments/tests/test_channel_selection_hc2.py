@@ -121,6 +121,8 @@ class _ComponentTestReducer:
         ("ECS-HC2", "ECS"),
         ("ECP-HC2", "ECP"),
         ("TSelect-HC2", "TSelect"),
+        ("ChannelScorer-HC2", "ChannelScorer"),
+        ("BPSO-HC2", "BPSO"),
         ("Random-HC2", "Random"),
         ("Riemannian-HC2", "Riemannian"),
         ("DetachRocket-HC2", "DetachRocket"),
@@ -172,6 +174,13 @@ def test_gmarv4_hc2_factory_is_component_aware():
         ("ECS-DrCIF", "DrCIFClassifier", "n_estimators", 500),
         ("ECS-STC", "ShapeletTransformClassifier", "n_shapelet_samples", 10000),
         ("ECS-TDE", "TemporalDictionaryEnsemble", "n_parameter_samples", 250),
+        (
+            "ChannelScorer-STC",
+            "ShapeletTransformClassifier",
+            "n_shapelet_samples",
+            10000,
+        ),
+        ("BPSO-STC", "ShapeletTransformClassifier", "n_shapelet_samples", 10000),
         ("GMARv2-Arsenal", "Arsenal", "n_kernels", 2000),
         ("GMARv3-Arsenal", "Arsenal", "n_kernels", 2000),
         ("GMARv4-Arsenal", "Arsenal", "n_kernels", 2000),
@@ -186,7 +195,7 @@ def test_channel_selection_component_pipeline_options(
     monkeypatch,
 ):
     """Component pipelines use the same budgets as the HC2 components."""
-    if classifier_name.startswith("GMARv5"):
+    if classifier_name.startswith(("BPSO", "GMARv5")):
         monkeypatch.setitem(sys.modules, "aeon_neuro", ModuleType("aeon_neuro"))
 
     pipeline = get_classifier_by_name(
@@ -205,7 +214,12 @@ def test_channel_selection_component_pipeline_options(
     elif classifier_name.startswith("GMARv5"):
         expected_selector = "GuardedTemporalV5"
     else:
-        expected_selector = "ECS"
+        if classifier_name.startswith("ChannelScorer"):
+            expected_selector = "ChannelScorer"
+        elif classifier_name.startswith("BPSO"):
+            expected_selector = "BPSO"
+        else:
+            expected_selector = "ECS"
     assert pipeline.selector == expected_selector
     assert type(pipeline.classifier).__name__ == expected_class
     assert pipeline.classifier.get_params()[parameter] == expected_value
@@ -223,6 +237,44 @@ def test_full_hc2_stc_component_option():
 
     assert type(classifier).__name__ == "ShapeletTransformClassifier"
     assert classifier.n_shapelet_samples == 10000
+
+
+def test_channel_scorer_uses_original_minirocket_configuration():
+    """ChannelScorer matches the transformer used to create prior datasets."""
+    transformer = _make_channel_transformer(
+        selector="ChannelScorer",
+        n_channels=20,
+        proportion=0.25,
+        random_state=7,
+        n_jobs=1,
+    )
+
+    assert type(transformer).__name__ == "ChannelScorer"
+    assert transformer.proportion == 0.25
+    assert type(transformer.estimator).__name__ == "MiniRocketClassifier"
+    assert transformer.estimator.n_kernels == 2000
+    assert transformer.estimator.random_state == 7
+    assert transformer.estimator.n_jobs == 1
+
+
+def test_bpso_uses_original_minirocket_configuration():
+    """BPSO matches the transformer used to create prior datasets."""
+    transformer = _make_channel_transformer(
+        selector="BPSO",
+        n_channels=20,
+        proportion=0.25,
+        random_state=7,
+        n_jobs=1,
+    )
+
+    assert type(transformer).__name__ == "BPSO"
+    assert transformer.proportion == 0.25
+    assert transformer.n_particles == 30
+    assert transformer.max_iter == 50
+    assert type(transformer.estimator).__name__ == "MiniRocketClassifier"
+    assert transformer.estimator.n_kernels == 2000
+    assert transformer.estimator.random_state == 7
+    assert transformer.estimator.n_jobs == 1
 
 
 def test_resampling_pipeline_keeps_training_labels_aligned(monkeypatch):

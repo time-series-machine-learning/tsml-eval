@@ -374,6 +374,33 @@ def _make_channel_transformer(
         from aeon.transformations.collection.channel_selection import TSelect
 
         return TSelect(random_state=random_state)
+    if selector_key == "channelscorer":
+        from aeon.classification.convolution_based import MiniRocketClassifier
+        from aeon.transformations.collection.channel_selection import ChannelScorer
+
+        return ChannelScorer(
+            estimator=MiniRocketClassifier(
+                n_kernels=2000,
+                n_jobs=n_jobs,
+                random_state=random_state,
+            ),
+            scoring_function=None,
+            score_sign=None,
+            proportion=proportion,
+        )
+    if selector_key == "bpso":
+        from aeon.classification.convolution_based import MiniRocketClassifier
+        from aeon_neuro.transformations.collection.channel_selection import BPSO
+
+        return BPSO(
+            proportion=proportion,
+            estimator=MiniRocketClassifier(
+                n_kernels=2000,
+                n_jobs=n_jobs,
+                random_state=random_state,
+            ),
+            random_state=random_state,
+        )
     if selector_key == "csp":
         from aeon_neuro.transformations.collection.channel_creation import (
             CommonSpacialPatterns,
