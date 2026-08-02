@@ -64,6 +64,8 @@ transforms=(
     "ECS"
     "ECP"
     "TSelect"
+    "ChannelScorer"
+    "BPSO"
     "Random"
     "Riemannian"
     "DetachRocket"
