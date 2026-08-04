@@ -63,6 +63,7 @@ class _FeatureMetadata(NamedTuple):
     partition_start: int
     partition_end: int
     level: int
+    channel: int
 
 
 class _PartitionState(NamedTuple):
@@ -83,9 +84,10 @@ class _IntervalState(NamedTuple):
 
 
 class _RepresentationState(NamedTuple):
-    """A fitted representation and all valid interval configurations."""
+    """A fitted channel representation and its interval configurations."""
 
     name: str
+    channel: int
     intervals: tuple
 
 
@@ -322,12 +324,13 @@ class PULSARClassifier(BaseClassifier):
     """PULSAR interval classifier.
 
     PULSAR (Pooled multi-scale summaries from randomized intervals) creates four
-    univariate representations, applies local statistics to every valid sliding
-    dilated interval, and pools each response sequence over a hierarchy of
-    contiguous partitions. All coarsest-level features are retained, while finer
-    pooled features and the raw representation values are ranked by a Fisher score.
-    The selected features are standardized and passed to calibrated Ridge and
-    Extra-Trees classifiers whose probabilities are averaged.
+    representations for each channel, applies local statistics to every valid
+    sliding dilated interval, and pools each response sequence over a hierarchy of
+    contiguous partitions. The channel feature blocks are concatenated, as in
+    QUANT. All coarsest-level features are retained, while finer pooled features and
+    the raw representation values are ranked by a Fisher score. The selected
+    features are standardized and passed to calibrated Ridge and Extra-Trees
+    classifiers whose probabilities are averaged.
 
     Parameters
     ----------
@@ -368,7 +371,7 @@ class PULSARClassifier(BaseClassifier):
     selected_feature_indices_ : np.ndarray
         Candidate-column indices retained by Fisher selection.
     selected_feature_metadata_ : tuple
-        Descriptions of retained candidate columns.
+        Descriptions of retained candidate columns, including their channel index.
     fit_stage_times_ : dict
         Wall-clock timings for representation, response-map, pooling, selection,
         scaling, and classifier fitting stages.
@@ -414,7 +417,7 @@ class PULSARClassifier(BaseClassifier):
     """
 
     _tags = {
-        "capability:multivariate": False,
+        "capability:multivariate": True,
         "capability:unequal_length": False,
         "capability:multithreading": True,
         "algorithm_type": "interval",
@@ -525,7 +528,7 @@ class PULSARClassifier(BaseClassifier):
         self._pooling_operators = tuple(pooling_operators)
 
     def _get_representation(self, X, name):
-        """Generate one univariate representation."""
+        """Generate one representation for a single-channel collection."""
         series = X[:, 0, :]
         if name == "original":
             return np.asarray(series, dtype=np.float64)
@@ -576,7 +579,9 @@ class PULSARClassifier(BaseClassifier):
             states.append(_IntervalState(length, dilation, tuple(selected_partitions)))
         return tuple(states)
 
-    def _pool_response_map(self, response, representation, interval, fitting):
+    def _pool_response_map(
+        self, response, representation, channel, interval, fitting
+    ):
         """Pool one response map and return global/local columns and metadata."""
         global_columns = []
         local_columns = []
@@ -602,6 +607,7 @@ class PULSARClassifier(BaseClassifier):
                         partition.start,
                         partition.end,
                         partition.level,
+                        channel,
                     )
                     if partition.level == 0:
                         global_columns.append(pooled)
@@ -632,52 +638,73 @@ class PULSARClassifier(BaseClassifier):
         candidate_metadata = []
         states = []
 
-        for representation in self._representations:
-            start = perf_counter()
-            transformed = self._get_representation(X, representation)
-            stage_times["representation_generation"] += perf_counter() - start
-            if transformed is None:
-                continue
-
-            intervals = (
-                self._new_interval_states(transformed.shape[1], rng)
-                if fitting
-                else self._states_by_representation[representation].intervals
-            )
-            if fitting:
-                states.append(_RepresentationState(representation, intervals))
-
-            for interval in intervals:
+        # QUANT flattens features channel-first. Apply the complete PULSAR pipeline
+        # independently to each channel and concatenate the resulting feature blocks
+        # in the same order. Slicing to a one-channel 3D collection also works around
+        # collection transformers that do not support multivariate input themselves.
+        for channel in range(X.shape[1]):
+            channel_X = X[:, channel : channel + 1, :]
+            for representation in self._representations:
                 start = perf_counter()
-                response = _response_map(
-                    transformed,
-                    interval.length,
-                    interval.dilation,
-                    self._local_statistics,
-                )
-                stage_times["response_map_generation"] += perf_counter() - start
-                start = perf_counter()
-                local, global_, local_meta, global_meta = self._pool_response_map(
-                    response, representation, interval, fitting
-                )
-                stage_times["hierarchical_pooling"] += perf_counter() - start
-                candidate_columns.extend(local)
-                global_columns.extend(global_)
-                candidate_metadata.extend(local_meta)
-                global_metadata.extend(global_meta)
+                transformed = self._get_representation(channel_X, representation)
+                stage_times["representation_generation"] += perf_counter() - start
+                if transformed is None:
+                    continue
 
-            # The raw representation values are deliberately part of the candidate
-            # pool, after its finer pooled features, as in the published pipeline.
-            candidate_columns.extend(transformed.T)
-            candidate_metadata.extend(
-                _FeatureMetadata(representation, 0, 0, "raw", "", index, index + 1, -1)
-                for index in range(transformed.shape[1])
-            )
+                state_key = (channel, representation)
+                intervals = (
+                    self._new_interval_states(transformed.shape[1], rng)
+                    if fitting
+                    else self._states_by_channel_representation[state_key].intervals
+                )
+                if fitting:
+                    states.append(
+                        _RepresentationState(representation, channel, intervals)
+                    )
+
+                for interval in intervals:
+                    start = perf_counter()
+                    response = _response_map(
+                        transformed,
+                        interval.length,
+                        interval.dilation,
+                        self._local_statistics,
+                    )
+                    stage_times["response_map_generation"] += perf_counter() - start
+                    start = perf_counter()
+                    local, global_, local_meta, global_meta = self._pool_response_map(
+                        response, representation, channel, interval, fitting
+                    )
+                    stage_times["hierarchical_pooling"] += perf_counter() - start
+                    candidate_columns.extend(local)
+                    global_columns.extend(global_)
+                    candidate_metadata.extend(local_meta)
+                    global_metadata.extend(global_meta)
+
+                # The raw representation values are deliberately part of the
+                # candidate pool, after its finer pooled features, as in the
+                # published pipeline.
+                candidate_columns.extend(transformed.T)
+                candidate_metadata.extend(
+                    _FeatureMetadata(
+                        representation,
+                        0,
+                        0,
+                        "raw",
+                        "",
+                        index,
+                        index + 1,
+                        -1,
+                        channel,
+                    )
+                    for index in range(transformed.shape[1])
+                )
 
         if fitting:
             self._representation_states_ = tuple(states)
-            self._states_by_representation = {
-                state.name: state for state in self._representation_states_
+            self._states_by_channel_representation = {
+                (state.channel, state.name): state
+                for state in self._representation_states_
             }
             self.global_feature_metadata_ = tuple(global_metadata)
             self.candidate_feature_metadata_ = tuple(candidate_metadata)
@@ -751,8 +778,6 @@ class PULSARClassifier(BaseClassifier):
         """Fit feature generation, selection, scaling, and classifier heads."""
         self._validate_parameters()
         self.n_cases_, self.n_channels_, self.n_timepoints_ = X.shape
-        if self.n_channels_ != 1:
-            raise ValueError("PULSARClassifier only supports univariate series")
 
         start = perf_counter()
         global_features, candidates, stage_times = self._feature_transform(X, True)

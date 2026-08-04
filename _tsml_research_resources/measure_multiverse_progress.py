@@ -271,6 +271,19 @@ def _print_report(
         )
 
 
+def _write_hc2_oom_list(output_file, failures):
+    datasets = [
+        dataset
+        for classifier, dataset, reason in failures
+        if classifier == "HC2" and reason == "OOM"
+    ]
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+    with output_file.open("w", encoding="utf-8", newline="\n") as file:
+        if datasets:
+            file.write("\n".join(datasets) + "\n")
+    return len(datasets)
+
+
 def _parse_args():
     username = getpass.getuser()
     local_path = Path("/gpfs/home") / username
@@ -289,6 +302,11 @@ def _parse_args():
         "--output-dir",
         type=Path,
         help="Slurm output root; defaults to <results-dir>/output.",
+    )
+    parser.add_argument(
+        "--oom-hc2-file",
+        type=Path,
+        help="HC2 OOM list; defaults to oom_hc2.txt beside the dataset list.",
     )
     parser.add_argument("--fold", type=int, default=0)
     parser.add_argument(
@@ -313,6 +331,7 @@ def main():
     args = _parse_args()
     datasets = _read_datasets(args.dataset_file)
     output_dir = args.output_dir or args.results_dir / "output"
+    oom_hc2_file = args.oom_hc2_file or args.dataset_file.with_name("oom_hc2.txt")
 
     while True:
         if args.watch:
@@ -326,6 +345,7 @@ def main():
             args.fold,
             active_jobs,
         )
+        oom_count = _write_hc2_oom_list(oom_hc2_file, failures)
         _print_report(
             args.results_dir,
             output_dir,
@@ -335,6 +355,7 @@ def main():
             active_jobs,
             args.show_failures,
         )
+        print(f"\nHC2 OOM list: {oom_hc2_file} ({oom_count} problems)")
         if not args.watch:
             break
         time.sleep(args.watch)
