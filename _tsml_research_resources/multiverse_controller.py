@@ -632,6 +632,14 @@ def _record_active_submission(config, state, task, snapshot):
         state["memory_levels"][task.state_key] = eligible_levels[-1]
 
 
+def _record_all_active_submissions(config, datasets, snapshot, state):
+    """Capture active job attempts and memory across every configured category."""
+    for category in config.categories:
+        for task in _iter_tasks(category, datasets, config.resamples):
+            if task.job_key in snapshot.states:
+                _record_active_submission(config, state, task, snapshot)
+
+
 def _refresh_failure_record(config, state, task):
     """Record a newly observed failure and escalate confirmed OOM memory."""
     reason, signature = _latest_failure_details(config, task)
@@ -915,6 +923,7 @@ def run_cycle(config, dry_run=False, report_only=False, no_email=False):
         attempts = state["attempts"]
         branch, commit = _git_revision(config.repo_dir)
         snapshot = _query_slurm(config)
+        _record_all_active_submissions(config, datasets, snapshot, state)
         category, missing = _find_current_category(config, datasets, snapshot, state)
 
         active_missing = [task for task in missing if task.job_key in snapshot.states]

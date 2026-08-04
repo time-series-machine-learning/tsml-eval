@@ -15,6 +15,8 @@ Multiverse classification experiments. It:
 - processes categories in the configured order: `IntervalBased`, `DictionaryBased`,
   `ShapeletBased`, `ConvolutionBased`, then the remaining categories;
 - recognises existing `Classifier_Dataset` Slurm arrays and completed result files;
+- records active jobs and their memory across all categories, even before that category
+  becomes eligible for new submissions;
 - fills the configured running/pending task ceiling without duplicating active work;
 - submits one-CPU jobs and disables CUDA and numerical-library worker threads;
 - starts tasks at 16 GB and retries confirmed OOMs at 32, 64, then 128 GB;

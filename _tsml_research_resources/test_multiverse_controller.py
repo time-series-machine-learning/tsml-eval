@@ -234,6 +234,29 @@ def test_slurm_memory_parser():
     assert controller._parse_memory_mb("N/A") is None
 
 
+def test_later_category_active_memory_is_recorded(tmp_path):
+    """Running shapelet jobs are captured while IntervalBased remains current."""
+    categories = (
+        controller.Category("IntervalBased", ("CIF",)),
+        controller.Category("ShapeletBased", ("RDST",)),
+    )
+    config = _config(tmp_path, categories, resamples=1)
+    datasets = controller._read_datasets(config.dataset_file)
+    task = controller.Task("ShapeletBased", "RDST", "ProblemA", 0)
+    snapshot = controller.SlurmSnapshot(
+        {task.job_key: "RUNNING"},
+        1,
+        memory_mb={task.job_key: 64000},
+    )
+    state = _state()
+
+    controller._record_all_active_submissions(config, datasets, snapshot, state)
+
+    assert state["attempts"][task.state_key] == 1
+    assert state["last_submitted_memory"][task.state_key] == 64000
+    assert controller._task_memory(config, state, task) == 64000
+
+
 def test_shipped_configuration_starts_with_interval_based():
     """The supplied Hali configuration should complete intervals first."""
     config_file = Path(controller.__file__).with_name("multiverse_controller.toml")
