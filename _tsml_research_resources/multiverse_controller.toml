@@ -1,0 +1,91 @@
+# Multiverse controller configuration for Hali.
+#
+# Categories are processed strictly in the order below. The controller only submits
+# jobs from the first category with missing results, so IntervalBased completes first.
+
+[controller]
+username = "ajb"
+email = "ajb@uea.ac.uk"
+repo_dir = "/gpfs/home/{username}/Code/tsml-eval"
+data_dir = "/gpfs/home/{username}/Data/Multiverse"
+dataset_file = "/gpfs/home/{username}/DataSetLists/MultiverseCore.txt"
+results_root = "/gpfs/home/{username}/Results/Multiverse"
+state_dir = "/gpfs/home/{username}/Results/Multiverse/.controller"
+resamples = 30
+
+# Non-OOM failures are tried at most this many times. Confirmed OOMs instead follow
+# the Slurm memory escalation levels below.
+max_attempts = 2
+
+# Full CSV validation is much more expensive than checking for a nonempty result.
+validate_results = false
+
+[slurm]
+account = "cmp"
+partition = "compute"
+qos = "uea-core-default"
+
+# All of the user's running and pending tasks in this partition count toward this
+# ceiling, including tasks not submitted by this controller.
+max_active_tasks = 200
+memory_mb_levels = [16000, 32000, 64000, 128000]
+time_limit = "7-00:00:00"
+
+[environment]
+module = "python/anaconda/2024.10/3.12.7"
+conda_sh = "/gpfs/software/hali/python/anaconda/2024.10/etc/profile.d/conda.sh"
+env_name = "tsml-eval"
+numba_cache_dir = "/gpfs/home/{username}/Code/.cache/numba/tsml-eval"
+
+[[categories]]
+name = "IntervalBased"
+classifiers = [
+    "CIF",
+    "DrCIF",
+    "QUANT",
+    "RSTSF",
+    "RandomIntervals",
+    "RISE",
+    "SupervisedIntervals",
+    "STSF",
+    "TSF",
+]
+
+[[categories]]
+name = "DictionaryBased"
+classifiers = ["IndividualTDE", "MUSE", "REDCOMETS", "TDE"]
+
+[[categories]]
+name = "ShapeletBased"
+classifiers = ["LS", "RDST", "STC"]
+
+[[categories]]
+name = "ConvolutionBased"
+classifiers = ["Arsenal", "Hydra", "MiniRocket", "MultiRocket", "MRHydra", "ROCKET"]
+
+[[categories]]
+name = "DistanceBased"
+classifiers = ["1NN-DTW", "EE", "PF", "ProximityTree"]
+
+[[categories]]
+name = "FeatureBased"
+classifiers = ["Catch22", "FreshPRINCE", "Signatures", "Summary", "TSFresh"]
+
+[[categories]]
+name = "Hybrid"
+classifiers = ["HC2", "RIST"]
+
+[[categories]]
+name = "DeepLearning"
+classifiers = [
+    "CNN",
+    "DisjointCNN",
+    "Encoder",
+    "FCNN",
+    "InceptionTime",
+    "SingleInception",
+    "IndividualLITE",
+    "LiteTIME",
+    "MLP",
+    "ResNet",
+]
