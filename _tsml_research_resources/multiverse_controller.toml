@@ -1,7 +1,8 @@
 # Multiverse controller configuration for Hali.
 #
-# Categories are processed strictly in the order below. The controller only submits
-# jobs from the first category with missing results, so IntervalBased completes first.
+# This is the breadth-first 8 GB pass. Missing work is interleaved across every
+# category to maximise the volume and variety of results before a later high-memory
+# completion pass.
 
 [controller]
 username = "ajb"
@@ -13,9 +14,14 @@ results_root = "/gpfs/home/{username}/Results/Multiverse"
 state_dir = "/gpfs/home/{username}/Results/Multiverse/.controller"
 resamples = 30
 
-# Non-OOM failures are tried at most this many times. Confirmed OOMs instead follow
-# the Slurm memory escalation levels below.
-max_attempts = 2
+# Make only one attempt at each missing result in this pass. Failures are reported
+# and deferred rather than consuming capacity through retries.
+max_attempts = 1
+all_categories_first_pass = true
+
+# Initially defer exceptionally slow datasets. Names must exactly match the dataset
+# list; completed results already on disk are never deleted.
+excluded_datasets = ["AustraliaRainfall_disc"]
 
 # Full CSV validation is much more expensive than checking for a nonempty result.
 validate_results = false
@@ -28,7 +34,7 @@ qos = "uea-core-default"
 # All of the user's running and pending tasks in this partition count toward this
 # ceiling, including tasks not submitted by this controller.
 max_active_tasks = 200
-memory_mb_levels = [16000, 32000, 64000, 128000]
+memory_mb_levels = [8000]
 time_limit = "7-00:00:00"
 
 [environment]

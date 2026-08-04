@@ -8,7 +8,14 @@ from tsml_eval.experiments import _get_classifier
 from tsml_eval.utils.functions import str_in_nested_list
 
 
-def _config(tmp_path, categories, resamples=3, max_active_tasks=3):
+def _config(
+    tmp_path,
+    categories,
+    resamples=3,
+    max_active_tasks=3,
+    all_categories_first_pass=False,
+    excluded_datasets=(),
+):
     dataset_file = tmp_path / "datasets.txt"
     dataset_file.write_text("ProblemA\n", encoding="utf-8", newline="\n")
     repo_dir = tmp_path / "repo"
@@ -25,6 +32,8 @@ def _config(tmp_path, categories, resamples=3, max_active_tasks=3):
         state_dir=tmp_path / "results" / ".controller",
         resamples=resamples,
         max_attempts=2,
+        all_categories_first_pass=all_categories_first_pass,
+        excluded_datasets=excluded_datasets,
         validate_results=False,
         account="account",
         partition="compute",
@@ -80,6 +89,62 @@ def test_categories_are_strictly_ordered(tmp_path):
     )
     assert category.name == "FeatureBased"
     assert len(missing) == 2
+
+
+def test_first_pass_interleaves_all_categories(tmp_path):
+    """Breadth-first mode should offer work from every category in rotation."""
+    categories = (
+        controller.Category("IntervalBased", ("CIF",)),
+        controller.Category("FeatureBased", ("Catch22",)),
+    )
+    config = _config(tmp_path, categories, resamples=2, all_categories_first_pass=True)
+    datasets = controller._read_datasets(config.dataset_file)
+
+    category, missing = controller._find_work_scope(
+        config, datasets, controller.SlurmSnapshot({}, 0), _state()
+    )
+    ordered = controller._round_robin_categories(config, missing)
+
+    assert category.name == "AllCategoriesFirstPass"
+    assert [(task.category, task.resample) for task in ordered] == [
+        ("IntervalBased", 0),
+        ("FeatureBased", 0),
+        ("IntervalBased", 1),
+        ("FeatureBased", 1),
+    ]
+
+
+def test_excluded_datasets_are_removed(tmp_path):
+    """Slow-problem exclusions should not enter progress totals or submissions."""
+    categories = (controller.Category("IntervalBased", ("CIF",)),)
+    config = _config(
+        tmp_path, categories, excluded_datasets=("AustraliaRainfall_disc",)
+    )
+
+    included = controller._included_datasets(
+        config, ("ProblemA", "AustraliaRainfall_disc")
+    )
+
+    assert included == ("ProblemA",)
+
+
+def test_clean_first_pass_ignores_logs_from_older_runs(tmp_path):
+    """Archived state makes old failure logs irrelevant to the new pass."""
+    categories = (controller.Category("IntervalBased", ("CIF",)),)
+    config = _config(tmp_path, categories, all_categories_first_pass=True)
+    task = controller.Task("IntervalBased", "CIF", "ProblemA", 0)
+    output_dir = config.results_root / "IntervalBased" / "output" / "CIF" / "ProblemA"
+    output_dir.mkdir(parents=True)
+    (output_dir / "123-1.err").write_text(
+        "slurmstepd: error: Detected 1 oom_kill event\n", encoding="utf-8"
+    )
+    state = _state()
+
+    controller._refresh_failure_record(config, state, task)
+
+    assert state["attempts"] == {}
+    assert state["failures"] == {}
+    assert controller._task_retryable(config, state, task)
 
 
 def test_cycle_skips_active_task_and_fills_exact_capacity(tmp_path, monkeypatch):
@@ -257,15 +322,18 @@ def test_later_category_active_memory_is_recorded(tmp_path):
     assert controller._task_memory(config, state, task) == 64000
 
 
-def test_shipped_configuration_starts_with_interval_based():
-    """The supplied Hali configuration should complete intervals first."""
+def test_shipped_configuration_is_breadth_first_at_8gb():
+    """The supplied Hali configuration should make one broad low-memory pass."""
     config_file = Path(controller.__file__).with_name("multiverse_controller.toml")
     config = controller._load_config(config_file)
 
     assert config.categories[0].name == "IntervalBased"
     assert config.resamples == 30
     assert config.max_active_tasks == 200
-    assert config.memory_mb_levels == (16000, 32000, 64000, 128000)
+    assert config.max_attempts == 1
+    assert config.all_categories_first_pass
+    assert config.excluded_datasets == ("AustraliaRainfall_disc",)
+    assert config.memory_mb_levels == (8000,)
     assert config.email == "ajb@uea.ac.uk"
     assert [category.name for category in config.categories[:4]] == [
         "IntervalBased",

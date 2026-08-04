@@ -2,7 +2,8 @@
 
 The controller performs one reconciliation cycle and exits. Run it periodically with
 ``run_multiverse_controller.sh`` so a failed cycle is restarted without leaving a
-long-lived Python process. Only the first incomplete category is submitted.
+long-lived Python process. It supports either ordered categories or a breadth-first
+pass across every category.
 """
 
 from __future__ import annotations
@@ -46,6 +47,8 @@ class ControllerConfig:
     state_dir: Path
     resamples: int
     max_attempts: int
+    all_categories_first_pass: bool
+    excluded_datasets: tuple[str, ...]
     validate_results: bool
     account: str
     partition: str
@@ -132,6 +135,12 @@ def _load_config(config_file):
         state_dir=path_from(controller, "state_dir", results_root / ".controller"),
         resamples=int(controller.get("resamples", 30)),
         max_attempts=int(controller.get("max_attempts", 2)),
+        all_categories_first_pass=bool(
+            controller.get("all_categories_first_pass", False)
+        ),
+        excluded_datasets=tuple(
+            str(dataset) for dataset in controller.get("excluded_datasets", ())
+        ),
         validate_results=bool(controller.get("validate_results", False)),
         account=str(slurm.get("account", "cmp")),
         partition=str(slurm.get("partition", "compute")),
@@ -166,6 +175,8 @@ def _validate_config(config):
         raise ValueError("resamples must be at least 1")
     if config.max_attempts < 1:
         raise ValueError("max_attempts must be at least 1")
+    if len(config.excluded_datasets) != len(set(config.excluded_datasets)):
+        raise ValueError("excluded_datasets must be unique")
     if config.max_active_tasks < 1:
         raise ValueError("max_active_tasks must be at least 1")
     if (
@@ -189,7 +200,7 @@ def _validate_config(config):
         raise ValueError("A classifier must occur in only one category")
     if any(not category.classifiers for category in config.categories):
         raise ValueError("Every category must contain at least one classifier")
-    for value in category_names + classifiers:
+    for value in category_names + classifiers + list(config.excluded_datasets):
         if not value or "\n" in value or "\r" in value or "|" in value:
             raise ValueError(f"Unsafe category or classifier name: {value!r}")
 
@@ -212,6 +223,15 @@ def _read_datasets(dataset_file):
     if any(unsafe_names):
         raise ValueError("Dataset names must not contain newlines or '|'")
     return datasets
+
+
+def _included_datasets(config, datasets):
+    """Remove explicitly deferred datasets while preserving list order."""
+    excluded = set(config.excluded_datasets)
+    included = tuple(dataset for dataset in datasets if dataset not in excluded)
+    if not included:
+        raise ValueError("Every dataset was excluded")
+    return included
 
 
 def _job_name(classifier, dataset):
@@ -464,6 +484,49 @@ def _find_current_category(config, datasets, snapshot, state):
     return None, []
 
 
+def _find_work_scope(config, datasets, snapshot, state):
+    """Return the configured ordered-category or all-category work scope."""
+    if not config.all_categories_first_pass:
+        return _find_current_category(config, datasets, snapshot, state)
+
+    missing = []
+    actionable = False
+    for category in config.categories:
+        category_missing = [
+            task
+            for task in _iter_tasks(category, datasets, config.resamples)
+            if not _is_complete(config, task)
+        ]
+        missing.extend(category_missing)
+        for task in category_missing:
+            if task.job_key in snapshot.states:
+                _record_active_submission(config, state, task, snapshot)
+                actionable = True
+            else:
+                _refresh_failure_record(config, state, task)
+                actionable = actionable or _task_retryable(config, state, task)
+    if actionable:
+        return Category("AllCategoriesFirstPass", ()), missing
+    return None, []
+
+
+def _round_robin_categories(config, tasks):
+    """Interleave eligible tasks across categories in configured order."""
+    buckets = {
+        category.name: [task for task in tasks if task.category == category.name]
+        for category in config.categories
+    }
+    ordered = []
+    offset = 0
+    while any(offset < len(bucket) for bucket in buckets.values()):
+        for category in config.categories:
+            bucket = buckets[category.name]
+            if offset < len(bucket):
+                ordered.append(bucket[offset])
+        offset += 1
+    return ordered
+
+
 def _count_complete(config, category, datasets):
     """Count existing result files without reading their full CSV contents."""
     if config.validate_results:
@@ -533,9 +596,15 @@ def _category_rows(config, datasets, snapshot, state_data):
     return rows
 
 
-def _exhausted_tasks(config, snapshot, state):
+def _exhausted_tasks(config, snapshot, state, datasets=None):
     """Return all inactive, still-missing tasks at the submission-attempt limit."""
     exhausted = []
+    allowed_datasets = set(datasets) if datasets is not None else None
+    allowed_pairs = {
+        (category.name, classifier)
+        for category in config.categories
+        for classifier in category.classifiers
+    }
     for key in state["attempts"]:
         fields = key.split("|")
         if len(fields) != 4:
@@ -546,7 +615,9 @@ def _exhausted_tasks(config, snapshot, state):
         except ValueError:
             continue
         if (
-            task.job_key not in snapshot.states
+            (category, classifier) in allowed_pairs
+            and (allowed_datasets is None or dataset in allowed_datasets)
+            and task.job_key not in snapshot.states
             and not _is_complete(config, task)
             and _task_terminal_reason(config, state, task) is not None
         ):
@@ -642,6 +713,12 @@ def _record_all_active_submissions(config, datasets, snapshot, state):
 
 def _refresh_failure_record(config, state, task):
     """Record a newly observed failure and escalate confirmed OOM memory."""
+    if (
+        config.all_categories_first_pass
+        and int(state["attempts"].get(task.state_key, 0)) == 0
+    ):
+        # A clean first-pass state deliberately ignores logs left by older runs.
+        return
     reason, signature = _latest_failure_details(config, task)
     if signature is None:
         return
@@ -742,6 +819,15 @@ def _compose_report(
         f"Results root: {config.results_root}",
         f"Datasets: {config.dataset_file}",
         f"Resamples: {config.resamples}",
+        "Scheduling mode: "
+        + (
+            "breadth-first across all categories"
+            if config.all_categories_first_pass
+            else "ordered categories"
+        ),
+        "Memory tiers (MB): "
+        + ", ".join(str(memory) for memory in config.memory_mb_levels),
+        "Excluded datasets: " + (", ".join(config.excluded_datasets) or "none"),
         "CPU-only jobs: yes",
         "",
     ]
@@ -751,7 +837,7 @@ def _compose_report(
         [
             f"User running/pending tasks on {config.partition}: "
             f"{snapshot.total_user_tasks}/{config.max_active_tasks}",
-            "Current category: "
+            "Current scheduling scope: "
             + (
                 category.name
                 if category
@@ -762,10 +848,10 @@ def _compose_report(
     if category:
         lines.extend(
             [
-                f"Current-category missing results: {len(missing)}",
+                f"In-scope missing results: {len(missing)}",
                 f"Already running/pending: {len(active_missing)}",
                 f"Eligible for submission: {len(retryable)}",
-                f"Terminal outcomes in category: {len(current_exhausted)}",
+                f"Terminal outcomes in scope: {len(current_exhausted)}",
             ]
         )
     lines.extend(
@@ -917,14 +1003,14 @@ def run_cycle(config, dry_run=False, report_only=False, no_email=False):
             raise FileNotFoundError(f"Repository not found: {config.repo_dir}")
         if not config.data_dir.is_dir():
             raise FileNotFoundError(f"Data directory not found: {config.data_dir}")
-        datasets = _read_datasets(config.dataset_file)
+        datasets = _included_datasets(config, _read_datasets(config.dataset_file))
         state_file = config.state_dir / "state.json"
         state = _load_state(state_file)
         attempts = state["attempts"]
         branch, commit = _git_revision(config.repo_dir)
         snapshot = _query_slurm(config)
         _record_all_active_submissions(config, datasets, snapshot, state)
-        category, missing = _find_current_category(config, datasets, snapshot, state)
+        category, missing = _find_work_scope(config, datasets, snapshot, state)
 
         active_missing = [task for task in missing if task.job_key in snapshot.states]
         inactive_missing = [
@@ -933,6 +1019,8 @@ def run_cycle(config, dry_run=False, report_only=False, no_email=False):
         retryable = [
             task for task in inactive_missing if _task_retryable(config, state, task)
         ]
+        if config.all_categories_first_pass:
+            retryable = _round_robin_categories(config, retryable)
         current_exhausted = [
             task
             for task in inactive_missing
@@ -981,7 +1069,7 @@ def run_cycle(config, dry_run=False, report_only=False, no_email=False):
             snapshot.total_user_tasks + len(submitted_tasks),
             snapshot.error,
         )
-        all_exhausted = _exhausted_tasks(config, report_snapshot, state)
+        all_exhausted = _exhausted_tasks(config, report_snapshot, state, datasets)
         rows = _category_rows(config, datasets, report_snapshot, state)
         report = _compose_report(
             config,
