@@ -63,7 +63,7 @@ classifiers = ["IndividualTDE", "MUSE", "REDCOMETS", "TDE"]
 
 [[categories]]
 name = "ShapeletBased"
-classifiers = ["LS", "RDST", "STC"]
+classifiers = ["RDST", "STC"]
 
 [[categories]]
 name = "ConvolutionBased"
@@ -80,18 +80,3 @@ classifiers = ["Catch22", "FreshPRINCE", "Signatures", "Summary", "TSFresh"]
 [[categories]]
 name = "Hybrid"
 classifiers = ["HC2", "RIST"]
-
-[[categories]]
-name = "DeepLearning"
-classifiers = [
-    "CNN",
-    "DisjointCNN",
-    "Encoder",
-    "FCNN",
-    "InceptionTime",
-    "SingleInception",
-    "IndividualLITE",
-    "LiteTIME",
-    "MLP",
-    "ResNet",
-]

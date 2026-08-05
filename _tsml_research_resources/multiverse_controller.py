@@ -813,7 +813,11 @@ def _compose_report(
     state,
 ):
     """Compose the stdout, saved, and emailed progress report."""
+    total_complete = sum(row[1] for row in rows)
+    total_expected = sum(row[7] for row in rows)
+    total_percent = 100 * total_complete / total_expected if total_expected else 100.0
     lines = [
+        f"Complete: {total_complete}/{total_expected} ({total_percent:.1f}%)",
         f"Updated: {datetime.now().astimezone().isoformat(timespec='seconds')}",
         f"Repository: {config.repo_dir}",
         f"Revision: {branch} {commit}",

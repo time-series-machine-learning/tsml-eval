@@ -217,6 +217,34 @@ def test_email_interval_persists_across_cycles(tmp_path, monkeypatch):
     assert controller._email_due(state_dir, 14400)
 
 
+def test_report_starts_with_overall_completion(tmp_path):
+    """The email body should lead with aggregate completed and expected tasks."""
+    config = _config(tmp_path, (controller.Category("IntervalBased", ("CIF",)),))
+    rows = [
+        ("IntervalBased", 3, 0, 0, 0, 0, 0, 4),
+        ("FeatureBased", 2, 0, 0, 0, 0, 0, 6),
+    ]
+
+    report = controller._compose_report(
+        config,
+        "branch",
+        "commit",
+        None,
+        [],
+        [],
+        [],
+        [],
+        [],
+        controller.SlurmSnapshot({}, 0),
+        rows,
+        [],
+        [],
+        _state(),
+    )
+
+    assert report.splitlines()[0] == "Complete: 5/10 (50.0%)"
+
+
 def test_exhausted_category_advances_to_keep_allocation_used(tmp_path):
     """Permanent failures are reported but do not strand later useful work."""
     categories = (
@@ -348,6 +376,13 @@ def test_shipped_configuration_is_breadth_first_at_8gb():
     assert config.excluded_datasets == ("AustraliaRainfall_disc",)
     assert config.memory_mb_levels == (8000,)
     assert config.email == "ajb@uea.ac.uk"
+    assert "DeepLearning" not in {category.name for category in config.categories}
+    assert "LS" not in {
+        classifier
+        for category in config.categories
+        for classifier in category.classifiers
+    }
+    assert sum(len(category.classifiers) for category in config.categories) == 32
     assert [category.name for category in config.categories[:4]] == [
         "IntervalBased",
         "DictionaryBased",

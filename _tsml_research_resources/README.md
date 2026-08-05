@@ -25,7 +25,7 @@ Multiverse classification experiments. It:
 - records every observed OOM, timeout, and other failure in saved and emailed reports;
 - saves a progress table hourly and emails it no more than once every four hours.
 
-Paths, Slurm limits, category order, and the 43 multivariate-compatible aeon
+Paths, Slurm limits, category order, and the 32 configured aeon
 classifiers are configured in `multiverse_controller.toml`. Results are expected at
 `/gpfs/home/ajb/Results/Multiverse/<Category>`.
 
@@ -82,8 +82,10 @@ bash _tsml_research_resources/run_multiverse_controller.sh
 Detach with `Ctrl-a d`. The shell supervisor runs one Python cycle, lets it exit,
 sleeps for one hour, and starts a fresh cycle even when the previous one failed. A
 persistent timestamp limits successful report emails to one every four hours, including
-across supervisor restarts. Pass different cycle and email intervals in seconds as the
-second and third arguments if required:
+across supervisor restarts. At startup it first cancels every pending Slurm task owned
+by the user, across all partitions, while leaving running jobs untouched. Set
+`MULTIVERSE_CLEAR_PENDING_ON_START=false` to retain pending jobs. Pass different cycle
+and email intervals in seconds as the second and third arguments if required:
 
 ```bash
 bash _tsml_research_resources/run_multiverse_controller.sh \
