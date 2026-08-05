@@ -204,6 +204,19 @@ def test_dry_run_does_not_create_controller_state(tmp_path, monkeypatch):
     assert not config.numba_cache_dir.exists()
 
 
+def test_email_interval_persists_across_cycles(tmp_path, monkeypatch):
+    """A successful email marker should throttle subsequent controller cycles."""
+    state_dir = tmp_path / "state"
+    monkeypatch.setattr(controller.time, "time", lambda: 1000.0)
+
+    assert controller._email_due(state_dir, 14400)
+    controller._record_email_sent(state_dir)
+    assert not controller._email_due(state_dir, 14400)
+
+    monkeypatch.setattr(controller.time, "time", lambda: 15400.0)
+    assert controller._email_due(state_dir, 14400)
+
+
 def test_exhausted_category_advances_to_keep_allocation_used(tmp_path):
     """Permanent failures are reported but do not strand later useful work."""
     categories = (
@@ -329,7 +342,7 @@ def test_shipped_configuration_is_breadth_first_at_8gb():
 
     assert config.categories[0].name == "IntervalBased"
     assert config.resamples == 30
-    assert config.max_active_tasks == 200
+    assert config.max_active_tasks == 8000
     assert config.max_attempts == 1
     assert config.all_categories_first_pass
     assert config.excluded_datasets == ("AustraliaRainfall_disc",)

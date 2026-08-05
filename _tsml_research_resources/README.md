@@ -17,12 +17,13 @@ Multiverse classification experiments. It:
 - recognises existing `Classifier_Dataset` Slurm arrays and completed result files;
 - records active jobs and their memory across all categories, even before that category
   becomes eligible for new submissions;
-- fills the configured running/pending task ceiling without duplicating active work;
+- fills the configured 8,000 running/pending task ceiling without duplicating active
+  work;
 - submits one-CPU jobs and disables CUDA and numerical-library worker threads;
 - makes one 8 GB attempt per missing result, deferring failures to a later
   large-memory completion pass;
 - records every observed OOM, timeout, and other failure in saved and emailed reports;
-- saves and emails a progress table after every cycle.
+- saves a progress table hourly and emails it no more than once every four hours.
 
 Paths, Slurm limits, category order, and the 43 multivariate-compatible aeon
 classifiers are configured in `multiverse_controller.toml`. Results are expected at
@@ -71,7 +72,7 @@ python _tsml_research_resources/multiverse_controller.py --dry-run
 ```
 
 Run a report without submitting jobs with `--report-only`. To start the recurring
-three-hour supervisor in `screen`:
+hourly supervisor in `screen`:
 
 ```bash
 screen -S multiverse-controller
@@ -79,12 +80,14 @@ bash _tsml_research_resources/run_multiverse_controller.sh
 ```
 
 Detach with `Ctrl-a d`. The shell supervisor runs one Python cycle, lets it exit,
-sleeps for three hours, and starts a fresh cycle even when the previous one failed.
-Pass a different interval in seconds as the second argument if required:
+sleeps for one hour, and starts a fresh cycle even when the previous one failed. A
+persistent timestamp limits successful report emails to one every four hours, including
+across supervisor restarts. Pass different cycle and email intervals in seconds as the
+second and third arguments if required:
 
 ```bash
 bash _tsml_research_resources/run_multiverse_controller.sh \
-    _tsml_research_resources/multiverse_controller.toml 7200
+    _tsml_research_resources/multiverse_controller.toml 7200 28800
 ```
 
 Runtime state and reports are stored under

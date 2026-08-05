@@ -17,6 +17,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+import time
 import tomllib
 from collections import OrderedDict
 from dataclasses import dataclass, field
@@ -964,6 +965,27 @@ def _send_email(address, subject, report):
     return "Email not sent: mail, mailx, and sendmail were not found"
 
 
+def _email_due(state_dir, interval_seconds):
+    """Return whether the persistent email interval has elapsed."""
+    if interval_seconds <= 0:
+        return True
+    marker = state_dir / "last_email_epoch.txt"
+    try:
+        last_email = float(marker.read_text(encoding="utf-8").strip())
+    except (OSError, ValueError):
+        return True
+    return time.time() - last_email >= interval_seconds
+
+
+def _record_email_sent(state_dir):
+    """Persist the last successful email time atomically."""
+    state_dir.mkdir(parents=True, exist_ok=True)
+    marker = state_dir / "last_email_epoch.txt"
+    temporary = marker.with_suffix(".tmp")
+    temporary.write_text(f"{time.time()}\n", encoding="utf-8", newline="\n")
+    temporary.replace(marker)
+
+
 def _save_report(state_dir, report):
     """Save the latest report and append it to a controller history log."""
     state_dir.mkdir(parents=True, exist_ok=True)
@@ -992,7 +1014,13 @@ def _acquire_lock(lock_file):
     return file
 
 
-def run_cycle(config, dry_run=False, report_only=False, no_email=False):
+def run_cycle(
+    config,
+    dry_run=False,
+    report_only=False,
+    no_email=False,
+    email_interval_seconds=0,
+):
     """Run one restart-safe monitor and queue-refill cycle."""
     lock = None
     if not dry_run:
@@ -1091,14 +1119,22 @@ def run_cycle(config, dry_run=False, report_only=False, no_email=False):
         if not dry_run:
             _save_state(state_file, state)
             _save_report(config.state_dir, report)
-            if not no_email:
+            if not no_email and _email_due(config.state_dir, email_interval_seconds):
                 status = (
                     "settled-with-failures"
                     if category is None and all_exhausted
                     else ("complete" if category is None else category.name)
                 )
                 subject = f"Multiverse progress: {status}"
-                print(_send_email(config.email, subject, report))  # noqa: T201
+                email_status = _send_email(config.email, subject, report)
+                print(email_status)  # noqa: T201
+                if email_status.startswith("Email sent"):
+                    _record_email_sent(config.state_dir)
+            elif not no_email:
+                print(  # noqa: T201
+                    "Email deferred: the configured reporting interval "
+                    "has not elapsed"
+                )
         return 0 if snapshot.error is None and not submission_errors else 1
     finally:
         if lock is not None:
@@ -1125,6 +1161,12 @@ def _parse_args(args=None):
     parser.add_argument(
         "--no-email", action="store_true", help="Do not send this cycle's email."
     )
+    parser.add_argument(
+        "--email-interval-seconds",
+        type=int,
+        default=0,
+        help="Minimum interval between successful emails; zero emails every cycle.",
+    )
     return parser.parse_args(args)
 
 
@@ -1133,11 +1175,14 @@ def main(args=None):
     parsed = _parse_args(args)
     try:
         config = _load_config(parsed.config)
+        if parsed.email_interval_seconds < 0:
+            raise ValueError("email interval must not be negative")
         return run_cycle(
             config,
             dry_run=parsed.dry_run,
             report_only=parsed.report_only,
             no_email=parsed.no_email,
+            email_interval_seconds=parsed.email_interval_seconds,
         )
     except Exception as error:
         print(f"ERROR: {type(error).__name__}: {error}", file=sys.stderr)  # noqa: T201

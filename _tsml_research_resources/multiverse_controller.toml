@@ -33,7 +33,7 @@ qos = "uea-core-default"
 
 # All of the user's running and pending tasks in this partition count toward this
 # ceiling, including tasks not submitted by this controller.
-max_active_tasks = 200
+max_active_tasks = 8000
 memory_mb_levels = [8000]
 time_limit = "7-00:00:00"
 
