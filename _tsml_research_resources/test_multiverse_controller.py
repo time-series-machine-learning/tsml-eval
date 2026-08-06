@@ -14,6 +14,7 @@ def _config(
     resamples=3,
     max_active_tasks=3,
     all_categories_first_pass=False,
+    small_datasets_first=False,
     excluded_datasets=(),
 ):
     dataset_file = tmp_path / "datasets.txt"
@@ -33,6 +34,7 @@ def _config(
         resamples=resamples,
         max_attempts=2,
         all_categories_first_pass=all_categories_first_pass,
+        small_datasets_first=small_datasets_first,
         excluded_datasets=excluded_datasets,
         validate_results=False,
         account="account",
@@ -126,6 +128,20 @@ def test_excluded_datasets_are_removed(tmp_path):
     )
 
     assert included == ("ProblemA",)
+
+
+def test_small_datasets_are_scheduled_first(tmp_path):
+    """Downloaded dataset bytes should determine the scheduling order."""
+    categories = (controller.Category("IntervalBased", ("CIF",)),)
+    config = _config(tmp_path, categories, small_datasets_first=True)
+    for dataset, content in (("Large", "12345"), ("Small", "1")):
+        dataset_dir = config.data_dir / dataset
+        dataset_dir.mkdir()
+        (dataset_dir / f"{dataset}_TRAIN.ts").write_text(content, encoding="utf-8")
+
+    included = controller._included_datasets(config, ("Large", "Unavailable", "Small"))
+
+    assert included == ("Small", "Large", "Unavailable")
 
 
 def test_clean_first_pass_ignores_logs_from_older_runs(tmp_path):
@@ -373,6 +389,7 @@ def test_shipped_configuration_is_breadth_first_at_8gb():
     assert config.max_active_tasks == 8000
     assert config.max_attempts == 1
     assert config.all_categories_first_pass
+    assert config.small_datasets_first
     assert config.excluded_datasets == ("AustraliaRainfall_disc",)
     assert config.memory_mb_levels == (8000,)
     assert config.email == "ajb@uea.ac.uk"

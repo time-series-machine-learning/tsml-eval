@@ -19,6 +19,10 @@ resamples = 30
 max_attempts = 1
 all_categories_first_pass = true
 
+# Within each classifier, submit downloaded datasets from smallest to largest by
+# total on-disk size. Datasets whose size cannot be read follow in list order.
+small_datasets_first = true
+
 # Initially defer exceptionally slow datasets. Names must exactly match the dataset
 # list; completed results already on disk are never deleted.
 excluded_datasets = ["AustraliaRainfall_disc"]

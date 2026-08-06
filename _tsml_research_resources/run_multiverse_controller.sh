@@ -1,12 +1,12 @@
 #!/bin/bash
-# Restart the one-shot Multiverse controller every hour.
+# Restart the one-shot Multiverse controller every 30 minutes.
 
 set -uo pipefail
 
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 repo_dir=$(cd -- "${script_dir}/.." && pwd)
 config_file=${1:-"${script_dir}/multiverse_controller.toml"}
-interval_seconds=${2:-${MULTIVERSE_CONTROLLER_INTERVAL_SECONDS:-3600}}
+interval_seconds=${2:-${MULTIVERSE_CONTROLLER_INTERVAL_SECONDS:-1800}}
 email_interval_seconds=${3:-${MULTIVERSE_EMAIL_INTERVAL_SECONDS:-14400}}
 clear_pending_on_start=${MULTIVERSE_CLEAR_PENDING_ON_START:-true}
 python_executable=${PYTHON:-python}

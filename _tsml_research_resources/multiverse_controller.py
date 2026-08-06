@@ -49,6 +49,7 @@ class ControllerConfig:
     resamples: int
     max_attempts: int
     all_categories_first_pass: bool
+    small_datasets_first: bool
     excluded_datasets: tuple[str, ...]
     validate_results: bool
     account: str
@@ -139,6 +140,7 @@ def _load_config(config_file):
         all_categories_first_pass=bool(
             controller.get("all_categories_first_pass", False)
         ),
+        small_datasets_first=bool(controller.get("small_datasets_first", False)),
         excluded_datasets=tuple(
             str(dataset) for dataset in controller.get("excluded_datasets", ())
         ),
@@ -227,12 +229,40 @@ def _read_datasets(dataset_file):
 
 
 def _included_datasets(config, datasets):
-    """Remove explicitly deferred datasets while preserving list order."""
+    """Remove explicitly deferred datasets and apply the scheduling order."""
     excluded = set(config.excluded_datasets)
     included = tuple(dataset for dataset in datasets if dataset not in excluded)
     if not included:
         raise ValueError("Every dataset was excluded")
+    if config.small_datasets_first:
+        sizes = {
+            dataset: _dataset_size_bytes(config.data_dir / dataset)
+            for dataset in included
+        }
+        original_positions = {dataset: index for index, dataset in enumerate(included)}
+        included = tuple(
+            sorted(
+                included,
+                key=lambda dataset: (
+                    sizes[dataset] is None,
+                    sizes[dataset] if sizes[dataset] is not None else 0,
+                    original_positions[dataset],
+                ),
+            )
+        )
     return included
+
+
+def _dataset_size_bytes(dataset_dir):
+    """Return total file bytes below a dataset directory, or None if unavailable."""
+    try:
+        if not dataset_dir.is_dir():
+            return None
+        return sum(
+            path.stat().st_size for path in dataset_dir.rglob("*") if path.is_file()
+        )
+    except OSError:
+        return None
 
 
 def _job_name(classifier, dataset):

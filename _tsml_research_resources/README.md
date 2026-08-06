@@ -13,6 +13,7 @@ instructions will likely achieve nothing without alterations.
 Multiverse classification experiments. It:
 
 - runs a breadth-first first pass, interleaving work across all configured categories;
+- schedules downloaded datasets from smallest to largest within each classifier;
 - skips explicitly deferred slow datasets (initially `AustraliaRainfall_disc`);
 - recognises existing `Classifier_Dataset` Slurm arrays and completed result files;
 - records active jobs and their memory across all categories, even before that category
@@ -23,7 +24,8 @@ Multiverse classification experiments. It:
 - makes one 8 GB attempt per missing result, deferring failures to a later
   large-memory completion pass;
 - records every observed OOM, timeout, and other failure in saved and emailed reports;
-- saves a progress table hourly and emails it no more than once every four hours.
+- saves a progress table every 30 minutes and emails it no more than once every four
+  hours.
 
 Paths, Slurm limits, category order, and the 32 configured aeon
 classifiers are configured in `multiverse_controller.toml`. Results are expected at
@@ -72,7 +74,7 @@ python _tsml_research_resources/multiverse_controller.py --dry-run
 ```
 
 Run a report without submitting jobs with `--report-only`. To start the recurring
-hourly supervisor in `screen`:
+30-minute supervisor in `screen`:
 
 ```bash
 screen -S multiverse-controller
@@ -80,7 +82,7 @@ bash _tsml_research_resources/run_multiverse_controller.sh
 ```
 
 Detach with `Ctrl-a d`. The shell supervisor runs one Python cycle, lets it exit,
-sleeps for one hour, and starts a fresh cycle even when the previous one failed. A
+sleeps for 30 minutes, and starts a fresh cycle even when the previous one failed. A
 persistent timestamp limits successful report emails to one every four hours, including
 across supervisor restarts. At startup it first cancels every pending Slurm task owned
 by the user, across all partitions, while leaving running jobs untouched. Set
