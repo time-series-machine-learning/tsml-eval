@@ -1,0 +1,86 @@
+# Multiverse controller configuration for Hali.
+#
+# This is the breadth-first 8 GB pass. Missing work is interleaved across every
+# category to maximise the volume and variety of results before a later high-memory
+# completion pass.
+
+[controller]
+username = "ajb"
+email = "ajb@uea.ac.uk"
+repo_dir = "/gpfs/home/{username}/Code/tsml-eval"
+data_dir = "/gpfs/home/{username}/Data/Multiverse"
+dataset_file = "/gpfs/home/{username}/DataSetLists/MultiverseCore.txt"
+results_root = "/gpfs/home/{username}/Results/Multiverse"
+state_dir = "/gpfs/home/{username}/Results/Multiverse/.controller"
+resamples = 30
+
+# Make only one attempt at each missing result in this pass. Failures are reported
+# and deferred rather than consuming capacity through retries.
+max_attempts = 1
+all_categories_first_pass = true
+
+# Within each classifier, submit downloaded datasets from smallest to largest by
+# total on-disk size. Datasets whose size cannot be read follow in list order.
+small_datasets_first = true
+
+# Initially defer exceptionally slow datasets. Names must exactly match the dataset
+# list; completed results already on disk are never deleted.
+excluded_datasets = ["AustraliaRainfall_disc"]
+
+# Full CSV validation is much more expensive than checking for a nonempty result.
+validate_results = false
+
+[slurm]
+account = "cmp"
+partition = "compute"
+qos = "uea-core-default"
+
+# All of the user's running and pending tasks in this partition count toward this
+# ceiling, including tasks not submitted by this controller.
+max_active_tasks = 8000
+memory_mb_levels = [8000]
+time_limit = "7-00:00:00"
+
+[environment]
+module = "python/anaconda/2024.10/3.12.7"
+conda_sh = "/gpfs/software/hali/python/anaconda/2024.10/etc/profile.d/conda.sh"
+env_name = "tsml-eval"
+numba_cache_dir = "/gpfs/home/{username}/Code/.cache/numba/tsml-eval"
+
+[[categories]]
+name = "IntervalBased"
+classifiers = [
+    "CIF",
+    "DrCIF",
+    "QUANT",
+    "RSTSF",
+    "RandomIntervals",
+    "RISE",
+    "SupervisedIntervals",
+    "STSF",
+    "TSF",
+]
+
+[[categories]]
+name = "DictionaryBased"
+classifiers = ["IndividualTDE", "MUSE", "REDCOMETS", "TDE"]
+
+[[categories]]
+name = "ShapeletBased"
+classifiers = ["RDST", "STC"]
+
+[[categories]]
+name = "ConvolutionBased"
+classifiers = ["Arsenal", "Hydra", "MiniRocket", "MultiRocket", "MRHydra", "ROCKET"]
+
+[[categories]]
+name = "DistanceBased"
+classifiers = ["1NN-DTW", "EE", "PF", "ProximityTree"]
+
+[[categories]]
+name = "FeatureBased"
+classifiers = ["Catch22", "FreshPRINCE", "Signatures", "Summary", "TSFresh"]
+
+[[categories]]
+name = "Hybrid"
+classifiers = ["HC2", "RIST"]
