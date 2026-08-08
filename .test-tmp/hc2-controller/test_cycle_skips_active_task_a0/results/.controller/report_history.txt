@@ -1,0 +1,27 @@
+Complete: 0/3 (0.0%)
+Updated: 2026-08-08T08:57:18+02:00
+Repository: C:\Code\tsml-eval\.test-tmp\hc2-controller\test_cycle_skips_active_task_a0\repo
+Revision: test-branch abc123
+Results root: C:\Code\tsml-eval\.test-tmp\hc2-controller\test_cycle_skips_active_task_a0\results
+Datasets: C:\Code\tsml-eval\.test-tmp\hc2-controller\test_cycle_skips_active_task_a0\datasets.txt
+Resamples: 3
+Scheduling mode: ordered categories
+Memory tiers (MB): 16000, 32000, 64000, 128000
+Excluded datasets: none
+CPU-only jobs: yes
+
+User running/pending tasks on compute: 2/2
+Current scheduling scope: IntervalBased
+In-scope missing results: 3
+Already running/pending: 1
+Eligible for submission: 2
+Terminal outcomes in scope: 0
+Newly submitted tasks: 1
+
+Category                 Complete   Running   Pending    OOM  Timeout   Failed      Total  Progress
+-----------------------------------------------------------------------------------------------------
+IntervalBased                   0         1         1      0        0        0          3      0.0%
+
+Submitted arrays:
+  12345: CIF/ProblemA (1 tasks at 16000 MB)
+

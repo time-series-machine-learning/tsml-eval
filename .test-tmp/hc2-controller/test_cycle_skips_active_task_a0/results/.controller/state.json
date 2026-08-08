@@ -1,0 +1,12 @@
+{
+  "attempts": {
+    "IntervalBased|CIF|ProblemA|0": 1,
+    "IntervalBased|CIF|ProblemA|1": 1
+  },
+  "failures": {},
+  "last_submitted_memory": {
+    "IntervalBased|CIF|ProblemA|1": 16000
+  },
+  "memory_levels": {},
+  "version": 1
+}
