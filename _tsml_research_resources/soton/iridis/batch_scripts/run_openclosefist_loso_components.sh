@@ -30,8 +30,10 @@ dataset="OpenCloseFist"
 result_dataset="${dataset}LOSO"
 
 # Subject identifiers in the published OpenCloseFist ID files are 0..104.
-first_subject=0
-last_subject=104
+# Environment overrides allow expensive recovery runs to be divided between
+# nodes while the normal command continues to cover the complete LOSO study.
+first_subject="${FIRST_SUBJECT:-0}"
+last_subject="${LAST_SUBJECT:-104}"
 
 max_num_submitted=200
 queue="batch"
@@ -183,7 +185,8 @@ case "${run_set}" in
 esac
 
 memory_per_cpu="${memory_per_cpu_gib}G"
-job_name="eeg-ocf-loso-${run_set}"
+subject_range_label="subjects-${first_subject}-${last_subject}"
+job_name="eeg-ocf-loso-${run_set}-${first_subject}-${last_subject}"
 
 # ==============================================================================
 # Repository, environment, data, and result locations
@@ -235,8 +238,9 @@ for suffix in TRAIN TEST; do
         exit 1
     fi
 done
-if ((first_subject < 0 || last_subject < first_subject)); then
+if ((first_subject < 0 || last_subject < first_subject || last_subject > 104)); then
     echo "ERROR: invalid subject range ${first_subject}..${last_subject}."
+    echo "OpenCloseFist subject identifiers must be within 0..104."
     exit 1
 fi
 if ((max_cpus_to_use < 1 || max_cpus_to_use > 192)); then
@@ -304,7 +308,7 @@ PY
 # ==============================================================================
 
 run_id=$(date +%Y%m%d%H%M%S)
-batch_id="${run_id}-${dataset}-loso-${run_set}"
+batch_id="${run_id}-${dataset}-loso-${run_set}-${subject_range_label}"
 submission_dir="${results_dir}/batch-submissions/${run_id}"
 command_file="${submission_dir}/generatedCommandList-${batch_id}.txt"
 submission_file="${submission_dir}/generatedSubmissionFile-${batch_id}.sub"

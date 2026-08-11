@@ -64,6 +64,9 @@ case "${run_set}" in
     drcif-slow)
         run_specs=("DrCIF|slow_only|4|35")
         ;;
+    stc-slow)
+        run_specs=("STC|slow_only|4|10")
+        ;;
     tde-slow)
         run_specs=("TDE|slow_only|4|150")
         ;;
@@ -75,7 +78,7 @@ case "${run_set}" in
         ;;
     *)
         echo "ERROR: unknown RUN_SET: ${run_set}" >&2
-        echo "Use all, fast, slow, drcif-slow, tde-slow, or drcif-tde-slow." >&2
+        echo "Use all, fast, slow, drcif-slow, stc-slow, tde-slow, or drcif-tde-slow." >&2
         exit 2
         ;;
 esac
