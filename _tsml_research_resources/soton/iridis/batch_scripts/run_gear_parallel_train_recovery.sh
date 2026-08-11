@@ -2,8 +2,8 @@
 
 set -euo pipefail
 
-# Recover GEAR-Comp archive train files whose serial ten-fold CV runs exceed
-# the 60-hour Iridis batch limit. Each dataset gets one node and one
+# Recover archive pipeline train files whose serial ten-fold CV runs exceed the
+# 60-hour Iridis batch limit. Each dataset gets one node and one
 # independent process per deterministic CV fold. The folds are combined into a
 # standard tsml trainResample0.csv after staskfarm has completed.
 
@@ -42,6 +42,12 @@ all_specs=(
 # DrCIF is opt-in while the existing serial recovery is active. Thirty GiB
 # gives headroom over the 21.2 GiB peak measured for its slow archive fits.
 drcif_spec="GEAR-Comp-DrCIF|LongIntervalTask|30"
+bpso_specs=(
+    "BPSO-Arsenal|LongIntervalTask|20"
+    "BPSO-DrCIF|LongIntervalTask|35"
+    "BPSO-STC|LongIntervalTask|12"
+    "BPSO-TDE|LongIntervalTask|60"
+)
 
 case "${run_set}" in
     all)
@@ -56,9 +62,12 @@ case "${run_set}" in
     drcif)
         specs=("${drcif_spec}")
         ;;
+    bpso)
+        specs=("${bpso_specs[@]}")
+        ;;
     *)
         echo "ERROR: unknown RUN_SET '${run_set}'." >&2
-        echo "Use all, stc, tde, or drcif." >&2
+        echo "Use all, stc, tde, drcif, or bpso." >&2
         exit 2
         ;;
 esac
