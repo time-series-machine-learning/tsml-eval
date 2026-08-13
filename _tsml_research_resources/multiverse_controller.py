@@ -319,7 +319,7 @@ def _query_slurm(config):
         f"--user={config.username}",
         f"--partition={config.partition}",
         "--states=RUNNING,PENDING",
-        "--format=%200j|%a|%T|%m",
+        "--format=%200j|%K|%T|%m",
     ]
     try:
         result = subprocess.run(command, check=True, capture_output=True, text=True)
@@ -339,10 +339,13 @@ def _query_slurm(config):
             index = int(array_index)
         except ValueError:
             continue
-        states[(name, index)] = state
+        key = (name, index)
+        # Prefer RUNNING when duplicate submissions exist for the same task.
+        if state == "RUNNING" or key not in states:
+            states[key] = state
         parsed_memory = _parse_memory_mb(memory)
         if parsed_memory is not None:
-            memory_mb[(name, index)] = parsed_memory
+            memory_mb[key] = parsed_memory
     return SlurmSnapshot(states, total, memory_mb=memory_mb)
 
 
