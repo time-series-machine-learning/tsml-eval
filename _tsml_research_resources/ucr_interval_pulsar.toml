@@ -1,0 +1,46 @@
+# UCR2018 clean test-only interval-classifier run on Hali.
+# Requires aeon branch ajb/pulsar in the ucr-pulsar Conda environment.
+
+[controller]
+username = "ajb"
+email = "ajb@uea.ac.uk"
+repo_dir = "/gpfs/home/{username}/Code/tsml-eval-ucr-pulsar"
+data_dir = "/gpfs/home/{username}/Data/UnivariateClassification"
+dataset_file = "/gpfs/home/{username}/Code/tsml-eval-ucr-pulsar/_tsml_research_resources/dataset_lists/UnivariateClassification112-UCR2018Clean.txt"
+results_root = "/gpfs/home/{username}/Results/UCR2018TestOnly"
+state_dir = "/gpfs/home/{username}/Results/UCR2018TestOnly/.controller-interval-pulsar"
+resamples = 30
+max_attempts = 3
+all_categories_first_pass = false
+small_datasets_first = true
+excluded_datasets = []
+validate_results = false
+
+[slurm]
+account = "cmp"
+partition = "compute"
+qos = "uea-core-default"
+max_active_tasks = 8000
+memory_mb_levels = [8000, 16000, 32000]
+time_limit = "7-00:00:00"
+
+[environment]
+module = "python/anaconda/2024.10/3.12.7"
+conda_sh = "/gpfs/software/hali/python/anaconda/2024.10/etc/profile.d/conda.sh"
+env_name = "ucr-pulsar"
+numba_cache_dir = "/gpfs/home/{username}/Code/.cache/numba/ucr-pulsar"
+
+[[categories]]
+name = "IntervalBased"
+classifiers = [
+    "CIF",
+    "DrCIF",
+    "QUANT",
+    "RSTSF",
+    "RandomIntervals",
+    "RISE",
+    "SupervisedIntervals",
+    "STSF",
+    "TSF",
+    "PULSAR",
+]
