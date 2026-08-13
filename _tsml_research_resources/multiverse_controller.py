@@ -590,6 +590,46 @@ def _count_complete(config, category, datasets):
     return complete
 
 
+def _classifier_email_rows(config, datasets, snapshot):
+    """Build per-classifier completion and running counts for email reports."""
+    rows = []
+    total = len(datasets) * config.resamples
+    for category in config.categories:
+        for classifier in category.classifiers:
+            single = Category(category.name, (classifier,))
+            complete = _count_complete(config, single, datasets)
+            running = sum(
+                snapshot.states.get(task.job_key) == "RUNNING"
+                for task in _iter_tasks(single, datasets, config.resamples)
+            )
+            rows.append((category.name, classifier, complete, total, running))
+    return rows
+
+
+def _compose_email_report(config, datasets, snapshot):
+    """Compose a concise progress email without terminal-outcome details."""
+    rows = _classifier_email_rows(config, datasets, snapshot)
+    complete = sum(row[2] for row in rows)
+    total = sum(row[3] for row in rows)
+    percent = 100 * complete / total if total else 100.0
+    lines = [
+        f"Complete: {complete}/{total} ({percent:.1f}%)",
+        f"Updated: {datetime.now().astimezone().isoformat(timespec='seconds')}",
+        f"Running jobs: {sum(row[4] for row in rows)}",
+        "",
+        f"{'Category':<22} {'Classifier':<24} {'Complete':>10} "
+        f"{'Total':>8} {'Progress':>9} {'Running':>9}",
+        "-" * 88,
+    ]
+    for category, classifier, done, expected, running in rows:
+        progress = 100 * done / expected if expected else 100.0
+        lines.append(
+            f"{category:<22} {classifier:<24} {done:>10} "
+            f"{expected:>8} {progress:>8.1f}% {running:>9}"
+        )
+    return "\n".join(lines) + "\n"
+
+
 def _category_rows(config, datasets, snapshot, state_data):
     """Build concise progress rows for every configured category."""
     rows = []
@@ -1160,7 +1200,8 @@ def run_cycle(
                     else ("complete" if category is None else category.name)
                 )
                 subject = f"Multiverse progress: {status}"
-                email_status = _send_email(config.email, subject, report)
+                email_report = _compose_email_report(config, datasets, report_snapshot)
+                email_status = _send_email(config.email, subject, email_report)
                 print(email_status)  # noqa: T201
                 if email_status.startswith("Email sent"):
                     _record_email_sent(config.state_dir)
