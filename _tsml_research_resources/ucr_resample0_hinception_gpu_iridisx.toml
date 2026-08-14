@@ -1,0 +1,46 @@
+# Default-resample H-InceptionTime GPU pass for the UCR univariate archive on IridisX.
+# Identical in structure to multiverse_core_resample0_hinception_gpu_iridisx.toml,
+# only the dataset list and results root differ, so the two passes can run side by
+# side from separate state directories.
+#
+# Copy this file and change dataset_file, results_root and state_dir to add further
+# archives or classifiers.
+
+[controller]
+username = "ajb2u23"
+email = "ajb@uea.ac.uk"
+repo_dir = "/home/{username}/Code/tsml-eval-gpu"
+data_dir = "/home/{username}/Data/UCR"
+dataset_file = "/home/{username}/DataSetLists/UnivariateClassification112-UCR2018Clean.txt"
+results_root = "/home/{username}/Results/UCR"
+state_dir = "/home/{username}/Results/UCR/.controller-resample0-hinception-gpu"
+resamples = 1
+max_attempts = 1
+all_categories_first_pass = false
+small_datasets_first = true
+excluded_datasets = []
+validate_results = false
+
+[slurm]
+account = ""
+partition = "swarm_a100"
+qos = ""
+max_active_tasks = 66
+cpus_per_task = 2
+gpus = 1
+gres = "gpu:a100swarm:1"
+
+# UCR problems are univariate and much smaller than the Multiverse ones
+memory_mb_levels = [32000]
+time_limit = "5-00:00:00"
+
+[environment]
+module = "conda/python3"
+# TODO-IRIDISX: see the Multiverse configuration, this must match it
+conda_sh = "/iridisfs/ixsoftware/conda/etc/profile.d/conda.sh"
+env_name = "tsml-eval-gpu"
+numba_cache_dir = "/home/{username}/Code/.cache/numba/tsml-eval-gpu"
+
+[[categories]]
+name = "DeepLearning"
+classifiers = ["H-InceptionTime"]

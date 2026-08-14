@@ -1,0 +1,59 @@
+# Default-resample H-InceptionTime GPU completion pass for MultiverseCore on IridisX.
+# This mirrors multiverse_core_resample0_hinception_gpu.toml, which is the same pass
+# on Hali. Keep the two in step: only the cluster-specific sections should differ.
+#
+# Differences from the Hali configuration, all forced by the cluster:
+#   - paths are under /home, IridisX has no /gpfs
+#   - no account or QoS, the default association needs neither
+#   - swarm_a100 advertises gpu:a100swarm, so the full gres string must be given
+#   - 5 day partition limit rather than Hali's 7
+
+[controller]
+username = "ajb2u23"
+email = "ajb@uea.ac.uk"
+repo_dir = "/home/{username}/Code/tsml-eval-gpu"
+data_dir = "/home/{username}/Data/Multiverse"
+dataset_file = "/home/{username}/DataSetLists/MultiverseCore.txt"
+results_root = "/home/{username}/Results/Multiverse"
+state_dir = "/home/{username}/Results/Multiverse/.controller-core-resample0-hinception-gpu"
+resamples = 1
+max_attempts = 1
+all_categories_first_pass = false
+small_datasets_first = true
+excluded_datasets = []
+validate_results = false
+
+[slurm]
+# The default association carries no account and only the "normal" QoS. Empty values
+# omit the directive entirely. If a swarm submission is rejected for QoS reasons, set
+# qos = "ecsa100" here (ecsh100 for swarm_h100)
+account = ""
+partition = "swarm_a100"
+qos = ""
+
+# swarm_a100 is 5 nodes x 4 A100 80GB. The ecsa100 QoS caps concurrent GPUs at 8, so
+# tasks beyond that queue rather than run
+max_active_tasks = 66
+cpus_per_task = 2
+gpus = 1
+
+# swarm_a100 advertises gpu:a100swarm, not gpu:a100. A bare "gpu:1" is rejected.
+# On the open a100 partition this would be "gpu:a100:1" instead
+gres = "gpu:a100swarm:1"
+
+memory_mb_levels = [64000]
+
+# swarm_a100 allows up to 5-00:00:00, unlike Hali's 7 day limit
+time_limit = "5-00:00:00"
+
+[environment]
+module = "conda/python3"
+# TODO-IRIDISX: confirm with "module load conda/python3 && echo $CONDA_EXE", the
+# conda.sh sits in etc/profile.d relative to the conda installation root
+conda_sh = "/iridisfs/ixsoftware/conda/etc/profile.d/conda.sh"
+env_name = "tsml-eval-gpu"
+numba_cache_dir = "/home/{username}/Code/.cache/numba/tsml-eval-gpu"
+
+[[categories]]
+name = "DeepLearning"
+classifiers = ["H-InceptionTime"]

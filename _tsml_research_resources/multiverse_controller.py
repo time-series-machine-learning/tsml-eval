@@ -66,6 +66,11 @@ class ControllerConfig:
     cpus_per_task: int = 1
     gpus: int = 0
 
+    # Full --gres string, for clusters whose GPUs carry a type. IridisX swarm_a100
+    # advertises gpu:a100swarm, so a bare gpu:1 is rejected there. Empty means
+    # gpu:{gpus}, which is what Hali wants.
+    gres: str = ""
+
 
 @dataclass(frozen=True)
 class Task:
@@ -171,6 +176,7 @@ def _load_config(config_file):
         categories=categories,
         cpus_per_task=int(slurm.get("cpus_per_task", 1)),
         gpus=int(slurm.get("gpus", 0)),
+        gres=str(slurm.get("gres", "")),
     )
     _validate_config(config)
     return config
@@ -190,6 +196,10 @@ def _validate_config(config):
         raise ValueError("cpus_per_task must be at least 1")
     if config.gpus < 0:
         raise ValueError("gpus must be non-negative")
+    if config.gres and not config.gpus:
+        raise ValueError("gres is set but gpus is 0, so no GPU would be requested")
+    if any(character in config.gres for character in " \n\r"):
+        raise ValueError(f"Unsafe gres string: {config.gres!r}")
     if (
         not config.memory_mb_levels
         or any(value < 1 for value in config.memory_mb_levels)
@@ -430,7 +440,24 @@ def _batch_script(
         config.numba_cache_dir.mkdir(parents=True, exist_ok=True)
     array_spec = ",".join(str(index) for index in array_indices)
     q = shlex.quote
-    gpu_directive = f"#SBATCH --gres=gpu:{config.gpus}" if config.gpus else ""
+    # Slurm stops reading #SBATCH directives at the first line that is not a comment,
+    # so optional directives must be dropped from the header rather than left blank.
+    gres = config.gres or f"gpu:{config.gpus}"
+    directives = [
+        f"#SBATCH --account={config.account}" if config.account else "",
+        f"#SBATCH --partition={config.partition}",
+        f"#SBATCH --qos={config.qos}" if config.qos else "",
+        f"#SBATCH --gres={gres}" if config.gpus else "",
+        f"#SBATCH --time={config.time_limit}",
+        f"#SBATCH --job-name={_job_name(task.classifier, task.dataset)}",
+        f"#SBATCH --array={array_spec}",
+        "#SBATCH --ntasks=1",
+        f"#SBATCH --cpus-per-task={config.cpus_per_task}",
+        f"#SBATCH --mem={memory_mb}M",
+        f"#SBATCH --output={output_dir}/%A-%a.out",
+        f"#SBATCH --error={output_dir}/%A-%a.err",
+    ]
+    directive_block = "\n".join(line for line in directives if line)
     if config.gpus:
         device_setup = """cuda_lib_dirs=$(find "$CONDA_PREFIX/lib" -type d -path '*/site-packages/nvidia/*/lib' -print | paste -sd:)
 if [[ -n "$cuda_lib_dirs" ]]; then
@@ -460,18 +487,7 @@ PY"""
     else:
         device_setup = 'export CUDA_VISIBLE_DEVICES=""'
     return f"""#!/bin/bash
-#SBATCH --account={config.account}
-#SBATCH --partition={config.partition}
-#SBATCH --qos={config.qos}
-{gpu_directive}
-#SBATCH --time={config.time_limit}
-#SBATCH --job-name={_job_name(task.classifier, task.dataset)}
-#SBATCH --array={array_spec}
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task={config.cpus_per_task}
-#SBATCH --mem={memory_mb}M
-#SBATCH --output={output_dir}/%A-%a.out
-#SBATCH --error={output_dir}/%A-%a.err
+{directive_block}
 
 set -eo pipefail
 source /etc/profile
