@@ -41,9 +41,9 @@ name = "MultiverseCore"
 classifiers = [
     "1NN-DTW",
     "Arsenal",
-    "CIF",
+    "CIF-500",
     "Catch22",
-    "DrCIF",
+    "DrCIF-500",
     "Dummy",
     "FreshPRINCE",
     "HC2",
