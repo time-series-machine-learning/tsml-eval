@@ -30,7 +30,10 @@ resample=${3:-0}
 username=${USER:?USER is not set}
 repo_dir="/home/${username}/Code/tsml-eval-gpu"
 data_dir="/home/${username}/Data/Multiverse"
-results_dir="/home/${username}/Results/Multiverse/DeepLearning"
+# A dedicated tree, not the paper results. If a paper result already existed the
+# experiment would skip training and the check would pass without testing anything,
+# and a check that did train would pollute completeness reporting
+results_dir="/home/${username}/Results/GPUTest/DeepLearning"
 env_name=tsml-eval-gpu
 
 env_dir="/home/${username}/.conda/envs/${env_name}"
