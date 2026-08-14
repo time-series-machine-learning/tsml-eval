@@ -11,7 +11,7 @@ set -eo pipefail
 
 if [[ "${1:-}" != "--inside-allocation" ]]; then
     script_path=$(realpath "$0")
-    dataset=${1:-STEW}
+    dataset=${1:-AtrialFibrillation}
     resample=${2:-0}
 
     exec srun \
@@ -25,7 +25,7 @@ if [[ "${1:-}" != "--inside-allocation" ]]; then
         bash "$script_path" --inside-allocation "$dataset" "$resample"
 fi
 
-dataset=${2:-STEW}
+dataset=${2:-AtrialFibrillation}
 resample=${3:-0}
 username=${USER:?USER is not set}
 repo_dir="/home/${username}/Code/tsml-eval-gpu"

@@ -3,11 +3,12 @@
 # that the tsml-eval-gpu environment trains on the GPU. Run from an IridisX login
 # node; no Conda activation is required beforehand.
 #
-#   sh run_litemv_gpu_test_iridisx.sh                 # STEW, resample 0
-#   sh run_litemv_gpu_test_iridisx.sh BasicMotions 0
+#   sh run_litemv_gpu_test_iridisx.sh                 # AtrialFibrillation, 0
+#   sh run_litemv_gpu_test_iridisx.sh STEW 0
 #
-# The default problem is STEW, matching the Hali smoke test and the 66 problem core
-# list, so the data needed for the check is data the core pass needs anyway.
+# The default problem is AtrialFibrillation, which is in the 66 problem core list and
+# is small (15 train, 15 test), so the check finishes quickly and needs only data
+# the core pass needs anyway.
 #
 # Results go to Results/GPUTest, not the paper result tree. LITETime-MV is not the
 # classifier of the H-InceptionTime pass, so its results do not belong there.
@@ -22,7 +23,7 @@ gres=gpu:a100swarm:1
 
 if [[ "${1:-}" != "--inside-allocation" ]]; then
     script_path=$(realpath "$0")
-    dataset=${1:-STEW}
+    dataset=${1:-AtrialFibrillation}
     resample=${2:-0}
 
     echo "Requesting ${gres} on ${partition} for ${dataset} resample ${resample}."
@@ -39,7 +40,7 @@ if [[ "${1:-}" != "--inside-allocation" ]]; then
         bash "$script_path" --inside-allocation "$dataset" "$resample"
 fi
 
-dataset=${2:-STEW}
+dataset=${2:-AtrialFibrillation}
 resample=${3:-0}
 username=${USER:?USER is not set}
 repo_dir="/home/${username}/Code/tsml-eval-gpu"

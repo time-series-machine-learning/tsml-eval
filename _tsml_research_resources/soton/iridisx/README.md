@@ -102,10 +102,11 @@ activation now fails the job loudly rather than silently using base Python, but
 
 >sh _tsml_research_resources/run_hinception_gpu_test_iridisx.sh
 
-Runs one H-InceptionTime experiment on STEW in a real `swarm_a100` allocation and
-fails loudly if TensorFlow cannot see the GPU. STEW is in the core list, so a
-successful run becomes a real result the controller then skips. It also prints the
-resolved `conda.sh` path.
+Runs one H-InceptionTime experiment on `AtrialFibrillation` in a real `swarm_a100`
+allocation and fails loudly if TensorFlow cannot see the GPU. `AtrialFibrillation`
+is in the 66 problem core list and is small, so the check is quick and a successful
+run becomes a real result the controller then skips. It also prints the resolved
+`conda.sh` path. Pass a different problem and resample as arguments.
 
 `run_litemv_gpu_test_iridisx.sh` is the same check with LITETime-MV, writing to
 `~/Results/GPUTest` since LITETime-MV is not part of the H-InceptionTime pass.
