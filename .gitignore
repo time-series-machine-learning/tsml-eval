@@ -127,6 +127,13 @@ dmypy.json
 # Test output
 test_output/
 examples/generated_results/
+.test-tmp/
+pytest-cache-files-*/
+
+# One-off local Multiverse result migration/archive utilities
+_tsml_research_resources/build_multiverse_zip.ps1
+_tsml_research_resources/migrate_multiverse_testonly.sh
+_tsml_research_resources/reconcile_multiverse_testonly.ps1
 
 # Test datasts
 test_datasets/

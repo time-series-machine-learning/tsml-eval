@@ -8,16 +8,15 @@ repo_dir = "/gpfs/home/{username}/Code/tsml-eval"
 data_dir = "/gpfs/home/{username}/Data/Multiverse"
 dataset_file = "/gpfs/home/{username}/DataSetLists/MultiverseCore.txt"
 
-# The single category preserves the established results layout:
-# Results/Multiverse/TestOnly/MultiverseCore/<classifier>/Predictions/...
-results_root = "/gpfs/home/{username}/Results/Multiverse/TestOnly"
-state_dir = "/gpfs/home/{username}/Results/Multiverse/TestOnly/.controller-core-resample0-non-deep"
+# Store every classifier under its algorithm type.
+results_root = "/gpfs/home/{username}/Results/Multiverse"
+state_dir = "/gpfs/home/{username}/Results/Multiverse/.controller-core-resample0-non-deep"
 resamples = 1
 
 # Non-OOM failures get one attempt. OOMs are retried automatically at the next
 # configured memory level by later controller cycles.
 max_attempts = 1
-all_categories_first_pass = false
+all_categories_first_pass = true
 small_datasets_first = true
 excluded_datasets = []
 validate_results = false
@@ -37,21 +36,33 @@ env_name = "tsml-eval"
 numba_cache_dir = "/gpfs/home/{username}/Code/.cache/numba/tsml-eval"
 
 [[categories]]
-name = "MultiverseCore"
-classifiers = [
-    "1NN-DTW",
-    "Arsenal",
-    "CIF-500",
-    "Catch22",
-    "DrCIF-500",
-    "Dummy",
-    "FreshPRINCE",
-    "HC2",
-    "MRHydra",
-    "QUANT",
-    "RDST",
-    "RIST",
-    "ROCKET",
-    "STC",
-    "TDE",
-]
+name = "IntervalBased"
+classifiers = ["CIF-500", "DrCIF-500", "QUANT"]
+
+[[categories]]
+name = "DictionaryBased"
+classifiers = ["TDE"]
+
+[[categories]]
+name = "ShapeletBased"
+classifiers = ["RDST", "STC"]
+
+[[categories]]
+name = "ConvolutionBased"
+classifiers = ["Arsenal", "MRHydra", "ROCKET"]
+
+[[categories]]
+name = "DistanceBased"
+classifiers = ["1NN-DTW"]
+
+[[categories]]
+name = "FeatureBased"
+classifiers = ["Catch22", "FreshPRINCE"]
+
+[[categories]]
+name = "Hybrid"
+classifiers = ["HC2", "RIST"]
+
+[[categories]]
+name = "Other"
+classifiers = ["Dummy"]
