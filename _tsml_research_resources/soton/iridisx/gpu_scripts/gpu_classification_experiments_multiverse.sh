@@ -3,8 +3,7 @@
 # Check and edit all options before the first run!
 # While reading is fine, please dont write anything to the default directories in this script
 #
-# Settings marked TODO-IRIDISX have not been confirmed on IridisX yet. Run
-# iridisx_probe.sh on the login node and fill them in before the first submission.
+# Slurm settings below are confirmed from sinfo/sacctmgr on IridisX.
 
 # Start and end for resamples. 30 is the full resample protocol, 1 is the default-resample pass
 max_folds=1
@@ -14,23 +13,27 @@ start_fold=1
 # Keep this low for GPU jobs, there are far fewer GPUs than CPU cores
 max_num_submitted=12
 
-# IridisX GPU partitions. Do NOT use "batch", it does not exist on IridisX, and "amd"
-# is the general AMD CPU partition with no GPUs.
-#   swarm_a100      5 nodes, 4x A100 80GB NV-Linked,  ECS/ORC staff and PGR only
-#   swarm_h100      2 nodes, 8x H100 80GB NV-Switch,  ECS/ORC staff and PGR only
-#   a100           13 nodes, 2x A100 80GB NV-Linked,  open to all
-#   scavenger_4a100 idle swarm_a100 nodes, PREEMPTIBLE, 8 nodes max per user
-#   scavenger_8h100 idle swarm_h100 nodes, PREEMPTIBLE, 8 nodes max per user
+# IridisX GPU partitions, confirmed from sinfo. Do NOT use "batch", it does not exist
+# on IridisX, and "amd" is the general CPU partition with no GPUs.
+#   partition        nodes  gres              timelimit   notes
+#   swarm_a100       5      gpu:a100swarm:4   5-00:00:00  ECS/ORC staff and PGR only
+#   swarm_h100       2      gpu:h100swarm:8   5-00:00:00  ECS/ORC staff and PGR only
+#   a100             12     gpu:a100:2        2-12:00:00  open to all
+#   scavenger_4a100  5      gpu:a100swarm:4     12:00:00  PREEMPTIBLE
+#   scavenger_8h100  2      gpu:h100swarm:8     12:00:00  PREEMPTIBLE
+#   mi300x           1      gpu:mi300x:8      2-12:00:00  AMD, will NOT run CUDA
 # Preemption is tolerable here: a killed resample leaves no results file, so rerunning
 # this script resubmits exactly the missing work
 queue="swarm_a100"
 
-# TODO-IRIDISX: confirm the exact gres type string with "sinfo -o '%P %G' -e".
-# Requesting the type rather than a bare "gpu:1" keeps jobs on the intended hardware
-gres="gpu:a100:1"
+# The gres TYPE differs by partition and must match it exactly. swarm_a100 uses
+# "a100swarm", the open a100 partition uses plain "a100". Getting this wrong is a
+# submission error, not a silent fallback
+gres="gpu:a100swarm:1"
 
-# TODO-IRIDISX: if IridisX requires an account and/or QoS, set them here.
-# Leave empty to omit the directive (Iridis 6 did not require either)
+# No account or QoS is needed for the default association. If a swarm submission is
+# rejected for QoS reasons, set qos to the relevant one (ecsa100 for swarm_a100,
+# ecsh100 for swarm_h100). Leave empty to omit the directive
 account=""
 qos=""
 
@@ -48,14 +51,16 @@ max_memory=32000
 # 4 of 48 cores alongside 1 of 4 GPUs leaves the node usable by others
 cpus_per_task=4
 
-# TODO-IRIDISX: confirm the maximum walltime for the GPU partition ("sinfo -o '%P %l'")
-max_time="60:00:00"
+# swarm_a100 and swarm_h100 allow up to 5-00:00:00, a100 up to 2-12:00:00, and the
+# scavenger partitions only 12:00:00. Request what you need, accurate walltimes are
+# scheduled sooner
+max_time="2-00:00:00"
 
 # Start point for the script i.e. 3 datasets, 3 classifiers = 9 jobs to submit, start_point=5 will skip to job 5
 start_point=1
 
-# IridisX exposes /home and /scratch globally through Storage Scale on both login and
-# compute nodes. TODO-IRIDISX: confirm the exact user paths under these
+# /home and /scratch are global Storage Scale mounts on login and compute nodes.
+# /iridisfs/home and /iridisfs/scratch are the same directories
 local_path="/home/$username/"
 
 # Datasets to use and directory of data files.
@@ -76,7 +81,7 @@ script_file_path="$local_path/Code/tsml-eval-gpu/tsml_eval/experiments/classific
 # see iridisx_python.md for how to build it
 env_name="tsml-eval-gpu"
 
-# TODO-IRIDISX: confirm the conda module name with "module avail conda"
+# conda/python3 is the only conda module on IridisX
 conda_module="conda/python3"
 
 # Classifiers to loop over. Must be separated by a space

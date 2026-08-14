@@ -16,17 +16,31 @@ Login node: `loginX003.iridis.soton.ac.uk` (`loginX001` also has GPUs, `loginX00
 CPU-only). `/home`, `/scratch` and the module shares are global Storage Scale mounts,
 visible identically from login and compute nodes.
 
-| Partition | Nodes | GPUs per node | Cores | Usable RAM | Notes |
-| --- | --- | --- | --- | --- | --- |
-| `swarm_a100` | 5 | 4x A100 80GB NV-Linked | 48 | 900000 MB | ECS/ORC staff and PGR only |
-| `swarm_h100` | 2 | 8x H100 80GB NV-Switch | 96 | 1850000 MB | ECS/ORC staff and PGR only |
-| `a100` | 13 | 2x A100 80GB NV-Linked | 48 | 490000 MB | open to all |
-| `scavenger_4a100` | 5 | 4x A100 80GB | 48 | 900000 MB | idle `swarm_a100`, **preemptible** |
-| `scavenger_8h100` | 2 | 8x H100 80GB | 96 | 1850000 MB | idle `swarm_h100`, **preemptible** |
-| `amd` / `amd_serial` | 90 | none | 64 | 230400 MB | general CPU, no GPUs |
+Confirmed from `sinfo` on 14/08/2026. The `gres` type string differs per partition and
+must be requested exactly — `gpu:a100swarm:1` on `swarm_a100`, but `gpu:a100:1` on the
+open `a100` partition. A wrong type is a submission error, not a silent fallback.
+
+| Partition | Nodes | gres | Timelimit | Notes |
+| --- | --- | --- | --- | --- |
+| `swarm_a100` | 5 | `gpu:a100swarm:4` | 5-00:00:00 | ECS/ORC staff and PGR only |
+| `swarm_h100` | 2 | `gpu:h100swarm:8` | 5-00:00:00 | ECS/ORC staff and PGR only |
+| `a100` | 12 | `gpu:a100:2` | 2-12:00:00 | open to all |
+| `swarm_l4` | 3 | `gpu:l4swarm:7` | 5-00:00:00 | ECS/ORC |
+| `scavenger_4a100` | 5 | `gpu:a100swarm:4` | 12:00:00 | idle `swarm_a100`, **preemptible** |
+| `scavenger_8h100` | 2 | `gpu:h100swarm:8` | 12:00:00 | idle `swarm_h100`, **preemptible** |
+| `quad_h200` / `i7_h200` | 4 / 25 | `gpu:h200:4` | 2-12:00:00 | H200 |
+| `mi300x` | 1 | `gpu:mi300x:8` | 2-12:00:00 | **AMD**, will not run CUDA TensorFlow |
+| `amd` / `amd_serial` | 90 / 14 | none | 2-12:00:00 | general CPU, no GPUs |
 
 The scripts default to `swarm_a100`. As ECS, we are eligible, and single-GPU deep
 learner jobs do not need an H100.
+
+The relevant QoS caps concurrent GPUs, not just jobs: `ecsa100` and `ecsh100` allow
+`gres/gpu=8`, the open `a100` QoS only `gres/gpu=2`. So at most 8 array tasks run at
+once on `swarm_a100` however many are submitted. `max_num_submitted=12` in the scripts
+leaves a few queued behind the running 8.
+
+`mi300x` is the only AMD GPU partition. A CUDA TensorFlow build cannot use it.
 
 **`batch` does not exist on IridisX** and will fail with `Invalid partition
 specified`. `serial` no longer exists on either cluster.
@@ -41,11 +55,13 @@ busy periods (September/October and April are the peak months).
 
 ## Order of work
 
-1. Run `iridisx_probe.sh` on the login node and keep the output.
-2. Fill in the remaining `TODO-IRIDISX` settings in the `gpu_scripts`, mainly the
-   `gres` type string, the partition walltime limit, and the conda module name.
-3. Build the `tsml-eval-gpu` conda environment, see `iridisx_python.md`.
-4. Smoke test one small dataset with one classifier before submitting an archive.
+1. Build the `tsml-eval-gpu` conda environment against its own checkout, see
+   `iridisx_python.md`.
+2. Copy the data and dataset lists to `~/Data` and `~/DataSetLists`.
+3. Smoke test one small dataset with one classifier before submitting an archive.
+
+`iridisx_probe.sh` can be rerun at any point to check the cluster configuration has
+not changed, and is worth rerunning if a submission starts being rejected.
 
 ## Contents
 
