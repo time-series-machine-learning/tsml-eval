@@ -1,6 +1,12 @@
 #!/bin/bash
 # GPU classification experiments on IridisX for the UCR univariate archive.
 # Check and edit all options before the first run!
+#
+# NOTE ON SCOPE: the supported route for the paper passes is the Multiverse
+# controller (multiverse_core_resample0_hinception_gpu_iridisx.toml), which handles
+# retries, memory escalation and progress reporting. This script is for ad-hoc runs
+# of a single classifier. It deliberately writes to the SAME result tree as the
+# controller, so whichever runs second skips resamples the first already produced.
 # While reading is fine, please dont write anything to the default directories in this script
 #
 # Slurm settings below are confirmed from sinfo/sacctmgr on IridisX.
@@ -70,8 +76,9 @@ data_dir="$local_path/Data/"
 datasets="$local_path/DataSetLists/UnivariateClassification112-UCR2018Clean.txt"
 
 # Results and output file write location. Change these to reflect your own file structure
-results_dir="$local_path/ClassificationResults/results/"
-out_dir="$local_path/ClassificationResults/output/"
+# Matches the controller layout: results_root/<category>, so both routes share a tree
+results_dir="$local_path/Results/UCR/DeepLearning/"
+out_dir="$local_path/Results/UCR/DeepLearning/output/"
 
 # The python script we are running. This is a separate checkout to the CPU one, on the
 # ajb/hc2 branch. It must match the checkout that tsml-eval-gpu is pip installed from
@@ -88,7 +95,7 @@ conda_module="conda/python3"
 # Deep learning options in tsml_eval/experiments/_get_classifier.py:
 #   CNN FCN MLP Encoder ResNet SingleInception InceptionTime H-InceptionTime
 #   LITETime IndividualLITE DisjointCNN
-classifiers_to_run="InceptionTime LITETime"
+classifiers_to_run="H-InceptionTime"
 
 # You can add extra arguments here. See tsml_eval/utils/arguments.py parse_args
 # You will have to add any variable to the python call close to the bottom of the script

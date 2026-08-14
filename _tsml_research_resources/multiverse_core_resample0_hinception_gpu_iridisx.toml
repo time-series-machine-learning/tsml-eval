@@ -13,7 +13,9 @@ username = "ajb2u23"
 email = "ajb@uea.ac.uk"
 repo_dir = "/home/{username}/Code/tsml-eval-gpu"
 data_dir = "/home/{username}/Data/Multiverse"
-dataset_file = "/home/{username}/DataSetLists/MultiverseCore.txt"
+# Read the 66 problem core list straight from the checkout, so no copy-and-rename
+# step is needed and the list is versioned with the code
+dataset_file = "/home/{username}/Code/tsml-eval-gpu/_tsml_research_resources/dataset_lists/MultivariateClassification66-MultiverseMini.txt"
 results_root = "/home/{username}/Results/Multiverse"
 state_dir = "/home/{username}/Results/Multiverse/.controller-core-resample0-hinception-gpu"
 resamples = 1
@@ -48,9 +50,9 @@ time_limit = "5-00:00:00"
 
 [environment]
 module = "conda/python3"
-# TODO-IRIDISX: confirm with "module load conda/python3 && echo $CONDA_EXE", the
-# conda.sh sits in etc/profile.d relative to the conda installation root
-conda_sh = "/iridisfs/ixsoftware/conda/etc/profile.d/conda.sh"
+# Empty means the job derives conda.sh from the loaded module at runtime, which
+# avoids pinning a path that has not been verified on this cluster
+conda_sh = ""
 env_name = "tsml-eval-gpu"
 numba_cache_dir = "/home/{username}/Code/.cache/numba/tsml-eval-gpu"
 

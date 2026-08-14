@@ -57,11 +57,62 @@ busy periods (September/October and April are the peak months).
 
 1. Build the `tsml-eval-gpu` conda environment against its own checkout, see
    `iridisx_python.md`.
-2. Copy the data and dataset lists to `~/Data` and `~/DataSetLists`.
-3. Smoke test one small dataset with one classifier before submitting an archive.
+2. Copy the archive data to `~/Data/Multiverse` and `~/Data/UCR`. Dataset *lists* do
+   not need copying, the controller configurations read them from the checkout.
+3. Run the smoke test (below) and confirm TensorFlow reports an A100.
+4. Start the controller.
 
 `iridisx_probe.sh` can be rerun at any point to check the cluster configuration has
 not changed, and is worth rerunning if a submission starts being rejected.
+
+## The supported route: the Multiverse controller
+
+The controller in `_tsml_research_resources/multiverse_controller.py` is the supported
+way to run these passes, and is the same code used on Hali. It reconciles what is
+already on disk against what is wanted, submits only missing work, escalates memory
+after an OOM, pins the repository commit, and emails progress. The IridisX
+configurations are:
+
+| Configuration | Pass |
+| --- | --- |
+| `multiverse_core_resample0_hinception_gpu_iridisx.toml` | H-InceptionTime over the 66 problem Multiverse core |
+| `ucr_resample0_hinception_gpu_iridisx.toml` | H-InceptionTime over the 112 problem UCR clean list |
+
+Both mirror their Hali counterparts and differ only where the cluster forces it.
+
+Always inspect a generated script before the first submission of a pass:
+
+>python _tsml_research_resources/multiverse_controller.py --config _tsml_research_resources/multiverse_core_resample0_hinception_gpu_iridisx.toml --dry-run
+
+Then start the supervisor, which reruns one controller cycle every 30 minutes:
+
+>sh _tsml_research_resources/run_multiverse_controller.sh _tsml_research_resources/multiverse_core_resample0_hinception_gpu_iridisx.toml
+
+The supervisor writes its log to `~/Results/Multiverse/.controller/supervisor.log`.
+Set `MULTIVERSE_LOG_DIR` if the results live elsewhere:
+
+>MULTIVERSE_LOG_DIR=~/Results/UCR/.controller sh _tsml_research_resources/run_multiverse_controller.sh _tsml_research_resources/ucr_resample0_hinception_gpu_iridisx.toml
+
+**Do not start the supervisor from inside the `tsml-eval-gpu` environment.** Generated
+jobs drop inherited Conda state and verify the interpreter before running, so a stale
+activation now fails the job loudly rather than silently using base Python, but
+`conda deactivate` first anyway.
+
+## Smoke test before an archive run
+
+>sh _tsml_research_resources/run_hinception_gpu_test_iridisx.sh
+
+Runs one H-InceptionTime experiment on `AtrialFibrillation` in a real `swarm_a100`
+allocation and fails loudly if TensorFlow cannot see the GPU. `AtrialFibrillation`
+is in the 66 problem core list and is small, so the check is quick and a successful
+run becomes a real result the controller then skips. It also prints the resolved
+`conda.sh` path. Pass a different problem and resample as arguments.
+
+`run_litemv_gpu_test_iridisx.sh` is the same check with LITETime-MV, writing to
+`~/Results/GPUTest` since LITETime-MV is not part of the H-InceptionTime pass.
+
+A deep learner that silently trains on CPU is the main failure mode to watch for,
+which is why both tests assert on the device rather than just printing it.
 
 ## Contents
 
@@ -74,37 +125,16 @@ modules. Submits nothing.
 : Setup guide for the `tsml-eval-gpu` conda environment.
 
 `gpu_scripts/gpu_classification_experiments_ucr.sh`
-: UCR univariate archive. Defaults to the 112 problem clean list.
-
 `gpu_scripts/gpu_classification_experiments_multiverse.sh`
-: Multiverse multivariate archive. Defaults to the 133 problem clean list.
+: Standalone serial submission scripts, the Iridis 6 pattern: one Slurm array per
+classifier/dataset pair, a `max_num_submitted` queue-limit loop that polls `squeue`,
+and a check that skips resamples already on disk. These are for ad-hoc single
+classifier runs, **not** the supported route for a paper pass. They write to the same
+result tree as the controller and default to the same classifier, so the two cannot
+fork the results: whichever runs second skips what the first produced.
 
-Both scripts are the standard serial submission pattern from Iridis 6: one Slurm
-array per classifier/dataset pair, a `max_num_submitted` queue-limit loop that polls
-`squeue` and sleeps until the queue drops below the limit, and a completed-resample
-check that skips resamples whose `testResample<i>.csv` already exists. Rerunning a
-script after a partial run picks up only the missing work.
-
-`max_num_submitted` defaults to 12 in both. There are only 20 A100s across
-`swarm_a100`, so this should stay low.
-
-## Dataset lists
-
-Copy the relevant list from `_tsml_research_resources/dataset_lists/` to
-`$local_path/DataSetLists/` on the cluster:
-
-- `UnivariateClassification112-UCR2018Clean.txt` (or the full 128 archive,
-  `UnivariateClassification128-UCR2018.txt`)
-- `Multivariate133Classification-MultiverseClean.txt` (or the 66 problem subset,
-  `MultivariateClassification66-MultiverseMini.txt`)
-
-## Smoke test before an archive run
-
-Set `datasets` to a file containing one small problem (`ItalyPowerDemand` for UCR,
-`BasicMotions` for multivariate), `max_folds=1`, and one classifier. Check the `.out`
-file: `nvidia-smi` should list the allocated A100, and TensorFlow should log a
-physical GPU device rather than falling back to CPU. A deep learner that silently
-runs on CPU is the main failure mode to watch for.
+`max_num_submitted` defaults to 12. The `ecsa100` QoS caps concurrent GPUs at 8, so
+higher values only lengthen the pending queue.
 
 ## Line endings
 

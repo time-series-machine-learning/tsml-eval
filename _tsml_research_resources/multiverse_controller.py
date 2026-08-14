@@ -59,7 +59,7 @@ class ControllerConfig:
     memory_mb_levels: tuple[int, ...]
     time_limit: str
     module: str
-    conda_sh: Path
+    conda_sh: Path | None
     env_name: str
     numba_cache_dir: Path
     categories: tuple[Category, ...]
@@ -70,6 +70,9 @@ class ControllerConfig:
     # advertises gpu:a100swarm, so a bare gpu:1 is rejected there. Empty means
     # gpu:{gpus}, which is what Hali wants.
     gres: str = ""
+
+    # IridisX rejects submissions that do not request a node count.
+    nodes: int = 1
 
 
 @dataclass(frozen=True)
@@ -162,10 +165,17 @@ def _load_config(config_file):
         ),
         time_limit=str(slurm.get("time_limit", "7-00:00:00")),
         module=str(environment.get("module", "python/anaconda/2024.10/3.12.7")),
-        conda_sh=path_from(
-            environment,
-            "conda_sh",
-            "/gpfs/software/hali/python/anaconda/2024.10/etc/profile.d/conda.sh",
+        # An explicit path is used when given. Setting conda_sh = "" instead derives it
+        # from the loaded module at job runtime, which suits clusters where the
+        # location has not been pinned down.
+        conda_sh=(
+            None
+            if environment.get("conda_sh") == ""
+            else path_from(
+                environment,
+                "conda_sh",
+                "/gpfs/software/hali/python/anaconda/2024.10/etc/profile.d/conda.sh",
+            )
         ),
         env_name=str(environment.get("env_name", "tsml-eval")),
         numba_cache_dir=path_from(
@@ -177,6 +187,7 @@ def _load_config(config_file):
         cpus_per_task=int(slurm.get("cpus_per_task", 1)),
         gpus=int(slurm.get("gpus", 0)),
         gres=str(slurm.get("gres", "")),
+        nodes=int(slurm.get("nodes", 1)),
     )
     _validate_config(config)
     return config
@@ -200,6 +211,8 @@ def _validate_config(config):
         raise ValueError("gres is set but gpus is 0, so no GPU would be requested")
     if any(character in config.gres for character in " \n\r"):
         raise ValueError(f"Unsafe gres string: {config.gres!r}")
+    if config.nodes < 1:
+        raise ValueError("nodes must be at least 1")
     if (
         not config.memory_mb_levels
         or any(value < 1 for value in config.memory_mb_levels)
@@ -440,8 +453,9 @@ def _batch_script(
         config.numba_cache_dir.mkdir(parents=True, exist_ok=True)
     array_spec = ",".join(str(index) for index in array_indices)
     q = shlex.quote
-    # Slurm stops reading #SBATCH directives at the first line that is not a comment,
-    # so optional directives must be dropped from the header rather than left blank.
+    # Optional directives are dropped rather than emitted empty, to keep the header
+    # readable and portable. Slurm itself tolerates blank lines between directives:
+    # parsing stops at the first non-comment, non-whitespace line.
     gres = config.gres or f"gpu:{config.gpus}"
     directives = [
         f"#SBATCH --account={config.account}" if config.account else "",
@@ -451,6 +465,8 @@ def _batch_script(
         f"#SBATCH --time={config.time_limit}",
         f"#SBATCH --job-name={_job_name(task.classifier, task.dataset)}",
         f"#SBATCH --array={array_spec}",
+        # IridisX rejects any submission without a node count
+        f"#SBATCH --nodes={config.nodes}",
         "#SBATCH --ntasks=1",
         f"#SBATCH --cpus-per-task={config.cpus_per_task}",
         f"#SBATCH --mem={memory_mb}M",
@@ -486,15 +502,48 @@ if not devices:
 PY"""
     else:
         device_setup = 'export CUDA_VISIBLE_DEVICES=""'
+    if config.conda_sh is None:
+        # Derive conda.sh from the loaded module. Clusters put it in different places
+        # and a wrong absolute path fails every job.
+        conda_sh_setup = """conda_sh="$(dirname "$(dirname "$(command -v conda)")")/etc/profile.d/conda.sh\""""
+    else:
+        conda_sh_setup = f"conda_sh={q(str(config.conda_sh))}"
     return f"""#!/bin/bash
 {directive_block}
 
 set -eo pipefail
 source /etc/profile
+
+# Drop any Conda state inherited from the submitting shell. Without this, a stale
+# CONDA_DEFAULT_ENV can survive the module reload and make the activation below a
+# no-op, leaving the job running the base interpreter with no tensorflow.
+unset CONDA_DEFAULT_ENV CONDA_PREFIX CONDA_SHLVL CONDA_PROMPT_MODIFIER PYTHONPATH
 module purge
 module load {q(config.module)}
-source {q(str(config.conda_sh))}
+{conda_sh_setup}
+if [[ ! -f "$conda_sh" ]]; then
+    echo "ERROR: conda.sh not found at $conda_sh"
+    exit 1
+fi
+source "$conda_sh"
+if (( ${{CONDA_SHLVL:-0}} > 0 )); then
+    conda deactivate
+fi
 conda activate {q(config.env_name)}
+
+# Verify the activation actually took, rather than discovering it through an
+# ImportError part way into the experiment.
+expected_env={q(config.env_name)}
+if [[ "$(basename "${{CONDA_PREFIX:-none}}")" != "$expected_env" ]]; then
+    echo "ERROR: expected the $expected_env environment, got ${{CONDA_PREFIX:-none}}"
+    exit 1
+fi
+python_path=$(command -v python)
+if [[ "$python_path" != "$CONDA_PREFIX"/* ]]; then
+    echo "ERROR: python is $python_path, which is outside $CONDA_PREFIX"
+    exit 1
+fi
+echo "Python:            $python_path"
 
 export NUMBA_CACHE_DIR={q(str(config.numba_cache_dir))}
 {device_setup}
