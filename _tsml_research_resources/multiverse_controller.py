@@ -63,6 +63,8 @@ class ControllerConfig:
     env_name: str
     numba_cache_dir: Path
     categories: tuple[Category, ...]
+    cpus_per_task: int = 1
+    gpus: int = 0
 
 
 @dataclass(frozen=True)
@@ -167,6 +169,8 @@ def _load_config(config_file):
             "/gpfs/home/{username}/Code/.cache/numba/tsml-eval",
         ),
         categories=categories,
+        cpus_per_task=int(slurm.get("cpus_per_task", 1)),
+        gpus=int(slurm.get("gpus", 0)),
     )
     _validate_config(config)
     return config
@@ -182,6 +186,10 @@ def _validate_config(config):
         raise ValueError("excluded_datasets must be unique")
     if config.max_active_tasks < 1:
         raise ValueError("max_active_tasks must be at least 1")
+    if config.cpus_per_task < 1:
+        raise ValueError("cpus_per_task must be at least 1")
+    if config.gpus < 0:
+        raise ValueError("gpus must be non-negative")
     if (
         not config.memory_mb_levels
         or any(value < 1 for value in config.memory_mb_levels)
@@ -414,7 +422,7 @@ def _batch_script(
     memory_mb,
     prepare_directories=True,
 ):
-    """Create a CPU-only Slurm array script for one classifier/dataset pair."""
+    """Create a Slurm array script for one classifier/dataset pair."""
     category_results = config.results_root / task.category
     output_dir = category_results / "output" / task.classifier / task.dataset
     if prepare_directories:
@@ -422,15 +430,45 @@ def _batch_script(
         config.numba_cache_dir.mkdir(parents=True, exist_ok=True)
     array_spec = ",".join(str(index) for index in array_indices)
     q = shlex.quote
+    gpu_directive = f"#SBATCH --gres=gpu:{config.gpus}" if config.gpus else ""
+    if config.gpus:
+        device_setup = """cuda_lib_dirs=$(find "$CONDA_PREFIX/lib" -type d -path '*/site-packages/nvidia/*/lib' -print | paste -sd:)
+if [[ -n "$cuda_lib_dirs" ]]; then
+    export LD_LIBRARY_PATH="${cuda_lib_dirs}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+fi
+ptxas_path=$(find "$CONDA_PREFIX/lib" -type f -path '*/site-packages/nvidia/*/bin/ptxas' -print -quit)
+if [[ -n "$ptxas_path" ]]; then
+    export PATH="$(dirname "$ptxas_path"):$PATH"
+fi
+echo "CUDA library path: ${cuda_lib_dirs:-not found}"
+echo "ptxas:             ${ptxas_path:-not found}"
+echo "CUDA_VISIBLE_DEVICES: ${CUDA_VISIBLE_DEVICES:-unset}"
+if ! command -v nvidia-smi >/dev/null 2>&1; then
+    echo "ERROR: nvidia-smi is unavailable in this GPU allocation."
+    exit 1
+fi
+nvidia-smi -L
+python - <<'PY'
+import tensorflow as tf
+
+devices = tf.config.list_physical_devices("GPU")
+print("TensorFlow version:", tf.__version__)
+print("TensorFlow GPUs:", devices)
+if not devices:
+    raise SystemExit("ERROR: TensorFlow cannot see the allocated GPU.")
+PY"""
+    else:
+        device_setup = 'export CUDA_VISIBLE_DEVICES=""'
     return f"""#!/bin/bash
 #SBATCH --account={config.account}
 #SBATCH --partition={config.partition}
 #SBATCH --qos={config.qos}
+{gpu_directive}
 #SBATCH --time={config.time_limit}
 #SBATCH --job-name={_job_name(task.classifier, task.dataset)}
 #SBATCH --array={array_spec}
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=1
+#SBATCH --cpus-per-task={config.cpus_per_task}
 #SBATCH --mem={memory_mb}M
 #SBATCH --output={output_dir}/%A-%a.out
 #SBATCH --error={output_dir}/%A-%a.err
@@ -443,7 +481,7 @@ source {q(str(config.conda_sh))}
 conda activate {q(config.env_name)}
 
 export NUMBA_CACHE_DIR={q(str(config.numba_cache_dir))}
-export CUDA_VISIBLE_DEVICES=""
+{device_setup}
 export OMP_NUM_THREADS=1
 export MKL_NUM_THREADS=1
 export MPI_NUM_THREADS=1
@@ -470,7 +508,8 @@ echo "Classifier:        {task.classifier}"
 echo "Dataset:           {task.dataset}"
 echo "Resample ID:       $((SLURM_ARRAY_TASK_ID - 1))"
 echo "Requested memory:  ${{SLURM_MEM_PER_NODE:-unknown}} MB"
-echo "CPU-only:          true"
+echo "Requested CPUs:    {config.cpus_per_task}"
+echo "Requested GPUs:    {config.gpus}"
 echo "tsml-eval commit:  $actual_commit"
 
 python -u -m tsml_eval.experiments.classification_experiments \\
@@ -906,7 +945,8 @@ def _compose_report(
         "Memory tiers (MB): "
         + ", ".join(str(memory) for memory in config.memory_mb_levels),
         "Excluded datasets: " + (", ".join(config.excluded_datasets) or "none"),
-        "CPU-only jobs: yes",
+        f"CPUs per task: {config.cpus_per_task}",
+        f"GPUs per task: {config.gpus}",
         "",
     ]
     if snapshot.error:

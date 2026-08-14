@@ -1,0 +1,37 @@
+# Default-resample H-InceptionTime GPU completion pass for MultiverseCore on Hali.
+# Existing DeepLearning/H-InceptionTime results are detected and retained.
+
+[controller]
+username = "ajb"
+email = "ajb@uea.ac.uk"
+repo_dir = "/gpfs/home/{username}/Code/tsml-eval-gpu"
+data_dir = "/gpfs/home/{username}/Data/Multiverse"
+dataset_file = "/gpfs/home/{username}/DataSetLists/MultiverseCore.txt"
+results_root = "/gpfs/home/{username}/Results/Multiverse"
+state_dir = "/gpfs/home/{username}/Results/Multiverse/.controller-core-resample0-hinception-gpu"
+resamples = 1
+max_attempts = 1
+all_categories_first_pass = false
+small_datasets_first = true
+excluded_datasets = []
+validate_results = false
+
+[slurm]
+account = "cmp"
+partition = "gpu"
+qos = "gpu"
+max_active_tasks = 12
+cpus_per_task = 2
+gpus = 1
+memory_mb_levels = [64000]
+time_limit = "7-00:00:00"
+
+[environment]
+module = "python/anaconda/2024.10/3.12.7"
+conda_sh = "/gpfs/software/hali/python/anaconda/2024.10/etc/profile.d/conda.sh"
+env_name = "tsml-eval-gpu"
+numba_cache_dir = "/gpfs/home/{username}/Code/.cache/numba/tsml-eval-gpu"
+
+[[categories]]
+name = "DeepLearning"
+classifiers = ["H-InceptionTime"]
