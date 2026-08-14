@@ -1,0 +1,251 @@
+Review of commit 01e619a5a67d571ad44688a68dc6070fe3807967
+=======================================================================
+
+Scope
+-----
+
+This review covers the commit "Mirror the Hali GPU Multiverse setup on
+IridisX", compared with its parent 733716e. The intended experiment is the
+default resample of the paper's H-InceptionTime classifier on all 66
+MultiverseCore problems, using a separate tsml-eval-gpu checkout and Conda
+environment.
+
+Do not start the IridisX controller until the blocking findings below are
+resolved.
+
+
+1. BLOCKING: controller jobs omit --nodes=1
+------------------------------------------------
+
+The IridisX README says that --nodes=1 is mandatory and that IridisX rejects
+submissions without a node count. The standalone shell scripts include it, but
+multiverse_controller.py does not add it to the generated directive block.
+
+Reproducing a batch header with
+multiverse_core_resample0_hinception_gpu_iridisx.toml produced:
+
+    #!/bin/bash
+    #SBATCH --partition=swarm_a100
+    #SBATCH --gres=gpu:a100swarm:1
+    #SBATCH --time=5-00:00:00
+    #SBATCH --job-name=H-InceptionTime_STEW
+    #SBATCH --array=1
+    #SBATCH --ntasks=1
+    #SBATCH --cpus-per-task=2
+    #SBATCH --mem=64000M
+    #SBATCH --output=...
+    #SBATCH --error=...
+
+There is no --nodes directive.
+
+Requested fix:
+
+- Add #SBATCH --nodes=1 to the controller's generated directive block.
+- Prefer a validated nodes setting in ControllerConfig, defaulting to 1, if
+  future configurations might need another value.
+- Add a unit test that generates an IridisX header and asserts that --nodes=1,
+  --array, --time, --mem, --output, --error and the typed --gres are present.
+
+
+2. BLOCKING: supervisor log path still defaults to Hali /gpfs
+-----------------------------------------------------------------
+
+run_multiverse_controller.sh now permits MULTIVERSE_LOG_DIR, but its default is
+still:
+
+    /gpfs/home/${USER}/Results/Multiverse/.controller
+
+IridisX has no /gpfs. No IridisX controller launch command in the new README
+sets MULTIVERSE_LOG_DIR. A user following the documentation will therefore get
+mkdir/tee failures or lose the supervisor log.
+
+Requested fix:
+
+- Prefer a portable default based on $HOME, or derive the log directory from
+  the selected controller configuration/state directory.
+- Alternatively add a small IridisX supervisor wrapper and document the exact
+  launch command, including:
+
+    MULTIVERSE_LOG_DIR=/home/ajb2u23/Results/Multiverse/.controller
+
+- Ensure the supervisor exits immediately if its log directory cannot be
+  created; it currently does not use set -e.
+
+
+3. HIGH: inherited Conda environment bug remains in IridisX scripts
+---------------------------------------------------------------------
+
+run_hinception_gpu_test_iridisx.sh performs module purge/load and then:
+
+    conda activate "$env_name"
+
+This is the same pattern that failed during the Hali smoke test. If the launcher
+inherits CONDA_DEFAULT_ENV=tsml-eval-gpu, the module reload can replace PATH with
+base Python while Conda still believes the named environment is active. The
+subsequent activation can become a no-op. The allocated GPU is then correct, but
+Python reports:
+
+    ModuleNotFoundError: No module named 'tensorflow'
+
+The same risk exists in controller-generated jobs if the supervisor is started
+inside tsml-eval-gpu. Documentation telling the user to deactivate first reduces
+the risk but does not make the scripts robust.
+
+Requested fix:
+
+- Reset inherited Conda state before activation.
+- Activate the environment by absolute path, not only by name.
+- Verify command -v python equals the expected environment executable and fail
+  with a clear message otherwise.
+- Print the selected Python path in every job log.
+- Apply this consistently to the Hali smoke test, IridisX smoke test and
+  controller-generated GPU jobs.
+
+
+4. INCORRECT DIAGNOSIS: blank lines do not terminate SBATCH parsing
+---------------------------------------------------------------------
+
+The commit message and source comment say that the empty optional GPU directive
+left a blank line, which caused Slurm to ignore all later directives and run
+resample -1. This is not how Slurm documents the parser.
+
+Official sbatch documentation says processing stops at the first
+"non-comment, non-whitespace" line. A blank line is whitespace and is allowed:
+
+    https://slurm.schedmd.com/sbatch.html
+
+Filtering empty optional directives is still a reasonable cleanup. Supporting
+empty account/QoS and a typed gres string is also useful. However, the stated
+blank-line failure mechanism is incorrect and should not be used as the
+explanation for earlier resample -1 jobs. Those jobs need a separate root-cause
+investigation using their exact generated scripts and sbatch output.
+
+Requested fix:
+
+- Correct the commit/source documentation to say the filtering is for a clean,
+  portable header rather than a blank-line parsing requirement.
+- Add regression tests for generated CPU and GPU headers instead of relying on
+  the incorrect premise.
+
+
+5. MEDIUM: MultiverseCore dataset filename is inconsistent
+------------------------------------------------------------
+
+The IridisX controller config expects:
+
+    /home/{username}/DataSetLists/MultiverseCore.txt
+
+The README tells the user to copy:
+
+    MultivariateClassification66-MultiverseMini.txt
+
+There is no instruction to rename it. Following the README literally causes a
+FileNotFoundError before submission.
+
+Requested fix:
+
+- Make the config use the documented filename, preferably directly from the
+  dedicated tsml-eval-gpu checkout:
+
+    /home/{username}/Code/tsml-eval-gpu/_tsml_research_resources/
+        dataset_lists/MultivariateClassification66-MultiverseMini.txt
+
+  or clearly document the required copy-and-rename command.
+
+
+6. MEDIUM: standalone scripts do not mirror the controller experiment
+-----------------------------------------------------------------------
+
+The Multiverse controller runs:
+
+    classifier: H-InceptionTime
+    results:    ~/Results/Multiverse/DeepLearning
+
+The new standalone Multiverse script runs:
+
+    classifiers: InceptionTime LITETime-MV
+    results:     ~/MultiverseResults/results
+
+These are different classifiers and different result trees. Running both can
+split results, obscure completeness reporting and duplicate work. The UCR script
+has another result root and runs InceptionTime/LITETime rather than the configured
+H-InceptionTime pass.
+
+Requested fix:
+
+- Decide whether the controller or the legacy serial submission scripts are the
+  supported route for this reproduction.
+- For the requested paper run, align all scripts on H-InceptionTime and
+  ~/Results/Multiverse/DeepLearning, or label the standalone scripts clearly as
+  separate experiments that must not be used for this pass.
+- Add the exact supported controller launch and dry-run commands to README.md.
+
+
+7. MEDIUM: smoke-test defaults are outside the 66-core list
+------------------------------------------------------------
+
+The IridisX smoke test defaults to BasicMotions. BasicMotions is in the full
+133-problem Multiverse list but not in the 66-problem MultiverseCore list. The
+smoke test also writes into the same DeepLearning result tree as the core paper
+run. If only core data were copied, the default test fails to load; if full data
+are present, it adds a non-core result to the paper tree.
+
+Requested fix:
+
+- Use STEW as the default, matching the Hali smoke test and the core list.
+- Preserve the no-overwrite behaviour so a completed smoke test becomes a real
+  result that the controller skips.
+
+
+8. UNVERIFIED: conda.sh remains a TODO in runnable configs
+-----------------------------------------------------------
+
+Both the IridisX controller config and smoke-test script contain a TODO asking the
+user to confirm:
+
+    /iridisfs/ixsoftware/conda/etc/profile.d/conda.sh
+
+This path is operational configuration, not documentation-only metadata. The jobs
+cannot run if it is wrong.
+
+Requested fix:
+
+- Run the supplied probe on IridisX.
+- Resolve the path from `dirname "$CONDA_EXE"` after module load where practical,
+  or replace the TODO with the verified absolute path before submission.
+
+
+What looks sound
+----------------
+
+- Optional account and QoS directives are omitted cleanly when empty.
+- A full typed gres string is necessary for gpu:a100swarm:1 and the new setting
+  provides it.
+- The gres validation rejects whitespace and rejects gres when gpus is zero.
+- The controller module compiles successfully.
+- git diff --check reports no whitespace errors in the pulled commit.
+- The Hali defaults remain present when account, QoS and gres are not overridden.
+
+
+Test limitations
+----------------
+
+The existing test_multiverse_email_report.py test could not run in the reviewing
+Windows sandbox because pytest could not access its temporary directory. This was
+an environment ACL failure during fixture setup, not a failed assertion. No tests
+were added by commit 01e619a for the new directive-generation behaviour. The
+generated IridisX header was therefore also inspected directly, which exposed the
+missing --nodes=1 directive.
+
+
+Recommended minimum before an IridisX smoke test
+-------------------------------------------------
+
+1. Add and test --nodes=1 in controller-generated jobs.
+2. Fix or explicitly configure the supervisor log path.
+3. make Conda activation deterministic and verify the Python executable.
+4. Resolve the conda.sh TODO on the real cluster.
+5. Align the core dataset filename and choose STEW for the smoke test.
+6. Generate one batch script in dry-run mode and inspect every SBATCH directive.
+7. Run one STEW H-InceptionTime smoke test and verify TensorFlow reports an A100.
+8. Only then start the 66-problem controller.
