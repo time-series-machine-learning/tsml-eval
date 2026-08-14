@@ -1,5 +1,5 @@
-# Default-resample deep-learning completion pass for the Multiverse paper on Hali.
-# This is intentionally separate from the non-deep paper-classifier pass.
+# Default-resample LITETime-MV CPU completion pass for the Multiverse paper on
+# Hali. This is intentionally separate from the non-deep paper-classifier pass.
 
 [controller]
 username = "ajb"
@@ -8,8 +8,7 @@ repo_dir = "/gpfs/home/{username}/Code/tsml-eval"
 data_dir = "/gpfs/home/{username}/Data/Multiverse"
 dataset_file = "/gpfs/home/{username}/DataSetLists/MultiverseCore.txt"
 
-# Keep the MV variant separate from the existing ordinary LiteTIME results. Existing
-# H-InceptionTime paper results in DeepLearning are detected and skipped.
+# Keep the MV variant separate from the existing ordinary LiteTIME results.
 results_root = "/gpfs/home/{username}/Results/Multiverse"
 state_dir = "/gpfs/home/{username}/Results/Multiverse/.controller-core-resample0-litetime-mv"
 resamples = 1
@@ -38,4 +37,4 @@ numba_cache_dir = "/gpfs/home/{username}/Code/.cache/numba/tsml-eval"
 
 [[categories]]
 name = "DeepLearning"
-classifiers = ["H-InceptionTime", "LITETime-MV"]
+classifiers = ["LITETime-MV"]
