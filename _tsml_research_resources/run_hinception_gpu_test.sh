@@ -29,13 +29,24 @@ repo_dir="/gpfs/home/${username}/Code/tsml-eval-gpu"
 data_dir="/gpfs/home/${username}/Data/Multiverse"
 results_dir="/gpfs/home/${username}/Results/Multiverse/DeepLearning"
 env_name=tsml-eval-gpu
+env_dir="/gpfs/home/${username}/.conda/envs/${env_name}"
 
 source /etc/profile
 set -u
 module purge
 module load python/anaconda/2024.10/3.12.7
 source /gpfs/software/hali/python/anaconda/2024.10/etc/profile.d/conda.sh
-conda activate "$env_name"
+if (( ${CONDA_SHLVL:-0} > 0 )); then
+    conda deactivate
+fi
+conda activate "$env_dir"
+
+if [[ "$(command -v python)" != "${env_dir}/bin/python" ]]; then
+    echo "ERROR: the GPU Conda environment did not activate correctly." >&2
+    echo "Expected Python: ${env_dir}/bin/python" >&2
+    echo "Actual Python:   $(command -v python)" >&2
+    exit 1
+fi
 
 cuda_lib_dirs=$(find "$CONDA_PREFIX/lib" -type d -path '*/site-packages/nvidia/*/lib' -print | paste -sd:)
 if [[ -z "$cuda_lib_dirs" ]]; then
@@ -62,6 +73,7 @@ cd "$repo_dir"
 echo "Host:       $(hostname)"
 echo "Slurm job:  ${SLURM_JOB_ID:-unknown}"
 echo "Repository: $repo_dir"
+echo "Python:     $(command -v python)"
 echo "Dataset:    $dataset"
 echo "Resample:   $resample"
 nvidia-smi -L
