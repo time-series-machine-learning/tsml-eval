@@ -3,7 +3,7 @@
 # allocation. Run this script from a Hali login node; no Conda activation is
 # required beforehand.
 
-set -euo pipefail
+set -eo pipefail
 
 if [[ "${1:-}" != "--inside-allocation" ]]; then
     script_path=$(realpath "$0")
@@ -31,6 +31,7 @@ results_dir="/gpfs/home/${username}/Results/Multiverse/DeepLearning"
 env_name=tsml-eval-gpu
 
 source /etc/profile
+set -u
 module purge
 module load python/anaconda/2024.10/3.12.7
 source /gpfs/software/hali/python/anaconda/2024.10/etc/profile.d/conda.sh
