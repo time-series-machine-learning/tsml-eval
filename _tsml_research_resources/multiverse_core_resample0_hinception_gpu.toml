@@ -11,7 +11,9 @@ results_root = "/gpfs/home/{username}/Results/Multiverse"
 state_dir = "/gpfs/home/{username}/Results/Multiverse/.controller-core-resample0-hinception-gpu"
 resamples = 1
 max_attempts = 1
-all_categories_first_pass = false
+# There is only one category in this run. Enabling first-pass mode makes a
+# freshly reset controller ignore terminal logs left by earlier submissions.
+all_categories_first_pass = true
 small_datasets_first = true
 excluded_datasets = []
 validate_results = false

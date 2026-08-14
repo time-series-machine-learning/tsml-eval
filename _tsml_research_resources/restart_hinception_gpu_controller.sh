@@ -24,10 +24,17 @@ if [[ ! -f "$config_file" || ! -f "$supervisor" ]]; then
     exit 1
 fi
 
-echo "Stopping the existing H-InceptionTime GPU controller, if present."
+echo "Stopping existing H-InceptionTime GPU controllers, if present."
 pkill -TERM -f "[r]un_multiverse_controller.sh.*${config_name}" || true
 pkill -TERM -f "[m]ultiverse_controller.py.*${config_name}" || true
-screen -S "$session_name" -X quit >/dev/null 2>&1 || true
+mapfile -t old_sessions < <(
+    screen -ls | awk -v name="$session_name" \
+        '$1 ~ ("\\." name "$") {print $1}'
+)
+for old_session in "${old_sessions[@]}"; do
+    echo "Closing screen session: ${old_session}"
+    screen -S "$old_session" -X quit >/dev/null 2>&1 || true
+done
 
 if [[ -d "$state_dir" ]]; then
     archived_state="${state_dir}-cancelled-$(date +%Y%m%d-%H%M%S)"
