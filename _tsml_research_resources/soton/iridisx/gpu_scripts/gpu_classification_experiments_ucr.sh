@@ -68,8 +68,9 @@ datasets="$local_path/DataSetLists/UnivariateClassification112-UCR2018Clean.txt"
 results_dir="$local_path/ClassificationResults/results/"
 out_dir="$local_path/ClassificationResults/output/"
 
-# The python script we are running
-script_file_path="$local_path/tsml-eval/tsml_eval/experiments/classification_experiments.py"
+# The python script we are running. This is a separate checkout to the CPU one, on the
+# ajb/hc2 branch. It must match the checkout that tsml-eval-gpu is pip installed from
+script_file_path="$local_path/Code/tsml-eval-gpu/tsml_eval/experiments/classification_experiments.py"
 
 # GPU conda environment. Keep this separate from the CPU "tsml-eval" environment,
 # see iridisx_python.md for how to build it
