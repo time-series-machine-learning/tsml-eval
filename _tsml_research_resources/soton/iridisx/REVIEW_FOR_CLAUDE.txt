@@ -181,20 +181,27 @@ Requested fix:
 - Add the exact supported controller launch and dry-run commands to README.md.
 
 
-7. MEDIUM: smoke-test defaults are outside the 66-core list
-------------------------------------------------------------
+7. MEDIUM: smoke-test dataset and result destination are unsuitable
+--------------------------------------------------------------------
 
 The IridisX smoke test defaults to BasicMotions. BasicMotions is in the full
-133-problem Multiverse list but not in the 66-problem MultiverseCore list. The
-smoke test also writes into the same DeepLearning result tree as the core paper
-run. If only core data were copied, the default test fails to load; if full data
-are present, it adds a non-core result to the paper tree.
+133-problem Multiverse list but not in the 66-problem MultiverseCore list. If
+only core data were copied, it fails to load; if full data are present, it adds
+a non-core result to the paper tree.
+
+STEW must not be used as the replacement smoke test. Although its series length
+is only 256, it contains 28,512 cases and 14 channels, and its source dataset is
+about 1.44 GB. Existing HC2 attempts ran for up to 56 hours without completing.
+It is a genuine long-running paper task, not a quick environment check.
 
 Requested fix:
 
-- Use STEW as the default, matching the Hali smoke test and the core list.
-- Preserve the no-overwrite behaviour so a completed smoke test becomes a real
-  result that the controller skips.
+- Use a genuinely small problem such as AtrialFibrillation (15 train and 15 test
+  cases, 2 channels and length 640).
+- Write smoke-test output to a dedicated GPUTest result tree so an existing paper
+  result cannot cause the experiment to skip training and a non-paper test cannot
+  pollute completeness reporting.
+- Change the Hali smoke-test default away from STEW for the same reason.
 
 
 8. UNVERIFIED: conda.sh remains a TODO in runnable configs
@@ -245,7 +252,7 @@ Recommended minimum before an IridisX smoke test
 2. Fix or explicitly configure the supervisor log path.
 3. make Conda activation deterministic and verify the Python executable.
 4. Resolve the conda.sh TODO on the real cluster.
-5. Align the core dataset filename and choose STEW for the smoke test.
+5. Align the core dataset filename and use a genuinely small, isolated smoke test.
 6. Generate one batch script in dry-run mode and inspect every SBATCH directive.
 7. Run one STEW H-InceptionTime smoke test and verify TensorFlow reports an A100.
 8. Only then start the 66-problem controller.
