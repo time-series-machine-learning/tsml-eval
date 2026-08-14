@@ -10,8 +10,10 @@ interval_seconds=${2:-${MULTIVERSE_CONTROLLER_INTERVAL_SECONDS:-1800}}
 email_interval_seconds=${3:-${MULTIVERSE_EMAIL_INTERVAL_SECONDS:-14400}}
 clear_pending_on_start=${MULTIVERSE_CLEAR_PENDING_ON_START:-true}
 python_executable=${PYTHON:-python}
-# Hali default. IridisX has no /gpfs, so override with MULTIVERSE_LOG_DIR there
-log_dir=${MULTIVERSE_LOG_DIR:-"/gpfs/home/${USER}/Results/Multiverse/.controller"}
+# Derived from $HOME so it is correct on any cluster. On Hali this resolves to the
+# previous /gpfs/home/$USER path. Override with MULTIVERSE_LOG_DIR if the results live
+# somewhere other than ~/Results/Multiverse
+log_dir=${MULTIVERSE_LOG_DIR:-"${HOME}/Results/Multiverse/.controller"}
 log_file="${log_dir}/supervisor.log"
 
 if [[ ! "${interval_seconds}" =~ ^[1-9][0-9]*$ ]]; then
@@ -35,7 +37,11 @@ if [[ ! -f "${config_file}" ]]; then
     exit 1
 fi
 
-mkdir -p "${log_dir}"
+if ! mkdir -p "${log_dir}"; then
+    echo "ERROR: could not create log directory: ${log_dir}" >&2
+    echo "Set MULTIVERSE_LOG_DIR to a writable path." >&2
+    exit 1
+fi
 cd "${repo_dir}" || exit 1
 
 echo "Multiverse controller supervisor started."

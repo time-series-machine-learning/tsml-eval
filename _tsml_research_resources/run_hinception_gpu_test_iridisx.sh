@@ -11,7 +11,7 @@ set -eo pipefail
 
 if [[ "${1:-}" != "--inside-allocation" ]]; then
     script_path=$(realpath "$0")
-    dataset=${1:-BasicMotions}
+    dataset=${1:-STEW}
     resample=${2:-0}
 
     exec srun \
@@ -25,7 +25,7 @@ if [[ "${1:-}" != "--inside-allocation" ]]; then
         bash "$script_path" --inside-allocation "$dataset" "$resample"
 fi
 
-dataset=${2:-BasicMotions}
+dataset=${2:-STEW}
 resample=${3:-0}
 username=${USER:?USER is not set}
 repo_dir="/home/${username}/Code/tsml-eval-gpu"
@@ -33,13 +33,39 @@ data_dir="/home/${username}/Data/Multiverse"
 results_dir="/home/${username}/Results/Multiverse/DeepLearning"
 env_name=tsml-eval-gpu
 
+env_dir="/home/${username}/.conda/envs/${env_name}"
+
 source /etc/profile
 set -u
+
+# Mirrors the Hali smoke test. Conda state inherited from the submitting shell is
+# dropped, the environment is activated by absolute path rather than by name, and the
+# interpreter is verified. A module reload can otherwise leave a stale
+# CONDA_DEFAULT_ENV behind, making the activation a no-op and the job run base Python.
+unset CONDA_DEFAULT_ENV PYTHONPATH
 module purge
 module load conda/python3
-# TODO-IRIDISX: confirm this path with "module load conda/python3 && echo $CONDA_EXE"
-source /iridisfs/ixsoftware/conda/etc/profile.d/conda.sh
-conda activate "$env_name"
+
+# Derived rather than hardcoded, as the IridisX conda.sh location is not pinned down.
+# The resolved path is what the controller TOMLs would need for an explicit conda_sh
+conda_sh="$(dirname "$(dirname "$(command -v conda)")")/etc/profile.d/conda.sh"
+if [[ ! -f "$conda_sh" ]]; then
+    echo "ERROR: conda.sh not found at $conda_sh" >&2
+    exit 1
+fi
+echo "conda.sh:   $conda_sh"
+source "$conda_sh"
+if (( ${CONDA_SHLVL:-0} > 0 )); then
+    conda deactivate
+fi
+conda activate "$env_dir"
+
+if [[ "$(command -v python)" != "${env_dir}/bin/python" ]]; then
+    echo "ERROR: the GPU Conda environment did not activate correctly." >&2
+    echo "Expected Python: ${env_dir}/bin/python" >&2
+    echo "Actual Python:   $(command -v python)" >&2
+    exit 1
+fi
 
 cuda_lib_dirs=$(find "$CONDA_PREFIX/lib" -type d -path '*/site-packages/nvidia/*/lib' -print | paste -sd:)
 if [[ -z "$cuda_lib_dirs" ]]; then

@@ -11,7 +11,7 @@ username = "ajb2u23"
 email = "ajb@uea.ac.uk"
 repo_dir = "/home/{username}/Code/tsml-eval-gpu"
 data_dir = "/home/{username}/Data/UCR"
-dataset_file = "/home/{username}/DataSetLists/UnivariateClassification112-UCR2018Clean.txt"
+dataset_file = "/home/{username}/Code/tsml-eval-gpu/_tsml_research_resources/dataset_lists/UnivariateClassification112-UCR2018Clean.txt"
 results_root = "/home/{username}/Results/UCR"
 state_dir = "/home/{username}/Results/UCR/.controller-resample0-hinception-gpu"
 resamples = 1
@@ -36,8 +36,8 @@ time_limit = "5-00:00:00"
 
 [environment]
 module = "conda/python3"
-# TODO-IRIDISX: see the Multiverse configuration, this must match it
-conda_sh = "/iridisfs/ixsoftware/conda/etc/profile.d/conda.sh"
+# Derived from the loaded module at runtime, see the Multiverse configuration
+conda_sh = ""
 env_name = "tsml-eval-gpu"
 numba_cache_dir = "/home/{username}/Code/.cache/numba/tsml-eval-gpu"
 
