@@ -69,6 +69,21 @@ if [[ "${clear_pending_on_start}" == true ]]; then
     fi
 fi
 
+# Send a true startup snapshot before the first queue-refill cycle. An interval
+# of zero forces this report on every supervisor start; a successful send then
+# records the normal four-hour email marker used by subsequent cycles.
+echo "Sending initial controller state." | tee -a "${log_file}"
+"${python_executable}" -u "${script_dir}/multiverse_controller.py" \
+    --config "${config_file}" \
+    --report-only \
+    --email-interval-seconds 0 \
+    2>&1 | tee -a "${log_file}"
+initial_report_status=${PIPESTATUS[0]}
+if ((initial_report_status != 0)); then
+    echo "Initial controller report exited ${initial_report_status}; continuing." \
+        | tee -a "${log_file}"
+fi
+
 while true; do
     echo "Controller cycle started: $(date --iso-8601=seconds)" | tee -a "${log_file}"
     "${python_executable}" -u "${script_dir}/multiverse_controller.py" \
