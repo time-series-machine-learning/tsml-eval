@@ -18,25 +18,43 @@
 
 set -eo pipefail
 
-partition=swarm_a100
-gres=gpu:a100swarm:1
+# Overridable so alternative partitions can be tried without editing this file. The
+# gres TYPE is partition specific: a100swarm on swarm_a100 and scavenger_4a100, but
+# plain a100 on the open a100 partition.
+#
+#   PARTITION=a100 GRES=gpu:a100:1 sh run_litemv_gpu_test_iridisx.sh
+#   ACCOUNT=<account> QOS=ecsa100 sh run_litemv_gpu_test_iridisx.sh
+#
+# "Invalid account or account/partition combination specified" means the association
+# is not valid on that partition. List what you may use with:
+#   sacctmgr show assoc user=$USER format=Account,Partition,QOS%50 -p
+partition=${PARTITION:-swarm_a100}
+gres=${GRES:-gpu:a100swarm:1}
+account=${ACCOUNT:-}
+qos=${QOS:-}
 
 if [[ "${1:-}" != "--inside-allocation" ]]; then
     script_path=$(realpath "$0")
     dataset=${1:-AtrialFibrillation}
     resample=${2:-0}
 
-    echo "Requesting ${gres} on ${partition} for ${dataset} resample ${resample}."
-    echo "If this queues for a long time, try partition=scavenger_4a100 instead."
+    srun_options=(
+        --partition="${partition}"
+        --gres="${gres}"
+        --cpus-per-task=2
+        --mem=32G
+        --time=0-01:00:00
+        --nodes=1
+        --job-name="LITEMV_test_${dataset}"
+    )
+    [[ -n "$account" ]] && srun_options+=(--account="${account}")
+    [[ -n "$qos" ]] && srun_options+=(--qos="${qos}")
 
-    exec srun \
-        --partition="${partition}" \
-        --gres="${gres}" \
-        --cpus-per-task=2 \
-        --mem=32G \
-        --time=0-01:00:00 \
-        --nodes=1 \
-        --job-name="LITEMV_test_${dataset}" \
+    echo "Requesting ${gres} on ${partition} for ${dataset} resample ${resample}."
+    echo "Account: ${account:-default}   QoS: ${qos:-default}"
+    echo "If this queues for a long time, try PARTITION=scavenger_4a100 instead."
+
+    exec srun "${srun_options[@]}" \
         bash "$script_path" --inside-allocation "$dataset" "$resample"
 fi
 

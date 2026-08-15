@@ -9,19 +9,34 @@
 
 set -eo pipefail
 
+# Overridable, see run_litemv_gpu_test_iridisx.sh for the details. The gres TYPE is
+# partition specific: a100swarm on swarm_a100, plain a100 on the open a100 partition.
+partition=${PARTITION:-swarm_a100}
+gres=${GRES:-gpu:a100swarm:1}
+account=${ACCOUNT:-}
+qos=${QOS:-}
+
 if [[ "${1:-}" != "--inside-allocation" ]]; then
     script_path=$(realpath "$0")
     dataset=${1:-AtrialFibrillation}
     resample=${2:-0}
 
-    exec srun \
-        --partition=swarm_a100 \
-        --gres=gpu:a100swarm:1 \
-        --cpus-per-task=2 \
-        --mem=64G \
-        --time=0-04:00:00 \
-        --nodes=1 \
-        --job-name="HI_test_${dataset}" \
+    srun_options=(
+        --partition="${partition}"
+        --gres="${gres}"
+        --cpus-per-task=2
+        --mem=64G
+        --time=0-04:00:00
+        --nodes=1
+        --job-name="HI_test_${dataset}"
+    )
+    [[ -n "$account" ]] && srun_options+=(--account="${account}")
+    [[ -n "$qos" ]] && srun_options+=(--qos="${qos}")
+
+    echo "Requesting ${gres} on ${partition} for ${dataset} resample ${resample}."
+    echo "Account: ${account:-default}   QoS: ${qos:-default}"
+
+    exec srun "${srun_options[@]}" \
         bash "$script_path" --inside-allocation "$dataset" "$resample"
 fi
 
