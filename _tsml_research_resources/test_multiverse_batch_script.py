@@ -132,6 +132,34 @@ def test_cpu_job_disables_visible_devices(tmp_path):
     assert script_lines[0] == "#!/bin/bash"
 
 
+def test_classifier_kwargs_are_added_to_experiment_command(tmp_path):
+    """Configured estimator arguments should carry their value types to the CLI."""
+    config = _config(
+        tmp_path,
+        classifier_kwargs={
+            "H-InceptionTime": {"verbose": True, "batch_size": 32}
+        },
+    )
+    task = controller.Task("DeepLearning", "H-InceptionTime", "STEW", 0)
+    script = controller._batch_script(
+        config, task, [1], "abc123", 8000, prepare_directories=False
+    )
+
+    assert "Estimator kwargs:  verbose=true, batch_size=32" in script
+    assert "-kw verbose true bool -kw batch_size 32 int" in script
+
+
+def test_classifier_kwargs_reject_unknown_classifier(tmp_path):
+    """A typo in the classifier key should fail before any jobs are submitted."""
+    config = _config(
+        tmp_path,
+        classifier_kwargs={"H-InceptionTypo": {"verbose": True}},
+    )
+
+    with pytest.raises(ValueError, match="unknown classifiers: H-InceptionTypo"):
+        controller._validate_config(config)
+
+
 def test_conda_sh_is_derived_when_not_configured(tmp_path):
     """An unset conda_sh should resolve from the loaded module at job runtime."""
     config = _config(tmp_path, conda_sh=None)
