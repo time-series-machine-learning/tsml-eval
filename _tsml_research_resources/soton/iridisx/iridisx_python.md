@@ -112,13 +112,25 @@ runs and the package it imports come from different branches.
 **The GPU environment installs `aeon` from PyPI at a pinned version, unlike the CPU
 environment which uses an editable checkout at `~/Code/aeon`.**
 
+Install the same version Hali's GPU environment uses, so results from the two
+clusters are comparable. Check it first:
+
+>ssh hali "conda activate tsml-eval-gpu && python -c 'import aeon; print(aeon.__version__)'"
+
+Then, substituting that version:
+
 >pip uninstall -y aeon
 
->pip install "aeon==1.4.0"
+>pip install "aeon==1.5.0"
 
 >python -c "import aeon; print(aeon.__file__, aeon.__version__)"
 
 The path must be inside the environment, not under `~/Code`.
+
+`tsml-eval` requires `aeon>=1.0.0,<1.6.0`. 1.5.0, released 29/06/2026, is the newest
+release inside that bound and is the right default for a fresh setup. Deep learner
+internals change between minor versions, so if Hali already holds results on an
+earlier version, match that instead of taking the newest.
 
 The editable checkout exists so aeon branches can be switched for CPU work. The GPU
 passes do not track a branch, so they gain nothing from it and inherit two problems:
@@ -139,10 +151,8 @@ passes do not track a branch, so they gain nothing from it and inherit two probl
   checkout means switching an aeon branch silently changes the algorithm inside jobs
   that are already queued.
 
-Pin the exact version rather than a range, so results stay comparable across months
-and match the Hali GPU environment. Check what Hali uses and keep the two the same:
-
->conda activate tsml-eval-gpu && python -c "import aeon; print(aeon.__version__)"
+Pin an exact version rather than a range, so a reinstall months later cannot silently
+move the algorithm code underneath a part-finished set of results.
 
 ## 6. Before running scripts
 
