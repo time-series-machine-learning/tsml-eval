@@ -91,7 +91,7 @@ The GPU jobs run off their own checkout so the branch can differ from the CPU ru
 
 >cd ~/Code/tsml-eval-gpu
 
->git switch ajb/hc2
+>git switch ajb/gpu
 
 >pip uninstall -y tsml-eval
 
@@ -107,13 +107,44 @@ This must print a path under `~/Code/tsml-eval-gpu`. The `script_file_path` vari
 in the submission scripts must point at the same checkout, otherwise the script that
 runs and the package it imports come from different branches.
 
-`aeon` deep learners come from the `aeon` dependency. To use a development branch:
+## 5. Install a pinned aeon
 
->pip uninstall aeon
+**The GPU environment installs `aeon` from PyPI at a pinned version, unlike the CPU
+environment which uses an editable checkout at `~/Code/aeon`.**
 
->pip install git+https://github.com/aeon-toolkit/aeon.git@main
+>pip uninstall -y aeon
 
-## 5. Before running scripts
+>pip install "aeon==1.4.0"
+
+>python -c "import aeon; print(aeon.__file__, aeon.__version__)"
+
+The path must be inside the environment, not under `~/Code`.
+
+The editable checkout exists so aeon branches can be switched for CPU work. The GPU
+passes do not track a branch, so they gain nothing from it and inherit two problems:
+
+- A cloned environment points at the shared checkout, so whatever branch the CPU work
+  left it on is what GPU jobs import. This produced:
+
+      File ".../Code/tsml-eval-gpu/tsml_eval/experiments/__init__.py", line 22
+        from tsml_eval.experiments._get_clusterer import get_clusterer_by_name
+      File ".../Code/aeon/aeon/base/_base.py", line 46
+        from aeon.utils.validation._dependencies import _check_estimator_deps
+      ModuleNotFoundError: No module named 'aeon.utils.validation'
+
+  Any `tsml_eval.experiments` import reaches aeon through `_get_clusterer`, so a
+  half-switched aeon tree breaks every experiment, not only the clustering ones.
+- The controller pins the `tsml-eval` commit and refuses to run if the repository
+  moves under a submitted job, but there is no equivalent guard for aeon. A shared
+  checkout means switching an aeon branch silently changes the algorithm inside jobs
+  that are already queued.
+
+Pin the exact version rather than a range, so results stay comparable across months
+and match the Hali GPU environment. Check what Hali uses and keep the two the same:
+
+>conda activate tsml-eval-gpu && python -c "import aeon; print(aeon.__version__)"
+
+## 6. Before running scripts
 
 **Scripts will not run properly whilst the conda environment is active.**
 
