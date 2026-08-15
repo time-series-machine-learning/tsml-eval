@@ -76,6 +76,7 @@ configurations are:
 | Configuration | Pass |
 | --- | --- |
 | `multiverse_core_resample0_hinception_gpu_iridisx.toml` | H-InceptionTime over the 66 problem Multiverse core |
+| `multiverse_core_resample0_litemv_gpu_iridisx.toml` | LITETime-MV over the 66 problem Multiverse core |
 | `ucr_resample0_hinception_gpu_iridisx.toml` | H-InceptionTime over the 112 problem UCR clean list |
 
 Both mirror their Hali counterparts and differ only where the cluster forces it.
@@ -104,12 +105,20 @@ activation now fails the job loudly rather than silently using base Python, but
 
 Runs one H-InceptionTime experiment on `AtrialFibrillation` in a real `swarm_a100`
 allocation and fails loudly if TensorFlow cannot see the GPU. `AtrialFibrillation`
-is in the 66 problem core list and is small, so the check is quick and a successful
-run becomes a real result the controller then skips. It also prints the resolved
-`conda.sh` path. Pass a different problem and resample as arguments.
+is in the 66 problem core list and is small (15 train, 15 test), so the check is
+quick. It also prints the resolved `conda.sh` path. Pass a different problem and
+resample as arguments.
 
-`run_litemv_gpu_test_iridisx.sh` is the same check with LITETime-MV, writing to
-`~/Results/GPUTest` since LITETime-MV is not part of the H-InceptionTime pass.
+`run_litemv_gpu_test_iridisx.sh` is the same check with LITETime-MV.
+
+Both write to `~/Results/GPUTest`, never the paper tree. This matters in both
+directions: an existing paper result would make the experiment skip training, so the
+check would pass without testing anything, and a check that did train would add a
+non-paper result to completeness reporting.
+
+**Do not use STEW as a smoke test.** Despite its short series it has 28,512 cases
+over 14 channels, and is a genuine long-running paper task rather than a quick
+environment check.
 
 A deep learner that silently trains on CPU is the main failure mode to watch for,
 which is why both tests assert on the device rather than just printing it.

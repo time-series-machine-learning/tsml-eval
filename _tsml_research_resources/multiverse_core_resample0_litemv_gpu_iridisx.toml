@@ -1,0 +1,64 @@
+# Default-resample LITETime-MV GPU pass for MultiverseCore on IridisX.
+#
+# The equivalent Hali pass, multiverse_core_resample0_litetime_mv.toml, runs
+# LITETime-MV on CPU. This is the GPU version of the same pass, with the cluster
+# settings taken from multiverse_core_resample0_hinception_gpu_iridisx.toml.
+#
+# LITETime-MV is the multivariate LITE variant, so it suits the Multiverse archive.
+# For the univariate UCR archive use LITETime instead.
+#
+# Results are kept under the shared DeepLearning category, so the classifier sits
+# alongside H-InceptionTime rather than in a tree of its own. The state directory is
+# separate, so this pass reconciles independently of the H-InceptionTime one.
+
+[controller]
+username = "ajb2u23"
+email = "ajb@uea.ac.uk"
+repo_dir = "/home/{username}/Code/tsml-eval-gpu"
+data_dir = "/home/{username}/Data/Multiverse"
+# Read the 66 problem core list straight from the checkout, so no copy-and-rename
+# step is needed and the list is versioned with the code
+dataset_file = "/home/{username}/Code/tsml-eval-gpu/_tsml_research_resources/dataset_lists/MultivariateClassification66-MultiverseMini.txt"
+results_root = "/home/{username}/Results/Multiverse"
+state_dir = "/home/{username}/Results/Multiverse/.controller-core-resample0-litemv-gpu"
+resamples = 1
+max_attempts = 1
+all_categories_first_pass = false
+small_datasets_first = true
+excluded_datasets = []
+validate_results = false
+
+[slurm]
+# The default association carries no account and only the "normal" QoS. Empty values
+# omit the directive entirely. If a swarm submission is rejected for QoS reasons, set
+# qos = "ecsa100" here (ecsh100 for swarm_h100)
+account = ""
+partition = "swarm_a100"
+qos = ""
+
+# swarm_a100 is 5 nodes x 4 A100 80GB. The ecsa100 QoS caps concurrent GPUs at 8, so
+# tasks beyond that queue rather than run
+max_active_tasks = 66
+cpus_per_task = 2
+gpus = 1
+nodes = 1
+
+# swarm_a100 advertises gpu:a100swarm, not gpu:a100. A bare "gpu:1" is rejected
+gres = "gpu:a100swarm:1"
+
+memory_mb_levels = [64000]
+
+# swarm_a100 allows up to 5-00:00:00, unlike Hali's 7 day limit
+time_limit = "5-00:00:00"
+
+[environment]
+module = "conda/python3"
+# Empty means the job derives conda.sh from the loaded module at runtime, which
+# avoids pinning a path that has not been verified on this cluster
+conda_sh = ""
+env_name = "tsml-eval-gpu"
+numba_cache_dir = "/home/{username}/Code/.cache/numba/tsml-eval-gpu"
+
+[[categories]]
+name = "DeepLearning"
+classifiers = ["LITETime-MV"]
