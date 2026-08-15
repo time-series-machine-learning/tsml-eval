@@ -154,3 +154,29 @@ def test_gres_without_gpus_is_rejected(tmp_path):
     """A gres string with no GPU request would silently request no GPU."""
     with pytest.raises(ValueError, match="gres is set but gpus is 0"):
         controller._validate_config(_config(tmp_path, gres="gpu:a100swarm:1"))
+
+
+def test_ordered_pass_can_ignore_failure_logs_from_older_runs(tmp_path):
+    """Clean log handling should not require breadth-first category scheduling."""
+    config = _config(
+        tmp_path,
+        all_categories_first_pass=False,
+        ignore_existing_failure_logs=True,
+    )
+    task = controller.Task("DeepLearning", "H-InceptionTime", "STEW", 0)
+    error_file = (
+        config.results_root
+        / task.category
+        / "output"
+        / task.classifier
+        / task.dataset
+        / "123-1.err"
+    )
+    error_file.parent.mkdir(parents=True)
+    error_file.write_text("CANCELLED\n", encoding="utf-8")
+    state = controller._load_state(config.state_dir / "state.json")
+
+    controller._refresh_failure_record(config, state, task)
+
+    assert state["attempts"] == {}
+    assert state["failures"] == {}

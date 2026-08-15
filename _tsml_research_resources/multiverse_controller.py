@@ -74,6 +74,10 @@ class ControllerConfig:
     # IridisX rejects submissions that do not request a node count.
     nodes: int = 1
 
+    # Ignore output logs from older submissions until this controller has observed
+    # or submitted the task itself. This is independent of category scheduling.
+    ignore_existing_failure_logs: bool = False
+
 
 @dataclass(frozen=True)
 class Task:
@@ -188,6 +192,9 @@ def _load_config(config_file):
         gpus=int(slurm.get("gpus", 0)),
         gres=str(slurm.get("gres", "")),
         nodes=int(slurm.get("nodes", 1)),
+        ignore_existing_failure_logs=bool(
+            controller.get("ignore_existing_failure_logs", False)
+        ),
     )
     _validate_config(config)
     return config
@@ -892,10 +899,9 @@ def _record_all_active_submissions(config, datasets, snapshot, state):
 def _refresh_failure_record(config, state, task):
     """Record a newly observed failure and escalate confirmed OOM memory."""
     if (
-        config.all_categories_first_pass
-        and int(state["attempts"].get(task.state_key, 0)) == 0
-    ):
-        # A clean first-pass state deliberately ignores logs left by older runs.
+        config.all_categories_first_pass or config.ignore_existing_failure_logs
+    ) and int(state["attempts"].get(task.state_key, 0)) == 0:
+        # A clean first pass can deliberately ignore logs left by older runs.
         return
     reason, signature = _latest_failure_details(config, task)
     if signature is None:
