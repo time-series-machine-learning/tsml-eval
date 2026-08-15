@@ -104,12 +104,12 @@ Always inspect a generated script before the first submission of a pass:
 
 Then start the supervisor, which reruns one controller cycle every 30 minutes:
 
->sh _tsml_research_resources/run_multiverse_controller.sh _tsml_research_resources/multiverse_core_resample0_hinception_gpu_iridisx.toml
+>bash _tsml_research_resources/run_multiverse_controller.sh _tsml_research_resources/multiverse_core_resample0_hinception_gpu_iridisx.toml
 
 The supervisor writes its log to `~/Results/Multiverse/.controller/supervisor.log`.
 Set `MULTIVERSE_LOG_DIR` if the results live elsewhere:
 
->MULTIVERSE_LOG_DIR=~/Results/UCR/.controller sh _tsml_research_resources/run_multiverse_controller.sh _tsml_research_resources/ucr_resample0_hinception_gpu_iridisx.toml
+>MULTIVERSE_LOG_DIR=~/Results/UCR/.controller bash _tsml_research_resources/run_multiverse_controller.sh _tsml_research_resources/ucr_resample0_hinception_gpu_iridisx.toml
 
 **Do not start the supervisor from inside the `tsml-eval-gpu` environment.** Generated
 jobs drop inherited Conda state and verify the interpreter before running, so a stale
