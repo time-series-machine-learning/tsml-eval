@@ -49,11 +49,15 @@ nodes = 1
 # instead, so the type has to change alongside the partition
 gres = "gpu:a100:1"
 
-memory_mb_levels = [64000]
+# 128 GB. a100 nodes hold 490 GB across 2 GPUs, so this does not block the
+# node. A single tier means an OOM is reported rather than retried; add a
+# higher level to have the controller escalate automatically
+memory_mb_levels = [128000]
 
-# The a100 partition allows up to 2-12:00:00, well under Hali's 7 day limit. Asking
-# for more than a partition allows is rejected at submission
-time_limit = "2-00:00:00"
+# 60 hours, the a100 partition maximum. Worth taking in full: a timeout
+# discards everything the job has computed, and the expensive problems here
+# are the ones that did not finish on CPU
+time_limit = "2-12:00:00"
 
 [environment]
 module = "conda/python3"

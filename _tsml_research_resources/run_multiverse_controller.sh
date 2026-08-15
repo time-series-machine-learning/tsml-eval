@@ -1,5 +1,16 @@
 #!/bin/bash
 # Restart the one-shot Multiverse controller every 30 minutes.
+#
+# Run with bash, not sh. Invoking it as "sh run_multiverse_controller.sh" runs bash in
+# POSIX mode, which disables the process substitution used below and fails partway
+# through startup with "syntax error near unexpected token `<'". The guard immediately
+# below re-executes under bash so that mistake is corrected rather than fatal.
+if [ -z "${BASH_VERSION-}" ]; then
+    exec bash "$0" "$@"
+fi
+case ${SHELLOPTS-} in
+    *posix*) exec bash "$0" "$@" ;;
+esac
 
 set -uo pipefail
 

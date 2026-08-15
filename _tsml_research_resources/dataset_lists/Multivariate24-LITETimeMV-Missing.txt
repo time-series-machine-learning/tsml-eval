@@ -1,0 +1,28 @@
+# LITETime-MV problems outstanding from MultivariateClassification66-MultiverseMini,
+# as of 15/08/2026, determined from D:/Results/multiverse.zip. 42 of 66 complete.
+# Regenerate against a results tree with the loop in
+# multiverse_litemv_missing_gpu_iridisx.toml, and shorten this file as results land.
+Alzheimers
+AustraliaRainfall_disc
+BIDMC32HR_disc
+BIDMC32SpO2_disc
+CounterMovementJump
+CrowdSourced
+DuckDuckGeese
+EigenWorms
+FaceDetection
+FordChallenge
+HouseholdPowerConsumption1_disc
+HouseholdPowerConsumption2_disc
+IEEEPPG_disc
+Locust2022
+MindReading
+MotionSenseHAR
+MotorImagery
+PEMS-SF
+Skoda
+STEW
+TactileTextureRecognition
+Tiselac
+UCIActivity
+USCActivity
