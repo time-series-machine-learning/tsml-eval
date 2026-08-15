@@ -58,7 +58,10 @@ cpus_per_task = 2
 gpus = 1
 nodes = 1
 gres = "gpu:a100:1"
-memory_mb_levels = [64000]
+# 128 GB. a100 nodes hold 490 GB across 2 GPUs, so this does not block the
+# node. A single tier means an OOM is reported rather than retried; add a
+# higher level to have the controller escalate automatically
+memory_mb_levels = [128000]
 # 60 hours, the a100 partition maximum. Worth taking in full: a timeout
 # discards everything the job has computed, and the expensive problems here
 # are the ones that did not finish on CPU
