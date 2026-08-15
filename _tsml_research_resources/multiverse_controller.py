@@ -63,6 +63,11 @@ class ControllerConfig:
     env_name: str
     numba_cache_dir: Path
     categories: tuple[Category, ...]
+    expected_branch: str = ""
+    ignore_existing_failure_logs: bool = False
+    classifier_kwargs: dict[str, dict[str, bool | int | float | str]] = field(
+        default_factory=dict
+    )
 
 
 @dataclass(frozen=True)
@@ -111,6 +116,13 @@ def _load_config(config_file):
     slurm = raw.get("slurm", {})
     environment = raw.get("environment", {})
     category_rows = raw.get("categories", [])
+    classifier_kwargs = raw.get("classifier_kwargs", {})
+    if not isinstance(classifier_kwargs, dict):
+        raise ValueError("classifier_kwargs must be a TOML table")
+    if any(
+        not isinstance(arguments, dict) for arguments in classifier_kwargs.values()
+    ):
+        raise ValueError("Every classifier_kwargs entry must be a TOML table")
     username = str(controller.get("username") or getpass.getuser())
 
     def path_from(section, key, default=None):
@@ -167,6 +179,16 @@ def _load_config(config_file):
             "/gpfs/home/{username}/Code/.cache/numba/tsml-eval",
         ),
         categories=categories,
+        expected_branch=str(controller.get("expected_branch", "")),
+        ignore_existing_failure_logs=bool(
+            controller.get("ignore_existing_failure_logs", False)
+        ),
+        classifier_kwargs={
+            str(classifier): {
+                str(key): value for key, value in arguments.items()
+            }
+            for classifier, arguments in classifier_kwargs.items()
+        },
     )
     _validate_config(config)
     return config
@@ -206,6 +228,25 @@ def _validate_config(config):
     for value in category_names + classifiers + list(config.excluded_datasets):
         if not value or "\n" in value or "\r" in value or "|" in value:
             raise ValueError(f"Unsafe category or classifier name: {value!r}")
+
+    if config.expected_branch and not re.fullmatch(
+        r"[A-Za-z0-9._/-]+", config.expected_branch
+    ):
+        raise ValueError(f"Unsafe expected_branch: {config.expected_branch!r}")
+    unknown_kwarg_classifiers = set(config.classifier_kwargs) - set(classifiers)
+    if unknown_kwarg_classifiers:
+        unknown = ", ".join(sorted(unknown_kwarg_classifiers))
+        raise ValueError(f"classifier_kwargs contains unknown classifiers: {unknown}")
+    for classifier, arguments in config.classifier_kwargs.items():
+        for key, value in arguments.items():
+            if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", key):
+                raise ValueError(
+                    f"Unsafe estimator keyword for {classifier}: {key!r}"
+                )
+            if not isinstance(value, (bool, int, float, str)):
+                raise ValueError(
+                    f"Unsupported value for {classifier}.{key}: {value!r}"
+                )
 
 
 def _read_datasets(dataset_file):
@@ -422,6 +463,26 @@ def _batch_script(
         config.numba_cache_dir.mkdir(parents=True, exist_ok=True)
     array_spec = ",".join(str(index) for index in array_indices)
     q = shlex.quote
+    kwarg_tokens = []
+    kwarg_summary = []
+    for key, value in config.classifier_kwargs.get(task.classifier, {}).items():
+        if isinstance(value, bool):
+            rendered_value = "true" if value else "false"
+            value_type = "bool"
+        elif isinstance(value, int):
+            rendered_value = str(value)
+            value_type = "int"
+        elif isinstance(value, float):
+            rendered_value = repr(value)
+            value_type = "float"
+        else:
+            rendered_value = value
+            value_type = "str"
+        kwarg_tokens.extend(("-kw", key, rendered_value, value_type))
+        kwarg_summary.append(f"{key}={rendered_value}")
+    kwarg_arguments = " ".join(q(token) for token in kwarg_tokens)
+    kwarg_suffix = f" \\\n    {kwarg_arguments}" if kwarg_arguments else ""
+    kwarg_description = ", ".join(kwarg_summary) or "none"
     return f"""#!/bin/bash
 #SBATCH --account={config.account}
 #SBATCH --partition={config.partition}
@@ -471,6 +532,7 @@ echo "Dataset:           {task.dataset}"
 echo "Resample ID:       $((SLURM_ARRAY_TASK_ID - 1))"
 echo "Requested memory:  ${{SLURM_MEM_PER_NODE:-unknown}} MB"
 echo "CPU-only:          true"
+echo {q(f"Estimator kwargs:  {kwarg_description}")}
 echo "tsml-eval commit:  $actual_commit"
 
 python -u -m tsml_eval.experiments.classification_experiments \\
@@ -478,7 +540,7 @@ python -u -m tsml_eval.experiments.classification_experiments \\
     {q(str(category_results))} \\
     {q(task.classifier)} \\
     {q(task.dataset)} \\
-    $((SLURM_ARRAY_TASK_ID - 1))
+    $((SLURM_ARRAY_TASK_ID - 1)){kwarg_suffix}
 """
 
 
@@ -788,10 +850,9 @@ def _record_all_active_submissions(config, datasets, snapshot, state):
 def _refresh_failure_record(config, state, task):
     """Record a newly observed failure and escalate confirmed OOM memory."""
     if (
-        config.all_categories_first_pass
-        and int(state["attempts"].get(task.state_key, 0)) == 0
-    ):
-        # A clean first-pass state deliberately ignores logs left by older runs.
+        config.all_categories_first_pass or config.ignore_existing_failure_logs
+    ) and int(state["attempts"].get(task.state_key, 0)) == 0:
+        # A clean first pass can deliberately ignore logs left by older runs.
         return
     reason, signature = _latest_failure_details(config, task)
     if signature is None:
@@ -1113,6 +1174,11 @@ def run_cycle(
         state = _load_state(state_file)
         attempts = state["attempts"]
         branch, commit = _git_revision(config.repo_dir)
+        if config.expected_branch and branch != config.expected_branch:
+            raise RuntimeError(
+                f"CPU controller requires branch {config.expected_branch!r}, "
+                f"but {config.repo_dir} is on {branch!r}"
+            )
         snapshot = _query_slurm(config)
         _record_all_active_submissions(config, datasets, snapshot, state)
         category, missing = _find_work_scope(config, datasets, snapshot, state)
