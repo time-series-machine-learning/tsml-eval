@@ -88,9 +88,15 @@ configurations are:
 | --- | --- |
 | `multiverse_core_resample0_hinception_gpu_iridisx.toml` | H-InceptionTime over the 66 problem Multiverse core |
 | `multiverse_core_resample0_litemv_gpu_iridisx.toml` | LITETime-MV over the 66 problem Multiverse core |
+| `multiverse_litemv_missing_gpu_iridisx.toml` | LITETime-MV over a hand-listed set of outstanding problems |
 | `ucr_resample0_hinception_gpu_iridisx.toml` | H-InceptionTime over the 112 problem UCR clean list |
 
-Both mirror their Hali counterparts and differ only where the cluster forces it.
+The first two mirror their Hali counterparts and differ only where the cluster forces
+it. The third exists because completeness is judged per cluster: the controller skips
+any dataset and resample it can see on disk under `results_root`, so work already done
+on Hali looks missing on IridisX. Either copy those results across, or list the
+genuinely outstanding problems in `~/DataSetLists/LITETimeMV-Missing.txt` and use the
+missing-list configuration.
 
 Always inspect a generated script before the first submission of a pass:
 
