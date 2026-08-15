@@ -77,6 +77,7 @@ class ControllerConfig:
     # Ignore output logs from older submissions until this controller has observed
     # or submitted the task itself. This is independent of category scheduling.
     ignore_existing_failure_logs: bool = False
+    expected_branch: str = ""
 
     # Extra estimator constructor arguments, keyed by the classifier name used in
     # the category list. Values are translated to classification_experiments -kw
@@ -209,6 +210,7 @@ def _load_config(config_file):
         ignore_existing_failure_logs=bool(
             controller.get("ignore_existing_failure_logs", False)
         ),
+        expected_branch=str(controller.get("expected_branch", "")),
         classifier_kwargs={
             str(classifier): {
                 str(key): value for key, value in arguments.items()
@@ -240,6 +242,10 @@ def _validate_config(config):
         raise ValueError(f"Unsafe gres string: {config.gres!r}")
     if config.nodes < 1:
         raise ValueError("nodes must be at least 1")
+    if config.expected_branch and not re.fullmatch(
+        r"[A-Za-z0-9._/-]+", config.expected_branch
+    ):
+        raise ValueError(f"Unsafe expected_branch: {config.expected_branch!r}")
     if (
         not config.memory_mb_levels
         or any(value < 1 for value in config.memory_mb_levels)
@@ -620,6 +626,8 @@ export LOKY_MAX_CPU_COUNT=1
 export TF_NUM_INTEROP_THREADS=1
 export TF_NUM_INTRAOP_THREADS=1
 export PYTHONUNBUFFERED=1
+export PYTHONWARNINGS=ignore
+export TF_CPP_MIN_LOG_LEVEL=2
 
 cd {q(str(config.repo_dir))}
 actual_commit=$(git rev-parse HEAD)
@@ -1268,6 +1276,9 @@ def run_cycle(
     email_interval_seconds=0,
 ):
     """Run one restart-safe monitor and queue-refill cycle."""
+    stop_marker = config.state_dir / "STOP"
+    if stop_marker.exists():
+        raise RuntimeError(f"Controller disabled by stop marker: {stop_marker}")
     lock = None
     if not dry_run:
         config.state_dir.mkdir(parents=True, exist_ok=True)
@@ -1282,6 +1293,11 @@ def run_cycle(
         state = _load_state(state_file)
         attempts = state["attempts"]
         branch, commit = _git_revision(config.repo_dir)
+        if config.expected_branch and branch != config.expected_branch:
+            raise RuntimeError(
+                f"Controller requires branch {config.expected_branch!r}, "
+                f"but {config.repo_dir} is on {branch!r}"
+            )
         snapshot = _query_slurm(config)
         _record_all_active_submissions(config, datasets, snapshot, state)
         category, missing = _find_work_scope(config, datasets, snapshot, state)

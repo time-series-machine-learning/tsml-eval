@@ -6,21 +6,34 @@
 set -euo pipefail
 
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+repo_dir=$(cd -- "${script_dir}/.." && pwd)
 config_file="${script_dir}/multiverse_paper_30resamples_cpu.toml"
 supervisor="${script_dir}/run_multiverse_controller.sh"
 session_name="multiverse-paper-cpu"
+required_branch="ajb/hc2"
+state_dir="/gpfs/home/${USER}/Results/Multiverse/.controller-paper-30resamples-cpu"
 
-for command_name in python screen pkill squeue; do
+for command_name in git python screen pkill squeue; do
     if ! command -v "$command_name" >/dev/null 2>&1; then
         echo "ERROR: required command is unavailable: ${command_name}" >&2
         exit 1
     fi
 done
 
+actual_branch=$(git -C "$repo_dir" branch --show-current)
+if [[ "$actual_branch" != "$required_branch" ]]; then
+    echo "ERROR: CPU Multiverse jobs must run from ${required_branch}." >&2
+    echo "Current branch: ${actual_branch:-DETACHED}" >&2
+    exit 1
+fi
+
 if [[ ! -f "$config_file" || ! -f "$supervisor" ]]; then
     echo "ERROR: controller files were not found beside this script." >&2
     exit 1
 fi
+
+# Starting this controller is an explicit request to clear a previous one-off stop.
+rm -f -- "${state_dir}/STOP"
 
 echo "Stopping known CPU Multiverse queue feeders on this login node."
 cpu_configs=(
