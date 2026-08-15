@@ -1162,6 +1162,9 @@ def run_cycle(
     email_interval_seconds=0,
 ):
     """Run one restart-safe monitor and queue-refill cycle."""
+    stop_marker = config.state_dir / "STOP"
+    if stop_marker.exists():
+        raise RuntimeError(f"Controller disabled by stop marker: {stop_marker}")
     lock = None
     if not dry_run:
         config.state_dir.mkdir(parents=True, exist_ok=True)

@@ -9,6 +9,7 @@ config_file="${script_dir}/multiverse_paper_30resamples_cpu.toml"
 supervisor="${script_dir}/run_multiverse_controller.sh"
 session_name="multiverse-paper-cpu"
 required_branch="ajb/hc2"
+state_dir="/gpfs/home/${USER}/Results/Multiverse/.controller-paper-30resamples-cpu"
 
 for command_name in git python screen pkill squeue; do
     if ! command -v "$command_name" >/dev/null 2>&1; then
@@ -28,6 +29,9 @@ if [[ ! -f "$config_file" || ! -f "$supervisor" ]]; then
     echo "ERROR: controller files were not found beside this script." >&2
     exit 1
 fi
+
+# Starting this controller is an explicit request to clear a previous one-off stop.
+rm -f -- "${state_dir}/STOP"
 
 echo "Stopping known CPU Multiverse queue feeders on this login node."
 cpu_configs=(
