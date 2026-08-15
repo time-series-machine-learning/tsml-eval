@@ -10,7 +10,7 @@ interval_seconds=${2:-${MULTIVERSE_CONTROLLER_INTERVAL_SECONDS:-1800}}
 email_interval_seconds=${3:-${MULTIVERSE_EMAIL_INTERVAL_SECONDS:-14400}}
 clear_pending_on_start=${MULTIVERSE_CLEAR_PENDING_ON_START:-true}
 python_executable=${PYTHON:-python}
-log_dir="/gpfs/home/${USER}/Results/Multiverse/.controller"
+log_dir="${MULTIVERSE_SUPERVISOR_LOG_DIR:-/gpfs/home/${USER}/Results/Multiverse/.controller}"
 log_file="${log_dir}/supervisor.log"
 
 if [[ ! "${interval_seconds}" =~ ^[1-9][0-9]*$ ]]; then
