@@ -1,5 +1,5 @@
 # Default-resample CPU pass for the non-deep Multiverse paper classifiers over
-# every locally downloaded problem in the 132-problem archive. The launcher
+# every locally downloaded problem except DREAM* and S2Agri-*. The launcher
 # creates the local-only dataset list before starting this controller.
 
 [controller]
@@ -7,7 +7,7 @@ username = "ajb"
 email = "ajb@uea.ac.uk"
 repo_dir = "/gpfs/home/{username}/Code/tsml-eval"
 data_dir = "/gpfs/home/{username}/Data/Multiverse"
-dataset_file = "/gpfs/home/{username}/DataSetLists/MultiverseAvailableLocal132.txt"
+dataset_file = "/gpfs/home/{username}/DataSetLists/MultiverseAvailableCPU.txt"
 results_root = "/gpfs/home/{username}/Results/Multiverse"
 state_dir = "/gpfs/home/{username}/Results/Multiverse/.controller-full-resample0-cpu-32gb"
 expected_branch = "ajb/hc2"

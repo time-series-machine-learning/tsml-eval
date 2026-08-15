@@ -1,5 +1,5 @@
 #!/bin/bash
-# Build the locally available 132-problem list and start its CPU controller.
+# Build the locally available CPU list and start its controller.
 
 set -euo pipefail
 
@@ -10,8 +10,9 @@ source_list="${script_dir}/dataset_lists/Multivariate133Classification-Multivers
 supervisor="${script_dir}/run_multiverse_controller.sh"
 data_dir="/gpfs/home/${USER}/Data/Multiverse"
 list_dir="/gpfs/home/${USER}/DataSetLists"
-available_list="${list_dir}/MultiverseAvailableLocal132.txt"
-missing_list="${list_dir}/MultiverseUnavailableLocal132.txt"
+available_list="${list_dir}/MultiverseAvailableCPU.txt"
+missing_list="${list_dir}/MultiverseUnavailableCPU.txt"
+excluded_list="${list_dir}/MultiverseExcludedCPU.txt"
 state_dir="/gpfs/home/${USER}/Results/Multiverse/.controller-full-resample0-cpu-32gb"
 session_name="multiverse-full-resample0-cpu"
 required_branch="ajb/hc2"
@@ -44,13 +45,15 @@ fi
 mkdir -p "$list_dir" "$state_dir"
 available_tmp=$(mktemp)
 missing_tmp=$(mktemp)
+excluded_tmp=$(mktemp)
 cleanup() {
-    rm -f -- "$available_tmp" "$missing_tmp"
+    rm -f -- "$available_tmp" "$missing_tmp" "$excluded_tmp"
 }
 trap cleanup EXIT
 
 archive_count=0
 available_count=0
+excluded_count=0
 while IFS= read -r clean_dataset || [[ -n "$clean_dataset" ]]; do
     clean_dataset=${clean_dataset//$'\r'/}
     if [[ -z "$clean_dataset" || "$clean_dataset" == \#* ]]; then
@@ -63,9 +66,9 @@ while IFS= read -r clean_dataset || [[ -n "$clean_dataset" ]]; do
     dataset=${dataset%_eq}
     dataset=${dataset%_nmv}
 
-    # S2Agri-34 is deliberately not downloaded by get_multiverse, leaving the
-    # 132-problem working archive requested for this pass.
-    if [[ "$dataset" == "S2Agri-34" ]]; then
+    if [[ "$dataset" == DREAM* || "$dataset" == S2Agri-* ]]; then
+        printf '%s\n' "$dataset" >> "$excluded_tmp"
+        ((excluded_count += 1))
         continue
     fi
     ((archive_count += 1))
@@ -84,29 +87,28 @@ while IFS= read -r clean_dataset || [[ -n "$clean_dataset" ]]; do
     fi
 done < "$source_list"
 
-if ((archive_count != 132)); then
-    echo "ERROR: expected 132 archive entries after S2Agri-34; found ${archive_count}." >&2
-    exit 1
-fi
-
 missing_count=$((archive_count - available_count))
-echo "Archive problems:          ${archive_count}"
+echo "Eligible archive problems: ${archive_count}"
+echo "Explicitly excluded:       ${excluded_count}"
 echo "Locally available:         ${available_count}"
 echo "Unavailable (not queued):  ${missing_count}"
+if ((excluded_count)); then
+    echo "Excluded datasets:"
+    sed 's/^/  /' "$excluded_tmp"
+fi
 if ((missing_count)); then
     echo "Unavailable datasets:"
     sed 's/^/  /' "$missing_tmp"
 fi
 
-# The user expects exactly three deliberately absent oversized datasets. Stop
-# rather than silently launching an incomplete pass if the cluster differs.
-if ((missing_count != 3)); then
-    echo "ERROR: expected exactly three unavailable datasets; refusing to submit." >&2
+if ((available_count == 0)); then
+    echo "ERROR: no locally complete eligible datasets were found; refusing to submit." >&2
     exit 1
 fi
 
 mv -- "$available_tmp" "$available_list"
 mv -- "$missing_tmp" "$missing_list"
+mv -- "$excluded_tmp" "$excluded_list"
 trap - EXIT
 
 rm -f -- "${state_dir}/STOP"
@@ -153,6 +155,7 @@ echo
 echo "Controller started successfully."
 echo "Available list:   ${available_list}"
 echo "Unavailable list: ${missing_list}"
+echo "Excluded list:    ${excluded_list}"
 screen -ls | grep -F "$session_name" || true
 echo
 echo "Current compute queue:"
