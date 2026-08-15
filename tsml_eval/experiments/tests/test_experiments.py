@@ -70,3 +70,52 @@ def test_experiments_predefined_resample_data_loading():
     _check_classification_file_format(test_file)
 
     os.remove(test_file)
+
+
+def test_device_description_without_a_deep_learning_framework():
+    """The device should be reported as CPU when no framework is loaded."""
+    import sys
+
+    from tsml_eval.experiments.experiments import _device_description
+
+    tensorflow = sys.modules.pop("tensorflow", None)
+    try:
+        assert _device_description() == "CPU"
+        # Reporting the device must not import a framework, as that would add seconds
+        # of start-up and a large amount of memory to every non-deep experiment.
+        assert "tensorflow" not in sys.modules
+    finally:
+        if tensorflow is not None:
+            sys.modules["tensorflow"] = tensorflow
+
+
+def test_device_description_reports_a_gpu_model():
+    """A loaded framework reporting a GPU should name the device in the results."""
+    import sys
+    from types import SimpleNamespace
+
+    from tsml_eval.experiments.experiments import _device_description
+
+    gpu = SimpleNamespace(name="/physical_device:GPU:0")
+    fake = SimpleNamespace(
+        config=SimpleNamespace(
+            list_physical_devices=lambda kind: [gpu] if kind == "GPU" else [],
+            experimental=SimpleNamespace(
+                # A comma here would be read as a field separator in the first line.
+                get_device_details=lambda device: {"device_name": "NVIDIA A100, 80GB"}
+            ),
+        )
+    )
+
+    original = sys.modules.get("tensorflow")
+    sys.modules["tensorflow"] = fake
+    try:
+        description = _device_description()
+    finally:
+        if original is None:
+            del sys.modules["tensorflow"]
+        else:
+            sys.modules["tensorflow"] = original
+
+    assert description == "NVIDIA A100  80GB"
+    assert "," not in description
