@@ -47,9 +47,10 @@ gres = "gpu:a100:1"
 
 memory_mb_levels = [64000]
 
-# The a100 partition allows up to 2-12:00:00, well under Hali's 7 day limit. Asking
-# for more than a partition allows is rejected at submission
-time_limit = "2-00:00:00"
+# 60 hours, the a100 partition maximum. Worth taking in full: a timeout
+# discards everything the job has computed, and the expensive problems here
+# are the ones that did not finish on CPU
+time_limit = "2-12:00:00"
 
 [environment]
 module = "conda/python3"
