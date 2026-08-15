@@ -19,10 +19,10 @@ aeon_dir="${local_path}/Code/aeon"
 python_path="/home/${username}/.conda/envs/tsml-eval/bin/python"
 worker="${tsml_eval_dir}/tsml_eval/_wip/eeg_cote/run_gear_auto_transformed_component.py"
 
-# This is the accelerated ajb/hc2 revision used by the established pipeline
-# experiments. Descendants are accepted (for example, the later Arsenal SVD
-# fallback), but stock/release aeon checkouts are rejected.
-required_aeon_hc2_commit="cac5ddf09d9ecbb56171450bbdd477fb645519c0"
+# Require the accelerated ajb/hc2 implementation including the deterministic
+# explicit-CV fallback for an Arsenal ridge LOO-SVD non-convergence. Descendants
+# are accepted, but the earlier experiment revision and stock aeon are rejected.
+required_aeon_hc2_commit="ed21ac50acc9c80c5ff2827a374a81a0d69debbc"
 
 transformed_data_root="${local_path}/Results/Transforms/GEAR-Auto"
 results_root="${local_path}/Results/ChannelSelectionPipeline"
