@@ -22,14 +22,14 @@ set -eo pipefail
 # gres TYPE is partition specific: a100swarm on swarm_a100 and scavenger_4a100, but
 # plain a100 on the open a100 partition.
 #
-#   PARTITION=a100 GRES=gpu:a100:1 sh run_litemv_gpu_test_iridisx.sh
+#   PARTITION=swarm_a100 GRES=gpu:a100swarm:1 ACCOUNT=ecs sh run_litemv_gpu_test_iridisx.sh
 #   ACCOUNT=<account> QOS=ecsa100 sh run_litemv_gpu_test_iridisx.sh
 #
 # "Invalid account or account/partition combination specified" means the association
 # is not valid on that partition. List what you may use with:
 #   sacctmgr show assoc user=$USER format=Account,Partition,QOS%50 -p
-partition=${PARTITION:-swarm_a100}
-gres=${GRES:-gpu:a100swarm:1}
+partition=${PARTITION:-a100}
+gres=${GRES:-gpu:a100:1}
 account=${ACCOUNT:-}
 qos=${QOS:-}
 

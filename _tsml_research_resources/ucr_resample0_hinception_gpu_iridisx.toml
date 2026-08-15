@@ -23,16 +23,16 @@ validate_results = false
 
 [slurm]
 account = ""
-partition = "swarm_a100"
+partition = "a100"
 qos = ""
 max_active_tasks = 66
 cpus_per_task = 2
 gpus = 1
-gres = "gpu:a100swarm:1"
+gres = "gpu:a100:1"
 
 # UCR problems are univariate and much smaller than the Multiverse ones
 memory_mb_levels = [32000]
-time_limit = "5-00:00:00"
+time_limit = "2-00:00:00"
 
 [environment]
 module = "conda/python3"

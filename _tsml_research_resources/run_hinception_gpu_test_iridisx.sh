@@ -5,14 +5,14 @@
 #
 # This mirrors run_hinception_gpu_test.sh, which is the same check on Hali. Keep the
 # two in step. IridisX differences: no account or QoS, /home rather than /gpfs, the
-# conda/python3 module, and the swarm_a100 partition whose gres type is a100swarm.
+# conda/python3 module, and the a100 partition whose gres type must be given.
 
 set -eo pipefail
 
 # Overridable, see run_litemv_gpu_test_iridisx.sh for the details. The gres TYPE is
 # partition specific: a100swarm on swarm_a100, plain a100 on the open a100 partition.
-partition=${PARTITION:-swarm_a100}
-gres=${GRES:-gpu:a100swarm:1}
+partition=${PARTITION:-a100}
+gres=${GRES:-gpu:a100:1}
 account=${ACCOUNT:-}
 qos=${QOS:-}
 

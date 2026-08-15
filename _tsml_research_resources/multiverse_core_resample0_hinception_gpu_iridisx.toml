@@ -26,27 +26,30 @@ excluded_datasets = []
 validate_results = false
 
 [slurm]
-# The default association carries no account and only the "normal" QoS. Empty values
-# omit the directive entirely. If a swarm submission is rejected for QoS reasons, set
-# qos = "ecsa100" here (ecsh100 for swarm_h100)
+# This account ("normal") needs no explicit account or QoS directive on the a100
+# partition, which only denies the student accounts. If access to the ecs account is
+# granted, switch to partition = "swarm_a100", gres = "gpu:a100swarm:1",
+# account = "ecs" and time_limit up to 5-00:00:00 for 8 concurrent GPUs instead of 2
 account = ""
-partition = "swarm_a100"
+partition = "a100"
 qos = ""
 
-# swarm_a100 is 5 nodes x 4 A100 80GB. The ecsa100 QoS caps concurrent GPUs at 8, so
-# tasks beyond that queue rather than run
+# The open a100 partition is 12 nodes x 2 A100 80GB. Its QoS caps concurrent GPUs at
+# 2, so tasks beyond that queue rather than run. swarm_a100 would allow 8, but it has
+# AllowAccounts=ecs,orc and this account is in "normal" only
 max_active_tasks = 66
 cpus_per_task = 2
 gpus = 1
 
-# swarm_a100 advertises gpu:a100swarm, not gpu:a100. A bare "gpu:1" is rejected.
-# On the open a100 partition this would be "gpu:a100:1" instead
-gres = "gpu:a100swarm:1"
+# The a100 partition advertises gpu:a100. On swarm_a100 this must be gpu:a100swarm:1
+# instead, so the type has to change alongside the partition
+gres = "gpu:a100:1"
 
 memory_mb_levels = [64000]
 
-# swarm_a100 allows up to 5-00:00:00, unlike Hali's 7 day limit
-time_limit = "5-00:00:00"
+# The a100 partition allows up to 2-12:00:00, well under Hali's 7 day limit. Asking
+# for more than a partition allows is rejected at submission
+time_limit = "2-00:00:00"
 
 [environment]
 module = "conda/python3"

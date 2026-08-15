@@ -32,13 +32,24 @@ open `a100` partition. A wrong type is a submission error, not a silent fallback
 | `mi300x` | 1 | `gpu:mi300x:8` | 2-12:00:00 | **AMD**, will not run CUDA TensorFlow |
 | `amd` / `amd_serial` | 90 / 14 | none | 2-12:00:00 | general CPU, no GPUs |
 
-The scripts default to `swarm_a100`. As ECS, we are eligible, and single-GPU deep
-learner jobs do not need an H100.
+**Everything defaults to the open `a100` partition**, because account `normal` is the
+only association this user holds and `swarm_a100` has `AllowAccounts=ecs,orc`:
 
-The relevant QoS caps concurrent GPUs, not just jobs: `ecsa100` and `ecsh100` allow
-`gres/gpu=8`, the open `a100` QoS only `gres/gpu=2`. So at most 8 array tasks run at
-once on `swarm_a100` however many are submitted. `max_num_submitted=12` in the scripts
-leaves a few queued behind the running 8.
+    $ srun --account=ecs --partition=swarm_a100 ...
+    srun: error: Unable to allocate resources: Invalid account or account/partition
+    combination specified
+
+`a100` has `DenyAccounts=student,ecsstudents` only, so `normal` is allowed there.
+
+The cost is concurrency. The `a100` QoS caps `gres/gpu=2`, so only two GPU jobs run at
+once however many are submitted; `ecsa100` would allow eight. Note also that `a100`
+has a **2-12:00:00** time limit against SWARM's five days, so a configuration copied
+from a SWARM setup is rejected at submission until `time_limit` is lowered.
+
+To move to SWARM once HPC grant the `ecs` account, change four settings per
+configuration: `partition = "swarm_a100"`, `gres = "gpu:a100swarm:1"`,
+`account = "ecs"`, and `time_limit` up to `5-00:00:00`. The controller resumes from
+whatever is already on disk, so nothing is lost or repeated by switching mid-pass.
 
 `mi300x` is the only AMD GPU partition. A CUDA TensorFlow build cannot use it.
 
