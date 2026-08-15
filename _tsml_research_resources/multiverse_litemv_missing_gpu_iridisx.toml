@@ -29,8 +29,12 @@ email = "ajb@uea.ac.uk"
 repo_dir = "/home/{username}/Code/tsml-eval-gpu"
 data_dir = "/home/{username}/Data/Multiverse"
 
-# The hand-maintained list of outstanding problems, not the full core list
-dataset_file = "/home/{username}/DataSetLists/LITETimeMV-Missing.txt"
+# The outstanding problems, not the full core list. This list is versioned with the
+# code so it arrives with a git pull, and is a snapshot taken on 15/08/2026: the 24
+# problems of the 66 core list with no LITETime-MV result. Shorten it as results land,
+# or point this at a hand-maintained file such as
+# "/home/{username}/DataSetLists/LITETimeMV-Missing.txt" instead
+dataset_file = "/home/{username}/Code/tsml-eval-gpu/_tsml_research_resources/dataset_lists/Multivariate24-LITETimeMV-Missing.txt"
 
 results_root = "/home/{username}/Results/Multiverse"
 state_dir = "/home/{username}/Results/Multiverse/.controller-litemv-missing-gpu"
