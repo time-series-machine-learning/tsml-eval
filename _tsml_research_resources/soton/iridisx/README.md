@@ -104,7 +104,12 @@ Always inspect a generated script before the first submission of a pass:
 
 Then start the supervisor, which reruns one controller cycle every 30 minutes:
 
->bash _tsml_research_resources/run_multiverse_controller.sh _tsml_research_resources/multiverse_core_resample0_hinception_gpu_iridisx.toml
+>PYTHON=~/.conda/envs/tsml-eval-gpu/bin/python bash _tsml_research_resources/run_multiverse_controller.sh _tsml_research_resources/multiverse_core_resample0_hinception_gpu_iridisx.toml
+
+`PYTHON` is needed because the supervisor runs on a login node with no environment
+active, where `python` may not exist at all. The environment's interpreter is the
+right one: the controller needs Python 3.11 or newer for `tomllib`, and must import
+`tsml_eval` when a configuration sets `validate_results`.
 
 The supervisor writes its log to `~/Results/Multiverse/.controller/supervisor.log`.
 Set `MULTIVERSE_LOG_DIR` if the results live elsewhere:

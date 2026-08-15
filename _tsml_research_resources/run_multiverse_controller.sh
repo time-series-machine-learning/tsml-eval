@@ -20,7 +20,30 @@ config_file=${1:-"${script_dir}/multiverse_controller.toml"}
 interval_seconds=${2:-${MULTIVERSE_CONTROLLER_INTERVAL_SECONDS:-1800}}
 email_interval_seconds=${3:-${MULTIVERSE_EMAIL_INTERVAL_SECONDS:-14400}}
 clear_pending_on_start=${MULTIVERSE_CLEAR_PENDING_ON_START:-true}
-python_executable=${PYTHON:-python}
+# The supervisor runs on a login node with no environment active, where "python" may
+# not exist at all. Resolve one up front and stop if there is none, rather than
+# looping every 30 minutes on "python: command not found".
+#
+# Note the interpreter needs Python 3.11 or newer for tomllib, and must be able to
+# import tsml_eval when the configuration sets validate_results, so the experiment
+# environment's interpreter is usually the right choice:
+#
+#   PYTHON=~/.conda/envs/tsml-eval-gpu/bin/python bash run_multiverse_controller.sh ...
+python_executable=${PYTHON:-}
+if [[ -z "${python_executable}" ]]; then
+    for candidate in python python3; do
+        if command -v "${candidate}" >/dev/null 2>&1; then
+            python_executable=${candidate}
+            break
+        fi
+    done
+fi
+if ! command -v "${python_executable:-}" >/dev/null 2>&1; then
+    echo "ERROR: no Python interpreter found." >&2
+    echo "Set PYTHON to one, or module load a Python before starting. e.g." >&2
+    echo "  PYTHON=~/.conda/envs/tsml-eval-gpu/bin/python bash $0 <config>" >&2
+    exit 1
+fi
 # Derived from $HOME so it is correct on any cluster. On Hali this resolves to the
 # previous /gpfs/home/$USER path. Override with MULTIVERSE_LOG_DIR if the results live
 # somewhere other than ~/Results/Multiverse
