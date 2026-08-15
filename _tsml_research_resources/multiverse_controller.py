@@ -514,6 +514,8 @@ export LOKY_MAX_CPU_COUNT=1
 export TF_NUM_INTEROP_THREADS=1
 export TF_NUM_INTRAOP_THREADS=1
 export PYTHONUNBUFFERED=1
+export PYTHONWARNINGS=ignore
+export TF_CPP_MIN_LOG_LEVEL=2
 
 cd {q(str(config.repo_dir))}
 actual_commit=$(git rev-parse HEAD)
