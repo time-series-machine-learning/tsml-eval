@@ -7,6 +7,8 @@ script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 repo_dir=$(cd -- "${script_dir}/.." && pwd)
 state_dir="/gpfs/home/${USER}/Results/Multiverse/.controller-paper-30resamples-cpu"
 stop_marker="${state_dir}/STOP"
+litetime_state_dir="/gpfs/home/${USER}/Results/Multiverse/.controller-core-resample0-litetime-mv"
+litetime_stop_marker="${litetime_state_dir}/STOP"
 session_name="multiverse-paper-cpu"
 
 for command_name in flock git pkill python scancel screen squeue; do
@@ -22,9 +24,11 @@ if [[ "$actual_branch" != "ajb/hc2" ]]; then
     exit 1
 fi
 
-mkdir -p "$state_dir"
+mkdir -p "$state_dir" "$litetime_state_dir"
 touch "$stop_marker"
+touch "$litetime_stop_marker"
 echo "Created shared controller stop marker: ${stop_marker}"
+echo "Created LITETime-MV stop marker: ${litetime_stop_marker}"
 
 # Stop a supervisor on this login node. The shared marker prevents a supervisor
 # on another login node from submitting more work on its next cycle.
@@ -33,6 +37,12 @@ pkill -TERM -f \
     || true
 pkill -TERM -f \
     '[m]ultiverse_controller.py.*multiverse_paper_30resamples_cpu.toml' \
+    || true
+pkill -TERM -f \
+    '[r]un_multiverse_controller.sh.*multiverse_core_resample0_litetime_mv.toml' \
+    || true
+pkill -TERM -f \
+    '[m]ultiverse_controller.py.*multiverse_core_resample0_litetime_mv.toml' \
     || true
 
 mapfile -t sessions < <(
