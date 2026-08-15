@@ -10,6 +10,7 @@ interval_seconds=${2:-${MULTIVERSE_CONTROLLER_INTERVAL_SECONDS:-1800}}
 email_interval_seconds=${3:-${MULTIVERSE_EMAIL_INTERVAL_SECONDS:-14400}}
 clear_pending_on_start=${MULTIVERSE_CLEAR_PENDING_ON_START:-true}
 python_executable=${PYTHON:-python}
+post_cycle_python=${MULTIVERSE_POST_CYCLE_PYTHON:-}
 log_dir="${MULTIVERSE_SUPERVISOR_LOG_DIR:-/gpfs/home/${USER}/Results/Multiverse/.controller}"
 log_file="${log_dir}/supervisor.log"
 
@@ -93,5 +94,17 @@ while true; do
     controller_status=${PIPESTATUS[0]}
     echo "Controller exited ${controller_status}; restarting after ${interval_seconds}s." \
         | tee -a "${log_file}"
+    if [[ -n "${post_cycle_python}" ]]; then
+        if [[ ! -f "${post_cycle_python}" ]]; then
+            echo "ERROR: post-cycle Python script not found: ${post_cycle_python}" \
+                | tee -a "${log_file}"
+        else
+            "${python_executable}" -u "${post_cycle_python}" \
+                2>&1 | tee -a "${log_file}"
+            post_cycle_status=${PIPESTATUS[0]}
+            echo "Post-cycle script exited ${post_cycle_status}." \
+                | tee -a "${log_file}"
+        fi
+    fi
     sleep "${interval_seconds}"
 done

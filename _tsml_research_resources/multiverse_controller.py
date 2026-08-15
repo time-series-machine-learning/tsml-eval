@@ -65,6 +65,7 @@ class ControllerConfig:
     categories: tuple[Category, ...]
     expected_branch: str = ""
     ignore_existing_failure_logs: bool = False
+    build_train_files: bool = False
     classifier_kwargs: dict[str, dict[str, bool | int | float | str]] = field(
         default_factory=dict
     )
@@ -183,6 +184,7 @@ def _load_config(config_file):
         ignore_existing_failure_logs=bool(
             controller.get("ignore_existing_failure_logs", False)
         ),
+        build_train_files=bool(controller.get("build_train_files", False)),
         classifier_kwargs={
             str(classifier): {
                 str(key): value for key, value in arguments.items()
@@ -323,22 +325,37 @@ def _result_file(config, task):
     )
 
 
-def _is_complete(config, task):
-    """Check whether a result exists and, optionally, fully validate it."""
-    result_file = _result_file(config, task)
-    try:
-        if not result_file.is_file() or result_file.stat().st_size == 0:
-            return False
-    except OSError:
-        return False
-    if not config.validate_results:
-        return True
-    try:
-        from tsml_eval.utils.results_validation import validate_results_file
+def _train_result_file(config, task):
+    """Return the expected train-result path for a task."""
+    return (
+        config.results_root
+        / task.category
+        / task.classifier
+        / "Predictions"
+        / task.dataset
+        / f"trainResample{task.resample}.csv"
+    )
 
-        return validate_results_file(result_file)
-    except (IndexError, OSError, ValueError):
-        return False
+
+def _is_complete(config, task):
+    """Check whether required test/train results exist and optionally validate them."""
+    result_files = [_result_file(config, task)]
+    if config.build_train_files:
+        result_files.append(_train_result_file(config, task))
+    for result_file in result_files:
+        try:
+            if not result_file.is_file() or result_file.stat().st_size == 0:
+                return False
+        except OSError:
+            return False
+    if config.validate_results:
+        try:
+            from tsml_eval.utils.results_validation import validate_results_file
+
+            return all(validate_results_file(path) for path in result_files)
+        except (IndexError, OSError, ValueError):
+            return False
+    return True
 
 
 def _iter_tasks(category, datasets, resamples):
@@ -482,6 +499,7 @@ def _batch_script(
         kwarg_summary.append(f"{key}={rendered_value}")
     kwarg_arguments = " ".join(q(token) for token in kwarg_tokens)
     kwarg_suffix = f" \\\n    {kwarg_arguments}" if kwarg_arguments else ""
+    train_suffix = " \\\n    -tr" if config.build_train_files else ""
     kwarg_description = ", ".join(kwarg_summary) or "none"
     return f"""#!/bin/bash
 #SBATCH --account={config.account}
@@ -534,6 +552,7 @@ echo "Dataset:           {task.dataset}"
 echo "Resample ID:       $((SLURM_ARRAY_TASK_ID - 1))"
 echo "Requested memory:  ${{SLURM_MEM_PER_NODE:-unknown}} MB"
 echo "CPU-only:          true"
+echo "Build train file:  {str(config.build_train_files).lower()}"
 echo {q(f"Estimator kwargs:  {kwarg_description}")}
 echo "tsml-eval commit:  $actual_commit"
 
@@ -542,7 +561,7 @@ python -u -m tsml_eval.experiments.classification_experiments \\
     {q(str(category_results))} \\
     {q(task.classifier)} \\
     {q(task.dataset)} \\
-    $((SLURM_ARRAY_TASK_ID - 1)){kwarg_suffix}
+    $((SLURM_ARRAY_TASK_ID - 1)){train_suffix}{kwarg_suffix}
 """
 
 
@@ -627,7 +646,7 @@ def _round_robin_categories(config, tasks):
 
 def _count_complete(config, category, datasets):
     """Count existing result files without reading their full CSV contents."""
-    if config.validate_results:
+    if config.validate_results or config.build_train_files:
         return sum(
             _is_complete(config, task)
             for task in _iter_tasks(category, datasets, config.resamples)
@@ -827,6 +846,11 @@ def _task_memory(config, state, task):
 
 def _record_active_submission(config, state, task, snapshot):
     """Capture attempts and requested memory for jobs from any queue feeder."""
+    if config.build_train_files and task.state_key not in state["attempts"]:
+        # An independently submitted test-only job may share this task's Slurm
+        # name. Do not count it as the train-file attempt: once it finishes, the
+        # controller must still be allowed to generate a missing train file.
+        return
     state["attempts"].setdefault(task.state_key, 1)
     memory_mb = snapshot.memory_mb.get(task.job_key)
     if memory_mb is None:

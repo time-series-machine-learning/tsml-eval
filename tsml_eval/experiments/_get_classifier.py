@@ -106,6 +106,7 @@ other_classifiers = [
 shapelet_based_classifiers = [
     "stc-2hour",
     ["shapelettransformclassifier", "stc"],
+    "hc2-stc",
     "stc-unequal",
     ["rdstclassifier", "rdst"],
     ["randomshapeletforestclassifier", "randomshapeletforest", "rsf"],
@@ -862,6 +863,15 @@ def _set_classifier_shapelet_based(
             transform_limit_in_minutes=120,
             random_state=random_state,
             n_jobs=n_jobs,
+            **kwargs,
+        )
+    elif c == "hc2-stc":
+        from aeon.classification.shapelet_based import ShapeletTransformClassifier
+
+        return ShapeletTransformClassifier(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
             **kwargs,
         )
     elif c == "shapelettransformclassifier" or c == "stc":
