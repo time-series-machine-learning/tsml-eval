@@ -18,15 +18,25 @@ mailto="${username}@soton.ac.uk"
 
 transform_name="GEAR-Auto"
 classifier_name="HC2"
-problems=(
-    "FaceDetection"
-    "LongIntervalTask"
-)
+problem_to_run="${PROBLEM:-all}"
+case "${problem_to_run}" in
+    all)
+        problems=("FaceDetection" "LongIntervalTask")
+        ;;
+    FaceDetection|LongIntervalTask)
+        problems=("${problem_to_run}")
+        ;;
+    *)
+        echo "ERROR: PROBLEM must be all, FaceDetection, or LongIntervalTask." >&2
+        exit 2
+        ;;
+esac
 
 tsml_eval_dir="${local_path}/Code/tsml-eval"
 aeon_dir="${local_path}/Code/aeon"
 python_path="/home/${username}/.conda/envs/tsml-eval/bin/python"
 worker="${tsml_eval_dir}/tsml_eval/_wip/eeg_cote/run_transformed_archive_classifier.py"
+required_aeon_hc2_commit="ed21ac50acc9c80c5ff2827a374a81a0d69debbc"
 
 transform_root="${local_path}/Results/Transforms"
 results_root="${local_path}/Results/ChannelSelectionPipeline"
@@ -45,6 +55,13 @@ for repository in "${tsml_eval_dir}" "${aeon_dir}"; do
         exit 1
     fi
 done
+if ! git -C "${aeon_dir}" merge-base --is-ancestor \
+    "${required_aeon_hc2_commit}" HEAD; then
+    echo "ERROR: aeon lacks the accelerated HC2 Arsenal SVD fallback." >&2
+    echo "Required ancestor: ${required_aeon_hc2_commit}" >&2
+    echo "Current commit:    $(git -C "${aeon_dir}" rev-parse HEAD)" >&2
+    exit 1
+fi
 
 mkdir -p "${results_root}" "${output_root}" "${numba_cache_dir}"
 tsml_eval_commit=$(git -C "${tsml_eval_dir}" rev-parse HEAD)
@@ -160,6 +177,7 @@ echo "Host:             \$(hostname)"
 echo "Slurm job ID:     \${SLURM_JOB_ID}"
 echo "Allocated tasks:  \${SLURM_NTASKS}"
 echo "Classifier cells: ${command_count}"
+echo "Problem selector:  ${problem_to_run}"
 echo "Memory per task:  ${memory_per_cpu}"
 echo "Transform root:   ${transform_root}"
 echo "Results root:     ${results_root}"

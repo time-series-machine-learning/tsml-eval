@@ -118,6 +118,20 @@ select_specs() {
 
 select_specs
 
+native_result_complete() {
+    local result_name="$1"
+    local train_file="$2"
+    local test_file="$3"
+    local train_header
+    local test_header
+
+    [[ -s "${train_file}" && -s "${test_file}" ]] || return 1
+    IFS= read -r train_header < "${train_file}"
+    IFS= read -r test_header < "${test_file}"
+    [[ "${train_header}" == *",${result_name} (GEARNativeComponentPipeline),TRAIN,"* \
+        && "${test_header}" == *",${result_name} (GEARNativeComponentPipeline),TEST,"* ]]
+}
+
 for required in "${python_path}" "${worker}" "${data_root}"; do
     if [[ ! -e "${required}" ]]; then
         echo "ERROR: required path is missing: ${required}" >&2
@@ -179,7 +193,8 @@ for spec in "${specs[@]}"; do
         prediction_dir="${results_root}/${result_name}/Predictions/${dataset}"
         train_file="${prediction_dir}/trainResample0.csv"
         test_file="${prediction_dir}/testResample0.csv"
-        if [[ -s "${train_file}" && -s "${test_file}" ]]; then
+        if native_result_complete \
+            "${result_name}" "${train_file}" "${test_file}"; then
             echo "Skipping complete native result: ${result_name}/${dataset}"
             continue
         fi

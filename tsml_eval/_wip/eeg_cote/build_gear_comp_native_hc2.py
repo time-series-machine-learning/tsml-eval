@@ -1,8 +1,9 @@
-"""Build GEAR-Comp-HC2 results from native component train/test files.
+"""Build an HC2 result from native GEAR component train/test files.
 
 The script discovers every dataset/resample pair complete in all four
-``GEAR-Comp-Native-*`` directories, applies standard HC2 accuracy-to-the-fourth
-weights, and writes combined train and test files below ``GEAR-Comp-HC2``.
+component directories, applies standard HC2 accuracy-to-the-fourth weights,
+and writes combined train and test files. It defaults to the GEAR-Comp family
+but can also combine a shared GEAR-Auto representation.
 """
 
 from __future__ import annotations
@@ -29,8 +30,24 @@ def _load(path: Path) -> ClassifierResults:
     return ClassifierResults().load_from_file(str(path), verify_values=True)
 
 
+def _identifies_source(path: Path, expected_name: str, split: str) -> bool:
+    """Return whether a result header identifies the expected source run."""
+    if not path.is_file() or path.stat().st_size == 0:
+        return False
+    try:
+        with path.open(encoding="utf-8") as file:
+            first_line = file.readline().strip()
+    except (OSError, UnicodeError):
+        return False
+    return (
+        f",{expected_name} (" in first_line
+        and f"),{split.upper()}," in first_line
+    )
+
+
 def _source_file(
     results_root: Path,
+    source_prefix: str,
     component: str,
     dataset: str,
     split: str,
@@ -38,25 +55,30 @@ def _source_file(
 ) -> Path:
     return (
         results_root
-        / f"{SOURCE_PREFIX}-{component}"
+        / f"{source_prefix}-{component}"
         / "Predictions"
         / dataset
         / f"{split}Resample{resample_id}.csv"
     )
 
 
-def _discover_complete_keys(results_root: Path) -> list[tuple[str, int]]:
+def _discover_complete_keys(
+    results_root: Path, source_prefix: str
+) -> list[tuple[str, int]]:
     keys = None
     for component in COMPONENTS:
-        component_root = results_root / f"{SOURCE_PREFIX}-{component}" / "Predictions"
+        component_root = results_root / f"{source_prefix}-{component}" / "Predictions"
         component_keys = set()
         if component_root.is_dir():
             for train_file in component_root.glob("*/trainResample*.csv"):
                 suffix = train_file.stem.removeprefix("trainResample")
-                if not suffix.isdigit() or train_file.stat().st_size == 0:
+                if not suffix.isdigit():
                     continue
                 test_file = train_file.with_name(f"testResample{suffix}.csv")
-                if test_file.is_file() and test_file.stat().st_size > 0:
+                expected_name = f"{source_prefix}-{component}"
+                if _identifies_source(
+                    train_file, expected_name, "TRAIN"
+                ) and _identifies_source(test_file, expected_name, "TEST"):
                     component_keys.add((train_file.parent.name, int(suffix)))
         keys = component_keys if keys is None else keys.intersection(component_keys)
     return sorted(keys or ())
@@ -124,8 +146,10 @@ def build_one(
     dataset: str,
     resample_id: int,
     overwrite: bool,
+    source_prefix: str = SOURCE_PREFIX,
+    result_name: str = RESULT_NAME,
 ) -> str:
-    output_dir = results_root / RESULT_NAME / "Predictions" / dataset
+    output_dir = results_root / result_name / "Predictions" / dataset
     output_train = output_dir / f"trainResample{resample_id}.csv"
     output_test = output_dir / f"testResample{resample_id}.csv"
     if not overwrite and all(
@@ -134,12 +158,47 @@ def build_one(
     ):
         return "skipped"
 
+    for component in COMPONENTS:
+        expected_name = f"{source_prefix}-{component}"
+        for split in ("train", "test"):
+            source_file = _source_file(
+                results_root,
+                source_prefix,
+                component,
+                dataset,
+                split,
+                resample_id,
+            )
+            if not _identifies_source(source_file, expected_name, split):
+                raise ValueError(
+                    f"{source_file} is not a {expected_name} "
+                    f"{split.upper()} result."
+                )
+
     train_results = [
-        _load(_source_file(results_root, component, dataset, "train", resample_id))
+        _load(
+            _source_file(
+                results_root,
+                source_prefix,
+                component,
+                dataset,
+                "train",
+                resample_id,
+            )
+        )
         for component in COMPONENTS
     ]
     test_results = [
-        _load(_source_file(results_root, component, dataset, "test", resample_id))
+        _load(
+            _source_file(
+                results_root,
+                source_prefix,
+                component,
+                dataset,
+                "test",
+                resample_id,
+            )
+        )
         for component in COMPONENTS
     ]
     train_labels, n_classes = _validate_aligned(train_results, "TRAIN")
@@ -166,7 +225,7 @@ def build_one(
         {
             "alpha": 4,
             "components": list(COMPONENTS),
-            "source_prefix": SOURCE_PREFIX,
+            "source_prefix": source_prefix,
             "native_train_accuracies": dict(
                 zip(COMPONENTS, component_accuracies.tolist())
             ),
@@ -176,19 +235,19 @@ def build_one(
         sort_keys=True,
     )
     comment = (
-        "Constructed from component-specific GEAR files using each HC2 "
-        "component's native train-estimate mechanism and accuracy^4 weighting."
+        f"Constructed from {source_prefix} files using each HC2 component's "
+        "native train-estimate mechanism and accuracy^4 weighting."
     )
 
     write_classification_results(
         train_predictions,
         train_probabilities,
         train_labels,
-        RESULT_NAME,
+        result_name,
         dataset,
         str(results_root),
         full_path=False,
-        first_line_classifier_name=f"{RESULT_NAME} (FromNativeComponentFiles)",
+        first_line_classifier_name=f"{result_name} (FromNativeComponentFiles)",
         split="TRAIN",
         resample_id=resample_id,
         time_unit="MILLISECONDS",
@@ -208,11 +267,11 @@ def build_one(
         test_predictions,
         test_probabilities,
         test_labels,
-        RESULT_NAME,
+        result_name,
         dataset,
         str(results_root),
         full_path=False,
-        first_line_classifier_name=f"{RESULT_NAME} (FromNativeComponentFiles)",
+        first_line_classifier_name=f"{result_name} (FromNativeComponentFiles)",
         split="TEST",
         resample_id=resample_id,
         time_unit="MILLISECONDS",
@@ -237,9 +296,11 @@ def main() -> None:
     parser.add_argument("--dataset", action="append")
     parser.add_argument("--resample-id", type=int)
     parser.add_argument("--overwrite", action="store_true")
+    parser.add_argument("--source-prefix", default=SOURCE_PREFIX)
+    parser.add_argument("--result-name", default=RESULT_NAME)
     args = parser.parse_args()
 
-    keys = _discover_complete_keys(args.results_root)
+    keys = _discover_complete_keys(args.results_root, args.source_prefix)
     if args.dataset:
         keys = [key for key in keys if key[0] in set(args.dataset)]
     if args.resample_id is not None:
@@ -252,10 +313,12 @@ def main() -> None:
             dataset,
             resample_id,
             overwrite=args.overwrite,
+            source_prefix=args.source_prefix,
+            result_name=args.result_name,
         )
         if status == "written":
             written += 1
-            print(f"WROTE {RESULT_NAME}/{dataset}/resample{resample_id}")
+            print(f"WROTE {args.result_name}/{dataset}/resample{resample_id}")
         else:
             skipped += 1
     print(f"Complete source cells: {len(keys)}; written: {written}; skipped: {skipped}")

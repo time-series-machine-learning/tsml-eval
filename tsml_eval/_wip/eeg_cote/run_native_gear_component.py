@@ -38,6 +38,16 @@ NATIVE_METHODS = {
 }
 
 
+def _is_native_result(path: Path, result_name: str, split: str) -> bool:
+    """Return whether a result was produced by the native GEAR pipeline."""
+    if not path.is_file() or path.stat().st_size == 0:
+        return False
+    with path.open(encoding="utf-8") as result_file:
+        first_line = result_file.readline()
+    expected = f",{result_name} (GEARNativeComponentPipeline),{split},"
+    return expected in first_line
+
+
 class GEARNativeComponentPipeline(BaseClassifier):
     """One component-specific GEAR view with the component's native estimate."""
 
@@ -209,7 +219,9 @@ def run_native_component(
     prediction_dir = results_path / result_name / "Predictions" / dataset
     train_file = prediction_dir / f"trainResample{resample_id}.csv"
     test_file = prediction_dir / f"testResample{resample_id}.csv"
-    if all(path.is_file() and path.stat().st_size > 0 for path in (train_file, test_file)):
+    if _is_native_result(train_file, result_name, "TRAIN") and _is_native_result(
+        test_file, result_name, "TEST"
+    ):
         print(f"{result_name}/{dataset}: complete native results exist; skipping.")
         return
 
