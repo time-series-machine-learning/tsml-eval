@@ -215,6 +215,15 @@ def test_get_classifier_by_name_invalid():
         get_classifier_by_name("invalid")
 
 
+def test_standard_stc_uses_aeon_implementation():
+    """Test the standard STC alias does not select an experimental WIP class."""
+    classifier = get_classifier_by_name("STC")
+
+    assert type(classifier).__module__.startswith(
+        "aeon.classification.shapelet_based"
+    )
+
+
 def test_aeon_classifiers_available():
     """Test all aeon classifiers are available."""
     excluded = [
