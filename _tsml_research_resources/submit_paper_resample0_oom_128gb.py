@@ -48,6 +48,8 @@ _OOM_TASKS = (
     ("FeatureBased", "FreshPRINCE", "STEW"),
     ("FeatureBased", "FreshPRINCE", "Tiselac"),
     ("Hybrid", "HC2", "AustraliaRainfall_disc"),
+    ("Hybrid", "HC2", "BIDMC32HR_disc"),
+    ("Hybrid", "HC2", "BIDMC32SpO2_disc"),
     ("Hybrid", "HC2", "CrowdSourced"),
     ("Hybrid", "HC2", "FordChallenge"),
     ("Hybrid", "HC2", "STEW"),
@@ -61,9 +63,19 @@ _OOM_TASKS = (
     ("ShapeletBased", "RDST", "AustraliaRainfall_disc"),
     ("ShapeletBased", "RDST", "Tiselac"),
     ("ShapeletBased", "RDST", "USCActivity"),
+    ("ShapeletBased", "STC", "BIDMC32HR_disc"),
+    ("ShapeletBased", "STC", "BIDMC32SpO2_disc"),
+    ("ShapeletBased", "STC", "Tiselac"),
+    ("ShapeletBased", "STC", "USCActivity"),
     ("ConvolutionBased", "ROCKET", "AustraliaRainfall_disc"),
     ("ConvolutionBased", "ROCKET", "Tiselac"),
+    ("DictionaryBased", "TDE", "AustraliaRainfall_disc"),
     ("DictionaryBased", "TDE", "CrowdSourced"),
+    ("DictionaryBased", "TDE", "STEW"),
+    ("DictionaryBased", "TDE", "Tiselac"),
+    ("DictionaryBased", "TDE", "USCActivity"),
+    ("DistanceBased", "1NN-DTW", "BIDMC32HR_disc"),
+    ("DistanceBased", "1NN-DTW", "BIDMC32SpO2_disc"),
 )
 
 
