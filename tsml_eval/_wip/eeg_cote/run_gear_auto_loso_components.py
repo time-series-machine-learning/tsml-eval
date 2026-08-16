@@ -21,6 +21,7 @@ import warnings
 from pathlib import Path
 
 from tsml_eval.experiments._channel_selection_hc2 import (
+    _make_channel_transformer,
     _make_gear_transformer,
     _metadata_to_builtin,
     _selector_metadata,
@@ -32,12 +33,46 @@ from tsml_eval._wip.eeg_loso import load_loso_split
 # TDE is excluded: it is the weakest component on this problem and removing it
 # improves accuracy while removing a large part of the cost.
 DEFAULT_COMPONENTS = ("Arsenal", "DrCIF", "STC")
-RESULT_PREFIX = "GEAR-Auto-Native"
+
+# Result families, one per reduction. Detach-ROCKET is included because it gave the
+# best accuracy and runtime compromise in the archive comparison. The existing
+# partial DetachRocket-* results were produced per component, each refitting the
+# selector, so this family is kept separate.
+SELECTORS = {
+    "gear-auto": "GEAR-Auto-Native",
+    "detachrocket": "DetachRocket-Native",
+}
+DEFAULT_PROPORTION = 0.25
 
 
-def _result_files(results_path: Path, component: str, dataset: str, subject: int):
+def _make_reducer(selector: str, n_channels: int, random_state: int, proportion: float):
+    """Construct the shared reduction for one fold."""
+    if selector == "gear-auto":
+        # GEAR chooses its own channel budget, so proportion does not apply.
+        return _make_gear_transformer(
+            component="auto", random_state=random_state, n_jobs=1
+        )
+    return _make_channel_transformer(
+        selector,
+        n_channels=n_channels,
+        proportion=proportion,
+        random_state=random_state,
+        n_jobs=1,
+    )
+
+
+def _apply_fit(reducer, X, y):
+    """Fit the reduction, supporting both resampling and plain transformers."""
+    if hasattr(reducer, "fit_resample"):
+        return reducer.fit_resample(X, y)
+    return reducer.fit_transform(X, y), y
+
+
+def _result_files(
+    results_path: Path, prefix: str, component: str, dataset: str, subject: int
+):
     """Return the train and test result paths for one component and fold."""
-    directory = results_path / f"{RESULT_PREFIX}-{component}" / "Predictions" / dataset
+    directory = results_path / f"{prefix}-{component}" / "Predictions" / dataset
     return (
         directory / f"trainResample{subject}.csv",
         directory / f"testResample{subject}.csv",
@@ -51,8 +86,13 @@ def run_fold(
     held_subject: int,
     dataset: str,
     components: tuple[str, ...],
+    selector: str = "gear-auto",
+    proportion: float = DEFAULT_PROPORTION,
 ) -> None:
-    """Fit one shared GEAR-Auto reduction and every outstanding component on it."""
+    """Fit one shared reduction and every outstanding component on it."""
+    if selector not in SELECTORS:
+        raise ValueError(f"selector must be one of {sorted(SELECTORS)}.")
+    prefix = SELECTORS[selector]
     result_dataset = f"{dataset}LOSO"
 
     outstanding = [
@@ -60,12 +100,14 @@ def run_fold(
         for component in components
         if not all(
             path.is_file() and path.stat().st_size > 0
-            for path in _result_files(results_path, component, result_dataset, held_subject)
+            for path in _result_files(
+                results_path, prefix, component, result_dataset, held_subject
+            )
         )
     ]
     if not outstanding:
         print(  # noqa: T201
-            f"{RESULT_PREFIX}/{result_dataset}/subject{held_subject}: "
+            f"{prefix}/{result_dataset}/subject{held_subject}: "
             "complete results exist for every component; skipping."
         )
         return
@@ -74,20 +116,20 @@ def run_fold(
         data_path, dataset, held_subject
     )
     print(  # noqa: T201
-        f"{RESULT_PREFIX}/{result_dataset}/subject{held_subject}: "
+        f"{prefix}/{result_dataset}/subject{held_subject}: "
         f"subjects={len(subjects)}, TRAIN {X_train.shape}, TEST {X_test.shape}, "
         f"components={outstanding}"
     )
 
     # One reduction for the whole pipeline, fitted once and reused below.
-    reducer = _make_gear_transformer(
-        component="auto", random_state=held_subject, n_jobs=1
+    reducer = _make_reducer(
+        selector, X_train.shape[1], random_state=held_subject, proportion=proportion
     )
     start = time.perf_counter_ns()
-    X_train_reduced, y_train_reduced = reducer.fit_resample(X_train, y_train)
+    X_train_reduced, y_train_reduced = _apply_fit(reducer, X_train, y_train)
     transform_fit_millis = (time.perf_counter_ns() - start) / 1_000_000
     if len(y_train_reduced) != len(y_train):
-        raise RuntimeError("GEAR-Auto must retain every training label.")
+        raise RuntimeError(f"{prefix} must retain every training label.")
 
     start = time.perf_counter_ns()
     X_test_reduced = reducer.transform(X_test)
@@ -98,7 +140,7 @@ def run_fold(
         f"in {transform_fit_millis / 1000:.1f}s"
     )
 
-    sidecar = results_path / f"{RESULT_PREFIX}-Reduction" / result_dataset
+    sidecar = results_path / f"{prefix}-Reduction" / result_dataset
     sidecar.mkdir(parents=True, exist_ok=True)
     (sidecar / f"reduction{held_subject}.json").write_text(
         json.dumps(
@@ -110,6 +152,7 @@ def run_fold(
                 "train_output_shape": list(X_train_reduced.shape),
                 "test_output_shape": list(X_test_reduced.shape),
                 "components": list(components),
+                "selector_name": selector,
                 "selector": _metadata_to_builtin(_selector_metadata(reducer)),
             },
             indent=1,
@@ -137,7 +180,7 @@ def run_fold(
             y_test,
             classifier,
             results_path=str(results_path),
-            classifier_name=f"{RESULT_PREFIX}-{component}",
+            classifier_name=f"{prefix}-{component}",
             dataset_name=result_dataset,
             resample_id=held_subject,
             build_train_file=True,
@@ -154,6 +197,8 @@ def main() -> None:
     parser.add_argument("held_subject", type=int)
     parser.add_argument("--dataset", default="OpenCloseFist")
     parser.add_argument("--components", nargs="+", default=list(DEFAULT_COMPONENTS))
+    parser.add_argument("--selector", default="gear-auto", choices=sorted(SELECTORS))
+    parser.add_argument("--proportion", type=float, default=DEFAULT_PROPORTION)
     args = parser.parse_args()
     run_fold(
         data_path=args.data_path,
@@ -161,6 +206,8 @@ def main() -> None:
         held_subject=args.held_subject,
         dataset=args.dataset,
         components=tuple(args.components),
+        selector=args.selector,
+        proportion=args.proportion,
     )
 
 

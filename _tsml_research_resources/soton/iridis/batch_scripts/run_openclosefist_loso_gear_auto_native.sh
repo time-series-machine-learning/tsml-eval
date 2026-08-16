@@ -2,27 +2,41 @@
 
 set -euo pipefail
 
-# Run the GEAR-Auto LOSO components with their native train estimates.
+# Run a reduced LOSO component family with native train estimates.
 #
-# One command per held-out subject fits the GEAR-Auto reduction once and then
-# fits every component on it, so the channel selector is charged once per fold
-# rather than once per component. Results are written below
-# GEAR-Auto-Native-{Arsenal,DrCIF,STC} and the shared reduction cost to
-# GEAR-Auto-Native-Reduction. Existing GEAR-Auto-HC2 and GEAR-Comp-* results are
-# untouched.
+# One command per held-out subject fits the reduction ONCE and then fits every
+# component on it, so the channel selector is charged once per fold rather than
+# once per component. That repeated charge is what made the per-component
+# GEAR-Comp-Native runs measure slower than full-channel HC2.
 #
-# The default component set excludes TDE. Set COMPONENTS to override, e.g.
+# SELECTOR chooses the reduction and the result family:
+#   gear-auto    -> GEAR-Auto-Native-*     (default)
+#   detachrocket -> DetachRocket-Native-*  (25% of channels, best in the archive)
+#
+# Existing GEAR-Auto-HC2, GEAR-Comp-* and the partial per-component DetachRocket-*
+# results are untouched.
+#
+# The default component set excludes TDE. Set COMPONENTS to override.
+#
+# Examples, spreading 105 folds over several nodes:
+#   SELECTOR=detachrocket FIRST_SUBJECT=0 LAST_SUBJECT=26 bash run_openclosefist_loso_gear_auto_native.sh
 #   COMPONENTS="Arsenal DrCIF STC TDE" bash run_openclosefist_loso_gear_auto_native.sh
-#
-# To spread 105 folds over several nodes, submit ranges concurrently:
-#   for r in "0 26" "27 53" "54 80" "81 104"; do
-#       set -- $r
-#       FIRST_SUBJECT=$1 LAST_SUBJECT=$2 bash run_openclosefist_loso_gear_auto_native.sh
-#   done
 
 first_subject="${FIRST_SUBJECT:-0}"
 last_subject="${LAST_SUBJECT:-104}"
 read -r -a components <<< "${COMPONENTS:-Arsenal DrCIF STC}"
+
+# Which shared reduction to fit once per fold. detachrocket gave the best accuracy
+# and runtime compromise in the archive comparison, so it is worth the LOSO run.
+selector="${SELECTOR:-gear-auto}"
+case "${selector}" in
+    gear-auto) result_prefix="GEAR-Auto-Native" ;;
+    detachrocket) result_prefix="DetachRocket-Native" ;;
+    *)
+        echo "ERROR: SELECTOR must be gear-auto or detachrocket." >&2
+        exit 2
+        ;;
+esac
 
 username="ajb2u23"
 local_path="/iridisfs/home/${username}"
@@ -92,17 +106,18 @@ aeon_commit=$(git -C "${aeon_dir}" rev-parse HEAD)
 
 # Fail before submission if the reducer or a component cannot be constructed.
 PYTHONNOUSERSITE=1 PYTHONPATH="${aeon_dir}:${tsml_eval_dir}" \
-"${python_path}" - "${components[@]}" <<'PY'
+"${python_path}" - "${selector}" "${components[@]}" <<'PY'
 import sys
 import aeon
 import aeon_neuro
 import tsml_eval
-from tsml_eval.experiments._channel_selection_hc2 import _make_gear_transformer
+from tsml_eval._wip.eeg_cote.run_gear_auto_loso_components import _make_reducer
 from tsml_eval.experiments._get_classifier import _make_hc2_or_component
 
-reducer = _make_gear_transformer(component="auto", random_state=0, n_jobs=1)
-print("reducer:   ", type(reducer).__name__)
-for component in sys.argv[1:]:
+selector = sys.argv[1]
+reducer = _make_reducer(selector, n_channels=64, random_state=0, proportion=0.25)
+print("reducer:   ", selector, type(reducer).__name__)
+for component in sys.argv[2:]:
     estimator = _make_hc2_or_component(
         component=component.casefold(), random_state=0, n_jobs=1,
         fit_contract=0, kwargs={},
@@ -116,20 +131,20 @@ PY
 
 run_id=$(date +%Y%m%d%H%M%S)
 range_label="subjects-${first_subject}-${last_subject}"
-submission_dir="${results_root}/batch-submissions/${run_id}-gear-auto-native-${range_label}"
+submission_dir="${results_root}/batch-submissions/${run_id}-${selector}-native-${range_label}"
 command_file="${submission_dir}/generatedCommandList-${run_id}.txt"
 submission_file="${submission_dir}/generatedSubmissionFile-${run_id}.sub"
 mkdir -p "${submission_dir}"
 : > "${command_file}"
 
-log_dir="${output_root}/GEAR-Auto-Native"
+log_dir="${output_root}/${result_prefix}"
 mkdir -p "${log_dir}"
 
 command_count=0
 for ((subject=first_subject; subject<=last_subject; subject++)); do
     complete=1
     for component in "${components[@]}"; do
-        prediction_dir="${results_root}/GEAR-Auto-Native-${component}/Predictions/${result_dataset}"
+        prediction_dir="${results_root}/${result_prefix}-${component}/Predictions/${result_dataset}"
         if [[ ! -s "${prediction_dir}/trainResample${subject}.csv" \
               || ! -s "${prediction_dir}/testResample${subject}.csv" ]]; then
             complete=0
@@ -144,6 +159,7 @@ for ((subject=first_subject; subject<=last_subject; subject++)); do
         "${python_path}" -u "${worker}"
         "${data_root}" "${results_root}" "${subject}"
         --dataset "${dataset}"
+        --selector "${selector}"
         --components "${components[@]}"
     )
     printf -v command_line '%q ' "${command[@]}"
@@ -155,7 +171,7 @@ for ((subject=first_subject; subject<=last_subject; subject++)); do
 done
 
 if ((command_count == 0)); then
-    echo "All selected GEAR-Auto native LOSO results already exist; no job submitted."
+    echo "All selected ${selector} native LOSO results already exist; no job submitted."
     exit 0
 fi
 
@@ -168,7 +184,7 @@ cat > "${submission_file}" <<EOF
 #!/bin/bash
 #SBATCH --mail-type=${mail}
 #SBATCH --mail-user=${mailto}
-#SBATCH --job-name=eeg-ocf-gear-auto-native-${first_subject}-${last_subject}
+#SBATCH --job-name=eeg-ocf-${selector}-native-${first_subject}-${last_subject}
 #SBATCH --partition=${queue}
 #SBATCH --time=${max_time}
 #SBATCH --output=${submission_dir}/%A-${run_id}.out
@@ -205,6 +221,7 @@ if [[ "\${current_aeon_commit}" != "${aeon_commit}" ]]; then
     exit 1
 fi
 
+echo "Selector:         ${selector} -> ${result_prefix}"
 echo "Components:       ${components[*]}"
 echo "Subjects:         ${first_subject}..${last_subject}"
 echo "Shared reduction: one GEAR-Auto fit per fold"
@@ -229,6 +246,6 @@ done
 
 sbatch_output=$(sbatch "${submission_file}")
 echo "${sbatch_output}"
-echo "Submitted ${command_count} GEAR-Auto native LOSO folds using ${cpu_count} tasks."
+echo "Submitted ${command_count} ${selector} native LOSO folds using ${cpu_count} tasks."
 echo "Components ${components[*]} share one reduction per fold."
 rm -f "${submission_file}"
