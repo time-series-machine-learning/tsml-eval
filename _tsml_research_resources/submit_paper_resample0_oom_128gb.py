@@ -176,11 +176,7 @@ def main():
     for row in initial_rows:
         if not _is_paper_job(row["name"]):
             continue
-        # LITETime-MV is now being run on Iridis GPUs, so remove every Hali
-        # instance, including resample 0.
-        if row["name"].startswith("LITETime-MV_"):
-            cancel_ids.append(row["job_id"])
-        elif row["array_index"] > 1:
+        if row["array_index"] > 1:
             cancel_ids.append(row["job_id"])
         elif row["name"] in oom_names:
             if _preserve_active_resample0(row):
@@ -242,7 +238,6 @@ def main():
     print(f"Completed results skipped: {complete}")
     print(f"Active resample-0 jobs preserved/skipped: {skipped_active}")
     print(f"New 128 GB jobs submitted: {submitted}")
-    print("All active Hali LITETime-MV jobs were cancelled.")
     print("Historical non-default-resample OOM tasks were intentionally ignored.")
 
 
