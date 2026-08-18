@@ -1,0 +1,73 @@
+# Resample-0, test-only pass of HC2, TDE, STC, DrCIF and Arsenal over MultiverseCore --
+# identical in shape to the paper's standard resample0 passes, just writing to
+# ~/Results/aeon1.5 instead of ~/Results/Multiverse. Companion to the same run on the
+# PyPI-aeon-1.5 side, to confirm ajb/hc2 doesn't diverge from released aeon 1.5.
+# Assumes aeon's branch is switched to main by hand before running -- no separate
+# environment or checkout is used for this.
+
+[controller]
+username = "ajb"
+email = "ajb@uea.ac.uk"
+repo_dir = "/gpfs/home/{username}/Code/tsml-eval"
+data_dir = "/gpfs/home/{username}/Data/Multiverse"
+dataset_file = "/gpfs/home/{username}/DataSetLists/MultiverseCore.txt"
+results_root = "/gpfs/home/{username}/Results/aeon1.5"
+state_dir = "/gpfs/home/{username}/Results/aeon1.5/.controller-core-hc2-tde-stc-drcif-arsenal"
+expected_branch = "ajb/hc2"
+resamples = 1
+
+all_categories_first_pass = true
+ignore_existing_failure_logs = true
+max_attempts = 1
+small_datasets_first = true
+excluded_datasets = []
+validate_results = false
+
+[slurm]
+account = "cmp"
+partition = "compute"
+qos = "uea-core-default"
+max_active_tasks = 8000
+memory_mb_levels = [32000, 64000]
+time_limit = "7-00:00:00"
+
+[environment]
+module = "python/anaconda/2024.10/3.12.7"
+conda_sh = "/gpfs/software/hali/python/anaconda/2024.10/etc/profile.d/conda.sh"
+env_name = "tsml-eval"
+numba_cache_dir = "/gpfs/home/{username}/Code/.cache/numba/tsml-eval"
+
+[classifier_kwargs.HC2]
+verbose = 1
+
+[classifier_kwargs.TDE]
+verbose = 1
+
+[classifier_kwargs.STC]
+verbose = 1
+
+[classifier_kwargs.DrCIF]
+verbose = 1
+
+[classifier_kwargs.Arsenal]
+verbose = 1
+
+[[categories]]
+name = "Hybrid"
+classifiers = ["HC2"]
+
+[[categories]]
+name = "DictionaryBased"
+classifiers = ["TDE"]
+
+[[categories]]
+name = "ShapeletBased"
+classifiers = ["STC"]
+
+[[categories]]
+name = "IntervalBased"
+classifiers = ["DrCIF"]
+
+[[categories]]
+name = "ConvolutionBased"
+classifiers = ["Arsenal"]
