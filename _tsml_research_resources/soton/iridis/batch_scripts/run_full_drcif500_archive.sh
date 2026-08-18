@@ -304,6 +304,7 @@ submit_batch() {
     local experiment_output
     local command_line
     local sbatch_output
+    local -a command
 
     : > "${command_file}"
     mkdir -p "${out_dir}/${classifier}"
@@ -326,19 +327,32 @@ submit_batch() {
 
             experiment_output="${out_dir}/${classifier}/output-${dataset}-${resample}-${batch_id}.txt"
 
-            command_line="PYTHONNOUSERSITE=1"
-            command_line+=" PYTHONPATH=${aeon_dir}:${tsml_eval_dir}"
-            command_line+=" NUMBA_CACHE_DIR=${numba_cache_dir}"
-            command_line+=" OMP_NUM_THREADS=1 MKL_NUM_THREADS=1"
-            command_line+=" OPENBLAS_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1"
-            command_line+=" ${python_path} ${script_file_path}"
-            command_line+=" ${data_dir} ${results_dir} ${classifier} ${dataset}"
-            command_line+=" ${resample}"
-            command_line+=" ${generate_train_arg} ${predefined_folds_arg}"
-            command_line+=" ${normalise_data_arg}"
-            command_line+=" > ${experiment_output} 2>&1"
+            command=(
+                "${python_path}"
+                -u
+                "${script_file_path}"
+                "${data_dir}"
+                "${results_dir}"
+                "${classifier}"
+                "${dataset}"
+                "${resample}"
+            )
 
-            echo "${command_line}" >> "${command_file}"
+            if [[ -n "${generate_train_arg}" ]]; then
+                command+=("${generate_train_arg}")
+            fi
+            if [[ -n "${predefined_folds_arg}" ]]; then
+                command+=("${predefined_folds_arg}")
+            fi
+            if [[ -n "${normalise_data_arg}" ]]; then
+                command+=("${normalise_data_arg}")
+            fi
+
+            printf -v command_line '%q ' "${command[@]}"
+            printf '%s> %q 2>&1\n' \
+                "${command_line}" \
+                "${experiment_output}" \
+                >> "${command_file}"
             cmd_count=$((cmd_count + 1))
         done
     done
@@ -353,38 +367,86 @@ submit_batch() {
 
     wait_for_queue_slot
 
-    {
-        echo "#!/bin/bash"
-        echo "#SBATCH --job-name=${job_name_prefix}-${batch_label}"
-        echo "#SBATCH --partition=${queue}"
-        echo "#SBATCH --nodes=1"
-        echo "#SBATCH --ntasks=${cpu_count}"
-        echo "#SBATCH --cpus-per-task=1"
-        echo "#SBATCH --mem-per-cpu=${memory_per_cpu}"
-        echo "#SBATCH --time=${walltime}"
-        echo "#SBATCH --output=${out_dir}/%x-%j.out"
-        echo "#SBATCH --error=${out_dir}/%x-%j.err"
-        echo "#SBATCH --mail-type=${mail}"
-        echo "#SBATCH --mail-user=${mailto}"
-        echo
-        echo "set -euo pipefail"
-        echo
-        echo "# Refuse to run if either checkout moved between submission and"
-        echo "# allocation."
-        echo "actual=\$(git -C ${tsml_eval_dir} rev-parse HEAD)"
-        echo "if [[ \"\${actual}\" != \"${tsml_eval_commit}\" ]]; then"
-        echo "    echo \"ERROR: tsml-eval moved to \${actual}\""
-        echo "    exit 1"
-        echo "fi"
-        echo "actual=\$(git -C ${aeon_dir} rev-parse HEAD)"
-        echo "if [[ \"\${actual}\" != \"${aeon_commit}\" ]]; then"
-        echo "    echo \"ERROR: aeon moved to \${actual}\""
-        echo "    exit 1"
-        echo "fi"
-        echo
-        echo "module load staskfarm"
-        echo "staskfarm -v ${command_file}"
-    } > "${submission_file}"
+    cat > "${submission_file}" <<SUB
+#!/bin/bash
+#SBATCH --mail-type=${mail}
+#SBATCH --mail-user=${mailto}
+#SBATCH --job-name=${job_name_prefix}-${batch_label}
+#SBATCH --partition=${queue}
+#SBATCH --time=${walltime}
+#SBATCH --output=${submission_dir}/%A-${batch_id}.out
+#SBATCH --error=${submission_dir}/%A-${batch_id}.err
+#SBATCH --nodes=1
+#SBATCH --ntasks=${cpu_count}
+#SBATCH --mem-per-cpu=${memory_per_cpu}
+
+. /etc/profile
+set -e
+
+cd "${tsml_eval_dir}" || exit 1
+
+unset PYTHONHOME
+export PYTHONNOUSERSITE=1
+export PYTHONPATH="${aeon_dir}:${tsml_eval_dir}"
+
+export OMP_NUM_THREADS=1
+export OPENBLAS_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+export NUMEXPR_NUM_THREADS=1
+export NUMBA_NUM_THREADS=1
+export LOKY_MAX_CPU_COUNT=1
+export PYTHONUNBUFFERED=1
+
+export NUMBA_CACHE_DIR="${numba_cache_dir}"
+mkdir -p "\${NUMBA_CACHE_DIR}"
+
+current_tsml_eval_commit=\$(git -C "${tsml_eval_dir}" rev-parse HEAD)
+current_aeon_commit=\$(git -C "${aeon_dir}" rev-parse HEAD)
+
+if [[ "\${current_tsml_eval_commit}" != "${tsml_eval_commit}" ]]; then
+    echo "ERROR: tsml-eval changed after submission."
+    echo "Expected: ${tsml_eval_commit}"
+    echo "Current:  \${current_tsml_eval_commit}"
+    exit 1
+fi
+
+if [[ "\${current_aeon_commit}" != "${aeon_commit}" ]]; then
+    echo "ERROR: aeon changed after submission."
+    echo "Expected: ${aeon_commit}"
+    echo "Current:  \${current_aeon_commit}"
+    exit 1
+fi
+
+echo "Classifier:        ${classifier}"
+echo "Batch:             ${batch_label}"
+echo "Host:              \$(hostname)"
+echo "Slurm job ID:      \${SLURM_JOB_ID}"
+echo "Allocated tasks:   \${SLURM_NTASKS}"
+echo "Command count:     ${cmd_count}"
+echo "tsml-eval commit:  \${current_tsml_eval_commit}"
+echo "aeon commit:       \${current_aeon_commit}"
+echo "Command file:      ${command_file}"
+echo
+
+"${python_path}" - <<'PY'
+import sys
+
+import aeon
+import tsml_eval
+from tsml_eval.experiments import get_classifier_by_name
+
+print("Python:    ", sys.executable)
+print("aeon:      ", aeon.__file__)
+print("tsml-eval: ", tsml_eval.__file__)
+estimator = get_classifier_by_name("drcif-500", random_state=0, n_jobs=1)
+print("drcif-500 n_estimators:", estimator.n_estimators)
+if estimator.n_estimators != 500:
+    raise SystemExit("ERROR: expected 500 trees")
+print("Import and factory checks succeeded")
+PY
+
+staskfarm "${command_file}"
+SUB
 
     sbatch_output=$(sbatch "${submission_file}")
     echo "${batch_label}: ${cmd_count} command(s) on ${cpu_count} CPU(s) -> ${sbatch_output}"
