@@ -45,8 +45,9 @@ verbose = 1
 
 # TDE, DrCIF and Arsenal on this aeon branch no longer accept a verbose constructor
 # argument -- passing it crashes the job, so it's left out for these three.
-[classifier_kwargs.DrCIF]
-n_estimators = 500
+#
+# DrCIF is left at its default n_estimators=200 here (not 500), to match the
+# existing IntervalBased/DrCIF Multiverse baseline for a like-for-like sanity check.
 
 [[categories]]
 name = "Hybrid"
