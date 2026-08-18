@@ -40,17 +40,13 @@ numba_cache_dir = "/gpfs/home/{username}/Code/.cache/numba/tsml-eval"
 [classifier_kwargs.HC2]
 verbose = 1
 
-[classifier_kwargs.TDE]
-verbose = 1
-
 [classifier_kwargs.STC]
 verbose = 1
 
+# TDE, DrCIF and Arsenal on this aeon branch no longer accept a verbose constructor
+# argument -- passing it crashes the job, so it's left out for these three.
 [classifier_kwargs.DrCIF]
-verbose = 1
-
-[classifier_kwargs.Arsenal]
-verbose = 1
+n_estimators = 500
 
 [[categories]]
 name = "Hybrid"
