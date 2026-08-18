@@ -34,15 +34,21 @@ start_fold=1
 max_num_submitted=200
 queue="batch"
 
-# 25 processes at 20 GiB each request 500 GiB of a standard red node. DrCIF at
-# 500 trees needs roughly 2.5 times the runtime of the 200-tree results.
-max_cpus_to_use="${max_cpus_to_use:-25}"
+# Each node runs at most nine datasets, one CPU each, so nine processes at
+# 20 GiB request 180 GiB of a standard red node. DrCIF at 500 trees needs
+# roughly 2.5 times the runtime of the 200-tree results.
+max_cpus_to_use="${max_cpus_to_use:-9}"
 memory_per_cpu_gib="${memory_per_cpu_gib:-20}"
 memory_per_cpu="${memory_per_cpu_gib}G"
 
 username="ajb2u23"
 mail="NONE"
 mailto="${username}@soton.ac.uk"
+
+# The batch partition allows 60 hours. LongIntervalTask needs 62.5 hours
+# for a full HC2 fit, which is why its full-channel HC2 was assembled from
+# components rather than fitted natively. DrCIF alone fits comfortably.
+max_time="60:00:00"
 
 local_path="/iridisfs/home/${username}"
 
@@ -58,40 +64,57 @@ normalise_data="false"
 # Datasets
 # ==============================================================================
 
-# The 25 archive problems with at least ten channels. The slow group is
-# submitted first so the long jobs start earliest.
-slow_datasets=(
+# The 25 archive problems with at least ten channels, split across four nodes
+# that run concurrently. The split is balanced by measured full-channel HC2 fit
+# time using a longest-processing-time first assignment, which brings the four
+# nodes within 0.7 hours of each other on the HC2 scale. DrCIF alone is a
+# fraction of a full HC2 fit, so these are upper bounds on the real load.
+#
+# LongIntervalTask sits alone on its own node because at 62.5 HC2-hours it is
+# the single longest job in the archive.
+node1_datasets=(
     "LongIntervalTask"
-    "MatchingPennies"
-    "ShortIntervalTask"
-    "SitStand"
 )
 
-fast_datasets=(
-    "SongFamiliarity"
-    "FeetHands"
-    "ImaginedOpenCloseFist"
+node2_datasets=(
+    "MatchingPennies"
     "ImaginedFeetHands"
-    "OpenCloseFist"
-    "FaceDetection"
-    "Alzheimers"
     "VisualSpeech"
-    "InnerSpeech"
-    "PronouncedSpeech"
     "MotorImagery"
     "PhotoStimulation"
-    "FibroUEA"
-    "FibroLiverpool"
-    "MindReading"
-    "FeedbackButton"
-    "LowCost"
     "ButtonPress"
-    "HandMovementDirection"
-    "FingerMovements"
     "EyesOpenShut"
 )
 
-datasets=("${slow_datasets[@]}" "${fast_datasets[@]}")
+node3_datasets=(
+    "ShortIntervalTask"
+    "FeetHands"
+    "OpenCloseFist"
+    "InnerSpeech"
+    "FibroUEA"
+    "FeedbackButton"
+    "LowCost"
+    "HandMovementDirection"
+    "FingerMovements"
+)
+
+node4_datasets=(
+    "SitStand"
+    "SongFamiliarity"
+    "FaceDetection"
+    "ImaginedOpenCloseFist"
+    "Alzheimers"
+    "PronouncedSpeech"
+    "FibroLiverpool"
+    "MindReading"
+)
+
+datasets=(
+    "${node1_datasets[@]}"
+    "${node2_datasets[@]}"
+    "${node3_datasets[@]}"
+    "${node4_datasets[@]}"
+)
 
 # ==============================================================================
 # Repository, data, and result locations
@@ -370,8 +393,12 @@ submit_batch() {
     slurm_job_count=$((slurm_job_count + 1))
 }
 
-submit_batch "slow" "60:00:00" "${slow_datasets[@]}"
-submit_batch "fast" "60:00:00" "${fast_datasets[@]}"
+# Four single-node jobs, submitted together so they occupy four nodes at
+# once. Each node runs its datasets in parallel, one CPU per dataset.
+submit_batch "node1" "${max_time}" "${node1_datasets[@]}"
+submit_batch "node2" "${max_time}" "${node2_datasets[@]}"
+submit_batch "node3" "${max_time}" "${node3_datasets[@]}"
+submit_batch "node4" "${max_time}" "${node4_datasets[@]}"
 
 echo
 echo "Submitted ${slurm_job_count} SLURM job(s), ${total_commands} command(s)."
