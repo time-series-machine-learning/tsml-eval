@@ -1,0 +1,66 @@
+# Generate the four exact HC2 component result sets, including train estimates, for
+# the 112 UCR2018Clean univariate datasets. Modelled on
+# multiverse_core_hc2_components.toml, with the UCR archive and a separate results
+# tree instead of Core/Multiverse. Companion to a PyPI-aeon-1.5 run on Iridis, to
+# confirm ajb/hc2's tsml-eval does not diverge from PyPI aeon 1.5 for these results.
+
+[controller]
+username = "ajb"
+email = "ajb@uea.ac.uk"
+repo_dir = "/gpfs/home/{username}/Code/tsml-eval"
+data_dir = "/gpfs/home/{username}/Data/UCR"
+dataset_file = "/gpfs/home/{username}/Code/tsml-eval/_tsml_research_resources/dataset_lists/UnivariateClassification112-UCR2018Clean.txt"
+results_root = "/gpfs/home/{username}/Results/aeon1.5"
+state_dir = "/gpfs/home/{username}/Results/aeon1.5/.controller-ucr112-hc2-components"
+expected_branch = "ajb/hc2"
+resamples = 1
+build_train_files = true
+
+all_categories_first_pass = true
+ignore_existing_failure_logs = true
+max_attempts = 1
+small_datasets_first = true
+excluded_datasets = []
+validate_results = false
+
+[slurm]
+account = "cmp"
+partition = "compute"
+qos = "uea-core-default"
+max_active_tasks = 8000
+memory_mb_levels = [32000, 64000, 128000]
+time_limit = "7-00:00:00"
+
+[environment]
+module = "python/anaconda/2024.10/3.12.7"
+conda_sh = "/gpfs/software/hali/python/anaconda/2024.10/etc/profile.d/conda.sh"
+env_name = "tsml-eval"
+numba_cache_dir = "/gpfs/home/{username}/Code/.cache/numba/tsml-eval"
+
+[classifier_kwargs.STC]
+verbose = 1
+
+[classifier_kwargs."DrCIF-500"]
+verbose = 1
+
+[classifier_kwargs.Arsenal]
+verbose = 1
+
+[classifier_kwargs.TDE]
+verbose = 1
+
+[[categories]]
+name = "ShapeletBased"
+classifiers = ["STC"]
+
+[[categories]]
+name = "IntervalBased"
+classifiers = ["DrCIF-500"]
+
+[[categories]]
+name = "ConvolutionBased"
+classifiers = ["Arsenal"]
+
+[[categories]]
+name = "DictionaryBased"
+classifiers = ["TDE"]
