@@ -46,7 +46,6 @@ _OOM_TASKS = (
     ("FeatureBased", "FreshPRINCE", "PEMS-SF"),
     ("FeatureBased", "FreshPRINCE", "Skoda"),
     ("FeatureBased", "FreshPRINCE", "STEW"),
-    ("FeatureBased", "FreshPRINCE", "Tiselac"),
     ("Hybrid", "HC2", "AustraliaRainfall_disc"),
     ("Hybrid", "HC2", "BIDMC32HR_disc"),
     ("Hybrid", "HC2", "BIDMC32SpO2_disc"),
