@@ -1,0 +1,56 @@
+# Resample-0 pass of HC2's four component classifiers (STC, DrCIF, Arsenal, TDE),
+# with train-fold estimates written, over the 28 EEG datasets in aeon's eeg2026
+# collection. Runs against a dedicated conda env built against aeon's 1.5 head
+# branch, and writes to its own results tree so it never mixes with the released
+# aeon results under ~/Results/Multiverse.
+
+[controller]
+username = "ajb"
+email = "ajb@uea.ac.uk"
+repo_dir = "/gpfs/home/{username}/Code/tsml-eval"
+data_dir = "/gpfs/home/{username}/Data/Multiverse"
+dataset_file = "/gpfs/home/{username}/Code/tsml-eval/_tsml_research_resources/dataset_lists/EEG28-2026.txt"
+
+# A separate tree so aeon-1.5-head results never mix with the released-aeon
+# results under ~/Results/Multiverse.
+results_root = "/gpfs/home/{username}/Results/aeon1.5"
+state_dir = "/gpfs/home/{username}/Results/aeon1.5/.controller-eeg-hc2-components"
+resamples = 1
+max_attempts = 1
+all_categories_first_pass = true
+small_datasets_first = true
+excluded_datasets = []
+validate_results = false
+build_train_files = true
+
+[slurm]
+account = "cmp"
+partition = "compute"
+qos = "uea-core-default"
+max_active_tasks = 8000
+memory_mb_levels = [32000, 64000]
+time_limit = "7-00:00:00"
+
+[environment]
+module = "python/anaconda/2024.10/3.12.7"
+conda_sh = "/gpfs/software/hali/python/anaconda/2024.10/etc/profile.d/conda.sh"
+# Dedicated env with aeon installed from its 1.5 head branch, so this never
+# mutates the tsml-eval / tsml-eval-gpu envs that other in-flight jobs depend on.
+env_name = "tsml-eval-aeon15"
+numba_cache_dir = "/gpfs/home/{username}/Code/.cache/numba/tsml-eval-aeon15"
+
+[[categories]]
+name = "ShapeletBased"
+classifiers = ["STC"]
+
+[[categories]]
+name = "IntervalBased"
+classifiers = ["DrCIF"]
+
+[[categories]]
+name = "ConvolutionBased"
+classifiers = ["Arsenal"]
+
+[[categories]]
+name = "DictionaryBased"
+classifiers = ["TDE"]
