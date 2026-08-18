@@ -41,7 +41,6 @@ _PAPER_CLASSIFIERS = (
 _OOM_TASKS = (
     ("FeatureBased", "FreshPRINCE", "AustraliaRainfall_disc"),
     ("FeatureBased", "FreshPRINCE", "DuckDuckGeese"),
-    ("FeatureBased", "FreshPRINCE", "FaceDetection"),
     ("FeatureBased", "FreshPRINCE", "FordChallenge"),
     ("FeatureBased", "FreshPRINCE", "PEMS-SF"),
     ("FeatureBased", "FreshPRINCE", "Skoda"),
