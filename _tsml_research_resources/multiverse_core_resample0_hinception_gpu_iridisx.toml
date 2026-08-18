@@ -26,34 +26,29 @@ excluded_datasets = []
 validate_results = false
 
 [slurm]
-# This account ("normal") needs no explicit account or QoS directive on the a100
-# partition, which only denies the student accounts. If access to the ecs account is
-# granted, switch to partition = "swarm_a100", gres = "gpu:a100swarm:1",
-# account = "ecs" and time_limit up to 5-00:00:00 for 8 concurrent GPUs instead of 2
-account = ""
-partition = "a100"
+# ecs account access granted 2026-08-18, so this now runs on swarm_a100 instead of
+# the open a100 partition -- 8 concurrent GPUs (AllowAccounts=ecs,orc) instead of 2.
+account = "ecs"
+partition = "swarm_a100"
 qos = ""
 
-# The open a100 partition is 12 nodes x 2 A100 80GB. Its QoS caps concurrent GPUs at
-# 2, so tasks beyond that queue rather than run. swarm_a100 would allow 8, but it has
-# AllowAccounts=ecs,orc and this account is in "normal" only
 max_active_tasks = 66
 cpus_per_task = 2
 gpus = 1
 
-# The a100 partition advertises gpu:a100. On swarm_a100 this must be gpu:a100swarm:1
-# instead, so the type has to change alongside the partition
-gres = "gpu:a100:1"
+# swarm_a100 advertises gpu:a100swarm, not gpu:a100, so the type has to change
+# alongside the partition
+gres = "gpu:a100swarm:1"
 
 # 128 GB. a100 nodes hold 490 GB across 2 GPUs, so this does not block the
 # node. A single tier means an OOM is reported rather than retried; add a
 # higher level to have the controller escalate automatically
 memory_mb_levels = [128000]
 
-# 60 hours, the a100 partition maximum. Worth taking in full: a timeout
-# discards everything the job has computed, and the expensive problems here
-# are the ones that did not finish on CPU
-time_limit = "2-12:00:00"
+# 5 days, the swarm_a100 partition maximum (up from a100's 60 hours). Worth taking
+# in full: a timeout discards everything the job has computed, and the expensive
+# problems here are the ones that did not finish on CPU
+time_limit = "5-00:00:00"
 
 [environment]
 module = "conda/python3"
