@@ -1,0 +1,87 @@
+# Snapshot of IridisX's H-InceptionTime queue (a100 + swarm_a100), taken 2026-08-19,
+# reordered so Hydra works the list in the opposite direction to IridisX.
+#
+# IridisX submits smallest-dataset-first (small_datasets_first = true), so its queue
+# drains small-to-large. This file lists the datasets in each queue's *pending* order
+# reversed (largest-to-small, per queue, as read directly off squeue's job listing --
+# ascending job ID is submission/size order, so the queue's own descending-job-ID
+# display is already the reverse), then interleaves the two queues one-for-one so a
+# 4-worker pool gets a size mix from the start rather than draining one queue's big
+# jobs before touching the other's.
+#
+# RacketSports is excluded: it was already RUNNING on a100 (50+ min in) when this
+# snapshot was taken, so duplicating it here would waste a full GPU-run on something
+# likely to finish on its own.
+#
+# One ambiguity: squeue truncates job names at 40 chars, and both
+# "HouseholdPowerConsumption1_disc" and "HouseholdPowerConsumption2_disc" truncate
+# identically ("...HouseholdPowerConsumptio"), one pending on each queue. Which
+# specific queue held which variant could not be determined from the truncated
+# listing -- but both are needed regardless of which queue actually holds which, so
+# both are included below (assignment to a100-slot vs swarm-slot is a guess and
+# doesn't affect correctness).
+#
+# This is a one-time snapshot, not something start_multiverse_full_resample0_
+# hinception_gpu_iridisx.sh regenerates -- if IridisX's queue changes materially
+# before Hydra works through this, the two will drift out of sync. That's expected:
+# per the earlier discussion, results racing between Hydra and IridisX's still-queued
+# jobs is accepted (whichever finishes first wins; the other harmlessly reruns).
+
+MindReading
+STEW
+BIDMC32HR_disc
+Skoda
+MotorImagery
+FaceDetection
+Alzheimers
+CrowdSourced
+PEMS-SF
+USCActivity
+BenzeneConcentration_disc
+PhotoStimulation
+DuckDuckGeese
+CounterMovementJump
+EigenWorms
+MotionSenseHAR
+FordChallenge
+LowCost
+TactileTextureRecognition
+HouseholdPowerConsumption2_disc
+Locust2022
+Heartbeat
+SpokenArabicDigits
+Tiselac
+IEEEPPG_disc
+EmoPain
+PhonemeSpectra
+BeijingPM25Quality_disc
+UCIActivity
+WISDM
+HouseholdPowerConsumption1_disc
+Blink
+AustraliaRainfall_disc
+EthanolConcentration
+BeijingPM10Quality_disc
+AsphaltObstaclesCoordinates
+AsphaltRegularityCoordinates
+BoneProbAgeGroup
+CharacterTrajectories
+HandMovementDirection
+SelfRegulationSCP1
+JapaneseVowels
+BoneIntensitiesAgeGroup
+AppliancesEnergy_disc
+Cricket
+NATOPS
+LSST
+AutomotiveRoadTrials
+ArticularyWordRecognition
+StandWalkJump
+Handwriting
+ERing
+UWaveGestureLibrary
+PenDigits
+EyesOpenShut
+AtrialFibrillation
+Epilepsy
+Libras
