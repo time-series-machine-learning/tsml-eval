@@ -26,7 +26,14 @@
 # before Hydra works through this, the two will drift out of sync. That's expected:
 # per the earlier discussion, results racing between Hydra and IridisX's still-queued
 # jobs is accepted (whichever finishes first wins; the other harmlessly reruns).
+#
+# Libras was moved from the tail (its size-sorted position) to the very front as a
+# one-off pipeline sanity check: small and fast, so a GPU-pinning/env/output-path
+# mistake shows up in minutes rather than after hours on a large problem. Everything
+# after it is still in the original largest-first order -- only this one entry was
+# relocated.
 
+Libras
 MindReading
 STEW
 BIDMC32HR_disc
@@ -84,4 +91,3 @@ PenDigits
 EyesOpenShut
 AtrialFibrillation
 Epilepsy
-Libras
