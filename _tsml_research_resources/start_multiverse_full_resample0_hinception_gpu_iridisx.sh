@@ -29,12 +29,18 @@ a100_list="${list_dir}/MultiverseAvailableGPU-IridisX-A100.txt"
 swarm_list="${list_dir}/MultiverseAvailableGPU-IridisX-Swarm.txt"
 state_dir_a100="/home/${USER}/Results/Multiverse/.controller-full-resample0-hinception-gpu-iridisx-a100"
 state_dir_swarm="/home/${USER}/Results/Multiverse/.controller-full-resample0-hinception-gpu-iridisx-swarm"
-session_a100="multiverse-full-hinception-iridisx-a100"
-session_swarm="multiverse-full-hinception-iridisx-swarm"
+label_a100="multiverse-full-hinception-iridisx-a100"
+label_swarm="multiverse-full-hinception-iridisx-swarm"
 python_executable="/home/${USER}/.conda/envs/tsml-eval-gpu/bin/python"
 required_branch="ajb/gpu"
 
-for command_name in flock git mktemp pkill screen squeue; do
+# IridisX has neither screen nor tmux. setsid gives the supervisor its own session so
+# it is immune to the SIGHUP a login-node logout would otherwise send it; nohup and the
+# closed stdin/redirected stdout are belt-and-suspenders for the same purpose. Liveness
+# is then confirmed by matching the supervisor's command line with pgrep (the same
+# pattern used to replace old copies below), rather than by a terminal multiplexer's
+# session list; a PID file is also written for convenience but is not load-bearing.
+for command_name in flock git mktemp pkill setsid squeue; do
     if ! command -v "$command_name" >/dev/null 2>&1; then
         echo "ERROR: required command is unavailable: ${command_name}" >&2
         exit 1
@@ -146,16 +152,8 @@ for config in "$config_a100" "$config_swarm"; do
     pkill -TERM -f "[r]un_multiverse_controller.sh.*${config_name}" || true
     pkill -TERM -f "[m]ultiverse_controller.py.*${config_name}" || true
 done
-for session_name in "$session_a100" "$session_swarm"; do
-    mapfile -t old_sessions < <(
-        screen -ls | awk -v name="$session_name" \
-            '$1 ~ ("\\." name "$") {print $1}'
-    )
-    for old_session in "${old_sessions[@]}"; do
-        echo "Closing old screen session: ${old_session}"
-        screen -S "$old_session" -X quit >/dev/null 2>&1 || true
-    done
-done
+# Give TERM a moment to land before the new instances try to take the lock files.
+sleep 1
 
 cd "$repo_dir"
 echo "Checking a100 work without submitting it."
@@ -165,37 +163,56 @@ echo "Checking swarm_a100 work without submitting it."
 "$python_executable" -u "${script_dir}/multiverse_controller.py" \
     --config "$config_swarm" --dry-run --no-email
 
-echo "Starting detached a100 controller: ${session_a100}"
-screen -dmS "$session_a100" \
-    flock -n "${state_dir_a100}/supervisor.lock" \
+echo "Starting detached a100 controller: ${label_a100}"
+setsid nohup flock -n "${state_dir_a100}/supervisor.lock" \
     env PYTHON="$python_executable" \
         MULTIVERSE_CLEAR_PENDING_ON_START=false \
         MULTIVERSE_LOG_DIR="$state_dir_a100" \
-    bash "$supervisor" "$config_a100"
+    bash "$supervisor" "$config_a100" \
+    > "${state_dir_a100}/launcher.out" 2>&1 < /dev/null &
+pid_a100=$!
+disown "$pid_a100"
+echo "$pid_a100" > "${state_dir_a100}/launcher.pid"
 
-echo "Starting detached swarm_a100 controller: ${session_swarm}"
-screen -dmS "$session_swarm" \
-    flock -n "${state_dir_swarm}/supervisor.lock" \
+echo "Starting detached swarm_a100 controller: ${label_swarm}"
+setsid nohup flock -n "${state_dir_swarm}/supervisor.lock" \
     env PYTHON="$python_executable" \
         MULTIVERSE_CLEAR_PENDING_ON_START=false \
         MULTIVERSE_LOG_DIR="$state_dir_swarm" \
-    bash "$supervisor" "$config_swarm"
+    bash "$supervisor" "$config_swarm" \
+    > "${state_dir_swarm}/launcher.out" 2>&1 < /dev/null &
+pid_swarm=$!
+disown "$pid_swarm"
+echo "$pid_swarm" > "${state_dir_swarm}/launcher.pid"
 
 sleep 2
-for session_name in "$session_a100" "$session_swarm"; do
-    if ! screen -ls | grep -Fq ".${session_name}"; then
-        echo "ERROR: controller session did not remain running: ${session_name}" >&2
-        echo "Another supervisor may already hold its lock file." >&2
-        exit 1
-    fi
-done
+# Verify via process-command matching rather than trusting the stored PID alone:
+# setsid may or may not fork depending on whether this shell's background job is
+# already a process group leader, so the pid in $! is not always the innermost
+# process. Matching the actual supervisor/controller command line is what pkill
+# above already relies on, so it is the more reliable liveness signal here too.
+config_a100_name=$(basename "$config_a100")
+config_swarm_name=$(basename "$config_swarm")
+if ! pgrep -f "[r]un_multiverse_controller.sh.*${config_a100_name}" >/dev/null; then
+    echo "ERROR: a100 controller did not remain running." >&2
+    echo "Check ${state_dir_a100}/launcher.out -- another supervisor may already hold its lock file." >&2
+    exit 1
+fi
+if ! pgrep -f "[r]un_multiverse_controller.sh.*${config_swarm_name}" >/dev/null; then
+    echo "ERROR: swarm_a100 controller did not remain running." >&2
+    echo "Check ${state_dir_swarm}/launcher.out -- another supervisor may already hold its lock file." >&2
+    exit 1
+fi
 
 echo
 echo "Both controllers started."
 echo "Available list:   ${available_list}"
 echo "Unavailable list: ${missing_list}"
 echo "Excluded list:    ${excluded_list}"
-screen -ls | grep -E "${session_a100}|${session_swarm}" || true
+echo "a100 controller:       started pid ${pid_a100}, log ${state_dir_a100}/supervisor.log"
+echo "swarm_a100 controller: started pid ${pid_swarm}, log ${state_dir_swarm}/supervisor.log"
+echo "Stop either with the same pkill pattern this script uses to replace old copies, e.g.:"
+echo "  pkill -f 'run_multiverse_controller.sh.*${config_a100_name}'"
 echo
 echo "Current a100 queue:"
 squeue -u "$USER" -p a100
