@@ -1,0 +1,47 @@
+# Default-resample H-InceptionTime GPU pass over the full Multiverse dataset list on
+# IridisX, using the open a100 partition (2 concurrent GPUs). Runs alongside
+# multiverse_full_resample0_hinception_gpu_iridisx_swarm.toml, which covers the other
+# half of the dataset list on swarm_a100 (8 concurrent GPUs via the ecs account). The
+# two configs read disjoint dataset_file halves built by
+# start_multiverse_full_resample0_hinception_gpu_iridisx.sh, so they never race to
+# submit the same task -- squeue is queried per-partition, so a task queued on one
+# partition is invisible to the other controller.
+
+[controller]
+username = "ajb2u23"
+email = "ajb@uea.ac.uk"
+repo_dir = "/home/{username}/Code/tsml-eval-gpu"
+data_dir = "/home/{username}/Data/Multiverse"
+dataset_file = "/home/{username}/DataSetLists/MultiverseAvailableGPU-IridisX-A100.txt"
+results_root = "/home/{username}/Results/Multiverse"
+state_dir = "/home/{username}/Results/Multiverse/.controller-full-resample0-hinception-gpu-iridisx-a100"
+resamples = 1
+max_attempts = 1
+all_categories_first_pass = false
+small_datasets_first = true
+excluded_datasets = []
+validate_results = false
+
+[slurm]
+account = ""
+partition = "a100"
+qos = ""
+max_active_tasks = 200
+cpus_per_task = 2
+gpus = 1
+nodes = 1
+gres = "gpu:a100:1"
+# 128 GB. a100 nodes hold 490 GB across 2 GPUs, so this does not block the node.
+memory_mb_levels = [128000]
+# 60 hours, the a100 partition maximum.
+time_limit = "2-12:00:00"
+
+[environment]
+module = "conda/python3"
+conda_sh = ""
+env_name = "tsml-eval-gpu"
+numba_cache_dir = "/home/{username}/Code/.cache/numba/tsml-eval-gpu"
+
+[[categories]]
+name = "DeepLearning"
+classifiers = ["H-InceptionTime"]
