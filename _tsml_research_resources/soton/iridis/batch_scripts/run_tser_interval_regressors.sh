@@ -345,31 +345,36 @@ done
 # Pin the source state for the whole chain
 # ==============================================================================
 
+# Only aeon is pinned. The estimators come from there, so a mid-run change to
+# aeon would silently mix two definitions of the same regressor across resamples.
+#
+# tsml-eval is deliberately not pinned: these batch scripts live in it and get
+# corrected while a run is in flight, and stopping the chain for that helps
+# nobody. Its commit is recorded each round for provenance instead.
 commit_file="${state_dir}/pinned-commits.txt"
 tsml_eval_head=$(git -C "${tsml_eval_dir}" rev-parse HEAD)
 aeon_head=$(git -C "${aeon_dir}" rev-parse HEAD)
 
 if [[ -f "${commit_file}" ]]; then
-    pinned_tsml_eval_commit=$(awk '$1 == "tsml-eval" { print $2 }' "${commit_file}")
     pinned_aeon_commit=$(awk '$1 == "aeon" { print $2 }' "${commit_file}")
 
-    if [[ "${pinned_tsml_eval_commit}" != "${tsml_eval_head}" ||
-          "${pinned_aeon_commit}" != "${aeon_head}" ]]; then
-        echo "ERROR: a checkout moved after this run started."
-        echo "  tsml-eval pinned ${pinned_tsml_eval_commit}, now ${tsml_eval_head}"
-        echo "  aeon      pinned ${pinned_aeon_commit}, now ${aeon_head}"
-        echo "Results in one run must come from one source state. Either restore"
-        echo "the commits, or start a new run with a fresh results root."
+    if [[ "${pinned_aeon_commit}" != "${aeon_head}" ]]; then
+        echo "ERROR: the aeon checkout moved after this run started."
+        echo "  aeon pinned ${pinned_aeon_commit}, now ${aeon_head}"
+        echo "Estimator definitions in one run must come from one source state."
+        echo "Either restore the commit, or start a new run with a fresh results"
+        echo "root."
         exit 1
     fi
 else
-    {
-        printf 'tsml-eval %s\n' "${tsml_eval_head}"
-        printf 'aeon %s\n' "${aeon_head}"
-    } > "${commit_file}"
-    pinned_tsml_eval_commit="${tsml_eval_head}"
+    printf 'aeon %s
+' "${aeon_head}" > "${commit_file}"
     pinned_aeon_commit="${aeon_head}"
 fi
+
+# Recorded, never enforced.
+printf 'tsml-eval %s round %s
+' "${tsml_eval_head}" "${round}"     >> "${state_dir}/tsml-eval-commits.txt"
 
 # ==============================================================================
 # Convert Boolean options into tsml-eval arguments
@@ -613,7 +618,7 @@ if [[ -n "${tier_ceiling_note}" ]]; then
     echo "Memory ceiling:    ${tier_ceiling_note}"
 fi
 echo "Retired:           ${#dead_keys[@]}"
-echo "tsml-eval commit:  ${pinned_tsml_eval_commit}"
+echo "tsml-eval commit:  ${tsml_eval_head} (not pinned)"
 echo "aeon commit:       ${pinned_aeon_commit}"
 echo
 
@@ -816,13 +821,6 @@ mkdir -p "\${NUMBA_CACHE_DIR}"
 
 current_tsml_eval_commit=\$(git -C "${tsml_eval_dir}" rev-parse HEAD)
 current_aeon_commit=\$(git -C "${aeon_dir}" rev-parse HEAD)
-
-if [[ "\${current_tsml_eval_commit}" != "${pinned_tsml_eval_commit}" ]]; then
-    echo "ERROR: tsml-eval changed after submission."
-    echo "Expected: ${pinned_tsml_eval_commit}"
-    echo "Current:  \${current_tsml_eval_commit}"
-    exit 1
-fi
 
 if [[ "\${current_aeon_commit}" != "${pinned_aeon_commit}" ]]; then
     echo "ERROR: aeon changed after submission."
