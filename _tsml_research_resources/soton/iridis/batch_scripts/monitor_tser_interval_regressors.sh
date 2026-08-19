@@ -31,7 +31,7 @@ attempt_file="${state_dir}/attempts.tsv"
 dataset_list_file="${TSER_INTERVAL_DATASET_LIST:-${local_path}/Code/tsml-eval/_tsml_research_resources/dataset_lists/Regression63-MonashExtendedClean.txt}"
 
 resamples=30
-memory_tiers_gib=(8 16 32 64 128 190)
+memory_tiers_gib=(4 8 16 32 64 128 190)
 
 details="false"
 watch_seconds=0

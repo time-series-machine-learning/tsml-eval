@@ -14,8 +14,9 @@ set -euo pipefail
 # Submission model. Each round submits four single node jobs, each running its
 # experiments in parallel under staskfarm with one CPU per experiment. Memory is
 # requested per CPU, so the memory tier sets how many experiments run in
-# parallel on a node: 8 GiB gives 23 within the 190 GiB node budget, capped by
-# the 40 cores of a standard node.
+# parallel on a node. Only four nodes may run at once, so the aim is to keep
+# all 40 cores of each of them busy: at 4 GiB a node runs its full 40 cores
+# within the 190 GiB budget, which is the most work four nodes can hold.
 #
 # Rounds and recovery. A single 60 hour allocation cannot finish 13230
 # experiments, so this script is built to run repeatedly. Each invocation
@@ -27,7 +28,7 @@ set -euo pipefail
 #      automatically when this round's four nodes finish.
 #
 # That chaining is what makes the run unattended: nothing needs a human between
-# the first pass at 8 GiB and the final high memory retries.
+# the first pass at 4 GiB and the final high memory retries.
 #
 # Usage:
 #
@@ -49,7 +50,7 @@ set -euo pipefail
 max_folds=30
 start_fold=1
 
-max_num_submitted=200
+max_num_submitted=500
 queue="batch"
 max_time="60:00:00"
 
@@ -66,16 +67,34 @@ node_count=4
 
 # Usable memory and cores on a standard batch node. Both bound how many
 # experiments a node runs at once, and at the small tiers cores bind first.
+# max_cpus_per_node must match the cores on the nodes the batch queue hands out.
 node_memory_budget_gib="${node_memory_budget_gib:-190}"
 max_cpus_per_node="${max_cpus_per_node:-40}"
 
-# Memory per CPU in GiB. Everything starts at tier 1, which is deliberately
-# small: most TSER problems fit in 8 GiB, and the smaller the request the more
-# experiments run at once on the four nodes. A confirmed out of memory kill, or
-# a run that vanished without writing an error, moves that one experiment up a
-# tier for its next attempt, so the few large problems climb to the memory they
-# need without holding back the rest.
-memory_tiers_gib=(8 16 32 64 128 190)
+# Memory per CPU in GiB. A confirmed out of memory kill, or a run that vanished
+# without writing an error, moves that one experiment up a tier for its next
+# attempt, so a problem that needs memory climbs to it without holding back the
+# rest.
+memory_tiers_gib=(4 8 16 32 64 128 190)
+
+# Which tier a dataset starts at, chosen from the size of its raw .ts files.
+#
+# Starting everything at 4 GiB would fill the cores, but the handful of large
+# problems would spend a whole round being killed before their first useful
+# attempt, and those are the slowest fits in the archive. So the size of the
+# data picks the opening tier: the archive is mostly small, and only a few
+# problems open high.
+#
+# On the 2024 archive this puts BIDMC32HR, BIDMC32RR, BIDMC32SpO2 and
+# PPGDalia_eq at 16 GiB, about eight mid sized problems at 8 GiB, and the
+# remaining fifty at 4 GiB. 16 GiB is a deliberate bet rather than a ceiling:
+# those four hold roughly 350 MiB of float64 per split, so a DrCIF fit over its
+# three representations should sit well inside it, and anything that does not
+# escalates on its own.
+large_dataset_bytes="${large_dataset_bytes:-314572800}"   # 300 MiB
+medium_dataset_bytes="${medium_dataset_bytes:-62914560}"  #  60 MiB
+large_dataset_start_tier="${large_dataset_start_tier:-3}"
+medium_dataset_start_tier="${medium_dataset_start_tier:-2}"
 
 # Safety rails for the unattended chain.
 max_rounds="${max_rounds:-40}"
@@ -479,6 +498,18 @@ classify_failure() {
 
 max_tier=${#memory_tiers_gib[@]}
 
+# The opening tier for a dataset that has never been attempted.
+declare -A dataset_start_tier=()
+for dataset in "${datasets[@]}"; do
+    if ((dataset_bytes[${dataset}] > large_dataset_bytes)); then
+        dataset_start_tier["${dataset}"]="${large_dataset_start_tier}"
+    elif ((dataset_bytes[${dataset}] > medium_dataset_bytes)); then
+        dataset_start_tier["${dataset}"]="${medium_dataset_start_tier}"
+    else
+        dataset_start_tier["${dataset}"]=1
+    fi
+done
+
 pending_keys=()
 declare -A pending_tier=()
 dead_keys=()
@@ -498,7 +529,7 @@ for regressor in "${regressors[@]}"; do
                 continue
             fi
 
-            tier="${attempt_tier[${key}]-1}"
+            tier="${attempt_tier[${key}]-${dataset_start_tier[${dataset}]}}"
             attempts="${attempt_count[${key}]-0}"
             failures="${failure_count[${key}]-0}"
             reason="${attempt_reason[${key}]-}"
@@ -589,8 +620,23 @@ for ((tier = 1; tier <= max_tier; tier++)); do
     fi
 done
 
-# Every tier with work gets at least one node. Spare nodes go to the tiers with
-# the most outstanding experiments, which in practice is the 8 GiB first pass.
+# How many experiments a node runs at once at each tier. A 4 GiB node holds the
+# full 40 cores, a 16 GiB node holds 11, so the same queue length means very
+# different waits at different tiers.
+declare -A tier_cpus=()
+for tier in "${active_tiers[@]}"; do
+    tier_cpus["${tier}"]=$((node_memory_budget_gib / memory_tiers_gib[tier - 1]))
+    if ((tier_cpus[${tier}] > max_cpus_per_node)); then
+        tier_cpus["${tier}"]="${max_cpus_per_node}"
+    fi
+    if ((tier_cpus[${tier}] < 1)); then
+        tier_cpus["${tier}"]=1
+    fi
+done
+
+# Every tier with work gets at least one node. Spare nodes then go to whichever
+# tier faces the longest sequential queue per task slot, so the four nodes are
+# balanced by the time they will take rather than by experiment count.
 declare -A tier_slots=()
 remaining_slots=${node_count}
 for tier in "${active_tiers[@]}"; do
@@ -602,7 +648,10 @@ while ((remaining_slots > 0)); do
     best_tier=""
     best_load=-1
     for tier in "${active_tiers[@]}"; do
-        load=$(( ${tier_pending_count[${tier}]} / ${tier_slots[${tier}]} ))
+        load=$((
+            ${tier_pending_count[${tier}]} /
+            (${tier_slots[${tier}]} * ${tier_cpus[${tier}]})
+        ))
         if ((load > best_load)); then
             best_load=${load}
             best_tier="${tier}"
