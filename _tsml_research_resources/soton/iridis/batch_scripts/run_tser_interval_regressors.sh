@@ -14,7 +14,8 @@ set -euo pipefail
 # Submission model. Each round submits four single node jobs, each running its
 # experiments in parallel under staskfarm with one CPU per experiment. Memory is
 # requested per CPU, so the memory tier sets how many experiments run in
-# parallel on a node: 32 GiB gives five within the 190 GiB node budget.
+# parallel on a node: 8 GiB gives 23 within the 190 GiB node budget, capped by
+# the 40 cores of a standard node.
 #
 # Rounds and recovery. A single 60 hour allocation cannot finish 13230
 # experiments, so this script is built to run repeatedly. Each invocation
@@ -26,7 +27,7 @@ set -euo pipefail
 #      automatically when this round's four nodes finish.
 #
 # That chaining is what makes the run unattended: nothing needs a human between
-# the first pass at 32 GiB and the final high memory retries.
+# the first pass at 8 GiB and the final high memory retries.
 #
 # Usage:
 #
@@ -63,17 +64,22 @@ mailto="${username}@soton.ac.uk"
 # Four concurrent single node jobs, as requested.
 node_count=4
 
-# Usable memory on a standard batch node.
+# Usable memory and cores on a standard batch node. Both bound how many
+# experiments a node runs at once, and at the small tiers cores bind first.
 node_memory_budget_gib="${node_memory_budget_gib:-190}"
+max_cpus_per_node="${max_cpus_per_node:-40}"
 
-# Memory per CPU in GiB. Everything starts at tier 1. A confirmed out of memory
-# kill, or a run that vanished without writing an error, moves that one
-# experiment up a tier for its next attempt.
-memory_tiers_gib=(32 64 128 190)
+# Memory per CPU in GiB. Everything starts at tier 1, which is deliberately
+# small: most TSER problems fit in 8 GiB, and the smaller the request the more
+# experiments run at once on the four nodes. A confirmed out of memory kill, or
+# a run that vanished without writing an error, moves that one experiment up a
+# tier for its next attempt, so the few large problems climb to the memory they
+# need without holding back the rest.
+memory_tiers_gib=(8 16 32 64 128 190)
 
 # Safety rails for the unattended chain.
 max_rounds="${max_rounds:-40}"
-max_attempts_per_experiment="${max_attempts_per_experiment:-6}"
+max_attempts_per_experiment="${max_attempts_per_experiment:-8}"
 max_failed_attempts="${max_failed_attempts:-3}"
 
 local_path="/iridisfs/home/${username}"
@@ -584,7 +590,7 @@ for ((tier = 1; tier <= max_tier; tier++)); do
 done
 
 # Every tier with work gets at least one node. Spare nodes go to the tiers with
-# the most outstanding experiments, which in practice is the 32 GiB first pass.
+# the most outstanding experiments, which in practice is the 8 GiB first pass.
 declare -A tier_slots=()
 remaining_slots=${node_count}
 for tier in "${active_tiers[@]}"; do
@@ -695,6 +701,9 @@ submit_node_job() {
     local job_id
 
     max_cpus_to_use=$((node_memory_budget_gib / memory_gib))
+    if ((max_cpus_to_use > max_cpus_per_node)); then
+        max_cpus_to_use=${max_cpus_per_node}
+    fi
     if ((max_cpus_to_use < 1)); then
         max_cpus_to_use=1
     fi
