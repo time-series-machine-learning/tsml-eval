@@ -15,8 +15,8 @@ set -euo pipefail
 # experiments in parallel under staskfarm with one CPU per experiment. Memory is
 # requested per CPU, so the memory tier sets how many experiments run in
 # parallel on a node. Only four nodes may run at once, so the aim is to keep
-# all 40 cores of each of them busy: at 4 GiB a node runs its full 40 cores
-# within the 190 GiB budget, which is the most work four nodes can hold.
+# all 192 cores of each of them busy. The batch nodes carry 752 GiB, so at 4 GiB
+# a node runs 185 experiments at once and four nodes hold well over 500.
 #
 # Rounds and recovery. A single 60 hour allocation cannot finish 13230
 # experiments, so this script is built to run repeatedly. Each invocation
@@ -67,15 +67,17 @@ node_count=4
 
 # Usable memory and cores on a standard batch node. Both bound how many
 # experiments a node runs at once, and at the small tiers cores bind first.
-# max_cpus_per_node must match the cores on the nodes the batch queue hands out.
-node_memory_budget_gib="${node_memory_budget_gib:-190}"
-max_cpus_per_node="${max_cpus_per_node:-40}"
+# These match the batch nodes reported by sinfo -p batch -o "%c %m": 192 cores
+# and 770000 MB, which is 752 GiB. The budget leaves a little headroom for the
+# task farm and the operating system.
+node_memory_budget_gib="${node_memory_budget_gib:-740}"
+max_cpus_per_node="${max_cpus_per_node:-192}"
 
 # Memory per CPU in GiB. A confirmed out of memory kill, or a run that vanished
 # without writing an error, moves that one experiment up a tier for its next
 # attempt, so a problem that needs memory climbs to it without holding back the
 # rest.
-memory_tiers_gib=(4 8 16 32 64 128 190)
+memory_tiers_gib=(4 8 16 32 64 128 256 740)
 
 # Which tier a dataset starts at, chosen from the size of its raw .ts files.
 #
@@ -86,8 +88,8 @@ memory_tiers_gib=(4 8 16 32 64 128 190)
 # problems open high.
 #
 # On the 2024 archive this puts BIDMC32HR, BIDMC32RR, BIDMC32SpO2 and
-# PPGDalia_eq at 16 GiB, about eight mid sized problems at 8 GiB, and the
-# remaining fifty at 4 GiB. 16 GiB is a deliberate bet rather than a ceiling:
+# PPGDalia_eq at 16 GiB, eleven mid sized problems at 8 GiB, and the remaining
+# forty eight at 4 GiB. 16 GiB is a deliberate bet rather than a ceiling:
 # those four hold roughly 350 MiB of float64 per split, so a DrCIF fit over its
 # three representations should sit well inside it, and anything that does not
 # escalates on its own.
@@ -98,7 +100,7 @@ medium_dataset_start_tier="${medium_dataset_start_tier:-2}"
 
 # Safety rails for the unattended chain.
 max_rounds="${max_rounds:-40}"
-max_attempts_per_experiment="${max_attempts_per_experiment:-8}"
+max_attempts_per_experiment="${max_attempts_per_experiment:-10}"
 max_failed_attempts="${max_failed_attempts:-3}"
 
 local_path="/iridisfs/home/${username}"
@@ -621,8 +623,8 @@ for ((tier = 1; tier <= max_tier; tier++)); do
 done
 
 # How many experiments a node runs at once at each tier. A 4 GiB node holds the
-# full 40 cores, a 16 GiB node holds 11, so the same queue length means very
-# different waits at different tiers.
+# full 185 experiments a node can hold, a 16 GiB node holds 46, so the same
+# queue length means very different waits at different tiers.
 declare -A tier_cpus=()
 for tier in "${active_tiers[@]}"; do
     tier_cpus["${tier}"]=$((node_memory_budget_gib / memory_tiers_gib[tier - 1]))
