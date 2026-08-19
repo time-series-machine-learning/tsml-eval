@@ -23,7 +23,7 @@ set -uo pipefail
 
 username="ajb2u23"
 local_path="/iridisfs/home/${username}"
-results_root="${TSER_INTERVAL_RESULTS_ROOT:-${local_path}/Results/TSERIntervals}"
+results_root="${TSER_INTERVAL_RESULTS_ROOT:-${local_path}/Results/TSER/IntervalBased}"
 out_dir="${results_root}/output"
 state_dir="${results_root}/.tser-interval-state"
 attempt_file="${state_dir}/attempts.tsv"

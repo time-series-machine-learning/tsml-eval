@@ -138,7 +138,7 @@ python_path="/home/${username}/.conda/envs/${env_name}/bin/python"
 
 data_dir="${local_path}/Data/TSER"
 
-results_dir="${TSER_INTERVAL_RESULTS_ROOT:-${local_path}/Results/TSERIntervals}"
+results_dir="${TSER_INTERVAL_RESULTS_ROOT:-${local_path}/Results/TSER/IntervalBased}"
 out_dir="${results_dir}/output"
 state_dir="${results_dir}/.tser-interval-state"
 numba_cache_dir="${local_path}/Code/.cache/${env_name}"
