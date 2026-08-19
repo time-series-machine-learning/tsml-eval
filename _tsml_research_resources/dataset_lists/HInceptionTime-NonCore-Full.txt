@@ -1,0 +1,84 @@
+# Full 133-dataset multiverse list minus the 66-dataset Core list, for H-InceptionTime
+# on Hydra. Core is already complete for H-InceptionTime elsewhere, so none of its 66
+# datasets are repeated here.
+#
+# Computed as a set difference between Multivariate133Classification-MultiverseClean.txt
+# (minus DREAM*/S2Agri-*, same exclusion the CPU full-run launcher applies) and
+# MultivariateClassification66-MultiverseMini.txt. Six names needed manual
+# reconciliation first: Core's list uses hyphenated/"-C"/"-MC"-suffixed names
+# (IRDS-SFL, KERAAL-RTK, KIMORE-PR-C, KINECAL-QSEO, UCDHE-Rowing-MC, UIPRMD-DS-C) for
+# datasets the 133-list names with underscores and no suffix (IRDS_SFL, KERAAL_RTK,
+# KIMORE_PR, KINECAL_QSEO, UCDHE_Rowing_MC, UIPRMD_DS) -- same datasets, inconsistent
+# naming between the two files. A naive string diff would have wrongly kept these as
+# "still needed"; they are excluded below since Core already covers them.
+#
+# Not ordered by size -- BasicMotions is pinned first as a quick pipeline sanity check
+# (known tiny: ~0.46 MB), everything after it is alphabetical/unordered. Run
+# reorder_by_size_desc.py against this file with Hydra's own Data/Multiverse directory
+# before starting a real pass: this machine is the only one with the full data present,
+# so it is the only place that can measure real sizes for all 61 entries (37 of the 61
+# -- the IRDS/KERAAL/KIMORE/KINECAL/UCDHE/UIPRMD families plus LenDB, Opportunity,
+# PAMAP2, SPHERE_WUS, WISDM2 -- are not in this Windows checkout's general archive
+# mirror, so no fixed order could be produced from here).
+
+BasicMotions
+AsphaltPavementTypeCoordinates
+BIDMC32RR_disc
+ButtonPress
+FeedbackButton
+FeetHands
+FingerMovements
+IRDS_EFL
+IRDS_EFR
+IRDS_SAL
+IRDS_SAR
+IRDS_SFE
+IRDS_SFR
+IRDS_STL
+IRDS_STR
+ImaginedFeetHands
+ImaginedOpenCloseFist
+InnerSpeech
+InsectWingbeat
+KERAAL_CTK
+KERAAL_CTK_MC
+KERAAL_ELK
+KERAAL_ELK_MC
+KERAAL_RTK_MC
+KIMORE_LA
+KIMORE_LT
+KIMORE_Sq
+KIMORE_TR
+KINECAL_3WFV
+KINECAL_GGFV
+KINECAL_QSEC
+LenDB
+LiveFuelMoistureContent_disc
+LongIntervalTask
+MatchingPennies
+NewsHeadlineSentiment_disc
+NewsTitleSentiment_disc
+OpenCloseFist
+Opportunity
+PAMAP2
+PPGDalia_disc
+PronouncedSpeech
+SPHERE_WUS
+SelfRegulationSCP2
+ShortIntervalTask
+SitStand
+SongFamiliarity
+UCDHE_MP
+UCDHE_MP_MC
+UCDHE_Rowing
+UIPRMD_HS
+UIPRMD_IL
+UIPRMD_SASLR
+UIPRMD_SL
+UIPRMD_SSA
+UIPRMD_SSE
+UIPRMD_SSIER
+UIPRMD_SSS
+UIPRMD_STS
+VisualSpeech
+WISDM2
