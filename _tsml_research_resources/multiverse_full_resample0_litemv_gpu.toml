@@ -1,0 +1,45 @@
+# Default-resample LITETime-MV GPU pass over the full Multiverse dataset list
+# on Hali. Uses the same locally-available dataset list built by the CPU full
+# pass (MultiverseAvailableCPU.txt, already excludes DREAM* and S2Agri-*).
+# Results share the same results_root as the CPU pass, so anything already
+# completed for LITETime-MV (e.g. via the earlier IridisX gap-fill pass) is
+# skipped automatically.
+
+[controller]
+username = "ajb"
+email = "ajb@uea.ac.uk"
+repo_dir = "/gpfs/home/{username}/Code/tsml-eval-gpu"
+data_dir = "/gpfs/home/{username}/Data/Multiverse"
+dataset_file = "/gpfs/home/{username}/DataSetLists/MultiverseAvailableCPU.txt"
+results_root = "/gpfs/home/{username}/Results/Multiverse"
+state_dir = "/gpfs/home/{username}/Results/Multiverse/.controller-full-resample0-litemv-gpu"
+expected_branch = "ajb/gpu"
+resamples = 1
+max_attempts = 1
+
+all_categories_first_pass = true
+ignore_existing_failure_logs = true
+small_datasets_first = true
+excluded_datasets = []
+validate_results = true
+
+[slurm]
+account = "cmp"
+partition = "gpu"
+qos = "gpu"
+max_active_tasks = 999
+cpus_per_task = 2
+gpus = 1
+nodes = 1
+memory_mb_levels = [64000]
+time_limit = "7-00:00:00"
+
+[environment]
+module = "python/anaconda/2024.10/3.12.7"
+conda_sh = "/gpfs/software/hali/python/anaconda/2024.10/etc/profile.d/conda.sh"
+env_name = "tsml-eval-gpu"
+numba_cache_dir = "/gpfs/home/{username}/Code/.cache/numba/tsml-eval-gpu"
+
+[[categories]]
+name = "DeepLearning"
+classifiers = ["LITETime-MV"]
