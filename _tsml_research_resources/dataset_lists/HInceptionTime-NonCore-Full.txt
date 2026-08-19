@@ -12,14 +12,17 @@
 # naming between the two files. A naive string diff would have wrongly kept these as
 # "still needed"; they are excluded below since Core already covers them.
 #
+# LenDB excluded (2026-08-19): ~10 GB, too large to justify given the rest of the
+# backlog -- not run on any machine for this pass.
+#
 # Not ordered by size -- BasicMotions is pinned first as a quick pipeline sanity check
 # (known tiny: ~0.46 MB), everything after it is alphabetical/unordered. Run
 # reorder_by_size_desc.py against this file with Hydra's own Data/Multiverse directory
 # before starting a real pass: this machine is the only one with the full data present,
-# so it is the only place that can measure real sizes for all 61 entries (37 of the 61
-# -- the IRDS/KERAAL/KIMORE/KINECAL/UCDHE/UIPRMD families plus LenDB, Opportunity,
-# PAMAP2, SPHERE_WUS, WISDM2 -- are not in this Windows checkout's general archive
-# mirror, so no fixed order could be produced from here).
+# so it is the only place that can measure real sizes for all 60 entries (36 of the 60
+# -- the IRDS/KERAAL/KIMORE/KINECAL/UCDHE/UIPRMD families plus Opportunity, PAMAP2,
+# SPHERE_WUS, WISDM2 -- are not in this Windows checkout's general archive mirror, so
+# no fixed order could be produced from here).
 
 BasicMotions
 AsphaltPavementTypeCoordinates
@@ -52,7 +55,6 @@ KIMORE_TR
 KINECAL_3WFV
 KINECAL_GGFV
 KINECAL_QSEC
-LenDB
 LiveFuelMoistureContent_disc
 LongIntervalTask
 MatchingPennies
