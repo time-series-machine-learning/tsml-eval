@@ -34,6 +34,7 @@ resamples=30
 memory_tiers_gib=(4 8 16 32 64 128 256 620)
 
 details="false"
+summary_only="false"
 watch_seconds=0
 
 # Must match run_tser_interval_regressors.sh.
@@ -60,6 +61,7 @@ usage() {
         "" \
         "Options:" \
         "  --details        List every incomplete regressor/problem pair." \
+        "  --summary        Per regressor progress only, for mailing." \
         "  --watch SECONDS  Refresh continuously at the specified interval." \
         "  -h, --help       Show this help."
 }
@@ -68,6 +70,10 @@ while (($# > 0)); do
     case "$1" in
         --details)
             details="true"
+            shift
+            ;;
+        --summary)
+            summary_only="true"
             shift
             ;;
         --watch)
@@ -481,14 +487,41 @@ scan_once() {
     echo "Scope:   ${#regressors[@]} regressors x ${#datasets[@]} datasets x ${resamples} resamples"
     echo
 
-    print_relevant_queue
-    print_current_activity
-    print_attempt_state
+    if [[ "${summary_only}" != "true" ]]; then
+        print_relevant_queue
+        print_current_activity
+        print_attempt_state
+    fi
 
-    printf '%-22s %14s %10s %s\n' \
-        "REGRESSOR" "RESAMPLES" "DATASETS" "PROGRESS"
-    printf '%-22s %14s %10s %s\n' \
-        "----------------------" "--------------" "----------" "--------"
+    # Live counts per regressor, from the same Slurm scan as the activity
+    # table, so running and pending are attributed to the estimator rather
+    # than reported only as one total.
+    local live_key
+    local live_regressor
+    declare -A running_by_regressor=()
+    declare -A pending_by_regressor=()
+
+    for live_key in "${!live_state[@]}"; do
+        live_regressor="${live_key%%|*}"
+        case "${live_state[${live_key}]}" in
+            RUNNING)
+                running_by_regressor["${live_regressor}"]=$((
+                    ${running_by_regressor[${live_regressor}]-0} + 1
+                ))
+                ;;
+            QUEUED|PENDING)
+                pending_by_regressor["${live_regressor}"]=$((
+                    ${pending_by_regressor[${live_regressor}]-0} + 1
+                ))
+                ;;
+        esac
+    done
+
+    printf '%-22s %14s %8s %8s %8s %8s\n' \
+        "REGRESSOR" "COMPLETE" "PERCENT" "RUNNING" "PENDING" "TODO"
+    printf '%-22s %14s %8s %8s %8s %8s\n' \
+        "----------------------" "--------------" "--------" "--------" \
+        "--------" "--------"
 
     for regressor in "${regressors[@]}"; do
         regressor_complete=0
@@ -507,12 +540,14 @@ scan_once() {
 
         total_complete=$((total_complete + regressor_complete))
 
-        printf '%-22s %6d/%-7d %4d/%-5d %5.1f%%\n' \
+        printf '%-22s %6d/%-7d %7.1f%% %8d %8d %8d\n' \
             "${regressor}" \
             "${regressor_complete}" "${expected_per_regressor}" \
-            "${regressor_datasets_done}" "${#datasets[@]}" \
             "$(awk -v done="${regressor_complete}" -v all="${expected_per_regressor}" \
-                'BEGIN { printf 100 * done / all }')"
+                'BEGIN { printf 100 * done / all }')" \
+            "${running_by_regressor[${regressor}]-0}" \
+            "${pending_by_regressor[${regressor}]-0}" \
+            "$((expected_per_regressor - regressor_complete))"
     done
 
     echo
@@ -521,6 +556,12 @@ scan_once() {
         "${total_expected}" \
         "$(awk -v done="${total_complete}" -v all="${total_expected}" \
             'BEGIN { printf 100 * done / all }')"
+
+    if [[ "${summary_only}" == "true" ]]; then
+        echo
+        echo "Use --details on the login node for the incomplete list."
+        return 0
+    fi
 
     if [[ "${details}" == "true" ]]; then
         echo

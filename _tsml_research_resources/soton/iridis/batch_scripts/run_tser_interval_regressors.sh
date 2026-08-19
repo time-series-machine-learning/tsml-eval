@@ -60,8 +60,21 @@ supervisor_time="02:00:00"
 supervisor_memory="4G"
 
 username="ajb2u23"
+mailto="${mailto:-${username}@soton.ac.uk}"
+
+# Slurm mail on the node jobs would be four messages a round with nothing in
+# them but a job state, so it stays off. The chain reports itself instead: every
+# round composes a progress summary and sends it from this script.
 mail="NONE"
-mailto="${username}@soton.ac.uk"
+
+# Slurm does mail the supervisor, but only when it fails, which is the one event
+# the round summaries cannot report because it stops them being sent.
+supervisor_mail="FAIL"
+
+# Off by default. mail_tser_interval_progress.sh reports on a 12 hour clock,
+# and a second message per round would only add noise. The summary is still
+# written to the state directory every round either way.
+email_updates="${email_updates:-false}"
 
 # Four concurrent single node jobs, as requested.
 node_count=4
@@ -949,6 +962,86 @@ if [[ "${dry_run}" != "true" ]]; then
 fi
 
 # ==============================================================================
+# Round summary
+# ==============================================================================
+
+# Written to the state directory every round whether or not mail works, so the
+# history of the run survives even on a cluster with no outbound mail.
+send_round_summary() {
+    local summary_file="${state_dir}/round-${round}-summary.txt"
+    local subject
+    local percent
+    local mailer=""
+
+    percent=$(awk -v done="${completed_total}" -v all="${total_experiments}"         'BEGIN { printf "%.1f", 100 * done / all }')
+
+    {
+        printf 'TSER interval regressors, round %s
+' "${round}"
+        printf 'Host: %s at %s
+
+' "$(hostname)" "$(date '+%Y-%m-%d %H:%M:%S %Z')"
+        printf 'Complete:   %s/%s (%s%%)
+'             "${completed_total}" "${total_experiments}" "${percent}"
+        printf 'Pending:    %s
+' "${#pending_keys[@]}"
+        printf 'Escalated:  %s (memory kill or silent death)
+' "${oom_escalated}"
+        printf 'Retired:    %s
+' "${#dead_keys[@]}"
+        printf 'Submitted:  %s command(s) over %s node job(s)
+
+'             "${total_commands}" "${#submitted_job_ids[@]}"
+
+        if ((${#dead_keys[@]} > 0)); then
+            printf 'Retired experiments:
+'
+            printf '  %s
+' "${dead_keys[@]}"
+            printf '
+'
+        fi
+
+        printf 'Results:     %s
+' "${results_dir}"
+        printf 'Submissions: %s
+' "${submission_dir}"
+    } > "${summary_file}"
+
+    if [[ "${email_updates,,}" != "true" ]]; then
+        return
+    fi
+
+    subject="TSER intervals round ${round}: ${percent}% complete, ${#pending_keys[@]} left"
+
+    for candidate in mail mailx sendmail; do
+        if command -v "${candidate}" >/dev/null 2>&1; then
+            mailer="${candidate}"
+            break
+        fi
+    done
+
+    case "${mailer}" in
+        mail|mailx)
+            "${mailer}" -s "${subject}" "${mailto}" < "${summary_file}" ||                 echo "Round summary mail failed; it is saved at ${summary_file}."
+            ;;
+        sendmail)
+            {
+                printf 'To: %s
+' "${mailto}"
+                printf 'Subject: %s
+
+' "${subject}"
+                cat "${summary_file}"
+            } | sendmail -t ||                 echo "Round summary mail failed; it is saved at ${summary_file}."
+            ;;
+        *)
+            echo "No mail command found; summary saved at ${summary_file}."
+            ;;
+    esac
+}
+
+# ==============================================================================
 # Chain the next round
 # ==============================================================================
 
@@ -961,6 +1054,8 @@ fi
 echo
 echo "Round ${round}: submitted ${#submitted_job_ids[@]} node job(s), ${total_commands} command(s)."
 
+send_round_summary
+
 if [[ "${chain}" == "true" ]] && ((round < max_rounds)) &&
    ((${#submitted_job_ids[@]} > 0)); then
     next_round=$((round + 1))
@@ -971,7 +1066,7 @@ if [[ "${chain}" == "true" ]] && ((round < max_rounds)) &&
     # has to reconcile and retry at a higher memory tier.
     cat > "${supervisor_file}" <<SUP
 #!/bin/bash
-#SBATCH --mail-type=${mail}
+#SBATCH --mail-type=${supervisor_mail}
 #SBATCH --mail-user=${mailto}
 #SBATCH --job-name=${job_name_prefix}-supervisor-r${next_round}
 #SBATCH --partition=${queue}
