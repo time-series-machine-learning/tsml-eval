@@ -15,8 +15,9 @@ set -euo pipefail
 # experiments in parallel under staskfarm with one CPU per experiment. Memory is
 # requested per CPU, so the memory tier sets how many experiments run in
 # parallel on a node. Only four nodes may run at once, so the aim is to keep
-# all 192 cores of each of them busy. The batch nodes carry 752 GiB, so at 4 GiB
-# a node runs 185 experiments at once and four nodes hold well over 500.
+# all 192 cores of each of them busy. The batch nodes carry 752 GiB but Slurm
+# caps one job at 634 GiB of it, so at 4 GiB a node runs 157 experiments at once
+# and four nodes hold over 600.
 #
 # Rounds and recovery. A single 60 hour allocation cannot finish 13230
 # experiments, so this script is built to run repeatedly. Each invocation
@@ -67,17 +68,23 @@ node_count=4
 
 # Usable memory and cores on a standard batch node. Both bound how many
 # experiments a node runs at once, and at the small tiers cores bind first.
-# These match the batch nodes reported by sinfo -p batch -o "%c %m": 192 cores
-# and 770000 MB, which is 752 GiB. The budget leaves a little headroom for the
-# task farm and the operating system.
-node_memory_budget_gib="${node_memory_budget_gib:-740}"
+# The batch nodes report 192 cores and 770000 MB, but the partition sets
+# MaxMemPerNode=650000, which is 634 GiB, and a job asking for more than that is
+# rejected outright rather than queued. The budget stays just under it.
+#
+# The nodes are shared rather than allocated whole, so a request near the cap
+# only starts on a node that is nearly empty. If rounds sit pending for long,
+# lower this for the invocation to start sooner on a partly used node:
+#
+#   node_memory_budget_gib=450 bash run_tser_interval_regressors.sh
+node_memory_budget_gib="${node_memory_budget_gib:-630}"
 max_cpus_per_node="${max_cpus_per_node:-192}"
 
 # Memory per CPU in GiB. A confirmed out of memory kill, or a run that vanished
 # without writing an error, moves that one experiment up a tier for its next
 # attempt, so a problem that needs memory climbs to it without holding back the
 # rest.
-memory_tiers_gib=(4 8 16 32 64 128 256 740)
+memory_tiers_gib=(4 8 16 32 64 128 256 620)
 
 # Which tier a dataset starts at, chosen from the size of its raw .ts files.
 #
@@ -272,6 +279,17 @@ if ((node_memory_budget_gib < memory_tiers_gib[0])); then
     echo "ERROR: node memory budget is smaller than the first memory tier."
     exit 1
 fi
+
+# Slurm rejects rather than queues a job asking for more than MaxMemPerNode, so
+# any tier above the budget is clamped to it. Escalation then stops helping at
+# the ceiling, which is the honest outcome: no more memory is available.
+tier_ceiling_note=""
+for ((tier_index = 0; tier_index < ${#memory_tiers_gib[@]}; tier_index++)); do
+    if ((memory_tiers_gib[tier_index] > node_memory_budget_gib)); then
+        memory_tiers_gib[tier_index]="${node_memory_budget_gib}"
+        tier_ceiling_note="one or more tiers clamped to ${node_memory_budget_gib} GiB"
+    fi
+done
 
 datasets=()
 while IFS= read -r line || [[ -n "${line}" ]]; do
@@ -591,6 +609,9 @@ echo "Experiments:       ${total_experiments}"
 echo "Complete:          ${completed_total}"
 echo "Pending:           ${#pending_keys[@]}"
 echo "Escalated:         ${oom_escalated} (memory kill or silent death)"
+if [[ -n "${tier_ceiling_note}" ]]; then
+    echo "Memory ceiling:    ${tier_ceiling_note}"
+fi
 echo "Retired:           ${#dead_keys[@]}"
 echo "tsml-eval commit:  ${pinned_tsml_eval_commit}"
 echo "aeon commit:       ${pinned_aeon_commit}"
@@ -623,7 +644,7 @@ for ((tier = 1; tier <= max_tier; tier++)); do
 done
 
 # How many experiments a node runs at once at each tier. A 4 GiB node holds the
-# full 185 experiments a node can hold, a 16 GiB node holds 46, so the same
+# full 157 experiments a node can hold, a 16 GiB node holds 39, so the same
 # queue length means very different waits at different tiers.
 declare -A tier_cpus=()
 for tier in "${active_tiers[@]}"; do
