@@ -963,7 +963,7 @@ if ((${#active_tiers[@]} <= remaining_slots)); then
         tier_slots["${tier}"]=1
         remaining_slots=$((remaining_slots - 1))
     done
-done
+fi
 
 while ((remaining_slots > 0)); do
     best_tier=""
