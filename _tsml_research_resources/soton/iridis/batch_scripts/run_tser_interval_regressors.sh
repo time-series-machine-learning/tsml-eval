@@ -129,6 +129,7 @@ local_path="/iridisfs/home/${username}"
 
 job_name_prefix="tser-interval"
 submission_label="TSERIntervals"
+workflow_label="interval regressors"
 
 generate_train_files="false"
 predefined_folds="false"
@@ -164,6 +165,12 @@ results_dir="${TSER_INTERVAL_RESULTS_ROOT:-${local_path}/Results/TSER/IntervalBa
 out_dir="${results_dir}/output"
 state_dir="${results_dir}/.tser-interval-state"
 numba_cache_dir="${local_path}/Code/.cache/${env_name}"
+shared_runner_lock="${TSER_SHARED_RUNNER_LOCK:-${local_path}/Results/TSER/.tser-runner.lock}"
+
+# The interval profile writes every regressor directly below results_dir. The
+# remaining-aeon profile fills this map so each regressor is written below its
+# normal TSER category directory instead.
+declare -A regressor_category=()
 
 # The Clean list carries the archive directory names actually on disk, with the
 # _nmv and _eq suffixes for the cleaned problems.
@@ -176,6 +183,7 @@ dataset_list_file="${tsml_eval_dir}/_tsml_research_resources/dataset_lists/Regre
 round=1
 chain="true"
 dry_run="false"
+profile="interval"
 
 usage() {
     printf '%s\n' \
@@ -183,6 +191,7 @@ usage() {
         "  run_tser_interval_regressors.sh [options]" \
         "" \
         "Options:" \
+        "  --profile NAME       interval or remaining-aeon (default interval)." \
         "  --round N            Round number; set by the chained job." \
         "  --max-rounds N       Stop chaining after this many rounds." \
         "  --dataset-list FILE  Override the dataset list." \
@@ -193,6 +202,14 @@ usage() {
 
 while (($# > 0)); do
     case "$1" in
+        --profile)
+            if (($# < 2)); then
+                echo "ERROR: --profile requires a value." >&2
+                exit 2
+            fi
+            profile="$2"
+            shift 2
+            ;;
         --round)
             if (($# < 2)); then
                 echo "ERROR: --round requires a value." >&2
@@ -237,6 +254,60 @@ while (($# > 0)); do
     esac
 done
 
+case "${profile}" in
+    interval)
+        ;;
+    remaining-aeon)
+        # One benchmark configuration for every non-deep aeon regressor not
+        # covered by the interval profile. KNeighborsTimeSeriesRegressor is
+        # represented by its standard 1NN-DTW configuration. Meta-estimators,
+        # sklearn/XGBoost estimators and deep learners are not part of this CPU
+        # pass.
+        regressors=(
+            "rocket"
+            "minirocket"
+            "multirocket"
+            "hydra"
+            "multirocket-hydra"
+            "1nn-dtw"
+            "summary-500"
+            "catch22-500"
+            "freshprince-500"
+            "tsfresh"
+            "rist"
+            "rdst"
+            "dummy"
+            "rotationforest"
+        )
+        regressor_category=(
+            [rocket]="ConvolutionBased"
+            [minirocket]="ConvolutionBased"
+            [multirocket]="ConvolutionBased"
+            [hydra]="ConvolutionBased"
+            [multirocket-hydra]="ConvolutionBased"
+            [1nn-dtw]="DistanceBased"
+            [summary-500]="FeatureBased"
+            [catch22-500]="FeatureBased"
+            [freshprince-500]="FeatureBased"
+            [tsfresh]="FeatureBased"
+            [rist]="Hybrid"
+            [rdst]="ShapeletBased"
+            [dummy]="Other"
+            [rotationforest]="VectorBased"
+        )
+        job_name_prefix="tser-aeon"
+        submission_label="TSERAeon"
+        workflow_label="remaining non-deep aeon regressors"
+        results_dir="${TSER_AEON_RESULTS_ROOT:-${local_path}/Results/TSER}"
+        out_dir="${TSER_AEON_OUTPUT_DIR:-${results_dir}/.tser-aeon-output}"
+        state_dir="${TSER_AEON_STATE_DIR:-${results_dir}/.tser-aeon-state}"
+        ;;
+    *)
+        echo "ERROR: --profile must be interval or remaining-aeon." >&2
+        exit 2
+        ;;
+esac
+
 if ! [[ "${round}" =~ ^[0-9]+$ ]] || ((round < 1)); then
     echo "ERROR: --round must be a positive integer." >&2
     exit 2
@@ -248,6 +319,18 @@ if ! [[ "${max_rounds}" =~ ^[0-9]+$ ]] || ((max_rounds < 1)); then
 fi
 
 script_path="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
+
+regressor_results_dir_result=""
+regressor_results_dir() {
+    local regressor="$1"
+    local category="${regressor_category[${regressor}]-}"
+
+    if [[ -n "${category}" ]]; then
+        regressor_results_dir_result="${results_dir}/${category}"
+    else
+        regressor_results_dir_result="${results_dir}"
+    fi
+}
 
 # ==============================================================================
 # Validate configuration
@@ -350,7 +433,12 @@ if ((${#missing_data[@]} > 0)); then
     exit 1
 fi
 
-mkdir -p "${results_dir}" "${out_dir}" "${state_dir}" "${numba_cache_dir}"
+mkdir -p \
+    "${results_dir}" \
+    "${out_dir}" \
+    "${state_dir}" \
+    "$(dirname "${shared_runner_lock}")" \
+    "${numba_cache_dir}"
 
 # A dependent supervisor and a manual spare-node refill can become runnable at
 # nearly the same moment. Serialize reconciliation and submission so the second
@@ -362,13 +450,15 @@ for required_command in flock sbatch scontrol squeue; do
         exit 1
     fi
 done
-exec 9> "${state_dir}/runner.lock"
+exec 9> "${shared_runner_lock}"
 if ! flock -w 300 9; then
-    echo "ERROR: another TSER submission round held the lock for five minutes." >&2
+    echo "ERROR: another TSER submission round held the shared lock for five minutes." >&2
     exit 1
 fi
 
 for regressor in "${regressors[@]}"; do
+    regressor_results_dir "${regressor}"
+    mkdir -p "${regressor_results_dir_result}"
     mkdir -p "${out_dir}/${regressor}"
 done
 
@@ -464,13 +554,19 @@ fi
 # Reconciliation touches every one of the 13230 experiments on every round, so
 # these helpers avoid command substitution and any other subshell.
 experiment_is_complete() {
-    local prefix="${results_dir}/$1/Predictions/$2"
+    local regressor="$1"
+    local dataset="$2"
+    local resample="$3"
+    local prefix
 
-    if [[ ! -s "${prefix}/testResample$3.csv" ]]; then
+    regressor_results_dir "${regressor}"
+    prefix="${regressor_results_dir_result}/${regressor}/Predictions/${dataset}"
+
+    if [[ ! -s "${prefix}/testResample${resample}.csv" ]]; then
         return 1
     fi
 
-    if [[ -n "${generate_train_arg}" && ! -s "${prefix}/trainResample$3.csv" ]]; then
+    if [[ -n "${generate_train_arg}" && ! -s "${prefix}/trainResample${resample}.csv" ]]; then
         return 1
     fi
 
@@ -548,14 +644,29 @@ declare -A active_job_complete_count=()
 declare -A active_job_started_count=()
 declare -A active_job_waiting_count=()
 active_node_job_ids=()
+occupied_tser_job_ids=()
 active_job_mapping_errors=()
 command_regex='regression_experiments\.py[[:space:]]+[^[:space:]]+[[:space:]]+[^[:space:]]+[[:space:]]+([^[:space:]]+)[[:space:]]+([^[:space:]]+)[[:space:]]+([0-9]+)'
 redirect_regex='>[[:space:]]+([^[:space:]]+)[[:space:]]+2>&1'
 
 while IFS='|' read -r active_job_id active_job_name active_job_state \
     active_job_node active_job_memory; do
-    if [[ -z "${active_job_id}" || "${active_job_name}" != "${job_name_prefix}-r"* ||
-          "${active_job_name}" == *supervisor* || "${active_job_name}" == *report* ]]; then
+    if [[ -z "${active_job_id}" || "${active_job_name}" == *supervisor* ||
+          "${active_job_name}" == *report* ]]; then
+        continue
+    fi
+
+    # The interval and remaining-aeon profiles share the same four-node
+    # allowance. Count both workflows before deciding how many slots this
+    # profile may fill, but only inspect command files belonging to this
+    # profile when excluding duplicate experiments.
+    if [[ "${active_job_name}" == "tser-interval-r"* ||
+          "${active_job_name}" == "tser-aeon-r"* ]]; then
+        occupied_tser_job_ids+=("${active_job_id}")
+    else
+        continue
+    fi
+    if [[ "${active_job_name}" != "${job_name_prefix}-r"* ]]; then
         continue
     fi
 
@@ -614,7 +725,7 @@ if ((${#active_job_mapping_errors[@]} > 0)); then
     exit 1
 fi
 
-available_node_slots=$((node_count - ${#active_node_job_ids[@]}))
+available_node_slots=$((node_count - ${#occupied_tser_job_ids[@]}))
 if ((available_node_slots < 0)); then
     available_node_slots=0
 fi
@@ -754,7 +865,8 @@ done
 
 total_experiments=$((${#regressors[@]} * ${#datasets[@]} * (max_folds - start_fold + 1)))
 
-echo "TSER interval regressor run - round ${round} of at most ${max_rounds}"
+echo "TSER ${workflow_label} run - round ${round} of at most ${max_rounds}"
+echo "Profile:           ${profile}"
 echo "Results:           ${results_dir}"
 echo "Data:              ${data_dir}"
 echo "Regressors:        ${#regressors[@]}"
@@ -764,6 +876,7 @@ echo "Experiments:       ${total_experiments}"
 echo "Complete:          ${completed_total}"
 echo "Pending:           ${#pending_keys[@]}"
 echo "Active node jobs:  ${#active_node_job_ids[@]} (${active_node_job_ids[*]-none})"
+echo "All TSER node jobs: ${#occupied_tser_job_ids[@]} (${occupied_tser_job_ids[*]-none})"
 echo "Free node slots:   ${available_node_slots}/${node_count}"
 echo "Active experiments: ${#active_experiment[@]}"
 echo "Escalated:         ${oom_escalated} (memory kill or silent death)"
@@ -916,17 +1029,20 @@ write_command() {
     local batch_id="$4"
     local command_file="$5"
     local experiment_output
+    local command_results_dir
     local command_line
     local -a command
 
     experiment_output="${out_dir}/${regressor}/output-${dataset}-${resample}-${batch_id}.txt"
+    regressor_results_dir "${regressor}"
+    command_results_dir="${regressor_results_dir_result}"
 
     command=(
         "${python_path}"
         -u
         "${script_file_path}"
         "${data_dir}"
-        "${results_dir}"
+        "${command_results_dir}"
         "${regressor}"
         "${dataset}"
         "${resample}"
@@ -1153,8 +1269,8 @@ send_round_summary() {
     percent=$(awk -v done="${completed_total}" -v all="${total_experiments}"         'BEGIN { printf "%.1f", 100 * done / all }')
 
     {
-        printf 'TSER interval regressors, round %s
-' "${round}"
+        printf 'TSER %s, round %s
+' "${workflow_label}" "${round}"
         printf 'Host: %s at %s
 
 ' "$(hostname)" "$(date '+%Y-%m-%d %H:%M:%S %Z')"
@@ -1189,7 +1305,7 @@ send_round_summary() {
         return
     fi
 
-    subject="TSER intervals round ${round}: ${percent}% complete, ${#pending_keys[@]} left"
+    subject="TSER ${workflow_label} round ${round}: ${percent}% complete, ${#pending_keys[@]} left"
 
     for candidate in mail mailx sendmail; do
         if command -v "${candidate}" >/dev/null 2>&1; then
@@ -1233,10 +1349,19 @@ echo "Round ${round}: submitted ${#submitted_job_ids[@]} node job(s), ${total_co
 
 send_round_summary
 
+chain_dependency_job_ids=("${submitted_job_ids[@]}")
+if ((${#chain_dependency_job_ids[@]} == 0 &&
+      ${#pending_keys[@]} > 0 &&
+      ${#occupied_tser_job_ids[@]} > 0)); then
+    # No slot was free for this profile. Wake it when one currently occupied
+    # TSER allocation ends instead of silently dropping this workflow's chain.
+    chain_dependency_job_ids=("${occupied_tser_job_ids[0]}")
+fi
+
 if [[ "${chain}" == "true" ]] && ((round < max_rounds)) &&
-   ((${#submitted_job_ids[@]} > 0)); then
+   ((${#chain_dependency_job_ids[@]} > 0)); then
     next_round=$((round + 1))
-    dependency=$(IFS=:; printf '%s' "${submitted_job_ids[*]}")
+    dependency=$(IFS=:; printf '%s' "${chain_dependency_job_ids[*]}")
     supervisor_file="${submission_dir}/generatedSupervisor-round${next_round}.sub"
 
     # afterany, not afterok: a node that dies is exactly the case the next round
@@ -1259,6 +1384,7 @@ if [[ "${chain}" == "true" ]] && ((round < max_rounds)) &&
 set -e
 
 bash "${script_path}" \\
+    --profile "${profile}" \\
     --round ${next_round} \\
     --max-rounds ${max_rounds} \\
     --dataset-list "${dataset_list_file}"
@@ -1278,4 +1404,4 @@ fi
 echo
 echo "Results:     ${results_dir}"
 echo "Submissions: ${submission_dir}"
-echo "Monitor:     bash monitor_tser_interval_regressors.sh --details"
+echo "Monitor:     bash monitor_tser_interval_regressors.sh --profile ${profile} --details"

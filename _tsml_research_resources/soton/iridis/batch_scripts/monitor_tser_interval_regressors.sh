@@ -27,6 +27,8 @@ results_root="${TSER_INTERVAL_RESULTS_ROOT:-${local_path}/Results/TSER/IntervalB
 out_dir="${results_root}/output"
 state_dir="${results_root}/.tser-interval-state"
 attempt_file="${state_dir}/attempts.tsv"
+job_name_prefix="tser-interval"
+workflow_label="interval regressors"
 
 dataset_list_file="${TSER_INTERVAL_DATASET_LIST:-${local_path}/Code/tsml-eval/_tsml_research_resources/dataset_lists/Regression63-MonashExtendedClean.txt}"
 
@@ -36,6 +38,7 @@ memory_tiers_gib=(4 8 16 32 64 128 256 620)
 details="false"
 summary_only="false"
 watch_seconds=0
+profile="interval"
 
 # Must match run_tser_interval_regressors.sh.
 regressors=(
@@ -48,6 +51,8 @@ regressors=(
     "quant"
 )
 
+declare -A regressor_category=()
+
 declare -A complete_count=()
 declare -A live_state=()
 declare -A live_job=()
@@ -58,9 +63,10 @@ declare -a datasets=()
 usage() {
     printf '%s\n' \
         "Usage:" \
-        "  monitor_tser_interval_regressors.sh [--details] [--watch SECONDS]" \
+        "  monitor_tser_interval_regressors.sh [--profile NAME] [--details] [--watch SECONDS]" \
         "" \
         "Options:" \
+        "  --profile NAME   interval or remaining-aeon (default interval)." \
         "  --details        List every incomplete regressor/problem pair." \
         "  --summary        Per regressor progress only, for mailing." \
         "  --watch SECONDS  Refresh continuously at the specified interval." \
@@ -69,6 +75,14 @@ usage() {
 
 while (($# > 0)); do
     case "$1" in
+        --profile)
+            if (($# < 2)); then
+                echo "ERROR: --profile requires a value." >&2
+                exit 2
+            fi
+            profile="$2"
+            shift 2
+            ;;
         --details)
             details="true"
             shift
@@ -96,6 +110,67 @@ while (($# > 0)); do
             ;;
     esac
 done
+
+case "${profile}" in
+    interval)
+        ;;
+    remaining-aeon)
+        regressors=(
+            "rocket"
+            "minirocket"
+            "multirocket"
+            "hydra"
+            "multirocket-hydra"
+            "1nn-dtw"
+            "summary-500"
+            "catch22-500"
+            "freshprince-500"
+            "tsfresh"
+            "rist"
+            "rdst"
+            "dummy"
+            "rotationforest"
+        )
+        regressor_category=(
+            [rocket]="ConvolutionBased"
+            [minirocket]="ConvolutionBased"
+            [multirocket]="ConvolutionBased"
+            [hydra]="ConvolutionBased"
+            [multirocket-hydra]="ConvolutionBased"
+            [1nn-dtw]="DistanceBased"
+            [summary-500]="FeatureBased"
+            [catch22-500]="FeatureBased"
+            [freshprince-500]="FeatureBased"
+            [tsfresh]="FeatureBased"
+            [rist]="Hybrid"
+            [rdst]="ShapeletBased"
+            [dummy]="Other"
+            [rotationforest]="VectorBased"
+        )
+        results_root="${TSER_AEON_RESULTS_ROOT:-${local_path}/Results/TSER}"
+        out_dir="${TSER_AEON_OUTPUT_DIR:-${results_root}/.tser-aeon-output}"
+        state_dir="${TSER_AEON_STATE_DIR:-${results_root}/.tser-aeon-state}"
+        attempt_file="${state_dir}/attempts.tsv"
+        job_name_prefix="tser-aeon"
+        workflow_label="remaining non-deep aeon regressors"
+        ;;
+    *)
+        echo "ERROR: --profile must be interval or remaining-aeon." >&2
+        exit 2
+        ;;
+esac
+
+regressor_results_root_result=""
+regressor_results_root() {
+    local regressor="$1"
+    local category="${regressor_category[${regressor}]-}"
+
+    if [[ -n "${category}" ]]; then
+        regressor_results_root_result="${results_root}/${category}"
+    else
+        regressor_results_root_result="${results_root}"
+    fi
+}
 
 if ! [[ "${watch_seconds}" =~ ^[0-9]+$ ]]; then
     echo "ERROR: --watch must be a non-negative integer." >&2
@@ -141,7 +216,8 @@ collect_complete_counts() {
     complete_count=()
 
     for regressor in "${regressors[@]}"; do
-        predictions_dir="${results_root}/${regressor}/Predictions"
+        regressor_results_root "${regressor}"
+        predictions_dir="${regressor_results_root_result}/${regressor}/Predictions"
         if [[ ! -d "${predictions_dir}" ]]; then
             continue
         fi
@@ -237,7 +313,7 @@ refresh_slurm_activity() {
         if [[ -z "${job_id}" ]]; then
             continue
         fi
-        if [[ "${job_name,,}" != *tser-interval* ]]; then
+        if [[ "${job_name}" != "${job_name_prefix}"* ]]; then
             continue
         fi
 
@@ -263,7 +339,8 @@ refresh_slurm_activity() {
             dataset="${BASH_REMATCH[2]}"
             resample="${BASH_REMATCH[3]}"
 
-            result_file="${results_root}/${regressor}/Predictions/${dataset}/testResample${resample}.csv"
+            regressor_results_root "${regressor}"
+            result_file="${regressor_results_root_result}/${regressor}/Predictions/${dataset}/testResample${resample}.csv"
             if [[ -s "${result_file}" ]]; then
                 # The task-farm allocation may remain alive after this command
                 # finished while other commands continue. Do not report a
@@ -380,7 +457,7 @@ print_relevant_queue() {
     if ((${#relevant_job_records[@]} == 0)); then
         echo "No matching running or pending jobs."
         echo "If work is outstanding the chain has stopped; restart it with"
-        echo "  bash run_tser_interval_regressors.sh"
+        echo "  bash run_tser_interval_regressors.sh --profile ${profile}"
         echo
         return
     fi
@@ -538,7 +615,7 @@ scan_once() {
     collect_complete_counts
     refresh_slurm_activity
 
-    printf 'TSER interval regressor monitor - %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')"
+    printf 'TSER %s monitor - %s\n' "${workflow_label}" "$(date '+%Y-%m-%d %H:%M:%S %Z')"
     printf 'Machine: %s\n' "$(hostname -f 2>/dev/null || hostname)"
     echo "Results: ${results_root}"
     echo "Scope:   ${#regressors[@]} regressors x ${#datasets[@]} datasets x ${resamples} resamples"

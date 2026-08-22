@@ -39,6 +39,9 @@ results_root="${TSER_INTERVAL_RESULTS_ROOT:-${local_path}/Results/TSER/IntervalB
 state_dir="${results_root}/.tser-interval-state"
 reporter_dir="${state_dir}/reporter"
 stop_file="${reporter_dir}/stop"
+profile="interval"
+report_label="intervals"
+report_job_name="tser-interval-report"
 
 queue="batch"
 report_time="00:10:00"
@@ -58,6 +61,7 @@ usage() {
         "  mail_tser_interval_progress.sh [options]" \
         "" \
         "Options:" \
+        "  --profile NAME      interval or remaining-aeon (default interval)." \
         "  --interval-hours N  Hours between reports (default 12)." \
         "  --mode slurm|local  Schedule with Slurm, or loop on the login node." \
         "  --once              Send one report now and schedule nothing." \
@@ -67,6 +71,14 @@ usage() {
 
 while (($# > 0)); do
     case "$1" in
+        --profile)
+            if (($# < 2)); then
+                echo "ERROR: --profile requires a value." >&2
+                exit 2
+            fi
+            profile="$2"
+            shift 2
+            ;;
         --interval-hours)
             if (($# < 2)); then
                 echo "ERROR: --interval-hours requires a value." >&2
@@ -102,6 +114,23 @@ while (($# > 0)); do
             ;;
     esac
 done
+
+case "${profile}" in
+    interval)
+        ;;
+    remaining-aeon)
+        results_root="${TSER_AEON_RESULTS_ROOT:-${local_path}/Results/TSER}"
+        state_dir="${TSER_AEON_STATE_DIR:-${results_root}/.tser-aeon-state}"
+        reporter_dir="${state_dir}/reporter"
+        stop_file="${reporter_dir}/stop"
+        report_label="remaining aeon"
+        report_job_name="tser-aeon-report"
+        ;;
+    *)
+        echo "ERROR: --profile must be interval or remaining-aeon." >&2
+        exit 2
+        ;;
+esac
 
 if ! [[ "${interval_hours}" =~ ^[0-9]+$ ]] || ((interval_hours < 1)); then
     echo "ERROR: --interval-hours must be a positive integer." >&2
@@ -173,7 +202,8 @@ send_report() {
     report_file="${reporter_dir}/report-${stamp}.txt"
 
     TSER_INTERVAL_RESULTS_ROOT="${results_root}" \
-        bash "${monitor_path}" --summary > "${report_file}" 2>&1 || true
+        bash "${monitor_path}" --profile "${profile}" --summary \
+        > "${report_file}" 2>&1 || true
 
     overall=$(
         grep -m1 '^Overall complete:' "${report_file}" |
@@ -191,7 +221,7 @@ send_report() {
         machine="$(hostname -f 2>/dev/null || hostname)"
     fi
 
-    subject="TSER intervals [${machine}]: ${overall}"
+    subject="TSER ${report_label} [${machine}]: ${overall}"
     send_mail "${subject}" "${report_file}" || true
 
     # "13230/13230 (100.0%)" means there is nothing left to report on.
@@ -213,7 +243,7 @@ schedule_next() {
     cat > "${job_file}" <<SUB
 #!/bin/bash
 #SBATCH --mail-type=NONE
-#SBATCH --job-name=tser-interval-report
+#SBATCH --job-name=${report_job_name}
 #SBATCH --partition=${queue}
 #SBATCH --time=${report_time}
 #SBATCH --output=${reporter_dir}/%A-report.out
@@ -226,7 +256,7 @@ schedule_next() {
 . /etc/profile
 set -e
 
-bash "${script_path}" --interval-hours ${interval_hours} --mode slurm
+bash "${script_path}" --profile "${profile}" --interval-hours ${interval_hours} --mode slurm
 SUB
 
     sbatch_output=$(sbatch "${job_file}")
