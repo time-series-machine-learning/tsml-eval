@@ -15,6 +15,7 @@ import os
 import re
 import shlex
 import shutil
+import socket
 import subprocess
 import sys
 import time
@@ -101,6 +102,7 @@ class SlurmSnapshot:
     total_user_tasks: int
     error: str | None = None
     memory_mb: dict[tuple[str, int], int] = field(default_factory=dict)
+    nodes: dict[tuple[str, int], str] = field(default_factory=dict)
 
 
 def _format_value(value, username):
@@ -377,7 +379,7 @@ def _query_slurm(config):
         f"--user={config.username}",
         f"--partition={config.partition}",
         "--states=RUNNING,PENDING",
-        "--format=%200j|%K|%T|%m",
+        "--format=%200j|%K|%T|%m|%R",
     ]
     try:
         result = subprocess.run(command, check=True, capture_output=True, text=True)
@@ -386,25 +388,33 @@ def _query_slurm(config):
 
     states = {}
     memory_mb = {}
+    nodes = {}
     total = 0
     for line in result.stdout.splitlines():
         total += 1
-        fields = line.rsplit("|", maxsplit=3)
-        if len(fields) != 4:
+        fields = line.rsplit("|", maxsplit=4)
+        if len(fields) != 5:
             continue
-        name, array_index, state, memory = (field.strip() for field in fields)
+        name, array_index, state, memory, node = (
+            field.strip() for field in fields
+        )
         try:
             index = int(array_index)
         except ValueError:
             continue
         key = (name, index)
         # Prefer RUNNING when duplicate submissions exist for the same task.
-        if state == "RUNNING" or key not in states:
+        preferred = state == "RUNNING" or key not in states
+        if preferred:
             states[key] = state
-        parsed_memory = _parse_memory_mb(memory)
-        if parsed_memory is not None:
-            memory_mb[key] = parsed_memory
-    return SlurmSnapshot(states, total, memory_mb=memory_mb)
+            parsed_memory = _parse_memory_mb(memory)
+            if parsed_memory is not None:
+                memory_mb[key] = parsed_memory
+            if state == "RUNNING" and node:
+                nodes[key] = node
+            else:
+                nodes.pop(key, None)
+    return SlurmSnapshot(states, total, memory_mb=memory_mb, nodes=nodes)
 
 
 def _parse_memory_mb(value):
@@ -698,10 +708,23 @@ def _compose_email_report(config, datasets, snapshot):
     complete = sum(row[2] for row in rows)
     total = sum(row[3] for row in rows)
     percent = 100 * complete / total if total else 100.0
+    machine = socket.gethostname()
+    node_counts = {}
+    for job_key, node in snapshot.nodes.items():
+        if snapshot.states.get(job_key) == "RUNNING":
+            node_counts[node] = node_counts.get(node, 0) + 1
+    running_nodes = (
+        ", ".join(
+            f"{node} ({count})" for node, count in sorted(node_counts.items())
+        )
+        or "none"
+    )
     lines = [
         f"Complete: {complete}/{total} ({percent:.1f}%)",
+        f"Machine: {machine}",
         f"Updated: {datetime.now().astimezone().isoformat(timespec='seconds')}",
         f"Running jobs: {sum(row[4] for row in rows)}",
+        f"Running nodes: {running_nodes}",
         "",
         f"{'Category':<22} {'Classifier':<24} {'Complete':>10} "
         f"{'Total':>8} {'Progress':>9} {'Running':>9}",
@@ -976,8 +999,18 @@ def _compose_report(
     total_complete = sum(row[1] for row in rows)
     total_expected = sum(row[7] for row in rows)
     total_percent = 100 * total_complete / total_expected if total_expected else 100.0
+    machine = socket.gethostname()
+    running_nodes = sorted(
+        {
+            node
+            for job_key, node in snapshot.nodes.items()
+            if snapshot.states.get(job_key) == "RUNNING"
+        }
+    )
     lines = [
         f"Complete: {total_complete}/{total_expected} ({total_percent:.1f}%)",
+        f"Machine: {machine}",
+        "Running nodes: " + (", ".join(running_nodes) or "none"),
         f"Updated: {datetime.now().astimezone().isoformat(timespec='seconds')}",
         f"Repository: {config.repo_dir}",
         f"Revision: {branch} {commit}",
@@ -1268,6 +1301,8 @@ def run_cycle(
             report_states,
             snapshot.total_user_tasks + len(submitted_tasks),
             snapshot.error,
+            memory_mb=snapshot.memory_mb,
+            nodes=snapshot.nodes,
         )
         all_exhausted = _exhausted_tasks(config, report_snapshot, state, datasets)
         rows = _category_rows(config, datasets, report_snapshot, state)
@@ -1297,7 +1332,7 @@ def run_cycle(
                     if category is None and all_exhausted
                     else ("complete" if category is None else category.name)
                 )
-                subject = f"Multiverse progress: {status}"
+                subject = f"Multiverse progress [{socket.gethostname()}]: {status}"
                 email_report = _compose_email_report(config, datasets, report_snapshot)
                 email_status = _send_email(config.email, subject, email_report)
                 print(email_status)  # noqa: T201

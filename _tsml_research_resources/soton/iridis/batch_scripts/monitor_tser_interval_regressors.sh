@@ -51,6 +51,7 @@ regressors=(
 declare -A complete_count=()
 declare -A live_state=()
 declare -A live_job=()
+declare -A live_node=()
 declare -a relevant_job_records=()
 declare -a datasets=()
 
@@ -216,6 +217,7 @@ refresh_slurm_activity() {
     local dataset
     local resample
     local output_log
+    local result_file
     local combo_state
     local key
     local command_regex='regression_experiments\.py[[:space:]]+[^[:space:]]+[[:space:]]+[^[:space:]]+[[:space:]]+([^[:space:]]+)[[:space:]]+([^[:space:]]+)[[:space:]]+([0-9]+)'
@@ -223,6 +225,7 @@ refresh_slurm_activity() {
 
     live_state=()
     live_job=()
+    live_node=()
     relevant_job_records=()
 
     if ! command -v squeue >/dev/null 2>&1; then
@@ -260,6 +263,15 @@ refresh_slurm_activity() {
             dataset="${BASH_REMATCH[2]}"
             resample="${BASH_REMATCH[3]}"
 
+            result_file="${results_root}/${regressor}/Predictions/${dataset}/testResample${resample}.csv"
+            if [[ -s "${result_file}" ]]; then
+                # The task-farm allocation may remain alive after this command
+                # finished while other commands continue. Do not report a
+                # completed experiment as still running merely because its log
+                # exists.
+                continue
+            fi
+
             output_log=""
             if [[ "${command_line}" =~ ${redirect_regex} ]]; then
                 output_log="${BASH_REMATCH[1]}"
@@ -293,6 +305,11 @@ refresh_slurm_activity() {
             fi
             live_state["${key}"]="${combo_state}"
             live_job["${key}"]="${job_id}"
+            if [[ "${job_state}" == "RUNNING" ]]; then
+                live_node["${key}"]="${reason}"
+            else
+                live_node["${key}"]="-"
+            fi
         done < "${command_file}"
     done < <(
         squeue \
@@ -301,6 +318,44 @@ refresh_slurm_activity() {
             --format="%i|%P|%j|%T|%M|%D|%R" \
             2>/dev/null
     )
+}
+
+print_running_nodes() {
+    local record
+    local job_id
+    local partition
+    local job_name
+    local job_state
+    local elapsed
+    local nodes
+    local reason
+    local node
+    local node_key
+    local current_count
+    local -A allocation_count=()
+
+    for record in "${relevant_job_records[@]}"; do
+        IFS='|' read -r \
+            job_id partition job_name job_state elapsed nodes reason <<< "${record}"
+        if [[ "${job_state}" != "RUNNING" || "${job_name,,}" == *supervisor* || \
+              "${job_name,,}" == *report* ]]; then
+            continue
+        fi
+        node_key="${reason:-unknown}"
+        current_count=${allocation_count["${node_key}"]-0}
+        allocation_count["${node_key}"]=$((current_count + 1))
+    done
+
+    if ((${#allocation_count[@]} == 0)); then
+        echo "Running nodes: none"
+        return
+    fi
+
+    echo "Running nodes:"
+    while IFS= read -r node; do
+        printf '  %s (%d allocation(s))\n' \
+            "${node}" "${allocation_count["${node}"]}"
+    done < <(printf '%s\n' "${!allocation_count[@]}" | sort)
 }
 
 print_relevant_queue() {
@@ -358,7 +413,7 @@ print_current_activity() {
                 running_count=$((running_count + 1))
                 IFS='|' read -r regressor dataset resample <<< "${key}"
                 running_records+=(
-                    "${regressor}|${dataset}|${resample}|${live_job[${key}]}"
+                    "${regressor}|${dataset}|${resample}|${live_job[${key}]}|${live_node[${key}]}"
                 )
                 ;;
             QUEUED) queued_count=$((queued_count + 1)) ;;
@@ -368,12 +423,13 @@ print_current_activity() {
 
     echo "Current experiment activity - ${running_count} running"
     echo "----------------------------------------"
-    printf '%-22s %-30s %-9s %s\n' "REGRESSOR" "DATASET" "RESAMPLE" "JOBID"
+    printf '%-22s %-30s %-9s %-12s %s\n' \
+        "REGRESSOR" "DATASET" "RESAMPLE" "JOBID" "NODE"
 
     for key in "${running_records[@]}"; do
-        IFS='|' read -r regressor dataset resample job_id <<< "${key}"
-        printf '%-22s %-30s %-9s %s\n' \
-            "${regressor}" "${dataset}" "${resample}" "${job_id}"
+        IFS='|' read -r regressor dataset resample job_id node <<< "${key}"
+        printf '%-22s %-30s %-9s %-12s %s\n' \
+            "${regressor}" "${dataset}" "${resample}" "${job_id}" "${node}"
     done
 
     if ((running_count == 0)); then
@@ -483,11 +539,17 @@ scan_once() {
     refresh_slurm_activity
 
     printf 'TSER interval regressor monitor - %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')"
+    printf 'Machine: %s\n' "$(hostname -f 2>/dev/null || hostname)"
     echo "Results: ${results_root}"
     echo "Scope:   ${#regressors[@]} regressors x ${#datasets[@]} datasets x ${resamples} resamples"
+    print_running_nodes
     echo
 
-    if [[ "${summary_only}" != "true" ]]; then
+    if [[ "${summary_only}" == "true" ]]; then
+        # Email summaries still need enough scheduler context to identify the
+        # allocation, state and machine without logging into Iridis.
+        print_relevant_queue
+    else
         print_relevant_queue
         print_current_activity
         print_attempt_state

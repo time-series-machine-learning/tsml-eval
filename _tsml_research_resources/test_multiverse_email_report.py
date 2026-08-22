@@ -44,7 +44,11 @@ def test_email_reports_progress_by_classifier(tmp_path):
     result.parent.mkdir(parents=True)
     result.write_text("result\n", encoding="utf-8")
     running = controller.Task("IntervalBased", "DrCIF", "ProblemA", 1)
-    snapshot = controller.SlurmSnapshot({running.job_key: "RUNNING"}, 1)
+    snapshot = controller.SlurmSnapshot(
+        {running.job_key: "RUNNING"},
+        1,
+        nodes={running.job_key: "compute042"},
+    )
 
     report = controller._compose_email_report(config, ("ProblemA",), snapshot)
 
@@ -52,6 +56,8 @@ def test_email_reports_progress_by_classifier(tmp_path):
     assert "CIF" in report and "1" in report
     assert "DrCIF" in report and "RUNNING" not in report
     assert "Running jobs: 1" in report
+    assert "Machine:" in report
+    assert "Running nodes: compute042 (1)" in report
     assert "OOM" not in report
     assert "Timeout" not in report
     assert "Terminal" not in report

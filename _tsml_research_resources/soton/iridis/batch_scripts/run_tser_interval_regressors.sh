@@ -36,6 +36,8 @@ set -euo pipefail
 #   bash run_tser_interval_regressors.sh                 # start the run
 #   bash run_tser_interval_regressors.sh --dry-run       # show the plan only
 #   bash run_tser_interval_regressors.sh --no-chain      # one round, no chain
+#   bash run_tser_interval_regressors.sh --round 2 --no-chain
+#                                                       # fill spare nodes early
 #
 # --round is set by the chained supervisor job and should not be passed by hand
 # except when deliberately resuming a run whose chain was cancelled.
@@ -350,6 +352,22 @@ fi
 
 mkdir -p "${results_dir}" "${out_dir}" "${state_dir}" "${numba_cache_dir}"
 
+# A dependent supervisor and a manual spare-node refill can become runnable at
+# nearly the same moment. Serialize reconciliation and submission so the second
+# invocation sees the first invocation's newly submitted jobs rather than racing
+# it and duplicating work.
+for required_command in flock sbatch scontrol squeue; do
+    if ! command -v "${required_command}" >/dev/null 2>&1; then
+        echo "ERROR: ${required_command} is required for TSER submission rounds." >&2
+        exit 1
+    fi
+done
+exec 9> "${state_dir}/runner.lock"
+if ! flock -w 300 9; then
+    echo "ERROR: another TSER submission round held the lock for five minutes." >&2
+    exit 1
+fi
+
 for regressor in "${regressors[@]}"; do
     mkdir -p "${out_dir}/${regressor}"
 done
@@ -487,6 +505,120 @@ latest_log_for() {
     latest_log_result="${latest}"
 }
 
+# Locate the command list belonging to an active task-farm allocation. The
+# generated stdout name and command-list name share the same batch suffix.
+active_command_file_for_job() {
+    local job_id="$1"
+    local job_information=""
+    local stdout_path=""
+    local stdout_name=""
+    local stdout_directory=""
+    local suffix=""
+    local candidate=""
+
+    job_information=$(scontrol show job -o "${job_id}" 2>/dev/null || true)
+    if [[ "${job_information}" =~ StdOut=([^[:space:]]+) ]]; then
+        stdout_path="${BASH_REMATCH[1]}"
+        stdout_name="${stdout_path##*/}"
+        stdout_directory="${stdout_path%/*}"
+
+        if [[ "${stdout_name}" == "${job_id}-"* ]]; then
+            suffix="${stdout_name#"${job_id}"-}"
+        elif [[ "${stdout_name}" == "%A-"* ]]; then
+            suffix="${stdout_name#"%A-"}"
+        fi
+        suffix="${suffix%.out}"
+        candidate="${stdout_directory}/generatedCommandList-${suffix}.txt"
+        if [[ -f "${candidate}" ]]; then
+            printf '%s' "${candidate}"
+        fi
+    fi
+}
+
+# Read every currently running or pending node allocation from this workflow.
+# Their commands must not be diagnosed as failed or submitted a second time by
+# an opportunistic refill round.
+declare -A active_experiment=()
+declare -A active_job_name_by_id=()
+declare -A active_job_state_by_id=()
+declare -A active_job_node_by_id=()
+declare -A active_job_memory_by_id=()
+declare -A active_job_command_count=()
+declare -A active_job_complete_count=()
+declare -A active_job_started_count=()
+declare -A active_job_waiting_count=()
+active_node_job_ids=()
+active_job_mapping_errors=()
+command_regex='regression_experiments\.py[[:space:]]+[^[:space:]]+[[:space:]]+[^[:space:]]+[[:space:]]+([^[:space:]]+)[[:space:]]+([^[:space:]]+)[[:space:]]+([0-9]+)'
+redirect_regex='>[[:space:]]+([^[:space:]]+)[[:space:]]+2>&1'
+
+while IFS='|' read -r active_job_id active_job_name active_job_state \
+    active_job_node active_job_memory; do
+    if [[ -z "${active_job_id}" || "${active_job_name}" != "${job_name_prefix}-r"* ||
+          "${active_job_name}" == *supervisor* || "${active_job_name}" == *report* ]]; then
+        continue
+    fi
+
+    active_command_file=$(active_command_file_for_job "${active_job_id}")
+    if [[ ! -f "${active_command_file}" ]]; then
+        active_job_mapping_errors+=(
+            "${active_job_id} (${active_job_name}, ${active_job_state})"
+        )
+        continue
+    fi
+
+    active_node_job_ids+=("${active_job_id}")
+    active_job_name_by_id["${active_job_id}"]="${active_job_name}"
+    active_job_state_by_id["${active_job_id}"]="${active_job_state}"
+    active_job_node_by_id["${active_job_id}"]="${active_job_node}"
+    active_job_memory_by_id["${active_job_id}"]="${active_job_memory}"
+    active_commands=0
+    active_complete=0
+    active_started=0
+    active_waiting=0
+    while IFS= read -r active_command_line || [[ -n "${active_command_line}" ]]; do
+        if [[ "${active_command_line}" =~ ${command_regex} ]]; then
+            active_key="${BASH_REMATCH[1]}|${BASH_REMATCH[2]}|${BASH_REMATCH[3]}"
+            active_commands=$((active_commands + 1))
+            if experiment_is_complete \
+                "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" "${BASH_REMATCH[3]}"; then
+                active_complete=$((active_complete + 1))
+                continue
+            fi
+
+            active_experiment["${active_key}"]="${active_job_id}"
+            active_output_log=""
+            if [[ "${active_command_line}" =~ ${redirect_regex} ]]; then
+                active_output_log="${BASH_REMATCH[1]}"
+            fi
+            if [[ -n "${active_output_log}" && -e "${active_output_log}" ]]; then
+                active_started=$((active_started + 1))
+            else
+                active_waiting=$((active_waiting + 1))
+            fi
+        fi
+    done < "${active_command_file}"
+    active_job_command_count["${active_job_id}"]="${active_commands}"
+    active_job_complete_count["${active_job_id}"]="${active_complete}"
+    active_job_started_count["${active_job_id}"]="${active_started}"
+    active_job_waiting_count["${active_job_id}"]="${active_waiting}"
+done < <(
+    squeue --noheader --user="${username}" --partition="${queue}" \
+        --states=RUNNING,PENDING --format='%i|%200j|%T|%R|%m'
+)
+
+if ((${#active_job_mapping_errors[@]} > 0)); then
+    echo "ERROR: active TSER node jobs could not be mapped to their command lists:" >&2
+    printf '  %s\n' "${active_job_mapping_errors[@]}" >&2
+    echo "Refusing to refill because their experiments cannot safely be excluded." >&2
+    exit 1
+fi
+
+available_node_slots=$((node_count - ${#active_node_job_ids[@]}))
+if ((available_node_slots < 0)); then
+    available_node_slots=0
+fi
+
 # Classify the most recent attempt of an experiment that has no result.
 #
 # OOM      a memory kill is recorded in the log
@@ -567,6 +699,11 @@ for regressor in "${regressors[@]}"; do
                 continue
             fi
 
+            if [[ -n "${active_experiment[${key}]+present}" ]]; then
+                attempt_reason["${key}"]="SUBMITTED"
+                continue
+            fi
+
             tier="${attempt_tier[${key}]-${dataset_start_tier[${dataset}]}}"
             attempts="${attempt_count[${key}]-0}"
             failures="${failure_count[${key}]-0}"
@@ -577,10 +714,10 @@ for regressor in "${regressors[@]}"; do
                 continue
             fi
 
-            # Only reconcile experiments submitted in an earlier round.
-            # Anything submitted in this round is still in flight.
-            if ((attempts > 0)) &&
-               [[ "${attempt_round[${key}]-0}" != "${round}" ]]; then
+            # Active experiments were removed above, so any remaining submitted
+            # attempt has left Slurm without producing a result and can now be
+            # reconciled even when an opportunistic refill reused the round number.
+            if ((attempts > 0)); then
                 classify_failure "${regressor}" "${dataset}" "${resample}"
                 reason="${classify_failure_result}"
 
@@ -626,6 +763,9 @@ echo "Resamples:         $((max_folds - start_fold + 1))"
 echo "Experiments:       ${total_experiments}"
 echo "Complete:          ${completed_total}"
 echo "Pending:           ${#pending_keys[@]}"
+echo "Active node jobs:  ${#active_node_job_ids[@]} (${active_node_job_ids[*]-none})"
+echo "Free node slots:   ${available_node_slots}/${node_count}"
+echo "Active experiments: ${#active_experiment[@]}"
 echo "Escalated:         ${oom_escalated} (memory kill or silent death)"
 if [[ -n "${tier_ceiling_note}" ]]; then
     echo "Memory ceiling:    ${tier_ceiling_note}"
@@ -634,6 +774,27 @@ echo "Retired:           ${#dead_keys[@]}"
 echo "tsml-eval commit:  ${tsml_eval_head} (not pinned)"
 echo "aeon commit:       ${pinned_aeon_commit}"
 echo
+
+if ((${#active_node_job_ids[@]} > 0)); then
+    echo "Active task-farm allocations"
+    echo "----------------------------"
+    printf '%-12s %-36s %-9s %-12s %-8s %8s %9s %11s %9s\n' \
+        "JOBID" "NAME" "STATE" "NODE/REASON" "MEMORY" \
+        "COMMANDS" "COMPLETE" "STARTED/INC" "WAITING"
+    for active_job_id in "${active_node_job_ids[@]}"; do
+        printf '%-12s %-36s %-9s %-12s %-8s %8d %9d %11d %9d\n' \
+            "${active_job_id}" \
+            "${active_job_name_by_id[${active_job_id}]}" \
+            "${active_job_state_by_id[${active_job_id}]}" \
+            "${active_job_node_by_id[${active_job_id}]}" \
+            "${active_job_memory_by_id[${active_job_id}]}" \
+            "${active_job_command_count[${active_job_id}]}" \
+            "${active_job_complete_count[${active_job_id}]}" \
+            "${active_job_started_count[${active_job_id}]}" \
+            "${active_job_waiting_count[${active_job_id}]}"
+    done
+    echo
+fi
 
 if ((${#pending_keys[@]} == 0)); then
     echo "Nothing left to run."
@@ -645,7 +806,7 @@ if ((${#pending_keys[@]} == 0)); then
 fi
 
 # ==============================================================================
-# Allocate the four nodes across the memory tiers present in this round
+# Allocate the currently free nodes across the memory tiers in this round
 # ==============================================================================
 
 declare -A tier_pending_count=()
@@ -675,23 +836,33 @@ for tier in "${active_tiers[@]}"; do
     fi
 done
 
-# Every tier with work gets at least one node. Spare nodes then go to whichever
-# tier faces the longest sequential queue per task slot, so the four nodes are
-# balanced by the time they will take rather than by experiment count.
+# Give every active tier a node when enough slots are free. If there are fewer
+# free slots than tiers, or after that initial allocation, assign each slot to
+# the tier with the longest sequential queue per task slot.
 declare -A tier_slots=()
-remaining_slots=${node_count}
+remaining_slots=${available_node_slots}
 for tier in "${active_tiers[@]}"; do
-    tier_slots["${tier}"]=1
-    remaining_slots=$((remaining_slots - 1))
+    tier_slots["${tier}"]=0
+done
+
+if ((${#active_tiers[@]} <= remaining_slots)); then
+    for tier in "${active_tiers[@]}"; do
+        tier_slots["${tier}"]=1
+        remaining_slots=$((remaining_slots - 1))
+    done
 done
 
 while ((remaining_slots > 0)); do
     best_tier=""
     best_load=-1
     for tier in "${active_tiers[@]}"; do
+        assigned_slots=${tier_slots[${tier}]}
+        if ((assigned_slots < 1)); then
+            assigned_slots=1
+        fi
         load=$((
             ${tier_pending_count[${tier}]} /
-            (${tier_slots[${tier}]} * ${tier_cpus[${tier}]})
+            (assigned_slots * ${tier_cpus[${tier}]})
         ))
         if ((load > best_load)); then
             best_load=${load}
@@ -876,6 +1047,12 @@ SUB
 for tier in "${active_tiers[@]}"; do
     memory_gib="${memory_tiers_gib[$((tier - 1))]}"
     slots="${tier_slots[${tier}]}"
+
+    # When fewer node slots are free than there are active memory tiers, the
+    # unselected tiers remain pending for the next refill round.
+    if ((slots < 1)); then
+        continue
+    fi
 
     slot_files=()
     slot_counts=()

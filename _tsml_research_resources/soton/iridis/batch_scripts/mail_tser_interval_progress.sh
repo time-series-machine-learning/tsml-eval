@@ -166,6 +166,7 @@ send_report() {
     local stamp
     local report_file
     local overall
+    local machine
     local subject
 
     stamp=$(date '+%Y%m%d-%H%M%S')
@@ -176,13 +177,21 @@ send_report() {
 
     overall=$(
         grep -m1 '^Overall complete:' "${report_file}" |
-            sed 's/^Overall complete: //'
+            sed 's/^Overall complete: //' || true
     )
     if [[ -z "${overall}" ]]; then
         overall="progress unknown"
     fi
 
-    subject="TSER intervals: ${overall}"
+    machine=$(
+        grep -m1 '^Machine:' "${report_file}" |
+            sed 's/^Machine:[[:space:]]*//' || true
+    )
+    if [[ -z "${machine}" ]]; then
+        machine="$(hostname -f 2>/dev/null || hostname)"
+    fi
+
+    subject="TSER intervals [${machine}]: ${overall}"
     send_mail "${subject}" "${report_file}" || true
 
     # "13230/13230 (100.0%)" means there is nothing left to report on.
