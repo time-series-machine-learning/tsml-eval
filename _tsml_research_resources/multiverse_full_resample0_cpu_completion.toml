@@ -18,20 +18,22 @@ small_datasets_first = true
 excluded_datasets = []
 validate_results = false
 
-# Known core terminal outcomes are deliberately not resubmitted. The nine
-# cancelled/time-limit entries below are classified as seven-day-limit failures.
+# Known core terminal outcomes are deliberately not resubmitted.
 excluded_tasks = [
+    # Software/algorithm limitations (6).
     "ShapeletBased|RDST|AustraliaRainfall_disc|0",
     "ShapeletBased|RDST|Tiselac|0",
     "ConvolutionBased|MRHydra|Tiselac|0",
     "ConvolutionBased|ROCKET|AustraliaRainfall_disc|0",
     "ConvolutionBased|MRHydra|PenDigits|0",
     "ShapeletBased|RDST|USCActivity|0",
+    # OOM at 128 GB (5).
     "ConvolutionBased|MRHydra|AustraliaRainfall_disc|0",
     "FeatureBased|FreshPRINCE|FaceDetection|0",
     "FeatureBased|FreshPRINCE|FordChallenge|0",
     "FeatureBased|FreshPRINCE|Skoda|0",
     "FeatureBased|FreshPRINCE|Tiselac|0",
+    # Seven-day limit (9), including the four user-classified cancellations.
     "DictionaryBased|TDE|AustraliaRainfall_disc|0",
     "DictionaryBased|TDE|Tiselac|0",
     "DictionaryBased|TDE|USCActivity|0",
