@@ -112,7 +112,11 @@ def main() -> int:
 
     for position, clean_name in enumerate(clean_names, start=1):
         base = _base_name(clean_name)
-        if base.startswith("DREAM") or base.startswith("S2Agri-"):
+        if (
+            base == "LenDB"
+            or base.startswith("DREAM")
+            or base.startswith("S2Agri-")
+        ):
             excluded.append(base)
             print(f"[{position}/{len(clean_names)}] excluded: {base}", flush=True)
             continue

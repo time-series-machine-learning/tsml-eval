@@ -15,7 +15,7 @@ all_categories_first_pass = true
 ignore_existing_failure_logs = true
 max_attempts = 1
 small_datasets_first = true
-excluded_datasets = []
+excluded_datasets = ["LenDB"]
 validate_results = false
 
 # Known core terminal outcomes are deliberately not resubmitted.
