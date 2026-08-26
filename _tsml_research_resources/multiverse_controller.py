@@ -64,6 +64,7 @@ class ControllerConfig:
     env_name: str
     numba_cache_dir: Path
     categories: tuple[Category, ...]
+    excluded_tasks: tuple[str, ...] = ()
     expected_branch: str = ""
     ignore_existing_failure_logs: bool = False
     build_train_files: bool = False
@@ -159,6 +160,9 @@ def _load_config(config_file):
         excluded_datasets=tuple(
             str(dataset) for dataset in controller.get("excluded_datasets", ())
         ),
+        excluded_tasks=tuple(
+            str(task) for task in controller.get("excluded_tasks", ())
+        ),
         validate_results=bool(controller.get("validate_results", False)),
         account=str(slurm.get("account", "cmp")),
         partition=str(slurm.get("partition", "compute")),
@@ -206,6 +210,8 @@ def _validate_config(config):
         raise ValueError("max_attempts must be at least 1")
     if len(config.excluded_datasets) != len(set(config.excluded_datasets)):
         raise ValueError("excluded_datasets must be unique")
+    if len(config.excluded_tasks) != len(set(config.excluded_tasks)):
+        raise ValueError("excluded_tasks must be unique")
     if config.max_active_tasks < 1:
         raise ValueError("max_active_tasks must be at least 1")
     if (
@@ -232,6 +238,36 @@ def _validate_config(config):
     for value in category_names + classifiers + list(config.excluded_datasets):
         if not value or "\n" in value or "\r" in value or "|" in value:
             raise ValueError(f"Unsafe category or classifier name: {value!r}")
+
+    category_classifiers = {
+        category.name: set(category.classifiers) for category in config.categories
+    }
+    for value in config.excluded_tasks:
+        fields = value.split("|")
+        if len(fields) != 4:
+            raise ValueError(
+                "Each excluded_tasks entry must be "
+                "'Category|Classifier|Dataset|Resample'"
+            )
+        category, classifier, dataset, resample = fields
+        if (
+            not dataset
+            or "\n" in dataset
+            or "\r" in dataset
+            or category not in category_classifiers
+            or classifier not in category_classifiers[category]
+        ):
+            raise ValueError(f"Unknown or unsafe excluded task: {value!r}")
+        try:
+            resample_id = int(resample)
+        except ValueError as error:
+            raise ValueError(f"Invalid excluded-task resample: {value!r}") from error
+        if (
+            str(resample_id) != resample
+            or resample_id < 0
+            or resample_id >= config.resamples
+        ):
+            raise ValueError(f"Excluded-task resample is out of range: {value!r}")
 
     if config.expected_branch and not re.fullmatch(
         r"[A-Za-z0-9._/-]+", config.expected_branch
@@ -360,12 +396,15 @@ def _is_complete(config, task):
     return True
 
 
-def _iter_tasks(category, datasets, resamples):
+def _iter_tasks(category, datasets, resamples, excluded_tasks=()):
     """Yield expected tasks in stable classifier/dataset/resample order."""
+    excluded = set(excluded_tasks)
     for classifier in category.classifiers:
         for dataset in datasets:
             for resample in range(resamples):
-                yield Task(category.name, classifier, dataset, resample)
+                task = Task(category.name, classifier, dataset, resample)
+                if task.state_key not in excluded:
+                    yield task
 
 
 def _query_slurm(config):
@@ -594,7 +633,9 @@ def _find_current_category(config, datasets, snapshot, state):
     for category in config.categories:
         missing = [
             task
-            for task in _iter_tasks(category, datasets, config.resamples)
+            for task in _iter_tasks(
+                category, datasets, config.resamples, config.excluded_tasks
+            )
             if not _is_complete(config, task)
         ]
         for task in missing:
@@ -621,7 +662,9 @@ def _find_work_scope(config, datasets, snapshot, state):
     for category in config.categories:
         category_missing = [
             task
-            for task in _iter_tasks(category, datasets, config.resamples)
+            for task in _iter_tasks(
+                category, datasets, config.resamples, config.excluded_tasks
+            )
             if not _is_complete(config, task)
         ]
         missing.extend(category_missing)
@@ -659,9 +702,12 @@ def _count_complete(config, category, datasets):
     if config.validate_results or config.build_train_files:
         return sum(
             _is_complete(config, task)
-            for task in _iter_tasks(category, datasets, config.resamples)
+            for task in _iter_tasks(
+                category, datasets, config.resamples, config.excluded_tasks
+            )
         )
     complete = 0
+    excluded = set(config.excluded_tasks)
     for classifier in category.classifiers:
         for dataset in datasets:
             result_dir = (
@@ -678,6 +724,10 @@ def _count_complete(config, category, datasets):
                     for result_file in files
                     if (match := _RESULT_PATTERN.match(result_file.name))
                     and 0 <= int(match.group(1)) < config.resamples
+                    and Task(
+                        category.name, classifier, dataset, int(match.group(1))
+                    ).state_key
+                    not in excluded
                     and result_file.stat().st_size > 0
                 }
             except OSError:
@@ -689,16 +739,20 @@ def _count_complete(config, category, datasets):
 def _classifier_email_rows(config, datasets, snapshot):
     """Build per-classifier completion and running counts for email reports."""
     rows = []
-    total = len(datasets) * config.resamples
     for category in config.categories:
         for classifier in category.classifiers:
             single = Category(category.name, (classifier,))
+            tasks = tuple(
+                _iter_tasks(
+                    single, datasets, config.resamples, config.excluded_tasks
+                )
+            )
             complete = _count_complete(config, single, datasets)
             running = sum(
                 snapshot.states.get(task.job_key) == "RUNNING"
-                for task in _iter_tasks(single, datasets, config.resamples)
+                for task in tasks
             )
-            rows.append((category.name, classifier, complete, total, running))
+            rows.append((category.name, classifier, complete, len(tasks), running))
     return rows
 
 
@@ -742,7 +796,6 @@ def _compose_email_report(config, datasets, snapshot):
 def _category_rows(config, datasets, snapshot, state_data):
     """Build concise progress rows for every configured category."""
     rows = []
-    tasks_per_classifier = len(datasets) * config.resamples
     for category in config.categories:
         complete = _count_complete(config, category, datasets)
         running = 0
@@ -750,7 +803,12 @@ def _category_rows(config, datasets, snapshot, state_data):
         oom = 0
         timeouts = 0
         failed = 0
-        for task in _iter_tasks(category, datasets, config.resamples):
+        category_tasks = tuple(
+            _iter_tasks(
+                category, datasets, config.resamples, config.excluded_tasks
+            )
+        )
+        for task in category_tasks:
             job_state = snapshot.states.get(task.job_key)
             if job_state == "RUNNING":
                 running += 1
@@ -769,7 +827,7 @@ def _category_rows(config, datasets, snapshot, state_data):
                     timeouts += 1
                 elif terminal_reason not in {None, "OOM"}:
                     failed += 1
-        total = len(category.classifiers) * tasks_per_classifier
+        total = len(category_tasks)
         rows.append(
             (category.name, complete, running, pending, oom, timeouts, failed, total)
         )
@@ -891,7 +949,9 @@ def _record_active_submission(config, state, task, snapshot):
 def _record_all_active_submissions(config, datasets, snapshot, state):
     """Capture active job attempts and memory across every configured category."""
     for category in config.categories:
-        for task in _iter_tasks(category, datasets, config.resamples):
+        for task in _iter_tasks(
+            category, datasets, config.resamples, config.excluded_tasks
+        ):
             if task.job_key in snapshot.states:
                 _record_active_submission(config, state, task, snapshot)
 
@@ -1026,6 +1086,7 @@ def _compose_report(
         "Memory tiers (MB): "
         + ", ".join(str(memory) for memory in config.memory_mb_levels),
         "Excluded datasets: " + (", ".join(config.excluded_datasets) or "none"),
+        f"Excluded tasks: {len(config.excluded_tasks)}",
         "CPU-only jobs: yes",
         "",
     ]
