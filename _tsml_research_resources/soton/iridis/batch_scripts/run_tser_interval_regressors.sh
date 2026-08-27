@@ -144,6 +144,7 @@ regressors=(
     "randomintervals-500"
     "summary-intervals"
     "quant"
+    "pulsar"
 )
 
 # ==============================================================================
