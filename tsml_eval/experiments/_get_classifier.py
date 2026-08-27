@@ -96,6 +96,7 @@ interval_based_classifiers = [
     ["randomintervalclassifier", "randomintervals", "catch22-intervals"],
     ["supervisedintervalclassifier", "supervisedintervals"],
     ["quantclassifier", "quant"],
+    ["pulsarclassifier", "pulsar"],
     "drcif-pipeline",
 ]
 other_classifiers = [
@@ -773,6 +774,12 @@ def _set_classifier_interval_based(
         from aeon.classification.interval_based import QUANTClassifier
 
         return QUANTClassifier(random_state=random_state, **kwargs)
+    elif c == "pulsarclassifier" or c == "pulsar":
+        from tsml_eval._wip.classification._pulsar import PULSARClassifier
+
+        return PULSARClassifier(
+            random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
 
     elif c == "drcif-pipeline":
         import numpy as np
