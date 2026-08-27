@@ -145,7 +145,7 @@ python_path="/home/${username}/.conda/envs/${env_name}/bin/python"
 # UCR datasets live one directory per problem under here:
 #   ${data_dir}/${dataset}/${dataset}_TRAIN.ts
 # Override with data_dir=... if the archive sits elsewhere on the cluster.
-data_dir="${data_dir:-${local_path}/Data}"
+data_dir="${data_dir:-${local_path}/Data/UCR}"
 
 results_dir="${UCR_PULSAR_RESULTS_ROOT:-${local_path}/Results/UCR/IntervalBased}"
 out_dir="${results_dir}/output"
