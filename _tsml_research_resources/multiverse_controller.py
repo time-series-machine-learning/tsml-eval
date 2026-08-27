@@ -565,10 +565,31 @@ def _batch_script(
 
 set -eo pipefail
 source /etc/profile
+
+# Slurm inherits the submitting controller's Conda variables. Clear them before
+# loading the module so conda activate cannot mistake a stale environment name
+# for a correctly configured PATH.
+unset CONDA_DEFAULT_ENV CONDA_PREFIX CONDA_SHLVL CONDA_PROMPT_MODIFIER PYTHONPATH
 module purge
 module load {q(config.module)}
-source {q(str(config.conda_sh))}
+conda_sh={q(str(config.conda_sh))}
+if [[ ! -f "$conda_sh" ]]; then
+    echo "ERROR: conda.sh not found at $conda_sh"
+    exit 1
+fi
+source "$conda_sh"
 conda activate {q(config.env_name)}
+
+expected_env={q(config.env_name)}
+if [[ "$(basename "${{CONDA_PREFIX:-none}}")" != "$expected_env" ]]; then
+    echo "ERROR: expected the $expected_env environment, got ${{CONDA_PREFIX:-none}}"
+    exit 1
+fi
+python_path=$(command -v python)
+if [[ "$python_path" != "$CONDA_PREFIX"/* ]]; then
+    echo "ERROR: python is $python_path, which is outside $CONDA_PREFIX"
+    exit 1
+fi
 
 export NUMBA_CACHE_DIR={q(str(config.numba_cache_dir))}
 export CUDA_VISIBLE_DEVICES=""
@@ -604,7 +625,7 @@ echo "CPU-only:          true"
 echo "Build train file:  {str(config.build_train_files).lower()}"
 echo {q(f"Estimator kwargs:  {kwarg_description}")}
 echo "tsml-eval commit:  $actual_commit"
-echo "Python executable: $(command -v python)"
+echo "Python executable: $python_path"
 echo "Python version:    $(python --version 2>&1)"
 python -c "import aeon; print('Aeon version:      ' + str(aeon.__version__)); print('Aeon location:     ' + str(aeon.__file__))"
 

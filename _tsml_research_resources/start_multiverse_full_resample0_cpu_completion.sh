@@ -24,10 +24,16 @@ run_worker() {
     rm -f -- "${state_dir}/STOP"
 
     source /etc/profile
+    unset CONDA_DEFAULT_ENV CONDA_PREFIX CONDA_SHLVL CONDA_PROMPT_MODIFIER PYTHONPATH
     module purge
     module load python/anaconda/2024.10/3.12.7
     source /gpfs/software/hali/python/anaconda/2024.10/etc/profile.d/conda.sh
     conda activate tsml-eval
+
+    if [[ "$(basename "${CONDA_PREFIX:-none}")" != "tsml-eval" ]]; then
+        echo "ERROR: failed to activate the tsml-eval environment." >&2
+        exit 1
+    fi
     cd "$repo_dir"
 
     echo "Checking the CPU experiment environment."
@@ -57,6 +63,14 @@ run_worker() {
 
 if [[ "${1:-}" == "--worker" ]]; then
     run_worker
+fi
+
+reset_state=false
+if [[ "${1:-}" == "--reset-state" ]]; then
+    reset_state=true
+elif [[ -n "${1:-}" ]]; then
+    echo "ERROR: unknown option: ${1}" >&2
+    exit 1
 fi
 
 for command_name in git pkill screen; do
@@ -104,6 +118,12 @@ for old_name in multiverse-full-resample0-cpu "$session_name"; do
         screen -S "$session" -X quit >/dev/null 2>&1 || true
     done
 done
+
+if [[ "$reset_state" == true && -f "${state_dir}/state.json" ]]; then
+    archived_state="${state_dir}/state.before-environment-fix-$(date +%Y%m%d-%H%M%S).json"
+    mv -- "${state_dir}/state.json" "$archived_state"
+    echo "Archived controller attempt state: ${archived_state}"
+fi
 
 mkdir -p "$state_dir"
 bootstrap_log="${state_dir}/bootstrap.log"
