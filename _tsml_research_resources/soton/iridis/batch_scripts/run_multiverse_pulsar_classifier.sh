@@ -322,15 +322,28 @@ for dataset in "${datasets[@]}"; do
     fi
     seen_datasets["${dataset}"]=1
 
-    train_data="${data_dir}/${dataset}/${dataset}_TRAIN.ts"
-    test_data="${data_dir}/${dataset}/${dataset}_TEST.ts"
-    if [[ ! -s "${train_data}" || ! -s "${test_data}" ]]; then
+    # aeon _load_collection strips a trailing _nmv then _eq to find the folder
+    # but keeps the full variant name for the .ts file, so JapaneseVowels_eq lives
+    # at JapaneseVowels/JapaneseVowels_eq_TRAIN.ts. _disc and plain names keep
+    # their own folder. Try the full name first, then the stripped base, and size
+    # whichever actually holds the files.
+    stripped_folder="${dataset%_nmv}"
+    stripped_folder="${stripped_folder%_eq}"
+    data_folder=""
+    for candidate in "${dataset}" "${stripped_folder}"; do
+        if [[ -s "${data_dir}/${candidate}/${dataset}_TRAIN.ts" &&
+              -s "${data_dir}/${candidate}/${dataset}_TEST.ts" ]]; then
+            data_folder="${candidate}"
+            break
+        fi
+    done
+    if [[ -z "${data_folder}" ]]; then
         missing_data+=("${dataset}")
         continue
     fi
 
-    train_size=$(stat -c %s "${train_data}")
-    test_size=$(stat -c %s "${test_data}")
+    train_size=$(stat -c %s "${data_dir}/${data_folder}/${dataset}_TRAIN.ts")
+    test_size=$(stat -c %s "${data_dir}/${data_folder}/${dataset}_TEST.ts")
     dataset_bytes["${dataset}"]=$((train_size + test_size))
 done
 
