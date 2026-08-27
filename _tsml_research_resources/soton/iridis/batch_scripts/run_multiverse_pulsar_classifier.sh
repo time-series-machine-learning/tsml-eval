@@ -2,10 +2,13 @@
 
 set -euo pipefail
 
-# Run the multivariate PULSAR interval classifier over the 133 problem Multiverse
-# archive, writing test prediction files.
+# Run the multivariate PULSAR interval classifier over the 66 problem
+# Multiverse-core archive (aeon multiverse_core), writing test prediction files.
 #
-# Scope: 1 classifier x 133 datasets x 30 resamples = 3990 experiments.
+# Scope: 1 classifier x 66 datasets x 30 resamples = 1980 experiments. The core
+# names match the results directories the other interval classifiers already used
+# under Results/Multiverse/IntervalBased, so PULSAR drops straight into the
+# multivariate bake-off.
 #
 # PULSAR (aeon ajb/pulsar, cloned into tsml_eval/_wip/classification/_pulsar.py)
 # handles multivariate series with the random-channel-per-interval scheme the
@@ -24,7 +27,7 @@ set -euo pipefail
 # one job at 634 GiB of it, so at 4 GiB a node runs 157 experiments at once and
 # four nodes hold over 600.
 #
-# Rounds and recovery. A single 60 hour allocation cannot finish 3990 heavy
+# Rounds and recovery. A single 60 hour allocation cannot finish 1980 heavy
 # experiments, so this script is built to run repeatedly. Each invocation
 #
 #   1. reconciles what finished, what died, and why,
@@ -38,10 +41,10 @@ set -euo pipefail
 #
 # Usage:
 #
-#   bash run_ucr_pulsar_classifier.sh                 # start the run
-#   bash run_ucr_pulsar_classifier.sh --dry-run       # show the plan only
-#   bash run_ucr_pulsar_classifier.sh --no-chain      # one round, no chain
-#   bash run_ucr_pulsar_classifier.sh --round 2 --no-chain
+#   bash run_multiverse_pulsar_classifier.sh                 # start the run
+#   bash run_multiverse_pulsar_classifier.sh --dry-run       # show the plan only
+#   bash run_multiverse_pulsar_classifier.sh --no-chain      # one round, no chain
+#   bash run_multiverse_pulsar_classifier.sh --round 2 --no-chain
 #                                                     # fill spare nodes early
 #
 # --round is set by the chained supervisor job and should not be passed by hand
@@ -88,7 +91,7 @@ node_count=4
 # nearly empty. If rounds sit pending for long, lower this for the invocation to
 # start sooner on a partly used node:
 #
-#   node_memory_budget_gib=450 bash run_ucr_pulsar_classifier.sh
+#   node_memory_budget_gib=450 bash run_multiverse_pulsar_classifier.sh
 node_memory_budget_gib="${node_memory_budget_gib:-630}"
 max_cpus_per_node="${max_cpus_per_node:-192}"
 
@@ -157,7 +160,7 @@ state_dir="${results_dir}/.mv-pulsar-state"
 numba_cache_dir="${local_path}/Code/.cache/${env_name}"
 shared_runner_lock="${MV_PULSAR_RUNNER_LOCK:-${local_path}/Results/Multiverse/.mv-pulsar-runner.lock}"
 
-dataset_list_file="${tsml_eval_dir}/_tsml_research_resources/dataset_lists/Multivariate133Classification-MultiverseClean.txt"
+dataset_list_file="${tsml_eval_dir}/_tsml_research_resources/dataset_lists/MultivariateClassification66-MultiverseMini.txt"
 
 # ==============================================================================
 # Command line
@@ -170,7 +173,7 @@ dry_run="false"
 usage() {
     printf '%s\n' \
         "Usage:" \
-        "  run_ucr_pulsar_classifier.sh [options]" \
+        "  run_multiverse_pulsar_classifier.sh [options]" \
         "" \
         "Options:" \
         "  --round N            Round number; set by the chained job." \
