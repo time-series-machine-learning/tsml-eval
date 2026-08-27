@@ -13,7 +13,9 @@ expected_branch = "ajb/hc2"
 resamples = 1
 all_categories_first_pass = true
 ignore_existing_failure_logs = true
-max_attempts = 1
+# Permit one retry for jobs recorded by the first completion pass. OOM retries
+# continue to follow the separate 32/64/128 GB memory escalation logic.
+max_attempts = 2
 small_datasets_first = true
 excluded_datasets = ["LenDB"]
 validate_results = false
