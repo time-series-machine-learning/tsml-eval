@@ -604,6 +604,9 @@ echo "CPU-only:          true"
 echo "Build train file:  {str(config.build_train_files).lower()}"
 echo {q(f"Estimator kwargs:  {kwarg_description}")}
 echo "tsml-eval commit:  $actual_commit"
+echo "Python executable: $(command -v python)"
+echo "Python version:    $(python --version 2>&1)"
+python -c "import aeon; print('Aeon version:      ' + str(aeon.__version__)); print('Aeon location:     ' + str(aeon.__file__))"
 
 python -u -m tsml_eval.experiments.classification_experiments \\
     {q(str(config.data_dir))} \\

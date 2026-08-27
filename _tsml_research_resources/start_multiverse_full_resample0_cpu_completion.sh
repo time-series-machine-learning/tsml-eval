@@ -30,6 +30,11 @@ run_worker() {
     conda activate tsml-eval
     cd "$repo_dir"
 
+    echo "Checking the CPU experiment environment."
+    echo "Python executable: $(command -v python)"
+    python -c \
+        "import aeon; print('Aeon version:  ' + str(aeon.__version__)); print('Aeon location: ' + str(aeon.__file__))"
+
     echo "Preparing all eligible equal-length, no-missing Multiverse data."
     python -u "$preparer" \
         --source "$source_list" \
