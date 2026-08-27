@@ -25,11 +25,13 @@ set -euo pipefail
 #   1. reconciles what finished, what died, and why,
 #   2. escalates the memory tier of anything that ran out of memory,
 #   3. resubmits only the resamples that are still missing,
-#   4. chains itself as a dependent Slurm job so the next round starts
-#      automatically when this round's four nodes finish.
+#   4. arms one dependent successor per node job it submits, so each node
+#      refills its own freed slot the moment it finishes rather than waiting
+#      for a whole round of four to end.
 #
-# That chaining is what makes the run unattended: nothing needs a human between
-# the first pass at 4 GiB and the final high memory retries.
+# That continuous refill keeps the nodes saturated and the run unattended:
+# nothing needs a human between the first pass at 4 GiB and the final high
+# memory retries.
 #
 # Usage:
 #
@@ -121,7 +123,7 @@ large_dataset_start_tier="${large_dataset_start_tier:-3}"
 medium_dataset_start_tier="${medium_dataset_start_tier:-2}"
 
 # Safety rails for the unattended chain.
-max_rounds="${max_rounds:-40}"
+max_rounds="${max_rounds:-500}"
 max_attempts_per_experiment="${max_attempts_per_experiment:-10}"
 max_failed_attempts="${max_failed_attempts:-3}"
 
@@ -994,7 +996,7 @@ done
 # Submission
 # ==============================================================================
 
-run_id=$(date +%Y%m%d%H%M%S)
+run_id=$(date +%Y%m%d%H%M%S)-${SLURM_JOB_ID:-$$}
 submission_dir="${results_dir}/batch-submissions/${run_id}-round${round}"
 mkdir -p "${submission_dir}"
 
@@ -1350,36 +1352,40 @@ echo "Round ${round}: submitted ${#submitted_job_ids[@]} node job(s), ${total_co
 
 send_round_summary
 
-chain_dependency_job_ids=("${submitted_job_ids[@]}")
-if ((${#chain_dependency_job_ids[@]} == 0 &&
-      ${#pending_keys[@]} > 0 &&
-      ${#occupied_tser_job_ids[@]} > 0)); then
-    # No slot was free for this profile. Wake it when one currently occupied
-    # TSER allocation ends instead of silently dropping this workflow's chain.
-    chain_dependency_job_ids=("${occupied_tser_job_ids[0]}")
-fi
-
-if [[ "${chain}" == "true" ]] && ((round < max_rounds)) &&
-   ((${#chain_dependency_job_ids[@]} > 0)); then
+# Continuous refill: arm one dependent successor per node job just submitted.
+# When that node finishes, its successor reconciles and refills only the slot it
+# freed, so the nodes stay saturated instead of idling until a whole round of
+# four ends. Every running node therefore always carries exactly one successor,
+# which is what keeps the pipeline live without a round barrier. Concurrent
+# successors are serialized by the shared flock, and each submits only into the
+# slots squeue shows free across both profiles, so the four-node cap holds.
+if [[ "${chain}" != "true" ]]; then
+    echo "Chaining disabled: run the script again to continue."
+elif ((round >= max_rounds)); then
+    echo "Refill generation limit ${max_rounds} reached: no successors armed."
+else
     next_round=$((round + 1))
-    dependency=$(IFS=:; printf '%s' "${chain_dependency_job_ids[*]}")
-    supervisor_file="${submission_dir}/generatedSupervisor-round${next_round}.sub"
 
-    # afterany, not afterok: a node that dies is exactly the case the next round
-    # has to reconcile and retry at a higher memory tier.
-    cat > "${supervisor_file}" <<SUP
+    arm_successor() {
+        local dependency="$1"
+        local tag="$2"
+        local supervisor_file="${submission_dir}/generatedSupervisor-r${next_round}-${tag}.sub"
+
+        # afterany, not afterok: a node that dies is exactly the case a successor
+        # must reconcile and retry at a higher memory tier.
+        cat > "${supervisor_file}" <<SUP
 #!/bin/bash
 #SBATCH --mail-type=${supervisor_mail}
 #SBATCH --mail-user=${mailto}
-#SBATCH --job-name=${job_name_prefix}-supervisor-r${next_round}
+#SBATCH --job-name=${job_name_prefix}-supervisor-r${next_round}-${tag}
 #SBATCH --partition=${queue}
 #SBATCH --time=${supervisor_time}
-#SBATCH --output=${submission_dir}/%A-supervisor-round${next_round}.out
-#SBATCH --error=${submission_dir}/%A-supervisor-round${next_round}.err
+#SBATCH --output=${submission_dir}/%A-supervisor-r${next_round}-${tag}.out
+#SBATCH --error=${submission_dir}/%A-supervisor-r${next_round}-${tag}.err
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --mem=${supervisor_memory}
-#SBATCH --dependency=afterany:${dependency}
+#SBATCH --dependency=${dependency}
 
 . /etc/profile
 set -e
@@ -1391,14 +1397,31 @@ bash "${script_path}" \\
     --dataset-list "${dataset_list_file}"
 SUP
 
-    supervisor_output=$(sbatch "${supervisor_file}")
-    echo "Next round chained: ${supervisor_output}"
-    echo "It starts once jobs ${dependency//:/, } have all finished."
-else
-    if [[ "${chain}" != "true" ]]; then
-        echo "Chaining disabled: run the script again to continue."
-    elif ((round >= max_rounds)); then
-        echo "Round limit ${max_rounds} reached: no further rounds are chained."
+        local output
+        output=$(sbatch "${supervisor_file}")
+        echo "  successor ${tag} on ${dependency}: ${output}"
+    }
+
+    armed=0
+    for node_job_id in "${submitted_job_ids[@]}"; do
+        arm_successor "afterany:${node_job_id}" "n${armed}"
+        armed=$((armed + 1))
+    done
+
+    # Liveness safety only for a manual (re)launch that found every node busy and
+    # so submitted nothing: keep one successor alive so pending work is not
+    # stranded. Steady-state refills never need it, because each running node
+    # already carries its own successor, so it is gated to the initial launch.
+    if ((armed == 0 && round == 1 &&
+          ${#pending_keys[@]} > 0 && ${#occupied_tser_job_ids[@]} > 0)); then
+        arm_successor "afterany:${occupied_tser_job_ids[0]}" "wait"
+        armed=1
+    fi
+
+    if ((armed > 0)); then
+        echo "Armed ${armed} successor(s), one per node job; each refills its slot when its node ends."
+    else
+        echo "No successors armed (nothing submitted, nothing pending to wait on)."
     fi
 fi
 
