@@ -1,7 +1,6 @@
 #!/bin/bash
 # Start the full-run LITETime-MV resample-0 jobs on Hali GPUs, covering the
-# same dataset list as the CPU full pass (MultiverseAvailableCPU.txt). Assumes
-# that list has already been built by start_multiverse_full_resample0_cpu.sh.
+# same eligible dataset list as the current CPU full pass (MultiverseFullCPU.txt).
 
 set -euo pipefail
 
@@ -13,7 +12,7 @@ state_dir="/gpfs/home/${USER}/Results/Multiverse/.controller-full-resample0-lite
 session_name="multiverse-full-litemv-gpu"
 python_executable="/gpfs/home/${USER}/.conda/envs/tsml-eval-gpu/bin/python"
 config_name=$(basename "$config_file")
-dataset_list="/gpfs/home/${USER}/DataSetLists/MultiverseAvailableCPU.txt"
+dataset_list="/gpfs/home/${USER}/DataSetLists/MultiverseFullCPU.txt"
 
 for command_name in flock git pkill screen squeue; do
     if ! command -v "$command_name" >/dev/null 2>&1; then

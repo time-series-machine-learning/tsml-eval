@@ -1,6 +1,6 @@
 # Default-resample LITETime-MV GPU pass over the full Multiverse dataset list
 # on Hali. Uses the same locally-available dataset list built by the CPU full
-# pass (MultiverseAvailableCPU.txt, already excludes DREAM* and S2Agri-*).
+# pass (MultiverseFullCPU.txt, already excludes LenDB, DREAM* and S2Agri-*).
 # Results share the same results_root as the CPU pass, so anything already
 # completed for LITETime-MV (e.g. via the earlier IridisX gap-fill pass) is
 # skipped automatically.
@@ -10,7 +10,7 @@ username = "ajb"
 email = "ajb@uea.ac.uk"
 repo_dir = "/gpfs/home/{username}/Code/tsml-eval-gpu"
 data_dir = "/gpfs/home/{username}/Data/Multiverse"
-dataset_file = "/gpfs/home/{username}/DataSetLists/MultiverseAvailableCPU.txt"
+dataset_file = "/gpfs/home/{username}/DataSetLists/MultiverseFullCPU.txt"
 results_root = "/gpfs/home/{username}/Results/Multiverse"
 state_dir = "/gpfs/home/{username}/Results/Multiverse/.controller-full-resample0-litemv-gpu"
 expected_branch = "ajb/gpu"
@@ -20,7 +20,15 @@ max_attempts = 1
 all_categories_first_pass = true
 ignore_existing_failure_logs = true
 small_datasets_first = true
-excluded_datasets = []
+excluded_datasets = [
+    "LenDB",
+    "DREAMERA",
+    "DREAMERV",
+    "S2Agri-10pc-17",
+    "S2Agri-10pc-34",
+    "S2Agri-17",
+    "S2Agri-34",
+]
 validate_results = true
 
 [slurm]
