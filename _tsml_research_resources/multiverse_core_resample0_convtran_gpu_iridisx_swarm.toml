@@ -1,0 +1,45 @@
+# Conservative ConvTran resample-0 pass on IridisX's SWARM A100 partition.
+# The paired standard configuration handles a disjoint half of the feasible list.
+
+[controller]
+username = "ajb2u23"
+email = "ajb@uea.ac.uk"
+repo_dir = "/home/{username}/Code/tsml-eval-gpu"
+data_dir = "/home/{username}/Data/Multiverse"
+dataset_file = "/home/{username}/DataSetLists/MultiverseCore-ConvTran-Swarm.txt"
+results_root = "/home/{username}/Results/Multiverse"
+state_dir = "/home/{username}/Results/Multiverse/.controller-core-resample0-convtran-swarm"
+resamples = 1
+max_attempts = 1
+all_categories_first_pass = false
+small_datasets_first = false
+excluded_datasets = []
+validate_results = false
+expected_branch = "ajb/gpu"
+
+[slurm]
+account = "ecs"
+partition = "swarm_a100"
+qos = ""
+max_active_tasks = 8
+cpus_per_task = 2
+gpus = 1
+nodes = 1
+gres = "gpu:a100swarm:1"
+memory_mb_levels = [64000, 128000]
+time_limit = "5-00:00:00"
+
+[environment]
+module = "conda/python3"
+conda_sh = ""
+env_name = "tsml-eval-gpu"
+numba_cache_dir = "/home/{username}/Code/.cache/numba/tsml-eval-gpu"
+gpu_check = "torch"
+
+[classifier_kwargs.ConvTran]
+device = "cuda"
+verbose = true
+
+[[categories]]
+name = "DeepLearning"
+classifiers = ["ConvTran"]
