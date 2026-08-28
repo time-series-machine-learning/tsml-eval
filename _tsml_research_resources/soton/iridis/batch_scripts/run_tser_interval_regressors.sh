@@ -6,10 +6,10 @@ set -euo pipefail
 #
 # Scope: 8 regressors x 63 datasets x 30 resamples = 15120 experiments.
 #
-# The 500 tree variants are used wherever one exists, so the ensemble size
-# matches the convention used for the interval classifiers. summary-intervals
-# and quant have no 500 variant: summary-intervals already builds a 500 tree
-# forest internally, and QUANT has no ensemble size of its own.
+# The regressors use aeon's default configurations (200-tree forests), matching
+# the interval classifiers in the survey. QUANT and PULSAR have no separate
+# ensemble size. summary-intervals is a framework estimator (not part of the core
+# published comparison) and still builds a 500-tree forest internally.
 #
 # Submission model. Each round submits four single node jobs, each running its
 # experiments in parallel under staskfarm with one CPU per experiment. Memory is
@@ -136,13 +136,13 @@ generate_train_files="false"
 predefined_folds="false"
 normalise_data="false"
 
-# The interval-based regressors, 500 trees where a 500 variant exists.
+# The interval-based regressors at aeon default configurations (200-tree forests).
 regressors=(
-    "tsf-500"
-    "rise-500"
-    "cif-500"
-    "drcif-500"
-    "randomintervals-500"
+    "tsf"
+    "rise"
+    "cif"
+    "drcif"
+    "randomintervals"
     "summary-intervals"
     "quant"
     "pulsar"
