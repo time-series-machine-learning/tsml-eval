@@ -32,8 +32,15 @@ open `a100` partition. A wrong type is a submission error, not a silent fallback
 | `mi300x` | 1 | `gpu:mi300x:8` | 2-12:00:00 | **AMD**, will not run CUDA TensorFlow |
 | `amd` / `amd_serial` | 90 / 14 | none | 2-12:00:00 | general CPU, no GPUs |
 
-**Everything defaults to the open `a100` partition**, because account `normal` is the
-only association this user holds and `swarm_a100` has `AllowAccounts=ecs,orc`:
+The HPC Early Access announcement of 24/08/2026 permits current IridisX PGR and
+staff users to use up to two complete nodes in `i7_h200`. The ConvTran configuration
+therefore throttles that partition to eight one-GPU tasks. `quad_h200` is retained as
+a second, disjoint queue with the same conservative local throttle, subject to the
+account's actual scheduler limits.
+
+The older GPU configurations default to the open `a100` partition. The dedicated
+ConvTran configurations use the two H200 partitions described above. Historically,
+account `normal` was the only association available and `swarm_a100` rejected it:
 
     $ srun --account=ecs --partition=swarm_a100 ...
     srun: error: Unable to allocate resources: Invalid account or account/partition
@@ -88,6 +95,8 @@ configurations are:
 | --- | --- |
 | `multiverse_core_resample0_hinception_gpu_iridisx.toml` | H-InceptionTime over the 66 problem Multiverse core |
 | `multiverse_core_resample0_litemv_gpu_iridisx.toml` | LITETime-MV over the 66 problem Multiverse core |
+| `multiverse_core_resample0_convtran_gpu_iridisx_quad_h200.toml` | ConvTran resample 0, first half of the feasible core subset on `quad_h200` |
+| `multiverse_core_resample0_convtran_gpu_iridisx_i7_h200.toml` | ConvTran resample 0, second half of the feasible core subset on `i7_h200` |
 | `multiverse_litemv_missing_gpu_iridisx.toml` | LITETime-MV over a hand-listed set of outstanding problems |
 | `ucr_resample0_hinception_gpu_iridisx.toml` | H-InceptionTime over the 112 problem UCR clean list |
 
@@ -120,6 +129,40 @@ Set `MULTIVERSE_LOG_DIR` if the results live elsewhere:
 jobs drop inherited Conda state and verify the interpreter before running, so a stale
 activation now fails the job loudly rather than silently using base Python, but
 `conda deactivate` first anyway.
+
+### ConvTran H200 first pass
+
+ConvTran attention is quadratic in the number of timepoints. The first pass is
+therefore selected from the real files on IridisX rather than treating every CORE
+problem as feasible. By default it accepts equal-length datasets satisfying all
+three bounds:
+
+- at most 10,000 training cases;
+- at most 2,000 timepoints;
+- `n_train_cases * n_timepoints^2 <= 1,000,000,000`.
+
+These are conservative throughput limits, not claims about the absolute H200 memory
+limit. Rejected and unavailable datasets are recorded under `~/DataSetLists`, so the
+thresholds can be expanded deliberately after reviewing timing and memory results.
+
+First run the isolated smoke test:
+
+>bash _tsml_research_resources/run_convtran_gpu_test_iridisx.sh
+
+It defaults to `AtrialFibrillation` on `i7_h200`, asserts that PyTorch sees CUDA, and
+writes only to `~/Results/GPUTest`. The older H200 queue can be tested with:
+
+>PARTITION=quad_h200 GRES=gpu:h200:1 bash _tsml_research_resources/run_convtran_gpu_test_iridisx.sh
+
+Once both allocations work, build the feasible list, inspect both controller dry
+runs, and start the two detached controllers with:
+
+>bash _tsml_research_resources/start_multiverse_core_convtran_gpu_iridisx.sh
+
+The launcher alternates the workload-sorted feasible list between `quad_h200` and
+`i7_h200`. Their lists are disjoint, preventing duplicate submissions even though
+both write standard `ConvTran` results to the shared
+`~/Results/Multiverse/DeepLearning` tree.
 
 ## Smoke test before an archive run
 
@@ -154,6 +197,16 @@ modules. Submits nothing.
 
 `iridisx_python.md`
 : Setup guide for the `tsml-eval-gpu` conda environment.
+
+`select_convtran_datasets.py`
+: Reads Multiverse `.ts` metadata and case counts without materialising the arrays,
+  then records feasible, rejected, and unavailable ConvTran datasets.
+
+`run_convtran_gpu_test_iridisx.sh`
+: Overwriting H200/CUDA smoke test for ConvTran using the isolated `GPUTest` tree.
+
+`start_multiverse_core_convtran_gpu_iridisx.sh`
+: Builds disjoint feasible lists and starts the `quad_h200` and `i7_h200` controllers.
 
 `gpu_scripts/gpu_classification_experiments_ucr.sh`
 `gpu_scripts/gpu_classification_experiments_multiverse.sh`

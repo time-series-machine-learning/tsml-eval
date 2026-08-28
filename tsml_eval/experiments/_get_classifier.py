@@ -29,6 +29,7 @@ deep_learning_classifiers = [
     "litetime-mv",
     ["individualliteclassifier", "individuallite"],
     ["disjointcnnclassifier", "disjointcnn"],
+    ["convtranclassifier", "convtran"],
 ]
 dictionary_based_classifiers = [
     ["bossensemble", "boss"],
@@ -342,6 +343,10 @@ def _set_classifier_deep_learning(
         from aeon.classification.deep_learning import DisjointCNNClassifier
 
         return DisjointCNNClassifier(random_state=random_state, **kwargs)
+    elif c == "convtranclassifier" or c == "convtran":
+        from tsml_eval._wip.classification import ConvTranClassifier
+
+        return ConvTranClassifier(random_state=random_state, **kwargs)
     else:
         raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
 

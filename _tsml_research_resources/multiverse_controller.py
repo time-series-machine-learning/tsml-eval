@@ -75,6 +75,10 @@ class ControllerConfig:
     # IridisX rejects submissions that do not request a node count.
     nodes: int = 1
 
+    # Framework used to prove that an allocated GPU is usable before training.
+    # Existing deep classifiers use TensorFlow; PyTorch classifiers opt in to torch.
+    gpu_check: str = "tensorflow"
+
     # Ignore output logs from older submissions until this controller has observed
     # or submitted the task itself. This is independent of category scheduling.
     ignore_existing_failure_logs: bool = False
@@ -208,6 +212,7 @@ def _load_config(config_file):
         gpus=int(slurm.get("gpus", 0)),
         gres=str(slurm.get("gres", "")),
         nodes=int(slurm.get("nodes", 1)),
+        gpu_check=str(environment.get("gpu_check", "tensorflow")).casefold(),
         ignore_existing_failure_logs=bool(
             controller.get("ignore_existing_failure_logs", False)
         ),
@@ -243,6 +248,8 @@ def _validate_config(config):
         raise ValueError(f"Unsafe gres string: {config.gres!r}")
     if config.nodes < 1:
         raise ValueError("nodes must be at least 1")
+    if config.gpu_check not in {"tensorflow", "torch"}:
+        raise ValueError("gpu_check must be 'tensorflow' or 'torch'")
     if config.expected_branch and not re.fullmatch(
         r"[A-Za-z0-9._/-]+", config.expected_branch
     ):
@@ -546,30 +553,42 @@ def _batch_script(
     ]
     directive_block = "\n".join(line for line in directives if line)
     if config.gpus:
-        device_setup = """cuda_lib_dirs=$(find "$CONDA_PREFIX/lib" -type d -path '*/site-packages/nvidia/*/lib' -print | paste -sd:)
+        if config.gpu_check == "torch":
+            gpu_python_check = """import torch
+
+available = torch.cuda.is_available()
+print("PyTorch version:", torch.__version__)
+print("PyTorch CUDA build:", torch.version.cuda)
+print("CUDA available:", available)
+if not available:
+    raise SystemExit("ERROR: PyTorch cannot see the allocated GPU.")
+print("GPU:", torch.cuda.get_device_name(0))"""
+        else:
+            gpu_python_check = """import tensorflow as tf
+
+devices = tf.config.list_physical_devices("GPU")
+print("TensorFlow version:", tf.__version__)
+print("TensorFlow GPUs:", devices)
+if not devices:
+    raise SystemExit("ERROR: TensorFlow cannot see the allocated GPU.")"""
+        device_setup = f"""cuda_lib_dirs=$(find "$CONDA_PREFIX/lib" -type d -path '*/site-packages/nvidia/*/lib' -print | paste -sd:)
 if [[ -n "$cuda_lib_dirs" ]]; then
-    export LD_LIBRARY_PATH="${cuda_lib_dirs}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+    export LD_LIBRARY_PATH="${{cuda_lib_dirs}}${{LD_LIBRARY_PATH:+:${{LD_LIBRARY_PATH}}}}"
 fi
 ptxas_path=$(find "$CONDA_PREFIX/lib" -type f -path '*/site-packages/nvidia/*/bin/ptxas' -print -quit)
 if [[ -n "$ptxas_path" ]]; then
     export PATH="$(dirname "$ptxas_path"):$PATH"
 fi
-echo "CUDA library path: ${cuda_lib_dirs:-not found}"
-echo "ptxas:             ${ptxas_path:-not found}"
-echo "CUDA_VISIBLE_DEVICES: ${CUDA_VISIBLE_DEVICES:-unset}"
+echo "CUDA library path: ${{cuda_lib_dirs:-not found}}"
+echo "ptxas:             ${{ptxas_path:-not found}}"
+echo "CUDA_VISIBLE_DEVICES: ${{CUDA_VISIBLE_DEVICES:-unset}}"
 if ! command -v nvidia-smi >/dev/null 2>&1; then
     echo "ERROR: nvidia-smi is unavailable in this GPU allocation."
     exit 1
 fi
 nvidia-smi -L
 python - <<'PY'
-import tensorflow as tf
-
-devices = tf.config.list_physical_devices("GPU")
-print("TensorFlow version:", tf.__version__)
-print("TensorFlow GPUs:", devices)
-if not devices:
-    raise SystemExit("ERROR: TensorFlow cannot see the allocated GPU.")
+{gpu_python_check}
 PY"""
     else:
         device_setup = 'export CUDA_VISIBLE_DEVICES=""'

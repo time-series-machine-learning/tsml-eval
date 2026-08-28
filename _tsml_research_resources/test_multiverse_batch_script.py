@@ -119,6 +119,27 @@ def test_gpu_job_verifies_the_environment_and_device(tmp_path):
     assert 'export CUDA_VISIBLE_DEVICES=""' not in script
 
 
+def test_pytorch_gpu_job_checks_torch_instead_of_tensorflow(tmp_path):
+    """A PyTorch estimator must not depend on TensorFlow's CUDA configuration."""
+    config = _config(
+        tmp_path,
+        partition="i7_h200",
+        account="",
+        qos="",
+        gpus=1,
+        gres="gpu:h200:1",
+        gpu_check="torch",
+    )
+    task = controller.Task("DeepLearning", "H-InceptionTime", "STEW", 0)
+    script = controller._batch_script(
+        config, task, [1], "abc123", 64000, prepare_directories=False
+    )
+
+    assert "PyTorch cannot see the allocated GPU" in script
+    assert "torch.cuda.is_available()" in script
+    assert "import tensorflow" not in script
+
+
 def test_cpu_job_disables_visible_devices(tmp_path):
     """A CPU job should not pick up a GPU that happens to be on the node."""
     script_lines = _header(_config(tmp_path))
@@ -182,6 +203,12 @@ def test_gres_without_gpus_is_rejected(tmp_path):
     """A gres string with no GPU request would silently request no GPU."""
     with pytest.raises(ValueError, match="gres is set but gpus is 0"):
         controller._validate_config(_config(tmp_path, gres="gpu:a100swarm:1"))
+
+
+def test_unknown_gpu_check_is_rejected(tmp_path):
+    """A typo must not silently omit the framework-specific CUDA assertion."""
+    with pytest.raises(ValueError, match="gpu_check must be"):
+        controller._validate_config(_config(tmp_path, gpu_check="pytorch"))
 
 
 def test_ordered_pass_can_ignore_failure_logs_from_older_runs(tmp_path):

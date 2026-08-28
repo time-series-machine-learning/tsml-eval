@@ -97,6 +97,16 @@ The GPU jobs run off their own checkout so the branch can differ from the CPU ru
 
 >pip install --editable .
 
+ConvTran is implemented in PyTorch. Install the repository's deep-learning extra in
+the same editable environment (this retains the editable checkout):
+
+>pip install --editable ".[deep_learning]"
+
+Confirm the environment has a CUDA-enabled PyTorch before submitting ConvTran. The
+H200 smoke test performs the same assertion inside an allocation:
+
+>python -c "import torch; print(torch.__version__, torch.version.cuda, torch.cuda.is_available())"
+
 The `pip uninstall` matters when the environment was cloned from the CPU one, as it
 drops the inherited pointer to the CPU checkout. Confirm which code the environment
 resolves to:
