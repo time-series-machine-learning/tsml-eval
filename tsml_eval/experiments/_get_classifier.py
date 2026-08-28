@@ -97,6 +97,7 @@ interval_based_classifiers = [
     ["supervisedintervalclassifier", "supervisedintervals"],
     ["quantclassifier", "quant"],
     ["pulsarclassifier", "pulsar"],
+    ["fitclassifier", "fit"],
     "drcif-pipeline",
 ]
 other_classifiers = [
@@ -780,6 +781,11 @@ def _set_classifier_interval_based(
         return PULSARClassifier(
             random_state=random_state, n_jobs=n_jobs, **kwargs
         )
+
+    elif c == "fitclassifier" or c == "fit":
+        from tsml_eval._wip.classification._fit import FITClassifier
+
+        return FITClassifier(random_state=random_state, **kwargs)
 
     elif c == "drcif-pipeline":
         import numpy as np
