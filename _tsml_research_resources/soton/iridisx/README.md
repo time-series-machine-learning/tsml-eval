@@ -28,18 +28,19 @@ open `a100` partition. A wrong type is a submission error, not a silent fallback
 | `swarm_l4` | 3 | `gpu:l4swarm:7` | 5-00:00:00 | ECS/ORC |
 | `scavenger_4a100` | 5 | `gpu:a100swarm:4` | 12:00:00 | idle `swarm_a100`, **preemptible** |
 | `scavenger_8h100` | 2 | `gpu:h100swarm:8` | 12:00:00 | idle `swarm_h100`, **preemptible** |
-| `quad_h200` / `i7_h200` | 4 / 25 | `gpu:h200:4` | 2-12:00:00 | H200 |
+| `i7_h200` | 25 | `gpu:h200:1` | 2-12:00:00 | H200 Early Access |
 | `mi300x` | 1 | `gpu:mi300x:8` | 2-12:00:00 | **AMD**, will not run CUDA TensorFlow |
 | `amd` / `amd_serial` | 90 / 14 | none | 2-12:00:00 | general CPU, no GPUs |
 
 The HPC Early Access announcement of 24/08/2026 permits current IridisX PGR and
-staff users to use up to two complete nodes in `i7_h200`. The ConvTran configuration
-therefore throttles that partition to eight one-GPU tasks. `quad_h200` is retained as
-a second, disjoint queue with the same conservative local throttle, subject to the
-account's actual scheduler limits.
+staff users to use up to two complete nodes in `i7_h200`. The current ConvTran
+rerun uses the established `a100` and `swarm_a100` pair: two active tasks on the
+standard queue and eight on SWARM (account `ecs`). The Early Access H200 queue can
+be added separately once its production configuration is confirmed.
 
 The older GPU configurations default to the open `a100` partition. The dedicated
-ConvTran configurations use the two H200 partitions described above. Historically,
+ConvTran configurations use the standard and SWARM A100 partitions described above.
+Historically,
 account `normal` was the only association available and `swarm_a100` rejected it:
 
     $ srun --account=ecs --partition=swarm_a100 ...
@@ -95,8 +96,8 @@ configurations are:
 | --- | --- |
 | `multiverse_core_resample0_hinception_gpu_iridisx.toml` | H-InceptionTime over the 66 problem Multiverse core |
 | `multiverse_core_resample0_litemv_gpu_iridisx.toml` | LITETime-MV over the 66 problem Multiverse core |
-| `multiverse_core_resample0_convtran_gpu_iridisx_quad_h200.toml` | ConvTran resample 0, first half of the feasible core subset on `quad_h200` |
-| `multiverse_core_resample0_convtran_gpu_iridisx_i7_h200.toml` | ConvTran resample 0, second half of the feasible core subset on `i7_h200` |
+| `multiverse_core_resample0_convtran_gpu_iridisx_a100.toml` | ConvTran resample 0, first half of the feasible core subset on `a100` |
+| `multiverse_core_resample0_convtran_gpu_iridisx_swarm.toml` | ConvTran resample 0, second half of the feasible core subset on `swarm_a100` |
 | `multiverse_litemv_missing_gpu_iridisx.toml` | LITETime-MV over a hand-listed set of outstanding problems |
 | `ucr_resample0_hinception_gpu_iridisx.toml` | H-InceptionTime over the 112 problem UCR clean list |
 
@@ -130,7 +131,7 @@ jobs drop inherited Conda state and verify the interpreter before running, so a 
 activation now fails the job loudly rather than silently using base Python, but
 `conda deactivate` first anyway.
 
-### ConvTran H200 first pass
+### ConvTran A100 first pass
 
 ConvTran attention is quadratic in the number of timepoints. The first pass is
 therefore selected from the real files on IridisX rather than treating every CORE
@@ -141,7 +142,7 @@ three bounds:
 - at most 2,000 timepoints;
 - `n_train_cases * n_timepoints^2 <= 1,000,000,000`.
 
-These are conservative throughput limits, not claims about the absolute H200 memory
+These are conservative throughput limits, not claims about the absolute A100 memory
 limit. Rejected and unavailable datasets are recorded under `~/DataSetLists`, so the
 thresholds can be expanded deliberately after reviewing timing and memory results.
 
@@ -149,18 +150,18 @@ First run the isolated smoke test:
 
 >bash _tsml_research_resources/run_convtran_gpu_test_iridisx.sh
 
-It defaults to `AtrialFibrillation` on `i7_h200`, asserts that PyTorch sees CUDA, and
-writes only to `~/Results/GPUTest`. The older H200 queue can be tested with:
+It defaults to `AtrialFibrillation` on `a100`, asserts that PyTorch sees CUDA, and
+writes only to `~/Results/GPUTest`. The SWARM queue can be tested with:
 
->PARTITION=quad_h200 GRES=gpu:h200:1 bash _tsml_research_resources/run_convtran_gpu_test_iridisx.sh
+>PARTITION=swarm_a100 GRES=gpu:a100swarm:1 ACCOUNT=ecs bash _tsml_research_resources/run_convtran_gpu_test_iridisx.sh
 
 Once both allocations work, build the feasible list, inspect both controller dry
 runs, and start the two detached controllers with:
 
 >bash _tsml_research_resources/start_multiverse_core_convtran_gpu_iridisx.sh
 
-The launcher alternates the workload-sorted feasible list between `quad_h200` and
-`i7_h200`. Their lists are disjoint, preventing duplicate submissions even though
+The launcher alternates the workload-sorted feasible list between `a100` and
+`swarm_a100`. Their lists are disjoint, preventing duplicate submissions even though
 both write standard `ConvTran` results to the shared
 `~/Results/Multiverse/DeepLearning` tree.
 
@@ -203,10 +204,10 @@ modules. Submits nothing.
   then records feasible, rejected, and unavailable ConvTran datasets.
 
 `run_convtran_gpu_test_iridisx.sh`
-: Overwriting H200/CUDA smoke test for ConvTran using the isolated `GPUTest` tree.
+: ConvTran CUDA smoke test using the isolated `GPUTest` tree.
 
 `start_multiverse_core_convtran_gpu_iridisx.sh`
-: Builds disjoint feasible lists and starts the `quad_h200` and `i7_h200` controllers.
+: Builds disjoint feasible lists and starts the `a100` and `swarm_a100` controllers.
 
 `gpu_scripts/gpu_classification_experiments_ucr.sh`
 `gpu_scripts/gpu_classification_experiments_multiverse.sh`

@@ -103,7 +103,7 @@ the same editable environment (this retains the editable checkout):
 >pip install --editable ".[deep_learning]"
 
 Confirm the environment has a CUDA-enabled PyTorch before submitting ConvTran. The
-H200 smoke test performs the same assertion inside an allocation:
+A100 smoke test performs the same assertion inside an allocation:
 
 >python -c "import torch; print(torch.__version__, torch.version.cuda, torch.cuda.is_available())"
 

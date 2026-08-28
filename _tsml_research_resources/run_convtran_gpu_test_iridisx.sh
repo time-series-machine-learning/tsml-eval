@@ -1,10 +1,10 @@
 #!/bin/bash
-# Run one ConvTran smoke test in an IridisX H200 allocation.
+# Run one ConvTran smoke test in an IridisX A100 allocation.
 
 set -euo pipefail
 
-partition=${PARTITION:-i7_h200}
-gres=${GRES:-gpu:h200:1}
+partition=${PARTITION:-a100}
+gres=${GRES:-gpu:a100:1}
 account=${ACCOUNT:-}
 qos=${QOS:-}
 
