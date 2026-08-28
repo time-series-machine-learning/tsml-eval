@@ -15,6 +15,7 @@ import os
 import re
 import shlex
 import shutil
+import socket
 import subprocess
 import sys
 import time
@@ -794,6 +795,7 @@ def _compose_email_report(config, datasets, snapshot):
     percent = 100 * complete / total if total else 100.0
     lines = [
         f"Complete: {complete}/{total} ({percent:.1f}%)",
+        f"Machine: {socket.getfqdn()}",
         f"Updated: {datetime.now().astimezone().isoformat(timespec='seconds')}",
         f"Running jobs: {sum(row[4] for row in rows)}",
         "",

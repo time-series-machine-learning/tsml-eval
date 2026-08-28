@@ -49,6 +49,7 @@ def test_email_reports_progress_by_classifier(tmp_path):
     report = controller._compose_email_report(config, ("ProblemA",), snapshot)
 
     assert report.splitlines()[0] == "Complete: 1/4 (25.0%)"
+    assert report.splitlines()[1].startswith("Machine: ")
     assert "CIF" in report and "1" in report
     assert "DrCIF" in report and "RUNNING" not in report
     assert "Running jobs: 1" in report
