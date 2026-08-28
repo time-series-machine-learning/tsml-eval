@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import getpass
 import json
+import math
 import os
 import re
 import shlex
@@ -69,6 +70,7 @@ class ControllerConfig:
     ignore_existing_failure_logs: bool = False
     build_train_files: bool = False
     dataset_first: bool = False
+    observed_runtime_first: bool = False
     classifier_kwargs: dict[str, dict[str, bool | int | float | str]] = field(
         default_factory=dict
     )
@@ -193,6 +195,9 @@ def _load_config(config_file):
         ),
         build_train_files=bool(controller.get("build_train_files", False)),
         dataset_first=bool(controller.get("dataset_first", False)),
+        observed_runtime_first=bool(
+            controller.get("observed_runtime_first", False)
+        ),
         classifier_kwargs={
             str(classifier): {
                 str(key): value for key, value in arguments.items()
@@ -317,7 +322,31 @@ def _included_datasets(config, datasets):
     included = tuple(dataset for dataset in datasets if dataset not in excluded)
     if not included:
         raise ValueError("Every dataset was excluded")
-    if config.small_datasets_first:
+    if config.observed_runtime_first:
+        sizes = {
+            dataset: _dataset_size_bytes(config.data_dir / dataset)
+            for dataset in included
+        }
+        original_positions = {dataset: index for index, dataset in enumerate(included)}
+        profiles = {
+            dataset: _dataset_completion_runtime_profile(config, dataset)
+            for dataset in included
+        }
+        included = tuple(
+            sorted(
+                included,
+                key=lambda dataset: (
+                    profiles[dataset][0],
+                    profiles[dataset][1],
+                    profiles[dataset][2] is None,
+                    profiles[dataset][2] if profiles[dataset][2] is not None else 0,
+                    sizes[dataset] is None,
+                    sizes[dataset] if sizes[dataset] is not None else 0,
+                    original_positions[dataset],
+                ),
+            )
+        )
+    elif config.small_datasets_first:
         sizes = {
             dataset: _dataset_size_bytes(config.data_dir / dataset)
             for dataset in included
@@ -334,6 +363,68 @@ def _included_datasets(config, datasets):
             )
         )
     return included
+
+
+def _dataset_completion_runtime_profile(config, dataset):
+    """Return missing work, missing timings, and worst observed runtime."""
+    missing_results = 0
+    missing_timings = 0
+    runtimes = []
+    for category in config.categories:
+        for classifier in category.classifiers:
+            for resample in range(config.resamples):
+                task = Task(category.name, classifier, dataset, resample)
+                if task.state_key in config.excluded_tasks:
+                    continue
+                if not _is_complete(config, task):
+                    missing_results += 1
+            runtime = _result_runtime_seconds(
+                config.results_root
+                / category.name
+                / classifier
+                / "Predictions"
+                / dataset
+                / "testResample0.csv"
+            )
+            if runtime is None:
+                missing_timings += 1
+            else:
+                runtimes.append(runtime)
+    return missing_results, missing_timings, max(runtimes) if runtimes else None
+
+
+def _result_runtime_seconds(result_file):
+    """Read fit plus predict time from a tsml-eval result header."""
+    try:
+        with result_file.open(encoding="utf-8", errors="replace") as file:
+            first_line = next(file).rstrip("\r\n").split(",")
+            next(file)
+            third_line = next(file).rstrip("\r\n").split(",")
+        if len(first_line) < 5 or len(third_line) < 3:
+            return None
+        fit_time = float(third_line[1])
+        predict_time = float(third_line[2])
+        if (
+            not math.isfinite(fit_time)
+            or not math.isfinite(predict_time)
+            or fit_time < 0
+            or predict_time < 0
+        ):
+            return None
+        factors = {
+            "NANOSECONDS": 1e-9,
+            "MICROSECONDS": 1e-6,
+            "MILLISECONDS": 1e-3,
+            "SECONDS": 1.0,
+            "MINUTES": 60.0,
+            "HOURS": 3600.0,
+        }
+        factor = factors.get(first_line[4].strip().upper())
+        if factor is None:
+            return None
+        return (fit_time + predict_time) * factor
+    except (OSError, StopIteration, ValueError):
+        return None
 
 
 def _dataset_size_bytes(dataset_dir):
@@ -1138,6 +1229,12 @@ def _compose_report(
             if config.all_categories_first_pass
             else "ordered categories"
             )
+        ),
+        "Dataset ordering: "
+        + (
+            "least missing work, observed runtime, then input size"
+            if config.observed_runtime_first
+            else ("input size" if config.small_datasets_first else "dataset list")
         ),
         "Memory tiers (MB): "
         + ", ".join(str(memory) for memory in config.memory_mb_levels),
