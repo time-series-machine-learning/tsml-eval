@@ -66,7 +66,8 @@ python -u "${script_dir}/multiverse_controller.py" \
 
 echo "Starting detached controller session: ${session_name}"
 screen -dmS "$session_name" \
-    env MULTIVERSE_CLEAR_PENDING_ON_START=false \
+    env MULTIVERSE_CLEAR_PENDING_ON_START=true \
+    MULTIVERSE_CLEAR_PENDING_PARTITION=compute \
     bash "$supervisor" "$config_file"
 
 sleep 2

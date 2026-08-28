@@ -2,8 +2,8 @@
 
 The controller performs one reconciliation cycle and exits. Run it periodically with
 ``run_multiverse_controller.sh`` so a failed cycle is restarted without leaving a
-long-lived Python process. It supports either ordered categories or a breadth-first
-pass across every category.
+long-lived Python process. It supports ordered categories, breadth-first scheduling,
+and dataset-first scheduling across all configured categories.
 """
 
 from __future__ import annotations
@@ -68,6 +68,7 @@ class ControllerConfig:
     expected_branch: str = ""
     ignore_existing_failure_logs: bool = False
     build_train_files: bool = False
+    dataset_first: bool = False
     classifier_kwargs: dict[str, dict[str, bool | int | float | str]] = field(
         default_factory=dict
     )
@@ -191,6 +192,7 @@ def _load_config(config_file):
             controller.get("ignore_existing_failure_logs", False)
         ),
         build_train_files=bool(controller.get("build_train_files", False)),
+        dataset_first=bool(controller.get("dataset_first", False)),
         classifier_kwargs={
             str(classifier): {
                 str(key): value for key, value in arguments.items()
@@ -678,6 +680,32 @@ def _find_current_category(config, datasets, snapshot, state):
 
 def _find_work_scope(config, datasets, snapshot, state):
     """Return the configured ordered-category or all-category work scope."""
+    if config.dataset_first:
+        missing = []
+        actionable = False
+        excluded = set(config.excluded_tasks)
+        for dataset in datasets:
+            for category in config.categories:
+                category_missing = []
+                for classifier in category.classifiers:
+                    for resample in range(config.resamples):
+                        task = Task(category.name, classifier, dataset, resample)
+                        if (
+                            task.state_key not in excluded
+                            and not _is_complete(config, task)
+                        ):
+                            category_missing.append(task)
+                missing.extend(category_missing)
+                for task in category_missing:
+                    if task.job_key in snapshot.states:
+                        _record_active_submission(config, state, task, snapshot)
+                        actionable = True
+                    else:
+                        _refresh_failure_record(config, state, task)
+                        actionable = actionable or _task_retryable(config, state, task)
+        if actionable:
+            return Category("DatasetFirst", ()), missing
+        return None, []
     if not config.all_categories_first_pass:
         return _find_current_category(config, datasets, snapshot, state)
 
@@ -1103,9 +1131,13 @@ def _compose_report(
         f"Resamples: {config.resamples}",
         "Scheduling mode: "
         + (
+            "dataset-first across all categories"
+            if config.dataset_first
+            else (
             "breadth-first across all categories"
             if config.all_categories_first_pass
             else "ordered categories"
+            )
         ),
         "Memory tiers (MB): "
         + ", ".join(str(memory) for memory in config.memory_mb_levels),

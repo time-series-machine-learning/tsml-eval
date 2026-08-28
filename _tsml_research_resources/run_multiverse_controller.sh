@@ -9,6 +9,7 @@ config_file=${1:-"${script_dir}/multiverse_controller.toml"}
 interval_seconds=${2:-${MULTIVERSE_CONTROLLER_INTERVAL_SECONDS:-1800}}
 email_interval_seconds=${3:-${MULTIVERSE_EMAIL_INTERVAL_SECONDS:-14400}}
 clear_pending_on_start=${MULTIVERSE_CLEAR_PENDING_ON_START:-true}
+clear_pending_partition=${MULTIVERSE_CLEAR_PENDING_PARTITION:-}
 python_executable=${PYTHON:-python}
 post_cycle_python=${MULTIVERSE_POST_CYCLE_PYTHON:-}
 log_dir="${MULTIVERSE_SUPERVISOR_LOG_DIR:-/gpfs/home/${USER}/Results/Multiverse/.controller}"
@@ -43,6 +44,7 @@ echo "Configuration: ${config_file}"
 echo "Cycle interval: ${interval_seconds} seconds"
 echo "Email interval: ${email_interval_seconds} seconds"
 echo "Clear pending jobs on start: ${clear_pending_on_start}"
+echo "Pending-job partition filter: ${clear_pending_partition:-all partitions}"
 echo "Log: ${log_file}"
 
 if [[ "${clear_pending_on_start}" == true ]]; then
@@ -52,10 +54,16 @@ if [[ "${clear_pending_on_start}" == true ]]; then
         exit 1
     fi
 
-    pending_output=$(
-        squeue --noheader --array --user="${USER}" --states=PENDING \
-            --format='%i'
+    pending_query=(
+        --noheader
+        --array
+        --user="${USER}"
+        --states=PENDING
     )
+    if [[ -n "${clear_pending_partition}" ]]; then
+        pending_query+=(--partition="${clear_pending_partition}")
+    fi
+    pending_output=$(squeue "${pending_query[@]}" --format='%i')
     mapfile -t pending_ids < <(
         sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e '/^$/d' \
             <<< "${pending_output}"
