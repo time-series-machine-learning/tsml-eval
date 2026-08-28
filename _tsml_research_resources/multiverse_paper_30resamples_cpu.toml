@@ -15,6 +15,7 @@ resamples = 30
 # Process one category to completion or a terminal outcome before moving on.
 all_categories_first_pass = false
 dataset_first = true
+observed_runtime_first = true
 
 # Retain old diagnostic logs without treating them as failures in this clean run.
 ignore_existing_failure_logs = true
@@ -72,10 +73,6 @@ classifiers = ["RDST", "STC"]
 [[categories]]
 name = "ConvolutionBased"
 classifiers = ["Arsenal", "MRHydra", "ROCKET"]
-
-[[categories]]
-name = "DistanceBased"
-classifiers = ["1NN-DTW"]
 
 [[categories]]
 name = "FeatureBased"

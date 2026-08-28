@@ -8,6 +8,15 @@ repo_dir=$(cd -- "${script_dir}/.." && pwd)
 launcher="${script_dir}/start_multiverse_paper_cpu_controller.sh"
 required_branch="ajb/hc2"
 minimum_age_seconds=$((24 * 60 * 60))
+state_dir="/gpfs/home/${USER}/Results/Multiverse/.controller-paper-30resamples-cpu"
+reset_state=false
+
+if [[ "${1:-}" == "--reset-state" ]]; then
+    reset_state=true
+elif [[ -n "${1:-}" ]]; then
+    echo "ERROR: unknown option: ${1}" >&2
+    exit 1
+fi
 
 for command_name in git scancel squeue; do
     if ! command -v "$command_name" >/dev/null 2>&1; then
@@ -36,6 +45,10 @@ elapsed_seconds() {
         minutes=$hours
         hours=0
     fi
+    days=$((10#$days))
+    hours=$((10#$hours))
+    minutes=$((10#$minutes))
+    seconds=$((10#$seconds))
     echo $((days * 86400 + hours * 3600 + minutes * 60 + seconds))
 }
 
@@ -61,6 +74,12 @@ if ((${#short_jobs[@]})); then
     done
 else
     echo "No running compute tasks younger than 24 hours."
+fi
+
+if [[ "$reset_state" == true && -f "${state_dir}/state.json" ]]; then
+    archived_state="${state_dir}/state.before-nodeep-restart-$(date +%Y%m%d-%H%M%S).json"
+    mv -- "${state_dir}/state.json" "$archived_state"
+    echo "Archived controller attempt state: ${archived_state}"
 fi
 
 echo "Restarting the CPU paper controller. Pending compute jobs will also be cleared."
