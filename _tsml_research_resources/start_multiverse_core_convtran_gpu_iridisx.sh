@@ -1,6 +1,6 @@
 #!/bin/bash
 # Select a conservative ConvTran subset of MultiverseCore, split it between the two
-# IridisX standard A100 and SWARM A100 partitions, dry-run both controllers, and
+# IridisX standard A100 and Early Access H200 partitions, dry-run both controllers, and
 # start them detached.
 
 set -euo pipefail
@@ -13,7 +13,7 @@ selector="${script_dir}/select_convtran_datasets.py"
 supervisor="${script_dir}/run_multiverse_controller.sh"
 config_prefix="${script_dir}/multiverse_core_resample0_convtran_gpu_iridisx"
 config_a100="${config_prefix}_a100.toml"
-config_swarm="${config_prefix}_swarm.toml"
+config_i7="${config_prefix}_i7_h200.toml"
 
 data_dir="/home/${USER}/Data/Multiverse"
 list_dir="/home/${USER}/DataSetLists"
@@ -21,10 +21,10 @@ feasible_list="${list_dir}/MultiverseCore-ConvTran-Feasible.txt"
 rejected_list="${list_dir}/MultiverseCore-ConvTran-Rejected.tsv"
 unavailable_list="${list_dir}/MultiverseCore-ConvTran-Unavailable.txt"
 a100_list="${list_dir}/MultiverseCore-ConvTran-A100.txt"
-swarm_list="${list_dir}/MultiverseCore-ConvTran-Swarm.txt"
+i7_list="${list_dir}/MultiverseCore-ConvTran-I7H200.txt"
 results_dir="/home/${USER}/Results/Multiverse"
 state_a100="${results_dir}/.controller-core-resample0-convtran-a100"
-state_swarm="${results_dir}/.controller-core-resample0-convtran-swarm"
+state_i7="${results_dir}/.controller-core-resample0-convtran-i7-h200"
 python_executable="/home/${USER}/.conda/envs/tsml-eval-gpu/bin/python"
 required_branch="ajb/gpu"
 
@@ -41,7 +41,7 @@ for command_name in flock git pgrep pkill setsid squeue; do
     fi
 done
 for required_file in "$source_list" "$selector" "$supervisor" "$config_a100" \
-    "$config_swarm" "$python_executable"; do
+    "$config_i7" "$python_executable"; do
     if [[ ! -f "$required_file" ]]; then
         echo "ERROR: required file not found: ${required_file}" >&2
         exit 1
@@ -65,7 +65,7 @@ if [[ ! -d "$data_dir" ]]; then
     exit 1
 fi
 
-mkdir -p "$list_dir" "$state_a100" "$state_swarm"
+mkdir -p "$list_dir" "$state_a100" "$state_i7"
 "$python_executable" "$selector" \
     --source-list "$source_list" \
     --data-dir "$data_dir" \
@@ -85,9 +85,9 @@ fi
 # Alternate the workload-sorted list so both partitions receive a size mix and the
 # two controllers can never race to submit the same classifier/dataset task.
 awk 'NR % 2 == 1' "$feasible_list" > "$a100_list"
-awk 'NR % 2 == 0' "$feasible_list" > "$swarm_list"
+awk 'NR % 2 == 0' "$feasible_list" > "$i7_list"
 echo "a100:       $(wc -l < "$a100_list") datasets -> ${a100_list}"
-echo "swarm_a100: $(wc -l < "$swarm_list") datasets -> ${swarm_list}"
+echo "i7_h200:    $(wc -l < "$i7_list") datasets -> ${i7_list}"
 echo "Rejected:  ${rejected_list}"
 echo "Missing:   ${unavailable_list}"
 
@@ -96,13 +96,13 @@ echo "Dry-running a100 controller."
 "$python_executable" -u "$selector" --help >/dev/null
 "$python_executable" -u "${script_dir}/multiverse_controller.py" \
     --config "$config_a100" --dry-run --no-email
-echo "Dry-running swarm_a100 controller."
+echo "Dry-running i7_h200 controller."
 "$python_executable" -u "${script_dir}/multiverse_controller.py" \
-    --config "$config_swarm" --dry-run --no-email
+    --config "$config_i7" --dry-run --no-email
 
 # Replace only previous supervisors for these exact configurations. Existing running
 # Slurm jobs are left alone and are reconciled by the new controller cycles.
-for config in "$config_a100" "$config_swarm"; do
+for config in "$config_a100" "$config_i7"; do
     config_name=$(basename "$config")
     pkill -TERM -f "[r]un_multiverse_controller.sh.*${config_name}" || true
     pkill -TERM -f "[m]ultiverse_controller.py.*${config_name}" || true
@@ -135,11 +135,11 @@ start_controller() {
 }
 
 start_controller "$config_a100" "$state_a100" "a100"
-start_controller "$config_swarm" "$state_swarm" "swarm_a100"
+start_controller "$config_i7" "$state_i7" "i7_h200"
 
 echo
 echo "ConvTran resample-0 controllers are running."
 echo "a100 log:       ${state_a100}/supervisor.log"
-echo "swarm_a100 log: ${state_swarm}/supervisor.log"
+echo "i7_h200 log:    ${state_i7}/supervisor.log"
 echo
-squeue -u "$USER" -p a100,swarm_a100
+squeue -u "$USER" -p a100,i7_h200

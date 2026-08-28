@@ -602,6 +602,8 @@ PY"""
 {directive_block}
 
 set -eo pipefail
+# Some Iridis login profile hooks dereference DISPLAY while jobs have no X session.
+export DISPLAY="${{DISPLAY:-}}"
 source /etc/profile
 
 # Drop any Conda state inherited from the submitting shell. Without this, a stale

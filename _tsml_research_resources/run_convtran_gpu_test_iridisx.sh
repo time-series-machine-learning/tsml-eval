@@ -36,6 +36,8 @@ data_dir="/home/${username}/Data/Multiverse"
 results_dir="/home/${username}/Results/GPUTest/DeepLearning"
 env_dir="/home/${username}/.conda/envs/tsml-eval-gpu"
 
+# IridisX's ssh-x-forwarding profile hook dereferences DISPLAY under nounset.
+export DISPLAY="${DISPLAY:-}"
 source /etc/profile
 unset CONDA_DEFAULT_ENV PYTHONPATH
 module purge
