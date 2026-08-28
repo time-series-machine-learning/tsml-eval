@@ -57,12 +57,6 @@ verbose = 1
 [classifier_kwargs.HC2]
 verbose = 1
 
-[classifier_kwargs."H-InceptionTime"]
-verbose = true
-
-[classifier_kwargs."LITETime-MV"]
-verbose = true
-
 [[categories]]
 name = "IntervalBased"
 classifiers = ["CIF-500", "DrCIF-500", "QUANT"]
@@ -90,10 +84,6 @@ classifiers = ["Catch22", "FreshPRINCE"]
 [[categories]]
 name = "Hybrid"
 classifiers = ["HC2", "RIST"]
-
-[[categories]]
-name = "DeepLearning"
-classifiers = ["H-InceptionTime", "LITETime-MV"]
 
 [[categories]]
 name = "Other"
