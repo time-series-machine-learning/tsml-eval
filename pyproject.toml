@@ -60,7 +60,8 @@ unstable_extras = [
 ]
 deep_learning = [
     "aeon[dl]",
-    "torch",
+  "torch",
+  "einops",
 ]
 
 dev = [
