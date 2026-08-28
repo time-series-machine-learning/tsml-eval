@@ -224,7 +224,7 @@ send_report() {
     subject="TSER ${report_label} [${machine}]: ${overall}"
     send_mail "${subject}" "${report_file}" || true
 
-    # "13230/13230 (100.0%)" means there is nothing left to report on.
+    # "15120/15120 (100.0%)" means there is nothing left to report on.
     if [[ "${overall}" == *"(100.0%)"* ]]; then
         return 1
     fi

@@ -53,7 +53,6 @@ set -euo pipefail
 max_folds=30
 start_fold=1
 
-max_num_submitted=500
 queue="batch"
 max_time="60:00:00"
 
@@ -347,7 +346,7 @@ mkdir -p \
 
 # Serialize reconciliation and submission so a chained supervisor and a manual
 # spare-node refill that become runnable together do not race and duplicate work.
-for required_command in flock sbatch scontrol squeue; do
+for required_command in flock sacct sbatch scontrol squeue sha256sum; do
     if ! command -v "${required_command}" >/dev/null 2>&1; then
         echo "ERROR: ${required_command} is required for submission rounds." >&2
         exit 1
@@ -368,12 +367,45 @@ done
 # Provenance
 # ==============================================================================
 
-# The estimator now comes from tsml-eval (the PULSAR clone), which by design is
-# not pinned: these batch scripts live in it and get corrected mid-run. aeon only
-# supplies two stable transformers, so it is not pinned either. Both commits are
-# recorded each round for provenance.
+# Pin the estimator implementation independently of the runner script. This
+# permits operational fixes to the queue controller without silently mixing
+# PULSAR or aeon definitions across resamples.
 tsml_eval_head=$(git -C "${tsml_eval_dir}" rev-parse HEAD)
 aeon_head=$(git -C "${aeon_dir}" rev-parse HEAD)
+pulsar_source_files=(
+    "${tsml_eval_dir}/tsml_eval/_wip/classification/_pulsar.py"
+    "${tsml_eval_dir}/tsml_eval/experiments/_get_classifier.py"
+)
+for source_file in "${pulsar_source_files[@]}"; do
+    if [[ ! -s "${source_file}" ]]; then
+        echo "ERROR: PULSAR source file is missing or empty: ${source_file}" >&2
+        exit 1
+    fi
+done
+pulsar_source_hash=$(sha256sum "${pulsar_source_files[@]}" | sha256sum | cut -d ' ' -f 1)
+pinned_source_file="${state_dir}/pinned-sources.txt"
+
+if [[ -f "${pinned_source_file}" ]]; then
+    pinned_aeon_commit=$(awk '$1 == "aeon" { print $2 }' "${pinned_source_file}")
+    pinned_pulsar_hash=$(awk '$1 == "pulsar" { print $2 }' "${pinned_source_file}")
+    if [[ "${pinned_aeon_commit}" != "${aeon_head}" ]]; then
+        echo "ERROR: aeon changed after this PULSAR run started."
+        echo "  aeon pinned ${pinned_aeon_commit}, now ${aeon_head}"
+        exit 1
+    fi
+    if [[ "${pinned_pulsar_hash}" != "${pulsar_source_hash}" ]]; then
+        echo "ERROR: PULSAR changed after this run started."
+        echo "  PULSAR pinned ${pinned_pulsar_hash}, now ${pulsar_source_hash}"
+        exit 1
+    fi
+else
+    printf 'aeon %s\npulsar %s\n' \
+        "${aeon_head}" "${pulsar_source_hash}" > "${pinned_source_file}"
+    pinned_aeon_commit="${aeon_head}"
+    pinned_pulsar_hash="${pulsar_source_hash}"
+fi
+
+# Record the whole checkout revisions as additional provenance.
 printf 'tsml-eval %s  aeon %s  round %s\n' \
     "${tsml_eval_head}" "${aeon_head}" "${round}" \
     >> "${state_dir}/commits.txt"
@@ -403,7 +435,7 @@ fi
 # One record per experiment submitted at least once:
 #
 #   classifier <tab> dataset <tab> resample <tab> tier <tab> attempts
-#       <tab> failures <tab> last_reason <tab> last_round
+#       <tab> failures <tab> last_reason <tab> last_round <tab> last_job_id
 #
 # tier indexes memory_tiers_gib from 1. last_reason is the outcome observed for
 # the most recent attempt, and is what drives escalation.
@@ -414,10 +446,12 @@ declare -A attempt_count=()
 declare -A failure_count=()
 declare -A attempt_reason=()
 declare -A attempt_round=()
+declare -A attempt_job_id=()
 
 if [[ -f "${attempt_file}" ]]; then
     while IFS=$'\t' read -r state_classifier state_dataset state_resample \
-        state_tier state_attempts state_failures state_reason state_round; do
+        state_tier state_attempts state_failures state_reason state_round \
+        state_job_id; do
         if [[ -z "${state_classifier:-}" ]]; then
             continue
         fi
@@ -427,6 +461,7 @@ if [[ -f "${attempt_file}" ]]; then
         failure_count["${key}"]="${state_failures}"
         attempt_reason["${key}"]="${state_reason}"
         attempt_round["${key}"]="${state_round}"
+        attempt_job_id["${key}"]="${state_job_id:-}"
     done < "${attempt_file}"
 fi
 
@@ -560,6 +595,7 @@ while IFS='|' read -r active_job_id active_job_name active_job_state \
             fi
 
             active_experiment["${active_key}"]="${active_job_id}"
+            attempt_job_id["${active_key}"]="${active_job_id}"
             active_output_log=""
             if [[ "${active_command_line}" =~ ${redirect_regex} ]]; then
                 active_output_log="${BASH_REMATCH[1]}"
@@ -596,15 +632,43 @@ fi
 #
 # OOM      a memory kill is recorded in the log
 # FAILED   Python or Slurm reported some other error
-# KILLED   a log but no result and no error: nearly always a cgroup memory kill
-#          or a wall clock cut, so it is treated as memory suspect and escalated
+# TIMEOUT  the containing allocation reached its wall-clock limit and is retried
+#          without increasing the memory tier
+# KILLED   a log but no result and no error, treated as memory suspect
 # NOLOG    nothing ever started, usually the round ended before its turn
 classify_failure_result=""
+declare -A allocation_state_cache=()
+allocation_state_result=""
+
+allocation_state_for_job() {
+    local job_id="$1"
+    local state=""
+
+    allocation_state_result=""
+    if [[ -z "${job_id}" ]]; then
+        return
+    fi
+    if [[ -n "${allocation_state_cache[${job_id}]+present}" ]]; then
+        allocation_state_result="${allocation_state_cache[${job_id}]}"
+        return
+    fi
+    state=$(sacct --noheader --parsable2 --jobs "${job_id}" \
+        --format=JobIDRaw,State 2>/dev/null | \
+        awk -F'|' -v wanted="${job_id}" '$1 == wanted { print $2; exit }' || true)
+    state="${state%%+*}"
+    state="${state%% *}"
+    allocation_state_cache["${job_id}"]="${state}"
+    allocation_state_result="${state}"
+}
+
 classify_failure() {
     local classifier="$1"
     local dataset="$2"
     local resample="$3"
     local log
+    local key="${classifier}|${dataset}|${resample}"
+    local job_id="${attempt_job_id[${key}]-}"
+    local allocation_state=""
 
     latest_log_for "${classifier}" "${dataset}" "${resample}"
     log="${latest_log_result}"
@@ -627,6 +691,19 @@ classify_failure() {
         classify_failure_result="FAILED"
         return
     fi
+
+    allocation_state_for_job "${job_id}"
+    allocation_state="${allocation_state_result}"
+    case "${allocation_state}" in
+        OUT_OF_MEMORY)
+            classify_failure_result="OOM"
+            return
+            ;;
+        TIMEOUT)
+            classify_failure_result="TIMEOUT"
+            return
+            ;;
+    esac
 
     classify_failure_result="KILLED"
 }
@@ -653,6 +730,7 @@ declare -A pending_tier=()
 dead_keys=()
 completed_total=0
 oom_escalated=0
+timeouts_observed=0
 
 for classifier in "${classifiers[@]}"; do
     for dataset in "${datasets[@]}"; do
@@ -682,7 +760,10 @@ for classifier in "${classifiers[@]}"; do
                 continue
             fi
 
-            if ((attempts > 0)); then
+            # A pending tier can wait through several refill invocations. Only
+            # diagnose a submitted attempt once, otherwise one failure can be
+            # counted repeatedly without another execution.
+            if ((attempts > 0)) && [[ "${reason}" == "SUBMITTED" ]]; then
                 classify_failure "${classifier}" "${dataset}" "${resample}"
                 reason="${classify_failure_result}"
 
@@ -695,6 +776,10 @@ for classifier in "${classifiers[@]}"; do
                         ;;
                     FAILED)
                         failures=$((failures + 1))
+                        ;;
+                    TIMEOUT)
+                        failures=$((failures + 1))
+                        timeouts_observed=$((timeouts_observed + 1))
                         ;;
                 esac
 
@@ -732,6 +817,7 @@ echo "Active node jobs:  ${#active_node_job_ids[@]} (${active_node_job_ids[*]-no
 echo "Free node slots:   ${available_node_slots}/${node_count}"
 echo "Active experiments: ${#active_experiment[@]}"
 echo "Escalated:         ${oom_escalated} (memory kill or silent death)"
+echo "Timed out:         ${timeouts_observed} (retried without raising memory)"
 if [[ -n "${tier_ceiling_note}" ]]; then
     echo "Memory ceiling:    ${tier_ceiling_note}"
 fi
@@ -846,28 +932,6 @@ mkdir -p "${submission_dir}"
 total_commands=0
 submitted_job_ids=()
 
-wait_for_queue_slot() {
-    local num_jobs
-
-    while true; do
-        num_jobs=$(
-            squeue \
-                --noheader \
-                --user="${username}" \
-                --partition="${queue}" \
-                --states=RUNNING,PENDING |
-                wc -l
-        )
-
-        if ((num_jobs < max_num_submitted)); then
-            break
-        fi
-
-        echo "Waiting 60 seconds: ${num_jobs} jobs are running or pending."
-        sleep 60
-    done
-}
-
 write_command() {
     local classifier="$1"
     local dataset="$2"
@@ -919,6 +983,8 @@ submit_node_job() {
     local max_cpus_to_use
     local sbatch_output
     local job_id
+    local submitted_command_line
+    local submitted_key
 
     max_cpus_to_use=$((node_memory_budget_gib / memory_gib))
     if ((max_cpus_to_use > max_cpus_per_node)); then
@@ -962,6 +1028,26 @@ export PYTHONUNBUFFERED=1
 export NUMBA_CACHE_DIR="${numba_cache_dir}"
 mkdir -p "\${NUMBA_CACHE_DIR}"
 
+current_aeon_commit=\$(git -C "${aeon_dir}" rev-parse HEAD)
+current_pulsar_hash=\$(
+    sha256sum \
+        "${tsml_eval_dir}/tsml_eval/_wip/classification/_pulsar.py" \
+        "${tsml_eval_dir}/tsml_eval/experiments/_get_classifier.py" | \
+        sha256sum | cut -d ' ' -f 1
+)
+if [[ "\${current_aeon_commit}" != "${pinned_aeon_commit}" ]]; then
+    echo "ERROR: aeon changed after submission."
+    echo "Expected: ${pinned_aeon_commit}"
+    echo "Current:  \${current_aeon_commit}"
+    exit 1
+fi
+if [[ "\${current_pulsar_hash}" != "${pinned_pulsar_hash}" ]]; then
+    echo "ERROR: PULSAR changed after submission."
+    echo "Expected: ${pinned_pulsar_hash}"
+    echo "Current:  \${current_pulsar_hash}"
+    exit 1
+fi
+
 echo "Round:             ${round}"
 echo "Batch:             ${batch_label}"
 echo "Memory per task:   ${memory_gib} GiB"
@@ -982,11 +1068,15 @@ SUB
         return
     fi
 
-    wait_for_queue_slot
-
     sbatch_output=$(sbatch "${submission_file}")
     job_id="${sbatch_output##* }"
     submitted_job_ids+=("${job_id}")
+    while IFS= read -r submitted_command_line || [[ -n "${submitted_command_line}" ]]; do
+        if [[ "${submitted_command_line}" =~ ${command_regex} ]]; then
+            submitted_key="${BASH_REMATCH[1]}|${BASH_REMATCH[2]}|${BASH_REMATCH[3]}"
+            attempt_job_id["${submitted_key}"]="${job_id}"
+        fi
+    done < "${command_file}"
     echo "${batch_label}: ${cmd_count} command(s) on ${cpu_count} CPU(s) at ${memory_gib} GiB each -> ${sbatch_output}"
 }
 
@@ -1073,13 +1163,14 @@ if [[ "${dry_run}" != "true" ]]; then
     : > "${tmp_attempt_file}"
     for key in "${!attempt_count[@]}"; do
         IFS='|' read -r state_classifier state_dataset state_resample <<< "${key}"
-        printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+        printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
             "${state_classifier}" "${state_dataset}" "${state_resample}" \
             "${attempt_tier[${key}]-1}" \
             "${attempt_count[${key}]-0}" \
             "${failure_count[${key}]-0}" \
             "${attempt_reason[${key}]-UNKNOWN}" \
             "${attempt_round[${key}]-0}" \
+            "${attempt_job_id[${key}]-}" \
             >> "${tmp_attempt_file}"
     done
     mv "${tmp_attempt_file}" "${attempt_file}"
@@ -1105,6 +1196,7 @@ send_round_summary() {
             "${completed_total}" "${total_experiments}" "${percent}"
         printf 'Pending:    %s\n' "${#pending_keys[@]}"
         printf 'Escalated:  %s (memory kill or silent death)\n' "${oom_escalated}"
+        printf 'Timed out:  %s (same-memory retry)\n' "${timeouts_observed}"
         printf 'Retired:    %s\n' "${#dead_keys[@]}"
         printf 'Submitted:  %s command(s) over %s node job(s)\n\n' \
             "${total_commands}" "${#submitted_job_ids[@]}"

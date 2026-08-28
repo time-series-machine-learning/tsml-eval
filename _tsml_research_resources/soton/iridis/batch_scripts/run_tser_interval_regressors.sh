@@ -4,7 +4,7 @@ set -euo pipefail
 
 # Run every interval-based regressor over the 63 problem TSER archive.
 #
-# Scope: 7 regressors x 63 datasets x 30 resamples = 13230 experiments.
+# Scope: 8 regressors x 63 datasets x 30 resamples = 15120 experiments.
 #
 # The regressors use aeon's default configurations (200-tree forests), matching
 # the interval classifiers in the survey. QUANT and PULSAR have no separate
@@ -19,7 +19,7 @@ set -euo pipefail
 # caps one job at 634 GiB of it, so at 4 GiB a node runs 157 experiments at once
 # and four nodes hold over 600.
 #
-# Rounds and recovery. A single 60 hour allocation cannot finish 13230
+# Rounds and recovery. A single 60 hour allocation cannot finish 15120
 # experiments, so this script is built to run repeatedly. Each invocation
 #
 #   1. reconciles what finished, what died, and why,
@@ -55,7 +55,6 @@ set -euo pipefail
 max_folds=30
 start_fold=1
 
-max_num_submitted=500
 queue="batch"
 max_time="60:00:00"
 
@@ -447,7 +446,7 @@ mkdir -p \
 # nearly the same moment. Serialize reconciliation and submission so the second
 # invocation sees the first invocation's newly submitted jobs rather than racing
 # it and duplicating work.
-for required_command in flock sbatch scontrol squeue; do
+for required_command in flock sacct sbatch scontrol squeue sha256sum; do
     if ! command -v "${required_command}" >/dev/null 2>&1; then
         echo "ERROR: ${required_command} is required for TSER submission rounds." >&2
         exit 1
@@ -469,15 +468,32 @@ done
 # Pin the source state for the whole chain
 # ==============================================================================
 
-# Only aeon is pinned. The estimators come from there, so a mid-run change to
-# aeon would silently mix two definitions of the same regressor across resamples.
-#
-# tsml-eval is deliberately not pinned: these batch scripts live in it and get
-# corrected while a run is in flight, and stopping the chain for that helps
-# nobody. Its commit is recorded each round for provenance instead.
+# Aeon is pinned because most estimators come from there. The PULSAR regressor
+# lives in tsml-eval, so its implementation and registration are pinned by a
+# content hash while the surrounding runner scripts remain free to receive
+# operational fixes during a long run.
 commit_file="${state_dir}/pinned-commits.txt"
 tsml_eval_head=$(git -C "${tsml_eval_dir}" rev-parse HEAD)
 aeon_head=$(git -C "${aeon_dir}" rev-parse HEAD)
+pulsar_source_hash=""
+pulsar_source_files=(
+    "${tsml_eval_dir}/tsml_eval/_wip/classification/_pulsar.py"
+    "${tsml_eval_dir}/tsml_eval/_wip/regression/_pulsar_regressor.py"
+    "${tsml_eval_dir}/tsml_eval/experiments/_get_regressor.py"
+)
+
+for regressor in "${regressors[@]}"; do
+    if [[ "${regressor,,}" == "pulsar" ]]; then
+        for source_file in "${pulsar_source_files[@]}"; do
+            if [[ ! -s "${source_file}" ]]; then
+                echo "ERROR: PULSAR source file is missing or empty: ${source_file}" >&2
+                exit 1
+            fi
+        done
+        pulsar_source_hash=$(sha256sum "${pulsar_source_files[@]}" | sha256sum | cut -d ' ' -f 1)
+        break
+    fi
+done
 
 if [[ -f "${commit_file}" ]]; then
     pinned_aeon_commit=$(awk '$1 == "aeon" { print $2 }' "${commit_file}")
@@ -490,10 +506,26 @@ if [[ -f "${commit_file}" ]]; then
         echo "root."
         exit 1
     fi
+
+    pinned_pulsar_hash=$(awk '$1 == "pulsar" { print $2 }' "${commit_file}")
+    if [[ -n "${pulsar_source_hash}" ]]; then
+        if [[ -z "${pinned_pulsar_hash}" ]]; then
+            printf 'pulsar %s\n' "${pulsar_source_hash}" >> "${commit_file}"
+            pinned_pulsar_hash="${pulsar_source_hash}"
+        elif [[ "${pinned_pulsar_hash}" != "${pulsar_source_hash}" ]]; then
+            echo "ERROR: the PULSAR implementation changed after this run started."
+            echo "  PULSAR pinned ${pinned_pulsar_hash}, now ${pulsar_source_hash}"
+            echo "Restore the source or start a new run with a fresh state directory."
+            exit 1
+        fi
+    fi
 else
-    printf 'aeon %s
-' "${aeon_head}" > "${commit_file}"
+    printf 'aeon %s\n' "${aeon_head}" > "${commit_file}"
     pinned_aeon_commit="${aeon_head}"
+    pinned_pulsar_hash="${pulsar_source_hash}"
+    if [[ -n "${pinned_pulsar_hash}" ]]; then
+        printf 'pulsar %s\n' "${pinned_pulsar_hash}" >> "${commit_file}"
+    fi
 fi
 
 # Recorded, never enforced.
@@ -527,7 +559,7 @@ fi
 # One record per experiment that has been submitted at least once:
 #
 #   regressor <tab> dataset <tab> resample <tab> tier <tab> attempts
-#       <tab> failures <tab> last_reason <tab> last_round
+#       <tab> failures <tab> last_reason <tab> last_round <tab> last_job_id
 #
 # tier indexes memory_tiers_gib from 1. last_reason is the outcome observed for
 # the most recent attempt, and is what drives escalation.
@@ -538,10 +570,12 @@ declare -A attempt_count=()
 declare -A failure_count=()
 declare -A attempt_reason=()
 declare -A attempt_round=()
+declare -A attempt_job_id=()
 
 if [[ -f "${attempt_file}" ]]; then
     while IFS=$'\t' read -r state_regressor state_dataset state_resample \
-        state_tier state_attempts state_failures state_reason state_round; do
+        state_tier state_attempts state_failures state_reason state_round \
+        state_job_id; do
         if [[ -z "${state_regressor:-}" ]]; then
             continue
         fi
@@ -551,10 +585,11 @@ if [[ -f "${attempt_file}" ]]; then
         failure_count["${key}"]="${state_failures}"
         attempt_reason["${key}"]="${state_reason}"
         attempt_round["${key}"]="${state_round}"
+        attempt_job_id["${key}"]="${state_job_id:-}"
     done < "${attempt_file}"
 fi
 
-# Reconciliation touches every one of the 13230 experiments on every round, so
+# Reconciliation touches every one of the 15120 experiments on every round, so
 # these helpers avoid command substitution and any other subshell.
 experiment_is_complete() {
     local regressor="$1"
@@ -701,6 +736,7 @@ while IFS='|' read -r active_job_id active_job_name active_job_state \
             fi
 
             active_experiment["${active_key}"]="${active_job_id}"
+            attempt_job_id["${active_key}"]="${active_job_id}"
             active_output_log=""
             if [[ "${active_command_line}" =~ ${redirect_regex} ]]; then
                 active_output_log="${BASH_REMATCH[1]}"
@@ -737,19 +773,48 @@ fi
 #
 # OOM      a memory kill is recorded in the log
 # FAILED   Python or Slurm reported some other error
+# TIMEOUT  the containing task-farm allocation reached its wall-clock limit;
+#          it is retried at the same memory tier
 # KILLED   the process left a log but no result and no error, which here is
-#          nearly always a cgroup memory kill or a wall clock cut, so it is
 #          treated as memory suspect and escalated
 # NOLOG    nothing ever started, usually the round ended before its turn
 #
 # The verdict is returned in classify_failure_result rather than on stdout, so
 # reconciling a whole round costs no subshells.
 classify_failure_result=""
+declare -A allocation_state_cache=()
+allocation_state_result=""
+
+allocation_state_for_job() {
+    local job_id="$1"
+    local state=""
+
+    allocation_state_result=""
+    if [[ -z "${job_id}" ]]; then
+        return
+    fi
+    if [[ -n "${allocation_state_cache[${job_id}]+present}" ]]; then
+        allocation_state_result="${allocation_state_cache[${job_id}]}"
+        return
+    fi
+
+    state=$(sacct --noheader --parsable2 --jobs "${job_id}" \
+        --format=JobIDRaw,State 2>/dev/null | \
+        awk -F'|' -v wanted="${job_id}" '$1 == wanted { print $2; exit }' || true)
+    state="${state%%+*}"
+    state="${state%% *}"
+    allocation_state_cache["${job_id}"]="${state}"
+    allocation_state_result="${state}"
+}
+
 classify_failure() {
     local regressor="$1"
     local dataset="$2"
     local resample="$3"
     local log
+    local key="${regressor}|${dataset}|${resample}"
+    local job_id="${attempt_job_id[${key}]-}"
+    local allocation_state=""
 
     latest_log_for "${regressor}" "${dataset}" "${resample}"
     log="${latest_log_result}"
@@ -772,6 +837,19 @@ classify_failure() {
         classify_failure_result="FAILED"
         return
     fi
+
+    allocation_state_for_job "${job_id}"
+    allocation_state="${allocation_state_result}"
+    case "${allocation_state}" in
+        OUT_OF_MEMORY)
+            classify_failure_result="OOM"
+            return
+            ;;
+        TIMEOUT)
+            classify_failure_result="TIMEOUT"
+            return
+            ;;
+    esac
 
     classify_failure_result="KILLED"
 }
@@ -799,6 +877,7 @@ declare -A pending_tier=()
 dead_keys=()
 completed_total=0
 oom_escalated=0
+timeouts_observed=0
 
 for regressor in "${regressors[@]}"; do
     for dataset in "${datasets[@]}"; do
@@ -828,10 +907,11 @@ for regressor in "${regressors[@]}"; do
                 continue
             fi
 
-            # Active experiments were removed above, so any remaining submitted
-            # attempt has left Slurm without producing a result and can now be
-            # reconciled even when an opportunistic refill reused the round number.
-            if ((attempts > 0)); then
+            # Reconcile each submitted attempt exactly once. A pending experiment
+            # may wait through several opportunistic refill invocations before its
+            # memory tier receives a node; without the SUBMITTED guard the same
+            # failure would be counted or escalated again on every invocation.
+            if ((attempts > 0)) && [[ "${reason}" == "SUBMITTED" ]]; then
                 classify_failure "${regressor}" "${dataset}" "${resample}"
                 reason="${classify_failure_result}"
 
@@ -844,6 +924,10 @@ for regressor in "${regressors[@]}"; do
                         ;;
                     FAILED)
                         failures=$((failures + 1))
+                        ;;
+                    TIMEOUT)
+                        failures=$((failures + 1))
+                        timeouts_observed=$((timeouts_observed + 1))
                         ;;
                 esac
 
@@ -883,6 +967,7 @@ echo "All TSER node jobs: ${#occupied_tser_job_ids[@]} (${occupied_tser_job_ids[
 echo "Free node slots:   ${available_node_slots}/${node_count}"
 echo "Active experiments: ${#active_experiment[@]}"
 echo "Escalated:         ${oom_escalated} (memory kill or silent death)"
+echo "Timed out:         ${timeouts_observed} (retried without raising memory)"
 if [[ -n "${tier_ceiling_note}" ]]; then
     echo "Memory ceiling:    ${tier_ceiling_note}"
 fi
@@ -1003,28 +1088,6 @@ mkdir -p "${submission_dir}"
 total_commands=0
 submitted_job_ids=()
 
-wait_for_queue_slot() {
-    local num_jobs
-
-    while true; do
-        num_jobs=$(
-            squeue \
-                --noheader \
-                --user="${username}" \
-                --partition="${queue}" \
-                --states=RUNNING,PENDING |
-                wc -l
-        )
-
-        if ((num_jobs < max_num_submitted)); then
-            break
-        fi
-
-        echo "Waiting 60 seconds: ${num_jobs} jobs are running or pending."
-        sleep 60
-    done
-}
-
 write_command() {
     local regressor="$1"
     local dataset="$2"
@@ -1079,6 +1142,8 @@ submit_node_job() {
     local max_cpus_to_use
     local sbatch_output
     local job_id
+    local submitted_command_line
+    local submitted_key
 
     max_cpus_to_use=$((node_memory_budget_gib / memory_gib))
     if ((max_cpus_to_use > max_cpus_per_node)); then
@@ -1132,6 +1197,22 @@ if [[ "\${current_aeon_commit}" != "${pinned_aeon_commit}" ]]; then
     exit 1
 fi
 
+if [[ -n "${pinned_pulsar_hash}" ]]; then
+    current_pulsar_hash=\$(
+        sha256sum \
+            "${tsml_eval_dir}/tsml_eval/_wip/classification/_pulsar.py" \
+            "${tsml_eval_dir}/tsml_eval/_wip/regression/_pulsar_regressor.py" \
+            "${tsml_eval_dir}/tsml_eval/experiments/_get_regressor.py" | \
+            sha256sum | cut -d ' ' -f 1
+    )
+    if [[ "\${current_pulsar_hash}" != "${pinned_pulsar_hash}" ]]; then
+        echo "ERROR: PULSAR changed after submission."
+        echo "Expected: ${pinned_pulsar_hash}"
+        echo "Current:  \${current_pulsar_hash}"
+        exit 1
+    fi
+fi
+
 echo "Round:             ${round}"
 echo "Batch:             ${batch_label}"
 echo "Memory per task:   ${memory_gib} GiB"
@@ -1152,11 +1233,15 @@ SUB
         return
     fi
 
-    wait_for_queue_slot
-
     sbatch_output=$(sbatch "${submission_file}")
     job_id="${sbatch_output##* }"
     submitted_job_ids+=("${job_id}")
+    while IFS= read -r submitted_command_line || [[ -n "${submitted_command_line}" ]]; do
+        if [[ "${submitted_command_line}" =~ ${command_regex} ]]; then
+            submitted_key="${BASH_REMATCH[1]}|${BASH_REMATCH[2]}|${BASH_REMATCH[3]}"
+            attempt_job_id["${submitted_key}"]="${job_id}"
+        fi
+    done < "${command_file}"
     echo "${batch_label}: ${cmd_count} command(s) on ${cpu_count} CPU(s) at ${memory_gib} GiB each -> ${sbatch_output}"
 }
 
@@ -1245,13 +1330,14 @@ if [[ "${dry_run}" != "true" ]]; then
     : > "${tmp_attempt_file}"
     for key in "${!attempt_count[@]}"; do
         IFS='|' read -r state_regressor state_dataset state_resample <<< "${key}"
-        printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+        printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
             "${state_regressor}" "${state_dataset}" "${state_resample}" \
             "${attempt_tier[${key}]-1}" \
             "${attempt_count[${key}]-0}" \
             "${failure_count[${key}]-0}" \
             "${attempt_reason[${key}]-UNKNOWN}" \
             "${attempt_round[${key}]-0}" \
+            "${attempt_job_id[${key}]-}" \
             >> "${tmp_attempt_file}"
     done
     mv "${tmp_attempt_file}" "${attempt_file}"
@@ -1283,6 +1369,8 @@ send_round_summary() {
 ' "${#pending_keys[@]}"
         printf 'Escalated:  %s (memory kill or silent death)
 ' "${oom_escalated}"
+        printf 'Timed out:  %s (same-memory retry)
+' "${timeouts_observed}"
         printf 'Retired:    %s
 ' "${#dead_keys[@]}"
         printf 'Submitted:  %s command(s) over %s node job(s)

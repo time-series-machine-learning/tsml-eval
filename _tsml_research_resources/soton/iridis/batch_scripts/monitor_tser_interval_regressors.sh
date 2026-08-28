@@ -49,6 +49,7 @@ regressors=(
     "randomintervals-500"
     "summary-intervals"
     "quant"
+    "pulsar"
 )
 
 declare -A regressor_category=()
@@ -518,7 +519,7 @@ print_current_activity() {
 }
 
 # Failure attribution is read from the runner's attempt state instead of
-# grepping 13230 logs. The runner writes it once per round.
+# grepping 15120 logs. The runner writes it once per round.
 print_attempt_state() {
     local regressor
     local dataset
@@ -528,6 +529,7 @@ print_attempt_state() {
     local failures
     local reason
     local last_round
+    local last_job_id
     local memory
     local latest_round=0
     local -A tier_counts=()
@@ -544,7 +546,7 @@ print_attempt_state() {
     fi
 
     while IFS=$'\t' read -r regressor dataset resample tier attempts \
-        failures reason last_round; do
+        failures reason last_round last_job_id; do
         if [[ -z "${regressor:-}" ]]; then
             continue
         fi
@@ -581,6 +583,7 @@ print_attempt_state() {
         echo "  none"
     fi
     echo "  OOM and KILLED are retried at the next memory tier."
+    echo "  TIMEOUT is retried at the same memory tier."
     echo "  DEAD experiments have exhausted their attempts and are abandoned."
     echo
 }
