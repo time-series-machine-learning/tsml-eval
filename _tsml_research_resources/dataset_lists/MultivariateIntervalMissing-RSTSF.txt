@@ -1,0 +1,8 @@
+FaceDetection
+FordChallenge
+PEMS-SF
+PenDigits
+Skoda
+STEW
+Tiselac
+USCActivity
