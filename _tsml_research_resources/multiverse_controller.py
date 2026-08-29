@@ -161,6 +161,12 @@ def _load_config(config_file):
         for row in category_rows
     )
     results_root = path_from(controller, "results_root")
+    classifier_override = os.environ.get("MULTIVERSE_CLASSIFIER", "").strip()
+    if classifier_override:
+        category_rows = [{"name": "DeepLearning", "classifiers": [classifier_override]}]
+        categories = (Category("DeepLearning", (classifier_override,)),)
+        classifier_kwargs = {classifier_override: classifier_kwargs.get(classifier_override, {})}
+    state_override = os.environ.get("MULTIVERSE_STATE_DIR", "").strip()
     config = ControllerConfig(
         username=username,
         email=str(controller.get("email", "")),
@@ -168,7 +174,7 @@ def _load_config(config_file):
         data_dir=path_from(controller, "data_dir"),
         dataset_file=path_from(controller, "dataset_file"),
         results_root=results_root,
-        state_dir=path_from(controller, "state_dir", results_root / ".controller"),
+        state_dir=Path(state_override).expanduser() if state_override else path_from(controller, "state_dir", results_root / ".controller"),
         resamples=int(controller.get("resamples", 30)),
         max_attempts=int(controller.get("max_attempts", 2)),
         all_categories_first_pass=bool(
