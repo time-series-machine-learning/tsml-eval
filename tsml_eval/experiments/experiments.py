@@ -1478,10 +1478,14 @@ N_RETRAIN_POINTS = 30
 def _maybe_shrink_window(forecaster, series_length):
     """Shrink a windowed forecaster's window for short series.
 
-    If ``forecaster`` exposes a ``window`` attribute and ``series_length`` is less
-    than twice that window, the window is set to half the series length (at least
-    1) so the forecaster can still be fit on the short series. Forecasters without a
-    ``window`` attribute are left unchanged. This is applied opt-in via the
+    If ``forecaster`` exposes a ``window`` attribute, the window is reduced so the
+    forecaster can be fit on a series of ``series_length``: to half the effective fit
+    length when the series is shorter than twice the window, and always to at most
+    the largest window aeon's ``RegressionForecaster`` accepts
+    (``fit_length - horizon - 3``, which enforces a minimum of 3 training samples).
+    The effective fit length subtracts the forecaster's differencing ``order`` (e.g.
+    ``DifferencedForecaster`` fits on a series shortened by ``order``). Forecasters
+    without a ``window`` attribute are left unchanged. This is applied opt-in via the
     ``adaptive_window`` flag of the ``load_and_run_*`` functions.
 
     Parameters
@@ -1489,7 +1493,7 @@ def _maybe_shrink_window(forecaster, series_length):
     forecaster : BaseForecaster
         The forecaster to (possibly) adjust in place.
     series_length : int
-        Length of the series the forecaster will be fit on.
+        Length of the (training) series the forecaster will be fit on.
 
     Returns
     -------
@@ -1497,8 +1501,17 @@ def _maybe_shrink_window(forecaster, series_length):
         The same forecaster, with ``window`` possibly reduced.
     """
     window = getattr(forecaster, "window", None)
-    if window is not None and series_length < 2 * window:
-        forecaster.window = max(1, series_length // 2)
+    if window is None:
+        return forecaster
+
+    order = getattr(forecaster, "order", 0)
+    order = order if isinstance(order, (int, np.integer)) else 0
+    horizon = getattr(forecaster, "horizon", 1) or 1
+    fit_length = series_length - order
+
+    max_window = fit_length - horizon - 3
+    if fit_length < 2 * window or window > max_window:
+        forecaster.window = max(1, min(fit_length // 2, max_window))
     return forecaster
 
 
@@ -1639,12 +1652,9 @@ def load_and_run_remote_forecasting_experiment(
     series = np.asarray(series, dtype=float)
     assert(np.isfinite(series).all())
 
-    # Opt-in: shrink a windowed forecaster's window for short series (e.g. some M4
-    # series are shorter than the configured window). Done before the train/test
-    # split below so the window used there is consistent with the fitted model.
-    if adaptive_window:
-        _maybe_shrink_window(forecaster, len(series))
-
+    # Opt-in adaptive_window: the window must be shrunk based on the length of the
+    # series the forecaster is actually FIT on (the training split), not the full
+    # series, so the call is made per-branch below once the training length is known.
     prediction_horizon = None
     if fixed_horizon:
         # M4/Monash fixed-horizon evaluation: the .tsf series contain the full data
@@ -1664,6 +1674,8 @@ def load_and_run_remote_forecasting_experiment(
             )
         train = series[:-prediction_horizon]
         test = series[-prediction_horizon:]
+        if adaptive_window:
+            _maybe_shrink_window(forecaster, len(train))
     elif retrain:
         if start is None:
             start = 0
@@ -1675,6 +1687,9 @@ def load_and_run_remote_forecasting_experiment(
         base_train_item, _ = train_test_split(
             series, 0, max_test_values=N_RETRAIN_POINTS
         )
+        # Shrink before forecaster.window is used to build the test arrays below.
+        if adaptive_window:
+            _maybe_shrink_window(forecaster, len(base_train_item))
         train = np.empty((n_selected, len(base_train_item)), dtype=series.dtype)
         if isinstance(forecaster, RegressionForecaster):
             test = np.empty((n_selected, forecaster.window + 1), dtype=series.dtype)
@@ -1695,6 +1710,8 @@ def load_and_run_remote_forecasting_experiment(
                 test[out_idx] = test_item[0]
     else:
         train, test = train_test_split(series)
+        if adaptive_window:
+            _maybe_shrink_window(forecaster, len(train))
         if isinstance(forecaster, RegressionForecaster) and len(test) > forecaster.window + 1:
             test = np.lib.stride_tricks.sliding_window_view(
                 test, window_shape=(forecaster.window + 1)
