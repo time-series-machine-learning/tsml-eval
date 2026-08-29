@@ -42,10 +42,15 @@ class PatchMTSCClassifier(BaseClassifier):
         super().__init__()
 
     def _fit(self, X, y):
-        if X.shape[2] < self.patch_len:
-            raise ValueError("patch_len must not exceed the number of timepoints")
         if self.emb_size % 4 or self.d_model_patch % self.num_heads:
             raise ValueError("emb_size must be divisible by 4 and d_model_patch by num_heads")
+        # The paper's default patch length is 16, but some Multiverse-Core
+        # problems are shorter.  Clamp the patch geometry to the observed
+        # series rather than rejecting an otherwise valid dataset.
+        patch_len = min(self.patch_len, X.shape[2])
+        stride = min(self.stride, patch_len)
+        self.patch_len_ = patch_len
+        self.stride_ = stride
         rng = check_random_state(self.random_state)
         self.random_state_ = int(rng.randint(np.iinfo(np.int32).max))
         torch.manual_seed(self.random_state_)
@@ -61,7 +66,7 @@ class PatchMTSCClassifier(BaseClassifier):
         else: Xtr, ytr, Xva, yva = X, yy, None, None
         cfg = {"Data_shape": X.shape, "emb_size": self.emb_size, "num_heads": self.num_heads,
                "dim_ff": self.dim_ff, "Fix_pos_encode": "tAPE", "Rel_pos_encode": "eRPE",
-               "patch_len": self.patch_len, "stride": self.stride, "padding_patch": "end",
+               "patch_len": patch_len, "stride": stride, "padding_patch": "end",
                "d_model_patch": self.d_model_patch, "d_model": self.d_model_patch,
                "dropout": self.dropout, "enc_in": self.n_channels_, "individual": 0,
                "head_dropout": 0., "pap_dropout": 0., "weight_decay": 5e-4,
