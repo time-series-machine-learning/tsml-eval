@@ -10,7 +10,9 @@ from aeon.classification.base import BaseClassifier
 from tsml_eval.experiments import get_classifier_by_name
 from tsml_eval.experiments._channel_selection_hc2 import (
     ChannelSelectionClassifierPipeline,
+    _make_channel_transformer,
 )
+from tsml_eval.experiments._guarded_multiaxis import GuardedMultiAxisReducer
 
 
 class _RecordingClassifier(BaseClassifier):
@@ -57,6 +59,7 @@ class _HalfCaseResampler:
         ("DetachRocket-HC2", "DetachRocket"),
         ("CSP-HC2", "CSP"),
         ("CaseTimeReducer-HC2", "CaseTimeReducer"),
+        ("GuardedMultiAxis-HC2", "GuardedMultiAxis"),
         ("CLeVerRank-HC2", "CLeVerRank"),
         ("CLeVerCluster-HC2", "CLeVerCluster"),
         ("CLeVerHybrid-HC2", "CLeVerHybrid"),
@@ -97,3 +100,15 @@ def test_resampling_pipeline_keeps_training_labels_aligned(monkeypatch):
 
     assert pipeline.classifier_.n_cases_fit_ == 5
     assert pipeline.predict_proba(X).shape == (10, 2)
+
+
+def test_guarded_multiaxis_transformer_is_local_to_tsml_eval():
+    """The experimental reducer does not require an aeon-neuro import."""
+    transformer = _make_channel_transformer(
+        selector="GuardedMultiAxis",
+        n_channels=4,
+        random_state=0,
+        n_jobs=1,
+    )
+
+    assert isinstance(transformer, GuardedMultiAxisReducer)
