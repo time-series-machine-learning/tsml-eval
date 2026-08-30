@@ -1,5 +1,6 @@
-# Thirty-resample CPU pass for every classifier used in the Multiverse paper.
-# Existing results are retained. All classifiers run dataset-by-dataset.
+# Thirty-resample CPU pass for every non-deep, non-1NN classifier used in the
+# Multiverse paper. Existing results are retained. Classifiers run one at a time
+# from fastest to slowest using observed core resample-0 runtimes.
 
 [controller]
 username = "ajb"
@@ -12,10 +13,27 @@ state_dir = "/gpfs/home/{username}/Results/Multiverse/.controller-paper-30resamp
 expected_branch = "ajb/hc2"
 resamples = 30
 
-# Process one category to completion or a terminal outcome before moving on.
+# Process one classifier to completion or a terminal outcome before moving on.
 all_categories_first_pass = false
-dataset_first = true
-observed_runtime_first = true
+dataset_first = false
+classifier_first = true
+classifier_order = [
+    "Other|Dummy",
+    "FeatureBased|Catch22",
+    "ShapeletBased|STC",
+    "IntervalBased|QUANT",
+    "ConvolutionBased|MRHydra",
+    "ConvolutionBased|ROCKET",
+    "ShapeletBased|RDST",
+    "ConvolutionBased|Arsenal",
+    "Hybrid|RIST",
+    "IntervalBased|CIF-500",
+    "IntervalBased|DrCIF-500",
+    "DictionaryBased|TDE",
+    "FeatureBased|FreshPRINCE",
+    "Hybrid|HC2",
+]
+observed_runtime_first = false
 
 # Retain old diagnostic logs without treating them as failures in this clean run.
 ignore_existing_failure_logs = true

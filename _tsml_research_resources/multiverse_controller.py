@@ -73,6 +73,8 @@ class ControllerConfig:
     ignore_existing_failure_logs: bool = False
     build_train_files: bool = False
     dataset_first: bool = False
+    classifier_first: bool = False
+    classifier_order: tuple[str, ...] = ()
     observed_runtime_first: bool = False
     classifier_kwargs: dict[str, dict[str, bool | int | float | str]] = field(
         default_factory=dict
@@ -198,6 +200,10 @@ def _load_config(config_file):
         ),
         build_train_files=bool(controller.get("build_train_files", False)),
         dataset_first=bool(controller.get("dataset_first", False)),
+        classifier_first=bool(controller.get("classifier_first", False)),
+        classifier_order=tuple(
+            str(value) for value in controller.get("classifier_order", ())
+        ),
         observed_runtime_first=bool(
             controller.get("observed_runtime_first", False)
         ),
@@ -252,6 +258,11 @@ def _validate_config(config):
     category_classifiers = {
         category.name: set(category.classifiers) for category in config.categories
     }
+    classifier_pairs = {
+        f"{category.name}|{classifier}"
+        for category in config.categories
+        for classifier in category.classifiers
+    }
     for value in config.excluded_tasks:
         fields = value.split("|")
         if len(fields) != 4:
@@ -278,6 +289,19 @@ def _validate_config(config):
             or resample_id >= config.resamples
         ):
             raise ValueError(f"Excluded-task resample is out of range: {value!r}")
+
+    if config.classifier_order and not config.classifier_first:
+        raise ValueError("classifier_order requires classifier_first = true")
+    if len(config.classifier_order) != len(set(config.classifier_order)):
+        raise ValueError("classifier_order must be unique")
+    for value in config.classifier_order:
+        if value not in classifier_pairs:
+            raise ValueError(
+                "classifier_order entries must be configured as "
+                f"'Category|Classifier': {value!r}"
+            )
+    if config.classifier_order and set(config.classifier_order) != classifier_pairs:
+        raise ValueError("classifier_order must list every configured classifier")
 
     if config.expected_branch and not re.fullmatch(
         r"[A-Za-z0-9._/-]+", config.expected_branch
@@ -772,8 +796,53 @@ def _find_current_category(config, datasets, snapshot, state):
     return None, []
 
 
+def _classifier_first_order(config):
+    """Yield configured classifiers in explicit or TOML order."""
+    by_pair = {
+        f"{category.name}|{classifier}": (category, classifier)
+        for category in config.categories
+        for classifier in category.classifiers
+    }
+    if config.classifier_order:
+        for pair in config.classifier_order:
+            yield by_pair[pair]
+        return
+
+    for category in config.categories:
+        for classifier in category.classifiers:
+            yield category, classifier
+
+
+def _find_current_classifier(config, datasets, snapshot, state):
+    """Return the first classifier with active or retryable missing tasks."""
+    excluded = set(config.excluded_tasks)
+    for category, classifier in _classifier_first_order(config):
+        current_category = Category(category.name, (classifier,))
+        missing = [
+            task
+            for task in _iter_tasks(
+                current_category, datasets, config.resamples, excluded
+            )
+            if not _is_complete(config, task)
+        ]
+        for task in missing:
+            if task.job_key in snapshot.states:
+                _record_active_submission(config, state, task, snapshot)
+            else:
+                _refresh_failure_record(config, state, task)
+        actionable = any(
+            task.job_key in snapshot.states or _task_retryable(config, state, task)
+            for task in missing
+        )
+        if actionable:
+            return Category(f"{category.name}/{classifier}", (classifier,)), missing
+    return None, []
+
+
 def _find_work_scope(config, datasets, snapshot, state):
     """Return the configured ordered-category or all-category work scope."""
+    if config.classifier_first:
+        return _find_current_classifier(config, datasets, snapshot, state)
     if config.dataset_first:
         missing = []
         actionable = False
@@ -1225,12 +1294,16 @@ def _compose_report(
         f"Resamples: {config.resamples}",
         "Scheduling mode: "
         + (
-            "dataset-first across all categories"
-            if config.dataset_first
+            "classifier-first"
+            if config.classifier_first
             else (
-            "breadth-first across all categories"
-            if config.all_categories_first_pass
-            else "ordered categories"
+                "dataset-first across all categories"
+                if config.dataset_first
+                else (
+                    "breadth-first across all categories"
+                    if config.all_categories_first_pass
+                    else "ordered categories"
+                )
             )
         ),
         "Dataset ordering: "

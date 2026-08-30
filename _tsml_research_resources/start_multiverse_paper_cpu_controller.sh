@@ -39,6 +39,9 @@ cpu_configs=(
     multiverse_interval_32gb.toml
     multiverse_core_resample0_non_deep.toml
     multiverse_core_resample0_litetime_mv.toml
+    multiverse_full_resample0_cpu_32gb.toml
+    multiverse_full_resample0_cpu_completion.toml
+    multiverse_resample0_extra_cpu.toml
     multiverse_paper_30resamples_cpu.toml
 )
 for config_name in "${cpu_configs[@]}"; do
