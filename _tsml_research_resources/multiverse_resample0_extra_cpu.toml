@@ -1,0 +1,36 @@
+# Default-resample pass for additional non-deep multivariate aeon classifiers.
+
+[controller]
+username = "ajb"
+email = "ajb@uea.ac.uk"
+repo_dir = "/gpfs/home/{username}/Code/tsml-eval"
+data_dir = "/gpfs/home/{username}/Data/Multiverse"
+dataset_file = "/gpfs/home/{username}/DataSetLists/MultiverseFullCPU.txt"
+results_root = "/gpfs/home/{username}/Results/Multiverse"
+state_dir = "/gpfs/home/{username}/Results/Multiverse/.controller-resample0-extra-cpu"
+expected_branch = "ajb/hc2"
+resamples = 1
+max_attempts = 2
+all_categories_first_pass = true
+ignore_existing_failure_logs = true
+small_datasets_first = true
+excluded_datasets = ["LenDB"]
+validate_results = false
+
+[slurm]
+account = "cmp"
+partition = "compute"
+qos = "uea-core-default"
+max_active_tasks = 8000
+memory_mb_levels = [32000, 64000, 128000]
+time_limit = "7-00:00:00"
+
+[environment]
+module = "python/anaconda/2024.10/3.12.7"
+conda_sh = "/gpfs/software/hali/python/anaconda/2024.10/etc/profile.d/conda.sh"
+env_name = "tsml-eval"
+numba_cache_dir = "/gpfs/home/{username}/Code/.cache/numba/tsml-eval"
+
+[[categories]]
+name = "DictionaryBased"
+classifiers = ["MUSE", "REDCOMETS"]

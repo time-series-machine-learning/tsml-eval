@@ -1,0 +1,49 @@
+# Default-resample pass for additional deep-learning multivariate aeon classifiers.
+
+[controller]
+username = "ajb"
+email = "ajb@uea.ac.uk"
+repo_dir = "/gpfs/home/{username}/Code/tsml-eval-gpu"
+data_dir = "/gpfs/home/{username}/Data/Multiverse"
+dataset_file = "/gpfs/home/{username}/DataSetLists/MultiverseFullCPU.txt"
+results_root = "/gpfs/home/{username}/Results/Multiverse"
+state_dir = "/gpfs/home/{username}/Results/Multiverse/.controller-resample0-extra-deep-gpu"
+expected_branch = "ajb/gpu"
+resamples = 1
+max_attempts = 1
+
+all_categories_first_pass = true
+ignore_existing_failure_logs = true
+small_datasets_first = true
+excluded_datasets = [
+    "LenDB",
+    "DREAMERA",
+    "DREAMERV",
+    "S2Agri-10pc-17",
+    "S2Agri-10pc-34",
+    "S2Agri-17",
+    "S2Agri-34",
+]
+validate_results = true
+
+[slurm]
+account = "cmp"
+partition = "gpu"
+qos = "gpu"
+max_active_tasks = 999
+cpus_per_task = 2
+gpus = 1
+nodes = 1
+memory_mb_levels = [64000]
+time_limit = "7-00:00:00"
+
+[environment]
+module = "python/anaconda/2024.10/3.12.7"
+conda_sh = "/gpfs/software/hali/python/anaconda/2024.10/etc/profile.d/conda.sh"
+env_name = "tsml-eval-gpu"
+numba_cache_dir = "/gpfs/home/{username}/Code/.cache/numba/tsml-eval-gpu"
+gpu_check = "tensorflow"
+
+[[categories]]
+name = "DeepLearning"
+classifiers = ["FCN", "MLP", "ResNet"]
