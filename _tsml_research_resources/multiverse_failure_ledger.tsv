@@ -1,0 +1,6 @@
+classifier	dataset	resample	status	reason	job_ids	notes
+ConvTran	Alzheimers	0	failed	CUDA out of memory in self-attention (107.29 GiB allocation requested)	1468208,1468234	H200 capacity/free memory insufficient
+ConvTran	EigenWorms	0	failed	CUDA out of memory in self-attention (154.22 GiB allocation requested)	1468205,1468233	Attention allocation exceeds H200 capacity
+ConvTran	PhotoStimulation	0	failed	CUDA out of memory during backward (38.62 GiB allocation requested)	1468191,1468204	H200 capacity/free memory insufficient
+ConvTran	EmoPain	0	failed	Aeon low-variance collection validation (1733 case/channel pairs)	1466948,1467139	Requires preprocessing or explicit validation policy
+PatchMTSC	PenDigits	0	failed	patch_len exceeded number of timepoints	1469943,1470039	Old cluster revision; fixed in commit 5be3066 by clamping patch_len/stride
