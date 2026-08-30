@@ -26,6 +26,9 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 
+
+COMPLETE_EXIT_CODE = 20
+
 _RESULT_PATTERN = re.compile(r"testResample(\d+)\.csv$")
 
 
@@ -1431,6 +1434,7 @@ def run_cycle(
     report_only=False,
     no_email=False,
     email_interval_seconds=0,
+    exit_when_complete=False,
 ):
     """Run one restart-safe monitor and queue-refill cycle."""
     stop_marker = config.state_dir / "STOP"
@@ -1519,6 +1523,12 @@ def run_cycle(
             nodes=snapshot.nodes,
         )
         all_exhausted = _exhausted_tasks(config, report_snapshot, state, datasets)
+        cycle_complete = (
+            category is None
+            and not all_exhausted
+            and report_snapshot.error is None
+            and not submission_errors
+        )
         rows = _category_rows(config, datasets, report_snapshot, state)
         report = _compose_report(
             config,
@@ -1540,7 +1550,13 @@ def run_cycle(
         if not dry_run:
             _save_state(state_file, state)
             _save_report(config.state_dir, report)
-            if not no_email and _email_due(config.state_dir, email_interval_seconds):
+            email_due = _email_due(config.state_dir, email_interval_seconds)
+            # A recurring supervisor exits after this cycle, so do not defer its
+            # final completion message merely because the regular reporting interval
+            # has not elapsed.
+            if exit_when_complete and cycle_complete:
+                email_due = True
+            if not no_email and email_due:
                 status = (
                     "settled-with-failures"
                     if category is None and all_exhausted
@@ -1557,6 +1573,8 @@ def run_cycle(
                     "Email deferred: the configured reporting interval "
                     "has not elapsed"
                 )
+        if exit_when_complete and cycle_complete:
+            return COMPLETE_EXIT_CODE
         return 0 if snapshot.error is None and not submission_errors else 1
     finally:
         if lock is not None:
@@ -1589,6 +1607,14 @@ def _parse_args(args=None):
         default=0,
         help="Minimum interval between successful emails; zero emails every cycle.",
     )
+    parser.add_argument(
+        "--exit-when-complete",
+        action="store_true",
+        help=(
+            "Exit with the dedicated completion status when every configured result "
+            "exists. Terminal failures are not considered complete."
+        ),
+    )
     return parser.parse_args(args)
 
 
@@ -1605,6 +1631,7 @@ def main(args=None):
             report_only=parsed.report_only,
             no_email=parsed.no_email,
             email_interval_seconds=parsed.email_interval_seconds,
+            exit_when_complete=parsed.exit_when_complete,
         )
     except Exception as error:
         print(f"ERROR: {type(error).__name__}: {error}", file=sys.stderr)  # noqa: T201

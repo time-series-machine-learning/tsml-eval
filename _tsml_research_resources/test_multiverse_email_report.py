@@ -107,3 +107,71 @@ def test_excluded_tasks_are_removed_from_work_and_denominator(tmp_path):
         config, ("ProblemA", "ProblemB"), controller.SlurmSnapshot({}, 0)
     )
     assert rows == [("IntervalBased", "CIF", 0, 1, 0)]
+
+
+def test_completed_cycle_has_dedicated_supervisor_exit_status(
+    tmp_path, monkeypatch
+):
+    """The supervisor must be able to distinguish completion from a normal cycle."""
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    dataset_file = tmp_path / "datasets.txt"
+    dataset_file.write_text("ProblemA\n", encoding="utf-8")
+    config = controller.ControllerConfig(
+        username="tester",
+        email="",
+        repo_dir=tmp_path,
+        data_dir=data_dir,
+        dataset_file=dataset_file,
+        results_root=tmp_path / "results",
+        state_dir=tmp_path / "state",
+        resamples=1,
+        max_attempts=1,
+        all_categories_first_pass=False,
+        small_datasets_first=False,
+        excluded_datasets=(),
+        validate_results=False,
+        account="account",
+        partition="compute",
+        qos="qos",
+        max_active_tasks=10,
+        memory_mb_levels=(32000,),
+        time_limit="1-00:00:00",
+        module="python",
+        conda_sh=tmp_path / "conda.sh",
+        env_name="tsml-eval",
+        numba_cache_dir=tmp_path / "numba",
+        categories=(controller.Category("IntervalBased", ("CIF",)),),
+    )
+    result = (
+        config.results_root
+        / "IntervalBased"
+        / "CIF"
+        / "Predictions"
+        / "ProblemA"
+        / "testResample0.csv"
+    )
+    result.parent.mkdir(parents=True)
+    result.write_text("result\n", encoding="utf-8")
+    monkeypatch.setattr(controller, "_git_revision", lambda unused: ("branch", "abc"))
+    monkeypatch.setattr(
+        controller, "_query_slurm", lambda unused: controller.SlurmSnapshot({}, 0)
+    )
+
+    normal_status = controller.run_cycle(config, dry_run=True, no_email=True)
+    complete_status = controller.run_cycle(
+        config,
+        dry_run=True,
+        no_email=True,
+        exit_when_complete=True,
+    )
+
+    assert normal_status == 0
+    assert complete_status == controller.COMPLETE_EXIT_CODE
+
+
+def test_exit_when_complete_command_line_flag():
+    """The recurring supervisor completion flag should be accepted by the CLI."""
+    parsed = controller._parse_args(["--exit-when-complete"])
+
+    assert parsed.exit_when_complete is True

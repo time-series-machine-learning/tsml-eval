@@ -31,3 +31,14 @@ Use the same script with `status` or `stop` to inspect or stop the detached
 runner. The combined log is
 `$HOME/Results/Multiverse/.tde-core-missing-unix/runner.log`, with a separate
 log for each dataset below its `logs` directory.
+
+# Recurring controller completion
+
+`run_multiverse_controller.sh` stops its recurring supervisor after every result
+configured for that controller exists. It sends a final completion email before
+stopping, even if the normal email interval has not elapsed. Configurations with
+terminal failures continue to run and report because they are not complete.
+
+Set `MULTIVERSE_STOP_WHEN_COMPLETE=false` when starting a supervisor only if it
+must continue polling after completion. A configured post-cycle script is run
+successfully before the supervisor is allowed to stop.
