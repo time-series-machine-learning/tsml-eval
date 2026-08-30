@@ -352,6 +352,9 @@ def _set_classifier_deep_learning(
         from tsml_eval._wip.classification import PatchMTSCClassifier
 
         return PatchMTSCClassifier(random_state=random_state, **kwargs)
+    elif c == "timesurlclassifier" or c == "timesurl":
+        from tsml_eval._wip.classification import TimesURLClassifier
+        return TimesURLClassifier(random_state=random_state, **kwargs)
     elif c == "patchmtscclassifier" or c == "patchmtsc":
         from tsml_eval._wip.classification import PatchMTSCClassifier
 
