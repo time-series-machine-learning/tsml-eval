@@ -110,6 +110,10 @@ echo "#!/bin/bash
 module load conda/python3
 source activate $env_name
 
+# staskfarm launches child srun steps.  Do not pass mutually exclusive memory
+# settings from the parent allocation into those steps.
+unset SLURM_MEM_PER_CPU SLURM_MEM_PER_GPU SLURM_MEM_PER_NODE
+
 staskfarm ${outDir}/generatedCommandList-${dt}.txt" > generatedSubmissionFile-${dt}.sub
 
 echo "At experiment ${expCount}, ${totalCount} jobs submitted total"
@@ -162,8 +166,8 @@ if ((expCount>=start_point)); then
 resamples_to_run=""
 for (( i=start_fold-1; i<max_folds; i++ ))
 do
-    if [ -f "${results_dir}${regressor}/Predictions/${dataset}/testResample${i}.csv" ]; then
-        if [ "${generate_train_files}" == "-tr" ] && ! [ -f "${results_dir}${regressor}/Predictions/${dataset}/trainResample${i}.csv" ]; then
+    if [ -s "${results_dir}${regressor}/Predictions/${dataset}/testResample${i}.csv" ]; then
+        if [ "${generate_train_files}" == "-tr" ] && ! [ -s "${results_dir}${regressor}/Predictions/${dataset}/trainResample${i}.csv" ]; then
             resamples_to_run="${resamples_to_run}${i} "
         fi
     else
