@@ -21,7 +21,6 @@ setsid nohup flock -n -E 75 "$lock_file" \
     bash "$script_dir/run_multiverse_controller.sh" "$config" \
     >> "$log_dir/launcher.out" 2>&1 < /dev/null &
 launcher_pid=$!
-disown "$launcher_pid"
 
 # A failed non-blocking flock exits immediately with status 75. Give the detached
 # launcher enough time to acquire the lock, then report duplicate starts clearly.
@@ -40,5 +39,6 @@ if ! kill -0 "$launcher_pid" 2>/dev/null; then
     exit 1
 fi
 
+disown "$launcher_pid"
 echo "$launcher_pid" > "$state_dir/launcher.pid"
 echo "Started ${classifier} controller on i7_h200 (PID ${launcher_pid}); log: ${log_dir}/supervisor.log"
