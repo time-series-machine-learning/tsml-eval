@@ -33,6 +33,7 @@ deep_learning_classifiers = [
     ["patchmtscclassifier", "patchmtsc"],
     ["timesnetclassifier", "timesnet"],
     ["timesurlclassifier", "timesurl"],
+    ["ts2vecclassifier", "ts2vec"],
 ]
 dictionary_based_classifiers = [
     ["bossensemble", "boss"],
@@ -358,6 +359,10 @@ def _set_classifier_deep_learning(
         from tsml_eval._wip.classification import TimesURLClassifier
 
         return TimesURLClassifier(random_state=random_state, **kwargs)
+    elif c == "ts2vecclassifier" or c == "ts2vec":
+        from tsml_eval._wip.classification import TS2VecClassifier
+
+        return TS2VecClassifier(random_state=random_state, **kwargs)
     elif c == "timesnetclassifier" or c == "timesnet":
         from tsml_eval._wip.classification import TimesNetClassifier
 
