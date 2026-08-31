@@ -7,6 +7,11 @@ Some of the contents could be adapted for other purposes or could be generalised
 for other Slurm/Linux devices, but running the scripts or following the hardware
 instructions will likely achieve nothing without alterations.
 
+# TDE development experiments
+
+See [TDE_DEVELOPMENT_EXPERIMENTS.md](TDE_DEVELOPMENT_EXPERIMENTS.md) for the
+controlled Multiverse-Core TDE variants, their HALI launchers, and recorded results.
+
 # Long-running Core TDE experiments on a non-Slurm Unix host
 
 `run_tde_core_missing_unix.sh` runs resample 0 for TDE on the four outstanding

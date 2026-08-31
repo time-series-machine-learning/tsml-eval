@@ -252,6 +252,19 @@ def test_tde_dev2_enables_bigrams_only():
     assert classifier.max_dims == 20
 
 
+def test_tde_dev3_uses_normalised_accuracy_weighted_similarity():
+    """Test TDE_Dev3 selects the experimental late-fusion configuration."""
+    classifier = get_classifier_by_name("TDE_Dev3")
+    uniform = get_classifier_by_name("TDE_Dev3-Uniform")
+
+    assert type(classifier).__name__ == "TDE_Dev3"
+    assert type(classifier).__module__ == "tsml_eval._wip.tde_dev._tde_dev3"
+    assert classifier.multivariate_similarity == "normalised"
+    assert classifier.dimension_weighting == "accuracy"
+    assert uniform.multivariate_similarity == "normalised"
+    assert uniform.dimension_weighting == "uniform"
+
+
 def test_aeon_classifiers_available():
     """Test all aeon classifiers are available."""
     excluded = [

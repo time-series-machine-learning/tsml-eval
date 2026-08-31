@@ -37,6 +37,8 @@ dictionary_based_classifiers = [
     ["temporaldictionaryensemble", "tde"],
     ["tde_dev", "tde-dev", "tdedev"],
     ["tde_dev2", "tde-dev2", "tdedev2"],
+    ["tde_dev3", "tde-dev3", "tdedev3"],
+    ["tde_dev3-uniform", "tde-dev3-uniform", "tdedev3-uniform"],
     "tde-unequal",
     "individualtde",
     "weasel",
@@ -399,6 +401,32 @@ def _set_classifier_dictionary_based(
         from tsml_eval._wip.tde_dev import TDE_Dev2
 
         return TDE_Dev2(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "tde_dev3" or c == "tde-dev3" or c == "tdedev3":
+        from tsml_eval._wip.tde_dev import TDE_Dev3
+
+        return TDE_Dev3(
+            multivariate_similarity="normalised",
+            dimension_weighting="accuracy",
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif (
+        c == "tde_dev3-uniform"
+        or c == "tde-dev3-uniform"
+        or c == "tdedev3-uniform"
+    ):
+        from tsml_eval._wip.tde_dev import TDE_Dev3
+
+        return TDE_Dev3(
+            multivariate_similarity="normalised",
+            dimension_weighting="uniform",
             random_state=random_state,
             n_jobs=n_jobs,
             time_limit_in_minutes=fit_contract,
