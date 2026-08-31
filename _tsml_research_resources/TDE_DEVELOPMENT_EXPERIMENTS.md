@@ -202,6 +202,31 @@ No test labels are used.
 - Diagnostic: `_tsml_research_resources/tde_dev3_diagnostics.py`
 - Focused tests: `tsml_eval/_wip/tde_dev/tests/test_tde_dev3.py`
 
+HALI files:
+
+- Accuracy-weighted configuration:
+  `multiverse_core_resample0_tde_dev3.toml`
+- Uniform-weight configuration:
+  `multiverse_core_resample0_tde_dev3_uniform.toml`
+- Launcher: `start_multiverse_core_resample0_tde_dev3.sh`
+- Results: `DictionaryBased/TDE_Dev3` and
+  `DictionaryBased/TDE_Dev3-Uniform`
+
+After pulling `ajb/hc2` on HALI, launch the accuracy-weighted experiment with:
+
+```bash
+bash _tsml_research_resources/start_multiverse_core_resample0_tde_dev3.sh
+```
+
+Launch the uniform-weight ablation separately with:
+
+```bash
+bash _tsml_research_resources/start_multiverse_core_resample0_tde_dev3.sh --uniform
+```
+
+Both commands first print a dry-run report, then start a detached controller. Add
+`--reset-state` only when previous terminal failures should deliberately be retried.
+
 Normalised mode stores the already-produced dimension bags consecutively, plus a
 two-dimensional case-offset array, dimension starts, and precomputed bag masses.
 Prediction and leave-one-out searches are Numba kernels; they do not reconstruct

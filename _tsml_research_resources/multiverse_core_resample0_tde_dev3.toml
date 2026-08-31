@@ -1,0 +1,40 @@
+# Resample-0 Multiverse-Core experiment for accuracy-weighted TDE Dev3.
+# Existing TDE_Dev3 result files are detected and never overwritten.
+
+[controller]
+username = "ajb"
+email = "ajb@uea.ac.uk"
+repo_dir = "/gpfs/home/{username}/Code/tsml-eval"
+data_dir = "/gpfs/home/{username}/Data/Multiverse"
+dataset_file = "/gpfs/home/{username}/DataSetLists/MultiverseCore.txt"
+results_root = "/gpfs/home/{username}/Results/Multiverse"
+state_dir = "/gpfs/home/{username}/Results/Multiverse/.controller-core-resample0-tde-dev3"
+expected_branch = "ajb/hc2"
+resamples = 1
+max_attempts = 2
+all_categories_first_pass = true
+ignore_existing_failure_logs = true
+small_datasets_first = true
+excluded_datasets = []
+validate_results = false
+
+[slurm]
+account = "cmp"
+partition = "compute"
+qos = "uea-core-default"
+max_active_tasks = 8000
+memory_mb_levels = [32000, 64000, 128000]
+time_limit = "7-00:00:00"
+
+[environment]
+module = "python/anaconda/2024.10/3.12.7"
+conda_sh = "/gpfs/software/hali/python/anaconda/2024.10/etc/profile.d/conda.sh"
+env_name = "tsml-eval"
+numba_cache_dir = "/gpfs/home/{username}/Code/.cache/numba/tsml-eval"
+
+[classifier_kwargs.TDE_Dev3]
+verbose = 1
+
+[[categories]]
+name = "DictionaryBased"
+classifiers = ["TDE_Dev3"]
