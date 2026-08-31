@@ -231,6 +231,16 @@ def test_standard_muse_supports_probabilities():
     assert classifier.support_probabilities
 
 
+def test_tde_dev_uses_wip_implementation():
+    """Test the TDE_Dev alias selects the isolated WIP implementation."""
+    classifier = get_classifier_by_name("TDE_Dev")
+
+    assert type(classifier).__name__ == "TDE_Dev"
+    assert type(classifier).__module__ == "tsml_eval._wip.tde_dev._tde_dev"
+    assert classifier.dim_threshold == 0
+    assert classifier.max_dims is None
+
+
 def test_aeon_classifiers_available():
     """Test all aeon classifiers are available."""
     excluded = [

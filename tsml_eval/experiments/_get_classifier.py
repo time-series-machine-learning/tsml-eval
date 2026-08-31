@@ -35,12 +35,12 @@ dictionary_based_classifiers = [
     "individualboss",
     ["contractableboss", "cboss"],
     ["temporaldictionaryensemble", "tde"],
+    ["tde_dev", "tde-dev", "tdedev"],
     "tde-unequal",
     "individualtde",
     "weasel",
     "weasel-logistic",
-    "muse",
-    "muse-logistic",
+    ["muse", "muse-logistic"],
     ["weasel_v2", "weaseldilation", "weasel-dilation", "weasel-d"],
     "redcomets",
     "redcomets-500",
@@ -385,6 +385,15 @@ def _set_classifier_dictionary_based(
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
+    elif c == "tde_dev" or c == "tde-dev" or c == "tdedev":
+        from tsml_eval._wip.tde_dev import TDE_Dev
+
+        return TDE_Dev(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
     elif c == "tde-unequal":
         from tsml_eval._wip.unequal_length._tde7 import TemporalDictionaryEnsemble
 
@@ -411,16 +420,7 @@ def _set_classifier_dictionary_based(
             support_probabilities=True,
             **kwargs,
         )
-    elif c == "muse":
-        from aeon.classification.dictionary_based import MUSE
-
-        return MUSE(
-            random_state=random_state,
-            n_jobs=n_jobs,
-            support_probabilities=True,
-            **kwargs,
-        )
-    elif c == "muse-logistic":
+    elif c == "muse" or c == "muse-logistic":
         from aeon.classification.dictionary_based import MUSE
 
         return MUSE(
