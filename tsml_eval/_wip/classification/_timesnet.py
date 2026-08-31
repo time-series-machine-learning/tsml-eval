@@ -92,13 +92,22 @@ class TimesNetClassifier(BaseClassifier):
           Maximum number of training epochs.
       learning_rate : float, default=1e-3
           Learning rate for RAdam.
-      lr_adjust : {"type1", "cosine", None}, default="type1"
+      lr_adjust : {"type1", "cosine", None}, default=None
           Learning rate schedule, applied every five epochs as in the original
-          TSLib training loop. ``"type1"``, the TSLib default, sets the rate to
-          ``learning_rate * 0.5 ** (epoch - 1)`` at epochs 5, 10, 15, and so on,
-          which decays it to near zero part way through a default 30 epoch run.
-          ``"cosine"`` follows TSLib's cosine option. ``None`` disables the
-          schedule and trains at a constant rate.
+          TSLib training loop. ``"type1"`` is TSLib's own default and sets the
+          rate to ``learning_rate * 0.5 ** (epoch - 1)`` at epochs 5, 10, 15 and
+          so on, which from the published ``learning_rate=0.001`` reaches 2.0e-6
+          by epoch 10 and 6.1e-8 by epoch 15, so training effectively stops
+          about a third of the way through a 30 epoch run.
+
+          The default here is None, which departs from TSLib deliberately. Their
+          schedule is harmless in their pipeline because they select the
+          retained epoch on the *test* set, so an early epoch from before the
+          collapse is kept anyway. This wrapper selects on a held-out split of
+          the training data, so it keeps a model that stopped learning. On ERing
+          the difference is 0.578 with the schedule against 0.933 without, where
+          the published result is 0.915. Set ``"type1"`` to reproduce TSLib's
+          behaviour, or ``"cosine"`` for their cosine option.
       patience : int, default=10
           Early stopping patience based on internal validation accuracy.
       validation_size : float, default=0.2
@@ -178,7 +187,7 @@ class TimesNetClassifier(BaseClassifier):
         batch_size: int = 16,
         n_epochs: int = 30,
         learning_rate: float = 1e-3,
-        lr_adjust: str | None = "type1",
+        lr_adjust: str | None = None,
         patience: int = 10,
         validation_size: float = 0.2,
         gradient_clip: float = 4.0,
