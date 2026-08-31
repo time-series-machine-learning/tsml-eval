@@ -36,6 +36,7 @@ dictionary_based_classifiers = [
     ["contractableboss", "cboss"],
     ["temporaldictionaryensemble", "tde"],
     ["tde_dev", "tde-dev", "tdedev"],
+    ["tde_dev2", "tde-dev2", "tdedev2"],
     "tde-unequal",
     "individualtde",
     "weasel",
@@ -389,6 +390,15 @@ def _set_classifier_dictionary_based(
         from tsml_eval._wip.tde_dev import TDE_Dev
 
         return TDE_Dev(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "tde_dev2" or c == "tde-dev2" or c == "tdedev2":
+        from tsml_eval._wip.tde_dev import TDE_Dev2
+
+        return TDE_Dev2(
             random_state=random_state,
             n_jobs=n_jobs,
             time_limit_in_minutes=fit_contract,

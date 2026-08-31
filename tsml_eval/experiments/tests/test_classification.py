@@ -241,6 +241,17 @@ def test_tde_dev_uses_wip_implementation():
     assert classifier.max_dims is None
 
 
+def test_tde_dev2_enables_bigrams_only():
+    """Test TDE_Dev2 changes only the standard TDE bigram configuration."""
+    classifier = get_classifier_by_name("TDE_Dev2")
+
+    assert type(classifier).__name__ == "TDE_Dev2"
+    assert type(classifier).__module__ == "tsml_eval._wip.tde_dev._tde_dev2"
+    assert classifier.bigrams is True
+    assert classifier.dim_threshold == 0.85
+    assert classifier.max_dims == 20
+
+
 def test_aeon_classifiers_available():
     """Test all aeon classifiers are available."""
     excluded = [
