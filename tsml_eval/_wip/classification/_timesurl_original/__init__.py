@@ -1,2 +1,5 @@
-# from .encoder_transformer import TSEncoder
-from .encoder import TSEncoder
+"""Vendored TimesURL implementation."""
+
+from .timesurl import TimesURL
+
+__all__ = ["TimesURL"]

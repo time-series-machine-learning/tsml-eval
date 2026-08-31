@@ -4,7 +4,7 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from models.encoder import generate_binomial_mask, generate_continuous_mask
+from .encoder import generate_binomial_mask, generate_continuous_mask
 
 class SimConv4(torch.nn.Module):
     def __init__(self, input_dims, output_dims,hidden_dims=64, mask_mode='binomial'):

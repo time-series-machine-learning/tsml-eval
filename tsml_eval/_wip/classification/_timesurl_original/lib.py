@@ -6,7 +6,7 @@ from torch.utils.data import Dataset, DataLoader, TensorDataset
 import numpy as np
 from sklearn import metrics
 
-from collator import CLDataCollator
+from .collator import CLDataCollator
 
 
 class TimeDataset(Dataset):
@@ -292,7 +292,8 @@ def get_unlabeled_pretrain_data(X_train, args):
     # X_train = torch.load(args.path + 'X_train.pt')
     # X_val = torch.load(args.path + 'X_val.pt')
     X_train = torch.from_numpy(X_train)
-    print('X_train: ' + str(X_train.shape))
+    if getattr(args, "verbose", False):
+        print('X_train: ' + str(X_train.shape))
     # print('X_val: ' + str(X_val.shape))
 
     # data_objects = generate_batches(X_train, X_val, args)

@@ -79,29 +79,55 @@ def _device_description():
         "CPU". Never raises, as a results file must still be written if the device
         cannot be identified.
     """
-    # Only inspect a framework that the estimator has already imported. Importing
-    # TensorFlow here would cost every non-deep experiment seconds of start-up and a
-    # large amount of memory for a single line of metadata.
+    # Only inspect frameworks that the estimator has already imported. Importing
+    # TensorFlow or PyTorch here would cost every non-deep experiment seconds of
+    # start-up and a large amount of memory for a single line of metadata.
     tensorflow = sys.modules.get("tensorflow")
-    if tensorflow is None:
-        return "CPU"
+    torch = sys.modules.get("torch")
 
-    try:
-        gpus = tensorflow.config.list_physical_devices("GPU")
-        if not gpus:
-            return "CPU"
+    names = []
+    inspection_failed = False
 
-        names = []
-        for gpu in gpus:
-            try:
-                details = tensorflow.config.experimental.get_device_details(gpu)
-                names.append(details.get("device_name", gpu.name))
-            except Exception:  # noqa: BLE001  # pragma: no cover
-                names.append(gpu.name)
-        # Commas would be read as field separators in the first line of the file.
-        return "; ".join(name.replace(",", " ") for name in names)
-    except Exception:  # noqa: BLE001  # pragma: no cover
-        return "unknown"
+    if tensorflow is not None:
+        try:
+            gpus = tensorflow.config.list_physical_devices("GPU")
+            for gpu in gpus:
+                try:
+                    details = tensorflow.config.experimental.get_device_details(gpu)
+                    names.append(details.get("device_name", gpu.name))
+                except Exception:  # noqa: BLE001
+                    names.append(gpu.name)
+        except Exception:  # noqa: BLE001
+            inspection_failed = True
+
+    if torch is not None:
+        try:
+            if torch.cuda.is_available():
+                for device_index in range(torch.cuda.device_count()):
+                    names.append(torch.cuda.get_device_name(device_index))
+        except Exception:  # noqa: BLE001
+            inspection_failed = True
+
+        # PyTorch exposes MPS separately from CUDA and does not provide a model name.
+        try:
+            mps = getattr(getattr(torch, "backends", None), "mps", None)
+            if mps is not None and mps.is_available():
+                names.append("Apple MPS")
+        except Exception:  # noqa: BLE001
+            inspection_failed = True
+
+    if names:
+        # Preserve TensorFlow-first ordering for existing results, add devices seen
+        # only by PyTorch, and avoid reporting one physical GPU twice when both
+        # frameworks see it. Commas would be parsed as first-line field separators.
+        sanitised_names = []
+        for name in names:
+            sanitised_name = str(name).replace(",", " ")
+            if sanitised_name not in sanitised_names:
+                sanitised_names.append(sanitised_name)
+        return "; ".join(sanitised_names)
+
+    return "unknown" if inspection_failed else "CPU"
 
 
 def run_classification_experiment(

@@ -32,6 +32,7 @@ deep_learning_classifiers = [
     ["convtranclassifier", "convtran"],
     ["patchmtscclassifier", "patchmtsc"],
     ["timesnetclassifier", "timesnet"],
+    ["timesurlclassifier", "timesurl"],
 ]
 dictionary_based_classifiers = [
     ["bossensemble", "boss"],
@@ -355,14 +356,12 @@ def _set_classifier_deep_learning(
         return PatchMTSCClassifier(random_state=random_state, **kwargs)
     elif c == "timesurlclassifier" or c == "timesurl":
         from tsml_eval._wip.classification import TimesURLClassifier
+
         return TimesURLClassifier(random_state=random_state, **kwargs)
     elif c == "timesnetclassifier" or c == "timesnet":
         from tsml_eval._wip.classification import TimesNetClassifier
-        return TimesNetClassifier(random_state=random_state, **kwargs)
-    elif c == "patchmtscclassifier" or c == "patchmtsc":
-        from tsml_eval._wip.classification import PatchMTSCClassifier
 
-        return PatchMTSCClassifier(random_state=random_state, **kwargs)
+        return TimesNetClassifier(random_state=random_state, **kwargs)
     else:
         raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
 

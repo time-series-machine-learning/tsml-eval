@@ -7,12 +7,12 @@ import math
 import random
 from datetime import datetime
 import pickle
-from utils import pkl_load, pad_nan_to_target
+from .utils import pkl_load, pad_nan_to_target
 from scipy.io.arff import loadarff
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from utils import generate_mask
-from utils import interpolate_cubic_spline
-from utils import normalize_with_mask
+from .utils import generate_mask
+from .utils import interpolate_cubic_spline
+from .utils import normalize_with_mask
 
 
 def load_UCR(dataset, load_tp: bool = True):
