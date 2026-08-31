@@ -402,7 +402,6 @@ class ConvTranClassifier(BaseClassifier):
         "capability:multivariate": True,
         "algorithm_type": "deeplearning",
         "non_deterministic": True,
-        "cant_pickle": True,
         "python_dependencies": "torch",
     }
 
