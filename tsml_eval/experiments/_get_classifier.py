@@ -414,7 +414,12 @@ def _set_classifier_dictionary_based(
     elif c == "muse":
         from aeon.classification.dictionary_based import MUSE
 
-        return MUSE(random_state=random_state, n_jobs=n_jobs, **kwargs)
+        return MUSE(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            support_probabilities=True,
+            **kwargs,
+        )
     elif c == "muse-logistic":
         from aeon.classification.dictionary_based import MUSE
 

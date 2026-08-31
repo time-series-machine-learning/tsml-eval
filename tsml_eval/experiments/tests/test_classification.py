@@ -224,6 +224,13 @@ def test_standard_stc_uses_aeon_implementation():
     )
 
 
+def test_standard_muse_supports_probabilities():
+    """Test MUSE can produce the probabilities required by experiments."""
+    classifier = get_classifier_by_name("MUSE")
+
+    assert classifier.support_probabilities
+
+
 def test_aeon_classifiers_available():
     """Test all aeon classifiers are available."""
     excluded = [

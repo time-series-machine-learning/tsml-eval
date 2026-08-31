@@ -7,6 +7,8 @@ script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 repo_dir=$(cd -- "${script_dir}/.." && pwd)
 config_file="${script_dir}/multiverse_resample0_extra_cpu.toml"
 required_branch="ajb/hc2"
+state_dir="${HOME}/Results/Multiverse/.controller-resample0-extra-cpu"
+reset_state=false
 
 activate_environment() {
     source /etc/profile
@@ -17,8 +19,19 @@ activate_environment() {
     conda activate tsml-eval
 }
 
-if [[ -n "${1:-}" ]]; then
-    echo "ERROR: unknown option: ${1}" >&2
+case "${1:-}" in
+    "") ;;
+    --reset-state) reset_state=true ;;
+    *)
+        echo "ERROR: unknown option: ${1}" >&2
+        echo "Usage: bash $(basename "$0") [--reset-state]" >&2
+        exit 1
+        ;;
+esac
+
+if [[ -n "${2:-}" ]]; then
+    echo "ERROR: too many arguments." >&2
+    echo "Usage: bash $(basename "$0") [--reset-state]" >&2
     exit 1
 fi
 
@@ -63,6 +76,12 @@ if ((${#pending_ids[@]})); then
     scancel "${pending_ids[@]}"
 else
     echo "No pending compute tasks to cancel."
+fi
+
+if [[ "$reset_state" == true && -d "$state_dir" ]]; then
+    archived_state="${state_dir}-previous-$(date +%Y%m%d-%H%M%S)"
+    mv -- "$state_dir" "$archived_state"
+    echo "Archived prior controller state: ${archived_state}"
 fi
 
 activate_environment
