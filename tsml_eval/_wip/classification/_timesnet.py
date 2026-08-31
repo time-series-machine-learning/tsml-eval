@@ -73,10 +73,13 @@ class TimesNetClassifier(BaseClassifier):
       ----------
       e_layers : int, default=2
           Number of TimesBlocks.
-      d_model : int, default=64
-          Embedding dimension.
-      d_ff : int, default=128
-          Hidden dimension inside the inception-style convolution blocks.
+      d_model : int, default=32
+          Embedding dimension. The default is the modal value across the
+          authors' published classification scripts, which use 32 or 64.
+      d_ff : int, default=64
+          Hidden dimension inside the inception-style convolution blocks. The
+          default is the modal value across the authors' published
+          classification scripts, which use 32, 64 or 256.
       top_k : int, default=3
           Number of dominant periods selected from the FFT.
       num_kernels : int, default=6
@@ -111,6 +114,33 @@ class TimesNetClassifier(BaseClassifier):
       verbose : bool, default=False
           If True, print training progress.
 
+      Attributes
+      ----------
+      network_ : torch.nn.Module
+          Fitted network, restored to the epoch with the best validation score.
+      scaler_ : object or None
+          Fitted per-channel standardiser, or None when ``standardise`` is False.
+      seq_len_ : int
+          Series length seen in ``fit``. ``predict`` requires the same length.
+      n_channels_ : int
+          Number of channels seen in ``fit``.
+      device_ : torch.device
+          Resolved training device.
+      history_ : list of dict
+          One entry per epoch with ``epoch``, ``train_loss`` and
+          ``validation_accuracy``. When ``validation_size`` is 0 there is no
+          held-out set, and ``validation_accuracy`` holds the negated training
+          loss, which is what selection then uses.
+      best_epoch_ : int
+          One-based index of the retained epoch.
+      best_validation_score_ : float
+          Score that selected the retained epoch: validation accuracy, or the
+          negated training loss when there is no validation set.
+      classes_ : np.ndarray
+          Class labels, from ``BaseClassifier``.
+      n_classes_ : int
+          Number of classes, from ``BaseClassifier``.
+
       Notes
       -----
       - Input X must be a NumPy array of shape (n_cases, n_channels, n_timepoints).
@@ -140,8 +170,8 @@ class TimesNetClassifier(BaseClassifier):
     def __init__(
         self,
         e_layers: int = 2,
-        d_model: int = 64,
-        d_ff: int = 128,
+        d_model: int = 32,
+        d_ff: int = 64,
         top_k: int = 3,
         num_kernels: int = 6,
         dropout: float = 0.1,
@@ -448,6 +478,7 @@ class TimesNetClassifier(BaseClassifier):
             if score > best_score:
                 best_score = score
                 best_state = deepcopy(self.network_.state_dict())
+                self.best_epoch_ = epoch + 1
                 epochs_without_improvement = 0
             else:
                 epochs_without_improvement += 1
@@ -459,6 +490,7 @@ class TimesNetClassifier(BaseClassifier):
                 print(f"updating learning rate to {new_lr}")
 
         self.network_.load_state_dict(best_state)
+        self.best_validation_score_ = best_score
         return self
 
     def _predict_proba(self, X: np.ndarray) -> np.ndarray:
@@ -604,10 +636,14 @@ class _DataEmbedding(nn.Module):
     only.
     """
 
-    def __init__(self, c_in: int, d_model: int, dropout: float = 0.1):
+    def __init__(
+        self, c_in: int, d_model: int, dropout: float = 0.1, max_len: int = 5000
+    ):
         super().__init__()
         self.value_embedding = _TokenEmbedding(c_in=c_in, d_model=d_model)
-        self.position_embedding = _PositionalEmbedding(d_model=d_model)
+        self.position_embedding = _PositionalEmbedding(
+            d_model=d_model, max_len=max_len
+        )
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -789,8 +825,8 @@ class _TimesNetClassificationModel(nn.Module):
         enc_in: int,
         num_class: int,
         e_layers: int = 2,
-        d_model: int = 64,
-        d_ff: int = 128,
+        d_model: int = 32,
+        d_ff: int = 64,
         top_k: int = 3,
         num_kernels: int = 6,
         dropout: float = 0.1,
@@ -814,7 +850,12 @@ class _TimesNetClassificationModel(nn.Module):
             ]
         )
 
-        self.enc_embedding = _DataEmbedding(enc_in, d_model, dropout=dropout)
+        # The positional table must cover the series. TSLib fixes it at 5000,
+        # which fails on the longer Multiverse problems: EigenWorms is 17984
+        # points and Alzheimers 15000.
+        self.enc_embedding = _DataEmbedding(
+            enc_in, d_model, dropout=dropout, max_len=max(5000, seq_len)
+        )
         self.layer_norm = nn.LayerNorm(d_model)
 
         self.act = F.gelu
