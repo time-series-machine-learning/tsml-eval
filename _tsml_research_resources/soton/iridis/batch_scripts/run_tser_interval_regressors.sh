@@ -185,6 +185,7 @@ dataset_list_file="${tsml_eval_dir}/_tsml_research_resources/dataset_lists/Regre
 round=1
 chain="true"
 dry_run="false"
+retry_retired="false"
 profile="interval"
 
 usage() {
@@ -197,6 +198,7 @@ usage() {
         "  --round N            Round number; set by the chained job." \
         "  --max-rounds N       Stop chaining after this many rounds." \
         "  --dataset-list FILE  Override the dataset list." \
+        "  --retry-retired      Retry experiments previously marked DEAD." \
         "  --no-chain           Submit this round only, do not chain." \
         "  --dry-run            Report the plan without submitting anything." \
         "  -h, --help           Show this help."
@@ -235,6 +237,10 @@ while (($# > 0)); do
             fi
             dataset_list_file="$2"
             shift 2
+            ;;
+        --retry-retired)
+            retry_retired="true"
+            shift
             ;;
         --no-chain)
             chain="false"
@@ -571,6 +577,7 @@ declare -A failure_count=()
 declare -A attempt_reason=()
 declare -A attempt_round=()
 declare -A attempt_job_id=()
+retired_reset=0
 
 if [[ -f "${attempt_file}" ]]; then
     while IFS=$'\t' read -r state_regressor state_dataset state_resample \
@@ -580,6 +587,14 @@ if [[ -f "${attempt_file}" ]]; then
             continue
         fi
         key="${state_regressor}|${state_dataset}|${state_resample}"
+        if [[ "${retry_retired}" == "true" && "${state_reason}" == "DEAD" ]]; then
+            state_attempts=0
+            state_failures=0
+            state_reason="RETRY"
+            state_round=0
+            state_job_id=""
+            retired_reset=$((retired_reset + 1))
+        fi
         attempt_tier["${key}"]="${state_tier}"
         attempt_count["${key}"]="${state_attempts}"
         failure_count["${key}"]="${state_failures}"
@@ -587,6 +602,10 @@ if [[ -f "${attempt_file}" ]]; then
         attempt_round["${key}"]="${state_round}"
         attempt_job_id["${key}"]="${state_job_id:-}"
     done < "${attempt_file}"
+fi
+
+if ((retired_reset > 0)); then
+    echo "Reset ${retired_reset} retired experiments for another attempt."
 fi
 
 # Reconciliation touches every one of the 15120 experiments on every round, so
@@ -1224,6 +1243,10 @@ echo "tsml-eval commit:  \${current_tsml_eval_commit}"
 echo "aeon commit:       \${current_aeon_commit}"
 echo "Command file:      ${command_file}"
 echo
+
+# staskfarm starts child srun steps. Do not propagate mutually exclusive Slurm
+# memory request variables from the parent allocation into those steps.
+unset SLURM_MEM_PER_CPU SLURM_MEM_PER_GPU SLURM_MEM_PER_NODE
 
 staskfarm "${command_file}"
 SUB
