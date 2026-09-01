@@ -29,6 +29,7 @@ deep_learning_classifiers = [
     "litetime-mv",
     ["individualliteclassifier", "individuallite"],
     ["disjointcnnclassifier", "disjointcnn"],
+    ["disjointcnn-mv", "disjointcnnmv"],
     ["convtranclassifier", "convtran"],
     ["patchmtscclassifier", "patchmtsc"],
     ["timesnetclassifier", "timesnet"],
@@ -346,6 +347,13 @@ def _set_classifier_deep_learning(
         return IndividualLITEClassifier(random_state=random_state, **kwargs)
     elif c == "disjointcnnclassifier" or c == "disjointcnn":
         from aeon.classification.deep_learning import DisjointCNNClassifier
+
+        return DisjointCNNClassifier(random_state=random_state, **kwargs)
+    elif c == "disjointcnn-mv" or c == "disjointcnnmv":
+        # The Multiverse port, which follows the authors' training procedure.
+        # Kept beside the aeon estimator above rather than replacing it so the
+        # two can be run against each other; see aeon issue #3775.
+        from tsml_eval._wip.classification import DisjointCNNClassifier
 
         return DisjointCNNClassifier(random_state=random_state, **kwargs)
     elif c == "convtranclassifier" or c == "convtran":
