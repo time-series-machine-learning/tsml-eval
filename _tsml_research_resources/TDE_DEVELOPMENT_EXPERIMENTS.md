@@ -16,9 +16,9 @@ and screen session. Existing prediction files are never overwritten.
 | Name | Parent | Deliberate change | Channel filtering | Bigrams | Status |
 |---|---|---|---|---|---|
 | `TDE` | Aeon TDE | Baseline | `dim_threshold=0.85`, `max_dims=20` | `None`, resolving to `False` for multivariate data | Existing comparison results |
-| `TDE_Dev` | Full WIP clone of Aeon TDE | Retain every channel | `dim_threshold=0`, `max_dims=n_channels` | Standard behavior (`False` for multivariate data) | Resample-0 Core run in progress; 48/66 results inspected on 2026-08-31 |
-| `TDE_Dev2` | Aeon TDE subclass | Force bigrams on | Standard TDE filtering | `True` | Configured for resample-0 Core run |
-| `TDE_Dev3` | Full WIP clone of Aeon TDE | Normalised per-dimension late fusion with accuracy weights | Standard TDE filtering | Standard behavior | Implemented and tested; synthetic diagnostics complete |
+| `TDE_Dev` | Full WIP clone of Aeon TDE | Retain every channel | `dim_threshold=0`, `max_dims=n_channels` | Standard behavior (`False` for multivariate data) | Resample-0 Core run in progress; 59/66 results inspected on 2026-09-02 |
+| `TDE_Dev2` | Aeon TDE subclass | Force bigrams on | Standard TDE filtering | `True` | Resample-0 Core run in progress; 57/66 results inspected on 2026-09-01 |
+| `TDE_Dev3` | Full WIP clone of Aeon TDE | Normalised per-dimension late fusion with accuracy weights | Standard TDE filtering | Standard behavior | Resample-0 Core run in progress; 59/66 accuracy-weighted and 58/66 uniform results inspected on 2026-09-02 |
 
 The variants are independent ablations: `TDE_Dev2` and `TDE_Dev3` do **not**
 inherit the all-channel behavior of `TDE_Dev`.
@@ -71,6 +71,11 @@ HALI files:
 - Controller state: `.controller-core-resample0-tde-dev`
 - Results: `DictionaryBased/TDE_Dev`
 
+The controller requires both test and train result files. If a test file already
+exists, tsml-eval reruns the fit to produce only the missing train estimate and does
+not overwrite the existing test file. TDE's own leave-one-out train-estimate support
+is used rather than an external cross-validation wrapper.
+
 Launch from the `ajb/hc2` checkout:
 
 ```bash
@@ -79,23 +84,24 @@ bash _tsml_research_resources/start_multiverse_core_resample0_tde_dev.sh
 
 ### Preliminary comparison with TDE
 
-Snapshot taken on 2026-08-31 using the 48 Core datasets with valid resample-0 files
+Snapshot taken on 2026-08-31 using the 50 Core datasets with valid resample-0 files
 for both classifiers:
 
 | Measure | TDE | TDE_Dev |
 |---|---:|---:|
-| Mean accuracy | 0.7067 | 0.7121 |
-| Mean balanced accuracy | 0.6681 | 0.6745 |
-| Accuracy wins/draws/losses for TDE_Dev |  | 19/12/17 |
-| Median fit time | 98.3 s | 98.6 s |
-| Median memory | 0.516 GiB | 0.654 GiB |
+| Mean accuracy | 0.7085 | 0.7140 |
+| Mean balanced accuracy | 0.6711 | 0.6777 |
+| Accuracy wins/draws/losses for TDE_Dev |  | 20/13/17 |
+| Median fit time | 103.7 s | 117.0 s |
+| Median prediction time | 6.0 s | 20.2 s |
+| Median memory | 0.564 GiB | 0.854 GiB |
 
 The mean accuracy difference was +0.0054 for `TDE_Dev`, but was not significant
-under a paired Wilcoxon test (`p=0.198`). Across 28,026 test cases, `TDE_Dev` made
-42 additional correct predictions. Aggregate fitting time was 11% higher and
-aggregate memory was 50% higher. These results are preliminary because 18
-`TDE_Dev` Core results were still missing and the completed subset is biased toward
-quicker datasets.
+under a paired Wilcoxon test (`p=0.158`). Across 28,852 test cases, `TDE_Dev` made
+50 additional correct predictions. Aggregate fitting time was 46% higher, median
+prediction time was 3.4 times higher, and median memory was 51% higher. These results
+are preliminary because 16 `TDE_Dev` Core results were still missing and the
+completed subset is biased toward quicker datasets.
 
 Mean log loss was worse for `TDE_Dev` because of several large outliers, notably
 IRDS-SFL, DuckDuckGeese, Handwriting, and Alzheimers. Median log-loss change was
@@ -133,6 +139,36 @@ Launch from the `ajb/hc2` checkout:
 ```bash
 bash _tsml_research_resources/start_multiverse_core_resample0_tde_dev2.sh
 ```
+
+### Preliminary comparison with TDE
+
+Snapshot taken on 2026-08-31 using the 46 Core datasets with valid resample-0 files
+for baseline TDE, `TDE_Dev`, and `TDE_Dev2`:
+
+| Measure | TDE | TDE_Dev | TDE_Dev2 |
+|---|---:|---:|---:|
+| Mean accuracy | 0.7199 | 0.7262 | 0.7224 |
+| Mean balanced accuracy | 0.6821 | 0.6896 | 0.6886 |
+| Mean log loss | 0.8271 | 1.0167 | 0.8540 |
+| Median fit time | 88.7 s | 89.3 s | 92.5 s |
+| Median prediction time | 4.5 s | 16.4 s | 6.0 s |
+| Median memory | 0.470 GiB | 0.573 GiB | 0.589 GiB |
+
+Against TDE on this common subset, `TDE_Dev2` had accuracy wins/draws/losses of
+17/12/17, a mean accuracy change of +0.0025, and a paired Wilcoxon p-value of 0.739.
+It made 20 fewer correct predictions across all 18,327 test cases despite improving
+the unweighted mean dataset accuracy, showing that its gains were concentrated in
+smaller datasets. Aggregate fitting time was 24% higher than TDE.
+
+`TDE_Dev` had the stronger signal on the same subset: +0.0063 mean accuracy,
+20/12/14 wins/draws/losses, and `p=0.099`, with 89 additional correct predictions.
+However, a few expensive high-dimensional datasets made its aggregate fit time 2.45
+times baseline. `PEMS-SF`, `UCDHE-Rowing-MC`, and `MindReading` were the largest fit
+time multipliers.
+
+Neither result is yet statistically significant. Dev1 currently looks more promising
+for accuracy but is substantially more expensive; Dev2 is cheaper than Dev1 and has
+better log loss, but offers little evidence of an accuracy improvement over baseline.
 
 ## Variant 3: TDE_Dev3 - normalised per-dimension late fusion
 
@@ -266,9 +302,58 @@ was warmed, prediction time was effectively unchanged at this scale. Larger arch
 problems are needed to measure the cost of per-dimension division and float64
 similarity matrices.
 
+## Latest incomplete Core comparison
+
+Snapshot taken on 2026-09-02. Completion was 59/66 for `TDE_Dev`, 57/66 for
+`TDE_Dev2`, 59/66 for accuracy-weighted `TDE_Dev3`, and 58/66 for
+`TDE_Dev3-Uniform`. There were 57 datasets common to baseline TDE and all four
+variants.
+
+| Measure on 57 common datasets | TDE | TDE_Dev | TDE_Dev2 | TDE_Dev3 | Dev3 uniform |
+|---|---:|---:|---:|---:|---:|
+| Mean accuracy | 0.7204 | **0.7272** | 0.7217 | 0.7184 | 0.7235 |
+| Mean balanced accuracy | 0.6711 | **0.6794** | 0.6761 | 0.6710 | 0.6753 |
+| Mean log loss | **0.8848** | 1.0364 | 0.9191 | 0.9595 | 0.9440 |
+| Median fit time | 158.4 s | 207.9 s | 139.3 s | 107.6 s | **107.4 s** |
+| Median prediction time | 12.5 s | 25.8 s | 17.8 s | **10.3 s** | 14.3 s |
+| Median memory | 0.850 GiB | 1.284 GiB | 1.045 GiB | **0.708 GiB** | 0.865 GiB |
+| Aggregate fit-time ratio to TDE | 1.00 | 1.95 | 1.41 | **0.99** | 1.01 |
+
+Paired accuracy outcomes against TDE were:
+
+- `TDE_Dev`: 27/13/17 wins/draws/losses, mean difference +0.0067,
+  Wilcoxon `p=0.0447`, and 414 additional correct predictions out of 55,548.
+- `TDE_Dev2`: 19/12/26, mean difference +0.0013, `p=0.870`, and 67 fewer
+  correct predictions.
+- `TDE_Dev3`: 17/11/29, mean difference -0.0020, `p=0.164`, and 565 fewer
+  correct predictions.
+- `TDE_Dev3-Uniform`: 18/11/28, mean difference +0.0031, `p=0.589`, and 489
+  fewer correct predictions.
+
+On this incomplete subset, retaining all channels is the only variant showing a
+meaningful positive accuracy signal, although it costs more and worsens log loss.
+Its nominal Wilcoxon result is now below 0.05, but this is an incomplete, repeatedly
+inspected subset and four variants are being compared, so it is not yet confirmatory.
+Bigrams still provide no convincing accuracy improvement.
+
+Uniform Dev3 outperformed accuracy-weighted Dev3 by +0.0051 mean accuracy,
+25/13/19 wins/draws/losses, 76 additional correct predictions, and better log loss;
+the paired difference was not significant (`p=0.119`). This suggests the dimension
+accuracy weights are harmful. Normalisation alone is closer to baseline, but its
+positive unweighted mean is driven by smaller datasets: it made 489 fewer total
+correct predictions. Accuracy-weighted Dev3 remains the fastest and lightest option.
+
+Missing results were:
+
+- `TDE_Dev` and `TDE_Dev3`: `AustraliaRainfall_disc`, `CrowdSourced`,
+  `FordChallenge`, `Skoda`, `STEW`, `Tiselac`, and `USCActivity`.
+- `TDE_Dev2`: the same seven plus `BIDMC32HR_disc` and `BIDMC32SpO2_disc`.
+- `TDE_Dev3-Uniform`: the same seven plus `BIDMC32HR_disc`.
+
 ## Common HALI controller behavior
 
-The currently configured development launchers (`TDE_Dev` and `TDE_Dev2`):
+The currently configured development launchers (`TDE_Dev`, `TDE_Dev2`, and
+`TDE_Dev3`):
 
 - run only resample 0 from `MultiverseCore.txt`;
 - submit CPU jobs to the `compute` partition;

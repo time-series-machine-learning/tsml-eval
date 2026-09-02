@@ -1,5 +1,5 @@
 # Resample-0 Multiverse-Core experiment for the development TDE variant.
-# Existing TDE_Dev result files are detected and are never overwritten.
+# Existing TDE_Dev test and train files are detected and are never overwritten.
 
 [controller]
 username = "ajb"
@@ -11,6 +11,7 @@ results_root = "/gpfs/home/{username}/Results/Multiverse"
 state_dir = "/gpfs/home/{username}/Results/Multiverse/.controller-core-resample0-tde-dev"
 expected_branch = "ajb/hc2"
 resamples = 1
+build_train_files = true
 max_attempts = 2
 all_categories_first_pass = true
 ignore_existing_failure_logs = true
