@@ -2,8 +2,10 @@
 
 set -euo pipefail
 
-# Complete one multivariate interval classifier on the Multiverse-core datasets it
-# is still missing, on Iridis, writing test prediction files.
+# Complete one multivariate classifier on the Multiverse-core datasets it is
+# still missing, on Iridis, writing test prediction files. The defaults retain
+# the interval-classifier workflow; small wrappers may override the category,
+# result root, dataset list, and resample range for other aeon classifiers.
 #
 # The classifier is chosen with MV_CLASSIFIER (RISE, RSTSF, STSF, TSF, ...), and
 # the run defaults to that method's missing-dataset list
@@ -56,8 +58,8 @@ set -euo pipefail
 
 # Resamples are zero-indexed internally:
 # start_fold=1 and max_folds=30 runs resamples 0 to 29.
-max_folds=30
-start_fold=1
+max_folds="${MV_MAX_FOLDS:-30}"
+start_fold="${MV_START_FOLD:-1}"
 
 queue="batch"
 max_time="60:00:00"
@@ -117,11 +119,13 @@ local_path="/iridisfs/home/${username}"
 # One interval classifier per run, selected via MV_CLASSIFIER (e.g. RISE, RSTSF,
 # STSF, TSF). The string is the get_classifier_by_name key (case-insensitive) and
 # the results directory name, matching the other interval methods in this store.
-MV_CLASSIFIER="${MV_CLASSIFIER:?set MV_CLASSIFIER to an interval method, e.g. RISE}"
+MV_CLASSIFIER="${MV_CLASSIFIER:?set MV_CLASSIFIER to an aeon classifier, e.g. RISE}"
 classifier_lc=$(printf '%s' "${MV_CLASSIFIER}" | tr 'A-Z' 'a-z')
 
-job_name_prefix="mv-interval-${classifier_lc}"
-submission_label="MVInterval"
+results_category="${MV_RESULTS_CATEGORY:-IntervalBased}"
+workflow_key="${MV_WORKFLOW_KEY:-interval-${classifier_lc}}"
+job_name_prefix="mv-${workflow_key}"
+submission_label="${MV_SUBMISSION_LABEL:-MVInterval}"
 workflow_label="${MV_CLASSIFIER} classifier"
 
 # Test only, matching the other interval classifiers in this results root.
@@ -156,15 +160,15 @@ python_path="/home/${username}/.conda/envs/${env_name}/bin/python"
 # Override with data_dir=... if the archive sits elsewhere on the cluster.
 data_dir="${data_dir:-${local_path}/Data/Multiverse}"
 
-results_dir="${MV_INTERVAL_RESULTS_ROOT:-${local_path}/Results/Multiverse/IntervalBased}"
+results_dir="${MV_RESULTS_ROOT:-${MV_INTERVAL_RESULTS_ROOT:-${local_path}/Results/Multiverse/${results_category}}}"
 out_dir="${results_dir}/output"
-state_dir="${results_dir}/.mv-interval-${classifier_lc}-state"
+state_dir="${results_dir}/.mv-${workflow_key}-state"
 numba_cache_dir="${local_path}/Code/.cache/${env_name}"
-shared_runner_lock="${MV_INTERVAL_RUNNER_LOCK:-${local_path}/Results/Multiverse/.mv-interval-${classifier_lc}-runner.lock}"
+shared_runner_lock="${MV_RUNNER_LOCK:-${MV_INTERVAL_RUNNER_LOCK:-${local_path}/Results/Multiverse/.mv-${workflow_key}-runner.lock}}"
 
 # Defaults to this method's missing-dataset list (only the incomplete datasets),
 # so complete work is not re-run. Override with --dataset-list for the full core.
-dataset_list_file="${tsml_eval_dir}/_tsml_research_resources/dataset_lists/MultivariateIntervalMissing-${MV_CLASSIFIER}.txt"
+dataset_list_file="${MV_DATASET_LIST:-${tsml_eval_dir}/_tsml_research_resources/dataset_lists/MultivariateIntervalMissing-${MV_CLASSIFIER}.txt}"
 
 # ==============================================================================
 # Command line
@@ -279,7 +283,7 @@ done
 current_branch=$(git -C "${tsml_eval_dir}" rev-parse --abbrev-ref HEAD)
 if [[ "${current_branch}" != "${expected_branch}" ]]; then
     echo "ERROR: tsml-eval is on branch ${current_branch}, expected ${expected_branch}."
-    echo "That branch must carry the interval classifier registration."
+    echo "That branch must carry the classifier registration."
     exit 1
 fi
 
@@ -380,6 +384,36 @@ exec 9> "${shared_runner_lock}"
 if ! flock -w 300 9; then
     echo "ERROR: another submission round held the shared lock for five minutes." >&2
     exit 1
+fi
+
+# The lock prevents simultaneous reconciliation, but releases after submission.
+# Refuse a second manual round-1 launch while this classifier's node jobs or
+# chained supervisors still exist; otherwise two independent chains can submit
+# the same result files.
+if ((round == 1)) && [[ "${dry_run}" != "true" ]]; then
+    existing_chain_jobs=()
+    while IFS='|' read -r existing_job_id existing_job_name existing_job_state; do
+        if [[ -z "${existing_job_id}" ||
+              "${existing_job_id}" == "${SLURM_JOB_ID:-}" ]]; then
+            continue
+        fi
+        if [[ "${existing_job_name}" == "${job_name_prefix}-r"* ||
+              "${existing_job_name}" == "${job_name_prefix}-supervisor-"* ]]; then
+            existing_chain_jobs+=(
+                "${existing_job_id} (${existing_job_name}, ${existing_job_state})"
+            )
+        fi
+    done < <(
+        squeue --noheader --user="${username}" --partition="${queue}" \
+            --states=RUNNING,PENDING --format='%i|%200j|%T'
+    )
+
+    if ((${#existing_chain_jobs[@]} > 0)); then
+        echo "ERROR: an active ${workflow_label} chain already exists:" >&2
+        printf '  %s\n' "${existing_chain_jobs[@]}" >&2
+        echo "Cancel the existing chain before starting a new round 1." >&2
+        exit 1
+    fi
 fi
 
 for classifier in "${classifiers[@]}"; do
@@ -1318,6 +1352,14 @@ else
 . /etc/profile
 set -e
 
+MV_CLASSIFIER="${MV_CLASSIFIER}" \\
+MV_RESULTS_CATEGORY="${results_category}" \\
+MV_RESULTS_ROOT="${results_dir}" \\
+MV_WORKFLOW_KEY="${workflow_key}" \\
+MV_SUBMISSION_LABEL="${submission_label}" \\
+MV_MAX_FOLDS="${max_folds}" \\
+MV_START_FOLD="${start_fold}" \\
+data_dir="${data_dir}" \\
 bash "${script_path}" \\
     --round ${next_round} \\
     --max-rounds ${max_rounds} \\
