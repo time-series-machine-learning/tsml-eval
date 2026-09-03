@@ -1,0 +1,62 @@
+# XCM-Tuned resample-0 pass on IridisX's i7_h200 Early Access queue.
+#
+# XCM with the authors' protocol: window size selected per dataset over
+# {0.2, 0.4, 0.6, 0.8, 1.0} by a stratified five-fold cross-validation of the
+# training set (Fauvel et al. 2021, S4.3), then a refit on the whole training
+# set. Selection never sees the test data.
+#
+# This runs beside the fixed-window XCM rather than replacing it, so the pair
+# shows how much of XCM's shortfall against the published table is tuning. It
+# writes to its own results directory, XCM-Tuned, and takes its own supervisor
+# lock.
+#
+# Cost: five candidates over five folds, so about 20 times the fixed-window
+# pass, which took 1.2 GPU-hours over Multiverse-core. Budget roughly a day.
+# Batch size is deliberately not searched: batch 1 costs about 32 times the
+# gradient steps of batch 32, which would take this near 900 GPU-hours for a
+# choice the published table makes on 4 of 30 datasets.
+
+[controller]
+username = "ajb2u23"
+email = "ajb@uea.ac.uk"
+repo_dir = "/home/{username}/Code/tsml-eval-gpu"
+data_dir = "/home/{username}/Data/Multiverse"
+dataset_file = "/home/{username}/Code/tsml-eval-gpu/_tsml_research_resources/dataset_lists/MultivariateClassification66-MultiverseMini.txt"
+results_root = "/home/{username}/Results/Multiverse"
+state_dir = "/home/{username}/Results/Multiverse/.controller-core-resample0-xcm-tuned-i7-h200"
+resamples = 1
+max_attempts = 2
+all_categories_first_pass = false
+small_datasets_first = true
+excluded_datasets = []
+validate_results = false
+expected_branch = "ajb/gpu"
+
+[slurm]
+account = ""
+partition = "i7_h200"
+qos = ""
+max_active_tasks = 8
+cpus_per_task = 2
+gpus = 1
+nodes = 1
+gres = "gpu:h200:1"
+memory_mb_levels = [64000, 128000]
+time_limit = "3-00:00:00"
+
+[environment]
+module = "conda/python3"
+conda_sh = ""
+env_name = "tsml-eval-gpu"
+numba_cache_dir = "/home/{username}/Code/.cache/numba/tsml-eval-gpu"
+gpu_check = "tensorflow"
+
+# The lookup supplies the window grid for this name; verbose prints each grid
+# point's cross-validated accuracy to the job log, which is the only record of
+# what the search chose if the run is interrupted.
+[classifier_kwargs."XCM-Tuned"]
+verbose = true
+
+[[categories]]
+name = "DeepLearning"
+classifiers = ["XCM-Tuned"]
