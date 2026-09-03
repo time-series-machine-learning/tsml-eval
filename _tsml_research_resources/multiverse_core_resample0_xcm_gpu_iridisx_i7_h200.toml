@@ -14,6 +14,10 @@
 #
 # Cost: five candidates over five folds, so about 20 times the fixed-window
 # pass, which took 1.2 GPU-hours over Multiverse-core. Budget roughly a day.
+# The time limit stays at the value the other configs use: the slowest
+# fixed-window dataset took 7.6 minutes, so 20 times that is about 2.5 hours,
+# well inside it. Asking for more than the partition allows has sbatch reject
+# every submission, which looks like a controller that runs but queues nothing.
 # Batch size is deliberately not searched: batch 1 costs about 32 times the
 # gradient steps of batch 32, which would take this near 900 GPU-hours for a
 # choice the published table makes on 4 of 30 datasets.
@@ -44,7 +48,7 @@ gpus = 1
 nodes = 1
 gres = "gpu:h200:1"
 memory_mb_levels = [64000, 128000]
-time_limit = "3-00:00:00"
+time_limit = "2-12:00:00"
 
 [environment]
 module = "conda/python3"
