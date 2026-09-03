@@ -29,7 +29,7 @@ deep_learning_classifiers = [
     "litetime-mv",
     ["individualliteclassifier", "individuallite"],
     ["disjointcnnclassifier", "disjointcnn"],
-    ["disjointcnn-mv", "disjointcnnmv"],
+    ["disjointcnn-aeon", "disjointcnnaeon"],
     ["convtranclassifier", "convtran"],
     ["patchmtscclassifier", "patchmtsc"],
     ["timesnetclassifier", "timesnet"],
@@ -347,14 +347,17 @@ def _set_classifier_deep_learning(
 
         return IndividualLITEClassifier(random_state=random_state, **kwargs)
     elif c == "disjointcnnclassifier" or c == "disjointcnn":
-        from aeon.classification.deep_learning import DisjointCNNClassifier
+        # The Multiverse port, which follows the authors' training procedure.
+        # aeon's estimator is available as disjointcnn-aeon; it applies a
+        # Permute after the final block, leaving GlobalAveragePooling2D to
+        # reduce the wrong axes so the classifier head receives one feature
+        # instead of 64, and scores about 20 accuracy points below the
+        # published numbers as a result. See aeon issue #3775.
+        from tsml_eval._wip.classification import DisjointCNNClassifier
 
         return DisjointCNNClassifier(random_state=random_state, **kwargs)
-    elif c == "disjointcnn-mv" or c == "disjointcnnmv":
-        # The Multiverse port, which follows the authors' training procedure.
-        # Kept beside the aeon estimator above rather than replacing it so the
-        # two can be run against each other; see aeon issue #3775.
-        from tsml_eval._wip.classification import DisjointCNNClassifier
+    elif c == "disjointcnn-aeon" or c == "disjointcnnaeon":
+        from aeon.classification.deep_learning import DisjointCNNClassifier
 
         return DisjointCNNClassifier(random_state=random_state, **kwargs)
     elif c == "convtranclassifier" or c == "convtran":

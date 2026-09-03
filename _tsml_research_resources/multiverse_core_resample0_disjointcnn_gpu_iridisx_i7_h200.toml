@@ -1,0 +1,60 @@
+# Disjoint-CNN resample-0 pass on IridisX's i7_h200 Early Access queue.
+#
+# DisjointCNN in the lookup is the Multiverse port, not aeon's. aeon applies a Permute
+# after the final block, leaving GlobalAveragePooling2D to reduce the wrong axes, so its
+# classifier head receives one feature instead of 64 and it scores about 20 accuracy
+# points below the published numbers (aeon issue #3775). Patching only that line takes
+# ERing from 0.641 to 0.941 against 0.964 published.
+#
+# IMPORTANT: aeon's earlier results must be moved aside first, since they sit under the
+# same DisjointCNN directory. The controller counts a dataset done when its
+# testResample0.csv exists, so leaving them there would skip every dataset silently:
+#
+#   mv $RESULTS/DeepLearning/DisjointCNN $RESULTS/DeepLearning/DisjointCNN-Aeon
+#
+# A PyTorch-free port, but Keras: gpu_check is "tensorflow" and there is no device
+# kwarg, since Keras places work on the visible GPU itself.
+
+[controller]
+username = "ajb2u23"
+email = "ajb@uea.ac.uk"
+repo_dir = "/home/{username}/Code/tsml-eval-gpu"
+data_dir = "/home/{username}/Data/Multiverse"
+dataset_file = "/home/{username}/Code/tsml-eval-gpu/_tsml_research_resources/dataset_lists/MultivariateClassification66-MultiverseMini.txt"
+results_root = "/home/{username}/Results/Multiverse"
+state_dir = "/home/{username}/Results/Multiverse/.controller-core-resample0-disjointcnn-i7-h200"
+resamples = 1
+max_attempts = 2
+all_categories_first_pass = false
+small_datasets_first = true
+# aeon rejects EmoPain before fit, "input collection has too little variation
+# (std <= 1e-07)", for every classifier, so attempting it only burns two jobs.
+excluded_datasets = ["EmoPain"]
+validate_results = false
+expected_branch = "ajb/gpu"
+
+[slurm]
+account = ""
+partition = "i7_h200"
+qos = ""
+max_active_tasks = 8
+cpus_per_task = 2
+gpus = 1
+nodes = 1
+gres = "gpu:h200:1"
+memory_mb_levels = [64000, 128000]
+time_limit = "2-12:00:00"
+
+[environment]
+module = "conda/python3"
+conda_sh = ""
+env_name = "tsml-eval-gpu"
+numba_cache_dir = "/home/{username}/Code/.cache/numba/tsml-eval-gpu"
+gpu_check = "tensorflow"
+
+[classifier_kwargs.DisjointCNN]
+verbose = true
+
+[[categories]]
+name = "DeepLearning"
+classifiers = ["DisjointCNN"]
