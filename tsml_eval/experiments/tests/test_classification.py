@@ -231,6 +231,14 @@ def test_standard_muse_supports_probabilities():
     assert classifier.support_probabilities
 
 
+def test_borf_wrapper_is_multivariate_and_supports_result_probabilities():
+    """Test the BORF composition meets classification experiment requirements."""
+    classifier = get_classifier_by_name("BORF")
+
+    assert classifier.get_tag("capability:multivariate")
+    assert callable(classifier.predict_proba)
+
+
 def test_tde_dev_uses_wip_implementation():
     """Test the TDE_Dev alias selects the isolated WIP implementation."""
     classifier = get_classifier_by_name("TDE_Dev")

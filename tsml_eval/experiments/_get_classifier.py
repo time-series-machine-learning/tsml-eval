@@ -44,6 +44,7 @@ dictionary_based_classifiers = [
     "weasel",
     "weasel-logistic",
     ["muse", "muse-logistic"],
+    ["borfclassifier", "borf"],
     ["weasel_v2", "weaseldilation", "weasel-dilation", "weasel-d"],
     "redcomets",
     "redcomets-500",
@@ -467,6 +468,10 @@ def _set_classifier_dictionary_based(
             support_probabilities=True,
             **kwargs,
         )
+    elif c == "borfclassifier" or c == "borf":
+        from tsml_eval._wip.classification import BORFClassifier
+
+        return BORFClassifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif (
         c == "weasel_v2"
         or c == "weaseldilation"

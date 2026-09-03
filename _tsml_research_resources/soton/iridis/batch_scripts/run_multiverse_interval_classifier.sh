@@ -433,6 +433,15 @@ aeon_head=$(git -C "${aeon_dir}" rev-parse HEAD)
 source_files=(
     "${tsml_eval_dir}/tsml_eval/experiments/_get_classifier.py"
 )
+if [[ -n "${MV_EXTRA_SOURCE_FILES:-}" ]]; then
+    IFS=':' read -r -a extra_source_files <<< "${MV_EXTRA_SOURCE_FILES}"
+    for source_file in "${extra_source_files[@]}"; do
+        if [[ "${source_file}" != /* ]]; then
+            source_file="${tsml_eval_dir}/${source_file}"
+        fi
+        source_files+=("${source_file}")
+    done
+fi
 for source_file in "${source_files[@]}"; do
     if [[ ! -s "${source_file}" ]]; then
         echo "ERROR: source file is missing or empty: ${source_file}" >&2
@@ -441,6 +450,17 @@ for source_file in "${source_files[@]}"; do
 done
 source_hash=$(sha256sum "${source_files[@]}" | sha256sum | cut -d ' ' -f 1)
 pinned_source_file="${state_dir}/pinned-sources.txt"
+source_manifest_file="${state_dir}/source-files.txt"
+
+if [[ -f "${source_manifest_file}" ]]; then
+    mapfile -t pinned_source_files < "${source_manifest_file}"
+    if [[ "${pinned_source_files[*]}" != "${source_files[*]}" ]]; then
+        echo "ERROR: source-file set changed after this run started." >&2
+        exit 1
+    fi
+else
+    printf '%s\n' "${source_files[@]}" > "${source_manifest_file}"
+fi
 
 if [[ -f "${pinned_source_file}" ]]; then
     pinned_aeon_commit=$(awk '$1 == "aeon" { print $2 }' "${pinned_source_file}")
@@ -1087,8 +1107,9 @@ mkdir -p "\${NUMBA_CACHE_DIR}"
 
 current_aeon_commit=\$(git -C "${aeon_dir}" rev-parse HEAD)
 current_source_hash=\$(
-    sha256sum \
-        "${tsml_eval_dir}/tsml_eval/experiments/_get_classifier.py" | \
+    while IFS= read -r source_file; do
+        sha256sum "\${source_file}"
+    done < "${source_manifest_file}" | \
         sha256sum | cut -d ' ' -f 1
 )
 if [[ "\${current_aeon_commit}" != "${pinned_aeon_commit}" ]]; then
@@ -1359,6 +1380,7 @@ MV_WORKFLOW_KEY="${workflow_key}" \\
 MV_SUBMISSION_LABEL="${submission_label}" \\
 MV_MAX_FOLDS="${max_folds}" \\
 MV_START_FOLD="${start_fold}" \\
+MV_EXTRA_SOURCE_FILES="${MV_EXTRA_SOURCE_FILES:-}" \\
 data_dir="${data_dir}" \\
 bash "${script_path}" \\
     --round ${next_round} \\
