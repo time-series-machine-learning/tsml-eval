@@ -193,7 +193,7 @@ class SCUMPPDDRCIF(BaseForecaster, IterativeForecastingMixin):
             ("randomforest", RegressionForecaster(window=self.window, regressor=RandomForestRegressor())),
             ("ridge", RegressionForecaster(window=self.window, regressor=RidgeCV(fit_intercept=True, alphas=np.logspace(-3, 3, 10)))),
             ("xgboost", RegressionForecaster(window=self.window, regressor=XGBRegressor())),           
-            ("ddrcif", DDrCIF()),
+            ("ddrcif", DDrCIF(window=self.window)),
             ("dotm", DOTM(season_length=int(self.season_length))),
         ]
         if self.dotm_max_length is not None:
