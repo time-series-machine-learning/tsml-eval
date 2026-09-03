@@ -14,6 +14,7 @@ convolution_based_regressors = [
     ["multirockethydraregressor", "multirockethydra", "multirocket-hydra"],
 ]
 deep_learning_regressors = [
+    ["convtranregressor", "convtran"],
     ["timecnnregressor", "timecnn", "cnnregressor", "cnn"],
     ["fcnregressor", "fcnn", "fcn"],
     ["mlpregressor", "mlp"],
@@ -210,7 +211,11 @@ def _set_regressor_convolution_based(
 def _set_regressor_deep_learning(
     r, random_state, n_jobs, fit_contract, checkpoint, kwargs
 ):
-    if r == "timecnnregressor" or r == "timecnn" or r == "cnnregressor" or r == "cnn":
+    if r == "convtranregressor" or r == "convtran":
+        from tsml_eval._wip.regression import ConvTranRegressor
+
+        return ConvTranRegressor(random_state=random_state, **kwargs)
+    elif r == "timecnnregressor" or r == "timecnn" or r == "cnnregressor" or r == "cnn":
         from aeon.regression.deep_learning import TimeCNNRegressor
 
         return TimeCNNRegressor(random_state=random_state, **kwargs)

@@ -58,7 +58,8 @@ __all__ = ["TS2VecClassifier"]
 import numpy as np
 from aeon.classification import BaseClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, train_test_split
+from sklearn.multiclass import OneVsRestClassifier
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
@@ -100,6 +101,12 @@ class TS2VecClassifier(BaseClassifier):
         in the original.
     temporal_unit : int, default=0
         Minimum unit for temporal contrast, as in the original.
+    probe_max_samples : int or None, default=None
+        Cap on the number of cases the probe is fitted on. None takes the
+        authors' values, 10000 for the SVM probe and 100000 for the logistic
+        one, and the collection is subsampled with stratification when it is
+        larger. Without this the SVM grid search is unaffordable on the large
+        collections.
     probe : {"svm", "logistic"}, default="svm"
         Classifier fitted on the representations. ``"svm"`` reproduces the
         authors' UEA protocol, an ``SVC`` chosen by grid search over C on the
@@ -119,6 +126,8 @@ class TS2VecClassifier(BaseClassifier):
         Pretrained TS2Vec encoder.
     probe_ : object
         Classifier fitted on the encoded training collection.
+    probe_cases_ : int
+        Number of cases the probe was fitted on, after any subsampling.
     device_ : str
         Resolved device.
     n_channels_ : int
@@ -138,7 +147,7 @@ class TS2VecClassifier(BaseClassifier):
     Examples
     --------
     >>> from aeon.testing.data_generation import make_example_3d_numpy
-    >>> from tsml_eval._wip.classification import TS2VecClassifier
+    >>> from multiverse.classification import TS2VecClassifier
     >>> X, y = make_example_3d_numpy(n_cases=8, n_channels=2, n_timepoints=20)
     >>> clf = TS2VecClassifier(n_iters=2, device="cpu")  # doctest: +SKIP
     >>> clf.fit(X, y)  # doctest: +SKIP
@@ -165,6 +174,7 @@ class TS2VecClassifier(BaseClassifier):
         max_train_length: int = 3000,
         temporal_unit: int = 0,
         probe: str = "svm",
+        probe_max_samples: int | None = None,
         device: str = "auto",
         verbose: bool = False,
         random_state=1234,
@@ -179,6 +189,7 @@ class TS2VecClassifier(BaseClassifier):
         self.max_train_length = max_train_length
         self.temporal_unit = temporal_unit
         self.probe = probe
+        self.probe_max_samples = probe_max_samples
         self.device = device
         self.verbose = verbose
         self.random_state = random_state
@@ -216,6 +227,25 @@ class TS2VecClassifier(BaseClassifier):
         """Convert an aeon collection to the authors' (case, time, channel)."""
         return np.transpose(np.asarray(X, dtype=np.float32), (0, 2, 1))
 
+    def _subsample(self, features, y, seed):
+        """Cap the collection the probe is fitted on, as the authors do.
+
+        ``fit_svm`` takes ``MAX_SAMPLES=10000`` and ``fit_lr`` 100000, and both
+        subsample with stratification before fitting. This is not a detail:
+        the SVM grid is ten values of C over five folds, and an RBF SVC is
+        between quadratic and cubic in the number of cases, so without the cap
+        the probe alone can outrun a 60 hour job on the larger collections.
+        """
+        limit = self.probe_max_samples
+        if limit is None:
+            limit = 10_000 if self.probe == "svm" else 100_000
+        if features.shape[0] <= limit:
+            return features, y
+        features, _, y, _ = train_test_split(
+            features, y, train_size=limit, random_state=0, stratify=y
+        )
+        return features, y
+
     def _build_probe(self, n_cases: int, seed: int):
         """Return the probe, following the authors' evaluation protocols.
 
@@ -224,9 +254,15 @@ class TS2VecClassifier(BaseClassifier):
         over C. ``probability=True`` is set so that ``predict_proba`` exists.
         """
         if self.probe == "logistic":
+            # One-vs-rest, matching the authors' fit_lr and the TimesURL probe.
+            # They pass multi_class="ovr", removed in scikit-learn 1.8; without
+            # the wrapper this would quietly become multinomial and stop being
+            # the same probe TimesURL uses.
             return make_pipeline(
                 StandardScaler(),
-                LogisticRegression(max_iter=1000000, random_state=seed),
+                OneVsRestClassifier(
+                    LogisticRegression(max_iter=1000000, random_state=seed)
+                ),
             )
 
         svm = SVC(C=np.inf, gamma="scale", probability=True, random_state=seed)
@@ -251,7 +287,7 @@ class TS2VecClassifier(BaseClassifier):
 
         import torch
 
-        from ._ts2vec_original.ts2vec import TS2Vec
+        from multiverse.classification._ts2vec_original.ts2vec import TS2Vec
 
         rng = check_random_state(self.random_state)
         seed = int(rng.randint(np.iinfo(np.int32).max))
@@ -287,7 +323,11 @@ class TS2VecClassifier(BaseClassifier):
         encoded_y = np.asarray(
             [self._class_dictionary[label] for label in y], dtype=np.int64
         )
-        self.probe_ = self._build_probe(len(encoded_y), seed).fit(encoded, encoded_y)
+        fit_features, fit_y = self._subsample(encoded, encoded_y, seed)
+        self.probe_cases_ = int(fit_features.shape[0])
+        self.probe_ = self._build_probe(
+            self.probe_cases_, seed
+        ).fit(fit_features, fit_y)
         return self
 
     def _check_shape(self, X: np.ndarray) -> None:
