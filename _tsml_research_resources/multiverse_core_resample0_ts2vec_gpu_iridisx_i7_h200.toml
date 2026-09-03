@@ -1,0 +1,61 @@
+# TS2Vec gap-filling pass on IridisX's i7_h200 Early Access queue.
+#
+# Four datasets timed out at the 60 hour limit on the first pass:
+# AustraliaRainfall_disc, Locust2022, Tiselac and USCActivity. They used about 3 GB, so
+# the limit reached was time, not memory.
+#
+# The cause was a gap in the port rather than the method. The authors' fit_svm
+# subsamples to MAX_SAMPLES=10000 before its grid search over ten values of C; the
+# wrapper omitted that, so an RBF SVC, between quadratic and cubic in the number of
+# cases, was cross-validated over the whole training set. Fixed in the port, so these
+# four are worth rerunning as they are.
+#
+# The controller counts a dataset done when its testResample0.csv exists, so this
+# submits only the outstanding ones. Expect 61 of 66 already present.
+#
+# TS2Vec is a PyTorch port, so gpu_check is "torch" and device is set explicitly.
+
+[controller]
+username = "ajb2u23"
+email = "ajb@uea.ac.uk"
+repo_dir = "/home/{username}/Code/tsml-eval-gpu"
+data_dir = "/home/{username}/Data/Multiverse"
+dataset_file = "/home/{username}/Code/tsml-eval-gpu/_tsml_research_resources/dataset_lists/MultivariateClassification66-MultiverseMini.txt"
+results_root = "/home/{username}/Results/Multiverse"
+state_dir = "/home/{username}/Results/Multiverse/.controller-core-resample0-ts2vec-i7-h200"
+resamples = 1
+max_attempts = 2
+all_categories_first_pass = false
+small_datasets_first = true
+# aeon rejects EmoPain before fit, "input collection has too little variation
+# (std <= 1e-07)", for every classifier, so attempting it only burns two jobs.
+excluded_datasets = ["EmoPain"]
+validate_results = false
+expected_branch = "ajb/gpu"
+
+[slurm]
+account = ""
+partition = "i7_h200"
+qos = ""
+max_active_tasks = 8
+cpus_per_task = 2
+gpus = 1
+nodes = 1
+gres = "gpu:h200:1"
+memory_mb_levels = [64000, 128000]
+time_limit = "2-12:00:00"
+
+[environment]
+module = "conda/python3"
+conda_sh = ""
+env_name = "tsml-eval-gpu"
+numba_cache_dir = "/home/{username}/Code/.cache/numba/tsml-eval-gpu"
+gpu_check = "torch"
+
+[classifier_kwargs.TS2Vec]
+device = "cuda"
+verbose = true
+
+[[categories]]
+name = "DeepLearning"
+classifiers = ["TS2Vec"]
