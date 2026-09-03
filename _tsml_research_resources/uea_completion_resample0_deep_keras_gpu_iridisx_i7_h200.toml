@@ -1,0 +1,63 @@
+# The four UEA datasets absent from MultiverseCore, on the deep classifiers.
+#
+# The companion to uea_completion_resample0_non_deep.toml, which covers the CPU
+# classifiers on Hali. Between them they complete the UEA 30 for every estimator on the
+# leaderboard, so that table stops being a 23 dataset subset of the archive everyone
+# else publishes on.
+#
+# The Keras half, companion to the _torch_ variant. Split by framework because
+# gpu_check is per config and a torch check would pass while TensorFlow saw no GPU.
+#
+# H-InceptionTime and LITETime-MV need only InsectWingbeat; LiteTIME needs all four.
+#
+# Most of the work here is the whole four datasets: of the leaderboard's estimators,
+# fifteen already have results for BasicMotions, FingerMovements and SelfRegulationSCP2
+# and need only InsectWingbeat, while these five have none of the four. The controller
+# skips whatever already has a testResample0.csv, so both cases are handled by pointing
+# it at the list.
+#
+# InsectWingbeat is 30000 cases over 200 channels and is where this will spend its
+# time and memory, if it completes at all.
+
+[controller]
+username = "ajb2u23"
+email = "ajb@uea.ac.uk"
+repo_dir = "/home/{username}/Code/tsml-eval-gpu"
+data_dir = "/home/{username}/Data/Multiverse"
+dataset_file = "/home/{username}/Code/tsml-eval-gpu/_tsml_research_resources/dataset_lists/MultivariateClassification4-UEANotInMultiverseCore.txt"
+results_root = "/home/{username}/Results/Multiverse"
+state_dir = "/home/{username}/Results/Multiverse/.controller-uea-completion-resample0-deep-keras-i7-h200"
+resamples = 1
+max_attempts = 2
+all_categories_first_pass = false
+small_datasets_first = true
+excluded_datasets = []
+validate_results = false
+expected_branch = "ajb/gpu"
+
+[slurm]
+account = ""
+partition = "i7_h200"
+qos = ""
+max_active_tasks = 8
+cpus_per_task = 2
+gpus = 1
+nodes = 1
+gres = "gpu:h200:1"
+memory_mb_levels = [64000, 128000]
+time_limit = "2-12:00:00"
+
+[environment]
+module = "conda/python3"
+conda_sh = ""
+env_name = "tsml-eval-gpu"
+numba_cache_dir = "/home/{username}/Code/.cache/numba/tsml-eval-gpu"
+gpu_check = "tensorflow"
+
+# No device kwarg: these are Keras and place work on the visible GPU themselves.
+[classifier_kwargs.H-InceptionTime]
+verbose = true
+
+[[categories]]
+name = "DeepLearning"
+classifiers = ["H-InceptionTime", "LITETime-MV", "LiteTIME"]

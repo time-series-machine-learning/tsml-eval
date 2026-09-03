@@ -1,0 +1,79 @@
+# The four UEA datasets absent from MultiverseCore, on the CPU classifiers.
+#
+# The UEA leaderboard covers 26 of the archive's 30 because BasicMotions,
+# FingerMovements, InsectWingbeat and SelfRegulationSCP2 are not in MultiverseCore and
+# so have never been run. Completing them makes that table directly comparable with the
+# published UEA results, rather than a 23 dataset subset of them.
+#
+# The categories mirror where the MultiverseCore results already live, so these land
+# beside them and the ingest needs no special case.
+#
+# InsectWingbeat is the expensive one: 30000 training cases over 200 channels, and the
+# dataset most often dropped in the literature for exactly that reason. Expect it to be
+# the last to finish and the one that escalates memory.
+
+[controller]
+username = "ajb"
+email = "ajb@uea.ac.uk"
+repo_dir = "/gpfs/home/{username}/Code/tsml-eval"
+data_dir = "/gpfs/home/{username}/Data/Multiverse"
+dataset_file = "/gpfs/home/{username}/Code/tsml-eval/_tsml_research_resources/dataset_lists/MultivariateClassification4-UEANotInMultiverseCore.txt"
+
+# Store every classifier under its algorithm type.
+results_root = "/gpfs/home/{username}/Results/Multiverse"
+state_dir = "/gpfs/home/{username}/Results/Multiverse/.controller-uea-completion-resample0-non-deep"
+resamples = 1
+
+# Non-OOM failures get one attempt. OOMs are retried automatically at the next
+# configured memory level by later controller cycles.
+max_attempts = 1
+all_categories_first_pass = true
+small_datasets_first = true
+excluded_datasets = []
+validate_results = false
+
+[slurm]
+account = "cmp"
+partition = "compute"
+qos = "uea-core-default"
+max_active_tasks = 8000
+memory_mb_levels = [32000, 64000]
+time_limit = "7-00:00:00"
+
+[environment]
+module = "python/anaconda/2024.10/3.12.7"
+conda_sh = "/gpfs/software/hali/python/anaconda/2024.10/etc/profile.d/conda.sh"
+env_name = "tsml-eval"
+numba_cache_dir = "/gpfs/home/{username}/Code/.cache/numba/tsml-eval"
+
+[[categories]]
+name = "IntervalBased"
+classifiers = ["CIF", "DrCIF", "QUANT", "STSF", "TSF"]
+
+[[categories]]
+name = "DictionaryBased"
+classifiers = ["TDE"]
+
+[[categories]]
+name = "ShapeletBased"
+classifiers = ["RDST", "STC"]
+
+[[categories]]
+name = "ConvolutionBased"
+classifiers = ["Arsenal", "MRHydra", "ROCKET"]
+
+[[categories]]
+name = "DistanceBased"
+classifiers = ["1NN-DTW"]
+
+[[categories]]
+name = "FeatureBased"
+classifiers = ["Catch22", "FreshPRINCE", "Summary"]
+
+[[categories]]
+name = "Hybrid"
+classifiers = ["HC2", "RIST"]
+
+[[categories]]
+name = "Other"
+classifiers = ["Dummy"]
