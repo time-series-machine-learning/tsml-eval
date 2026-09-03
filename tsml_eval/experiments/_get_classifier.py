@@ -36,6 +36,7 @@ deep_learning_classifiers = [
     ["timesurlclassifier", "timesurl"],
     ["ts2vecclassifier", "ts2vec"],
     ["xcmclassifier", "xcm"],
+    ["xcm-tuned", "xcmtuned"],
 ]
 dictionary_based_classifiers = [
     ["bossensemble", "boss"],
@@ -375,6 +376,16 @@ def _set_classifier_deep_learning(
     elif c == "xcmclassifier" or c == "xcm":
         from tsml_eval._wip.classification import XCMClassifier
 
+        return XCMClassifier(random_state=random_state, **kwargs)
+    elif c == "xcm-tuned" or c == "xcmtuned":
+        # The authors' protocol: window size chosen per dataset by a stratified
+        # five-fold cross-validation of the training set. Batch size is left at
+        # their modal 32 rather than searched, since batch 1 costs roughly 32
+        # times the gradient steps for a choice they make on 4 of 30 datasets.
+        from tsml_eval._wip.classification import XCMClassifier
+        from tsml_eval._wip.classification._xcm import PAPER_WINDOW_SIZES
+
+        kwargs.setdefault("window_size", PAPER_WINDOW_SIZES)
         return XCMClassifier(random_state=random_state, **kwargs)
     elif c == "timesnetclassifier" or c == "timesnet":
         from tsml_eval._wip.classification import TimesNetClassifier
