@@ -71,6 +71,19 @@ pkill -TERM -f "[r]un_multiverse_controller.sh.*${config_name}" || true
 pkill -TERM -f "[m]ultiverse_controller.py.*${config_name}" || true
 sleep 1
 
+# Killing a supervisor orphans the "sleep" it waits in between cycles, and that
+# orphan keeps the inherited descriptor on supervisor.lock open. A flock lock
+# lives as long as any descriptor on the file does, so the next launch would
+# fail to acquire and exit silently, while pgrep showed no controller running.
+# Release the lock explicitly before launching.
+if [[ -e "${state_dir}/supervisor.lock" ]] && command -v fuser >/dev/null 2>&1; then
+    if fuser -s "${state_dir}/supervisor.lock" 2>/dev/null; then
+        echo "Releasing supervisor.lock held by an orphaned process."
+        fuser -k -TERM "${state_dir}/supervisor.lock" >/dev/null 2>&1 || true
+        sleep 1
+    fi
+fi
+
 setsid nohup flock -n "${state_dir}/supervisor.lock" \
     env PYTHON="$python_executable" \
         MULTIVERSE_CLEAR_PENDING_ON_START=false \
@@ -83,7 +96,11 @@ echo "$launcher_pid" > "${state_dir}/launcher.pid"
 sleep 2
 if ! pgrep -f "[r]un_multiverse_controller.sh.*${config_name}" >/dev/null; then
     echo "ERROR: XCM controller did not remain running." >&2
-    echo "Check ${state_dir}/launcher.out" >&2
+    echo "Check ${state_dir}/launcher.out:" >&2
+    tail -20 "${state_dir}/launcher.out" >&2 || true
+    if command -v fuser >/dev/null 2>&1 \n        && fuser -s "${state_dir}/supervisor.lock" 2>/dev/null; then
+        echo "supervisor.lock is still held; see: fuser -v ${state_dir}/supervisor.lock" >&2
+    fi
     exit 1
 fi
 echo "XCM controller started (launcher PID ${launcher_pid})."
