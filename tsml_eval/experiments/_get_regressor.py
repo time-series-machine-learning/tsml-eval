@@ -15,6 +15,8 @@ convolution_based_regressors = [
 ]
 deep_learning_regressors = [
     ["convtranregressor", "convtran"],
+    ["timesnetregressor", "timesnet"],
+    ["ts2vecregressor", "ts2vec"],
     ["timecnnregressor", "timecnn", "cnnregressor", "cnn"],
     ["fcnregressor", "fcnn", "fcn"],
     ["mlpregressor", "mlp"],
@@ -215,6 +217,14 @@ def _set_regressor_deep_learning(
         from tsml_eval._wip.regression import ConvTranRegressor
 
         return ConvTranRegressor(random_state=random_state, **kwargs)
+    elif r == "timesnetregressor" or r == "timesnet":
+        from tsml_eval._wip.regression import TimesNetRegressor
+
+        return TimesNetRegressor(random_state=random_state, **kwargs)
+    elif r == "ts2vecregressor" or r == "ts2vec":
+        from tsml_eval._wip.regression import TS2VecRegressor
+
+        return TS2VecRegressor(random_state=random_state, **kwargs)
     elif r == "timecnnregressor" or r == "timecnn" or r == "cnnregressor" or r == "cnn":
         from aeon.regression.deep_learning import TimeCNNRegressor
 
