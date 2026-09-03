@@ -28,6 +28,7 @@ stats_forecasters = [
     "dotm",
     "dotm5000",
     "scumplusplus",
+    "scumplusplusddrcif",
     ["averagestats", "average", "hybridaverage"],
     ["averagestatsaic", "averageaic", "hybridaverageaic"],
 ]
