@@ -1,11 +1,14 @@
 #!/bin/bash
 # Start the XCM resample-0 controller on IridisX's Early Access H200 partition.
 #
-# Simpler than the ConvTran starter in two ways. There is one controller, not two,
-# because XCM is only queued on i7_h200. And there is no feasibility selector: the
-# ConvTran one exists to keep quadratic attention work inside the GPU, which does not
-# apply to a convolutional network, so XCM is offered the whole MultiverseCore list and
-# the controller's memory escalation handles the heavy problems.
+# XCM with the authors' window search: five candidates selected per dataset by a
+# stratified five-fold cross-validation of the training set. That is about 20 times the
+# cost of the fixed-window pass, which took 1.2 GPU-hours over Multiverse-core, so
+# budget roughly a day and expect the long tail to need the extended time limit.
+#
+# This is the reported XCM configuration. If an earlier fixed-window pass left results
+# in place they must be moved aside first, or every dataset is skipped silently: the
+# script prints the count it finds so that is visible before anything is queued.
 
 set -euo pipefail
 
@@ -54,8 +57,35 @@ fi
 # before queueing anything. The controller's own preflight runs inside the job, which
 # is too late to save a whole submission round.
 "$python_executable" -c "import tensorflow as tf; print('TensorFlow', tf.__version__)"
-"$python_executable" -c "from tsml_eval.experiments import get_classifier_by_name;
-print('XCM ->', type(get_classifier_by_name('XCM', random_state=0)).__name__)"
+
+# Print the resolved grid. A scalar window here would mean the lookup did not apply the
+# search and this would silently be an ordinary XCM run under a different name.
+"$python_executable" -c "from tsml_eval.experiments import get_classifier_by_name
+c = get_classifier_by_name('XCM', random_state=0)
+print('XCM ->', type(c).__name__)
+print('  window_size:', c.window_size)
+print('  batch_size: ', c.batch_size, '(not searched, the published modal value)')
+print('  cv_folds:   ', c.cv_folds)
+assert not isinstance(c.window_size, float), 'window_size is scalar: the search is off'"
+
+# Expect zero here. Anything else means an earlier fixed-window pass is still in place,
+# and those datasets would be skipped rather than rerun with the search.
+predictions_dir="${results_dir}/DeepLearning/XCM/Predictions"
+# find exits non-zero when the directory does not exist, and under pipefail that
+# would fail the assignment and end the script silently.
+if [[ -d "$predictions_dir" ]]; then
+    done_count=$(find "$predictions_dir" -name 'testResample0.csv' -size +0 | wc -l)
+else
+    done_count=0
+fi
+total_count=$(grep -cve '^[[:space:]]*$'     "${script_dir}/dataset_lists/MultivariateClassification66-MultiverseMini.txt")
+echo "XCM results already present: ${done_count} of ${total_count}"
+echo "  will write to ${predictions_dir}"
+if [[ "$done_count" -gt 0 ]]; then
+    echo "WARNING: ${done_count} results already exist, and those datasets will be" >&2
+    echo "skipped rather than rerun with the window search. Move them aside first:" >&2
+    echo "  mv ${results_dir}/DeepLearning/XCM ${results_dir}/DeepLearning/XCM-Fixed" >&2
+fi
 
 mkdir -p "$state_dir"
 

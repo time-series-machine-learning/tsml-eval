@@ -1,13 +1,22 @@
 # XCM resample-0 pass on IridisX's i7_h200 Early Access queue.
 #
-# A copy of the ConvTran i7_h200 config with three changes, all forced by XCM
-# being a Keras port rather than a PyTorch one:
-#   - gpu_check is "tensorflow", so the preflight check imports the framework
-#     XCM actually uses; a torch check would pass while TensorFlow saw no GPU.
-#   - no device kwarg, since XCM has no such parameter. Keras places work on
-#     the visible GPU by itself.
-#   - its own state_dir, so this controller takes a distinct supervisor lock
-#     and does not collide with a ConvTran, TimesURL or TS2Vec run.
+# XCM with the authors' protocol: window size selected per dataset over
+# {0.2, 0.4, 0.6, 0.8, 1.0} by a stratified five-fold cross-validation of the
+# training set (Fauvel et al. 2021, S4.3), then a refit on the whole training
+# set. Selection never sees the test data.
+#
+# This is the reported XCM configuration. A fixed-window run is available in the
+# lookup as XCM-Fixed if the cheap version is wanted for comparison.
+#
+# IMPORTANT: results from an earlier fixed-window XCM pass must be moved aside
+# first. The controller counts a dataset done when its testResample0.csv exists,
+# so leaving them in place would skip every dataset silently.
+#
+# Cost: five candidates over five folds, so about 20 times the fixed-window
+# pass, which took 1.2 GPU-hours over Multiverse-core. Budget roughly a day.
+# Batch size is deliberately not searched: batch 1 costs about 32 times the
+# gradient steps of batch 32, which would take this near 900 GPU-hours for a
+# choice the published table makes on 4 of 30 datasets.
 
 [controller]
 username = "ajb2u23"
@@ -35,7 +44,7 @@ gpus = 1
 nodes = 1
 gres = "gpu:h200:1"
 memory_mb_levels = [64000, 128000]
-time_limit = "2-12:00:00"
+time_limit = "3-00:00:00"
 
 [environment]
 module = "conda/python3"
@@ -44,6 +53,9 @@ env_name = "tsml-eval-gpu"
 numba_cache_dir = "/home/{username}/Code/.cache/numba/tsml-eval-gpu"
 gpu_check = "tensorflow"
 
+# The lookup supplies the window grid for this name; verbose prints each grid
+# point's cross-validated accuracy to the job log, which is the only record of
+# what the search chose if the run is interrupted.
 [classifier_kwargs.XCM]
 verbose = true
 
