@@ -70,7 +70,13 @@ assert not isinstance(c.window_size, float), 'window_size is scalar: the search 
 # This is a fresh classifier, so results are expected to be absent. The count is printed
 # to confirm the path, not because anything should already be there.
 predictions_dir="${results_dir}/DeepLearning/XCM-Tuned/Predictions"
-done_count=$(find "$predictions_dir" -name 'testResample0.csv' -size +0 2>/dev/null | wc -l)
+# find exits non-zero when the directory does not exist, and under pipefail that
+# would fail the assignment and end the script silently.
+if [[ -d "$predictions_dir" ]]; then
+    done_count=$(find "$predictions_dir" -name 'testResample0.csv' -size +0 | wc -l)
+else
+    done_count=0
+fi
 total_count=$(grep -cve '^[[:space:]]*$'     "${script_dir}/dataset_lists/MultivariateClassification66-MultiverseMini.txt")
 echo "XCM-Tuned results already present: ${done_count} of ${total_count}"
 echo "  will write to ${predictions_dir}"

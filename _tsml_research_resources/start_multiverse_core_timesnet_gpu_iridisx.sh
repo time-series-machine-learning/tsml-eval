@@ -65,7 +65,13 @@ print('TimesNet ->', type(c).__name__, '| lr_adjust', c.lr_adjust)"
 # Report the gap this run is meant to fill, so a wrong results path is obvious now
 # rather than after 66 needless jobs have been queued.
 predictions_dir="${results_dir}/DeepLearning/TimesNet/Predictions"
-done_count=$(find "$predictions_dir" -name 'testResample0.csv' -size +0 2>/dev/null | wc -l)
+# find exits non-zero when the directory does not exist, and under pipefail that
+# would fail the assignment and end the script silently.
+if [[ -d "$predictions_dir" ]]; then
+    done_count=$(find "$predictions_dir" -name 'testResample0.csv' -size +0 | wc -l)
+else
+    done_count=0
+fi
 total_count=$(grep -cve '^[[:space:]]*$'     "${script_dir}/dataset_lists/MultivariateClassification66-MultiverseMini.txt")
 echo "TimesNet results already present: ${done_count} of ${total_count}"
 echo "  looked in ${predictions_dir}"
