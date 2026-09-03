@@ -1,0 +1,58 @@
+# TimesNet resample-0 pass on IridisX's i7_h200 Early Access queue.
+#
+# Intended to fill the gaps left by the earlier TimesNet run rather than to start from
+# scratch. The controller treats a dataset as done when its testResample0.csv exists
+# under results_root/DeepLearning/TimesNet/Predictions, so pointing it at the full
+# MultiverseCore list submits only what is missing. That does mean results_root and the
+# category name have to match wherever the earlier results were written; if they do not,
+# this will cheerfully rerun all 66.
+#
+# TimesNet is a PyTorch port, so gpu_check is "torch" and device is set explicitly.
+#
+# lr_adjust is left at the implementation default of None. TSLib's "type1" schedule
+# halves the learning rate every epoch, reaching about 2e-6 by epoch 10, which cripples
+# training here. It is harmless in TSLib only because that pipeline selects the retained
+# epoch on the test set. Do not set it to reproduce their numbers.
+
+[controller]
+username = "ajb2u23"
+email = "ajb@uea.ac.uk"
+repo_dir = "/home/{username}/Code/tsml-eval-gpu"
+data_dir = "/home/{username}/Data/Multiverse"
+dataset_file = "/home/{username}/Code/tsml-eval-gpu/_tsml_research_resources/dataset_lists/MultivariateClassification66-MultiverseMini.txt"
+results_root = "/home/{username}/Results/Multiverse"
+state_dir = "/home/{username}/Results/Multiverse/.controller-core-resample0-timesnet-i7-h200"
+resamples = 1
+max_attempts = 2
+all_categories_first_pass = false
+small_datasets_first = true
+excluded_datasets = []
+validate_results = false
+expected_branch = "ajb/gpu"
+
+[slurm]
+account = ""
+partition = "i7_h200"
+qos = ""
+max_active_tasks = 8
+cpus_per_task = 2
+gpus = 1
+nodes = 1
+gres = "gpu:h200:1"
+memory_mb_levels = [64000, 128000]
+time_limit = "2-12:00:00"
+
+[environment]
+module = "conda/python3"
+conda_sh = ""
+env_name = "tsml-eval-gpu"
+numba_cache_dir = "/home/{username}/Code/.cache/numba/tsml-eval-gpu"
+gpu_check = "torch"
+
+[classifier_kwargs.TimesNet]
+device = "cuda"
+verbose = true
+
+[[categories]]
+name = "DeepLearning"
+classifiers = ["TimesNet"]
