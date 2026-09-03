@@ -464,6 +464,37 @@ if ! flock -w 300 9; then
     exit 1
 fi
 
+# The flock above prevents two rounds from reconciling simultaneously, but it
+# deliberately releases when a round has finished submitting. Without this
+# additional check, running the top-level command twice starts two independent
+# successor chains which can execute and write the same experiments. Chained
+# supervisors use --round greater than one and are therefore unaffected.
+if ((round == 1)) && [[ "${dry_run}" != "true" ]]; then
+    existing_chain_jobs=()
+    while IFS='|' read -r existing_job_id existing_job_name existing_job_state; do
+        if [[ -z "${existing_job_id}" ||
+              "${existing_job_id}" == "${SLURM_JOB_ID:-}" ]]; then
+            continue
+        fi
+        if [[ "${existing_job_name}" == "${job_name_prefix}-r"* ||
+              "${existing_job_name}" == "${job_name_prefix}-supervisor-"* ]]; then
+            existing_chain_jobs+=(
+                "${existing_job_id} (${existing_job_name}, ${existing_job_state})"
+            )
+        fi
+    done < <(
+        squeue --noheader --user="${username}" --partition="${queue}" \
+            --states=RUNNING,PENDING --format='%i|%200j|%T'
+    )
+
+    if ((${#existing_chain_jobs[@]} > 0)); then
+        echo "ERROR: an active ${workflow_label} chain already exists:" >&2
+        printf '  %s\n' "${existing_chain_jobs[@]}" >&2
+        echo "Cancel the existing chain before starting a new round 1." >&2
+        exit 1
+    fi
+fi
+
 for regressor in "${regressors[@]}"; do
     regressor_results_dir "${regressor}"
     mkdir -p "${regressor_results_dir_result}"
