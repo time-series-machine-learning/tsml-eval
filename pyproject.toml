@@ -99,13 +99,18 @@ repository = "https://github.com/time-series-machine-learning/tsml-eval/"
 file = "LICENSE"
 
 [tool.setuptools.packages.find]
-include = ["tsml_eval"]
+include = ["tsml_eval", "tsml_eval.*"]
+# _wip holds unreleased work-in-progress research code; keep it out of distributions
+exclude = ["tsml_eval._wip", "tsml_eval._wip.*"]
 
 [tool.check-manifest]
 ignore = [
     # Ignore virtual environments in local builds
     ".venv/**",
     "venv/**",
+    # Ignore the work-in-progress package, excluded from distributions
+    "tsml_eval/_wip",
+    "tsml_eval/_wip/**",
     # Ignore local files
     "local/**",
     "examples/generated_results/**",
