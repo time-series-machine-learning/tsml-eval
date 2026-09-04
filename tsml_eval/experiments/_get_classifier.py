@@ -30,6 +30,34 @@ deep_learning_classifiers = [
     ["individualliteclassifier", "individuallite"],
     ["disjointcnnclassifier", "disjointcnn"],
 ]
+sktime_deep_learning_classifiers = [
+    ["sktime-cnn", "sktime-cnnclassifier"],
+    ["sktime-cntc", "sktime-cntcclassifier"],
+    ["sktime-fcn", "sktime-fcnclassifier"],
+    ["sktime-inceptiontime", "sktime-inceptiontimeclassifier"],
+    ["sktime-inceptiontime-torch", "sktime-inceptiontimeclassifiertorch"],
+    ["sktime-lstmfcn", "sktime-lstmfcnclassifier"],
+    ["sktime-macnn", "sktime-macnnclassifier"],
+    ["sktime-mcdcnn", "sktime-mcdcnnclassifier"],
+    ["sktime-mcdcnn-torch", "sktime-mcdcnnclassifiertorch"],
+    ["sktime-mlp", "sktime-mlpclassifier"],
+    ["sktime-mvts-transformer", "sktime-mvtstransformerclassifier"],
+    ["sktime-resnet", "sktime-resnetclassifier"],
+    ["sktime-rnn", "sktime-simplernnclassifier"],
+    ["sktime-rnn-torch", "sktime-simplernnclassifiertorch"],
+    ["sktime-tapnet", "sktime-tapnetclassifier"],
+    ["sktime-tapnet-torch", "sktime-tapnetclassifiertorch"],
+    ["sktime-gru", "sktime-gruclassifier"],
+    ["sktime-grufcnn", "sktime-grufcnnclassifier"],
+    ["sktime-convtimenet", "sktime-convtimenetclassifier"],
+]
+sktime_interval_based_classifiers = [
+    ["sktime-tsf", "sktime-timeseriesforestclassifier"],
+    ["sktime-rise", "sktime-randomintervalspectralensemble"],
+    ["sktime-stsf", "sktime-supervisedtimeseriesforest"],
+    ["sktime-cif", "sktime-canonicalintervalforest"],
+    ["sktime-drcif", "sktime-drcifclassifier", "sktime-drcif"],
+]
 dictionary_based_classifiers = [
     ["bossensemble", "boss"],
     "individualboss",
@@ -167,7 +195,15 @@ def get_classifier_by_name(
     """
     c = classifier_name.casefold()
 
-    if str_in_nested_list(convolution_based_classifiers, c):
+    if str_in_nested_list(sktime_deep_learning_classifiers, c):
+        return _set_classifier_sktime_deep_learning(
+            c, random_state, n_jobs, fit_contract, checkpoint, kwargs
+        )
+    elif str_in_nested_list(sktime_interval_based_classifiers, c):
+        return _set_classifier_sktime_interval_based(
+            c, random_state, n_jobs, fit_contract, checkpoint, kwargs
+        )
+    elif str_in_nested_list(convolution_based_classifiers, c):
         return _set_classifier_convolution_based(
             c, random_state, n_jobs, fit_contract, checkpoint, kwargs
         )
@@ -350,6 +386,88 @@ def _set_classifier_deep_learning(
         return DisjointCNNClassifier(random_state=random_state, **kwargs)
     else:
         raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
+
+
+def _set_classifier_sktime_deep_learning(
+    c, random_state, n_jobs, fit_contract, checkpoint, kwargs
+):
+    """Construct a classifier from sktime's deep-learning module."""
+    from tsml_eval.estimators.classification._sktime import SktimeToAeonClassifier
+
+    classes = {
+        "sktime-cnn": "CNNClassifier",
+        "sktime-cnnclassifier": "CNNClassifier",
+        "sktime-cntc": "CNTCClassifier",
+        "sktime-cntcclassifier": "CNTCClassifier",
+        "sktime-fcn": "FCNClassifier",
+        "sktime-fcnclassifier": "FCNClassifier",
+        "sktime-inceptiontime": "InceptionTimeClassifier",
+        "sktime-inceptiontimeclassifier": "InceptionTimeClassifier",
+        "sktime-inceptiontime-torch": "InceptionTimeClassifierTorch",
+        "sktime-inceptiontimeclassifiertorch": "InceptionTimeClassifierTorch",
+        "sktime-lstmfcn": "LSTMFCNClassifier",
+        "sktime-lstmfcnclassifier": "LSTMFCNClassifier",
+        "sktime-macnn": "MACNNClassifier",
+        "sktime-macnnclassifier": "MACNNClassifier",
+        "sktime-mcdcnn": "MCDCNNClassifier",
+        "sktime-mcdcnnclassifier": "MCDCNNClassifier",
+        "sktime-mcdcnn-torch": "MCDCNNClassifierTorch",
+        "sktime-mcdcnnclassifiertorch": "MCDCNNClassifierTorch",
+        "sktime-mlp": "MLPClassifier",
+        "sktime-mlpclassifier": "MLPClassifier",
+        "sktime-mvts-transformer": "MVTSTransformerClassifier",
+        "sktime-mvtstransformerclassifier": "MVTSTransformerClassifier",
+        "sktime-resnet": "ResNetClassifier",
+        "sktime-resnetclassifier": "ResNetClassifier",
+        "sktime-rnn": "SimpleRNNClassifier",
+        "sktime-simplernnclassifier": "SimpleRNNClassifier",
+        "sktime-rnn-torch": "SimpleRNNClassifierTorch",
+        "sktime-simplernnclassifiertorch": "SimpleRNNClassifierTorch",
+        "sktime-tapnet": "TapNetClassifier",
+        "sktime-tapnetclassifier": "TapNetClassifier",
+        "sktime-tapnet-torch": "TapNetClassifierTorch",
+        "sktime-tapnetclassifiertorch": "TapNetClassifierTorch",
+        "sktime-gru": "GRUClassifier",
+        "sktime-gruclassifier": "GRUClassifier",
+        "sktime-grufcnn": "GRUFCNNClassifier",
+        "sktime-grufcnnclassifier": "GRUFCNNClassifier",
+        "sktime-convtimenet": "ConvTimeNetClassifier",
+        "sktime-convtimenetclassifier": "ConvTimeNetClassifier",
+    }
+    import sktime.classification.deep_learning as deep_learning
+
+    estimator = getattr(deep_learning, classes[c])
+    return SktimeToAeonClassifier(
+        estimator(random_state=random_state, **kwargs),
+    )
+
+
+def _set_classifier_sktime_interval_based(
+    c, random_state, n_jobs, fit_contract, checkpoint, kwargs
+):
+    """Construct an interval-based classifier from sktime."""
+    from tsml_eval.estimators.classification._sktime import SktimeToAeonClassifier
+
+    classes = {
+        "sktime-tsf": "TimeSeriesForestClassifier",
+        "sktime-timeseriesforestclassifier": "TimeSeriesForestClassifier",
+        "sktime-rise": "RandomIntervalSpectralEnsemble",
+        "sktime-randomintervalspectralensemble": "RandomIntervalSpectralEnsemble",
+        "sktime-stsf": "SupervisedTimeSeriesForest",
+        "sktime-supervisedtimeseriesforest": "SupervisedTimeSeriesForest",
+        "sktime-cif": "CanonicalIntervalForest",
+        "sktime-canonicalintervalforest": "CanonicalIntervalForest",
+        "sktime-drcif": "DrCIF",
+        "sktime-drcifclassifier": "DrCIF",
+    }
+    import sktime.classification.interval_based as interval_based
+
+    estimator = getattr(interval_based, classes[c])
+    multivariate = classes[c] in {"CanonicalIntervalForest", "DrCIF"}
+    return SktimeToAeonClassifier(
+        estimator(random_state=random_state, n_jobs=n_jobs, **kwargs),
+        capability_multivariate=multivariate,
+    )
 
 
 def _set_classifier_dictionary_based(
