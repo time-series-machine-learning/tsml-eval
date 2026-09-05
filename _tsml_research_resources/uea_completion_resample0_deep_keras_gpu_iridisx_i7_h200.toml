@@ -8,7 +8,9 @@
 # The Keras half, companion to the _torch_ variant. Split by framework because
 # gpu_check is per config and a torch check would pass while TensorFlow saw no GPU.
 #
-# H-InceptionTime and LITETime-MV need only InsectWingbeat; LiteTIME needs all four.
+# H-InceptionTime and LITETime-MV need only InsectWingbeat; LiteTIME and DisjointCNN
+# need all four. DisjointCNN is the Multiverse port, the estimator the lookup resolves
+# for the core pass, not aeon's.
 #
 # Most of the work here is the whole four datasets: of the leaderboard's estimators,
 # fifteen already have results for BasicMotions, FingerMovements and SelfRegulationSCP2
@@ -16,8 +18,11 @@
 # skips whatever already has a testResample0.csv, so both cases are handled by pointing
 # it at the list.
 #
-# InsectWingbeat is 30000 cases over 200 channels and is where this will spend its
-# time and memory, if it completes at all.
+# InsectWingbeat is the expensive one. The equal-length version the archive ships is
+# 25000 train and 25000 test cases over 200 channels of length 20, and it loads only
+# because classification_experiments.py passes load_equal_length=True, which sends
+# aeon to the _eq_ files. The ragged originals sit in the same directory and every
+# deep classifier refuses them.
 
 [controller]
 username = "ajb2u23"
@@ -58,6 +63,9 @@ gpu_check = "tensorflow"
 [classifier_kwargs.H-InceptionTime]
 verbose = true
 
+[classifier_kwargs.DisjointCNN]
+verbose = true
+
 [[categories]]
 name = "DeepLearning"
-classifiers = ["H-InceptionTime", "LITETime-MV", "LiteTIME"]
+classifiers = ["H-InceptionTime", "LITETime-MV", "LiteTIME", "DisjointCNN"]

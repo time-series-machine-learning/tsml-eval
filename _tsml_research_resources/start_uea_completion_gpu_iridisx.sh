@@ -2,10 +2,13 @@
 # Start both UEA-completion GPU controllers on IridisX's Early Access H200 partition.
 #
 # Completes the four UEA datasets absent from MultiverseCore: BasicMotions,
-# FingerMovements, InsectWingbeat and SelfRegulationSCP2. Fifteen estimators already
-# have the first three from earlier non-core passes and need only InsectWingbeat; the
-# rest need all four. The controller skips anything with a testResample0.csv, so it
-# works that out itself.
+# FingerMovements, InsectWingbeat and SelfRegulationSCP2. Most estimators already have
+# the first three from earlier non-core passes and need only InsectWingbeat; TS2Vec
+# and DisjointCNN need all four. The controller skips anything with a
+# testResample0.csv, so it works that out itself.
+#
+# TS2Vec has none of the four because its jobs died at fit on a bad import, fixed in
+# a3ba18c; DisjointCNN because the port was only added to the Keras config afterwards.
 #
 # Two controllers because gpu_check is per configuration: a torch check would pass while
 # TensorFlow saw no GPU, so the PyTorch and Keras classifiers are queued separately.
@@ -55,21 +58,40 @@ if [[ ! -d "$data_dir" ]]; then
     exit 1
 fi
 
-# The four are not in MultiverseCore, so confirm the data is actually present before
-# queueing anything. A missing dataset would otherwise fail once per estimator.
-echo "Checking the four datasets are downloaded."
-missing_data=0
-while read -r dataset; do
-    [[ -z "$dataset" ]] && continue
-    if [[ ! -d "${data_dir}/${dataset}" ]]; then
-        echo "  MISSING: ${data_dir}/${dataset}" >&2
-        missing_data=1
-    else
-        echo "  ok: ${dataset}"
-    fi
-done < "$dataset_list"
-if [[ "$missing_data" -ne 0 ]]; then
-    echo "ERROR: download the missing datasets before starting." >&2
+# The four are not in MultiverseCore, so confirm the data is present AND loads the way
+# the jobs will load it. Presence of the directory is not enough: InsectWingbeat ships
+# unequal length, every deep classifier refuses unequal input, and the first attempt at
+# it failed for all five torch estimators in under a minute. The archive also publishes
+# an equal-length version, and classification_experiments.py passes load_equal_length,
+# so aeon picks up <name>_eq_TRAIN.ts when it is sitting beside the original. This
+# check loads each dataset exactly as the job will and requires a 3D array.
+echo "Checking the four datasets load as equal length."
+if ! "$python_executable" - "$dataset_list" "$data_dir" <<'PYTHON'
+import sys
+from aeon.datasets import load_classification
+
+dataset_list, data_dir = sys.argv[1], sys.argv[2]
+names = [line.strip() for line in open(dataset_list) if line.strip()]
+bad = 0
+for name in names:
+    try:
+        X, _ = load_classification(name, split="train", extract_path=data_dir,
+                                   load_equal_length=True)
+    except Exception as error:
+        print(f"  FAILED to load {name}: {type(error).__name__}: {error}")
+        bad += 1
+        continue
+    if hasattr(X, "ndim"):
+        print(f"  ok: {name} {X.shape}")
+    else:
+        print(f"  UNEQUAL LENGTH: {name}, {len(X)} cases; every deep classifier will "
+              f"refuse it. Copy the {name}_eq_TRAIN.ts/_eq_TEST.ts pair into "
+              f"{data_dir}/{name}/ beside the originals.")
+        bad += 1
+raise SystemExit(1 if bad else 0)
+PYTHON
+then
+    echo "ERROR: fix the data above before starting." >&2
     exit 1
 fi
 

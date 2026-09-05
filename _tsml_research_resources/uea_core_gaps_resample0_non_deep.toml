@@ -1,0 +1,56 @@
+# The three UEA datasets that keep the UEA table short but sit inside MultiverseCore,
+# so the UEA completion pass skips them: they need the ordinary core CPU classifiers.
+#
+#   EigenWorms      ConvTran      (GPU; in multiverse_core_gapfill_deep_torch_*, not here)
+#   FaceDetection   FreshPRINCE
+#   PenDigits       MRHydra, STSF
+#
+# Four jobs, three of them here. Every other estimator already has all three datasets,
+# and the controller counts a dataset done when its testResample0.csv exists, so
+# pointing it at the union list submits only what is missing.
+#
+# STSF is the reason this is a separate file rather than a rerun of
+# multiverse_core_resample0_non_deep.toml: that config does not list STSF, and it runs
+# CIF-500 and DrCIF-500 where the leaderboard's CIF and DrCIF columns are the plain
+# estimators, so reusing it would mix configurations into the published columns.
+
+[controller]
+username = "ajb"
+email = "ajb@uea.ac.uk"
+repo_dir = "/gpfs/home/{username}/Code/tsml-eval"
+data_dir = "/gpfs/home/{username}/Data/Multiverse"
+dataset_file = "/gpfs/home/{username}/Code/tsml-eval/_tsml_research_resources/dataset_lists/MultivariateClassification3-UEACoreGaps.txt"
+results_root = "/gpfs/home/{username}/Results/Multiverse"
+state_dir = "/gpfs/home/{username}/Results/Multiverse/.controller-uea-core-gaps-resample0-non-deep"
+resamples = 1
+max_attempts = 2
+all_categories_first_pass = true
+small_datasets_first = true
+excluded_datasets = []
+validate_results = false
+
+[slurm]
+account = "cmp"
+partition = "compute"
+qos = "uea-core-default"
+max_active_tasks = 8000
+memory_mb_levels = [32000, 64000]
+time_limit = "7-00:00:00"
+
+[environment]
+module = "python/anaconda/2024.10/3.12.7"
+conda_sh = "/gpfs/software/hali/python/anaconda/2024.10/etc/profile.d/conda.sh"
+env_name = "tsml-eval"
+numba_cache_dir = "/gpfs/home/{username}/Code/.cache/numba/tsml-eval"
+
+[[categories]]
+name = "FeatureBased"
+classifiers = ["FreshPRINCE"]
+
+[[categories]]
+name = "ConvolutionBased"
+classifiers = ["MRHydra"]
+
+[[categories]]
+name = "IntervalBased"
+classifiers = ["STSF"]
