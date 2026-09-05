@@ -51,12 +51,12 @@ if [[ ! -d "$data_dir" ]]; then
     exit 1
 fi
 
-# PyTorch, so confirm this environment can see a GPU before queueing anything. The
-# controller's own preflight runs inside the job, which is too late to save a whole
-# submission round.
+# PyTorch, so confirm the environment imports before queueing anything. Report whether
+# CUDA is visible but do not require it: this runs on a login node, which has no GPU, so
+# False here is expected and says nothing about the compute nodes. The controller's
+# gpu_check runs inside the job, where the card actually is.
 "$python_executable" -c "import torch
-print('torch', torch.__version__, '| cuda available:', torch.cuda.is_available())
-assert torch.cuda.is_available(), 'no CUDA device visible from the login node environment'"
+print('torch', torch.__version__, '| cuda visible from this node:', torch.cuda.is_available())"
 
 # Confirm the lookup resolves, and print the settings that decide the cost: the
 # encoder is cheap and the SVM probe is not, so probe and its cap are what to check.
