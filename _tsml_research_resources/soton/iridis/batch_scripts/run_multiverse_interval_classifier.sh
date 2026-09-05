@@ -108,6 +108,10 @@ large_dataset_bytes="${large_dataset_bytes:-314572800}"   # 300 MiB
 medium_dataset_bytes="${medium_dataset_bytes:-62914560}"  #  60 MiB
 large_dataset_start_tier="${large_dataset_start_tier:-3}"
 medium_dataset_start_tier="${medium_dataset_start_tier:-2}"
+# Small datasets normally begin at the first (4 GiB) tier. Completion wrappers
+# can raise this as well when prior logs establish that raw file size is a poor
+# guide to the estimator's peak feature-matrix memory.
+default_dataset_start_tier="${default_dataset_start_tier:-1}"
 
 # Safety rails for the unattended chain.
 max_rounds="${max_rounds:-500}"
@@ -798,7 +802,7 @@ for dataset in "${datasets[@]}"; do
     elif ((dataset_bytes[${dataset}] > medium_dataset_bytes)); then
         dataset_start_tier["${dataset}"]="${medium_dataset_start_tier}"
     else
-        dataset_start_tier["${dataset}"]=1
+        dataset_start_tier["${dataset}"]="${default_dataset_start_tier}"
     fi
 done
 
@@ -1382,6 +1386,15 @@ MV_MAX_FOLDS="${max_folds}" \\
 MV_START_FOLD="${start_fold}" \\
 MV_EXTRA_SOURCE_FILES="${MV_EXTRA_SOURCE_FILES:-}" \\
 data_dir="${data_dir}" \\
+node_memory_budget_gib="${node_memory_budget_gib}" \\
+max_cpus_per_node="${max_cpus_per_node}" \\
+large_dataset_bytes="${large_dataset_bytes}" \\
+medium_dataset_bytes="${medium_dataset_bytes}" \\
+large_dataset_start_tier="${large_dataset_start_tier}" \\
+medium_dataset_start_tier="${medium_dataset_start_tier}" \\
+default_dataset_start_tier="${default_dataset_start_tier}" \\
+max_attempts_per_experiment="${max_attempts_per_experiment}" \\
+max_failed_attempts="${max_failed_attempts}" \\
 bash "${script_path}" \\
     --round ${next_round} \\
     --max-rounds ${max_rounds} \\
