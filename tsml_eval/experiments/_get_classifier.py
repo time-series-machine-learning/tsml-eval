@@ -35,6 +35,7 @@ deep_learning_classifiers = [
     ["timesnetclassifier", "timesnet"],
     ["timesurlclassifier", "timesurl"],
     ["ts2vecclassifier", "ts2vec"],
+    ["ranksclclassifier", "rankscl"],
     ["xcmclassifier", "xcm"],
     ["xcm-fixed", "xcmfixed"],
 ]
@@ -376,6 +377,15 @@ def _set_classifier_deep_learning(
         from tsml_eval._wip.classification import TS2VecClassifier
 
         return TS2VecClassifier(random_state=random_state, **kwargs)
+    elif c == "ranksclclassifier" or c == "rankscl":
+        # Supervised contrastive pretraining, then the frozen-representation SVM
+        # probe TS2Vec introduced. The authors' UEA settings are the defaults, so
+        # nothing is set here; batch_size 4 with the last incomplete batch dropped
+        # means a collection of fewer than four training cases is refused rather
+        # than trained on nothing.
+        from tsml_eval._wip.classification import RankSCLClassifier
+
+        return RankSCLClassifier(random_state=random_state, **kwargs)
     elif c == "xcmclassifier" or c == "xcm":
         # XCM follows the authors' protocol: the window is chosen per dataset by
         # a stratified five-fold cross-validation of the training set, not fixed.

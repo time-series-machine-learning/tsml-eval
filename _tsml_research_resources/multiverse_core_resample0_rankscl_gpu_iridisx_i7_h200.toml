@@ -1,0 +1,66 @@
+# RankSCL resample-0 pass on IridisX's i7_h200 Early Access queue.
+#
+# The last of the survey's thirteen trustworthy papers with no results at all.
+# Ren, Luo and Song, ICDM 2024: supervised contrastive pretraining where the
+# positives are jittered embeddings of a same-class neighbour and the loss
+# penalises each positive by how many negatives sit closer to the anchor, then
+# the frozen-representation SVM probe TS2Vec introduced.
+#
+# The lookup passes no parameters, so the authors' UEA settings in PAPER_DEFAULTS
+# apply as-is. Two of their behaviours matter for scheduling. The training loader
+# drops the last incomplete batch at batch_size 4, so the port refuses a
+# collection with fewer than four training cases rather than training on nothing;
+# no core dataset is that small, but a failure of that shape is a data problem,
+# not a resource one. And the probe is the same SVM as TS2Vec's, capped at
+# MAX_SAMPLES 10000, without which four datasets exhausted a 60 hour job.
+#
+# PyTorch, so gpu_check is "torch". Two memory levels because the encoder is
+# small but the probe's grid search is not.
+
+[controller]
+username = "ajb2u23"
+email = "ajb@uea.ac.uk"
+repo_dir = "/home/{username}/Code/tsml-eval-gpu"
+data_dir = "/home/{username}/Data/Multiverse"
+dataset_file = "/home/{username}/Code/tsml-eval-gpu/_tsml_research_resources/dataset_lists/MultivariateClassification66-MultiverseMini.txt"
+results_root = "/home/{username}/Results/Multiverse"
+state_dir = "/home/{username}/Results/Multiverse/.controller-core-resample0-rankscl-i7-h200"
+resamples = 1
+max_attempts = 2
+all_categories_first_pass = false
+small_datasets_first = true
+# aeon rejects EmoPain before fit, "input collection has too little variation
+# (std <= 1e-07)", for every classifier, so attempting it only burns two jobs.
+excluded_datasets = ["EmoPain"]
+validate_results = false
+expected_branch = "ajb/gpu"
+
+[slurm]
+account = ""
+partition = "i7_h200"
+qos = ""
+max_active_tasks = 8
+cpus_per_task = 2
+gpus = 1
+nodes = 1
+gres = "gpu:h200:1"
+memory_mb_levels = [64000, 128000]
+time_limit = "2-12:00:00"
+
+[environment]
+module = "conda/python3"
+conda_sh = ""
+env_name = "tsml-eval-gpu"
+numba_cache_dir = "/home/{username}/Code/.cache/numba/tsml-eval-gpu"
+gpu_check = "torch"
+
+# device "cuda" rather than the default "auto": auto falls back to the CPU when
+# CUDA is missing, which on a GPU queue means a job that quietly runs at a
+# fraction of the speed instead of failing. "cuda" raises.
+[classifier_kwargs.RankSCL]
+device = "cuda"
+verbose = true
+
+[[categories]]
+name = "DeepLearning"
+classifiers = ["RankSCL"]
