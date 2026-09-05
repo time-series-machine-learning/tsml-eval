@@ -147,7 +147,7 @@ class TS2VecClassifier(BaseClassifier):
     Examples
     --------
     >>> from aeon.testing.data_generation import make_example_3d_numpy
-    >>> from multiverse.classification import TS2VecClassifier
+    >>> from tsml_eval._wip.classification import TS2VecClassifier
     >>> X, y = make_example_3d_numpy(n_cases=8, n_channels=2, n_timepoints=20)
     >>> clf = TS2VecClassifier(n_iters=2, device="cpu")  # doctest: +SKIP
     >>> clf.fit(X, y)  # doctest: +SKIP
@@ -287,7 +287,7 @@ class TS2VecClassifier(BaseClassifier):
 
         import torch
 
-        from multiverse.classification._ts2vec_original.ts2vec import TS2Vec
+        from ._ts2vec_original.ts2vec import TS2Vec
 
         rng = check_random_state(self.random_state)
         seed = int(rng.randint(np.iinfo(np.int32).max))
