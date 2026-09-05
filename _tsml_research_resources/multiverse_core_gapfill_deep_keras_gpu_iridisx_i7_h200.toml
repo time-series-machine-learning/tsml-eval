@@ -1,0 +1,53 @@
+# The Keras half of the resample-0 gap fill, on IridisX's i7_h200 Early Access queue.
+#
+# Separate from the torch variant because gpu_check is per configuration: a torch
+# check would pass while TensorFlow saw no GPU.
+#
+#   LiteTIME   BIDMC32HR_disc, BIDMC32SpO2_disc, USCActivity
+#
+# The dataset list is the union of every deep gap, shared with the torch variant.
+# LiteTIME already has the other six, and the controller skips anything with a
+# testResample0.csv, so only these three are submitted.
+
+[controller]
+username = "ajb2u23"
+email = "ajb@uea.ac.uk"
+repo_dir = "/home/{username}/Code/tsml-eval-gpu"
+data_dir = "/home/{username}/Data/Multiverse"
+dataset_file = "/home/{username}/Code/tsml-eval-gpu/_tsml_research_resources/dataset_lists/MultivariateClassification9-DeepGaps.txt"
+results_root = "/home/{username}/Results/Multiverse"
+state_dir = "/home/{username}/Results/Multiverse/.controller-core-gapfill-deep-keras-i7-h200"
+resamples = 1
+max_attempts = 2
+all_categories_first_pass = false
+small_datasets_first = true
+excluded_datasets = []
+validate_results = false
+expected_branch = "ajb/gpu"
+
+[slurm]
+account = ""
+partition = "i7_h200"
+qos = ""
+max_active_tasks = 8
+cpus_per_task = 2
+gpus = 1
+nodes = 1
+gres = "gpu:h200:1"
+memory_mb_levels = [64000, 128000]
+time_limit = "2-12:00:00"
+
+[environment]
+module = "conda/python3"
+conda_sh = ""
+env_name = "tsml-eval-gpu"
+numba_cache_dir = "/home/{username}/Code/.cache/numba/tsml-eval-gpu"
+gpu_check = "tensorflow"
+
+# No device kwarg: Keras places work on the visible GPU itself.
+[classifier_kwargs.LiteTIME]
+verbose = true
+
+[[categories]]
+name = "DeepLearning"
+classifiers = ["LiteTIME"]
