@@ -1,3 +1,0 @@
-EigenWorms
-FaceDetection
-PenDigits

@@ -1,0 +1,75 @@
+# The CPU half of the resample-0 gap fill: six datasets that the leaderboard drops for
+# want of one or two results each, and that nothing else is queued to produce.
+#
+#   FaceDetection     FreshPRINCE
+#   FordChallenge     FreshPRINCE
+#   Skoda             FreshPRINCE
+#   STEW              HC2, TDE
+#   BIDMC32HR_disc    1NN-DTW      (LiteTIME is in the GPU gap fill)
+#   BIDMC32SpO2_disc  1NN-DTW      (LiteTIME is in the GPU gap fill)
+#
+# Eight jobs. Completing the first four datasets raises the common set from 51 to 55;
+# the two BIDMC sets follow once the GPU half lands LiteTIME on them.
+#
+# The memory ladder starts at 128 GB rather than 32 because that is where these already
+# failed, not a guess: FreshPRINCE recorded "OOM at 128GB" after eight attempts on
+# FaceDetection, FordChallenge and Skoda alike. The second tier is the 620 GB node,
+# which is what recovered MindReading, MotionSenseHAR and Tiselac for MUSE after the
+# same class of failure at 8 and 16 GB.
+#
+# 1NN-DTW on BIDMC32HR_disc is the one entry here that failed on time rather than
+# memory, and 7-00:00:00 is already Hali's ceiling, so it either fits or it does not.
+#
+# Datasets deliberately absent, because compute cannot fix them:
+#   PenDigits   MRHydra raises "n_timepoints must be >= 9 but found 8"; the series are
+#               length 8, so the dataset can never complete while MRHydra is a column.
+#   Tiselac     RDST and MRHydra hit LAPACK integer overflow in RidgeClassifierCV's
+#   Australia-  SVD, aeon issue 3738, after 12 to 14 attempts. ROCKET hits the same on
+#   Rainfall    AustraliaRainfall. Fixing 3738 unblocks five pairs across the two.
+#   EmoPain     aeon's check_collection_variance rejects it before fit for every aeon
+#               classifier.
+
+[controller]
+username = "ajb"
+email = "ajb@uea.ac.uk"
+repo_dir = "/gpfs/home/{username}/Code/tsml-eval"
+data_dir = "/gpfs/home/{username}/Data/Multiverse"
+dataset_file = "/gpfs/home/{username}/Code/tsml-eval/_tsml_research_resources/dataset_lists/MultivariateClassification6-CoreGapsCPU.txt"
+results_root = "/gpfs/home/{username}/Results/Multiverse"
+state_dir = "/gpfs/home/{username}/Results/Multiverse/.controller-core-gaps-resample0-non-deep"
+resamples = 1
+max_attempts = 2
+all_categories_first_pass = true
+small_datasets_first = true
+excluded_datasets = []
+validate_results = false
+
+[slurm]
+account = "cmp"
+partition = "compute"
+qos = "uea-core-default"
+max_active_tasks = 8000
+memory_mb_levels = [128000, 620000]
+time_limit = "7-00:00:00"
+
+[environment]
+module = "python/anaconda/2024.10/3.12.7"
+conda_sh = "/gpfs/software/hali/python/anaconda/2024.10/etc/profile.d/conda.sh"
+env_name = "tsml-eval"
+numba_cache_dir = "/gpfs/home/{username}/Code/.cache/numba/tsml-eval"
+
+[[categories]]
+name = "FeatureBased"
+classifiers = ["FreshPRINCE"]
+
+[[categories]]
+name = "Hybrid"
+classifiers = ["HC2"]
+
+[[categories]]
+name = "DictionaryBased"
+classifiers = ["TDE"]
+
+[[categories]]
+name = "DistanceBased"
+classifiers = ["1NN-DTW"]
