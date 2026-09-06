@@ -264,6 +264,7 @@ dataset_list_file="${tsml_eval_dir}/_tsml_research_resources/dataset_lists/Univa
 round=1
 chain="true"
 dry_run="false"
+skip_unresolved="false"
 
 usage() {
     printf '%s\n' \
@@ -274,6 +275,9 @@ usage() {
         "  --round N            Round number; set by the chained job." \
         "  --max-rounds N       Stop chaining after this many rounds." \
         "  --dataset-list FILE  Override the dataset list." \
+        "  --skip-unresolved    Drop estimators whose key will not construct," \
+        "                       usually a missing soft dependency, and run" \
+        "                       the rest rather than stopping." \
         "  --no-chain           Submit this round only, do not chain." \
         "  --dry-run            Report the plan without submitting anything." \
         "  -h, --help           Show this help."
@@ -304,6 +308,10 @@ while (($# > 0)); do
             fi
             dataset_list_file="$2"
             shift 2
+            ;;
+        --skip-unresolved)
+            skip_unresolved="true"
+            shift
             ;;
         --no-chain)
             chain="false"
@@ -375,23 +383,89 @@ fi
 
 # A misspelled or unregistered estimator key would otherwise fail 3360 times
 # inside the task farm, so construct all of them once, here.
-unresolved_classifiers=()
-for classifier in "${classifiers[@]}"; do
-    if ! PYTHONPATH="${aeon_dir}:${tsml_eval_dir}" PYTHONNOUSERSITE=1 \
+printf 'Resolving %s estimator keys... ' "${#classifiers[@]}"
+unresolved_report=$(
+    PYTHONPATH="${aeon_dir}:${tsml_eval_dir}" PYTHONNOUSERSITE=1 \
         "${python_path}" -c '
 import sys
+
 from tsml_eval.experiments._get_classifier import get_classifier_by_name
 
-get_classifier_by_name(sys.argv[1], random_state=0)
-' "${classifier}" >/dev/null 2>&1; then
-        unresolved_classifiers+=("${classifier}")
-    fi
-done
-if ((${#unresolved_classifiers[@]} > 0)); then
-    echo "ERROR: these classifier keys do not resolve in this checkout:" >&2
-    printf '  %s\n' "${unresolved_classifiers[@]}" >&2
-    echo "Branch ${current_branch} is missing them; ${expected_branch} carries all thirteen." >&2
+for name in sys.argv[1:]:
+    try:
+        get_classifier_by_name(name, random_state=0)
+    except Exception as error:
+        print("{}\t{}: {}".format(name, type(error).__name__, error))
+' "${classifiers[@]}" 2>&1
+)
+resolve_status=$?
+
+if ((resolve_status != 0)); then
+    printf 'the check itself failed\n'
+    echo "ERROR: could not run the estimator check with:" >&2
+    echo "  ${python_path}" >&2
+    printf '%s\n' "${unresolved_report}" >&2
     exit 1
+fi
+
+if [[ -n "${unresolved_report}" ]]; then
+    unresolved_classifiers=()
+    while IFS=$'\t' read -r unresolved_name unresolved_reason; do
+        if [[ -n "${unresolved_name}" ]]; then
+            unresolved_classifiers+=("${unresolved_name}")
+        fi
+    done <<< "${unresolved_report}"
+
+    printf '%s of %s failed\n\n' \
+        "${#unresolved_classifiers[@]}" "${#classifiers[@]}"
+    echo "These classifier keys do not resolve in this checkout:"
+    while IFS=$'\t' read -r unresolved_name unresolved_reason; do
+        if [[ -n "${unresolved_name}" ]]; then
+            printf '  %-22s %s\n' "${unresolved_name}" "${unresolved_reason}"
+        fi
+    done <<< "${unresolved_report}"
+    echo
+    echo "A ModuleNotFoundError or ImportError here is a soft dependency missing"
+    echo "from the ${env_name} environment, not a problem with the branch."
+    echo "MrSEQL, for one, needs the separate mrseql package."
+    echo
+
+    if [[ "${skip_unresolved}" != "true" ]]; then
+        echo "Install what is missing, or drop those estimators for this run with" >&2
+        echo "  --skip-unresolved" >&2
+        echo "which runs the rest and leaves their gaps for a later round." >&2
+        exit 1
+    fi
+
+    # Drop them, keeping every other estimator's work moving. Their results are
+    # simply not written this time; a later round with the dependency installed
+    # reconciles them back in without touching anything already done.
+    remaining_classifiers=()
+    for classifier in "${classifiers[@]}"; do
+        skip_this="false"
+        for unresolved_name in "${unresolved_classifiers[@]}"; do
+            if [[ "${classifier}" == "${unresolved_name}" ]]; then
+                skip_this="true"
+                break
+            fi
+        done
+        if [[ "${skip_this}" == "true" ]]; then
+            unset 'classifier_results_dir[${classifier}]'
+            unset 'classifier_train_arg[${classifier}]'
+        else
+            remaining_classifiers+=("${classifier}")
+        fi
+    done
+    classifiers=("${remaining_classifiers[@]}")
+
+    if ((${#classifiers[@]} == 0)); then
+        echo "ERROR: no estimators left to run." >&2
+        exit 1
+    fi
+    echo "Skipping them; continuing with ${#classifiers[@]} estimator(s)."
+    echo
+else
+    printf 'all resolve\n'
 fi
 
 if ((start_fold < 1 || max_folds < start_fold)); then
@@ -862,7 +936,14 @@ completed_total=0
 oom_escalated=0
 timeouts_observed=0
 
+printf 'Reconciling %s x %s x %s experiments against the results tree.\n' \
+    "${#classifiers[@]}" "${#datasets[@]}" "$((max_folds - start_fold + 1))"
+printf 'This stats every declared experiment and takes a few minutes.\n'
+
 for classifier in "${classifiers[@]}"; do
+    printf '  %-22s' "${classifier}"
+    classifier_complete_before="${completed_total}"
+
     for dataset in "${datasets[@]}"; do
         for ((resample = start_fold - 1; resample < max_folds; resample++)); do
             key="${classifier}|${dataset}|${resample}"
@@ -929,7 +1010,12 @@ for classifier in "${classifiers[@]}"; do
             pending_tier["${key}"]="${tier}"
         done
     done
+
+    printf ' %5d/%-5d complete\n' \
+        "$((completed_total - classifier_complete_before))" \
+        "$((${#datasets[@]} * (max_folds - start_fold + 1)))"
 done
+echo
 
 total_experiments=$((${#classifiers[@]} * ${#datasets[@]} * (max_folds - start_fold + 1)))
 
@@ -1398,6 +1484,14 @@ elif ((round >= max_rounds)); then
 else
     next_round=$((round + 1))
 
+    # Without this the first successor stops on the same unresolved key that
+    # this invocation was told to skip, and the chain dies one round in.
+    successor_skip_arg=""
+    if [[ "${skip_unresolved}" == "true" ]]; then
+        successor_skip_arg=" \\
+    --skip-unresolved"
+    fi
+
     arm_successor() {
         local dependency="$1"
         local tag="$2"
@@ -1425,7 +1519,7 @@ set -e
 bash "${script_path}" \\
     --round ${next_round} \\
     --max-rounds ${max_rounds} \\
-    --dataset-list "${dataset_list_file}"
+    --dataset-list "${dataset_list_file}"${successor_skip_arg}
 SUP
 
         local output
