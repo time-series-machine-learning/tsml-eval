@@ -11,14 +11,16 @@
 # Eight jobs. Completing the first four datasets raises the common set from 51 to 55;
 # the two BIDMC sets follow once the GPU half lands LiteTIME on them.
 #
+# On Iridis 6's batch queue, which is where the 620 GB MUSE recovery jobs are running.
 # The memory ladder starts at 128 GB rather than 32 because that is where these already
 # failed, not a guess: FreshPRINCE recorded "OOM at 128GB" after eight attempts on
-# FaceDetection, FordChallenge and Skoda alike. The second tier is the 620 GB node,
-# which is what recovered MindReading, MotionSenseHAR and Tiselac for MUSE after the
-# same class of failure at 8 and 16 GB.
+# FaceDetection, FordChallenge and Skoda alike. The 620 GB tier is what recovered
+# MindReading, MotionSenseHAR and Tiselac for MUSE after the same class of failure.
 #
-# 1NN-DTW on BIDMC32HR_disc is the one entry here that failed on time rather than
-# memory, and 7-00:00:00 is already Hali's ceiling, so it either fits or it does not.
+# One caveat. 1NN-DTW on BIDMC32HR_disc is the only entry here that failed on time
+# rather than memory, and it did so against Hali's 7 day limit. Iridis 6 caps at 60
+# hours, so this is the one job more likely to fail here than there; if it times out,
+# move that pair back to Hali rather than retrying.
 #
 # Datasets deliberately absent, because compute cannot fix them:
 #   PenDigits   MRHydra raises "n_timepoints must be >= 9 but found 8"; the series are
@@ -30,33 +32,39 @@
 #               classifier.
 
 [controller]
-username = "ajb"
+username = "ajb2u23"
 email = "ajb@uea.ac.uk"
-repo_dir = "/gpfs/home/{username}/Code/tsml-eval"
-data_dir = "/gpfs/home/{username}/Data/Multiverse"
-dataset_file = "/gpfs/home/{username}/Code/tsml-eval/_tsml_research_resources/dataset_lists/MultivariateClassification6-CoreGapsCPU.txt"
-results_root = "/gpfs/home/{username}/Results/Multiverse"
-state_dir = "/gpfs/home/{username}/Results/Multiverse/.controller-core-gaps-resample0-non-deep"
+# The GPU checkout, reused because it exists, is on ajb/gpu and therefore already has
+# this file. repo_dir and env_name are independent: the jobs run in the CPU environment
+# regardless of what the checkout is called.
+repo_dir = "/home/{username}/Code/tsml-eval-gpu"
+data_dir = "/home/{username}/Data/Multiverse"
+dataset_file = "/home/{username}/Code/tsml-eval-gpu/_tsml_research_resources/dataset_lists/MultivariateClassification6-CoreGapsCPU.txt"
+results_root = "/home/{username}/Results/Multiverse"
+state_dir = "/home/{username}/Results/Multiverse/.controller-core-gaps-resample0-non-deep"
 resamples = 1
 max_attempts = 2
 all_categories_first_pass = true
 small_datasets_first = true
 excluded_datasets = []
 validate_results = false
+expected_branch = "ajb/gpu"
 
 [slurm]
-account = "cmp"
-partition = "compute"
-qos = "uea-core-default"
-max_active_tasks = 8000
+partition = "batch"
+account = ""
+qos = ""
+max_active_tasks = 8
+cpus_per_task = 1
 memory_mb_levels = [128000, 620000]
-time_limit = "7-00:00:00"
+# Iridis 6 caps every job at 60 hours, against Hali's 7 days.
+time_limit = "2-12:00:00"
 
 [environment]
-module = "python/anaconda/2024.10/3.12.7"
-conda_sh = "/gpfs/software/hali/python/anaconda/2024.10/etc/profile.d/conda.sh"
+module = "conda/python3"
+conda_sh = ""
 env_name = "tsml-eval"
-numba_cache_dir = "/gpfs/home/{username}/Code/.cache/numba/tsml-eval"
+numba_cache_dir = "/home/{username}/Code/.cache/numba/tsml-eval"
 
 [[categories]]
 name = "FeatureBased"
