@@ -75,6 +75,7 @@ feature_based_classifiers = [
 hybrid_classifiers = [
     ["hivecotev1", "hc1"],
     ["hivecotev2", "hc2"],
+    ["hc2-quant", "hc2quant"],
     ["ristclassifier", "rist", "rist-extrat"],
 ]
 interval_based_classifiers = [
@@ -91,11 +92,37 @@ interval_based_classifiers = [
     "drcif-500",
     ["drcif", "drcifclassifier"],
     "drcif-unequal",
+    ["newdrcif", "new-drcif"],
+    "newdrcif-500",
+    ["quantdrcif", "quant-drcif"],
+    "quantdrcif-12",
+    ["shareddrcif", "shared-drcif"],
+    ["fastdrcif", "fast-drcif"],
+    ["fastdrcif_d", "fastdrcif-d"],
+    "shareddrcif-nopgram",
+    "shareddrcif-diff2",
+    "shareddrcif-dt",
+    "fastdrcif-dt",
+    "fastdrcif_d-dt",
+    "shareddrcif-min",
+    "rdstdrcif-min",
+    "fastdrcif_d-min",
+    ["rdstdrcif", "rdst-drcif"],
+    "rdstdrcif-dt",
+    "fire",
+    "fire-et",
+    ["pulsar", "pulsarclassifier"],
+    "pulsar-et",
+    "pulsar-ridge",
+    "pulsar-nopool",
+    "pulsar-nosel",
+    "pulsar-noar",
     "summary-intervals",
     ["randomintervals-500", "catch22-intervals-500"],
     ["randomintervalclassifier", "randomintervals", "catch22-intervals"],
     ["supervisedintervalclassifier", "supervisedintervals"],
     ["quantclassifier", "quant"],
+    ["baggedquant", "bagged-quant", "quant-bagged"],
     "drcif-pipeline",
 ]
 other_classifiers = [
@@ -603,6 +630,15 @@ def _set_classifier_hybrid(c, random_state, n_jobs, fit_contract, checkpoint, kw
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
+    elif c == "hc2-quant" or c == "hc2quant":
+        from tsml_eval._wip.classification import HC2Quant
+
+        return HC2Quant(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
     elif c == "ristclassifier" or c == "rist" or c == "rist-extrat":
         from aeon.classification.hybrid import RISTClassifier
         from sklearn.ensemble import ExtraTreesClassifier
@@ -731,6 +767,200 @@ def _set_classifier_interval_based(
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
+    elif c == "newdrcif" or c == "new-drcif":
+        from tsml_eval._wip.classification import NewDrCIF
+
+        return NewDrCIF(
+            att_subsample_size=6,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "newdrcif-500":
+        from tsml_eval._wip.classification import NewDrCIF
+
+        return NewDrCIF(
+            n_estimators=500,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "quantdrcif" or c == "quant-drcif":
+        from tsml_eval._wip.classification import QuantDrCIF
+
+        return QuantDrCIF(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "quantdrcif-12":
+        from tsml_eval._wip.classification import QuantDrCIF
+
+        return QuantDrCIF(
+            att_subsample_size=12,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "shareddrcif" or c == "shared-drcif":
+        from tsml_eval._wip.classification import SharedDrCIF
+
+        # random intervals, no gates, no dilation, constant-feature filter on
+        return SharedDrCIF(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "fastdrcif" or c == "fast-drcif":
+        from tsml_eval._wip.classification import FastDrCIF
+
+        # random intervals + length-gated features + constant filter
+        return FastDrCIF(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "fastdrcif_d" or c == "fastdrcif-d":
+        from tsml_eval._wip.classification import FastDrCIF_D
+
+        # random intervals + length gates + dilation + constant filter
+        return FastDrCIF_D(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "shareddrcif-nopgram":
+        from tsml_eval._wip.classification import SharedDrCIF
+
+        # drop periodogram: base + first differences only
+        return SharedDrCIF(
+            representations=("base", "diff1"),
+            random_state=random_state,
+            n_jobs=n_jobs,
+            **kwargs,
+        )
+    elif c == "shareddrcif-diff2":
+        from tsml_eval._wip.classification import SharedDrCIF
+
+        # drop periodogram, add second-order differences
+        return SharedDrCIF(
+            representations=("base", "diff1", "diff2"),
+            random_state=random_state,
+            n_jobs=n_jobs,
+            **kwargs,
+        )
+    elif c == "shareddrcif-dt":
+        from tsml_eval._wip.classification import SharedDrCIF
+
+        # random-subspace ensemble of proper best-split decision trees
+        return SharedDrCIF(
+            tree_type="dt", random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
+    elif c == "fastdrcif-dt":
+        from tsml_eval._wip.classification import FastDrCIF
+
+        return FastDrCIF(
+            tree_type="dt", random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
+    elif c == "fastdrcif_d-dt":
+        from tsml_eval._wip.classification import FastDrCIF_D
+
+        return FastDrCIF_D(
+            tree_type="dt", random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
+    elif c == "rdstdrcif" or c == "rdst-drcif":
+        from tsml_eval._wip.classification import RDSTDrCIF
+
+        # RDST/WEASEL-style: fixed interval lengths + log-uniform dilation
+        return RDSTDrCIF(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "rdstdrcif-dt":
+        from tsml_eval._wip.classification import RDSTDrCIF
+
+        # RDSTDrCIF with the random-subspace decision-tree ensemble
+        return RDSTDrCIF(
+            tree_type="dt", random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
+    elif c == "fire":
+        from tsml_eval._wip.classification import FIRE
+
+        # Fast Interval Representation Ensemble: the consolidated DrCIF successor
+        # (ExtraTrees + scaled Ridge heads averaged)
+        return FIRE(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "fire-et":
+        from tsml_eval._wip.classification import FIRE
+
+        # FIRE with the ExtraTrees head only (isolates the Ridge contribution)
+        return FIRE(
+            heads=("extratrees",), random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
+    elif c == "pulsar" or c == "pulsarclassifier":
+        from tsml_eval._wip.classification._pulsar import PULSARClassifier
+
+        return PULSARClassifier(
+            random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
+    elif c == "pulsar-et":
+        from tsml_eval._wip.classification._pulsar import PULSARClassifier
+
+        # ablation: ExtraTrees head only (no Ridge)
+        return PULSARClassifier(
+            classifiers=("extra_trees",),
+            random_state=random_state,
+            n_jobs=n_jobs,
+            **kwargs,
+        )
+    elif c == "pulsar-ridge":
+        from tsml_eval._wip.classification._pulsar import PULSARClassifier
+
+        # ablation: Ridge head only (no ExtraTrees) — is Ridge the secret sauce?
+        return PULSARClassifier(
+            classifiers=("ridge",),
+            random_state=random_state,
+            n_jobs=n_jobs,
+            **kwargs,
+        )
+    elif c == "pulsar-nopool":
+        from tsml_eval._wip.classification._pulsar import PULSARClassifier
+
+        # ablation: no hierarchical pooling (global level only)
+        return PULSARClassifier(
+            hierarchical_depth=1,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            **kwargs,
+        )
+    elif c == "pulsar-nosel":
+        from tsml_eval._wip.classification._pulsar import PULSARClassifier
+
+        # ablation: no Fisher feature selection (keep all candidate features)
+        return PULSARClassifier(
+            feature_selection_percentage=100,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            **kwargs,
+        )
+    elif c == "pulsar-noar":
+        from tsml_eval._wip.classification._pulsar import PULSARClassifier
+
+        # ablation: drop the (slow) autoregressive representation
+        return PULSARClassifier(
+            representations=("original", "periodogram", "derivative"),
+            random_state=random_state,
+            n_jobs=n_jobs,
+            **kwargs,
+        )
+    elif c == "shareddrcif-min":
+        from tsml_eval._wip.classification import SharedDrCIF
+
+        # lean pool: 5 cheap catch22 + 7 summary + 2 PULSAR stats
+        return SharedDrCIF(
+            features="minimal", random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
+    elif c == "rdstdrcif-min":
+        from tsml_eval._wip.classification import RDSTDrCIF
+
+        return RDSTDrCIF(
+            features="minimal", random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
+    elif c == "fastdrcif_d-min":
+        from tsml_eval._wip.classification import FastDrCIF_D
+
+        # full lean config: dilation + banding + minimal pool
+        return FastDrCIF_D(
+            features="minimal", random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
     elif c == "summary-intervals":
         from aeon.classification.interval_based import RandomIntervalClassifier
         from aeon.transformations.collection.feature_based import SevenNumberSummary
@@ -773,6 +1003,10 @@ def _set_classifier_interval_based(
         from aeon.classification.interval_based import QUANTClassifier
 
         return QUANTClassifier(random_state=random_state, **kwargs)
+    elif c == "baggedquant" or c == "bagged-quant" or c == "quant-bagged":
+        from tsml_eval._wip.classification import BaggedQUANT
+
+        return BaggedQUANT(random_state=random_state, **kwargs)
 
     elif c == "drcif-pipeline":
         import numpy as np
