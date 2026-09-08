@@ -50,7 +50,12 @@ Design notes vs the Java original
 """
 
 __maintainer__ = ["TonyBagnall"]
-__all__ = ["simulate_interval_shape_data", "SHAPES"]
+__all__ = [
+    "simulate_interval_shape_data",
+    "SHAPES",
+    "order_templates",
+    "level_offsets",
+]
 
 import numpy as np
 from sklearn.utils import check_random_state
@@ -104,6 +109,61 @@ def _head_and_shoulders(length, amplitude, base):
     )
     val[mid] = base + amplitude * np.sin(np.pi * (i[mid] - third) / max(third, 1))
     return val
+
+
+# --------------------------------------------------------------------------- #
+# Protocol mechanisms: level and order.
+#
+# These are the definitions used by the paper's explanatory simulation protocol,
+# and they are deliberately not the same as the ``shape`` and ``trend``
+# discriminators above. ``level`` is a per-class mean shift, not a waveform;
+# ``order`` gives the two classes the *same* multiset of values inside the
+# interval so they differ only in temporal arrangement, which ``shape`` does not
+# (its class waveforms differ in mean, variance and extrema as well).
+# --------------------------------------------------------------------------- #
+def order_templates(length):
+    """Two templates that are permutations of each other.
+
+    Returns ``(t0, t1)``, each of ``length`` points, zero mean and unit root mean
+    square. ``t0`` is an ascending ramp. ``t1`` interleaves the lower and upper
+    halves of the same sorted values, so the two share every order statistic and
+    differ only in the order the values appear in.
+
+    Because ``t1`` is a permutation of ``t0``, their sorted values, mean,
+    variance, minimum and maximum are identical by construction; only the
+    arrangement carries the class.
+    """
+    if length < 2:
+        raise ValueError("order templates need at least two points.")
+    t0 = np.linspace(-1.0, 1.0, length)
+    t0 = t0 - t0.mean()
+    rms = np.sqrt(np.mean(t0**2))
+    t0 = t0 / rms
+
+    half = length // 2
+    lower, upper = t0[:half], t0[half:]
+    t1 = np.empty(length, dtype=float)
+    # Interleave lower and upper; when length is odd the upper half is one
+    # longer and its final value is appended, keeping t1 a permutation of t0.
+    n_pairs = min(len(lower), len(upper))
+    t1[0 : 2 * n_pairs : 2] = lower[:n_pairs]
+    t1[1 : 2 * n_pairs : 2] = upper[:n_pairs]
+    if len(upper) > n_pairs:
+        t1[2 * n_pairs :] = upper[n_pairs:]
+    elif len(lower) > n_pairs:
+        t1[2 * n_pairs :] = lower[n_pairs:]
+    return t0, t1
+
+
+def level_offsets(n_classes):
+    """Per-class multipliers for the level mechanism, symmetric about zero.
+
+    Two classes give ``(-1, +1)``, so the interval mean is ``(2y - 1) a`` as the
+    protocol specifies.
+    """
+    if n_classes < 2:
+        raise ValueError("level needs at least two classes.")
+    return np.linspace(-1.0, 1.0, n_classes)
 
 
 #: Registry of available shape generators (name -> callable).
@@ -239,10 +299,11 @@ def simulate_interval_shape_data(
     if interval_length < 1:
         raise ValueError("Derived interval_length < 1; reduce noise_to_signal.")
 
-    if discriminator not in ("shape", "scale", "trend", "frequency"):
+    valid_discriminators = ("shape", "scale", "trend", "frequency", "level", "order")
+    if discriminator not in valid_discriminators:
         raise ValueError(
             f"Unknown discriminator '{discriminator}', "
-            "valid: 'shape', 'scale', 'trend', 'frequency'."
+            f"valid: {valid_discriminators}."
         )
 
     if discriminator == "shape":
@@ -302,6 +363,17 @@ def simulate_interval_shape_data(
     for c in range(n_classes):
         if discriminator == "shape":
             signal_by_class.append(SHAPES[shapes[c]](L, amplitude, base))
+        elif discriminator == "level":
+            # Constant per-class shift: interval values are N((2y-1)a, 1) for two
+            # classes, with ``amplitude`` playing the role of the strength a.
+            signal_by_class.append(
+                np.full(L, level_offsets(n_classes)[c] * amplitude, dtype=float)
+            )
+        elif discriminator == "order":
+            # Same values in both classes, different arrangement.
+            if n_classes != 2:
+                raise ValueError("the order mechanism is defined for two classes.")
+            signal_by_class.append(amplitude * order_templates(L)[c])
         elif discriminator == "trend":
             slope = c - (n_classes - 1) / 2.0  # symmetric, zero-mean ramp
             signal_by_class.append(
@@ -380,6 +452,7 @@ def simulate_interval_shape_data(
             "discriminator": discriminator,
             "phase_alignment": phase_alignment,
             "shapes": shapes,
+            "amplitude": amplitude,
             "interval_scales": interval_scales if discriminator == "scale" else None,
             "frequencies": frequencies if discriminator == "frequency" else None,
         }
