@@ -34,7 +34,7 @@ from collections import Counter, defaultdict
 DEFAULT_LIST = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
     "dataset_lists",
-    "MultivariateClassification66-MultiverseMini.txt",
+    "MultivariateClassification65-MultiverseMini.txt",
 )
 
 #: Job logs are named ``output-<dataset>-<resample>-<timestamp>-<pid>-<label>.txt``.
@@ -58,8 +58,10 @@ ERROR = re.compile(
 
 
 def read_list(path):
+    """Dataset names, one per line; blank lines and # comments are skipped."""
     with open(path, encoding="utf-8") as fh:
-        return sorted(line.strip() for line in fh if line.strip())
+        names = (line.strip() for line in fh)
+        return sorted(n for n in names if n and not n.startswith("#"))
 
 
 def completed(results_root, estimator, datasets, resamples):

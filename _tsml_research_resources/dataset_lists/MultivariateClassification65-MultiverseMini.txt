@@ -1,0 +1,76 @@
+# The multiverse core with PenDigits removed.
+#
+# PenDigits has series of length 8. STSF and RSTSF both search a periodogram and
+# an AR representation as well as the raw series and its first differences, and
+# those two representations are 4 and 6 points long. SupervisedIntervals imposes
+# a minimum interval of 3 and so needs at least 7 points, which makes the two
+# classifiers inapplicable to the problem rather than merely expensive on it.
+#
+# Retaining it would leave a hole in the comparison that no amount of compute
+# closes, so it is dropped for every method and the collection is 65 problems.
+# The 66 problem list is kept for results already collected against it.
+Alzheimers
+AppliancesEnergy_disc
+ArticularyWordRecognition
+AsphaltObstaclesCoordinates
+AsphaltRegularityCoordinates
+AtrialFibrillation
+AustraliaRainfall_disc
+AutomotiveRoadTrials
+BeijingPM10Quality_disc
+BeijingPM25Quality_disc
+BenzeneConcentration_disc
+BIDMC32HR_disc
+BIDMC32SpO2_disc
+Blink
+BoneIntensitiesAgeGroup
+BoneProbAgeGroup
+CharacterTrajectories
+CounterMovementJump
+Cricket
+CrowdSourced
+DuckDuckGeese
+EigenWorms
+EmoPain
+Epilepsy
+ERing
+EthanolConcentration
+EyesOpenShut
+FaceDetection
+FordChallenge
+HandMovementDirection
+Handwriting
+Heartbeat
+HouseholdPowerConsumption1_disc
+HouseholdPowerConsumption2_disc
+IEEEPPG_disc
+IRDS-SFL
+JapaneseVowels
+KERAAL-RTK
+KIMORE-PR-C
+KINECAL-QSEO
+Libras
+Locust2022
+LowCost
+LSST
+MindReading
+MotionSenseHAR
+MotorImagery
+NATOPS
+PEMS-SF
+PhonemeSpectra
+PhotoStimulation
+RacketSports
+SelfRegulationSCP1
+Skoda
+SpokenArabicDigits
+StandWalkJump
+STEW
+TactileTextureRecognition
+Tiselac
+UCDHE-Rowing-MC
+UCIActivity
+UIPRMD-DS-C
+USCActivity
+UWaveGestureLibrary
+WISDM

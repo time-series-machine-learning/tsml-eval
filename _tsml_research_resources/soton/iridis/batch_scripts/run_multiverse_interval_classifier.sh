@@ -113,6 +113,20 @@ medium_dataset_start_tier="${medium_dataset_start_tier:-2}"
 # guide to the estimator's peak feature-matrix memory.
 default_dataset_start_tier="${default_dataset_start_tier:-1}"
 
+# A floor under every opening tier, applied after the size rule above. The size
+# rule guesses from the raw file size, and a guess that opens too low costs a
+# whole round: the experiment is killed, escalated one tier, and only retried
+# next time round. When a previous run has already shown what the work needs, it
+# is cheaper to open there and lose parallelism than to climb a tier at a time.
+# Tier 5 is 64 GiB and tier 6 is 128 GiB.
+#
+#   MV_CLASSIFIER=RSTSF min_start_tier=5 bash run_multiverse_interval_classifier.sh
+#
+# Unlike default_dataset_start_tier, which only moves the small-dataset default
+# and can leave the large datasets opening lower than the small ones, this
+# raises every dataset that would otherwise start below it.
+min_start_tier="${min_start_tier:-1}"
+
 # Safety rails for the unattended chain.
 max_rounds="${max_rounds:-500}"
 max_attempts_per_experiment="${max_attempts_per_experiment:-10}"
@@ -795,6 +809,11 @@ classify_failure() {
 
 max_tier=${#memory_tiers_gib[@]}
 
+if ((min_start_tier < 1 || min_start_tier > max_tier)); then
+    echo "ERROR: min_start_tier must be between 1 and ${max_tier}, got ${min_start_tier}" >&2
+    exit 1
+fi
+
 declare -A dataset_start_tier=()
 for dataset in "${datasets[@]}"; do
     if ((dataset_bytes[${dataset}] > large_dataset_bytes)); then
@@ -803,6 +822,9 @@ for dataset in "${datasets[@]}"; do
         dataset_start_tier["${dataset}"]="${medium_dataset_start_tier}"
     else
         dataset_start_tier["${dataset}"]="${default_dataset_start_tier}"
+    fi
+    if ((dataset_start_tier[${dataset}] < min_start_tier)); then
+        dataset_start_tier["${dataset}"]="${min_start_tier}"
     fi
 done
 
