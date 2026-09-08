@@ -851,6 +851,15 @@ for classifier in "${classifiers[@]}"; do
             fi
 
             tier="${attempt_tier[${key}]-${dataset_start_tier[${dataset}]}}"
+
+            # The floor applies to a recorded tier too. An experiment that has
+            # been attempted before is the main reason to set one: the point of
+            # min_start_tier is to open where the previous run showed the work
+            # lands, and a tier recorded by that run would otherwise win and put
+            # the experiment straight back where it died.
+            if ((tier < min_start_tier)); then
+                tier="${min_start_tier}"
+            fi
             attempts="${attempt_count[${key}]-0}"
             failures="${failure_count[${key}]-0}"
             reason="${attempt_reason[${key}]-}"
