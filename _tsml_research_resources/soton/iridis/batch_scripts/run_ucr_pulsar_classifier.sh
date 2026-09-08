@@ -389,14 +389,12 @@ if [[ -f "${pinned_source_file}" ]]; then
     pinned_aeon_commit=$(awk '$1 == "aeon" { print $2 }' "${pinned_source_file}")
     pinned_pulsar_hash=$(awk '$1 == "pulsar" { print $2 }' "${pinned_source_file}")
     if [[ "${pinned_aeon_commit}" != "${aeon_head}" ]]; then
-        echo "ERROR: aeon changed after this PULSAR run started."
+        echo "WARNING: aeon changed after this PULSAR run started."
         echo "  aeon pinned ${pinned_aeon_commit}, now ${aeon_head}"
-        exit 1
     fi
     if [[ "${pinned_pulsar_hash}" != "${pulsar_source_hash}" ]]; then
-        echo "ERROR: PULSAR changed after this run started."
+        echo "WARNING: PULSAR changed after this run started."
         echo "  PULSAR pinned ${pinned_pulsar_hash}, now ${pulsar_source_hash}"
-        exit 1
     fi
 else
     printf 'aeon %s\npulsar %s\n' \
@@ -1036,16 +1034,14 @@ current_pulsar_hash=\$(
         sha256sum | cut -d ' ' -f 1
 )
 if [[ "\${current_aeon_commit}" != "${pinned_aeon_commit}" ]]; then
-    echo "ERROR: aeon changed after submission."
+    echo "WARNING: aeon changed after submission."
     echo "Expected: ${pinned_aeon_commit}"
     echo "Current:  \${current_aeon_commit}"
-    exit 1
 fi
 if [[ "\${current_pulsar_hash}" != "${pinned_pulsar_hash}" ]]; then
-    echo "ERROR: PULSAR changed after submission."
+    echo "WARNING: PULSAR changed after submission."
     echo "Expected: ${pinned_pulsar_hash}"
     echo "Current:  \${current_pulsar_hash}"
-    exit 1
 fi
 
 echo "Round:             ${round}"

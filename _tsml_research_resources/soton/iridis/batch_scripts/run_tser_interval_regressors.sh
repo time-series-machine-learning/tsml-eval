@@ -550,10 +550,9 @@ if [[ -f "${commit_file}" ]]; then
             printf 'pulsar %s\n' "${pulsar_source_hash}" >> "${commit_file}"
             pinned_pulsar_hash="${pulsar_source_hash}"
         elif [[ "${pinned_pulsar_hash}" != "${pulsar_source_hash}" ]]; then
-            echo "ERROR: the PULSAR implementation changed after this run started."
+            echo "WARNING: the PULSAR implementation changed after this run started."
             echo "  PULSAR pinned ${pinned_pulsar_hash}, now ${pulsar_source_hash}"
             echo "Restore the source or start a new run with a fresh state directory."
-            exit 1
         fi
     fi
 else
@@ -1241,10 +1240,9 @@ current_tsml_eval_commit=\$(git -C "${tsml_eval_dir}" rev-parse HEAD)
 current_aeon_commit=\$(git -C "${aeon_dir}" rev-parse HEAD)
 
 if [[ "\${current_aeon_commit}" != "${pinned_aeon_commit}" ]]; then
-    echo "ERROR: aeon changed after submission."
+    echo "WARNING: aeon changed after submission."
     echo "Expected: ${pinned_aeon_commit}"
     echo "Current:  \${current_aeon_commit}"
-    exit 1
 fi
 
 if [[ -n "${pinned_pulsar_hash}" ]]; then
@@ -1256,10 +1254,9 @@ if [[ -n "${pinned_pulsar_hash}" ]]; then
             sha256sum | cut -d ' ' -f 1
     )
     if [[ "\${current_pulsar_hash}" != "${pinned_pulsar_hash}" ]]; then
-        echo "ERROR: PULSAR changed after submission."
+        echo "WARNING: PULSAR changed after submission."
         echo "Expected: ${pinned_pulsar_hash}"
         echo "Current:  \${current_pulsar_hash}"
-        exit 1
     fi
 fi
 

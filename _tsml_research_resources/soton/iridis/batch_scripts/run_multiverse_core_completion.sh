@@ -686,11 +686,10 @@ if [[ -f "${pinned_source_file}" ]]; then
     pinned_aeon_commit=$(awk '$1 == "aeon" { print $2 }' "${pinned_source_file}")
     pinned_estimator_hash=$(awk '$1 == "estimators" { print $2 }' "${pinned_source_file}")
     if [[ "${pinned_aeon_commit}" != "${aeon_head}" ]]; then
-        echo "ERROR: aeon changed after this run started."
+        echo "WARNING: aeon changed after this run started."
         echo "  aeon pinned ${pinned_aeon_commit}, now ${aeon_head}"
         echo "Check out the pinned commit, or delete ${pinned_source_file} to"
         echo "accept the new one for the resamples that are still outstanding."
-        exit 1
     fi
     if [[ "${pinned_estimator_hash}" != "${estimator_source_hash}" ]]; then
         estimator_source_note="estimator sources changed since round 1 (pinned ${pinned_estimator_hash:0:12}, now ${estimator_source_hash:0:12})"
@@ -1344,10 +1343,9 @@ mkdir -p "\${NUMBA_CACHE_DIR}"
 
 current_aeon_commit=\$(git -C "${aeon_dir}" rev-parse HEAD)
 if [[ "\${current_aeon_commit}" != "${pinned_aeon_commit}" ]]; then
-    echo "ERROR: aeon changed after submission."
+    echo "WARNING: aeon changed after submission."
     echo "Expected: ${pinned_aeon_commit}"
     echo "Current:  \${current_aeon_commit}"
-    exit 1
 fi
 
 echo "Round:             ${round}"

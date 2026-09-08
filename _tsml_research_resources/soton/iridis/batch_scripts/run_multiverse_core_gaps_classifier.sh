@@ -21,7 +21,9 @@ set -euo pipefail
 #
 # All four runs share one six-dataset list rather than a list per classifier. The
 # runner submits an experiment only when its testResample0.csv is missing or empty,
-# so each classifier picks up just its own gaps.
+# so each classifier picks up just its own gaps. The list is read from
+# ~/DataSetLists, where the curated lists live, falling back to the copy in the
+# repository so a fresh checkout works with no manual step.
 #
 # Starting tiers are set from how each one failed, not guessed. The tiers are
 # (4 8 16 32 64 128 256 620) GiB, and memory is requested per CPU, so a higher tier
@@ -48,6 +50,7 @@ set -euo pipefail
 
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 repo_dir=$(cd -- "${script_dir}/../../../.." && pwd)
+dataset_list_name="MultivariateClassification6-CoreGapsCPU.txt"
 
 MV_CLASSIFIER="${MV_CLASSIFIER:?set MV_CLASSIFIER to FreshPRINCE, HC2, TDE or 1NN-DTW}"
 
@@ -70,7 +73,25 @@ export MV_WORKFLOW_KEY="core-gaps-${classifier_lc}"
 export MV_SUBMISSION_LABEL="MVCoreGaps"
 export MV_MAX_FOLDS="1"
 export MV_START_FOLD="1"
-export MV_DATASET_LIST="${MV_DATASET_LIST:-${repo_dir}/_tsml_research_resources/dataset_lists/MultivariateClassification6-CoreGapsCPU.txt}"
+# Curated dataset lists live in ~/DataSetLists on the cluster, so prefer that copy and
+# let it be edited without touching the repository. A copy also ships in the repository
+# so a fresh checkout runs without any manual step; the home copy wins when present.
+if [[ -z "${MV_DATASET_LIST:-}" ]]; then
+    home_dataset_list="${HOME}/DataSetLists/${dataset_list_name}"
+    repo_dataset_list="${repo_dir}/_tsml_research_resources/dataset_lists/${dataset_list_name}"
+    if [[ -s "${home_dataset_list}" ]]; then
+        MV_DATASET_LIST="${home_dataset_list}"
+    elif [[ -s "${repo_dataset_list}" ]]; then
+        MV_DATASET_LIST="${repo_dataset_list}"
+        echo "No ${home_dataset_list}; using the copy in the repository."
+        echo "  cp ${repo_dataset_list} ${home_dataset_list}"
+    else
+        echo "ERROR: no dataset list at ${home_dataset_list} or ${repo_dataset_list}" >&2
+        exit 1
+    fi
+fi
+export MV_DATASET_LIST
+echo "Dataset list: ${MV_DATASET_LIST}"
 
 # Size class does not predict the memory these need: FreshPRINCE's three are ordinary
 # sized on disk and still exhausted 128 GiB. Set every class to the same tier.

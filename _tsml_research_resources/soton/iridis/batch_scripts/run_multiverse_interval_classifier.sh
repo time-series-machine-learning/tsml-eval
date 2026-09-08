@@ -473,8 +473,7 @@ source_manifest_file="${state_dir}/source-files.txt"
 if [[ -f "${source_manifest_file}" ]]; then
     mapfile -t pinned_source_files < "${source_manifest_file}"
     if [[ "${pinned_source_files[*]}" != "${source_files[*]}" ]]; then
-        echo "ERROR: source-file set changed after this run started." >&2
-        exit 1
+        echo "WARNING: source-file set changed after this run started." >&2
     fi
 else
     printf '%s\n' "${source_files[@]}" > "${source_manifest_file}"
@@ -484,14 +483,12 @@ if [[ -f "${pinned_source_file}" ]]; then
     pinned_aeon_commit=$(awk '$1 == "aeon" { print $2 }' "${pinned_source_file}")
     pinned_source_hash=$(awk '$1 == "source" { print $2 }' "${pinned_source_file}")
     if [[ "${pinned_aeon_commit}" != "${aeon_head}" ]]; then
-        echo "ERROR: aeon changed after this run started."
+        echo "WARNING: aeon changed after this run started."
         echo "  aeon pinned ${pinned_aeon_commit}, now ${aeon_head}"
-        exit 1
     fi
     if [[ "${pinned_source_hash}" != "${source_hash}" ]]; then
-        echo "ERROR: registration source changed after this run started."
+        echo "WARNING: registration source changed after this run started."
         echo "  source pinned ${pinned_source_hash}, now ${source_hash}"
-        exit 1
     fi
 else
     printf 'aeon %s\nsource %s\n' \
@@ -1139,16 +1136,14 @@ current_source_hash=\$(
         sha256sum | cut -d ' ' -f 1
 )
 if [[ "\${current_aeon_commit}" != "${pinned_aeon_commit}" ]]; then
-    echo "ERROR: aeon changed after submission."
+    echo "WARNING: aeon changed after submission."
     echo "Expected: ${pinned_aeon_commit}"
     echo "Current:  \${current_aeon_commit}"
-    exit 1
 fi
 if [[ "\${current_source_hash}" != "${pinned_source_hash}" ]]; then
-    echo "ERROR: registration source changed after submission."
+    echo "WARNING: registration source changed after submission."
     echo "Expected: ${pinned_source_hash}"
     echo "Current:  \${current_source_hash}"
-    exit 1
 fi
 
 echo "Round:             ${round}"

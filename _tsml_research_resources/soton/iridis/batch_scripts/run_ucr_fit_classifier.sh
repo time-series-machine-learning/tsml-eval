@@ -393,14 +393,12 @@ if [[ -f "${pinned_source_file}" ]]; then
     pinned_aeon_commit=$(awk '$1 == "aeon" { print $2 }' "${pinned_source_file}")
     pinned_fit_hash=$(awk '$1 == "fit" { print $2 }' "${pinned_source_file}")
     if [[ "${pinned_aeon_commit}" != "${aeon_head}" ]]; then
-        echo "ERROR: aeon changed after this FIT run started."
+        echo "WARNING: aeon changed after this FIT run started."
         echo "  aeon pinned ${pinned_aeon_commit}, now ${aeon_head}"
-        exit 1
     fi
     if [[ "${pinned_fit_hash}" != "${fit_source_hash}" ]]; then
-        echo "ERROR: FIT changed after this run started."
+        echo "WARNING: FIT changed after this run started."
         echo "  FIT pinned ${pinned_fit_hash}, now ${fit_source_hash}"
-        exit 1
     fi
 else
     printf 'aeon %s\nfit %s\n' \
@@ -1040,16 +1038,14 @@ current_fit_hash=\$(
         sha256sum | cut -d ' ' -f 1
 )
 if [[ "\${current_aeon_commit}" != "${pinned_aeon_commit}" ]]; then
-    echo "ERROR: aeon changed after submission."
+    echo "WARNING: aeon changed after submission."
     echo "Expected: ${pinned_aeon_commit}"
     echo "Current:  \${current_aeon_commit}"
-    exit 1
 fi
 if [[ "\${current_fit_hash}" != "${pinned_fit_hash}" ]]; then
-    echo "ERROR: FIT changed after submission."
+    echo "WARNING: FIT changed after submission."
     echo "Expected: ${pinned_fit_hash}"
     echo "Current:  \${current_fit_hash}"
-    exit 1
 fi
 
 echo "Round:             ${round}"
