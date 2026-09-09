@@ -176,6 +176,20 @@ def _ranking_loss(embeddings, labels, distance):
 
     Returns None when the batch has no anchor with both a positive and a
     negative, which the authors' version would raise on.
+
+    Evaluated as one dense expression rather than the authors' loop over anchors
+    and positives. The loop is what the paper describes, but at the archive
+    settings a batch holds ``batch_size * (2 * aug_positives + 1)`` embeddings,
+    44 by default, and every case is repeated, so each anchor has around ten
+    positives. That is roughly 440 Python iterations per optimiser step, each
+    launching several small CUDA kernels, and launch latency then decides the
+    runtime rather than the arithmetic: measured at about 3.5 seconds a step for
+    a small encoder on an H200, which timed LSST out of a 60 hour job at epoch
+    91 of 100. The value is unchanged; only the order of the reduction differs.
+
+    Memory is cubic in the batch, ``n * n * n`` floats for the pairwise
+    differences, which is 85k elements at the defaults. A much larger
+    ``batch_size`` or ``aug_positives`` would need this chunked over anchors.
     """
     if distance == "Cosine":
         matrix = -torch.cosine_similarity(
@@ -185,20 +199,23 @@ def _ranking_loss(embeddings, labels, distance):
         matrix = torch.cdist(embeddings, embeddings, p=2)
 
     same = labels.reshape(1, -1) == labels.reshape(-1, 1)
-    violations = []
-    for anchor in range(matrix.shape[0]):
-        negatives = matrix[anchor][~same[anchor]]
-        if negatives.numel() == 0:
-            continue
-        positives = same[anchor].nonzero().flatten()
-        for positive in positives[positives != anchor]:
-            gap = matrix[anchor, positive]
-            closer = negatives[negatives <= gap]
-            violations.append(torch.sigmoid(gap - closer).sum())
-
-    if not violations:
+    negative = ~same
+    # a positive is a same-class case other than the anchor, and an anchor with
+    # no negative is skipped entirely, as in the authors' loop
+    pairs = same & ~torch.eye(
+        matrix.shape[0], dtype=torch.bool, device=matrix.device
+    )
+    pairs = pairs & negative.any(dim=1, keepdim=True)
+    if not pairs.any():
         return None
-    return torch.atan(torch.stack(violations)).mean()
+
+    # difference[anchor, positive, other] = d(anchor, positive) - d(anchor, other)
+    difference = matrix.unsqueeze(2) - matrix.unsqueeze(1)
+    # the wrongly ranked ones: a negative at least as close as the positive is
+    wrong = negative.unsqueeze(1) & (difference >= 0)
+    violations = (torch.sigmoid(difference) * wrong).sum(dim=2)
+
+    return torch.atan(violations)[pairs].mean()
 
 
 class RankSCLClassifier(BaseClassifier):
