@@ -154,3 +154,9 @@ debug.py
 
 # MacOs files
 .DS_Store
+
+# Keras checkpoints left in the working directory by aeon deep learners. Their
+# ModelCheckpoint writes "<time_ns>.keras" relative to the CWD, which for a
+# controller job is this repository, and a job killed before _fit finishes never
+# removes it. Untracked files block the starters, so ignore them.
+*.keras
