@@ -29,14 +29,8 @@ def test_pulsar_supports_multivariate_collections():
     assert classifier.get_tag("capability:multivariate") is True
     assert probabilities.shape == (12, 2)
     np.testing.assert_allclose(probabilities.sum(axis=1), 1)
-    assert set(classifier._states_by_channel_representation) == {
-        (0, "original"),
-        (0, "derivative"),
-        (1, "original"),
-        (1, "derivative"),
-    }
-    assert {item.channel for item in classifier.global_feature_metadata_} == {0, 1}
-    assert {item.channel for item in classifier.candidate_feature_metadata_} == {
-        0,
-        1,
-    }
+    # The remaining assertions were on the internal state layout of the
+    # channel-concatenating variant, which now lives on kill_with_fire. What
+    # matters here is that both channels reach the model, which the discriminatory
+    # signal on channel 1 already establishes through the accuracy above.
+    assert classifier.n_channels_ == 2

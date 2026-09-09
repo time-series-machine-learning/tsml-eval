@@ -63,6 +63,7 @@ interval_based_regressors = [
     ["randomintervals-500", "catch22-intervals-500"],
     ["randomintervalregressor", "randomintervals", "catch22-intervals"],
     ["quantregressor", "quant"],
+    ["pulsarregressor", "pulsar"],
     ["fire", "fireregressor"],
     "fire-et",
     ["shareddrcif", "shareddrcifregressor"],
@@ -521,6 +522,10 @@ def _set_regressor_interval_based(
         from aeon.regression.interval_based import QUANTRegressor
 
         return QUANTRegressor(random_state=random_state, **kwargs)
+    elif r == "pulsarregressor" or r == "pulsar":
+        from tsml_eval._wip.regression._pulsar_regressor import PULSARRegressor
+
+        return PULSARRegressor(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif r == "fire" or r == "fireregressor":
         from tsml_eval._wip.regression._fire_regressor import FIRERegressor
 
