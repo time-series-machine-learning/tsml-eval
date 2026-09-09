@@ -1,6 +1,0 @@
-BIDMC32HR_disc
-BIDMC32SpO2_disc
-FaceDetection
-FordChallenge
-STEW
-Skoda
