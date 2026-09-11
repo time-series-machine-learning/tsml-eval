@@ -58,9 +58,15 @@ fi
 # version test would refuse a working environment.
 echo "Checking this aeon accepts low-variance input."
 "$python_executable" - <<'PYTHON'
+import sys
+
 import numpy as np
 import aeon
 from aeon.classification import DummyClassifier
+
+MESSAGE = """  This aeon refuses low-variance input, so all six EmoPain jobs
+  would fail in seconds. It needs f8db0d3e2 (#3598, 2026-07-07), which is
+  newer than v1.5.0. Install aeon from main into tsml-eval-gpu first."""
 
 print(f"  aeon {aeon.__version__} at {aeon.__file__}")
 # one channel with std ~1e-12 and a nonzero range, which is exactly what aeon's
@@ -73,13 +79,8 @@ try:
 except ValueError as error:
     if "too little variation" not in str(error):
         raise
-    raise SystemExit(
-        "  This aeon refuses low-variance input, so all six EmoPain jobs would
-"
-        "  fail in seconds. It needs f8db0d3e2 (#3598, 2026-07-07), which is
-"
-        "  newer than v1.5.0. Install aeon from main into tsml-eval-gpu first."
-    ) from None
+    print(MESSAGE, file=sys.stderr)
+    raise SystemExit(1) from None
 print("  ok: low-variance input is accepted")
 PYTHON
 
