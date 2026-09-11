@@ -100,6 +100,25 @@ bash run_ucr_reference.sh --device gpu --check
 bash run_ucr_reference.sh --device gpu
 ```
 
+To stage the run while `DictionaryBased` results are still being copied, start
+only that category on the CPU queue:
+
+```bash
+bash run_ucr_reference.sh --device cpu --category DictionaryBased --check
+bash run_ucr_reference.sh --device cpu --category DictionaryBased
+```
+
+This category filter also applies to its automatic successor. Once copying has
+finished, launch the full run with:
+
+```bash
+bash run_ucr_reference.sh
+```
+
+The full launch keeps the dictionary results already present and adds the other
+categories. Repeat `--category` to stage several categories together, for example
+`--category DictionaryBased --category IntervalBased`.
+
 The second launch adds GPU work to the same state; subsequent supervisors retain
 both devices. A later CPU-only refill does not silently narrow an existing full
 run. `--no-chain` submits one cycle without arming a new supervisor; it does not

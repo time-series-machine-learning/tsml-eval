@@ -92,6 +92,14 @@ class ControllerTests(unittest.TestCase):
         self.assertEqual(by_name["ProximityTree"]["key"], "proximitytree-aeon")
         self.assertFalse(any("PreVal" in str(r) or "Experimental" in str(r) for r in c["classifiers"]))
 
+    def test_category_filter_only_plans_dictionary_results(self):
+        """A staged launch can fill DictionaryBased while copied results settle."""
+        self.c["classifiers"][0]["category"] = "DictionaryBased"
+        groups = ctl.plan(self.c, ["A", "B"], self.state, set(), ("cpu", "gpu"), ("DictionaryBased",))
+        tasks = [task for batch in groups.values() for task in batch]
+        self.assertTrue(tasks)
+        self.assertTrue(all(task["classifier"] == "Dummy" for task in tasks))
+
     def test_live_and_accounting_lag_are_reserved(self):
         """A temporarily absent scheduler record must not create duplicate work."""
         job, task = self.job()
