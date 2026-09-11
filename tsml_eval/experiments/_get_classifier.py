@@ -48,6 +48,8 @@ dictionary_based_classifiers = [
     ["mrsqmclassifier", "mrsqm"],
 ]
 distance_based_classifiers = [
+    "proximitytree-aeon",
+    "pf-aeon",
     ["kneighborstimeseriesclassifier", "dtw", "1nn-dtw"],
     ["ed", "1nn-euclidean", "1nn-ed"],
     ["msm", "1nn-msm"],
@@ -71,6 +73,7 @@ feature_based_classifiers = [
     "tsfresh-nofs",
     ["tsfreshclassifier", "tsfresh"],
     ["signatureclassifier", "signatures"],
+    ["tdmvdcclassifier", "tdmvdc"],
 ]
 hybrid_classifiers = [
     ["hivecotev1", "hc1"],
@@ -78,6 +81,7 @@ hybrid_classifiers = [
     ["ristclassifier", "rist", "rist-extrat"],
 ]
 interval_based_classifiers = [
+    ["intervalforestclassifier", "intervalforest"],
     "rstsf-500",
     ["rstsfclassifier", "rstsf", "r-stsf"],
     "rise-500",
@@ -124,6 +128,7 @@ other_classifiers = [
     "dummyclassifier-sklearn",
 ]
 shapelet_based_classifiers = [
+    "stc-aeon",
     "stc-2hour",
     ["shapelettransformclassifier", "stc"],
     "stc-unequal",
@@ -517,6 +522,14 @@ def _set_classifier_distance_based(
         from tsml.distance_based import GRAILClassifier
 
         return GRAILClassifier(**kwargs)
+    elif c == "proximitytree-aeon":
+        from aeon.classification.distance_based import ProximityTree
+
+        return ProximityTree(random_state=random_state, **kwargs)
+    elif c == "pf-aeon":
+        from aeon.classification.distance_based import ProximityForest
+
+        return ProximityForest(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "proximitytree" or c == "proximitytreeclassifier":
         from tsml_eval._wip.pf._pt import ProximityTree
 
@@ -605,6 +618,10 @@ def _set_classifier_feature_based(
         from aeon.classification.feature_based import SignatureClassifier
 
         return SignatureClassifier(random_state=random_state, **kwargs)
+    elif c == "tdmvdcclassifier" or c == "tdmvdc":
+        from aeon.classification.feature_based import TDMVDCClassifier
+
+        return TDMVDCClassifier(n_jobs=n_jobs, **kwargs)
     else:
         raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
 
@@ -640,7 +657,16 @@ def _set_classifier_hybrid(c, random_state, n_jobs, fit_contract, checkpoint, kw
 def _set_classifier_interval_based(
     c, random_state, n_jobs, fit_contract, checkpoint, kwargs
 ):
-    if c == "rstsf-500":
+    if c == "intervalforestclassifier" or c == "intervalforest":
+        from aeon.classification.interval_based import IntervalForestClassifier
+
+        return IntervalForestClassifier(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "rstsf-500":
         from aeon.classification.interval_based import RSTSF
 
         return RSTSF(
@@ -1028,7 +1054,16 @@ def _set_classifier_other(c, random_state, n_jobs, fit_contract, checkpoint, kwa
 def _set_classifier_shapelet_based(
     c, random_state, n_jobs, fit_contract, checkpoint, kwargs
 ):
-    if c == "stc-2hour":
+    if c == "stc-aeon":
+        from aeon.classification.shapelet_based import ShapeletTransformClassifier
+
+        return ShapeletTransformClassifier(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "stc-2hour":
         from tsml_eval._wip.shapelets.early_abandon._stc3 import (
             ShapeletTransformClassifier,
         )
