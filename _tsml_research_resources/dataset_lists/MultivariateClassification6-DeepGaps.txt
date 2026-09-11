@@ -1,7 +1,4 @@
 Alzheimers
-AustraliaRainfall_disc
-BIDMC32HR_disc
-BIDMC32SpO2_disc
 EigenWorms
 Locust2022
 PhotoStimulation

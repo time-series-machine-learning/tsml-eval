@@ -1,26 +1,21 @@
 #!/bin/bash
-# Start both deep-learner gap-fill controllers on IridisX's Early Access H200
-# partition.
+# Start the deep-learner gap-fill controller on IridisX's Early Access H200 queue.
 #
-# Ten missing resample-0 results across three classifiers:
+# Six experiments, each closing a dataset or bringing one within one job of it:
 #
-#   ConvTran   Alzheimers, EigenWorms, PhotoStimulation
-#   TS2Vec     AustraliaRainfall_disc, Locust2022, Tiselac, USCActivity
-#   LiteTIME   BIDMC32HR_disc, BIDMC32SpO2_disc, USCActivity
+#   ConvTran   Alzheimers, EigenWorms, PhotoStimulation   CUDA OOM on the A100
+#   TS2Vec     Locust2022, Tiselac, USCActivity           60 hour probe timeouts
 #
-# Both configs read the same nine-dataset union list and let the controller work
-# out the pairs: it counts a dataset done when its testResample0.csv exists, and
-# every combination in the list other than the ten above already has one. The
-# summary below prints what each classifier is still missing so that is visible
-# before anything is queued.
+# ConvTran's three complete their datasets outright, taking the scored set from
+# 56 to 59 of 64.
 #
-# Two controllers because gpu_check is per configuration: a torch check would pass
-# while TensorFlow saw no GPU, so ConvTran and TS2Vec are queued separately from
-# the Keras LiteTIME.
+# One controller now, not two. LiteTIME is withheld from the tables, so the Keras
+# half no longer closes anything, and AustraliaRainfall_disc is deferred from the
+# collection, so it is out of the dataset list.
 #
-# EmoPain is not here and is not a gap this can close. aeon rejects it before fit,
-# "input collection has too little variation (std <= 1e-07)", for every aeon
-# classifier, which is a data problem rather than a resource one.
+# TS2Vec will repeat its timeouts without the current checkout: it needs both the
+# vendored-package import fix and the probe fix, so this refuses to run against a
+# stale tree.
 
 set -euo pipefail
 
@@ -32,12 +27,11 @@ data_dir="/home/${USER}/Data/Multiverse"
 results_dir="/home/${USER}/Results/Multiverse"
 python_executable="/home/${USER}/.conda/envs/tsml-eval-gpu/bin/python"
 required_branch="ajb/gpu"
-dataset_list="${script_dir}/dataset_lists/MultivariateClassification9-DeepGaps.txt"
+dataset_list="${script_dir}/dataset_lists/MultivariateClassification6-DeepGaps.txt"
 
 # config : state directory suffix
 configs=(
     "multiverse_core_gapfill_deep_torch_gpu_iridisx_i7_h200.toml:torch"
-    "multiverse_core_gapfill_deep_keras_gpu_iridisx_i7_h200.toml:keras"
 )
 
 for command_name in flock git pgrep pkill setsid squeue; do
@@ -73,7 +67,7 @@ fi
 # nothing, which is fine; a count of nine means its results directory has gone.
 echo "Gaps the controllers will submit:"
 pending_total=0
-for classifier in ConvTran TS2Vec LiteTIME; do
+for classifier in ConvTran TS2Vec; do
     predictions_dir="${results_dir}/DeepLearning/${classifier}/Predictions"
     pending=""
     while read -r dataset; do
@@ -148,7 +142,7 @@ for entry in "${configs[@]}"; do
 done
 
 echo
-echo "Both gap-fill controllers are running."
+echo "The gap-fill controller is running."
 echo "ConvTran's three failed with CUDA out of memory on the A100 partition; the H200"
 echo "NVL carries 141 GB against 40 or 80 there, which is the reason to expect these"
 echo "to pass rather than any change to memory_mb_levels, which governs host RAM."
