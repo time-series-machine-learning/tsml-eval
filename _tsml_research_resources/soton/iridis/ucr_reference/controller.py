@@ -548,6 +548,34 @@ def print_report(c, ds, counts, state, complete, live=None, details=False):
             print(f"BLOCKED {k}: {r['reason']}; attempts={r['attempts']}; log={r.get('log', '-')}")
 
 
+def restart_stopped(c):
+    """Archive stopped state under the controller lock after checking Slurm."""
+    root = Path(c["state_dir"])
+    if not (root / "STOP").is_file():
+        raise RuntimeError("Restart requires a stopped controller. Run controller.py stop first.")
+    old = read_json(root / "run-config.json", c)
+    prefixes = {c["job_prefix"], old["job_prefix"]}
+    live = query_slurm(c)
+    active = [jid for jid, job in live.items()
+              if any(job["name"].startswith(prefix + "-") for prefix in prefixes)]
+    if active:
+        raise RuntimeError("Cannot restart while reference jobs are live: " + ", ".join(active)
+                           + ". Cancel them or wait for them to finish.")
+    # Preserve the locked inode and caches; move only controller-owned state.
+    keep = {"controller.lock", "archives", "numba-cache", "STOP"}
+    entries = [entry for entry in root.iterdir() if entry.name not in keep]
+    archive_root = root / "archives"
+    if root.is_symlink() or archive_root.is_symlink() or any(p.is_symlink() for p in entries):
+        raise RuntimeError("Refusing to archive state through symbolic links")
+    archive = archive_root / (time.strftime("%Y%m%d-%H%M%S") + "-" + uuid.uuid4().hex[:8])
+    archive.mkdir(parents=True)
+    for entry in entries:
+        entry.rename(archive / entry.name)
+    # Clear STOP last, so interrupted cleanup cannot restart submissions.
+    (root / "STOP").rename(archive / "STOP")
+    print(f"Archived stopped controller state: {archive}. Prediction files preserved.")
+
+
 def run_cycle(c, args):
     """Reconcile and refill bounded CPU/GPU allocations."""
     ds = datasets(c)
@@ -571,6 +599,8 @@ def run_cycle(c, args):
         print("Dry run: no scheduler calls, imports, submissions or state changes. Use --check on Iridis to validate data and environments.")
         return
     with locked(Path(c["state_dir"]) / "controller.lock"):
+        if getattr(args, "restart", False):
+            restart_stopped(c)
         if (Path(c["state_dir"]) / "STOP").exists():
             print("STOP file present: no submission or successor.")
             return
@@ -694,12 +724,16 @@ def main(argv=None):
     parser.add_argument("--dataset-list")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--check", action="store_true")
+    parser.add_argument("--restart", action="store_true",
+                        help="Archive stopped state after verifying no reference jobs are live.")
     parser.add_argument("--no-chain", action="store_true")
     parser.add_argument("--details", action="store_true")
     parser.add_argument("--offline", action="store_true")
     parser.add_argument("--watch", type=int, default=0)
     parser.add_argument("--task", type=Path)
     args = parser.parse_args(argv)
+    if args.restart and (args.action != "run" or args.dry_run):
+        parser.error("--restart requires run and cannot be combined with --dry-run")
     c = load_config(args.config.resolve(), args)
     if args.action == "run":
         run_cycle(c, args)

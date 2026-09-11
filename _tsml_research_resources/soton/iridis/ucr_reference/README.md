@@ -231,3 +231,20 @@ scripts. The CPU constructor check passed for 43/46 classifiers locally; the loc
 environment lacked `mrsqm`, `mrseql` and `roughpy`. Iridis dependency and GPU
 execution checks remain to be run on the cluster. No Slurm jobs were submitted
 during local validation.
+
+### Restart after stopping or changing configuration
+
+After stopping refills and cancelling or finishing all reference jobs, run:
+
+```bash
+bash run_ucr_reference.sh --device cpu --restart --check
+bash run_ucr_reference.sh --device cpu
+```
+
+`--restart` requires STOP and checks Slurm before archiving old state and logs
+under `.ucr-reference-state/archives/`. It preserves prediction files and the
+controller lock, clears STOP last, and lets the new run rebuild its state from
+existing test results. It refuses cleanup while reference workers, supervisors
+or other jobs with the reference prefix are live. Ordinary launches and automatic
+supervisors still honour STOP; cleanup never happens implicitly. A dry run cannot
+be combined with restart. Restart daily email reporting separately afterward.

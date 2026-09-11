@@ -315,6 +315,39 @@ class ControllerTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "missing from this state"):
                 ctl.run_cycle(self.c, self.args)
 
+    def test_restart_archives_state_preserving_results_and_lock(self):
+        root = Path(self.c["state_dir"])
+        root.mkdir(parents=True)
+        for name in ("STOP", "controller.lock", "state.json", "provenance.json"):
+            (root / name).write_text("{}")
+        (root / "batches").mkdir()
+        (root / "batches" / "task.log").write_text("old log")
+        paths = self.put_result(train="train")
+        with patch.object(ctl, "query_slurm", return_value={}):
+            ctl.restart_stopped(self.c)
+        self.assertFalse((root / "STOP").exists())
+        self.assertFalse((root / "state.json").exists())
+        self.assertTrue((root / "controller.lock").exists())
+        archive, = (root / "archives").iterdir()
+        self.assertEqual((archive / "batches" / "task.log").read_text(), "old log")
+        self.assertTrue(all(p.exists() for p in paths))
+
+    def test_restart_refuses_live_jobs_and_preserves_stop(self):
+        root = Path(self.c["state_dir"])
+        root.mkdir(parents=True)
+        (root / "STOP").touch()
+        with patch.object(ctl, "query_slurm", return_value={
+            "123": {"name": self.c["job_prefix"] + "-cpu-test"}
+        }):
+            with self.assertRaisesRegex(RuntimeError, "jobs are live"):
+                ctl.restart_stopped(self.c)
+        self.assertTrue((root / "STOP").exists())
+        self.assertFalse((root / "archives").exists())
+
+    def test_restart_requires_stop(self):
+        with self.assertRaisesRegex(RuntimeError, "requires a stopped"):
+            ctl.restart_stopped(self.c)
+
     def test_stop_file_prevents_scheduler_calls(self):
         """A delayed supervisor honours STOP without cancelling active jobs."""
         stop = Path(self.c["state_dir"]) / "STOP"
