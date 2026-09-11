@@ -7,7 +7,9 @@
 # release. The check below refuses to queue against an aeon that still raises,
 # because six jobs would otherwise fail in seconds exactly as they did before.
 #
-# Six jobs, roughly twenty minutes of GPU time in total.
+# Seven jobs, roughly twenty minutes of GPU time in total. XCM is pinned to the
+# fixed window the other 65 XCM results use, not the cross-validated search the
+# lookup name now resolves to.
 
 set -euo pipefail
 
@@ -64,7 +66,7 @@ import numpy as np
 import aeon
 from aeon.classification import DummyClassifier
 
-MESSAGE = """  This aeon refuses low-variance input, so all six EmoPain jobs
+MESSAGE = """  This aeon refuses low-variance input, so every EmoPain job
   would fail in seconds. It needs f8db0d3e2 (#3598, 2026-07-07), which is
   newer than v1.5.0. Install aeon from main into tsml-eval-gpu first."""
 
@@ -139,7 +141,7 @@ fi
 
 echo
 echo "EmoPain GPU controller started: ConvTran, DisjointCNN, PatchMTSC, TimesNet,"
-echo "TimesURL and TS2Vec, one job each. Expect them back within the hour."
+echo "TimesURL, TS2Vec and XCM, one job each. Expect them back within the hour."
 echo "log: ${state_dir}/supervisor.log"
 echo
 squeue -u "$USER" -p gpu

@@ -30,7 +30,8 @@
 # Cost is small. EmoPain is 968 x 30 x 200, between Heartbeat and PhonemeSpectra in
 # size, and the recorded fit times on those put the six at roughly: ConvTran 35s,
 # PatchMTSC 30s, TimesNet 1m, TS2Vec 90s, TimesURL 5m, DisjointCNN 10m. Twenty
-# minutes of GPU time in total, one job each.
+# minutes of GPU time in total, one job each. XCM joins them: it is the seventh
+# estimator whose only remaining gap is EmoPain.
 #
 # Unlike the IridisX configurations this needs no gpu_check and no framework split:
 # the Hali GPU runs have never used one, so torch and Keras estimators sit together.
@@ -87,6 +88,16 @@ verbose = true
 [classifier_kwargs.DisjointCNN]
 verbose = true
 
+# window_size pins this to the fixed-parameter XCM. The lookup name XCM resolves
+# to the per-dataset cross-validated search, but the 65 XCM results already in the
+# archive are the single fit at window 0.8, and the leaderboard reports that run.
+# An unpinned job here would put one tuned result in a column of fixed ones. The
+# lookup applies its grid with setdefault, so an explicit value wins, and 0.8 is
+# also the class default, which is why the other 65 carry it.
+[classifier_kwargs.XCM]
+window_size = 0.8
+verbose = true
+
 [[categories]]
 name = "DeepLearning"
-classifiers = ["ConvTran", "DisjointCNN", "PatchMTSC", "TimesNet", "TimesURL", "TS2Vec"]
+classifiers = ["ConvTran", "DisjointCNN", "PatchMTSC", "TimesNet", "TimesURL", "TS2Vec", "XCM"]
