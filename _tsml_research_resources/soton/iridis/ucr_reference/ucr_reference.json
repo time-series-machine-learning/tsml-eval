@@ -1,0 +1,446 @@
+{
+  "username": "ajb2u23",
+  "email": "ajb2u23@soton.ac.uk",
+  "repo_dir": "/iridisfs/home/{username}/Code/tsml-eval",
+  "aeon_dir": "/iridisfs/home/{username}/Code/aeon",
+  "data_dir": "/iridisfs/home/{username}/Data/UCR",
+  "results_root": "/iridisfs/home/{username}/Results/UCR",
+  "dataset_list": "{repo_dir}/_tsml_research_resources/dataset_lists/UnivariateClassification112-UCR2018Clean.txt",
+  "python": "/home/{username}/.conda/envs/tsml-eval/bin/python",
+  "resamples": 30,
+  "max_attempts": 10,
+  "max_failures": 3,
+  "max_rounds": 5000,
+  "refill_minutes": 15,
+  "job_prefix": "ucr-reference",
+  "time_limit": "60:00:00",
+  "cpu": {
+    "partition": "batch",
+    "max_jobs": 4,
+    "max_cpus": 192,
+    "node_memory_gib": 630,
+    "memory_gib": [
+      4,
+      8,
+      16,
+      32,
+      64,
+      128,
+      256,
+      620
+    ],
+    "waves_per_job": 8
+  },
+  "gpu": {
+    "partition": "gpu",
+    "max_jobs": 2,
+    "cpus": 4,
+    "memory_gib": [
+      16,
+      32,
+      64,
+      128
+    ],
+    "commands_per_job": 8,
+    "module": "apptainer/1.5.0",
+    "container": "/iridisfs/home/{username}/scratch/tensorflow_sandbox",
+    "python": "python"
+  },
+  "classifiers": [
+    {
+      "name": "ROCKET",
+      "class": "RocketClassifier",
+      "category": "ConvolutionBased",
+      "device": "cpu",
+      "train": false
+    },
+    {
+      "name": "MiniRocket",
+      "class": "MiniRocketClassifier",
+      "category": "ConvolutionBased",
+      "device": "cpu",
+      "train": false
+    },
+    {
+      "name": "MultiRocket",
+      "class": "MultiRocketClassifier",
+      "category": "ConvolutionBased",
+      "device": "cpu",
+      "train": false
+    },
+    {
+      "name": "Arsenal",
+      "class": "Arsenal",
+      "category": "ConvolutionBased",
+      "device": "cpu",
+      "train": true
+    },
+    {
+      "name": "Hydra",
+      "class": "HydraClassifier",
+      "category": "ConvolutionBased",
+      "device": "cpu",
+      "train": false
+    },
+    {
+      "name": "MrHydra",
+      "class": "MultiRocketHydraClassifier",
+      "category": "ConvolutionBased",
+      "device": "cpu",
+      "train": false
+    },
+    {
+      "name": "TimeCNNClassifier",
+      "class": "TimeCNNClassifier",
+      "category": "DeepLearning",
+      "device": "gpu",
+      "train": false
+    },
+    {
+      "name": "EncoderClassifier",
+      "class": "EncoderClassifier",
+      "category": "DeepLearning",
+      "device": "gpu",
+      "train": false
+    },
+    {
+      "name": "FCNClassifier",
+      "class": "FCNClassifier",
+      "category": "DeepLearning",
+      "device": "gpu",
+      "train": false
+    },
+    {
+      "name": "InceptionTimeClassifier",
+      "class": "InceptionTimeClassifier",
+      "category": "DeepLearning",
+      "device": "gpu",
+      "train": false
+    },
+    {
+      "name": "IndividualInceptionClassifier",
+      "class": "IndividualInceptionClassifier",
+      "category": "DeepLearning",
+      "device": "gpu",
+      "train": false
+    },
+    {
+      "name": "MLPClassifier",
+      "class": "MLPClassifier",
+      "category": "DeepLearning",
+      "device": "gpu",
+      "train": false
+    },
+    {
+      "name": "ResNetClassifier",
+      "class": "ResNetClassifier",
+      "category": "DeepLearning",
+      "device": "gpu",
+      "train": false
+    },
+    {
+      "name": "LITETimeClassifier",
+      "class": "LITETimeClassifier",
+      "category": "DeepLearning",
+      "device": "gpu",
+      "train": false
+    },
+    {
+      "name": "IndividualLITEClassifier",
+      "class": "IndividualLITEClassifier",
+      "category": "DeepLearning",
+      "device": "gpu",
+      "train": false
+    },
+    {
+      "name": "DisjointCNNClassifier",
+      "class": "DisjointCNNClassifier",
+      "category": "DeepLearning",
+      "device": "gpu",
+      "train": false
+    },
+    {
+      "name": "IndividualBOSS",
+      "class": "IndividualBOSS",
+      "category": "DictionaryBased",
+      "device": "cpu",
+      "train": false
+    },
+    {
+      "name": "BOSS",
+      "class": "BOSSEnsemble",
+      "category": "DictionaryBased",
+      "device": "cpu",
+      "train": true
+    },
+    {
+      "name": "CBOSS",
+      "class": "ContractableBOSS",
+      "category": "DictionaryBased",
+      "device": "cpu",
+      "train": true
+    },
+    {
+      "name": "TDE",
+      "class": "TemporalDictionaryEnsemble",
+      "category": "DictionaryBased",
+      "device": "cpu",
+      "train": true
+    },
+    {
+      "name": "IndividualTDE",
+      "class": "IndividualTDE",
+      "category": "DictionaryBased",
+      "device": "cpu",
+      "train": false
+    },
+    {
+      "name": "WEASEL",
+      "class": "WEASEL",
+      "category": "DictionaryBased",
+      "device": "cpu",
+      "train": false
+    },
+    {
+      "name": "WEASEL_V2",
+      "class": "WEASEL_V2",
+      "category": "DictionaryBased",
+      "device": "cpu",
+      "train": true
+    },
+    {
+      "name": "MUSE",
+      "class": "MUSE",
+      "category": "DictionaryBased",
+      "device": "cpu",
+      "train": false
+    },
+    {
+      "name": "REDCOMETS",
+      "class": "REDCOMETS",
+      "category": "DictionaryBased",
+      "device": "cpu",
+      "train": false
+    },
+    {
+      "name": "MrSQM",
+      "class": "MrSQMClassifier",
+      "category": "DictionaryBased",
+      "device": "cpu",
+      "train": false
+    },
+    {
+      "name": "MrSEQL",
+      "class": "MrSEQLClassifier",
+      "category": "DictionaryBased",
+      "device": "cpu",
+      "train": true
+    },
+    {
+      "name": "EE",
+      "class": "ElasticEnsemble",
+      "category": "DistanceBased",
+      "device": "cpu",
+      "train": false
+    },
+    {
+      "name": "1NN-DTW",
+      "class": "KNeighborsTimeSeriesClassifier",
+      "category": "DistanceBased",
+      "device": "cpu",
+      "train": false
+    },
+    {
+      "name": "ProximityTree",
+      "class": "ProximityTree",
+      "category": "DistanceBased",
+      "device": "cpu",
+      "train": false,
+      "key": "proximitytree-aeon"
+    },
+    {
+      "name": "PF",
+      "class": "ProximityForest",
+      "category": "DistanceBased",
+      "device": "cpu",
+      "train": false,
+      "key": "pf-aeon"
+    },
+    {
+      "name": "Catch22",
+      "class": "Catch22Classifier",
+      "category": "FeatureBased",
+      "device": "cpu",
+      "train": false
+    },
+    {
+      "name": "Signatures",
+      "class": "SignatureClassifier",
+      "category": "FeatureBased",
+      "device": "cpu",
+      "train": false
+    },
+    {
+      "name": "Summary",
+      "class": "SummaryClassifier",
+      "category": "FeatureBased",
+      "device": "cpu",
+      "train": false
+    },
+    {
+      "name": "TSFresh",
+      "class": "TSFreshClassifier",
+      "category": "FeatureBased",
+      "device": "cpu",
+      "train": false
+    },
+    {
+      "name": "FreshPRINCE",
+      "class": "FreshPRINCEClassifier",
+      "category": "FeatureBased",
+      "device": "cpu",
+      "train": false
+    },
+    {
+      "name": "TDMVDC",
+      "class": "TDMVDCClassifier",
+      "category": "FeatureBased",
+      "device": "cpu",
+      "train": false
+    },
+    {
+      "name": "HC1",
+      "class": "HIVECOTEV1",
+      "category": "Hybrid",
+      "device": "cpu",
+      "train": false
+    },
+    {
+      "name": "HC2",
+      "class": "HIVECOTEV2",
+      "category": "Hybrid",
+      "device": "cpu",
+      "train": false
+    },
+    {
+      "name": "RIST",
+      "class": "RISTClassifier",
+      "category": "Hybrid",
+      "device": "cpu",
+      "train": false
+    },
+    {
+      "name": "CIF",
+      "class": "CanonicalIntervalForestClassifier",
+      "category": "IntervalBased",
+      "device": "cpu",
+      "train": true
+    },
+    {
+      "name": "DrCIF",
+      "class": "DrCIFClassifier",
+      "category": "IntervalBased",
+      "device": "cpu",
+      "train": true
+    },
+    {
+      "name": "IntervalForest",
+      "class": "IntervalForestClassifier",
+      "category": "IntervalBased",
+      "device": "cpu",
+      "train": false
+    },
+    {
+      "name": "RandomIntervals",
+      "class": "RandomIntervalClassifier",
+      "category": "IntervalBased",
+      "device": "cpu",
+      "train": false
+    },
+    {
+      "name": "SupervisedIntervals",
+      "class": "SupervisedIntervalClassifier",
+      "category": "IntervalBased",
+      "device": "cpu",
+      "train": false
+    },
+    {
+      "name": "RISE",
+      "class": "RandomIntervalSpectralEnsembleClassifier",
+      "category": "IntervalBased",
+      "device": "cpu",
+      "train": true
+    },
+    {
+      "name": "RSTSF",
+      "class": "RSTSF",
+      "category": "IntervalBased",
+      "device": "cpu",
+      "train": true
+    },
+    {
+      "name": "STSF",
+      "class": "SupervisedTimeSeriesForest",
+      "category": "IntervalBased",
+      "device": "cpu",
+      "train": true
+    },
+    {
+      "name": "TSF",
+      "class": "TimeSeriesForestClassifier",
+      "category": "IntervalBased",
+      "device": "cpu",
+      "train": true
+    },
+    {
+      "name": "QUANT",
+      "class": "QUANTClassifier",
+      "category": "IntervalBased",
+      "device": "cpu",
+      "train": true
+    },
+    {
+      "name": "STC",
+      "class": "ShapeletTransformClassifier",
+      "category": "ShapeletBased",
+      "device": "cpu",
+      "train": true,
+      "key": "stc-aeon"
+    },
+    {
+      "name": "RDST",
+      "class": "RDSTClassifier",
+      "category": "ShapeletBased",
+      "device": "cpu",
+      "train": false
+    },
+    {
+      "name": "SAST",
+      "class": "SASTClassifier",
+      "category": "ShapeletBased",
+      "device": "cpu",
+      "train": false
+    },
+    {
+      "name": "RSAST",
+      "class": "RSASTClassifier",
+      "category": "ShapeletBased",
+      "device": "cpu",
+      "train": false
+    },
+    {
+      "name": "Dummy",
+      "class": "DummyClassifier",
+      "category": "Other",
+      "device": "cpu",
+      "train": false
+    },
+    {
+      "name": "RotationForest",
+      "class": "RotationForestClassifier",
+      "category": "VectorBased",
+      "device": "cpu",
+      "train": false
+    }
+  ]
+}
