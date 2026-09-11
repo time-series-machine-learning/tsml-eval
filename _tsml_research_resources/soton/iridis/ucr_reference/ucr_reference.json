@@ -224,13 +224,6 @@
       "train": false
     },
     {
-      "name": "MrSQM",
-      "class": "MrSQMClassifier",
-      "category": "DictionaryBased",
-      "device": "cpu",
-      "train": false
-    },
-    {
       "name": "MrSEQL",
       "class": "MrSEQLClassifier",
       "category": "DictionaryBased",
