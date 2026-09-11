@@ -1,0 +1,93 @@
+# EmoPain alone, for the six deep learners that lack it, on Hali GPUs.
+#
+# EmoPain is the last core dataset missing for the deep learners, and it has never
+# been a compute problem. aeon's check_collection_variance raised before fit for
+# every aeon classifier:
+#
+#   ValueError: Input collection has too little variation: std <= 1e-07 for 1733
+#   case/channel pair(s)
+#
+# That count is exact and the cause is understood. The check flags pairs with
+# std <= 1e-7 AND range != 0, so genuinely constant channels pass and only
+# near-constant ones fail. Every flagged pair is in channels 13 to 25, a block of
+# sparse signals: 84% of their values are below 1e-5, but their peaks reach 1.55,
+# the same range as the motion channels. They are quiet, not mis-scaled, and
+# rescaling them would make them dominate any scale-sensitive method while
+# invalidating the 18 estimators that already have EmoPain results.
+#
+# aeon settled this upstream in #3598, which relegated the check to a warning.
+# That landed on 2026-07-07, eight days after v1.5.0 was tagged, so **this run
+# requires an aeon newer than any release**. Confirm before starting:
+#
+#   python -c "import aeon, inspect; from aeon.base import _base_collection as b; \
+#       print('warns' if 'raise_error=False' in inspect.getsource(b) else 'RAISES')"
+#
+# Hali rather than IridisX deliberately. IridisX shares one tsml-eval-gpu
+# environment between the A100 and i7_h200 partitions, so upgrading aeon there
+# would change the environment under the running RankSCL pass and split one result
+# set across two aeon versions. Hali is a separate machine with its own conda
+# environment, so the upgrade is isolated.
+#
+# Cost is small. EmoPain is 968 x 30 x 200, between Heartbeat and PhonemeSpectra in
+# size, and the recorded fit times on those put the six at roughly: ConvTran 35s,
+# PatchMTSC 30s, TimesNet 1m, TS2Vec 90s, TimesURL 5m, DisjointCNN 10m. Twenty
+# minutes of GPU time in total, one job each.
+#
+# Unlike the IridisX configurations this needs no gpu_check and no framework split:
+# the Hali GPU runs have never used one, so torch and Keras estimators sit together.
+
+[controller]
+username = "ajb"
+email = "ajb@uea.ac.uk"
+repo_dir = "/gpfs/home/{username}/Code/tsml-eval-gpu"
+data_dir = "/gpfs/home/{username}/Data/Multiverse"
+dataset_file = "/gpfs/home/{username}/Code/tsml-eval-gpu/_tsml_research_resources/dataset_lists/MultivariateClassification1-EmoPain.txt"
+results_root = "/gpfs/home/{username}/Results/Multiverse"
+state_dir = "/gpfs/home/{username}/Results/Multiverse/.controller-emopain-resample0-deep-gpu"
+resamples = 1
+max_attempts = 2
+all_categories_first_pass = true
+small_datasets_first = true
+# EmoPain is the point of this run, so nothing is excluded here. The core
+# configurations exclude it, which is why it has to be asked for separately.
+excluded_datasets = []
+validate_results = false
+
+[slurm]
+account = "cmp"
+partition = "gpu"
+qos = "gpu"
+max_active_tasks = 6
+cpus_per_task = 2
+gpus = 1
+memory_mb_levels = [64000]
+time_limit = "7-00:00:00"
+
+[environment]
+module = "python/anaconda/2024.10/3.12.7"
+conda_sh = "/gpfs/software/hali/python/anaconda/2024.10/etc/profile.d/conda.sh"
+env_name = "tsml-eval-gpu"
+numba_cache_dir = "/gpfs/home/{username}/Code/.cache/numba/tsml-eval-gpu"
+
+[classifier_kwargs.ConvTran]
+device = "cuda"
+verbose = true
+
+[classifier_kwargs.TS2Vec]
+device = "cuda"
+verbose = true
+
+[classifier_kwargs.TimesNet]
+device = "cuda"
+verbose = true
+
+[classifier_kwargs.TimesURL]
+device = "cuda"
+verbose = true
+
+[classifier_kwargs.DisjointCNN]
+verbose = true
+
+[[categories]]
+name = "DeepLearning"
+classifiers = ["ConvTran", "DisjointCNN", "PatchMTSC", "TimesNet", "TimesURL", "TS2Vec"]
