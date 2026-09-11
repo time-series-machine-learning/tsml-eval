@@ -1,16 +1,23 @@
 # Fill the remaining resample-0 gaps for the PyTorch deep learners, on IridisX's
 # i7_h200 Early Access queue.
 #
-# Six experiments over six datasets, each of which closes a dataset or brings one
-# within one job of closing:
+# Five experiments, each of which closes a dataset or brings one within one job
+# of closing:
 #
-#   ConvTran   Alzheimers, EigenWorms, PhotoStimulation
+#   ConvTran   Alzheimers, PhotoStimulation
 #   TS2Vec     Locust2022, Tiselac, USCActivity
 #
-# ConvTran's three each complete a dataset on their own, and they failed with CUDA
-# out of memory after two attempts on the A100 partition. The fix is the card, not
-# the host allocation: an H200 NVL carries 141 GB against the A100's 40 or 80, and
-# memory_mb_levels only ever governed host RAM.
+# EigenWorms is not here. ConvTran's attention is quadratic in series length and
+# EigenWorms is 17984 points, the longest in the core, so at the paper's batch
+# size of 16 it asks for 154.22 GiB against a 139.80 GiB card, with 135.01 GiB
+# free. It does not fit at any memory tier or on any empty node. Running it needs
+# a smaller batch than the paper specifies, which is a decision about what the
+# result means rather than about scheduling, so it is left out until that is made.
+#
+# ConvTran's two each complete a dataset on their own. They have already failed on
+# the H200, not only on the A100, but for a reason the memory tier below fixes:
+# both landed on pink7007 beside another job, and this partition has one GPU per
+# node, so they were sharing a card.
 #
 # TS2Vec's three exhausted a 60 hour job, which was two faults compounding. The
 # probe lacked the authors' MAX_SAMPLES cap, and it carried probability=True into
@@ -29,7 +36,7 @@ username = "ajb2u23"
 email = "ajb@uea.ac.uk"
 repo_dir = "/home/{username}/Code/tsml-eval-gpu"
 data_dir = "/home/{username}/Data/Multiverse"
-dataset_file = "/home/{username}/Code/tsml-eval-gpu/_tsml_research_resources/dataset_lists/MultivariateClassification6-DeepGaps.txt"
+dataset_file = "/home/{username}/Code/tsml-eval-gpu/_tsml_research_resources/dataset_lists/MultivariateClassification5-DeepGaps.txt"
 results_root = "/home/{username}/Results/Multiverse"
 state_dir = "/home/{username}/Results/Multiverse/.controller-core-gapfill-deep-torch-i7-h200"
 resamples = 1
@@ -55,7 +62,16 @@ cpus_per_task = 2
 gpus = 1
 nodes = 1
 gres = "gpu:h200:1"
-memory_mb_levels = [64000, 128000]
+# One tier, and it is the whole node. i7_h200 has a single GPU per node and the
+# node carries 125 GB, so a job asking for 64000 MB leaves room for a second
+# job beside it and the two then share one H200. That is what the earlier
+# failures were: ConvTran asked for 107.29 GiB on Alzheimers with 25.75 GiB
+# free, and 38.62 GiB on PhotoStimulation with 19.92 GiB free, both on
+# pink7007. Neither exceeds an empty 139.80 GiB card. Requesting the node
+# outright makes packing impossible, at the cost of no longer being able to
+# escalate, which is moot here because the constraint is GPU memory and
+# memory_mb_levels only ever governed host RAM.
+memory_mb_levels = [128000]
 time_limit = "2-12:00:00"
 
 [environment]

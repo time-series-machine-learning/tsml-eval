@@ -1,13 +1,16 @@
 #!/bin/bash
 # Start the deep-learner gap-fill controller on IridisX's Early Access H200 queue.
 #
-# Six experiments, each closing a dataset or bringing one within one job of it:
+# Five experiments, each closing a dataset or bringing one within one job of it:
 #
-#   ConvTran   Alzheimers, EigenWorms, PhotoStimulation   CUDA OOM on the A100
+#   ConvTran   Alzheimers, PhotoStimulation   shared a GPU; now one job per node
 #   TS2Vec     Locust2022, Tiselac, USCActivity           60 hour probe timeouts
 #
 # ConvTran's three complete their datasets outright, taking the scored set from
 # 56 to 59 of 64.
+#
+#   more than the 139.8 GiB card holds, so it needs a batch size the paper does not
+#   specify and that decision has not been made.
 #
 # One controller now, not two. LiteTIME is withheld from the tables, so the Keras
 # half no longer closes anything, and AustraliaRainfall_disc is deferred from the
@@ -27,7 +30,7 @@ data_dir="/home/${USER}/Data/Multiverse"
 results_dir="/home/${USER}/Results/Multiverse"
 python_executable="/home/${USER}/.conda/envs/tsml-eval-gpu/bin/python"
 required_branch="ajb/gpu"
-dataset_list="${script_dir}/dataset_lists/MultivariateClassification6-DeepGaps.txt"
+dataset_list="${script_dir}/dataset_lists/MultivariateClassification5-DeepGaps.txt"
 
 # config : state directory suffix
 configs=(
