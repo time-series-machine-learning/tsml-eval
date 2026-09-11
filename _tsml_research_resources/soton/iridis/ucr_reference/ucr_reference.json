@@ -224,13 +224,6 @@
       "train": false
     },
     {
-      "name": "MrSEQL",
-      "class": "MrSEQLClassifier",
-      "category": "DictionaryBased",
-      "device": "cpu",
-      "train": true
-    },
-    {
       "name": "EE",
       "class": "ElasticEnsemble",
       "category": "DistanceBased",

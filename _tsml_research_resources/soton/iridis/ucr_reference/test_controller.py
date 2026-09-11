@@ -88,7 +88,7 @@ class ControllerTests(unittest.TestCase):
     def test_manifest_scope_and_original_folders(self):
         """All configured classes have unique explicit targets."""
         c = ctl.load_config(ctl.HERE / "ucr_reference.json")
-        self.assertEqual(len(c["classifiers"]), 55)
+        self.assertEqual(len(c["classifiers"]), 54)
         self.assertEqual(sum(r["device"] == "gpu" for r in c["classifiers"]), 10)
         by_name = {r["name"]: r for r in c["classifiers"]}
         self.assertEqual(by_name["MrHydra"]["category"], "ConvolutionBased")

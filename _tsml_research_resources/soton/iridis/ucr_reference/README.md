@@ -1,7 +1,7 @@
 # UCR reference results on Iridis 6
 
 This workflow fills the clean **112 UCR datasets × 30 resamples (0–29)** for
-all 53 concrete classifiers in aeon's eight main classification families, plus
+52 concrete classifiers (excluding MrSQM and MrSEQL) in aeon's eight main classification families, plus
 Dummy and Rotation Forest. CPU and GPU runs share one manifest and monitor.
 
 The checked-in `ucr_reference_manifest.json` records the complete and missing
@@ -18,12 +18,12 @@ The 10 September 2026 local inventory gives:
 
 | Scope | Classifiers | Required experiments | Complete | Missing |
 |---|---:|---:|---:|---:|
-| CPU | 45 | 151,200 | 54,600 | 96,600 |
+| CPU | 44 | 147,840 | 52,710 | 95,130 |
 | GPU / deep learning | 10 | 33,600 | 0 | 33,600 |
-| Total | 55 | 184,800 | 54,600 | 130,200 |
+| Total | 54 | 181,440 | 52,710 | 128,730 |
 
-Thirteen classifiers are complete, five partial, and 37 have no results in their
-configured collections. BOSS, cBOSS, WEASEL_V2 and MrSEQL also need 5,850 train
+Thirteen classifiers are complete, four partial, and 37 have no results in their
+configured collections. BOSS, cBOSS and WEASEL_V2 also need 4,380 train
 files between them. These are the same experiments as their missing tests, not
 an extra 5,850 submitted commands. RIST needs all 30 StarLightCurves resamples.
 
@@ -90,7 +90,7 @@ checks run on the login node; GPU availability is checked inside worker
 allocations. Check output identifies missing packages or unsupported factory
 keys; they are not silently removed from the target list.
 
-Optional soft dependencies include packages used by MrSEQL, signatures,
+Optional soft dependencies include packages used by signatures,
 TSFresh, TDMVDC and RSAST. Install the packages reported by preflight in the
 appropriate environment using the repository's Iridis setup guide. This workflow
 does not install packages or change either checkout during a run.
