@@ -35,6 +35,13 @@ class ControllerTests(unittest.TestCase):
             dict(name="Dummy", category="Other", device="cpu", train=True, **{"class": "DummyClassifier"}),
             dict(name="TimeCNNClassifier", category="DeepLearning", device="gpu", train=False, **{"class": "TimeCNNClassifier"}),
         ]
+        self.c["reference_manifest"] = str(self.root / "reference-manifest.json")
+        target_keys = [ctl.key_for(row["name"], d, i)
+                       for row in self.c["classifiers"] for d in ("A", "B") for i in range(2)]
+        ctl.save_json(Path(self.c["reference_manifest"]), {
+            "schema": 1, "resamples": 2, "reference_complete": [],
+            "target_tasks": target_keys, "total_tasks": len(target_keys),
+        })
         self.c["cpu"].update(max_jobs=1, max_cpus=2, waves_per_job=1)
         self.c["gpu"].update(max_jobs=1, commands_per_job=2)
         self.state = dict(jobs={}, attempts={}, round=0)
@@ -91,6 +98,35 @@ class ControllerTests(unittest.TestCase):
         self.assertEqual(by_name["PF"]["key"], "pf-aeon")
         self.assertEqual(by_name["ProximityTree"]["key"], "proximitytree-aeon")
         self.assertFalse(any("PreVal" in str(r) or "Experimental" in str(r) for r in c["classifiers"]))
+
+    def test_category_filter_only_plans_dictionary_results(self):
+        """A staged launch can fill DictionaryBased while copied results settle."""
+        self.c["classifiers"][0]["category"] = "DictionaryBased"
+        groups = ctl.plan(self.c, ["A", "B"], self.state, set(), ("cpu", "gpu"), ("DictionaryBased",))
+        tasks = [task for batch in groups.values() for task in batch]
+        self.assertTrue(tasks)
+        self.assertTrue(all(task["classifier"] == "Dummy" for task in tasks))
+
+    def test_reference_manifest_excludes_d_drive_baseline(self):
+        """Only target keys are eligible when the reference inventory is complete."""
+        baseline_key = ctl.key_for("Dummy", "A", 0)
+        target_key = ctl.key_for("Dummy", "A", 1)
+        ctl.save_json(Path(self.c["reference_manifest"]), {
+            "schema": 1, "resamples": 2,
+            "reference_complete": [baseline_key],
+            "target_tasks": [k for k in [
+                ctl.key_for(row["name"], d, i)
+                for row in self.c["classifiers"] for d in ("A", "B") for i in range(2)
+            ] if k != baseline_key],
+            "total_tasks": 8,
+        })
+        baseline, targets, _ = ctl.load_manifest(self.c, ["A", "B"])
+        self.assertEqual(baseline, {baseline_key})
+        groups = ctl.plan(self.c, ["A", "B"], self.state, baseline,
+                          ("cpu", "gpu"), task_keys=targets)
+        keys = {task["key"] for batch in groups.values() for task in batch}
+        self.assertNotIn(baseline_key, keys)
+        self.assertIn(target_key, keys)
 
     def test_live_and_accounting_lag_are_reserved(self):
         """A temporarily absent scheduler record must not create duplicate work."""

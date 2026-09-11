@@ -52,7 +52,7 @@ def load_config(path, args=None):
     c = read_json(path)
     substitutions = {"username": c["username"], "repo_dir": c["repo_dir"]}
     substitutions["repo_dir"] = c["repo_dir"].format(**substitutions)
-    for key in ("repo_dir", "aeon_dir", "data_dir", "results_root", "dataset_list", "python"):
+    for key in ("repo_dir", "aeon_dir", "data_dir", "results_root", "dataset_list", "reference_manifest", "python"):
         c[key] = c[key].format(**substitutions)
     c["gpu"]["container"] = c["gpu"]["container"].format(**substitutions)
     if args:
@@ -104,6 +104,24 @@ def datasets(c):
     if any(not re.fullmatch(r"[A-Za-z0-9_.-]+", d) for d in rows):
         raise ValueError("Invalid dataset name")
     return rows
+
+
+def load_manifest(c, ds):
+    """Load the D-drive inventory manifest and validate its target universe."""
+    path = Path(c["reference_manifest"])
+    if not path.is_file():
+        raise FileNotFoundError(f"Reference manifest not found: {path}")
+    manifest = read_json(path)
+    if manifest.get("resamples") != c["resamples"]:
+        raise ValueError("Reference manifest resample count does not match configuration")
+    expected = {f"{row['name']}|{d}|{i}" for row in c["classifiers"] for d in ds for i in range(c["resamples"])}
+    baseline = set(manifest.get("reference_complete", []))
+    targets = set(manifest.get("target_tasks", []))
+    if baseline & targets or baseline | targets != expected:
+        raise ValueError("Reference manifest does not exactly cover the configured classifier/dataset/resample universe")
+    if manifest.get("total_tasks") != len(expected):
+        raise ValueError("Reference manifest total_tasks is inconsistent")
+    return baseline, targets, manifest
 
 
 def key_for(name, dataset, resample):
@@ -214,7 +232,7 @@ def runtime(c, device, gpu=False):
             c["gpu"]["container"], c["gpu"]["python"]]
 
 
-def check_estimators(c, device):
+def check_estimators(c, device, categories=None):
     """Construct every configured estimator in its execution environment."""
     # This command is called inside the target Python/container, before submission.
     import aeon
@@ -223,7 +241,7 @@ def check_estimators(c, device):
         raise RuntimeError(f"aeon imported from unexpected location: {aeon.__file__}")
     errors = {}
     for row in c["classifiers"]:
-        if row["device"] != device:
+        if row["device"] != device or (categories and row["category"] not in categories):
             continue
         try:
             with contextlib.redirect_stdout(sys.stderr):
@@ -243,7 +261,7 @@ def make_classifier(row, resample):
     return estimator
 
 
-def preflight(c, config_path, devices):
+def preflight(c, config_path, devices, categories=None):
     """Validate data and dependencies without fitting classifiers on the login node."""
     for d in datasets(c):
         for split in ("TRAIN", "TEST"):
@@ -261,6 +279,8 @@ def preflight(c, config_path, devices):
     for device in devices:
         args = runtime(c, device) + [str(HERE / "controller.py"), "check-estimators",
                                     "--config", str(config_path), "--device", device]
+        for category in categories or ():
+            args += ["--category", category]
         if device == "gpu":
             # Apptainer comes from the same module used by existing GPU scripts.
             args = ["bash", "-lc", f"module load {shlex.quote(c['gpu']['module'])}; exec {shlex.join(args)}"]
@@ -338,7 +358,7 @@ def active_tasks(state):
     return {t["key"] for j in state["jobs"].values() if j["stage"] != "RECONCILED" for t in j["tasks"]}
 
 
-def plan(c, ds, state, complete, devices):
+def plan(c, ds, state, complete, devices, categories=None, task_keys=None):
     """Interleave missing resamples across classifiers and memory tiers."""
     reserved = active_tasks(state)
     groups = defaultdict(list)
@@ -350,7 +370,9 @@ def plan(c, ds, state, complete, devices):
             for row in c["classifiers"]:
                 k = key_for(row["name"], d, i)
                 record = state["attempts"].get(k, {})
-                if row["device"] not in devices or k in complete or k in reserved or record.get("blocked"):
+                if (task_keys is not None and k not in task_keys
+                        or row["device"] not in devices or (categories and row["category"] not in categories)
+                        or k in complete or k in reserved or record.get("blocked")):
                     continue
                 initial = 2 if sizes[d] > 300 * 1024**2 else 1 if sizes[d] > 60 * 1024**2 else 0
                 tier = record.get("tier", min(initial, len(c[row["device"]]["memory_gib"]) - 1))
@@ -434,7 +456,7 @@ def submit_batch(c, state, state_path, config_path, device, tier, tasks):
     print(f"Submitted {device} {len(tasks)} commands, {c[device]['memory_gib'][tier]} GiB/task: {job_id}", flush=True)
 
 
-def schedule_successor(c, state, state_path, config_path, live, device):
+def schedule_successor(c, state, state_path, config_path, live, device, categories=None):
     """Keep one delayed, short reconciliation job alive while work remains."""
     previous = state.get("supervisor", {})
     if previous.get("id") in live and previous["id"] != os.environ.get("SLURM_JOB_ID"):
@@ -455,8 +477,11 @@ def schedule_successor(c, state, state_path, config_path, live, device):
              f"#SBATCH --output={c['state_dir']}/%j-supervisor.out",
              f"#SBATCH --error={c['state_dir']}/%j-supervisor.err", "#SBATCH --mail-type=NONE", ""]
     lines += shell_environment(c)
-    lines += [shlex.join([c["python"], str(HERE / "controller.py"), "run",
-                         "--config", str(config_path), "--device", device])]
+    successor = [c["python"], str(HERE / "controller.py"), "run",
+                 "--config", str(config_path), "--device", device]
+    for category in categories or ():
+        successor += ["--category", category]
+    lines += [shlex.join(successor)]
     script.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
     state["supervisor"] = dict(name=name, stage="SUBMITTING", id=None)
     save_json(state_path, state)
@@ -474,7 +499,10 @@ def print_report(c, ds, counts, state, complete, live=None, details=False):
     print(f"{'CLASSIFIER':32} {'TEST':>7} {'TRAIN*':>7} {'DONE':>7} {'DATASETS':>9} {'DEVICE':>7}")
     for row in c["classifiers"]:
         r = counts[row["name"]]
-        print(f"{row['name']:32} {r['test']:7} {str(r['train']) if row['train'] else '-':>7} {r['complete']:7} {r['datasets']:9} {row['device']:>7}")
+        done = sum(k.startswith(row["name"] + "|") for k in complete)
+        full = sum(all(key_for(row["name"], d, i) in complete
+                       for i in range(c["resamples"])) for d in ds)
+        print(f"{row['name']:32} {r['test']:7} {str(r['train']) if row['train'] else '-':>7} {done:7} {full:9} {row['device']:>7}")
     total = len(ds) * c["resamples"] * len(c["classifiers"])
     blocked = {k: v for k, v in state["attempts"].items() if v.get("blocked") and k not in complete}
     reserved = active_tasks(state) - complete
@@ -523,14 +551,21 @@ def print_report(c, ds, counts, state, complete, live=None, details=False):
 def run_cycle(c, args):
     """Reconcile and refill bounded CPU/GPU allocations."""
     ds = datasets(c)
-    complete, counts = inventory(c, ds)
+    local_complete, counts = inventory(c, ds)
+    reference_complete, target_tasks, _ = load_manifest(c, ds)
+    complete = reference_complete | local_complete
     state_path = Path(c["state_dir"]) / "state.json"
     empty_state = dict(jobs={}, attempts={}, round=0)
     devices = ("cpu", "gpu") if args.device == "all" else (args.device,)
+    valid_categories = {row["category"] for row in c["classifiers"]}
+    categories = tuple(dict.fromkeys(getattr(args, "category", []) or ()))
+    unknown_categories = set(categories) - valid_categories
+    if unknown_categories:
+        raise ValueError(f"Unknown category: {', '.join(sorted(unknown_categories))}")
     if args.dry_run:
         state = read_json(state_path, empty_state)
         print_report(c, ds, counts, state, complete)
-        groups = plan(c, ds, state, complete, devices)
+        groups = plan(c, ds, state, complete, devices, categories, target_tasks)
         for (device, tier), tasks in sorted(groups.items()):
             print(f"Plan: {device}, {c[device]['memory_gib'][tier]} GiB/task, {len(tasks):,} missing unreserved experiments")
         print("Dry run: no scheduler calls, imports, submissions or state changes. Use --check on Iridis to validate data and environments.")
@@ -560,7 +595,7 @@ def run_cycle(c, args):
         # First launch validates every selected CPU/GPU environment before sbatch.
         unchecked = [d for d in devices if d not in state.get("checked_devices", [])]
         if unchecked or args.check:
-            preflight(c, snapshot, devices if args.check else unchecked)
+            preflight(c, snapshot, devices if args.check else unchecked, categories)
         if args.check:
             print("Data, source paths and all selected estimator constructors passed; nothing submitted.")
             return
@@ -574,7 +609,7 @@ def run_cycle(c, args):
         save_json(state_path, state)
         if state["round"] > c["max_rounds"]:
             raise RuntimeError("Maximum reconciliation rounds reached; inspect outstanding failures.")
-        groups = plan(c, ds, state, complete, devices)
+        groups = plan(c, ds, state, complete, devices, categories, target_tasks)
         for device in devices:
             occupied = sum(j["device"] == device and j["stage"] != "RECONCILED" for j in state["jobs"].values())
             for _ in range(max(0, c[device]["max_jobs"] - occupied)):
@@ -592,7 +627,7 @@ def run_cycle(c, args):
         has_work = any(groups.values()) or bool(active_tasks(state) - complete)
         if has_work and not args.no_chain and state["round"] < c["max_rounds"]:
             scope = "all" if len(devices) == 2 else devices[0]
-            schedule_successor(c, state, state_path, snapshot, live, scope)
+            schedule_successor(c, state, state_path, snapshot, live, scope, categories)
         elif not has_work:
             print("No runnable work remains. Blocked failures, if listed, are incomplete results.")
 
@@ -652,6 +687,8 @@ def main(argv=None):
     parser.add_argument("action", choices=["run", "monitor", "worker", "check-estimators", "verify", "stop"])
     parser.add_argument("--config", type=Path, default=HERE / "ucr_reference.json")
     parser.add_argument("--device", choices=["all", "cpu", "gpu"], default="all")
+    parser.add_argument("--category", action="append", default=[],
+                        help="Run only this result category; repeat for several categories.")
     parser.add_argument("--results-root")
     parser.add_argument("--data-dir")
     parser.add_argument("--dataset-list")
@@ -671,7 +708,9 @@ def main(argv=None):
             parser.error("--watch must be zero or at least five seconds")
         while True:
             ds = datasets(c)
-            complete, counts = inventory(c, ds)
+            local_complete, counts = inventory(c, ds)
+            reference_complete, _, _ = load_manifest(c, ds)
+            complete = reference_complete | local_complete
             state = read_json(Path(c["state_dir"]) / "state.json", dict(jobs={}, attempts={}))
             live = None if args.offline else query_slurm(c)
             print_report(c, ds, counts, state, complete, live, args.details)
@@ -683,7 +722,7 @@ def main(argv=None):
             parser.error("worker requires --task")
         worker(c, args.task)
     elif args.action == "check-estimators":
-        check_estimators(c, args.device)
+        check_estimators(c, args.device, args.category)
     elif args.action == "verify":
         if read_json(Path(c["state_dir"]) / "provenance.json") != provenance(c):
             raise RuntimeError("Source provenance changed after submission")
