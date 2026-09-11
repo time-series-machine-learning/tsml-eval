@@ -74,7 +74,7 @@
       "class": "Arsenal",
       "category": "ConvolutionBased",
       "device": "cpu",
-      "train": true
+      "train": false
     },
     {
       "name": "Hydra",
@@ -172,21 +172,21 @@
       "class": "BOSSEnsemble",
       "category": "DictionaryBased",
       "device": "cpu",
-      "train": true
+      "train": false
     },
     {
       "name": "CBOSS",
       "class": "ContractableBOSS",
       "category": "DictionaryBased",
       "device": "cpu",
-      "train": true
+      "train": false
     },
     {
       "name": "TDE",
       "class": "TemporalDictionaryEnsemble",
       "category": "DictionaryBased",
       "device": "cpu",
-      "train": true
+      "train": false
     },
     {
       "name": "IndividualTDE",
@@ -207,7 +207,7 @@
       "class": "WEASEL_V2",
       "category": "DictionaryBased",
       "device": "cpu",
-      "train": true
+      "train": false
     },
     {
       "name": "MUSE",
@@ -321,14 +321,14 @@
       "class": "CanonicalIntervalForestClassifier",
       "category": "IntervalBased",
       "device": "cpu",
-      "train": true
+      "train": false
     },
     {
       "name": "DrCIF",
       "class": "DrCIFClassifier",
       "category": "IntervalBased",
       "device": "cpu",
-      "train": true
+      "train": false
     },
     {
       "name": "IntervalForest",
@@ -356,42 +356,42 @@
       "class": "RandomIntervalSpectralEnsembleClassifier",
       "category": "IntervalBased",
       "device": "cpu",
-      "train": true
+      "train": false
     },
     {
       "name": "RSTSF",
       "class": "RSTSF",
       "category": "IntervalBased",
       "device": "cpu",
-      "train": true
+      "train": false
     },
     {
       "name": "STSF",
       "class": "SupervisedTimeSeriesForest",
       "category": "IntervalBased",
       "device": "cpu",
-      "train": true
+      "train": false
     },
     {
       "name": "TSF",
       "class": "TimeSeriesForestClassifier",
       "category": "IntervalBased",
       "device": "cpu",
-      "train": true
+      "train": false
     },
     {
       "name": "QUANT",
       "class": "QUANTClassifier",
       "category": "IntervalBased",
       "device": "cpu",
-      "train": true
+      "train": false
     },
     {
       "name": "STC",
       "class": "ShapeletTransformClassifier",
       "category": "ShapeletBased",
       "device": "cpu",
-      "train": true,
+      "train": false,
       "key": "stc-aeon"
     },
     {

@@ -10,8 +10,7 @@ not copy any prediction files. Only newly produced files under the configured
 Iridis `Results/UCR` root are written and counted alongside that baseline.
 The
 PreVal ZIP, `TestOnly`, HC2 composition experiments and experimental variants
-are outside this run. Existing nonempty results are skipped. Existing train-file
-conventions are preserved; new collections are test-only. No extra normalisation
+are outside this run. Existing nonempty results are skipped. This first run is test-only for every classifier; train prediction files are neither required nor generated. No extra normalisation
 or predefined resamples are applied. Resample 0 uses the original archive split.
 
 The 10 September 2026 local inventory gives:
@@ -23,9 +22,7 @@ The 10 September 2026 local inventory gives:
 | Total | 54 | 181,440 | 52,710 | 128,730 |
 
 Thirteen classifiers are complete, four partial, and 37 have no results in their
-configured collections. BOSS, cBOSS and WEASEL_V2 also need 4,380 train
-files between them. These are the same experiments as their missing tests, not
-an extra 5,850 submitted commands. RIST needs all 30 StarLightCurves resamples.
+configured collections. Only nonempty test files count toward completion in this first run.
 
 ## Configuration and prerequisites
 

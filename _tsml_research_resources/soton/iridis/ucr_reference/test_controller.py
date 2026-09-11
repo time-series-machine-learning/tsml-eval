@@ -93,7 +93,7 @@ class ControllerTests(unittest.TestCase):
         by_name = {r["name"]: r for r in c["classifiers"]}
         self.assertEqual(by_name["MrHydra"]["category"], "ConvolutionBased")
         self.assertFalse(by_name["HC2"]["train"])
-        self.assertTrue(by_name["BOSS"]["train"])
+        self.assertTrue(all(not row["train"] for row in c["classifiers"]))
         self.assertEqual(by_name["STC"]["key"], "stc-aeon")
         self.assertEqual(by_name["PF"]["key"], "pf-aeon")
         self.assertEqual(by_name["ProximityTree"]["key"], "proximitytree-aeon")
