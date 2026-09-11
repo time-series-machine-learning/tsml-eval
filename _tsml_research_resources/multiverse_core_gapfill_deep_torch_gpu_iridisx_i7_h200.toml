@@ -38,6 +38,12 @@ all_categories_first_pass = false
 small_datasets_first = true
 excluded_datasets = []
 validate_results = false
+# Old job logs are not evidence about this run. The controller rebuilds failure
+# records by reading the .err files left in the output directory, so clearing
+# state.json alone changes nothing: the next cycle re-derives the same terminal
+# outcomes and submits nothing. These tasks failed under code since fixed, or on
+# a GPU shared with another job, so the logs are discarded rather than trusted.
+ignore_existing_failure_logs = true
 expected_branch = "ajb/gpu"
 
 [slurm]
