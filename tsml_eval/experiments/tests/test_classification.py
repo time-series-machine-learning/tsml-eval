@@ -25,6 +25,30 @@ from tsml_eval.utils.tests.test_results_writing import _check_classification_fil
 
 
 @pytest.mark.parametrize(
+    "key, class_name",
+    [
+        ("IntervalForest", "IntervalForestClassifier"),
+        ("TDMVDC", "TDMVDCClassifier"),
+        ("stc-aeon", "ShapeletTransformClassifier"),
+        ("pf-aeon", "ProximityForest"),
+        ("proximitytree-aeon", "ProximityTree"),
+    ],
+)
+def test_aeon_reference_factory_keys(key, class_name):
+    """Reference keys must resolve to aeon, including aliases shadowed by WIP code."""
+    if key == "TDMVDC":
+        pytest.importorskip("tsfresh")
+    estimator = get_classifier_by_name(key, random_state=7, n_jobs=1)
+    assert type(estimator).__name__ == class_name
+    assert type(estimator).__module__.startswith("aeon.")
+    params = estimator.get_params(deep=False)
+    if "random_state" in params:
+        assert params["random_state"] == 7
+    if "n_jobs" in params:
+        assert params["n_jobs"] == 1
+
+
+@pytest.mark.parametrize(
     "classifier",
     ["DummyClassifier-tsml", "DummyClassifier-aeon", "DummyClassifier-sklearn"],
 )
