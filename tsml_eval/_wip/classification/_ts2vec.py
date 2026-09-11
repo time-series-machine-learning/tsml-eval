@@ -17,9 +17,11 @@ For the UEA archive the authors evaluate with a support vector machine, chosen
 by grid search over C on the training representations (``train.py`` passes
 ``eval_protocol='svm'``), so that is the default here. Their grid sets
 ``probability=False``, which leaves an ``SVC`` unable to produce probability
-estimates, so this wrapper sets it True: aeon classifiers must implement
-``predict_proba``. That adds Platt scaling, fitted by internal cross-validation
-on the training data only.
+estimates, and aeon classifiers must implement ``predict_proba``. The search
+therefore runs with it off, as theirs does, and the selected C is refitted once
+with it on. Platt scaling is not free: libsvm fits it by an internal five-fold
+cross-validation on every fit, so carrying it through the grid would cost about
+six times the search.
 
 This wrapper is designed for aeon and therefore assumes input X is a 3D NumPy
 array with shape (n_cases, n_channels, n_timepoints). The original expects
@@ -251,7 +253,14 @@ class TS2VecClassifier(BaseClassifier):
 
         The SVM path mirrors ``tasks/_eval_protocols.py::fit_svm``: a plain SVC
         on very small or very unbalanced collections, otherwise a grid search
-        over C. ``probability=True`` is set so that ``predict_proba`` exists.
+        over C.
+
+        The SVM is built with ``probability=False``, which is what the authors'
+        grid sets. Platt scaling is not free: libsvm fits it by an internal
+        five-fold cross-validation inside every ``fit``, so an estimator carrying
+        ``probability=True`` into a ten-value grid over five folds costs about
+        300 SVC trainings rather than 50. ``_fit_probe`` turns it back on for a
+        single refit at the selected C, which is what ``predict_proba`` needs.
         """
         if self.probe == "logistic":
             # One-vs-rest, matching the authors' fit_lr and the TimesURL probe.
@@ -265,7 +274,7 @@ class TS2VecClassifier(BaseClassifier):
                 ),
             )
 
-        svm = SVC(C=np.inf, gamma="scale", probability=True, random_state=seed)
+        svm = SVC(C=np.inf, gamma="scale", probability=False, random_state=seed)
         if n_cases // self.n_classes_ < 5 or n_cases < 50:
             return svm
         return GridSearchCV(
@@ -274,6 +283,28 @@ class TS2VecClassifier(BaseClassifier):
              "kernel": ["rbf"], "gamma": ["scale"]},
             cv=5,
             n_jobs=1,
+        )
+
+    def _fit_probe(self, features, y, seed):
+        """Select the probe's parameters, then refit it with probabilities on.
+
+        The selection is the authors' own: their grid sets
+        ``probability=False``, and scoring uses ``predict``, which reads the
+        decision function either way, so the chosen C is unchanged. Only the
+        final estimator needs Platt scaling, because aeon classifiers must
+        implement ``predict_proba``.
+        """
+        probe = self._build_probe(features.shape[0], seed)
+        if self.probe == "logistic":
+            return probe.fit(features, y)
+        if isinstance(probe, GridSearchCV):
+            probe.fit(features, y)
+            parameters = probe.best_params_
+        else:
+            # the degenerate-case bypass: too few cases per class to select on
+            parameters = {"C": probe.C, "kernel": "rbf", "gamma": "scale"}
+        return SVC(probability=True, random_state=seed, **parameters).fit(
+            features, y
         )
 
     def _encode(self, X: np.ndarray) -> np.ndarray:
@@ -325,9 +356,7 @@ class TS2VecClassifier(BaseClassifier):
         )
         fit_features, fit_y = self._subsample(encoded, encoded_y, seed)
         self.probe_cases_ = int(fit_features.shape[0])
-        self.probe_ = self._build_probe(
-            self.probe_cases_, seed
-        ).fit(fit_features, fit_y)
+        self.probe_ = self._fit_probe(fit_features, fit_y, seed)
         return self
 
     def _check_shape(self, X: np.ndarray) -> None:
