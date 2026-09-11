@@ -126,5 +126,12 @@ for key in terminal:
 with open(path, "w") as handle:
     json.dump(state, handle, indent=2)
 print(f"\nCleared {len(terminal)} record(s). Previous state saved to {backup}.")
-print("Restart the controller and it will submit this work again.")
+print()
+print("This is only half the job. The controller rebuilds failure records by")
+print("reading the .err files still in the output directory, so unless the")
+print("configuration sets")
+print()
+print("    ignore_existing_failure_logs = true")
+print()
+print("the next cycle re-derives the same outcomes and submits nothing.")
 PYTHON
