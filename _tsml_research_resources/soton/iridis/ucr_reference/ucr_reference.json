@@ -6,6 +6,7 @@
   "data_dir": "/iridisfs/home/{username}/Data/UCR",
   "results_root": "/iridisfs/home/{username}/Results/UCR",
   "dataset_list": "{repo_dir}/_tsml_research_resources/dataset_lists/UnivariateClassification112-UCR2018Clean.txt",
+  "reference_manifest": "{repo_dir}/_tsml_research_resources/soton/iridis/ucr_reference/ucr_reference_manifest.json",
   "python": "/home/{username}/.conda/envs/tsml-eval/bin/python",
   "resamples": 30,
   "max_attempts": 10,

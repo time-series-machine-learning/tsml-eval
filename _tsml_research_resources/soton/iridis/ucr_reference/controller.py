@@ -52,7 +52,7 @@ def load_config(path, args=None):
     c = read_json(path)
     substitutions = {"username": c["username"], "repo_dir": c["repo_dir"]}
     substitutions["repo_dir"] = c["repo_dir"].format(**substitutions)
-    for key in ("repo_dir", "aeon_dir", "data_dir", "results_root", "dataset_list", "python"):
+    for key in ("repo_dir", "aeon_dir", "data_dir", "results_root", "dataset_list", "reference_manifest", "python"):
         c[key] = c[key].format(**substitutions)
     c["gpu"]["container"] = c["gpu"]["container"].format(**substitutions)
     if args:
@@ -104,6 +104,24 @@ def datasets(c):
     if any(not re.fullmatch(r"[A-Za-z0-9_.-]+", d) for d in rows):
         raise ValueError("Invalid dataset name")
     return rows
+
+
+def load_manifest(c, ds):
+    """Load the D-drive inventory manifest and validate its target universe."""
+    path = Path(c["reference_manifest"])
+    if not path.is_file():
+        raise FileNotFoundError(f"Reference manifest not found: {path}")
+    manifest = read_json(path)
+    if manifest.get("resamples") != c["resamples"]:
+        raise ValueError("Reference manifest resample count does not match configuration")
+    expected = {f"{row['name']}|{d}|{i}" for row in c["classifiers"] for d in ds for i in range(c["resamples"])}
+    baseline = set(manifest.get("reference_complete", []))
+    targets = set(manifest.get("target_tasks", []))
+    if baseline & targets or baseline | targets != expected:
+        raise ValueError("Reference manifest does not exactly cover the configured classifier/dataset/resample universe")
+    if manifest.get("total_tasks") != len(expected):
+        raise ValueError("Reference manifest total_tasks is inconsistent")
+    return baseline, targets, manifest
 
 
 def key_for(name, dataset, resample):
@@ -340,7 +358,7 @@ def active_tasks(state):
     return {t["key"] for j in state["jobs"].values() if j["stage"] != "RECONCILED" for t in j["tasks"]}
 
 
-def plan(c, ds, state, complete, devices, categories=None):
+def plan(c, ds, state, complete, devices, categories=None, task_keys=None):
     """Interleave missing resamples across classifiers and memory tiers."""
     reserved = active_tasks(state)
     groups = defaultdict(list)
@@ -352,7 +370,8 @@ def plan(c, ds, state, complete, devices, categories=None):
             for row in c["classifiers"]:
                 k = key_for(row["name"], d, i)
                 record = state["attempts"].get(k, {})
-                if (row["device"] not in devices or (categories and row["category"] not in categories)
+                if (task_keys is not None and k not in task_keys
+                        or row["device"] not in devices or (categories and row["category"] not in categories)
                         or k in complete or k in reserved or record.get("blocked")):
                     continue
                 initial = 2 if sizes[d] > 300 * 1024**2 else 1 if sizes[d] > 60 * 1024**2 else 0
@@ -480,7 +499,10 @@ def print_report(c, ds, counts, state, complete, live=None, details=False):
     print(f"{'CLASSIFIER':32} {'TEST':>7} {'TRAIN*':>7} {'DONE':>7} {'DATASETS':>9} {'DEVICE':>7}")
     for row in c["classifiers"]:
         r = counts[row["name"]]
-        print(f"{row['name']:32} {r['test']:7} {str(r['train']) if row['train'] else '-':>7} {r['complete']:7} {r['datasets']:9} {row['device']:>7}")
+        done = sum(k.startswith(row["name"] + "|") for k in complete)
+        full = sum(all(key_for(row["name"], d, i) in complete
+                       for i in range(c["resamples"])) for d in ds)
+        print(f"{row['name']:32} {r['test']:7} {str(r['train']) if row['train'] else '-':>7} {done:7} {full:9} {row['device']:>7}")
     total = len(ds) * c["resamples"] * len(c["classifiers"])
     blocked = {k: v for k, v in state["attempts"].items() if v.get("blocked") and k not in complete}
     reserved = active_tasks(state) - complete
@@ -529,7 +551,9 @@ def print_report(c, ds, counts, state, complete, live=None, details=False):
 def run_cycle(c, args):
     """Reconcile and refill bounded CPU/GPU allocations."""
     ds = datasets(c)
-    complete, counts = inventory(c, ds)
+    local_complete, counts = inventory(c, ds)
+    reference_complete, target_tasks, _ = load_manifest(c, ds)
+    complete = reference_complete | local_complete
     state_path = Path(c["state_dir"]) / "state.json"
     empty_state = dict(jobs={}, attempts={}, round=0)
     devices = ("cpu", "gpu") if args.device == "all" else (args.device,)
@@ -541,7 +565,7 @@ def run_cycle(c, args):
     if args.dry_run:
         state = read_json(state_path, empty_state)
         print_report(c, ds, counts, state, complete)
-        groups = plan(c, ds, state, complete, devices, categories)
+        groups = plan(c, ds, state, complete, devices, categories, target_tasks)
         for (device, tier), tasks in sorted(groups.items()):
             print(f"Plan: {device}, {c[device]['memory_gib'][tier]} GiB/task, {len(tasks):,} missing unreserved experiments")
         print("Dry run: no scheduler calls, imports, submissions or state changes. Use --check on Iridis to validate data and environments.")
@@ -585,7 +609,7 @@ def run_cycle(c, args):
         save_json(state_path, state)
         if state["round"] > c["max_rounds"]:
             raise RuntimeError("Maximum reconciliation rounds reached; inspect outstanding failures.")
-        groups = plan(c, ds, state, complete, devices, categories)
+        groups = plan(c, ds, state, complete, devices, categories, target_tasks)
         for device in devices:
             occupied = sum(j["device"] == device and j["stage"] != "RECONCILED" for j in state["jobs"].values())
             for _ in range(max(0, c[device]["max_jobs"] - occupied)):
@@ -684,7 +708,9 @@ def main(argv=None):
             parser.error("--watch must be zero or at least five seconds")
         while True:
             ds = datasets(c)
-            complete, counts = inventory(c, ds)
+            local_complete, counts = inventory(c, ds)
+            reference_complete, _, _ = load_manifest(c, ds)
+            complete = reference_complete | local_complete
             state = read_json(Path(c["state_dir"]) / "state.json", dict(jobs={}, attempts={}))
             live = None if args.offline else query_slurm(c)
             print_report(c, ds, counts, state, complete, live, args.details)

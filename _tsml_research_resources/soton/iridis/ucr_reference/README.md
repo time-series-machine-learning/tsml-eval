@@ -4,7 +4,11 @@ This workflow fills the clean **112 UCR datasets × 30 resamples (0–29)** for
 all 54 concrete classifiers in aeon's eight main classification families, plus
 Dummy and Rotation Forest. CPU and GPU runs share one manifest and monitor.
 
-Only the explicitly configured collections under `Results/UCR` count. The
+The checked-in `ucr_reference_manifest.json` records the complete and missing
+keys found under `D:/Results/UCR`; it is a small metadata reference and does
+not copy any prediction files. Only newly produced files under the configured
+Iridis `Results/UCR` root are written and counted alongside that baseline.
+The
 PreVal ZIP, `TestOnly`, HC2 composition experiments and experimental variants
 are outside this run. Existing nonempty results are skipped. Existing train-file
 conventions are preserved; new collections are test-only. No extra normalisation
@@ -78,7 +82,7 @@ bash mail_ucr_reference_progress.sh --once
 ```
 
 The dry run is read-only and does not require Slurm, aeon imports or the GPU
-container. It displays counts from the configured UCR root. `--check` verifies
+container. It displays the D-drive baseline plus local Iridis output. `--check` verifies
 all data files and constructs every selected classifier in the actual CPU or
 container environment, without fitting anything or submitting jobs. The first
 real launch also performs these checks before its first submission. Constructor
@@ -118,6 +122,10 @@ bash run_ucr_reference.sh
 The full launch keeps the dictionary results already present and adds the other
 categories. Repeat `--category` to stage several categories together, for example
 `--category DictionaryBased --category IntervalBased`.
+
+If the D-drive inventory changes, regenerate the manifest before launching;
+the controller validates that its baseline and target keys exactly cover the
+configured classifier, dataset and resample universe.
 
 The second launch adds GPU work to the same state; subsequent supervisors retain
 both devices. A later CPU-only refill does not silently narrow an existing full
