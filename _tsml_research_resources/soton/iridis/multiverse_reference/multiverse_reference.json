@@ -1,0 +1,250 @@
+{
+ "username": "ajb2u23",
+ "email": "ajb2u23@soton.ac.uk",
+ "repo_dir": "/iridisfs/home/{username}/Code/tsml-eval",
+ "aeon_dir": "/iridisfs/home/{username}/Code/aeon",
+ "data_dir": "/iridisfs/home/{username}/Data/Multiverse",
+ "results_root": "/iridisfs/home/{username}/Results/Multiverse",
+ "dataset_list": "{repo_dir}/_tsml_research_resources/dataset_lists/MultivariateClassification66-MultiverseMini.txt",
+ "reference_manifest": "{repo_dir}/_tsml_research_resources/soton/iridis/multiverse_reference/multiverse_reference_manifest.json",
+ "python": "/home/{username}/.conda/envs/tsml-eval/bin/python",
+ "state_dir_name": ".multiverse-reference-state",
+ "resamples": 1,
+ "max_attempts": 10,
+ "max_failures": 3,
+ "max_rounds": 5000,
+ "refill_minutes": 15,
+ "job_prefix": "mv-reference",
+ "time_limit": "60:00:00",
+ "cpu": {
+  "partition": "batch",
+  "max_jobs": 4,
+  "max_cpus": 192,
+  "node_memory_gib": 630,
+  "memory_gib": [
+   4,
+   8,
+   16,
+   32,
+   64,
+   128,
+   256,
+   620
+  ],
+  "waves_per_job": 8
+ },
+ "gpu": {
+  "partition": "gpu",
+  "max_jobs": 2,
+  "cpus": 4,
+  "memory_gib": [
+   16,
+   32,
+   64,
+   128
+  ],
+  "commands_per_job": 8,
+  "module": "apptainer/1.5.0",
+  "container": "/iridisfs/home/{username}/scratch/tensorflow_sandbox",
+  "python": "python"
+ },
+ "classifiers": [
+  {
+   "name": "Arsenal",
+   "class": "Arsenal",
+   "category": "ConvolutionBased",
+   "device": "cpu",
+   "train": false
+  },
+  {
+   "name": "Catch22",
+   "class": "Catch22Classifier",
+   "category": "FeatureBased",
+   "device": "cpu",
+   "train": false
+  },
+  {
+   "name": "CIF",
+   "class": "CanonicalIntervalForestClassifier",
+   "category": "IntervalBased",
+   "device": "cpu",
+   "train": false
+  },
+  {
+   "name": "ConvTran",
+   "class": "ConvTranClassifier",
+   "category": "DeepLearning",
+   "device": "gpu",
+   "train": false,
+   "module": "tsml_eval."
+  },
+  {
+   "name": "DisjointCNN",
+   "class": "DisjointCNNClassifier",
+   "category": "DeepLearning",
+   "device": "gpu",
+   "train": false,
+   "module": "tsml_eval."
+  },
+  {
+   "name": "DrCIF",
+   "class": "DrCIFClassifier",
+   "category": "IntervalBased",
+   "device": "cpu",
+   "train": false
+  },
+  {
+   "name": "Dummy",
+   "class": "DummyClassifier",
+   "category": "Other",
+   "device": "cpu",
+   "train": false
+  },
+  {
+   "name": "H-InceptionTime",
+   "class": "InceptionTimeClassifier",
+   "category": "DeepLearning",
+   "device": "gpu",
+   "train": false
+  },
+  {
+   "name": "HC2",
+   "class": "HIVECOTEV2",
+   "category": "Hybrid",
+   "device": "cpu",
+   "train": false
+  },
+  {
+   "name": "LITETime-MV",
+   "class": "LITETimeClassifier",
+   "category": "DeepLearning",
+   "device": "gpu",
+   "train": false
+  },
+  {
+   "name": "MRHydra",
+   "class": "MultiRocketHydraClassifier",
+   "category": "ConvolutionBased",
+   "device": "cpu",
+   "train": false
+  },
+  {
+   "name": "MUSE",
+   "class": "MUSE",
+   "category": "DictionaryBased",
+   "device": "cpu",
+   "train": false
+  },
+  {
+   "name": "PatchMTSC",
+   "class": "PatchMTSCClassifier",
+   "category": "DeepLearning",
+   "device": "gpu",
+   "train": false,
+   "module": "tsml_eval."
+  },
+  {
+   "name": "QUANT",
+   "class": "QUANTClassifier",
+   "category": "IntervalBased",
+   "device": "cpu",
+   "train": false
+  },
+  {
+   "name": "RankSCL",
+   "class": "RankSCLClassifier",
+   "category": "DeepLearning",
+   "device": "gpu",
+   "train": false,
+   "module": "tsml_eval."
+  },
+  {
+   "name": "RDST",
+   "class": "RDSTClassifier",
+   "category": "ShapeletBased",
+   "device": "cpu",
+   "train": false
+  },
+  {
+   "name": "RIST",
+   "class": "RISTClassifier",
+   "category": "Hybrid",
+   "device": "cpu",
+   "train": false
+  },
+  {
+   "name": "ROCKET",
+   "class": "RocketClassifier",
+   "category": "ConvolutionBased",
+   "device": "cpu",
+   "train": false
+  },
+  {
+   "name": "STC",
+   "class": "ShapeletTransformClassifier",
+   "category": "ShapeletBased",
+   "device": "cpu",
+   "train": false
+  },
+  {
+   "name": "STSF",
+   "class": "SupervisedTimeSeriesForest",
+   "category": "IntervalBased",
+   "device": "cpu",
+   "train": false
+  },
+  {
+   "name": "Summary",
+   "class": "SummaryClassifier",
+   "category": "FeatureBased",
+   "device": "cpu",
+   "train": false
+  },
+  {
+   "name": "TDE",
+   "class": "TemporalDictionaryEnsemble",
+   "category": "DictionaryBased",
+   "device": "cpu",
+   "train": false
+  },
+  {
+   "name": "TimesNet",
+   "class": "TimesNetClassifier",
+   "category": "DeepLearning",
+   "device": "gpu",
+   "train": false,
+   "module": "tsml_eval."
+  },
+  {
+   "name": "TimesURL",
+   "class": "TimesURLClassifier",
+   "category": "DeepLearning",
+   "device": "gpu",
+   "train": false,
+   "module": "tsml_eval."
+  },
+  {
+   "name": "TS2Vec",
+   "class": "TS2VecClassifier",
+   "category": "DeepLearning",
+   "device": "gpu",
+   "train": false,
+   "module": "tsml_eval."
+  },
+  {
+   "name": "TSF",
+   "class": "TimeSeriesForestClassifier",
+   "category": "IntervalBased",
+   "device": "cpu",
+   "train": false
+  },
+  {
+   "name": "XCM",
+   "class": "XCMClassifier",
+   "category": "DeepLearning",
+   "device": "gpu",
+   "train": false,
+   "module": "tsml_eval."
+  }
+ ]
+}

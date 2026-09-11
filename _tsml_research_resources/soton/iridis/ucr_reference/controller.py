@@ -59,7 +59,8 @@ def load_config(path, args=None):
         for key in ("results_root", "data_dir", "dataset_list"):
             if getattr(args, key, None):
                 c[key] = str(Path(getattr(args, key)).resolve())
-    c["state_dir"] = str(Path(c["results_root"]) / ".ucr-reference-state")
+    c["state_dir"] = str(Path(c["results_root"])
+                         / c.get("state_dir_name", ".ucr-reference-state"))
     names = [r["name"] for r in c["classifiers"]]
     classes = [r["class"] for r in c["classifiers"]]
     if not names or len(names) != len(set(names)) or len(classes) != len(set(classes)):
@@ -256,8 +257,11 @@ def make_classifier(row, resample):
     from tsml_eval.experiments import get_classifier_by_name
 
     estimator = get_classifier_by_name(row.get("key", row["name"]), random_state=resample, n_jobs=1)
-    if type(estimator).__name__ != row["class"] or not type(estimator).__module__.startswith("aeon."):
-        raise ValueError(f"{row['name']} resolved to {type(estimator).__module__}.{type(estimator).__name__}, expected aeon {row['class']}")
+    # Ported estimators live outside aeon, so the expected home is per row. The
+    # default keeps the UCR reference run pinned to aeon as before.
+    prefix = row.get("module", "aeon.")
+    if type(estimator).__name__ != row["class"] or not type(estimator).__module__.startswith(prefix):
+        raise ValueError(f"{row['name']} resolved to {type(estimator).__module__}.{type(estimator).__name__}, expected {prefix}{row['class']}")
     return estimator
 
 
