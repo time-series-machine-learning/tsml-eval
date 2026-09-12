@@ -1,0 +1,286 @@
+% Prior-corrected CAWPE for HIVE-COTE 2.0.
+%
+% Self-contained section, intended to be \input into a paper. Requires:
+%   \usepackage{amsmath, amssymb, booktabs, graphicx}
+% and a \newtheorem{proposition}{Proposition} declaration if one is not already present.
+
+\section{Prior-Corrected Combination}
+\label{sec:prior-correction}
+
+\subsection{Background and notation}
+
+HIVE-COTE 2.0 (HC2)~\cite{middlehurst2021hc2} combines $M=4$ component classifiers, each
+built on a different representation of the series: the Shapelet Transform Classifier
+(STC), the Diverse Representation Canonical Interval Forest (DrCIF), Arsenal, and the
+Temporal Dictionary Ensemble (TDE). Let $\mathcal{D}=\{(\mathbf{x}_i,y_i)\}_{i=1}^{n}$ be
+a training set of series $\mathbf{x}_i$ with labels $y_i \in \mathcal{C} =
+\{1,\dots,C\}$, and let $\hat{p}_j(c \mid \mathbf{x})$ denote the probability estimate
+that component $j$ assigns to class $c$.
+
+Components are combined by CAWPE~\cite{large2019cawpe}, which weights each component by
+its training accuracy estimate raised to a fixed exponent $\alpha$ (default $\alpha=4$).
+Writing $\hat{a}_j$ for the out-of-bag accuracy estimate of component $j$, the weights
+and the combined posterior are
+\begin{equation}
+  w_j = \hat{a}_j^{\,\alpha},
+  \qquad
+  \hat{p}(c \mid \mathbf{x})
+  = \frac{\sum_{j=1}^{M} w_j \, \hat{p}_j(c \mid \mathbf{x})}
+         {\sum_{c' \in \mathcal{C}} \sum_{j=1}^{M} w_j \, \hat{p}_j(c' \mid \mathbf{x})}.
+  \label{eq:cawpe}
+\end{equation}
+The prediction is then $\hat{y}(\mathbf{x}) = \arg\max_{c} \hat{p}(c \mid \mathbf{x})$,
+with ties broken uniformly at random.
+
+\subsection{The decision rule implied by a loss}
+
+The rule $\hat{y} = \arg\max_c \hat{p}(c \mid \mathbf{x})$ minimises the expected
+$0/1$ loss, and therefore targets accuracy. It is not the optimal rule for balanced
+accuracy. Let $\pi_c = \Pr(y=c)$ denote the class prior, estimated from the training set
+as $\hat{\pi}_c = n_c / n$ with $n_c = |\{i : y_i = c\}|$. Balanced accuracy is the mean
+of the per-class recalls,
+\begin{equation}
+  \mathrm{BA} = \frac{1}{C} \sum_{c \in \mathcal{C}}
+    \Pr\!\left(\hat{y}(\mathbf{x}) = c \mid y = c\right),
+  \label{eq:ba}
+\end{equation}
+which is exactly the accuracy that would be obtained if every class were equally likely.
+Under a uniform prior $\pi'_c = 1/C$, Bayes' rule gives
+\begin{equation}
+  \Pr\!\left(y = c \mid \mathbf{x};\, \pi'\right)
+  \;\propto\; p(\mathbf{x} \mid y = c) \, \pi'_c
+  \;\propto\; \frac{\hat{p}(c \mid \mathbf{x})}{\pi_c},
+  \label{eq:bayes}
+\end{equation}
+since $p(\mathbf{x}\mid y=c) \propto \hat{p}(c\mid\mathbf{x})/\pi_c$. Dividing the
+combined posterior by the training prior therefore converts the accuracy-optimal rule
+into the balanced-accuracy-optimal one. This is a change of decision rule only: the
+probability estimates themselves, and every component, are left untouched.
+
+\subsection{Tempered prior correction}
+
+Equation~\eqref{eq:bayes} assumes $\hat{p}(c\mid\mathbf{x})$ is calibrated, so that the
+only discrepancy between the two rules is the prior. In practice the CAWPE posterior of
+Eq.~\eqref{eq:cawpe} is a renormalised weighted vote rather than a calibrated
+probability, and full correction over-shoots. We therefore introduce a single
+temperature parameter $\beta \in [0,1]$ and define the \emph{prior-corrected} posterior
+\begin{equation}
+  \boxed{\;
+  \hat{p}^{\,\beta}(c \mid \mathbf{x})
+  = \frac{\hat{p}(c \mid \mathbf{x}) \; \hat{\pi}_c^{\,-\beta}}
+         {\sum_{c' \in \mathcal{C}} \hat{p}(c' \mid \mathbf{x}) \; \hat{\pi}_{c'}^{\,-\beta}},
+  \qquad
+  \hat{y}^{\,\beta}(\mathbf{x}) = \arg\max_{c \in \mathcal{C}} \hat{p}^{\,\beta}(c \mid \mathbf{x}).
+  \;}
+  \label{eq:tempered}
+\end{equation}
+Equivalently, in the log domain the correction is an additive class-wise offset,
+$\log \hat{p}^{\,\beta}(c\mid\mathbf{x}) = \log \hat{p}(c\mid\mathbf{x}) - \beta \log
+\hat{\pi}_c + \mathrm{const}$, i.e.\ a shift of the decision boundary against frequent
+classes in proportion to their log-frequency. The parameter $\beta$ interpolates between
+the two rules: $\beta=0$ recovers standard HC2 exactly, and $\beta=1$ gives the Bayes
+rule for a uniform prior. Three properties follow directly.
+
+\begin{proposition}[Invariance on balanced data]
+If $\hat{\pi}_c = 1/C$ for all $c$, then $\hat{p}^{\,\beta} = \hat{p}$ for every $\beta$,
+and the predictions are unchanged.
+\end{proposition}
+\noindent The factor $\hat{\pi}_c^{-\beta} = C^{\beta}$ is constant in $c$ and cancels in
+the normalisation. The correction is thus inactive by construction on balanced problems
+and cannot harm them.
+
+\begin{proposition}[Invariance under degenerate estimates]
+\label{prop:degenerate}
+If $\hat{p}(\cdot\mid\mathbf{x})$ is a one-hot vector, then $\hat{y}^{\,\beta}(\mathbf{x})
+= \hat{y}(\mathbf{x})$ for every $\beta$.
+\end{proposition}
+\noindent Scaling the single non-zero entry by a positive constant cannot change which
+entry is largest. Prior correction therefore applies only to classifiers that emit
+genuinely soft estimates, and has no effect on hard-voting classifiers. We return to
+this in Section~\ref{sec:pc-comparison}.
+
+\begin{proposition}[Cost]
+Computing $\hat{y}^{\,\beta}$ for all test cases requires $O(nC)$ additional operations
+and no refitting, no access to the training series, and no additional model storage.
+\end{proposition}
+
+\subsection{Experimental setup}
+
+We evaluate on the 112 univariate UCR datasets~\cite{dau2019ucr} over 30 stratified
+resamples, reporting the mean over resamples per dataset and comparing classifiers with
+the Wilcoxon signed-rank test over the 112 paired dataset means. All HC2 variants are
+constructed from the same stored component predictions, so differences are attributable
+to the combination scheme alone and not to component variance. Datasets are grouped by
+imbalance ratio $\rho = \max_c n_c / \min_c n_c$: balanced ($\rho = 1$, 27 datasets),
+mild ($1 < \rho < 2$, 52), and imbalanced ($\rho \geq 2$, 33, of which 11 have
+$\rho \geq 5$).
+
+\subsection{Results}
+
+Table~\ref{tab:beta} reports both metrics as a function of $\beta$. The key observation
+is that mild correction is \emph{not} a trade between the two metrics: for
+$\beta \leq 0.75$ both accuracy and balanced accuracy improve simultaneously, and only
+full correction ($\beta=1$) sacrifices accuracy. This indicates that the CAWPE posterior
+is genuinely miscalibrated towards frequent classes, rather than merely being tuned to a
+different operating point.
+
+\begin{table}[t]
+\centering
+\caption{Effect of the prior-correction temperature $\beta$ on HC2. Mean over 112 UCR
+datasets and 30 resamples; $\Delta$ in percentage points against $\beta=0$; $p$ from a
+Wilcoxon signed-rank test over the 112 paired dataset means.}
+\label{tab:beta}
+\begin{tabular}{lcccccc}
+\toprule
+& \multicolumn{3}{c}{Accuracy} & \multicolumn{3}{c}{Balanced accuracy} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+$\beta$ & \% & $\Delta$ & $p$ & \% & $\Delta$ & $p$ \\
+\midrule
+$0$ (HC2)      & 89.301 & --- & --- & 87.244 & --- & --- \\
+$0.25$         & 89.429 & $+0.129$ & $0.0001$ & 87.640 & $+0.396$ & $<0.0001$ \\
+$\mathbf{0.50}$& \textbf{89.469} & $\mathbf{+0.169}$ & $\mathbf{0.0017}$ & 87.982 & $+0.738$ & $<0.0001$ \\
+$0.75$         & 89.341 & $+0.041$ & $0.0446$ & 88.227 & $+0.982$ & $<0.0001$ \\
+$1.00$         & 88.991 & $-0.310$ & $0.1808$ & \textbf{88.380} & $\mathbf{+1.135}$ & $<0.0001$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The effect is concentrated where the theory predicts. Table~\ref{tab:groups} breaks the
+$\beta=0.5$ result down by imbalance. Balanced datasets are unchanged to three decimal
+places, as required by Proposition~1. Gains in balanced accuracy grow monotonically with
+skew, reaching $+3.309$ percentage points on the most imbalanced group. Accuracy gains
+peak on mildly imbalanced data and turn slightly negative at $\rho \geq 5$, where a fixed
+$\beta = 0.5$ over-corrects.
+
+\begin{table}[t]
+\centering
+\caption{Change from prior correction at $\beta=0.5$, by imbalance ratio $\rho$.
+Percentage points, mean over 30 resamples.}
+\label{tab:groups}
+\begin{tabular}{lccc}
+\toprule
+Group & $n$ & $\Delta$ Accuracy & $\Delta$ Balanced accuracy \\
+\midrule
+Balanced ($\rho=1$)      & 27 & $+0.000$ & $+0.000$ \\
+Mild ($1<\rho<2$)        & 52 & $+0.258$ & $+0.402$ \\
+Imbalanced ($\rho\geq2$) & 33 & $+0.166$ & $+1.871$ \\
+Severe ($\rho\geq5$)     & 11 & $-0.149$ & $+3.309$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{A constant outperforms a tuned parameter}
+
+Since $\beta$ is a free parameter, an obvious refinement is to select it per dataset. We
+compared a fixed $\beta = 0.5$ against selecting $\beta$ from
+$\{0, 0.125, \dots, 1\}$ on the combined \emph{training} posterior, built from the
+components' own out-of-bag estimates, so that no test data is used. Tuning is worse than
+the constant on both metrics (Table~\ref{tab:tuning}): paired against the fixed setting
+it loses $0.046$ percentage points of accuracy and wins on only 25 of 112 datasets
+($p = 0.059$). The cause is a systematic bias in the selection signal: training-based
+selection chooses a mean $\beta$ of $0.167$ with a \emph{median} of $0.019$, that is, it
+usually declines to correct at all, against an oracle mean of $0.223$. The training
+posterior is evaluated against the same class distribution the components were fitted to,
+so the uncorrected rule appears better on training data than it is on test data.
+
+\begin{table}[t]
+\centering
+\caption{Selecting $\beta$ per dataset against a fixed value. Oracle selects $\beta$
+per dataset on test accuracy and is an upper bound, not a method.}
+\label{tab:tuning}
+\begin{tabular}{lcccc}
+\toprule
+& \multicolumn{2}{c}{Accuracy} & \multicolumn{2}{c}{Balanced accuracy} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+Selection of $\beta$ & \% & $\Delta$ & \% & $\Delta$ \\
+\midrule
+None ($\beta=0$)          & 89.301 & --- & 87.244 & --- \\
+Fixed $\beta=0.5$         & \textbf{89.469} & $\mathbf{+0.169}$ & 87.982 & $+0.738$ \\
+Tuned on train accuracy   & 89.423 & $+0.122$ & 87.664 & $+0.419$ \\
+Tuned on train bal.\ acc. & 89.155 & $-0.146$ & \textbf{88.166} & $\mathbf{+0.921}$ \\
+\midrule
+Oracle (test accuracy)    & 89.831 & $+0.530$ & 88.148 & $+0.903$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The oracle row shows that roughly three times the gain remains available to a perfect
+selection rule. Closing that gap requires a selection signal other than the training
+posterior; we leave this open.
+
+\subsubsection{Comparison with reweighting the ensemble}
+\label{sec:pc-comparison}
+
+Prior correction alters the decision rule; the obvious alternative is to alter the
+weights $w_j$. We find the latter to be structurally limited. At $\alpha=4$ over training
+accuracies that lie in a narrow band, CAWPE assigns weight shares between $22.6\%$ and
+$28.9\%$, against $25\%$ for uniform weighting, so the weights have little dynamic range
+to exploit. Accordingly, replacing $\hat{a}_j$ with the true test accuracy of each
+component -- an oracle -- improves balanced accuracy by only $0.05$ percentage points.
+Searching the full weight simplex per dataset, with weights selected on one stratified
+half of the test set and scored on the other, gains $0.33$ percentage points of balanced
+accuracy and is not significant (better on 51 of 112 datasets, $p = 0.211$). Prior
+correction at $\beta = 0.5$ exceeds this ceiling on both metrics while requiring no
+tuning data.
+
+Finally, we compare against MultiRocket-Hydra~\cite{dempster2023hydra}, which is not
+significantly different from HC2 on this archive. Holding the components fixed, prior
+correction changes the balanced-accuracy comparison from not significant to significant:
+uncorrected HC2 is better on 56 of 112 datasets ($+0.665$ percentage points, $p=0.298$),
+while at $\beta=0.5$ it is better on 72 of 112 ($+1.403$ points, $p<0.0001$). Both rows
+use identical component predictions and differ only in the decision rule, so the change
+is attributable to the correction.
+
+We make no corresponding claim for accuracy from this comparison. In our reconstruction
+HC2 is already significantly more accurate than MultiRocket-Hydra before any correction
+($+0.903$ points, 64 of 112, $p=0.0119$), so the correction does not confer that
+significance.
+
+Using the published reference results as the canonical build, neither comparison is
+significant before correction ($+0.742$ points on accuracy, $p=0.101$; $+0.474$ points
+on balanced accuracy, $p=0.782$). Transferring the per-dataset effect of $\beta=0.5$
+additively onto those results estimates $+0.911$ points on accuracy ($p=0.010$) and
+$+1.211$ points on balanced accuracy ($p=0.0002$). We report this as an estimate rather
+than a measurement: published reference results provide aggregate accuracies only, with
+no probability estimates to which the correction could be applied.
+
+We note that the comparison is fair in a specific and asymmetric sense:
+applying the same correction to MultiRocket-Hydra changes nothing whatsoever, on either
+metric and at every $\beta$, because its ridge-based head emits one-hot estimates for
+$100\%$ of test cases and Proposition~\ref{prop:degenerate} applies. The ability to
+benefit from post-hoc calibration is a property of producing soft estimates, which HC2's
+weighted probabilistic combination provides and a hard-voting pipeline does not. This is
+a property of the implementations compared rather than a statement that convolutional
+pipelines cannot be calibrated.
+
+\subsection{Threats to validity}
+\label{sec:pc-threats}
+
+Component predictions are stochastic, and independently rebuilt components do not
+reproduce a stored run exactly. Taking the published reference results as the canonical
+build, our reconstruction of uncorrected HC2 is significantly \emph{more} accurate than
+published HC2 ($+0.159$ percentage points, better on 64 of 112 datasets, $p=0.0015$),
+because it inherits component runs postdating the reference HC2 run. The discrepancy is
+comparable in size to the effect we report. Comparisons between $\beta$ settings are
+paired on identical component predictions and are unaffected, but absolute comparisons
+against an external classifier are: uncorrected HC2 against MultiRocket-Hydra on accuracy
+gives $p=0.101$ using published results and $p=0.0119$ using our reconstruction. Our
+MultiRocket-Hydra results agree with the published reference to within $0.002$ percentage
+points, so the discrepancy is specific to the HC2 build.
+
+Consequently, the claims in Section~\ref{sec:pc-comparison} that rest on an external
+comparison should be read as indicative. The directly measured, build-independent result
+is the paired improvement of Table~\ref{tab:beta}. A definitive external comparison
+requires rebuilding all four components and the corrected ensemble within a single run,
+which we leave to future work.
+
+The value $\beta = 0.5$ was selected on the same 112 datasets on which it is evaluated,
+so the reported accuracy gain of $0.169$ percentage points should be treated as mildly
+optimistic; validation on an independent collection is required before the magnitude is
+relied upon. The direction of the effect, and the invariance results of Propositions~1
+and~\ref{prop:degenerate}, do not depend on this choice. Separately, the correction may
+be treating a symptom: three of HC2's four components emit near-degenerate estimates
+(Arsenal is one-hot on $80\%$ of cases, and TDE accumulates member weights into the
+winning class only, so it has no probability estimates at all), which plausibly explains
+why the combined posterior is sharper and more majority-biased than a calibrated one.
+Calibrating the components before combination may subsume the correction proposed here.

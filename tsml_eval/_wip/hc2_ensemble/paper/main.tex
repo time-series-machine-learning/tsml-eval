@@ -1,0 +1,10 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb,booktabs,graphicx}
+\newtheorem{proposition}{Proposition}
+\begin{document}
+\input{prior_correction}
+\bibliographystyle{plain}
+\bibliography{refs}
+\end{document}
+% Minimal wrapper used to check that prior_correction.tex compiles standalone.
+% Compile: pdflatex main && bibtex main && pdflatex main && pdflatex main
