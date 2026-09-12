@@ -60,7 +60,7 @@ max_folds=30
 local_path="/gpfs/home/${username}"
 repo_dir="${local_path}/Code/tsml-eval"
 data_dir="${local_path}/Data/UCR/"                                                  # VERIFY
-datasets="${local_path}/DataSetLists/UnivariateClassification112-UCR2018Clean.txt"  # VERIFY
+datasets="${local_path}/DataSetLists/UCR.txt"
 results_dir="${local_path}/Results/UCR/${category}/"
 out_dir="${local_path}/Output/UCR/"
 
