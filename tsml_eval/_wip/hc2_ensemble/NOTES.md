@@ -267,10 +267,26 @@ This is a real correctness defect but **not** a lever for BA: correcting the wei
 worth at most +0.05 pp (the oracle), and every fixed debias offset tested made things
 slightly worse.
 
-**TDE has no probability estimates.** `_tde.py:607-611` accumulates member weights into
-the winning class bin only — its "probabilities" are a hard weighted vote share. It has
-the worst minority-class recall (0.6435) and largest majority/minority recall gap
-(0.2549) of any classifier measured, and the largest acc−BA degradation (2.444 pp).
+**All four components emit vote shares, not calibrated probabilities — and Arsenal is
+the coarse one, not TDE.** Every component sums hard member votes
+(`_tde.py:607-611` for TDE), so the output granularity is set by the member count and
+weighting. Measured over 40 datasets at resample 0:
+
+| component | mean max prob | frac one-hot | distinct values |
+|---|---|---|---|
+| DrCIF | 0.726 | 3% | 162 |
+| STC | 0.764 | 10% | 173 |
+| TDE | 0.816 | 23% | **313** |
+| Arsenal | 0.940 | **76%** | **26** |
+| MrHydra | 1.000 | 100% | 2 |
+
+TDE has the **finest**-grained estimates of the four: its 50 members carry unequal
+weights (`accuracy^4`), so the shares take many values. Arsenal is the degenerate one —
+25 equally weighted members on a binary problem give shares that are multiples of 1/25,
+exactly the 26 values observed. **Corrects an earlier note in this file claiming TDE has
+no probability estimates; that was wrong.** TDE does have the worst minority-class recall
+(0.6435), the largest majority/minority gap (0.2549) and the largest acc−BA degradation
+(2.444 pp), but that is not because its estimates are coarse.
 
 **Reweighting is bounded at ~+0.33 pp and is not significant.** Tuning weights on a
 stratified half of the *test set* (286-point simplex grid) and scoring on the other half
