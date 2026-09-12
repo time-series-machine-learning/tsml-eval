@@ -6,6 +6,7 @@
 #   ./run_ucr_component_experiments.sh Arsenal   ConvolutionBased
 #   ./run_ucr_component_experiments.sh DrCIF-500 IntervalBased
 #   ./run_ucr_component_experiments.sh Arsenal   ConvolutionBased Arsenal-sept
+#                       -> writes ConvolutionBased/Arsenal-sept/Arsenal/Predictions/...
 #
 # Why this exists. The stored UCR component results were each generated on a different
 # date from a different commit of ajb/hc2, and the stored HC2 predates all of them, so an
@@ -25,8 +26,10 @@
 # are skipped, so the script is safe to rerun to fill gaps. A resample whose test file
 # exists but whose train file is missing is resubmitted, since it is unusable otherwise.
 #
-# Set results_subdir to write somewhere other than <category>/<classifier>, e.g. to keep
-# a rerun alongside the existing results instead of skipping them.
+# Pass results_subdir to isolate a rerun from existing results. The experiment writes to
+# <results_path>/<classifier>/, using the classifier name, so isolation moves the results
+# root: results then land in <category>/<results_subdir>/<classifier>/ rather than in
+# <category>/<classifier>/, leaving the original results untouched.
 
 set -u
 
@@ -84,8 +87,21 @@ local_path="/gpfs/home/${username}"
 repo_dir="${local_path}/Code/tsml-eval"
 data_dir="${local_path}/Data/UCR/"                                                  # VERIFY
 datasets="${local_path}/DataSetLists/UCR.txt"
-results_dir="${local_path}/Results/UCR/${category}/"
 out_dir="${local_path}/Output/UCR/"
+
+# The experiment script writes to <results_path>/<classifier>/Predictions, using the
+# classifier name and not anything this script chooses. So a rerun cannot simply be
+# pointed at a different subdirectory: to isolate it, the whole results root has to
+# move, and the run then lands in <category>/<results_subdir>/<classifier>/.
+# Getting this wrong writes a rerun into the directory holding the original results,
+# where it silently fills any gaps with differently-versioned results.
+if [ "${results_subdir}" != "${classifier}" ]; then
+    results_dir="${local_path}/Results/UCR/${category}/${results_subdir}/"
+else
+    results_dir="${local_path}/Results/UCR/${category}/"
+fi
+# Where the experiment will actually write, which is what the gap check must read.
+written_dir="${results_dir}${classifier}"
 
 script_file_path="${repo_dir}/tsml_eval/experiments/classification_experiments.py"
 
@@ -108,8 +124,8 @@ fi
 
 # Record which commit produced these results. The whole reason for this rerun is that
 # the stored results do not say what code made them.
-provenance="${results_dir}${results_subdir}/PROVENANCE.txt"
-mkdir -p "${results_dir}${results_subdir}" "${out_dir}${results_subdir}/"
+provenance="${written_dir}/PROVENANCE.txt"
+mkdir -p "${written_dir}" "${out_dir}${results_subdir}/"
 {
     echo "classifier:  ${classifier}"
     echo "submitted:   $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
@@ -118,6 +134,7 @@ mkdir -p "${results_dir}${results_subdir}" "${out_dir}${results_subdir}/"
     echo "aeon:        $(python -c 'import aeon; print(aeon.__version__, aeon.__file__)' 2>/dev/null)"
 } >> "${provenance}"
 echo "Wrote provenance to ${provenance}"
+echo "Results will be written to ${written_dir}/Predictions"
 
 count=0
 total_tasks=0
@@ -126,8 +143,8 @@ while read -r dataset; do
 
     array_jobs=""
     for (( i=start_fold-1; i<max_folds; i++ )); do
-        test_file="${results_dir}${results_subdir}/Predictions/${dataset}/testResample${i}.csv"
-        train_file="${results_dir}${results_subdir}/Predictions/${dataset}/trainResample${i}.csv"
+        test_file="${written_dir}/Predictions/${dataset}/testResample${i}.csv"
+        train_file="${written_dir}/Predictions/${dataset}/trainResample${i}.csv"
         # A test file alone is not enough: without the train file there is no accuracy
         # estimate, so the resample cannot contribute a CAWPE weight.
         if [ -f "$test_file" ] && [ -f "$train_file" ]; then

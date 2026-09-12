@@ -25,10 +25,10 @@ separates "are the weights correct" from "do the weights earn their cost at all"
 """
 
 __maintainer__ = ["TonyBagnall"]
-__all__ = ["FixedWeightArsenal", "EqualWeightArsenal"]
+__all__ = ["FixedWeightArsenal", "CVWeightArsenal", "EqualWeightArsenal"]
 
 import numpy as np
-from sklearn.linear_model import RidgeClassifierCV
+from sklearn.linear_model import RidgeClassifier, RidgeClassifierCV
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
@@ -61,29 +61,81 @@ def _n_splits_for(y):
     return n_splits if n_splits >= 2 else 0
 
 
-def _fit_ridge_classifier(X, y, class_weight):
+def _binary_loo_accuracies(ridge, y):
+    """Per-alpha leave-one-out accuracy, reconstructed from the stored predictions.
+
+    ``RidgeClassifierCV`` already computes leave-one-out predictions for every alpha in
+    closed form, and with a scorer set it stores them in ``cv_results_``. Only the
+    reconstruction of labels from them is wrong for two classes: the stored column is a
+    signed decision value, so the predicted class is its sign, where scikit-learn takes
+    ``argmax`` over the single column and so always returns the first class. Redoing the
+    reconstruction here recovers the correct accuracy at closed-form cost.
+    """
+    cv_results = getattr(ridge, "cv_results_", None)
+    if cv_results is None or cv_results.ndim != 3 or cv_results.shape[1] != 1:
+        return None
+    positive = y == ridge.classes_[1]
+    decisions = cv_results[:, 0, :]
+    return np.array(
+        [(np.sign(decisions[:, i]) > 0) == positive for i in range(decisions.shape[1])]
+    ).mean(axis=1)
+
+
+def _fit_ridge_binary_loo(X, y, class_weight):
+    """Fit a binary member, scoring alphas by closed-form leave-one-out accuracy."""
+    search = RidgeClassifierCV(
+        alphas=ALPHAS,
+        class_weight=class_weight,
+        scoring="accuracy",
+        store_cv_results=True,
+    )
+    search.fit(X, y)
+    accuracies = _binary_loo_accuracies(search, y)
+    if accuracies is None:
+        return None
+
+    best = int(np.argmax(accuracies))
+    # Refitting on the chosen alpha is one ridge fit; explicit cross-validation would be
+    # n_splits * n_alphas of them.
+    ridge = RidgeClassifier(alpha=ALPHAS[best], class_weight=class_weight).fit(X, y)
+    ridge.best_score_ = float(accuracies[best])
+    ridge.alpha_ = ALPHAS[best]
+    ridge.weighting_path_ = "loo-binary"
+    return ridge
+
+
+def _fit_ridge_binary_cv(X, y, class_weight, n_splits, path):
+    """Fit a binary member by explicit stratified cross-validation."""
+    ridge = RidgeClassifierCV(
+        alphas=ALPHAS, class_weight=class_weight, scoring="accuracy", cv=n_splits
+    )
+    ridge.fit(X, y)
+    ridge.weighting_path_ = path
+    return ridge
+
+
+def _fit_ridge_classifier(X, y, class_weight, binary_strategy="loo"):
     """Fit the member ridge so that ``best_score_`` is a usable accuracy estimate.
 
-    Binary problems always use explicit cross-validation, because the generalised
-    cross-validation path reports 1.0 for them regardless of the data. Multiclass
-    problems keep the fast path, falling back when its SVD does not converge.
+    Binary problems need their leave-one-out accuracy recovering, either in closed form
+    or by explicit cross-validation. Multiclass problems keep the unmodified fast path,
+    where scikit-learn's reconstruction is already correct.
     """
     n_classes = len(np.unique(y))
     n_splits = _n_splits_for(y)
 
-    # Binary is only routed away from the fast path when folds are actually possible;
-    # with a singleton class no cross-validation exists and the fast path, wrong score
-    # and all, is still the only option. The flag records which happened.
-    if n_classes == 2 and n_splits:
-        ridge = RidgeClassifierCV(
-            alphas=ALPHAS,
-            class_weight=class_weight,
-            scoring="accuracy",
-            cv=n_splits,
-        )
-        ridge.fit(X, y)
-        ridge.weighting_path_ = "cv-binary"
-        return ridge
+    if n_classes == 2:
+        if binary_strategy == "loo":
+            try:
+                ridge = _fit_ridge_binary_loo(X, y, class_weight)
+            except (np.linalg.LinAlgError, TypeError):
+                ridge = None
+            if ridge is not None:
+                return ridge
+        if n_splits:
+            return _fit_ridge_binary_cv(X, y, class_weight, n_splits, "cv-binary")
+        # A singleton class leaves no way to estimate anything; the fast path, wrong
+        # score and all, is all that remains, and the flag records that.
 
     ridge = RidgeClassifierCV(
         alphas=ALPHAS, class_weight=class_weight, scoring="accuracy"
@@ -95,15 +147,7 @@ def _fit_ridge_classifier(X, y, class_weight):
     except np.linalg.LinAlgError:
         if not n_splits:
             raise
-        ridge = RidgeClassifierCV(
-            alphas=ALPHAS,
-            class_weight=class_weight,
-            scoring="accuracy",
-            cv=n_splits,
-        )
-        ridge.fit(X, y)
-        ridge.weighting_path_ = "cv-fallback"
-        return ridge
+        return _fit_ridge_binary_cv(X, y, class_weight, n_splits, "cv-fallback")
 
 
 class FixedWeightArsenal(Arsenal):
@@ -133,12 +177,17 @@ class FixedWeightArsenal(Arsenal):
             )
         return super()._fit(X, y)
 
+    _binary_strategy = "loo"
+
     def _fit_ensemble_estimator(self, rocket, X, y, train_rng=None):
         rocket.fit(X)
         transformed_x = _transform_with(rocket, X, self.rocket_transform == "rocket")
         scaler = StandardScaler(with_mean=False)
         ridge = _fit_ridge_classifier(
-            scaler.fit_transform(transformed_x), y, self.class_weight
+            scaler.fit_transform(transformed_x),
+            y,
+            self.class_weight,
+            binary_strategy=self._binary_strategy,
         )
         self._record_path(ridge)
         pipeline = make_pipeline(rocket, scaler, ridge)
@@ -159,7 +208,10 @@ class FixedWeightArsenal(Arsenal):
 
         scaler = StandardScaler(with_mean=False)
         ridge = _fit_ridge_classifier(
-            scaler.fit_transform(Xt[subsample]), y[subsample], self.class_weight
+            scaler.fit_transform(Xt[subsample]),
+            y[subsample],
+            self.class_weight,
+            binary_strategy=self._binary_strategy,
         )
         preds = ridge.predict(scaler.transform(Xt[oob]))
         return np.searchsorted(self.classes_, preds), ridge.best_score_, oob
@@ -168,6 +220,18 @@ class FixedWeightArsenal(Arsenal):
         if not hasattr(self, "weighting_paths_"):
             self.weighting_paths_ = []
         self.weighting_paths_.append(getattr(ridge, "weighting_path_", "unknown"))
+
+
+class CVWeightArsenal(FixedWeightArsenal):
+    """Arsenal weighting binary members by explicit stratified cross-validation.
+
+    A reference for ``FixedWeightArsenal``, which recovers the same quantity from the
+    closed-form leave-one-out predictions. This variant refits the ridge for every fold
+    and every alpha, so it is substantially slower, and is kept to confirm that the
+    cheap reconstruction agrees with a direct estimate.
+    """
+
+    _binary_strategy = "cv"
 
 
 class EqualWeightArsenal(FixedWeightArsenal):

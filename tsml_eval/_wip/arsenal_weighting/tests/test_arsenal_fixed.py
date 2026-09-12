@@ -7,6 +7,7 @@ from aeon.datasets import load_arrow_head, load_italy_power_demand
 from numpy.testing import assert_array_almost_equal
 
 from tsml_eval._wip.arsenal_weighting._arsenal_fixed import (
+    CVWeightArsenal,
     EqualWeightArsenal,
     _AEON_SUPPORTED,
     FixedWeightArsenal,
@@ -32,7 +33,7 @@ def test_binary_weights_are_not_degenerate():
     assert np.allclose(released.weights_, 1.0)
     assert not np.allclose(fixed.weights_, 1.0)
     assert all(0.0 < w <= 1.0 for w in fixed.weights_)
-    assert set(fixed.weighting_paths_) == {"cv-binary"}
+    assert set(fixed.weighting_paths_) == {"loo-binary"}
 
 
 def test_multiclass_is_unchanged():
@@ -86,3 +87,17 @@ def test_equal_weights_differ_from_released_on_multiclass():
     assert not np.allclose(
         released.predict_proba(X_test), equal.predict_proba(X_test)
     )
+
+
+def test_closed_form_agrees_with_cross_validation():
+    """The cheap reconstruction must estimate what explicit CV estimates."""
+    X, y = load_italy_power_demand(split="train")
+
+    loo = FixedWeightArsenal(**_PARAMS).fit(X, y)
+    cv = CVWeightArsenal(**_PARAMS).fit(X, y)
+
+    assert set(loo.weighting_paths_) == {"loo-binary"}
+    assert set(cv.weighting_paths_) == {"cv-binary"}
+    # Leave-one-out and five-fold are different estimators of the same quantity, so
+    # they agree closely rather than exactly.
+    assert np.allclose(loo.weights_, cv.weights_, atol=0.05)
