@@ -73,6 +73,33 @@ Train estimates are comparable: all four stored train files record
 `fit_predict_proba`, the same mechanism HC2 uses internally. Weights are derived
 identically.
 
+**Provenance, from the results headers and aeon's git history.** HC2 was run *first* and
+every component postdates it. All runs are from the `ajb/hc2` branch, but not from the
+same code:
+
+| run | date | aeon `ajb/hc2` HEAD at the time | commits to its own code since the HC2 run |
+|---|---|---|---|
+| HC2 | 07/14 15:56 | 66d4a747e "HC2 verbose" | — |
+| TDE | 07/15 09:20 | | 1 |
+| DrCIF | 07/17 11:30 | | 2 |
+| **Arsenal** | **07/26 21:12** | 6f5a24f42 | **9** |
+| STC | 07/27 09:19 | | 2 |
+
+Arsenal saw by far the most churn and is the only component significantly better than
+published. Merged into `ajb/hc2` on 07/16, two days *after* the HC2 results were
+generated: `b6e7e271a` "Up the Arsenal" (262 lines of `_arsenal.py`), `9c1fa45bb` [BUG]
+weight Arsenal members by CV accuracy not negative LOO error, `aafa1cf7d` [BUG] make
+rocket-family transforms thread-safe for ensemble use, `13f878ddf` [BUG] restore n_jobs
+invariance, `33125492e` single-precision Rocket convolutions. 16 commits touch
+`_arsenal.py`/`_rocket.py` between the two runs.
+
+Note the weighting-bug commit message reports negligible impact at default parameters, so
+the +0.345 pp is more likely from the broader overhaul than that single fix.
+
+**The stored HC2 therefore contains a pre-overhaul Arsenal, and cannot be reproduced from
+the current component files by construction.** This is not drift in the loose sense — it
+is a dated code difference on the same branch.
+
 Two independent deviations from real HC2 therefore exist in the rebuild:
 
 1. **Weaker DrCIF** — 200 vs 500 trees. Our DrCIF is −0.093 pp below published (p=0.035).
