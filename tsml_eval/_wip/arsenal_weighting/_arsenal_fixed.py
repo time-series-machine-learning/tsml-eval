@@ -16,10 +16,16 @@ stratified cross-validation and leave multiclass problems on the fast path, wher
 This is deliberately a subclass in the WIP area rather than a change to ``aeon``: it
 allows the fix to be evaluated against the released Arsenal on the archive before being
 proposed upstream.
+
+``EqualWeightArsenal`` is the control for the same question: it discards the member
+weights entirely and takes a straight vote. On a binary problem the released Arsenal is
+already an unweighted vote, since every weight is 1.0, so the two agree there by
+construction; they differ only when there are more than two classes. Comparing all three
+separates "are the weights correct" from "do the weights earn their cost at all".
 """
 
 __maintainer__ = ["TonyBagnall"]
-__all__ = ["FixedWeightArsenal"]
+__all__ = ["FixedWeightArsenal", "EqualWeightArsenal"]
 
 import numpy as np
 from sklearn.linear_model import RidgeClassifierCV
@@ -162,3 +168,55 @@ class FixedWeightArsenal(Arsenal):
         if not hasattr(self, "weighting_paths_"):
             self.weighting_paths_ = []
         self.weighting_paths_.append(getattr(ridge, "weighting_path_", "unknown"))
+
+
+class EqualWeightArsenal(FixedWeightArsenal):
+    """Arsenal that ignores member quality and takes a straight vote.
+
+    Every member contributes with weight one, so the ensemble probability is the plain
+    mean of the members' one-hot predictions. This is the control for whether CAWPE
+    weighting inside Arsenal earns its cost at all.
+
+    On a binary problem the released ``Arsenal`` already behaves this way, because the
+    upstream defect gives every member a weight of exactly one, so the two agree by
+    construction. They differ only when there are more than two classes.
+
+    Members are still fitted through the fast generalised cross-validation path, since
+    the score it returns is discarded: this variant is therefore no more expensive than
+    the released Arsenal, and cheaper than ``FixedWeightArsenal``.
+    """
+
+    def _fit_ensemble_estimator(self, rocket, X, y, train_rng=None):
+        rocket.fit(X)
+        transformed_x = _transform_with(rocket, X, self.rocket_transform == "rocket")
+        scaler = StandardScaler(with_mean=False)
+        # The score is never read, so the cheap path is always the right one here.
+        ridge = _aeon_fit_ridge(scaler.fit_transform(transformed_x), y, self.class_weight)
+        self._record_path_name("equal")
+        pipeline = make_pipeline(rocket, scaler, ridge)
+
+        train_estimate = (
+            self._train_probas_for_estimator(transformed_x, y, train_rng)
+            if train_rng is not None
+            else None
+        )
+        return pipeline, 1.0, train_estimate
+
+    def _train_probas_for_estimator(self, Xt, y, rng):
+        subsample = rng.choice(self.n_cases_, size=self.n_cases_)
+        oob = _get_oob_indices(subsample, self.n_cases_)
+
+        if oob.size == 0:
+            return np.empty(0, dtype=np.intp), 0.0, oob
+
+        scaler = StandardScaler(with_mean=False)
+        ridge = _aeon_fit_ridge(
+            scaler.fit_transform(Xt[subsample]), y[subsample], self.class_weight
+        )
+        preds = ridge.predict(scaler.transform(Xt[oob]))
+        return np.searchsorted(self.classes_, preds), 1.0, oob
+
+    def _record_path_name(self, name):
+        if not hasattr(self, "weighting_paths_"):
+            self.weighting_paths_ = []
+        self.weighting_paths_.append(name)

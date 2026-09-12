@@ -7,6 +7,7 @@ from aeon.datasets import load_arrow_head, load_italy_power_demand
 from numpy.testing import assert_array_almost_equal
 
 from tsml_eval._wip.arsenal_weighting._arsenal_fixed import (
+    EqualWeightArsenal,
     _AEON_SUPPORTED,
     FixedWeightArsenal,
 )
@@ -57,3 +58,31 @@ def test_predictions_remain_valid():
 
     assert probas.shape == (len(X_test), len(np.unique(y)))
     assert_array_almost_equal(probas.sum(axis=1), 1.0)
+
+
+def test_equal_weights_match_released_arsenal_on_binary():
+    """The released Arsenal is already a straight vote on binary problems."""
+    X, y = load_italy_power_demand(split="train")
+    X_test, _ = load_italy_power_demand(split="test")
+
+    released = Arsenal(**_PARAMS).fit(X, y)
+    equal = EqualWeightArsenal(**_PARAMS).fit(X, y)
+
+    assert np.allclose(released.weights_, 1.0)
+    assert np.allclose(equal.weights_, 1.0)
+    assert_array_almost_equal(released.predict_proba(X_test), equal.predict_proba(X_test))
+
+
+def test_equal_weights_differ_from_released_on_multiclass():
+    """With more than two classes the released weights are real, so voting differs."""
+    X, y = load_arrow_head(split="train")
+    X_test, _ = load_arrow_head(split="test")
+
+    released = Arsenal(**_PARAMS).fit(X, y)
+    equal = EqualWeightArsenal(**_PARAMS).fit(X, y)
+
+    assert not np.allclose(released.weights_, 1.0)
+    assert np.allclose(equal.weights_, 1.0)
+    assert not np.allclose(
+        released.predict_proba(X_test), equal.predict_proba(X_test)
+    )

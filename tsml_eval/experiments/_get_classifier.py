@@ -11,6 +11,7 @@ convolution_based_classifiers = [
     ["multirocket", "multi-rocket", "multirocketclassifier"],
     ["arsenalclassifier", "arsenal"],
     "arsenal-fixedweight",
+    "arsenal-equalweight",
     "arsenal-unequal",
     ["miniarsenal", "mini-arsenal"],
     ["multiarsenal", "multi-arsenal"],
@@ -293,6 +294,15 @@ def _set_classifier_convolution_based(
         from tsml_eval._wip.arsenal_weighting import FixedWeightArsenal
 
         return FixedWeightArsenal(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "arsenal-equalweight":
+        from tsml_eval._wip.arsenal_weighting import EqualWeightArsenal
+
+        return EqualWeightArsenal(
             random_state=random_state,
             n_jobs=n_jobs,
             time_limit_in_minutes=fit_contract,
