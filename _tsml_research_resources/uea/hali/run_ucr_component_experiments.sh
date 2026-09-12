@@ -37,7 +37,30 @@ results_subdir="${3:-$classifier}"
 if [ -z "$classifier" ] || [ -z "$category" ]; then
     echo "usage: $0 <classifier> <category> [results_subdir]"
     echo "   e.g: $0 Arsenal ConvolutionBased"
+    echo
+    echo "Set WAIT_FOR to a job-name pattern to hold submission until the jobs already"
+    echo "queued for that pattern have finished, e.g."
+    echo "   WAIT_FOR='DrCIF-500_|Arsenal-sept_' $0 Arsenal-fixedweight ConvolutionBased"
+    echo "Submission then begins only once no running or pending job of yours matches."
     exit 1
+fi
+
+# Optionally hold until earlier work has drained. Slurm dependencies are per job, and
+# the earlier runs are hundreds of separate arrays, so waiting on the queue itself is
+# simpler and does not need their job ids to be recorded anywhere.
+if [ -n "${WAIT_FOR:-}" ]; then
+    echo "Waiting for running or pending jobs matching '${WAIT_FOR}' to finish."
+    while true; do
+        remaining=$(squeue --noheader --array --user="$USER" \
+            --states=RUNNING,PENDING --format='%j' 2>/dev/null \
+            | grep -cE "${WAIT_FOR}")
+        if [ "${remaining:-0}" -eq 0 ]; then
+            echo "$(date '+%F %T') none left, submitting."
+            break
+        fi
+        echo "$(date '+%F %T') ${remaining} task(s) still queued, checking again in 10 minutes."
+        sleep 600
+    done
 fi
 
 # ---------------------------------------------------------------------------

@@ -10,6 +10,7 @@ convolution_based_classifiers = [
     ["minirocket", "mini-rocket", "minirocketclassifier"],
     ["multirocket", "multi-rocket", "multirocketclassifier"],
     ["arsenalclassifier", "arsenal"],
+    "arsenal-fixedweight",
     "arsenal-unequal",
     ["miniarsenal", "mini-arsenal"],
     ["multiarsenal", "multi-arsenal"],
@@ -283,6 +284,15 @@ def _set_classifier_convolution_based(
         from aeon.classification.convolution_based import Arsenal
 
         return Arsenal(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "arsenal-fixedweight":
+        from tsml_eval._wip.arsenal_weighting import FixedWeightArsenal
+
+        return FixedWeightArsenal(
             random_state=random_state,
             n_jobs=n_jobs,
             time_limit_in_minutes=fit_contract,
