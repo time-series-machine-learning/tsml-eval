@@ -248,7 +248,9 @@ class FromFileHIVECOTE(BaseClassifier):
             y = np.zeros(n_instances)
 
         for i, path in enumerate(self.classifiers):
-            cr = ClassifierResults().load_from_file(path + file_name)
+            cr = ClassifierResults().load_from_file(
+                path + file_name, calculate_stats=False
+            )
 
             # verify file matches data
             if not self.skip_shape_check:

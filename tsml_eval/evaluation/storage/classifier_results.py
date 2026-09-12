@@ -225,7 +225,7 @@ class ClassifierResults(EstimatorResults):
             fit_and_estimate_time=self.fit_and_estimate_time,
         )
 
-    def load_from_file(self, file_path, verify_values=True):
+    def load_from_file(self, file_path, verify_values=True, calculate_stats=True):
         """
         Load classifier results from a specified file.
 
@@ -240,13 +240,22 @@ class ClassifierResults(EstimatorResults):
             file should be a tsml formatted classifier results file.
         verify_values : bool, default=True
             If the method should perform verification of the loaded values.
+        calculate_stats : bool, default=True
+            If the method should calculate performance statistics from the loaded
+            values. A caller that only wants the probabilities or labels can skip
+            this, which is not merely a saving: log loss rejects a probability above
+            1, and an ensemble that casts a unanimous vote writes a 1.0 that reads
+            back as 1.0000000000000002, so the statistics can refuse a file that is
+            otherwise perfectly usable.
 
         Returns
         -------
         self : ClassifierResults
             The same ClassifierResults object with loaded results.
         """
-        cr = load_classifier_results(file_path, verify_values=verify_values)
+        cr = load_classifier_results(
+            file_path, calculate_stats=calculate_stats, verify_values=verify_values
+        )
         self.__dict__.update(cr.__dict__)
         return self
 
@@ -276,9 +285,16 @@ class ClassifierResults(EstimatorResults):
                 "ignore",
                 message="The y_pred values do not sum to one",
             )
+            # An ensemble casting a unanimous vote writes a probability of 1.0,
+            # which reads back from the file as 1.0000000000000002. log_loss
+            # rejects anything above 1 outright, so a file that is otherwise
+            # perfectly well formed cannot be loaded at all. Clip rather than
+            # refuse: the intended value is 1, and rows still sum to 1 within
+            # 5e-16. 50 of the 3782 Multiverse result files are affected, all of
+            # them TDE or Arsenal.
             self.log_loss = log_loss(
                 self.class_labels,
-                self.probabilities,
+                np.clip(self.probabilities, 0.0, 1.0),
             )
         if self.auroc_score is None or overwrite:
             self.auroc_score = roc_auc_score(
