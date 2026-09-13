@@ -395,6 +395,112 @@ section, ready to paste into Overleaf. `paper/refs.bib` has the four citations;
 (verified: 5 pages, no warnings, no undefined citations). The section needs
 `amsmath, amssymb, booktabs, graphicx` and a `proposition` theorem environment.
 
+## Component quality barely reaches the ensemble (three confirmations)
+
+| change | component effect | ensemble effect |
+|---|---|---|
+| DrCIF 200 -> 500 trees | +0.137 pp (p<0.0001) | +0.009 pp (p=0.42) |
+| Arsenal weighting fix | +0.502 pp on binary | **-0.040 pp** (p=0.41) |
+| combination fixes (shrink + beta) | — | **+0.260 acc / +0.942 BA** (p<0.00001) |
+
+HC2 is remarkably insensitive to its components' individual accuracy: a significant
+component gain produces no ensemble gain, twice, while changes to the combination
+produce an order of magnitude more. This is the argument for working at level 1.
+
+Speculative mechanism for the Arsenal case, untested: the corrected Arsenal is *more*
+confident (one-hot on 89.5% of binary cases against 79.1%) because the corrected penalty
+is far heavier, so its members agree more often. A more regularised, more confident
+component may correlate more with the others and reduce ensemble diversity. Testable by
+measuring pairwise component disagreement before and after.
+
+## Arsenal variants, measured (112 datasets, 30 resamples)
+
+All four predictions made before the runs were confirmed: equalweight is identical to
+released on 100% of binary runs and differs on 85% of multiclass ones; fixedweight is
+identical to released on 100% of multiclass runs and differs on 76.5% of binary ones.
+
+| variant | all | binary | multiclass |
+|---|---|---|---|
+| released | 86.966 | 91.311 | 84.552 |
+| rerun on current code | 86.966 | 91.311 | 84.552 |
+| **fixedweight** | 87.145 | **91.813** (+0.502, p=0.22) | 84.552 |
+| equalweight | 86.963 | 91.311 | 84.547 |
+
+Equal weighting costs 0.003 pp overall: Arsenal's internal CAWPE barely earns its keep.
+
+**The fix does not resolve Arsenal's degeneracy.** On binary, distinct probability values
+rise 3.8x (16.9 -> 64.6) but the one-hot fraction *rises* too (79.1% -> 89.5%), because
+the corrected penalty makes members agree more. Shrinkage therefore remains independently
+useful rather than being subsumed, contrary to what was expected.
+
+**Framing for the paper: the Arsenal work is a correctness and reproducibility fix, not
+an accuracy improvement.** It has no measurable effect on HC2.
+
+## Best level-1 configuration so far
+
+Beta shrinkage (a=2, scaled by member count) plus prior correction (beta=0.5), confirmed
+over 112 datasets and 30 resamples:
+
+| | accuracy | balanced accuracy |
+|---|---|---|
+| HC2 | 89.309 | 87.250 |
+| + beta=0.5 | 89.482 | 87.995 |
+| + shrink a=2 and beta=0.5 | **89.569** | **88.192** |
+| total vs HC2 | **+0.260 pp** (p=0.00001) | **+0.942 pp** (p<0.00001) |
+
+Both fixes use only exactly known quantities (member counts, class priors) and compose,
+because they correct different defects: shrinkage over-confidence in coarse components,
+beta the majority-class bias of the decision rule.
+
+## Alpha is slightly suboptimal at 4; tuning it still fails
+
+Fixed-alpha sweep over 112 datasets and 30 resamples: accuracy rises to a shallow plateau
+at alpha 6-10 and falls after. alpha=8 beats alpha=4 by +0.040 pp (p=0.008); the whole
+range alpha 3-12 spans 0.07 pp. Corroborates CAWPE's own reported plateau at 5-7.
+
+Tuning alpha per dataset on the train estimates gives -0.012 pp (p=0.74) against an
+oracle of +0.583 pp. The corrected tuner picks alpha=0 on 47% of runs and alpha=24 on
+15%: bimodal at the extremes, mean choice 6.72 against the oracle's 6.89, i.e. unbiased
+on average and wrong case by case.
+
+**The pre-existing `_tune_alpha` in `hivecote_from_file.py` is broken**: `train_preds`
+are class indices while `y` keeps its original labels whenever `skip_y_check=True`, so
+every alpha ties on a meaningless score and argmax returns the first, making it always
+return alpha=1. Fixing that converts a broken method into a working one that still does
+not beat a constant.
+
+## Selection and robust combination: both negative
+
+| variant | dAcc pp | p |
+|---|---|---|
+| pick best 3 by train estimate | -0.182 | 0.041 |
+| pick best 1 by train estimate | -1.215 | <0.0001 |
+| pick best 3, oracle | +0.320 | 0.016 |
+| **oracle best of all 15 subsets** | **+1.227** | <0.0001 |
+| median / trimmed mean | -0.299 | 0.015 |
+| inverse-variance weighting | -0.361 | 0.005 |
+| CI selection (Wilson vs 1/C) | +0.053 | 0.036 |
+
+The oracle picks all four components on only 8/112 datasets and most often a single one.
+Selection headroom is the largest measured, and entirely unreachable from train estimates.
+
+Per-instance oracle ceiling: at least one component is correct on 93.645% of test cases
+against HC2's 87.834%, so **+5.81 pp** is available to instance-based selection.
+
+## The dividing line
+
+Everything that worked uses only exactly known quantities; everything that needed the
+components' self-assessment failed.
+
+| scheme | needs train estimates? | result |
+|---|---|---|
+| prior correction beta | no | +0.17 acc / +0.74 BA |
+| Beta shrinkage | no (member counts) | +0.09 acc, composes with beta |
+| alpha tuning | yes | worse than a constant |
+| pick best k | yes | -0.18 pp |
+| bias correction | yes | +0.07 pp even as an oracle |
+| per-class recall weights | yes | -4.02 pp even as an oracle |
+
 ## Files
 
 - `experiments/` — analysis scripts, each self-contained and reading only stored results.
