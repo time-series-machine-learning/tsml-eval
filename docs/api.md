@@ -78,7 +78,17 @@ Functions for running experiments.
 
 ## Utilities: [tsml_eval.utils](https://github.com/time-series-machine-learning/tsml-eval/tree/main/tsml_eval/utils)
 
-Public utility functions used elsewhere in the package.
+Public utilities used elsewhere in the package.
+
+```{eval-rst}
+.. currentmodule:: tsml_eval
+.. autosummary::
+    :toctree: auto_generated/
+    :template: class.rst
+
+    utils.cross_validation.HVBlockCrossValidator
+    utils.cross_validation.BufferedBlockedKFold
+```
 
 ```{eval-rst}
 .. currentmodule:: tsml_eval
