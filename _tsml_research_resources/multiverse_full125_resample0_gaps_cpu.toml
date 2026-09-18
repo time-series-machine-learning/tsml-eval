@@ -1,0 +1,84 @@
+# A: single-CPU gaps for the Multiverse paper classifiers on the 125 datasets that
+# exclude the eight huge problems (DREAMERA, DREAMERV, InsectWingbeat, LenDB and the
+# four S2Agri). Started by start_multiverse_full125_gaps.sh, which prepares the data
+# and writes the dataset list first.
+#
+# Only the classifiers with remaining gaps are listed. At 2026-09-18 the D-drive copy
+# of the results was missing, on these 125 datasets:
+#   FreshPRINCE  LongIntervalTask, MatchingPennies, Opportunity, PAMAP2, ShortIntervalTask
+#   RDST         NewsHeadlineSentiment_disc, NewsTitleSentiment_disc, PPGDalia_disc, WISDM2
+#   MRHydra      NewsHeadlineSentiment_disc, NewsTitleSentiment_disc, WISDM2
+#   RIST         KIMORE-LT-C
+# Existing results are skipped, so anything else these classifiers already have on
+# Hali is left alone. Check the dry run before the supervisor starts submitting.
+#
+# HC2 and TDE are handled by the component-train config, 1NN-DTW by the threaded
+# config, and H-InceptionTime needs the GPU controller on ajb/gpu.
+
+[controller]
+username = "ajb"
+email = "ajb@uea.ac.uk"
+repo_dir = "/gpfs/home/{username}/Code/tsml-eval"
+data_dir = "/gpfs/home/{username}/Data/Multiverse"
+dataset_file = "/gpfs/home/{username}/DataSetLists/MultiverseFull125CPU.txt"
+results_root = "/gpfs/home/{username}/Results/Multiverse"
+state_dir = "/gpfs/home/{username}/Results/Multiverse/.controller-full125-resample0-gaps-cpu"
+expected_branch = "ajb/hc2"
+resamples = 1
+all_categories_first_pass = true
+ignore_existing_failure_logs = true
+max_attempts = 2
+small_datasets_first = true
+excluded_datasets = []
+validate_results = false
+
+# Known terminal outcomes, not resubmitted.
+excluded_tasks = [
+    # LAPACK integer overflow in RidgeClassifierCV's SVD (aeon issue 3738).
+    "ShapeletBased|RDST|AustraliaRainfall_disc|0",
+    "ShapeletBased|RDST|Tiselac|0",
+    "ConvolutionBased|MRHydra|Tiselac|0",
+    # Segfault at 128 GB with no Python traceback.
+    "ShapeletBased|RDST|USCActivity|0",
+    # Series length 8, MRHydra requires at least 9.
+    "ConvolutionBased|MRHydra|PenDigits|0",
+    # Out of memory at 128 GB.
+    "ConvolutionBased|MRHydra|AustraliaRainfall_disc|0",
+    "FeatureBased|FreshPRINCE|FaceDetection|0",
+    "FeatureBased|FreshPRINCE|FordChallenge|0",
+    "FeatureBased|FreshPRINCE|Skoda|0",
+    "FeatureBased|FreshPRINCE|Tiselac|0",
+]
+
+[slurm]
+account = "cmp"
+partition = "compute"
+qos = "uea-core-default"
+max_active_tasks = 8000
+memory_mb_levels = [32000, 64000, 128000]
+time_limit = "7-00:00:00"
+
+[environment]
+module = "python/anaconda/2024.10/3.12.7"
+conda_sh = "/gpfs/software/hali/python/anaconda/2024.10/etc/profile.d/conda.sh"
+env_name = "tsml-eval"
+numba_cache_dir = "/gpfs/home/{username}/Code/.cache/numba/tsml-eval"
+
+[classifier_kwargs.FreshPRINCE]
+verbose = 1
+
+[[categories]]
+name = "FeatureBased"
+classifiers = ["FreshPRINCE"]
+
+[[categories]]
+name = "ShapeletBased"
+classifiers = ["RDST"]
+
+[[categories]]
+name = "ConvolutionBased"
+classifiers = ["MRHydra"]
+
+[[categories]]
+name = "Hybrid"
+classifiers = ["RIST"]

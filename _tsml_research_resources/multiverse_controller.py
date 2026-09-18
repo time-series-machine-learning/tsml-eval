@@ -76,6 +76,7 @@ class ControllerConfig:
     classifier_first: bool = False
     classifier_order: tuple[str, ...] = ()
     observed_runtime_first: bool = False
+    cpus_per_task: int = 1
     classifier_kwargs: dict[str, dict[str, bool | int | float | str]] = field(
         default_factory=dict
     )
@@ -181,6 +182,7 @@ def _load_config(config_file):
             for value in slurm.get("memory_mb_levels", (16000, 32000, 64000, 128000))
         ),
         time_limit=str(slurm.get("time_limit", "7-00:00:00")),
+        cpus_per_task=int(slurm.get("cpus_per_task", 1)),
         module=str(environment.get("module", "python/anaconda/2024.10/3.12.7")),
         conda_sh=path_from(
             environment,
@@ -224,6 +226,8 @@ def _validate_config(config):
         raise ValueError("resamples must be at least 1")
     if config.max_attempts < 1:
         raise ValueError("max_attempts must be at least 1")
+    if config.cpus_per_task < 1:
+        raise ValueError("cpus_per_task must be at least 1")
     if len(config.excluded_datasets) != len(set(config.excluded_datasets)):
         raise ValueError("excluded_datasets must be unique")
     if len(config.excluded_tasks) != len(set(config.excluded_tasks)):
@@ -669,6 +673,16 @@ def _batch_script(
     kwarg_arguments = " ".join(q(token) for token in kwarg_tokens)
     kwarg_suffix = f" \\\n    {kwarg_arguments}" if kwarg_arguments else ""
     train_suffix = " \\\n    -tr" if config.build_train_files else ""
+    # One CPU runs the single-threaded entry point, as every existing configuration
+    # does. More than one runs the threaded entry point, which passes -nj to the
+    # estimator; the single-threaded one fixes n_jobs at 1 and ignores -nj.
+    threaded = config.cpus_per_task > 1
+    entry_module = (
+        "threaded_classification_experiments"
+        if threaded
+        else "classification_experiments"
+    )
+    threads_suffix = f" \\\n    -nj {config.cpus_per_task}" if threaded else ""
     kwarg_description = ", ".join(kwarg_summary) or "none"
     return f"""#!/bin/bash
 #SBATCH --account={config.account}
@@ -678,7 +692,7 @@ def _batch_script(
 #SBATCH --job-name={_job_name(task.classifier, task.dataset)}
 #SBATCH --array={array_spec}
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=1
+#SBATCH --cpus-per-task={config.cpus_per_task}
 #SBATCH --mem={memory_mb}M
 #SBATCH --output={output_dir}/%A-%a.out
 #SBATCH --error={output_dir}/%A-%a.err
@@ -718,7 +732,7 @@ export MKL_NUM_THREADS=1
 export MPI_NUM_THREADS=1
 export OPENBLAS_NUM_THREADS=1
 export NUMEXPR_NUM_THREADS=1
-export LOKY_MAX_CPU_COUNT=1
+export LOKY_MAX_CPU_COUNT={config.cpus_per_task}
 export TF_NUM_INTEROP_THREADS=1
 export TF_NUM_INTRAOP_THREADS=1
 export PYTHONUNBUFFERED=1
@@ -742,6 +756,7 @@ echo "Dataset:           {task.dataset}"
 echo "Resample ID:       $((SLURM_ARRAY_TASK_ID - 1))"
 echo "Requested memory:  ${{SLURM_MEM_PER_NODE:-unknown}} MB"
 echo "CPU-only:          true"
+echo "Requested CPUs:    {config.cpus_per_task}"
 echo "Build train file:  {str(config.build_train_files).lower()}"
 echo {q(f"Estimator kwargs:  {kwarg_description}")}
 echo "tsml-eval commit:  $actual_commit"
@@ -749,12 +764,12 @@ echo "Python executable: $python_path"
 echo "Python version:    $(python --version 2>&1)"
 python -c "import aeon; print('Aeon version:      ' + str(aeon.__version__)); print('Aeon location:     ' + str(aeon.__file__))"
 
-python -u -m tsml_eval.experiments.classification_experiments \\
+python -u -m tsml_eval.experiments.{entry_module} \\
     {q(str(config.data_dir))} \\
     {q(str(category_results))} \\
     {q(task.classifier)} \\
     {q(task.dataset)} \\
-    $((SLURM_ARRAY_TASK_ID - 1)){train_suffix}{kwarg_suffix}
+    $((SLURM_ARRAY_TASK_ID - 1)){train_suffix}{threads_suffix}{kwarg_suffix}
 """
 
 
