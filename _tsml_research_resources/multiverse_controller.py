@@ -1596,9 +1596,12 @@ def run_cycle(
             nodes=snapshot.nodes,
         )
         all_exhausted = _exhausted_tasks(config, report_snapshot, state, datasets)
-        cycle_complete = (
+        # A controller must stop once its scope is settled: either every result
+        # exists or the remaining tasks have reached a terminal outcome. Treating
+        # terminal failures as permanently incomplete leaves the supervisor alive
+        # forever, repeatedly polling a queue it can no longer improve.
+        cycle_settled = (
             category is None
-            and not all_exhausted
             and report_snapshot.error is None
             and not submission_errors
         )
@@ -1627,7 +1630,7 @@ def run_cycle(
             # A recurring supervisor exits after this cycle, so do not defer its
             # final completion message merely because the regular reporting interval
             # has not elapsed.
-            if exit_when_complete and cycle_complete:
+            if exit_when_complete and cycle_settled:
                 email_due = True
             if not no_email and email_due:
                 status = (
@@ -1646,7 +1649,7 @@ def run_cycle(
                     "Email deferred: the configured reporting interval "
                     "has not elapsed"
                 )
-        if exit_when_complete and cycle_complete:
+        if exit_when_complete and cycle_settled:
             return COMPLETE_EXIT_CODE
         return 0 if snapshot.error is None and not submission_errors else 1
     finally:
@@ -1684,8 +1687,8 @@ def _parse_args(args=None):
         "--exit-when-complete",
         action="store_true",
         help=(
-            "Exit with the dedicated completion status when every configured result "
-            "exists. Terminal failures are not considered complete."
+            "Exit with the dedicated completion status when every configured task "
+            "is settled: complete or terminal."
         ),
     )
     return parser.parse_args(args)
