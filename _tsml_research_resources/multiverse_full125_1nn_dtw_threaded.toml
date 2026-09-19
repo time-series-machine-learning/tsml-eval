@@ -1,0 +1,52 @@
+# C: 1NN-DTW gaps on the 125 datasets, multithreaded.
+#
+# At 2026-09-18 the D-drive copy of the results was missing 1NN-DTW on BIDMC32HR_disc,
+# BIDMC32RR_disc, BIDMC32SpO2_disc, FeetHands, ImaginedOpenCloseFist,
+# LongIntervalTask, MatchingPennies, OpenCloseFist, PAMAP2, PPGDalia_disc,
+# ShortIntervalTask, SitStand and SongFamiliarity.
+#
+# These cannot finish on one core. BIDMC32HR_disc measured 251 ms per DTW pair
+# single-threaded over 13.3M pairs, about 39 days, against a 7-day limit. n_jobs
+# works for the aeon KNN classifier (3.3x on 8 cores, 43% parallel efficiency), so at
+# 32 cores it should need roughly 2 to 3 days. Each thread allocates one series-length
+# squared cost matrix, 128 MB at length 4000, well inside the 32 GB first level.
+#
+# cpus_per_task > 1 makes the controller run threaded_classification_experiments
+# with -nj set to the same value. Check that 32 cores per task is allowed under the
+# uea-core-default QOS; lower it here if not.
+
+[controller]
+username = "ajb"
+email = "ajb@uea.ac.uk"
+repo_dir = "/gpfs/home/{username}/Code/tsml-eval"
+data_dir = "/gpfs/home/{username}/Data/Multiverse"
+dataset_file = "/gpfs/home/{username}/DataSetLists/MultiverseFull125CPU.txt"
+results_root = "/gpfs/home/{username}/Results/Multiverse"
+state_dir = "/gpfs/home/{username}/Results/Multiverse/.controller-full125-1nn-dtw-threaded"
+expected_branch = "ajb/hc2"
+resamples = 1
+all_categories_first_pass = true
+ignore_existing_failure_logs = true
+max_attempts = 2
+small_datasets_first = true
+excluded_datasets = []
+validate_results = false
+
+[slurm]
+account = "cmp"
+partition = "compute"
+qos = "uea-core-default"
+max_active_tasks = 200
+cpus_per_task = 32
+memory_mb_levels = [32000, 64000, 128000]
+time_limit = "7-00:00:00"
+
+[environment]
+module = "python/anaconda/2024.10/3.12.7"
+conda_sh = "/gpfs/software/hali/python/anaconda/2024.10/etc/profile.d/conda.sh"
+env_name = "tsml-eval"
+numba_cache_dir = "/gpfs/home/{username}/Code/.cache/numba/tsml-eval"
+
+[[categories]]
+name = "DistanceBased"
+classifiers = ["1NN-DTW"]
