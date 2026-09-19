@@ -26,6 +26,8 @@ from datetime import datetime
 from pathlib import Path
 
 _RESULT_PATTERN = re.compile(r"testResample(\d+)\.csv$")
+# Returned by --exit-when-complete once nothing is left to run or retry.
+COMPLETE_EXIT_CODE = 20
 
 
 @dataclass(frozen=True)
@@ -1303,6 +1305,7 @@ def run_cycle(
     report_only=False,
     no_email=False,
     email_interval_seconds=0,
+    exit_when_complete=False,
 ):
     """Run one restart-safe monitor and queue-refill cycle."""
     stop_marker = config.state_dir / "STOP"
@@ -1389,6 +1392,14 @@ def run_cycle(
             snapshot.error,
         )
         all_exhausted = _exhausted_tasks(config, report_snapshot, state, datasets)
+        # Settled means every result exists or every remaining task has reached a
+        # terminal outcome. Terminal failures count, or the supervisor would poll a
+        # queue it can no longer improve for ever.
+        cycle_settled = (
+            category is None
+            and report_snapshot.error is None
+            and not submission_errors
+        )
         rows = _category_rows(config, datasets, report_snapshot, state)
         report = _compose_report(
             config,
@@ -1410,7 +1421,12 @@ def run_cycle(
         if not dry_run:
             _save_state(state_file, state)
             _save_report(config.state_dir, report)
-            if not no_email and _email_due(config.state_dir, email_interval_seconds):
+            email_due = _email_due(config.state_dir, email_interval_seconds)
+            # The supervisor exits after a settled cycle, so send the final report
+            # now rather than deferring it to an interval that will never come.
+            if exit_when_complete and cycle_settled:
+                email_due = True
+            if not no_email and email_due:
                 status = (
                     "settled-with-failures"
                     if category is None and all_exhausted
@@ -1427,6 +1443,8 @@ def run_cycle(
                     "Email deferred: the configured reporting interval "
                     "has not elapsed"
                 )
+        if exit_when_complete and cycle_settled:
+            return COMPLETE_EXIT_CODE
         return 0 if snapshot.error is None and not submission_errors else 1
     finally:
         if lock is not None:
@@ -1459,6 +1477,11 @@ def _parse_args(args=None):
         default=0,
         help="Minimum interval between successful emails; zero emails every cycle.",
     )
+    parser.add_argument(
+        "--exit-when-complete",
+        action="store_true",
+        help=f"Exit {COMPLETE_EXIT_CODE} once no task is left to run or retry.",
+    )
     return parser.parse_args(args)
 
 
@@ -1475,6 +1498,7 @@ def main(args=None):
             report_only=parsed.report_only,
             no_email=parsed.no_email,
             email_interval_seconds=parsed.email_interval_seconds,
+            exit_when_complete=parsed.exit_when_complete,
         )
     except Exception as error:
         print(f"ERROR: {type(error).__name__}: {error}", file=sys.stderr)  # noqa: T201

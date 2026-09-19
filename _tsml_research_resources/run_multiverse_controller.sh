@@ -20,6 +20,11 @@ config_file=${1:-"${script_dir}/multiverse_controller.toml"}
 interval_seconds=${2:-${MULTIVERSE_CONTROLLER_INTERVAL_SECONDS:-1800}}
 email_interval_seconds=${3:-${MULTIVERSE_EMAIL_INTERVAL_SECONDS:-14400}}
 clear_pending_on_start=${MULTIVERSE_CLEAR_PENDING_ON_START:-true}
+# Off by default so the long-running controllers keep their behaviour. When true, the
+# supervisor sends a final email and exits once every result exists or every task
+# left has reached a terminal outcome.
+stop_when_complete=${MULTIVERSE_STOP_WHEN_COMPLETE:-false}
+complete_exit_status=20
 # The supervisor runs on a login node with no environment active, where "python" may
 # not exist at all. Resolve one up front and stop if there is none, rather than
 # looping every 30 minutes on "python: command not found".
@@ -66,6 +71,12 @@ if [[ "${clear_pending_on_start}" != true &&
     exit 1
 fi
 
+if [[ "${stop_when_complete}" != true &&
+    "${stop_when_complete}" != false ]]; then
+    echo "ERROR: MULTIVERSE_STOP_WHEN_COMPLETE must be true or false" >&2
+    exit 1
+fi
+
 if [[ ! -f "${config_file}" ]]; then
     echo "ERROR: controller configuration not found: ${config_file}" >&2
     exit 1
@@ -83,6 +94,7 @@ echo "Configuration: ${config_file}"
 echo "Cycle interval: ${interval_seconds} seconds"
 echo "Email interval: ${email_interval_seconds} seconds"
 echo "Clear pending jobs on start: ${clear_pending_on_start}"
+echo "Stop when complete: ${stop_when_complete}"
 echo "Log: ${log_file}"
 
 if [[ "${clear_pending_on_start}" == true ]]; then
@@ -110,6 +122,11 @@ if [[ "${clear_pending_on_start}" == true ]]; then
     fi
 fi
 
+controller_completion_args=()
+if [[ "${stop_when_complete}" == true ]]; then
+    controller_completion_args+=(--exit-when-complete)
+fi
+
 # Send a true startup snapshot before the first queue-refill cycle. An interval
 # of zero forces this report on every supervisor start; a successful send then
 # records the normal four-hour email marker used by subsequent cycles.
@@ -118,9 +135,13 @@ echo "Sending initial controller state." | tee -a "${log_file}"
     --config "${config_file}" \
     --report-only \
     --email-interval-seconds 0 \
+    "${controller_completion_args[@]}" \
     2>&1 | tee -a "${log_file}"
 initial_report_status=${PIPESTATUS[0]}
-if ((initial_report_status != 0)); then
+if ((initial_report_status == complete_exit_status)); then
+    echo "All configured work is settled; supervisor stopping." | tee -a "${log_file}"
+    exit 0
+elif ((initial_report_status != 0)); then
     echo "Initial controller report exited ${initial_report_status}; continuing." \
         | tee -a "${log_file}"
 fi
@@ -130,8 +151,14 @@ while true; do
     "${python_executable}" -u "${script_dir}/multiverse_controller.py" \
         --config "${config_file}" \
         --email-interval-seconds "${email_interval_seconds}" \
+        "${controller_completion_args[@]}" \
         2>&1 | tee -a "${log_file}"
     controller_status=${PIPESTATUS[0]}
+    if ((controller_status == complete_exit_status)); then
+        echo "All configured work is settled; supervisor stopping." \
+            | tee -a "${log_file}"
+        exit 0
+    fi
     echo "Controller exited ${controller_status}; restarting after ${interval_seconds}s." \
         | tee -a "${log_file}"
     sleep "${interval_seconds}"
