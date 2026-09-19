@@ -6,6 +6,12 @@
 # with no blank cell, as regenerated on 2026-09-18. They are listed in
 # dataset_lists/MultivariateClassification100-MultiversePaperComplete.txt.
 #
+# The list holds base names, as the other GPU lists do: the paper's _eq and _nmv
+# suffixes are stripped, and _disc, which is part of the name, is kept. The
+# experiment asks load_classification for the equal-length, no-missing variant
+# itself, so a suffixed name would send it looking for a directory that does not
+# exist, and would file its results apart from every existing result.
+#
 # The classifiers are every deep learner the GPU runs have used so far. Results
 # that already exist under results_root are skipped, so this fills gaps rather than
 # repeating work. Two lookup names differ from the obvious ones:
