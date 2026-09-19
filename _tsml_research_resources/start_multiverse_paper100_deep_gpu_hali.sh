@@ -9,9 +9,10 @@
 #
 #   bash _tsml_research_resources/start_multiverse_paper100_deep_gpu_hali.sh
 #
-# Progress: screen -r multiverse-paper100-deep-gpu, or the supervisor.log in the
-# state directory below. Stop it early with stop_multiverse_jobs.sh, or by creating
-# a file named STOP in the state directory.
+# The supervisor is detached with setsid and nohup rather than screen, which is not
+# installed everywhere, so it survives logging out. Progress is in supervisor.log in
+# the state directory below and its PID in launcher.pid there. Stop it early with
+# kill "$(cat <state_dir>/launcher.pid)", or by creating a file named STOP there.
 
 set -euo pipefail
 
@@ -21,7 +22,6 @@ config_file="${script_dir}/multiverse_paper100_resample0_deep_gpu_hali.toml"
 dataset_list="${script_dir}/dataset_lists/MultivariateClassification100-MultiversePaperComplete.txt"
 supervisor="${script_dir}/run_multiverse_controller.sh"
 state_dir="/gpfs/home/${USER}/Results/Multiverse/.controller-paper100-resample0-deep-gpu"
-session_name="multiverse-paper100-deep-gpu"
 python_executable="/gpfs/home/${USER}/.conda/envs/tsml-eval-gpu/bin/python"
 data_dir="/gpfs/home/${USER}/Data/Multiverse"
 config_name=$(basename "$config_file")
@@ -36,7 +36,7 @@ case "${1:-}" in
         ;;
 esac
 
-for command_name in flock git pkill screen squeue; do
+for command_name in flock git nohup pkill setsid squeue; do
     if ! command -v "$command_name" >/dev/null 2>&1; then
         echo "ERROR: required command is unavailable: ${command_name}" >&2
         exit 1
@@ -111,13 +111,8 @@ PYTHON
 echo "Stopping an earlier paper-100 supervisor, if present."
 pkill -TERM -f "[r]un_multiverse_controller.sh.*${config_name}" || true
 pkill -TERM -f "[m]ultiverse_controller.py.*${config_name}" || true
-mapfile -t old_sessions < <(
-    screen -ls | awk -v name="$session_name" '$1 ~ ("\\." name "$") {print $1}'
-)
-for old_session in "${old_sessions[@]}"; do
-    echo "Closing screen session: ${old_session}"
-    screen -S "$old_session" -X quit >/dev/null 2>&1 || true
-done
+# Give the old supervisor a moment to exit and release its lock.
+sleep 2
 
 if [[ "$reset_state" == true && -d "$state_dir" ]]; then
     archived_state="${state_dir}-previous-$(date +%Y%m%d-%H%M%S)"
@@ -134,27 +129,40 @@ echo "Checking the missing deep-learning work without submitting it."
 
 # Hourly queue refills, a daily email, and a final email then exit once settled.
 # Pending jobs from other runs are left alone.
-echo "Starting detached supervisor: ${session_name}"
-screen -dmS "$session_name" \
-    flock -n "${state_dir}/supervisor.lock" \
+echo "Starting detached supervisor."
+setsid nohup flock -n -E 75 "${state_dir}/supervisor.lock" \
     env PYTHON="$python_executable" \
         MULTIVERSE_CLEAR_PENDING_ON_START=false \
         MULTIVERSE_STOP_WHEN_COMPLETE=true \
         MULTIVERSE_CONTROLLER_INTERVAL_SECONDS=3600 \
         MULTIVERSE_EMAIL_INTERVAL_SECONDS=86400 \
         MULTIVERSE_LOG_DIR="$state_dir" \
-    bash "$supervisor" "$config_file"
+    bash "$supervisor" "$config_file" \
+    >> "${state_dir}/launcher.out" 2>&1 < /dev/null &
+launcher_pid=$!
 
+# A failed non-blocking flock exits at once with status 75, so give the launcher
+# time to take the lock and report a duplicate start clearly.
 sleep 2
-if ! screen -ls | grep -Fq ".${session_name}"; then
-    echo "ERROR: supervisor session did not remain running." >&2
-    echo "Another supervisor may already hold ${state_dir}/supervisor.lock." >&2
+if ! kill -0 "$launcher_pid" 2>/dev/null; then
+    set +e
+    wait "$launcher_pid" 2>/dev/null
+    launcher_status=$?
+    set -e
+    if [[ "$launcher_status" -eq 75 ]]; then
+        echo "ERROR: another supervisor holds ${state_dir}/supervisor.lock." >&2
+    else
+        echo "ERROR: the supervisor exited during startup (status ${launcher_status})." >&2
+        echo "Check ${state_dir}/launcher.out" >&2
+    fi
     exit 1
 fi
+disown "$launcher_pid"
+echo "$launcher_pid" > "${state_dir}/launcher.pid"
 
 echo
 echo "Paper-100 deep-learning supervisor started. A first report is emailed now,"
 echo "then one a day until every job has finished."
-echo "log: ${state_dir}/supervisor.log"
+echo "PID ${launcher_pid}; log: ${state_dir}/supervisor.log"
 echo
 squeue -u "$USER" -p gpu
