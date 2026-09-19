@@ -1,0 +1,113 @@
+# Resample 0 of the GPU deep learners on the 100 Multiverse datasets that the
+# DMLR 2026 paper scores, on Hali GPUs.
+#
+# The 100 are the datasets on which all 17 of the paper's classifiers completed:
+# the rows of its appendix accuracy tables (tab:big_results1 and tab:big_results2)
+# with no blank cell, as regenerated on 2026-09-18. They are listed in
+# dataset_lists/MultivariateClassification100-MultiversePaperComplete.txt.
+#
+# The classifiers are every deep learner the GPU runs have used so far. Results
+# that already exist under results_root are skipped, so this fills gaps rather than
+# repeating work. Two lookup names differ from the obvious ones:
+#
+#   FCNN   the classifier lookup has no "FCN" alias ("fcn" is a regressor name),
+#          so an FCN job would fail before it started
+#   XCM    pinned to window 0.8, the fixed-parameter run every existing XCM result
+#          uses, not the cross-validated search the lookup name resolves to
+#
+# EmoPain is among the 100, so this needs the aeon from main that accepts
+# low-variance input (#3598). The starter checks that before submitting anything.
+#
+# One configuration holds both frameworks. gpu_check stays at tensorflow, which
+# guards the Keras learners against silently training on the CPU; each torch
+# learner is given device = "cuda", which fails loudly instead of falling back.
+#
+# The time limit is the paper's 60 hours, so a run that exceeds it is recorded the
+# way the paper would have recorded it.
+
+[controller]
+username = "ajb"
+email = "ajb@uea.ac.uk"
+repo_dir = "/gpfs/home/{username}/Code/tsml-eval-gpu"
+data_dir = "/gpfs/home/{username}/Data/Multiverse"
+dataset_file = "/gpfs/home/{username}/Code/tsml-eval-gpu/_tsml_research_resources/dataset_lists/MultivariateClassification100-MultiversePaperComplete.txt"
+results_root = "/gpfs/home/{username}/Results/Multiverse"
+state_dir = "/gpfs/home/{username}/Results/Multiverse/.controller-paper100-resample0-deep-gpu"
+expected_branch = "ajb/gpu"
+resamples = 1
+max_attempts = 2
+all_categories_first_pass = true
+ignore_existing_failure_logs = true
+small_datasets_first = true
+excluded_datasets = []
+validate_results = false
+
+[slurm]
+account = "cmp"
+partition = "gpu"
+qos = "gpu"
+max_active_tasks = 16
+cpus_per_task = 2
+gpus = 1
+nodes = 1
+memory_mb_levels = [64000, 128000]
+time_limit = "2-12:00:00"
+
+[environment]
+module = "python/anaconda/2024.10/3.12.7"
+conda_sh = "/gpfs/software/hali/python/anaconda/2024.10/etc/profile.d/conda.sh"
+env_name = "tsml-eval-gpu"
+numba_cache_dir = "/gpfs/home/{username}/Code/.cache/numba/tsml-eval-gpu"
+gpu_check = "tensorflow"
+
+[classifier_kwargs.ConvTran]
+device = "cuda"
+verbose = true
+
+[classifier_kwargs.PatchMTSC]
+device = "cuda"
+verbose = true
+
+[classifier_kwargs.RankSCL]
+device = "cuda"
+verbose = true
+
+[classifier_kwargs.TimesNet]
+device = "cuda"
+verbose = true
+
+[classifier_kwargs.TimesURL]
+device = "cuda"
+verbose = true
+
+[classifier_kwargs.TS2Vec]
+device = "cuda"
+verbose = true
+
+[classifier_kwargs.DisjointCNN]
+verbose = true
+
+[classifier_kwargs.H-InceptionTime]
+verbose = true
+
+[classifier_kwargs.XCM]
+window_size = 0.8
+verbose = true
+
+[[categories]]
+name = "DeepLearning"
+classifiers = [
+    "FCNN",
+    "MLP",
+    "ResNet",
+    "H-InceptionTime",
+    "LITETime-MV",
+    "DisjointCNN",
+    "XCM",
+    "ConvTran",
+    "PatchMTSC",
+    "RankSCL",
+    "TimesNet",
+    "TimesURL",
+    "TS2Vec",
+]
