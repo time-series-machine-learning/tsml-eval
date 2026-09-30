@@ -37,6 +37,18 @@ jobs:
           python -m pip install build
           python -m build
 
+      - name: Check tag matches built version
+        if: github.ref_type == 'tag'
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          if ! ls dist/tsml_eval-"${RELEASE_TAG#v}"-*.whl > /dev/null 2>&1; then
+            echo "::error::Tag ${RELEASE_TAG} does not match the built distribution."
+            ls dist/
+            exit 1
+          fi
+
       - name: Store build files
         uses: actions/upload-artifact@v7
         with:
