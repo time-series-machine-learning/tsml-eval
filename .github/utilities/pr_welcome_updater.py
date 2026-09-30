@@ -44,4 +44,5 @@ for option in label_options:
             f"- [x] {option[1]}",
         )
 
-comment.edit(comment_body)
+if comment_body != comment.body:
+    comment.edit(comment_body)
