@@ -1190,6 +1190,7 @@ def run_forecasting_experiment(
     att_max_shape=0,
     benchmark_time=True,
     prediction_horizon=None,
+    forecasting_method="iterative",
 ):
     """Run a forecasting experiment and save the results to file.
 
@@ -1225,9 +1226,25 @@ def run_forecasting_experiment(
         ``BaseForecaster.iterative_forecast``). ``test`` must be the 1D array of the
         ``prediction_horizon`` true values following ``train``. If None, the default
         one-step-ahead evaluation over the test values is used.
+    forecasting_method : str, default="iterative"
+        Multi-step strategy used with ``prediction_horizon``. ``"iterative"`` feeds
+        predictions back as inputs as described above. ``"direct"`` calls the
+        forecaster's ``direct_forecast``, fitting one model per step ahead on
+        ``train``; all fitting happens inside that call, so its time and memory are
+        recorded as the fit time and the test time is 0.
     """
     if not isinstance(forecaster, BaseForecaster):
         raise TypeError("forecaster must be an aeon forecaster.")
+
+    if forecasting_method not in ("iterative", "direct"):
+        raise ValueError(
+            "forecasting_method must be 'iterative' or 'direct', got "
+            f"{forecasting_method!r}."
+        )
+    if forecasting_method == "direct" and prediction_horizon is None:
+        raise ValueError(
+            "forecasting_method='direct' requires prediction_horizon (fixed_horizon)."
+        )
 
     if prediction_horizon is not None and (
         train.ndim != 1 or test.ndim != 1 or len(test) != prediction_horizon
@@ -1271,6 +1288,20 @@ def run_forecasting_experiment(
         for index, train_series in enumerate(train):
             test_preds[index] = forecaster.forecast(train_series)
         test_preds = test_preds.flatten()
+    elif forecasting_method == "direct":
+        # Direct (fixed-horizon) forecasting: one model per step ahead, each fit on
+        # train inside direct_forecast.
+        direct_preds = []
+        mem_usage, fit_time = record_max_memory(
+            lambda: direct_preds.append(
+                forecaster.direct_forecast(train, prediction_horizon)
+            ),
+            interval=MEMRECORD_INTERVAL,
+            return_func_time=True,
+        )
+        test_true = test
+        test_preds = np.asarray(direct_preds[0], dtype=test.dtype).flatten()
+        test_time = 0
     else:
         mem_usage, fit_time = record_max_memory(
             forecaster.fit,
@@ -1531,6 +1562,7 @@ def load_and_run_remote_forecasting_experiment(
     end=None,
     fixed_horizon=False,
     adaptive_window=False,
+    forecasting_method="iterative",
 ):
     """Load a dataset and run a regression experiment.
 
@@ -1589,12 +1621,20 @@ def load_and_run_remote_forecasting_experiment(
         This lets window-based forecasters (e.g. ``RegressionForecaster`` and
         ``DifferencedForecaster``) run on short series (such as some M4 series) that
         would otherwise be shorter than the configured window.
+    forecasting_method : str, default="iterative"
+        Multi-step strategy for ``fixed_horizon`` runs: ``"iterative"`` (recursive)
+        or ``"direct"`` (one model per step ahead via ``direct_forecast``). Only
+        used when ``fixed_horizon`` is True.
     """
     if forecaster_name is None:
         forecaster_name = type(forecaster).__name__
 
     if fixed_horizon and retrain:
         raise ValueError("fixed_horizon and retrain cannot both be True.")
+    if forecasting_method != "iterative" and not fixed_horizon:
+        raise ValueError(
+            f"forecasting_method={forecasting_method!r} requires fixed_horizon=True."
+        )
 
     # When running a subset of retrain points, write results under a point-specific
     # dataset name so per-point jobs do not clobber each other's result files. The
@@ -1734,4 +1774,5 @@ def load_and_run_remote_forecasting_experiment(
         att_max_shape=att_max_shape,
         benchmark_time=benchmark_time,
         prediction_horizon=prediction_horizon,
+        forecasting_method=forecasting_method,
     )

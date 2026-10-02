@@ -74,6 +74,8 @@ def run_experiment(args, overwrite=False):
         # Opt-in: shrink a windowed forecaster's window to half the series length for
         # series shorter than twice the window (e.g. short M4 series).
         adaptive_window = args.kwargs.pop('adaptive_window', False)
+        # Multi-step strategy for fixed_horizon runs, e.g. -kw method direct str.
+        forecasting_method = args.kwargs.pop('method', 'iterative')
 
         # When running a subset of retrain points, results are written under a
         # point-specific dataset name (see load_and_run_remote_forecasting_experiment),
@@ -127,6 +129,7 @@ def run_experiment(args, overwrite=False):
                 end=end,
                 fixed_horizon=fixed_horizon,
                 adaptive_window=adaptive_window,
+                forecasting_method=forecasting_method,
             )
     # local run (no args)
     else:

@@ -109,6 +109,29 @@ def get_forecaster_by_name(forecaster_name, random_state=None, n_jobs=1, **kwarg
 
                 return DifferencedForecaster(regressor=regressor, window=window)
 
+        # An "es-" prefix means "normalise windows by the ES level and seasonal
+        # factor" (as in ES-RNN): e.g. "es-randomforest". season_length (supplied
+        # per series for M4) is the ES seasonal period; log optionally log
+        # transforms the normalised values.
+        if f.startswith("es-"):
+            seasonal_period = kwargs.pop("season_length", 1)
+            log = kwargs.pop("log", False)
+            try:
+                regressor = get_regressor_by_name(
+                    f[3:], random_state, n_jobs, **kwargs
+                )
+            except ValueError:
+                pass
+            else:
+                from aeon.forecasting import ESNormalisedRegressionForecaster
+
+                return ESNormalisedRegressionForecaster(
+                    window=window,
+                    regressor=regressor,
+                    seasonal_period=seasonal_period,
+                    log=log,
+                )
+
         try:
             regressor = get_regressor_by_name(f, random_state, n_jobs, **kwargs)
         except ValueError:
