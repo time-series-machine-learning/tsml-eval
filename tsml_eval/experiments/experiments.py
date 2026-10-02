@@ -26,8 +26,8 @@ import pandas as pd
 from aeon.benchmarking.metrics.clustering import clustering_accuracy_score
 from aeon.classification import BaseClassifier
 from aeon.clustering import BaseClusterer
-from aeon.forecasting import BaseForecaster, RegressionForecaster
 from aeon.datasets import load_from_tsf_file
+from aeon.forecasting import BaseForecaster, RegressionForecaster
 from aeon.regression.base import BaseRegressor
 from aeon.utils.validation._dependencies import _check_soft_dependencies
 from aeon.utils.validation.collection import get_n_cases
@@ -1341,7 +1341,7 @@ def run_forecasting_experiment(
         estimator_attributes_to_file(
             forecaster, attribute_file_path, max_list_shape=att_max_shape
         )
-    if (np.isfinite(test_preds).all() is False):
+    if np.isfinite(test_preds).all() is False:
         test_mape = np.inf
     else:
         test_mape = mean_absolute_percentage_error(test_true, test_preds)
@@ -1462,10 +1462,14 @@ def load_and_run_forecasting_experiment(
         benchmark_time=benchmark_time,
     )
 
-def train_test_split(x, train_proportion=0.7, max_series_length=10000, max_test_values=None):
+
+def train_test_split(
+    x, train_proportion=0.7, max_series_length=10000, max_test_values=None
+):
     """
     Transform X and return a transformed version.
     private _transform containing core logic, called from transform
+
     Parameters
     ----------
     x : np.ndarray
@@ -1479,6 +1483,7 @@ def train_test_split(x, train_proportion=0.7, max_series_length=10000, max_test_
     max_test_values : int, optional (default=None)
         The maximum number of test values to generate. If the test proportion is larger than
         this, it will be adjusted to be equal to this.
+
     Returns
     -------
     Xt: np.ndarray
@@ -1499,6 +1504,7 @@ def train_test_split(x, train_proportion=0.7, max_series_length=10000, max_test_
 
     # Generate windowed versions of train and test sets
     return train_series, test_series
+
 
 # Number of rolling one-step-ahead test points used when retrain=True. The last
 # N_RETRAIN_POINTS values of a series are held out and forecast one at a time, with
@@ -1681,16 +1687,20 @@ def load_and_run_remote_forecasting_experiment(
     if "_" in dataset_name:
         dataset, series_name = dataset_name.rsplit("_", 1)
     else:
-        raise ValueError(f"Dataset {dataset_name} given, but has no series attached when remote_forecasting_experiment called.")
+        raise ValueError(
+            f"Dataset {dataset_name} given, but has no series attached when remote_forecasting_experiment called."
+        )
 
     data_full_path = f"{data_path}/{dataset}/{dataset}.tsf"
     if not os.path.exists(data_full_path):
-        raise FileExistsError(f"Cannot load {data_full_path} for dataset {dataset}. Did you run download_datasets.py beforehand?")
+        raise FileExistsError(
+            f"Cannot load {data_full_path} for dataset {dataset}. Did you run download_datasets.py beforehand?"
+        )
     else:
         df, metadata = load_from_tsf_file(data_full_path)
-        series = df.loc[df['series_name'].eq(series_name), 'series_value'].iat[0]
+        series = df.loc[df["series_name"].eq(series_name), "series_value"].iat[0]
     series = np.asarray(series, dtype=float)
-    assert(np.isfinite(series).all())
+    assert np.isfinite(series).all()
 
     # Opt-in adaptive_window: the window must be shrunk based on the length of the
     # series the forecaster is actually FIT on (the training split), not the full
@@ -1743,7 +1753,7 @@ def load_and_run_remote_forecasting_experiment(
             if isinstance(forecaster, RegressionForecaster):
                 # Add 1 for the test data item
                 test_array = np.empty(forecaster.window + 1, dtype=series.dtype)
-                test_array[:-1] = train_item[-forecaster.window:]
+                test_array[:-1] = train_item[-forecaster.window :]
                 test_array[-1] = test_item[0]
                 test[out_idx] = test_array
             else:
@@ -1752,14 +1762,20 @@ def load_and_run_remote_forecasting_experiment(
         train, test = train_test_split(series)
         if adaptive_window:
             _maybe_shrink_window(forecaster, len(train))
-        if isinstance(forecaster, RegressionForecaster) and len(test) > forecaster.window + 1:
+        if (
+            isinstance(forecaster, RegressionForecaster)
+            and len(test) > forecaster.window + 1
+        ):
             test = np.lib.stride_tricks.sliding_window_view(
                 test, window_shape=(forecaster.window + 1)
             )
-        elif isinstance(forecaster, RegressionForecaster) and len(test) < forecaster.window:
+        elif (
+            isinstance(forecaster, RegressionForecaster)
+            and len(test) < forecaster.window
+        ):
             test_array = np.empty(forecaster.window + 1, dtype=series.dtype)
-            test_array[-len(test):] = test
-            test_array[:-len(test)+1] = train[forecaster.window - len(test) + 1:]
+            test_array[-len(test) :] = test
+            test_array[: -len(test) + 1] = train[forecaster.window - len(test) + 1 :]
             test = test_array
 
     run_forecasting_experiment(

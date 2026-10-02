@@ -66,16 +66,16 @@ def run_experiment(args, overwrite=False):
         # forecaster. fixed_horizon selects the M4-style protocol: train once on the
         # series minus the last @horizon values, then forecast the whole horizon.
         retrain = False
-        if 'retrain' in args.kwargs:
-            retrain = args.kwargs.pop('retrain')
-        fixed_horizon = args.kwargs.pop('fixed_horizon', False)
-        start = args.kwargs.pop('start', None)
-        end = args.kwargs.pop('end', None)
+        if "retrain" in args.kwargs:
+            retrain = args.kwargs.pop("retrain")
+        fixed_horizon = args.kwargs.pop("fixed_horizon", False)
+        start = args.kwargs.pop("start", None)
+        end = args.kwargs.pop("end", None)
         # Opt-in: shrink a windowed forecaster's window to half the series length for
         # series shorter than twice the window (e.g. short M4 series).
-        adaptive_window = args.kwargs.pop('adaptive_window', False)
+        adaptive_window = args.kwargs.pop("adaptive_window", False)
         # Multi-step strategy for fixed_horizon runs, e.g. -kw method direct str.
-        forecasting_method = args.kwargs.pop('method', 'iterative')
+        forecasting_method = args.kwargs.pop("method", "iterative")
 
         # When running a subset of retrain points, results are written under a
         # point-specific dataset name (see load_and_run_remote_forecasting_experiment),

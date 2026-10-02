@@ -43,7 +43,7 @@ other_forecasters = [
     "ensemble3",
     "ensemble4",
     "ensemble5",
-    "ensembleaic1"
+    "ensembleaic1",
 ]
 
 
@@ -89,17 +89,15 @@ def get_forecaster_by_name(forecaster_name, random_state=None, n_jobs=1, **kwarg
     else:
         window = 100
         print(kwargs)
-        if 'window' in kwargs:
-            window = kwargs.pop('window')
+        if "window" in kwargs:
+            window = kwargs.pop("window")
 
         # A "d-" prefix means "difference the data before forecasting": strip the
         # "d-" and, if the remainder is a known regressor, wrap it in a generic
         # DifferencedForecaster (e.g. "d-drcif" -> differenced "drcif").
         if f.startswith("d-"):
             try:
-                regressor = get_regressor_by_name(
-                    f[2:], random_state, n_jobs, **kwargs
-                )
+                regressor = get_regressor_by_name(f[2:], random_state, n_jobs, **kwargs)
             except ValueError:
                 pass
             else:
@@ -117,9 +115,7 @@ def get_forecaster_by_name(forecaster_name, random_state=None, n_jobs=1, **kwarg
             seasonal_period = kwargs.pop("season_length", 1)
             log = kwargs.pop("log", False)
             try:
-                regressor = get_regressor_by_name(
-                    f[3:], random_state, n_jobs, **kwargs
-                )
+                regressor = get_regressor_by_name(f[3:], random_state, n_jobs, **kwargs)
             except ValueError:
                 pass
             else:
@@ -137,6 +133,7 @@ def get_forecaster_by_name(forecaster_name, random_state=None, n_jobs=1, **kwarg
         except ValueError:
             raise ValueError(f"UNKNOWN FORECASTER: {f} in get_forecaster_by_name")
         from aeon.forecasting import RegressionForecaster
+
         return RegressionForecaster(window=window, regressor=regressor)
 
 
@@ -215,44 +212,66 @@ def _set_forecaster_stats(f, random_state, n_jobs, kwargs):
         from aeon.forecasting.stats import DOTM
         from aeon.forecasting.stats._scum import _RecentWindowForecaster
 
-        return _RecentWindowForecaster(DOTM(**kwargs) , max_length=5000)
+        return _RecentWindowForecaster(DOTM(**kwargs), max_length=5000)
     elif f == "scumplusplus":
+        import numpy as np
         from aeon.forecasting import RegressionForecaster
-        from aeon.forecasting.stats import SCUM, AutoETS, AutoCES, AutoARIMA, DOTM
+        from aeon.forecasting.stats import DOTM, SCUM, AutoARIMA, AutoCES, AutoETS
         from aeon.forecasting.stats._scum import _RecentWindowForecaster
         from sklearn.ensemble import RandomForestRegressor
         from sklearn.linear_model import RidgeCV
         from xgboost import XGBRegressor
-        import numpy as np
 
-        if not 'season_length' in kwargs or not 'window' in kwargs:
+        if not "season_length" in kwargs or not "window" in kwargs:
             raise ValueError("Both 'season_length' and 'window' must be provided.")
-        
-        season_length = kwargs.pop('season_length')
-        window = kwargs.pop('window')
+
+        season_length = kwargs.pop("season_length")
+        window = kwargs.pop("window")
         forecasters = [
             ("ets", AutoETS(seasonal_period=int(season_length))),
             ("ces", AutoCES(season_length=int(season_length))),
             ("arima", AutoARIMA()),
-            ("randomforest", RegressionForecaster(window=window, regressor=RandomForestRegressor(random_state=random_state, n_jobs=n_jobs, **kwargs))),
-            ("ridge", RegressionForecaster(window=window, regressor=RidgeCV(fit_intercept=True, alphas=np.logspace(-3, 3, 10), **kwargs))),
-            ("xgboost", RegressionForecaster(window=window, regressor=XGBRegressor(random_state=random_state, n_jobs=n_jobs, **kwargs))),           
+            (
+                "randomforest",
+                RegressionForecaster(
+                    window=window,
+                    regressor=RandomForestRegressor(
+                        random_state=random_state, n_jobs=n_jobs, **kwargs
+                    ),
+                ),
+            ),
+            (
+                "ridge",
+                RegressionForecaster(
+                    window=window,
+                    regressor=RidgeCV(
+                        fit_intercept=True, alphas=np.logspace(-3, 3, 10), **kwargs
+                    ),
+                ),
+            ),
+            (
+                "xgboost",
+                RegressionForecaster(
+                    window=window,
+                    regressor=XGBRegressor(
+                        random_state=random_state, n_jobs=n_jobs, **kwargs
+                    ),
+                ),
+            ),
             ("dotm", DOTM(season_length=int(season_length))),
         ]
         forecasters[-1] = (
             "dotm",
-            _RecentWindowForecaster(
-                forecasters[-1][1], max_length=5000
-            ),
+            _RecentWindowForecaster(forecasters[-1][1], max_length=5000),
         )
         return SCUM(season_length=season_length, forecasters=forecasters, **kwargs)
     elif f == "scumplusplusddrcif":
         from tsml_eval.estimators.forecasting.SCUMPPDDRCIF import SCUMPPDDRCIF
 
-        if not 'season_length' in kwargs or not 'window' in kwargs:
+        if not "season_length" in kwargs or not "window" in kwargs:
             raise ValueError("Both 'season_length' and 'window' must be provided.")
-        season_length = kwargs.pop('season_length')
-        window = kwargs.pop('window')
+        season_length = kwargs.pop("season_length")
+        window = kwargs.pop("window")
         return SCUMPPDDRCIF(season_length=season_length, window=window, **kwargs)
     elif f == "averagestats" or f == "average" or f == "hybridaverage":
         from tsml_eval.estimators.forecasting.HybridStats import AverageStats
