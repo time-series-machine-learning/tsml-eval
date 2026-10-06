@@ -147,3 +147,6 @@ debug.py
 
 # MacOs files
 .DS_Store
+
+# coding tools
+.claude/

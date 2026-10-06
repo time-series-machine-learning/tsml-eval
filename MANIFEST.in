@@ -21,4 +21,5 @@ exclude .gitattributes
 exclude .gitignore
 exclude .pre-commit-config.yaml
 exclude .readthedocs.yml
+exclude AGENTS.md
 exclude conftest.py

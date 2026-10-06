@@ -7,7 +7,7 @@ body:
 - type: markdown
   attributes:
     value: >
-      #### You can see if he bug has already been addressed by searching
+      #### You can see if the bug has already been addressed by searching
       through the open and closed [issues](https://github.com/time-series-machine-learning/tsml-eval/issues?q=is%3Aissue).
 - type: textarea
   attributes:
@@ -42,10 +42,16 @@ body:
     description: |
       Please provide a clear and concise description of the actual seen results or paste the incorrect output if available.
 
-      If you observe an error, please paste the error message including the full traceback of the exception. For instance the code example above raises the following exception:
+      If you observe an error, please paste the error message including the full traceback of the exception.
     placeholder: |
       ```python-traceback
       Place traceback error here if applicable. If your issue has no traceback, please describe the observed output without formatting.
       ```
   validations:
     required: true
+- type: textarea
+  attributes:
+    label: Suggested fix
+    description: >
+      If you have an idea for where the issue comes from or how it could be
+      fixed, please describe it here. This is optional.
