@@ -214,7 +214,12 @@ class DrCIFClassifier(BaseIntervalForest, BaseClassifier):
         ]
 
         interval_features = [
-            Catch22(outlier_norm=True, use_pycatch22=use_pycatch22),
+            # only pass use_pycatch22 when set, it is deprecated in aeon 1.6
+            (
+                Catch22(outlier_norm=True, use_pycatch22=True)
+                if use_pycatch22
+                else Catch22(outlier_norm=True)
+            ),
             mean,
             std,
             slope,

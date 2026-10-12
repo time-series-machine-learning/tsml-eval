@@ -129,6 +129,19 @@ distance_based_clusterers = [
     ["kspectralcentroid", "ksc"],
     ["timeserieskshape", "kshape"],
     "kasba",
+    "agglomerative-euclidean",
+    "agglomerative-squared",
+    ["agglomerative-dtw", "timeseriesagglomerative"],
+    "agglomerative-ddtw",
+    "agglomerative-wdtw",
+    "agglomerative-wddtw",
+    "agglomerative-lcss",
+    "agglomerative-erp",
+    "agglomerative-edr",
+    "agglomerative-twe",
+    "agglomerative-msm",
+    "agglomerative-adtw",
+    "agglomerative-shape_dtw",
 ]
 feature_based_clusterers = [
     ["catch22", "catch22clusterer"],
@@ -430,6 +443,14 @@ def _set_clusterer_distance_based(
 
         return KASBA(
             random_state=random_state,
+            **kwargs,
+        )
+    elif "agglomerative" in c:
+        from aeon.clustering import TimeSeriesAgglomerative
+
+        return TimeSeriesAgglomerative(
+            distance=distance,
+            distance_params=distance_params,
             **kwargs,
         )
 

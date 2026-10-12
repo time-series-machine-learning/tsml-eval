@@ -864,9 +864,15 @@ def run_clustering_experiment(
     if clusterer_name is None:
         clusterer_name = type(clusterer).__name__
 
+    can_predict = True
     # aeon clusterer
     if isinstance(clusterer, BaseClusterer):
-        pass
+        # transductive clusterers cannot predict, labels_ is used for train results.
+        # TimeSeriesAgglomerative does not set the tag in aeon 1.6.0
+        can_predict = (
+            clusterer.get_tag("capability:predict", False, True)
+            and type(clusterer).__name__ != "TimeSeriesAgglomerative"
+        )
     elif isinstance(clusterer, BaseEstimator) and is_clusterer(clusterer):
         is_sklearn = True
         if _check_soft_dependencies("tsml", severity="none"):
@@ -952,7 +958,7 @@ def run_clustering_experiment(
         )
 
     start = int(round(time.time() * 1000))
-    if callable(getattr(clusterer, "predict_proba", None)):
+    if can_predict and callable(getattr(clusterer, "predict_proba", None)):
         train_probs = clusterer.predict_proba(X_train)
         train_preds = np.argmax(train_probs, axis=1)
     else:

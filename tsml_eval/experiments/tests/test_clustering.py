@@ -321,6 +321,32 @@ def test_combined_train_test(dataset):
     os.remove(train_file)
 
 
+def test_transductive_clusterer():
+    """Test train results for a clusterer which cannot predict new cases."""
+    clusterer = "TimeSeriesAgglomerative"
+    dataset = "MinimalChinatown"
+
+    args = [
+        _TEST_DATA_PATH,
+        _CLUSTERER_RESULTS_PATH,
+        clusterer,
+        dataset,
+        "0",
+        "-ow",
+    ]
+
+    clustering_experiments.run_experiment(args)
+
+    train_file = (
+        f"{_CLUSTERER_RESULTS_PATH}{clusterer}/Predictions/{dataset}/trainResample0.csv"
+    )
+
+    assert os.path.exists(train_file)
+    _check_clustering_file_format(train_file)
+
+    os.remove(train_file)
+
+
 def _check_clustering_file_n_clusters(file_path, expected):
     with open(file_path) as f:
         lines = f.readlines()
