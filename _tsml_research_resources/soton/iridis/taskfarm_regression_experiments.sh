@@ -12,7 +12,7 @@ max_folds=10
 start_fold=1
 
 # To avoid hitting the cluster queue limit we have a higher level queue
-max_num_submitted=900
+max_num_submitted=10000
 
 gpu_job="false"
 iridis_version="5"
