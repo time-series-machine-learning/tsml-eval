@@ -18,6 +18,7 @@ stats_forecasters = [
     "autoarima",
     ["etsforecaster", "ets"],
     "autoets",
+    ["statsforecastets", "sfets", "statsforecastautoets"],
     ["autoces", "ces", "cets", "autocets"],
     ["tarforecaster", "tar"],
     "autotar",
@@ -178,6 +179,13 @@ def _set_forecaster_stats(f, random_state, n_jobs, kwargs):
         from aeon.forecasting.stats import AutoETS
 
         return AutoETS(**kwargs)
+    elif f == "statsforecastets" or f == "sfets" or f == "statsforecastautoets":
+        from tsml_eval.estimators.forecasting.StatsForecastETS import StatsForecastETS
+
+        # Accept either name for the per-series M4 seasonal period.
+        season_length = kwargs.pop("seasonal_period", 1)
+        season_length = kwargs.pop("season_length", season_length)
+        return StatsForecastETS(season_length=season_length, **kwargs)
     elif f == "autoces" or f == "ces" or f == "cets" or f == "autocets":
         from aeon.forecasting.stats import AutoCES
 
