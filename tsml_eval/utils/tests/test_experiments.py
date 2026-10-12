@@ -3,6 +3,8 @@
 import os
 
 import pytest
+from aeon.classification import DummyClassifier
+from aeon.classification.compose import ClassifierEnsemble
 from aeon.classification.shapelet_based import ShapeletTransformClassifier
 from aeon.classification.sklearn import RotationForestClassifier
 
@@ -81,20 +83,23 @@ def test_max_depth():
     assert not os.path.exists(test_dir + "estimator_/estimators__0/estimators__0.txt")
 
 
-def test_max_list_shape():
+@pytest.mark.parametrize("max_list_shape", [0, 1, 2])
+def test_max_list_shape(max_list_shape):
     """Test writing estimator attributes to file max list shape parameter."""
-    estimator = ShapeletTransformClassifier(
-        n_shapelet_samples=50,
-        estimator=RotationForestClassifier(n_estimators=2),
-    )
+    # classifiers is a list of estimators, ensemble_ is a list of (name, estimator)
+    estimator = ClassifierEnsemble(classifiers=[DummyClassifier(), DummyClassifier()])
     X, y = load_minimal_chinatown()
     estimator.fit(X, y)
 
-    test_dir = _TEST_OUTPUT_PATH + "/attribute_writing_max_list_shape/"
-    estimator_attributes_to_file(estimator, test_dir, max_list_shape=0)
+    test_dir = (
+        _TEST_OUTPUT_PATH + f"/attribute_writing_max_list_shape_{max_list_shape}/"
+    )
+    estimator_attributes_to_file(estimator, test_dir, max_list_shape=max_list_shape)
 
-    assert os.path.exists(test_dir + "ShapeletTransformClassifier.txt")
-    assert os.path.exists(test_dir + "estimator/estimator.txt")
-    assert os.path.exists(test_dir + "estimator_/estimator_.txt")
-    assert os.path.exists(test_dir + "estimator_/_base_estimator/_base_estimator.txt")
-    assert not os.path.exists(test_dir + "estimator_/estimators__0/estimators__0.txt")
+    assert os.path.exists(test_dir + "ClassifierEnsemble.txt")
+    assert os.path.exists(test_dir + "classifiers_0/classifiers_0.txt") == (
+        max_list_shape >= 1
+    )
+    assert os.path.exists(test_dir + "ensemble__0_1/ensemble__0_1.txt") == (
+        max_list_shape >= 2
+    )
