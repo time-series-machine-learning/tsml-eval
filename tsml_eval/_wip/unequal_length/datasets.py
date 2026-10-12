@@ -28,7 +28,7 @@ def series_subsequence(series, new_size, rng):
 
 
 def transform_X(X, indices, new_sizes, func, rng):
-    X_new = [x for x in X]
+    X_new = [*X]
     for i in range(len(indices)):
         X_new[indices[i]] = func(X[indices[i]], new_sizes[i], rng)
         assert X_new[indices[i]].shape[1] == new_sizes[i]
