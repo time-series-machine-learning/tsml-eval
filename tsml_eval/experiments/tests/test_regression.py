@@ -205,6 +205,27 @@ def test_get_regressor_by_name_invalid():
         get_regressor_by_name("invalid")
 
 
+@pytest.mark.parametrize(
+    "regressor, distance, n_neighbors",
+    [
+        ("1nn-ed", "euclidean", 1),
+        ("5nn-ed", "euclidean", 5),
+        ("1nn-dtw", "dtw", 1),
+        ("5nn-dtw", "dtw", 5),
+        ("1nn-msm", "msm", 1),
+        ("5nn-msm", "msm", 5),
+    ],
+)
+def test_get_regressor_by_name_knn(regressor, distance, n_neighbors):
+    """Test kNN regressors use the settings in the name, n_jobs and kwargs."""
+    r = get_regressor_by_name(regressor, n_jobs=2, weights="distance")
+
+    assert r.distance == distance
+    assert r.n_neighbors == n_neighbors
+    assert r.n_jobs == 2
+    assert r.weights == "distance"
+
+
 def test_aeon_regressors_available():
     """Test all aeon regressors are available."""
     excluded = [

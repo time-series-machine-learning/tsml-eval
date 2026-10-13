@@ -269,22 +269,30 @@ def _set_regressor_distance_based(
     if r == "1nn-ed":
         from aeon.regression.distance_based import KNeighborsTimeSeriesRegressor
 
-        return KNeighborsTimeSeriesRegressor(**kwargs)
+        return KNeighborsTimeSeriesRegressor(
+            distance="euclidean", n_jobs=n_jobs, **kwargs
+        )
     elif r == "5nn-ed":
         from aeon.regression.distance_based import KNeighborsTimeSeriesRegressor
 
-        return KNeighborsTimeSeriesRegressor(n_neighbors=5, **kwargs)
+        return KNeighborsTimeSeriesRegressor(
+            n_neighbors=5, distance="euclidean", n_jobs=n_jobs, **kwargs
+        )
     elif r == "kneighborstimeseriesregressor" or r == "1nn-dtw":
         from aeon.regression.distance_based import KNeighborsTimeSeriesRegressor
 
         return KNeighborsTimeSeriesRegressor(
-            distance="dtw", distance_params={"window": 0.1}, **kwargs
+            distance="dtw", distance_params={"window": 0.1}, n_jobs=n_jobs, **kwargs
         )
     elif r == "5nn-dtw":
         from aeon.regression.distance_based import KNeighborsTimeSeriesRegressor
 
         return KNeighborsTimeSeriesRegressor(
-            n_neighbors=5, distance="dtw", distance_params={"window": 0.1}, **kwargs
+            n_neighbors=5,
+            distance="dtw",
+            distance_params={"window": 0.1},
+            n_jobs=n_jobs,
+            **kwargs,
         )
     elif r == "1nn-msm":
         from aeon.regression.distance_based import KNeighborsTimeSeriesRegressor
@@ -293,6 +301,8 @@ def _set_regressor_distance_based(
             n_neighbors=1,
             distance="msm",
             distance_params={"window": None, "independent": True, "c": 1},
+            n_jobs=n_jobs,
+            **kwargs,
         )
     elif r == "5nn-msm":
         from aeon.regression.distance_based import KNeighborsTimeSeriesRegressor
@@ -301,6 +311,8 @@ def _set_regressor_distance_based(
             n_neighbors=5,
             distance="msm",
             distance_params={"window": None, "independent": True, "c": 1},
+            n_jobs=n_jobs,
+            **kwargs,
         )
 
 

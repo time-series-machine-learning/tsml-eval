@@ -215,6 +215,28 @@ def test_get_classifier_by_name_invalid():
         get_classifier_by_name("invalid")
 
 
+@pytest.mark.parametrize("classifier", ["rdst", "1nn-dtw-cv"])
+def test_get_classifier_by_name_n_jobs(classifier):
+    """Test n_jobs is passed to classifiers which can use it."""
+    c = get_classifier_by_name(classifier, n_jobs=2)
+    assert c.get_params()["n_jobs"] == 2
+
+
+def test_get_classifier_by_name_logistic_n_jobs():
+    """Test n_jobs is not passed to LogisticRegression, where it is deprecated."""
+    c = get_classifier_by_name("logistic", n_jobs=2)
+    assert c.get_params().get("n_jobs") is None
+
+
+def test_get_classifier_by_name_drcif_unequal_n_estimators():
+    """Test n_estimators can be set using kwargs for drcif-unequal."""
+    c = get_classifier_by_name("drcif-unequal")
+    assert c.n_estimators == 500
+
+    c = get_classifier_by_name("drcif-unequal", n_estimators=2)
+    assert c.n_estimators == 2
+
+
 def test_aeon_classifiers_available():
     """Test all aeon classifiers are available."""
     excluded = [

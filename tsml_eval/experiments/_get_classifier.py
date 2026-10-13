@@ -491,6 +491,7 @@ def _set_classifier_distance_based(
             estimator=KNeighborsTimeSeriesClassifier(),
             param_grid=param_grid,
             scoring="accuracy",
+            n_jobs=n_jobs,
             **kwargs,
         )
     elif c == "grailclassifier" or c == "grail":
@@ -724,12 +725,12 @@ def _set_classifier_interval_based(
     elif c == "drcif-unequal":
         from tsml_eval._wip.unequal_length._drcif6 import DrCIFClassifier
 
+        # n_estimators is not part of the name, so it can be changed using kwargs
         return DrCIFClassifier(
-            n_estimators=500,
             random_state=random_state,
             n_jobs=n_jobs,
             time_limit_in_minutes=fit_contract,
-            **kwargs,
+            **{"n_estimators": 500, **kwargs},
         )
     elif c == "summary-intervals":
         from aeon.classification.interval_based import RandomIntervalClassifier
@@ -887,7 +888,7 @@ def _set_classifier_shapelet_based(
     elif c == "rdstclassifier" or c == "rdst":
         from aeon.classification.shapelet_based import RDSTClassifier
 
-        return RDSTClassifier(random_state=random_state, **kwargs)
+        return RDSTClassifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif (
         c == "randomshapeletforestclassifier"
         or c == "randomshapeletforest"
@@ -927,7 +928,8 @@ def _set_classifier_vector(c, random_state, n_jobs, fit_contract, checkpoint, kw
     elif c == "logisticregression" or c == "logistic":
         from sklearn.linear_model import LogisticRegression
 
-        return LogisticRegression(random_state=random_state, n_jobs=n_jobs, **kwargs)
+        # n_jobs has no effect since scikit-learn 1.8 and is deprecated
+        return LogisticRegression(random_state=random_state, **kwargs)
     elif c == "prevalidatedridgeclassifier" or c == "prevalidatedridge":
         from aeon.classification.sklearn import PrevalidatedRidgeClassifier
 
