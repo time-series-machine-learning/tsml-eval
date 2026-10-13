@@ -409,6 +409,7 @@ def _set_regressor_interval_based(
         return TimeSeriesForestRegressor(
             random_state=random_state,
             n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
             **kwargs,
         )
     elif r == "tsf-i":
@@ -434,6 +435,7 @@ def _set_regressor_interval_based(
             n_estimators=500,
             random_state=random_state,
             n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
             **kwargs,
         )
     elif r == "rise-500":
@@ -445,6 +447,7 @@ def _set_regressor_interval_based(
             n_estimators=500,
             random_state=random_state,
             n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
             **kwargs,
         )
     elif r == "randomintervalspectralensembleregressor" or r == "rise":
@@ -455,6 +458,7 @@ def _set_regressor_interval_based(
         return RandomIntervalSpectralEnsembleRegressor(
             random_state=random_state,
             n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
             **kwargs,
         )
     elif r == "cif-500":
@@ -464,6 +468,7 @@ def _set_regressor_interval_based(
             n_estimators=500,
             random_state=random_state,
             n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
             **kwargs,
         )
     elif r == "canonicalintervalforestregressor" or r == "cif":
@@ -472,6 +477,7 @@ def _set_regressor_interval_based(
         return CanonicalIntervalForestRegressor(
             random_state=random_state,
             n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
             **kwargs,
         )
     elif r == "drcif" or r == "drcifregressor":

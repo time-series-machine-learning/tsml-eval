@@ -640,6 +640,7 @@ def _set_classifier_interval_based(
             n_estimators=500,
             random_state=random_state,
             n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
             **kwargs,
         )
     elif c == "randomintervalspectralensembleclassifier" or c == "rise":
@@ -650,6 +651,7 @@ def _set_classifier_interval_based(
         return RandomIntervalSpectralEnsembleClassifier(
             random_state=random_state,
             n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
             **kwargs,
         )
     elif c == "tsf-500":
@@ -659,6 +661,7 @@ def _set_classifier_interval_based(
             n_estimators=500,
             random_state=random_state,
             n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
             **kwargs,
         )
     elif c == "timeseriesforestclassifier" or c == "tsf":
@@ -667,6 +670,7 @@ def _set_classifier_interval_based(
         return TimeSeriesForestClassifier(
             random_state=random_state,
             n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
             **kwargs,
         )
     elif c == "cif-500":
@@ -676,6 +680,7 @@ def _set_classifier_interval_based(
             n_estimators=500,
             random_state=random_state,
             n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
             **kwargs,
         )
     elif c == "canonicalintervalforestclassifier" or c == "cif":
@@ -684,6 +689,7 @@ def _set_classifier_interval_based(
         return CanonicalIntervalForestClassifier(
             random_state=random_state,
             n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
             **kwargs,
         )
     elif c == "stsf-500":
@@ -693,6 +699,7 @@ def _set_classifier_interval_based(
             n_estimators=500,
             random_state=random_state,
             n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
             **kwargs,
         )
     elif c == "supervisedtimeseriesforest" or c == "stsf":
@@ -701,6 +708,7 @@ def _set_classifier_interval_based(
         return SupervisedTimeSeriesForest(
             random_state=random_state,
             n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
             **kwargs,
         )
     elif c == "drcif-500":
