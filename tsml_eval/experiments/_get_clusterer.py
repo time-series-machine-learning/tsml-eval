@@ -196,6 +196,8 @@ def get_clusterer_by_name(
         `tsml_eval.utils.experiments import load_experiment_data`.
     row_normalise: bool, default=False
         Whether to row normalise the data if it is loaded using data_vars.
+    **kwargs
+        Additional keyword arguments to be passed to the clusterer.
 
     Return
     ------
@@ -298,139 +300,24 @@ def _set_clusterer_distance_based(
     row_normalise,
     kwargs,
 ):
-    if "init_algorithm" in kwargs:
-        init_algorithm = kwargs["init_algorithm"]
-    else:
-        init_algorithm = "random"
-
-    if "distance" in kwargs:
-        distance = kwargs["distance"]
-    else:
-        if "-" not in c:
-            print("No distance metric specified, using default DTW")  # noqa: T201
-            distance = "dtw"
-        else:
-            distance = c.split("-")[-1]
-
-    if "distance_params" in kwargs:
-        distance_params = kwargs["distance_params"]
-    else:
-        distance_params = _get_distance_default_params(
-            distance, data_vars, row_normalise
-        )
-
-    if "kmeans" in c or "timeserieskmeans" in c:
-        if "average_params" in kwargs:
-            average_params = kwargs["average_params"]
-        else:
-            average_params = {"distance": distance, **distance_params.copy()}
-
-        if "ssg" in c:
-            # Sets to use subgradient BA
-            average_params = {
-                **average_params,
-                "method": "subgradient",
-            }
-            return TimeSeriesKMeans(
-                n_init=10,
-                init=init_algorithm,
-                distance=distance,
-                distance_params=distance_params,
-                random_state=random_state,
-                averaging_method="ba",
-                average_params=average_params,
-                **kwargs,
-            )
-        elif "ba" in c:
-            return TimeSeriesKMeans(
-                n_init=10,
-                init=init_algorithm,
-                distance=distance,
-                distance_params=distance_params,
-                random_state=random_state,
-                averaging_method="ba",
-                average_params=average_params,
-                **kwargs,
-            )
-        else:
-            return TimeSeriesKMeans(
-                n_init=10,
-                init=init_algorithm,
-                distance=distance,
-                distance_params=distance_params,
-                random_state=random_state,
-                averaging_method="mean",
-                **kwargs,
-            )
-    elif "kmedoids" in c or "timeserieskmedoids" in c:
-        return TimeSeriesKMedoids(
-            n_init=10,
-            init=init_algorithm,
-            distance=distance,
-            distance_params=distance_params,
-            random_state=random_state,
-            method="alternate",
-            **kwargs,
-        )
-    elif "pam" in c or "timeseriespam" in c:
-        return TimeSeriesKMedoids(
-            n_init=10,
-            init=init_algorithm,
-            distance=distance,
-            distance_params=distance_params,
-            random_state=random_state,
-            method="pam",
-            **kwargs,
-        )
-    elif "clarans" in c or "timeseriesclarans" in c:
-        return TimeSeriesCLARANS(
-            n_init=10,
-            init=init_algorithm,
-            distance=distance,
-            distance_params=distance_params,
-            random_state=random_state,
-            **kwargs,
-        )
-    elif "clara" in c or "timeseriesclara" in c:
-        return TimeSeriesCLARA(
-            init=init_algorithm,
-            distance=distance,
-            distance_params=distance_params,
-            random_state=random_state,
-            **kwargs,
-        )
-    elif "som" in c or "elasticsom" in c:
-        return ElasticSOM(
-            distance=distance,
-            init="random",
-            sigma=1.0,
-            learning_rate=0.5,
-            decay_function="asymptotic_decay",
-            neighborhood_function="gaussian",
-            sigma_decay_function="asymptotic_decay",
-            num_iterations=500,
-            distance_params=distance_params,
-            random_state=random_state,
-            verbose=False,
-        )
-    elif "ksc" in c or "kspectralcentroid" in c:
+    if c == "kspectralcentroid" or c == "ksc":
         return KSpectralCentroid(
             # Max shift set to n_timepoints when max_shift is None
             max_shift=None,
-            init=init_algorithm,
+            init="random",
             tol=1e-06,
             random_state=random_state,
             **kwargs,
         )
-    elif "kshape" in c:
+    elif c == "timeserieskshape" or c == "kshape":
         return KShape(
-            init=init_algorithm,
+            init="random",
             n_init=10,
             tol=1e-06,
             random_state=random_state,
             **kwargs,
         )
-    elif "timeserieskernelkmeans" in c:
+    elif c == "timeserieskernelkmeans":
         return TimeSeriesKernelKMeans(
             n_init=10,
             tol=1e-06,
@@ -445,7 +332,105 @@ def _set_clusterer_distance_based(
             random_state=random_state,
             **kwargs,
         )
-    elif "agglomerative" in c:
+
+    # the remaining names end with the distance to use i.e. "kmeans-msm", the
+    # clusterer class names use dtw
+    if "-" in c:
+        name, distance = c.rsplit("-", 1)
+    else:
+        name, distance = c, "dtw"
+    distance_params = _get_distance_default_params(distance, data_vars, row_normalise)
+
+    if name == "kmeans" or name == "timeserieskmeans":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance=distance,
+            distance_params=distance_params,
+            random_state=random_state,
+            averaging_method="mean",
+            **kwargs,
+        )
+    elif name == "kmeans-ba":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance=distance,
+            distance_params=distance_params,
+            random_state=random_state,
+            averaging_method="ba",
+            average_params={"distance": distance, **distance_params},
+            **kwargs,
+        )
+    elif name == "kmeans-ssg-ba":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance=distance,
+            distance_params=distance_params,
+            random_state=random_state,
+            averaging_method="ba",
+            # Sets to use subgradient BA
+            average_params={
+                "distance": distance,
+                **distance_params,
+                "method": "subgradient",
+            },
+            **kwargs,
+        )
+    elif name == "kmedoids" or name == "timeserieskmedoids":
+        return TimeSeriesKMedoids(
+            n_init=10,
+            init="random",
+            distance=distance,
+            distance_params=distance_params,
+            random_state=random_state,
+            method="alternate",
+            **kwargs,
+        )
+    elif name == "pam":
+        return TimeSeriesKMedoids(
+            n_init=10,
+            init="random",
+            distance=distance,
+            distance_params=distance_params,
+            random_state=random_state,
+            method="pam",
+            **kwargs,
+        )
+    elif name == "clarans" or name == "timeseriesclarans":
+        return TimeSeriesCLARANS(
+            n_init=10,
+            init="random",
+            distance=distance,
+            distance_params=distance_params,
+            random_state=random_state,
+            **kwargs,
+        )
+    elif name == "clara" or name == "timeseriesclara":
+        return TimeSeriesCLARA(
+            init="random",
+            distance=distance,
+            distance_params=distance_params,
+            random_state=random_state,
+            **kwargs,
+        )
+    elif name == "som" or name == "elasticsom":
+        return ElasticSOM(
+            distance=distance,
+            init="random",
+            sigma=1.0,
+            learning_rate=0.5,
+            decay_function="asymptotic_decay",
+            neighborhood_function="gaussian",
+            sigma_decay_function="asymptotic_decay",
+            num_iterations=500,
+            distance_params=distance_params,
+            random_state=random_state,
+            verbose=False,
+            **kwargs,
+        )
+    elif name == "agglomerative" or name == "timeseriesagglomerative":
         from aeon.clustering import TimeSeriesAgglomerative
 
         return TimeSeriesAgglomerative(
@@ -453,6 +438,8 @@ def _set_clusterer_distance_based(
             distance_params=distance_params,
             **kwargs,
         )
+    else:
+        raise ValueError(f"UNKNOWN CLUSTERER: {c} in get_clusterer_by_name")
 
 
 def _get_distance_default_params(
