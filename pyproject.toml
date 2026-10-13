@@ -56,7 +56,6 @@ all_extras = [
 ]
 unstable_extras = [
     "aeon[unstable_extras]",
-    "tsml[unstable_extras]",
 ]
 deep_learning = [
     "aeon[dl]",
