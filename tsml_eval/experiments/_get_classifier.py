@@ -491,6 +491,7 @@ def _set_classifier_distance_based(
             estimator=KNeighborsTimeSeriesClassifier(),
             param_grid=param_grid,
             scoring="accuracy",
+            n_jobs=n_jobs,
             **kwargs,
         )
     elif c == "grailclassifier" or c == "grail":
@@ -639,6 +640,7 @@ def _set_classifier_interval_based(
             n_estimators=500,
             random_state=random_state,
             n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
             **kwargs,
         )
     elif c == "randomintervalspectralensembleclassifier" or c == "rise":
@@ -649,6 +651,7 @@ def _set_classifier_interval_based(
         return RandomIntervalSpectralEnsembleClassifier(
             random_state=random_state,
             n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
             **kwargs,
         )
     elif c == "tsf-500":
@@ -658,6 +661,7 @@ def _set_classifier_interval_based(
             n_estimators=500,
             random_state=random_state,
             n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
             **kwargs,
         )
     elif c == "timeseriesforestclassifier" or c == "tsf":
@@ -666,6 +670,7 @@ def _set_classifier_interval_based(
         return TimeSeriesForestClassifier(
             random_state=random_state,
             n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
             **kwargs,
         )
     elif c == "cif-500":
@@ -675,6 +680,7 @@ def _set_classifier_interval_based(
             n_estimators=500,
             random_state=random_state,
             n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
             **kwargs,
         )
     elif c == "canonicalintervalforestclassifier" or c == "cif":
@@ -683,6 +689,7 @@ def _set_classifier_interval_based(
         return CanonicalIntervalForestClassifier(
             random_state=random_state,
             n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
             **kwargs,
         )
     elif c == "stsf-500":
@@ -692,6 +699,7 @@ def _set_classifier_interval_based(
             n_estimators=500,
             random_state=random_state,
             n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
             **kwargs,
         )
     elif c == "supervisedtimeseriesforest" or c == "stsf":
@@ -700,6 +708,7 @@ def _set_classifier_interval_based(
         return SupervisedTimeSeriesForest(
             random_state=random_state,
             n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
             **kwargs,
         )
     elif c == "drcif-500":
@@ -887,7 +896,7 @@ def _set_classifier_shapelet_based(
     elif c == "rdstclassifier" or c == "rdst":
         from aeon.classification.shapelet_based import RDSTClassifier
 
-        return RDSTClassifier(random_state=random_state, **kwargs)
+        return RDSTClassifier(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif (
         c == "randomshapeletforestclassifier"
         or c == "randomshapeletforest"
@@ -927,7 +936,7 @@ def _set_classifier_vector(c, random_state, n_jobs, fit_contract, checkpoint, kw
     elif c == "logisticregression" or c == "logistic":
         from sklearn.linear_model import LogisticRegression
 
-        return LogisticRegression(random_state=random_state, n_jobs=n_jobs, **kwargs)
+        return LogisticRegression(random_state=random_state, **kwargs)
     elif c == "prevalidatedridgeclassifier" or c == "prevalidatedridge":
         from aeon.classification.sklearn import PrevalidatedRidgeClassifier
 
