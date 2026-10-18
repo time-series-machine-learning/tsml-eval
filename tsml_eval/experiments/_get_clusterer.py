@@ -9,6 +9,7 @@ from aeon.clustering import (
     KSpectralCentroid,
     TimeSeriesCLARA,
     TimeSeriesCLARANS,
+    TimeSeriesKernelKMeans,
     TimeSeriesKMeans,
     TimeSeriesKMedoids,
 )
@@ -127,6 +128,7 @@ distance_based_clusterers = [
     "som-soft_dtw",
     ["kspectralcentroid", "ksc"],
     ["timeserieskshape", "kshape"],
+    "timeserieskernelkmeans",
     "kasba",
     "agglomerative-euclidean",
     "agglomerative-squared",
@@ -1344,6 +1346,14 @@ def _set_clusterer_distance_based(
             n_init=10,
             tol=1e-06,
             random_state=random_state,
+            **kwargs,
+        )
+    elif c == "timeserieskernelkmeans":
+        return TimeSeriesKernelKMeans(
+            n_init=10,
+            tol=1e-06,
+            random_state=random_state,
+            n_jobs=n_jobs,
             **kwargs,
         )
     elif c == "kasba":
