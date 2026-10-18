@@ -86,8 +86,6 @@ distance_based_clusterers = [
     "kmeans-ba-ddtw",
     "kmeans-ba-wdtw",
     "kmeans-ba-wddtw",
-    "kmeans-ba-lcss",
-    "kmeans-ba-erp",
     "kmeans-ba-edr",
     "kmeans-ba-twe",
     "kmeans-ba-msm",
@@ -97,7 +95,6 @@ distance_based_clusterers = [
     "kmeans-ssg-ba-ddtw",
     "kmeans-ssg-ba-wdtw",
     "kmeans-ssg-ba-wddtw",
-    "kmeans-ssg-ba-erp",
     "kmeans-ssg-ba-edr",
     "kmeans-ssg-ba-twe",
     "kmeans-ssg-ba-msm",
@@ -903,25 +900,6 @@ def _set_clusterer_distance_based(
             random_state=random_state,
             **kwargs,
         )
-    elif c == "kmeans-ba-lcss":
-        from aeon.clustering import TimeSeriesKMeans
-
-        return TimeSeriesKMeans(
-            distance="lcss",
-            random_state=random_state,
-            **kwargs,
-        )
-    elif c == "kmeans-ba-erp":
-        from aeon.clustering import TimeSeriesKMeans
-
-        g = _get_erp_g(data_vars, row_normalise)
-        return TimeSeriesKMeans(
-            distance="erp",
-            distance_params={"g": g},
-            random_state=random_state,
-            average_params={"g": g},
-            **kwargs,
-        )
     elif c == "kmeans-ba-edr":
         from aeon.clustering import TimeSeriesKMeans
 
@@ -1000,17 +978,6 @@ def _set_clusterer_distance_based(
             distance="wddtw",
             random_state=random_state,
             average_params={"method": "subgradient"},
-            **kwargs,
-        )
-    elif c == "kmeans-ssg-ba-erp":
-        from aeon.clustering import TimeSeriesKMeans
-
-        g = _get_erp_g(data_vars, row_normalise)
-        return TimeSeriesKMeans(
-            distance="erp",
-            distance_params={"g": g},
-            random_state=random_state,
-            average_params={"g": g, "method": "subgradient"},
             **kwargs,
         )
     elif c == "kmeans-ssg-ba-edr":
