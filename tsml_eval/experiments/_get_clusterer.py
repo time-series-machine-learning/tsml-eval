@@ -9,7 +9,6 @@ from aeon.clustering import (
     KSpectralCentroid,
     TimeSeriesCLARA,
     TimeSeriesCLARANS,
-    TimeSeriesKernelKMeans,
     TimeSeriesKMeans,
     TimeSeriesKMedoids,
 )
@@ -300,7 +299,1037 @@ def _set_clusterer_distance_based(
     row_normalise,
     kwargs,
 ):
-    if c == "kspectralcentroid" or c == "ksc":
+    if c == "kmeans-euclidean":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="euclidean",
+            random_state=random_state,
+            averaging_method="mean",
+            **kwargs,
+        )
+    elif c == "kmeans-squared":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="squared",
+            random_state=random_state,
+            averaging_method="mean",
+            **kwargs,
+        )
+    elif c == "kmeans-dtw" or c == "timeserieskmeans":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="dtw",
+            distance_params={"window": 0.2},
+            random_state=random_state,
+            averaging_method="mean",
+            **kwargs,
+        )
+    elif c == "kmeans-ddtw":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="ddtw",
+            distance_params={"window": 0.2},
+            random_state=random_state,
+            averaging_method="mean",
+            **kwargs,
+        )
+    elif c == "kmeans-wdtw":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="wdtw",
+            random_state=random_state,
+            averaging_method="mean",
+            **kwargs,
+        )
+    elif c == "kmeans-wddtw":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="wddtw",
+            random_state=random_state,
+            averaging_method="mean",
+            **kwargs,
+        )
+    elif c == "kmeans-lcss":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="lcss",
+            distance_params={"epsilon": 1.0},
+            random_state=random_state,
+            averaging_method="mean",
+            **kwargs,
+        )
+    elif c == "kmeans-erp":
+        g = _get_erp_g(data_vars, row_normalise)
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="erp",
+            distance_params={"g": g},
+            random_state=random_state,
+            averaging_method="mean",
+            **kwargs,
+        )
+    elif c == "kmeans-edr":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="edr",
+            distance_params={"epsilon": None},
+            random_state=random_state,
+            averaging_method="mean",
+            **kwargs,
+        )
+    elif c == "kmeans-twe":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="twe",
+            distance_params={"nu": 0.001, "lmbda": 1.0},
+            random_state=random_state,
+            averaging_method="mean",
+            **kwargs,
+        )
+    elif c == "kmeans-msm":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="msm",
+            distance_params={"c": 1.0, "independent": True},
+            random_state=random_state,
+            averaging_method="mean",
+            **kwargs,
+        )
+    elif c == "kmeans-adtw":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="adtw",
+            distance_params={"warp_penalty": 1.0},
+            random_state=random_state,
+            averaging_method="mean",
+            **kwargs,
+        )
+    elif c == "kmeans-shape_dtw":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="shape_dtw",
+            distance_params={"descriptor": "identity", "reach": 30},
+            random_state=random_state,
+            averaging_method="mean",
+            **kwargs,
+        )
+    elif c == "kmedoids-euclidean":
+        return TimeSeriesKMedoids(
+            n_init=10,
+            init="random",
+            distance="euclidean",
+            random_state=random_state,
+            method="alternate",
+            **kwargs,
+        )
+    elif c == "kmedoids-squared":
+        return TimeSeriesKMedoids(
+            n_init=10,
+            init="random",
+            distance="squared",
+            random_state=random_state,
+            method="alternate",
+            **kwargs,
+        )
+    elif c == "kmedoids-dtw" or c == "timeserieskmedoids":
+        return TimeSeriesKMedoids(
+            n_init=10,
+            init="random",
+            distance="dtw",
+            distance_params={"window": 0.2},
+            random_state=random_state,
+            method="alternate",
+            **kwargs,
+        )
+    elif c == "kmedoids-ddtw":
+        return TimeSeriesKMedoids(
+            n_init=10,
+            init="random",
+            distance="ddtw",
+            distance_params={"window": 0.2},
+            random_state=random_state,
+            method="alternate",
+            **kwargs,
+        )
+    elif c == "kmedoids-wdtw":
+        return TimeSeriesKMedoids(
+            n_init=10,
+            init="random",
+            distance="wdtw",
+            random_state=random_state,
+            method="alternate",
+            **kwargs,
+        )
+    elif c == "kmedoids-wddtw":
+        return TimeSeriesKMedoids(
+            n_init=10,
+            init="random",
+            distance="wddtw",
+            random_state=random_state,
+            method="alternate",
+            **kwargs,
+        )
+    elif c == "kmedoids-lcss":
+        return TimeSeriesKMedoids(
+            n_init=10,
+            init="random",
+            distance="lcss",
+            distance_params={"epsilon": 1.0},
+            random_state=random_state,
+            method="alternate",
+            **kwargs,
+        )
+    elif c == "kmedoids-erp":
+        g = _get_erp_g(data_vars, row_normalise)
+        return TimeSeriesKMedoids(
+            n_init=10,
+            init="random",
+            distance="erp",
+            distance_params={"g": g},
+            random_state=random_state,
+            method="alternate",
+            **kwargs,
+        )
+    elif c == "kmedoids-edr":
+        return TimeSeriesKMedoids(
+            n_init=10,
+            init="random",
+            distance="edr",
+            distance_params={"epsilon": None},
+            random_state=random_state,
+            method="alternate",
+            **kwargs,
+        )
+    elif c == "kmedoids-twe":
+        return TimeSeriesKMedoids(
+            n_init=10,
+            init="random",
+            distance="twe",
+            distance_params={"nu": 0.001, "lmbda": 1.0},
+            random_state=random_state,
+            method="alternate",
+            **kwargs,
+        )
+    elif c == "kmedoids-msm":
+        return TimeSeriesKMedoids(
+            n_init=10,
+            init="random",
+            distance="msm",
+            distance_params={"c": 1.0, "independent": True},
+            random_state=random_state,
+            method="alternate",
+            **kwargs,
+        )
+    elif c == "kmedoids-adtw":
+        return TimeSeriesKMedoids(
+            n_init=10,
+            init="random",
+            distance="adtw",
+            distance_params={"warp_penalty": 1.0},
+            random_state=random_state,
+            method="alternate",
+            **kwargs,
+        )
+    elif c == "kmedoids-shape_dtw":
+        return TimeSeriesKMedoids(
+            n_init=10,
+            init="random",
+            distance="shape_dtw",
+            distance_params={"descriptor": "identity", "reach": 30},
+            random_state=random_state,
+            method="alternate",
+            **kwargs,
+        )
+    elif c == "clarans-euclidean":
+        return TimeSeriesCLARANS(
+            n_init=10,
+            init="random",
+            distance="euclidean",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clarans-squared":
+        return TimeSeriesCLARANS(
+            n_init=10,
+            init="random",
+            distance="squared",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clarans-dtw" or c == "timeseriesclarans":
+        return TimeSeriesCLARANS(
+            n_init=10,
+            init="random",
+            distance="dtw",
+            distance_params={"window": 0.2},
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clarans-ddtw":
+        return TimeSeriesCLARANS(
+            n_init=10,
+            init="random",
+            distance="ddtw",
+            distance_params={"window": 0.2},
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clarans-wdtw":
+        return TimeSeriesCLARANS(
+            n_init=10,
+            init="random",
+            distance="wdtw",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clarans-wddtw":
+        return TimeSeriesCLARANS(
+            n_init=10,
+            init="random",
+            distance="wddtw",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clarans-lcss":
+        return TimeSeriesCLARANS(
+            n_init=10,
+            init="random",
+            distance="lcss",
+            distance_params={"epsilon": 1.0},
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clarans-erp":
+        g = _get_erp_g(data_vars, row_normalise)
+        return TimeSeriesCLARANS(
+            n_init=10,
+            init="random",
+            distance="erp",
+            distance_params={"g": g},
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clarans-edr":
+        return TimeSeriesCLARANS(
+            n_init=10,
+            init="random",
+            distance="edr",
+            distance_params={"epsilon": None},
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clarans-twe":
+        return TimeSeriesCLARANS(
+            n_init=10,
+            init="random",
+            distance="twe",
+            distance_params={"nu": 0.001, "lmbda": 1.0},
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clarans-msm":
+        return TimeSeriesCLARANS(
+            n_init=10,
+            init="random",
+            distance="msm",
+            distance_params={"c": 1.0, "independent": True},
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clarans-adtw":
+        return TimeSeriesCLARANS(
+            n_init=10,
+            init="random",
+            distance="adtw",
+            distance_params={"warp_penalty": 1.0},
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clarans-shape_dtw":
+        return TimeSeriesCLARANS(
+            n_init=10,
+            init="random",
+            distance="shape_dtw",
+            distance_params={"descriptor": "identity", "reach": 30},
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clara-euclidean":
+        return TimeSeriesCLARA(
+            init="random",
+            distance="euclidean",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clara-squared":
+        return TimeSeriesCLARA(
+            init="random",
+            distance="squared",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clara-dtw" or c == "timeseriesclara":
+        return TimeSeriesCLARA(
+            init="random",
+            distance="dtw",
+            distance_params={"window": 0.2},
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clara-ddtw":
+        return TimeSeriesCLARA(
+            init="random",
+            distance="ddtw",
+            distance_params={"window": 0.2},
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clara-wdtw":
+        return TimeSeriesCLARA(
+            init="random",
+            distance="wdtw",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clara-wddtw":
+        return TimeSeriesCLARA(
+            init="random",
+            distance="wddtw",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clara-lcss":
+        return TimeSeriesCLARA(
+            init="random",
+            distance="lcss",
+            distance_params={"epsilon": 1.0},
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clara-erp":
+        g = _get_erp_g(data_vars, row_normalise)
+        return TimeSeriesCLARA(
+            init="random",
+            distance="erp",
+            distance_params={"g": g},
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clara-edr":
+        return TimeSeriesCLARA(
+            init="random",
+            distance="edr",
+            distance_params={"epsilon": None},
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clara-twe":
+        return TimeSeriesCLARA(
+            init="random",
+            distance="twe",
+            distance_params={"nu": 0.001, "lmbda": 1.0},
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clara-msm":
+        return TimeSeriesCLARA(
+            init="random",
+            distance="msm",
+            distance_params={"c": 1.0, "independent": True},
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clara-adtw":
+        return TimeSeriesCLARA(
+            init="random",
+            distance="adtw",
+            distance_params={"warp_penalty": 1.0},
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clara-shape_dtw":
+        return TimeSeriesCLARA(
+            init="random",
+            distance="shape_dtw",
+            distance_params={"descriptor": "identity", "reach": 30},
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "pam-euclidean":
+        return TimeSeriesKMedoids(
+            n_init=10,
+            init="random",
+            distance="euclidean",
+            random_state=random_state,
+            method="pam",
+            **kwargs,
+        )
+    elif c == "pam-squared":
+        return TimeSeriesKMedoids(
+            n_init=10,
+            init="random",
+            distance="squared",
+            random_state=random_state,
+            method="pam",
+            **kwargs,
+        )
+    elif c == "pam-dtw":
+        return TimeSeriesKMedoids(
+            n_init=10,
+            init="random",
+            distance="dtw",
+            distance_params={"window": 0.2},
+            random_state=random_state,
+            method="pam",
+            **kwargs,
+        )
+    elif c == "pam-ddtw":
+        return TimeSeriesKMedoids(
+            n_init=10,
+            init="random",
+            distance="ddtw",
+            distance_params={"window": 0.2},
+            random_state=random_state,
+            method="pam",
+            **kwargs,
+        )
+    elif c == "pam-wdtw":
+        return TimeSeriesKMedoids(
+            n_init=10,
+            init="random",
+            distance="wdtw",
+            random_state=random_state,
+            method="pam",
+            **kwargs,
+        )
+    elif c == "pam-wddtw":
+        return TimeSeriesKMedoids(
+            n_init=10,
+            init="random",
+            distance="wddtw",
+            random_state=random_state,
+            method="pam",
+            **kwargs,
+        )
+    elif c == "pam-lcss":
+        return TimeSeriesKMedoids(
+            n_init=10,
+            init="random",
+            distance="lcss",
+            distance_params={"epsilon": 1.0},
+            random_state=random_state,
+            method="pam",
+            **kwargs,
+        )
+    elif c == "pam-erp":
+        g = _get_erp_g(data_vars, row_normalise)
+        return TimeSeriesKMedoids(
+            n_init=10,
+            init="random",
+            distance="erp",
+            distance_params={"g": g},
+            random_state=random_state,
+            method="pam",
+            **kwargs,
+        )
+    elif c == "pam-edr":
+        return TimeSeriesKMedoids(
+            n_init=10,
+            init="random",
+            distance="edr",
+            distance_params={"epsilon": None},
+            random_state=random_state,
+            method="pam",
+            **kwargs,
+        )
+    elif c == "pam-twe":
+        return TimeSeriesKMedoids(
+            n_init=10,
+            init="random",
+            distance="twe",
+            distance_params={"nu": 0.001, "lmbda": 1.0},
+            random_state=random_state,
+            method="pam",
+            **kwargs,
+        )
+    elif c == "pam-msm":
+        return TimeSeriesKMedoids(
+            n_init=10,
+            init="random",
+            distance="msm",
+            distance_params={"c": 1.0, "independent": True},
+            random_state=random_state,
+            method="pam",
+            **kwargs,
+        )
+    elif c == "pam-adtw":
+        return TimeSeriesKMedoids(
+            n_init=10,
+            init="random",
+            distance="adtw",
+            distance_params={"warp_penalty": 1.0},
+            random_state=random_state,
+            method="pam",
+            **kwargs,
+        )
+    elif c == "pam-shape_dtw":
+        return TimeSeriesKMedoids(
+            n_init=10,
+            init="random",
+            distance="shape_dtw",
+            distance_params={"descriptor": "identity", "reach": 30},
+            random_state=random_state,
+            method="pam",
+            **kwargs,
+        )
+    elif c == "kmeans-ba-dtw":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="dtw",
+            distance_params={"window": 0.2},
+            random_state=random_state,
+            averaging_method="ba",
+            average_params={"distance": "dtw", "window": 0.2},
+            **kwargs,
+        )
+    elif c == "kmeans-ba-ddtw":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="ddtw",
+            distance_params={"window": 0.2},
+            random_state=random_state,
+            averaging_method="ba",
+            average_params={"distance": "ddtw", "window": 0.2},
+            **kwargs,
+        )
+    elif c == "kmeans-ba-wdtw":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="wdtw",
+            random_state=random_state,
+            averaging_method="ba",
+            average_params={"distance": "wdtw"},
+            **kwargs,
+        )
+    elif c == "kmeans-ba-wddtw":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="wddtw",
+            random_state=random_state,
+            averaging_method="ba",
+            average_params={"distance": "wddtw"},
+            **kwargs,
+        )
+    elif c == "kmeans-ba-lcss":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="lcss",
+            distance_params={"epsilon": 1.0},
+            random_state=random_state,
+            averaging_method="ba",
+            average_params={"distance": "lcss", "epsilon": 1.0},
+            **kwargs,
+        )
+    elif c == "kmeans-ba-erp":
+        g = _get_erp_g(data_vars, row_normalise)
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="erp",
+            distance_params={"g": g},
+            random_state=random_state,
+            averaging_method="ba",
+            average_params={"distance": "erp", "g": g},
+            **kwargs,
+        )
+    elif c == "kmeans-ba-edr":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="edr",
+            distance_params={"epsilon": None},
+            random_state=random_state,
+            averaging_method="ba",
+            average_params={"distance": "edr", "epsilon": None},
+            **kwargs,
+        )
+    elif c == "kmeans-ba-twe":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="twe",
+            distance_params={"nu": 0.001, "lmbda": 1.0},
+            random_state=random_state,
+            averaging_method="ba",
+            average_params={"distance": "twe", "nu": 0.001, "lmbda": 1.0},
+            **kwargs,
+        )
+    elif c == "kmeans-ba-msm":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="msm",
+            distance_params={"c": 1.0, "independent": True},
+            random_state=random_state,
+            averaging_method="ba",
+            average_params={"distance": "msm", "c": 1.0, "independent": True},
+            **kwargs,
+        )
+    elif c == "kmeans-ba-adtw":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="adtw",
+            distance_params={"warp_penalty": 1.0},
+            random_state=random_state,
+            averaging_method="ba",
+            average_params={"distance": "adtw", "warp_penalty": 1.0},
+            **kwargs,
+        )
+    elif c == "kmeans-ba-shape_dtw":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="shape_dtw",
+            distance_params={"descriptor": "identity", "reach": 30},
+            random_state=random_state,
+            averaging_method="ba",
+            average_params={
+                "distance": "shape_dtw",
+                "descriptor": "identity",
+                "reach": 30,
+            },
+            **kwargs,
+        )
+    elif c == "kmeans-ssg-ba-dtw":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="dtw",
+            distance_params={"window": 0.2},
+            random_state=random_state,
+            averaging_method="ba",
+            average_params={"distance": "dtw", "window": 0.2, "method": "subgradient"},
+            **kwargs,
+        )
+    elif c == "kmeans-ssg-ba-ddtw":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="ddtw",
+            distance_params={"window": 0.2},
+            random_state=random_state,
+            averaging_method="ba",
+            average_params={"distance": "ddtw", "window": 0.2, "method": "subgradient"},
+            **kwargs,
+        )
+    elif c == "kmeans-ssg-ba-wdtw":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="wdtw",
+            random_state=random_state,
+            averaging_method="ba",
+            average_params={"distance": "wdtw", "method": "subgradient"},
+            **kwargs,
+        )
+    elif c == "kmeans-ssg-ba-wddtw":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="wddtw",
+            random_state=random_state,
+            averaging_method="ba",
+            average_params={"distance": "wddtw", "method": "subgradient"},
+            **kwargs,
+        )
+    elif c == "kmeans-ssg-ba-erp":
+        g = _get_erp_g(data_vars, row_normalise)
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="erp",
+            distance_params={"g": g},
+            random_state=random_state,
+            averaging_method="ba",
+            average_params={"distance": "erp", "g": g, "method": "subgradient"},
+            **kwargs,
+        )
+    elif c == "kmeans-ssg-ba-edr":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="edr",
+            distance_params={"epsilon": None},
+            random_state=random_state,
+            averaging_method="ba",
+            average_params={
+                "distance": "edr",
+                "epsilon": None,
+                "method": "subgradient",
+            },
+            **kwargs,
+        )
+    elif c == "kmeans-ssg-ba-twe":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="twe",
+            distance_params={"nu": 0.001, "lmbda": 1.0},
+            random_state=random_state,
+            averaging_method="ba",
+            average_params={
+                "distance": "twe",
+                "nu": 0.001,
+                "lmbda": 1.0,
+                "method": "subgradient",
+            },
+            **kwargs,
+        )
+    elif c == "kmeans-ssg-ba-msm":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="msm",
+            distance_params={"c": 1.0, "independent": True},
+            random_state=random_state,
+            averaging_method="ba",
+            average_params={
+                "distance": "msm",
+                "c": 1.0,
+                "independent": True,
+                "method": "subgradient",
+            },
+            **kwargs,
+        )
+    elif c == "kmeans-ssg-ba-adtw":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="adtw",
+            distance_params={"warp_penalty": 1.0},
+            random_state=random_state,
+            averaging_method="ba",
+            average_params={
+                "distance": "adtw",
+                "warp_penalty": 1.0,
+                "method": "subgradient",
+            },
+            **kwargs,
+        )
+    elif c == "kmeans-ssg-ba-shape_dtw":
+        return TimeSeriesKMeans(
+            n_init=10,
+            init="random",
+            distance="shape_dtw",
+            distance_params={"descriptor": "identity", "reach": 30},
+            random_state=random_state,
+            averaging_method="ba",
+            average_params={
+                "distance": "shape_dtw",
+                "descriptor": "identity",
+                "reach": 30,
+                "method": "subgradient",
+            },
+            **kwargs,
+        )
+    elif c == "som-dtw" or c == "elasticsom":
+        return ElasticSOM(
+            distance="dtw",
+            init="random",
+            sigma=1.0,
+            learning_rate=0.5,
+            decay_function="asymptotic_decay",
+            neighborhood_function="gaussian",
+            sigma_decay_function="asymptotic_decay",
+            num_iterations=500,
+            distance_params={"window": 0.2},
+            random_state=random_state,
+            verbose=False,
+            **kwargs,
+        )
+    elif c == "som-ddtw":
+        return ElasticSOM(
+            distance="ddtw",
+            init="random",
+            sigma=1.0,
+            learning_rate=0.5,
+            decay_function="asymptotic_decay",
+            neighborhood_function="gaussian",
+            sigma_decay_function="asymptotic_decay",
+            num_iterations=500,
+            distance_params={"window": 0.2},
+            random_state=random_state,
+            verbose=False,
+            **kwargs,
+        )
+    elif c == "som-wdtw":
+        return ElasticSOM(
+            distance="wdtw",
+            init="random",
+            sigma=1.0,
+            learning_rate=0.5,
+            decay_function="asymptotic_decay",
+            neighborhood_function="gaussian",
+            sigma_decay_function="asymptotic_decay",
+            num_iterations=500,
+            random_state=random_state,
+            verbose=False,
+            **kwargs,
+        )
+    elif c == "som-wddtw":
+        return ElasticSOM(
+            distance="wddtw",
+            init="random",
+            sigma=1.0,
+            learning_rate=0.5,
+            decay_function="asymptotic_decay",
+            neighborhood_function="gaussian",
+            sigma_decay_function="asymptotic_decay",
+            num_iterations=500,
+            random_state=random_state,
+            verbose=False,
+            **kwargs,
+        )
+    elif c == "som-lcss":
+        return ElasticSOM(
+            distance="lcss",
+            init="random",
+            sigma=1.0,
+            learning_rate=0.5,
+            decay_function="asymptotic_decay",
+            neighborhood_function="gaussian",
+            sigma_decay_function="asymptotic_decay",
+            num_iterations=500,
+            distance_params={"epsilon": 1.0},
+            random_state=random_state,
+            verbose=False,
+            **kwargs,
+        )
+    elif c == "som-erp":
+        g = _get_erp_g(data_vars, row_normalise)
+        return ElasticSOM(
+            distance="erp",
+            init="random",
+            sigma=1.0,
+            learning_rate=0.5,
+            decay_function="asymptotic_decay",
+            neighborhood_function="gaussian",
+            sigma_decay_function="asymptotic_decay",
+            num_iterations=500,
+            distance_params={"g": g},
+            random_state=random_state,
+            verbose=False,
+            **kwargs,
+        )
+    elif c == "som-edr":
+        return ElasticSOM(
+            distance="edr",
+            init="random",
+            sigma=1.0,
+            learning_rate=0.5,
+            decay_function="asymptotic_decay",
+            neighborhood_function="gaussian",
+            sigma_decay_function="asymptotic_decay",
+            num_iterations=500,
+            distance_params={"epsilon": None},
+            random_state=random_state,
+            verbose=False,
+            **kwargs,
+        )
+    elif c == "som-twe":
+        return ElasticSOM(
+            distance="twe",
+            init="random",
+            sigma=1.0,
+            learning_rate=0.5,
+            decay_function="asymptotic_decay",
+            neighborhood_function="gaussian",
+            sigma_decay_function="asymptotic_decay",
+            num_iterations=500,
+            distance_params={"nu": 0.001, "lmbda": 1.0},
+            random_state=random_state,
+            verbose=False,
+            **kwargs,
+        )
+    elif c == "som-msm":
+        return ElasticSOM(
+            distance="msm",
+            init="random",
+            sigma=1.0,
+            learning_rate=0.5,
+            decay_function="asymptotic_decay",
+            neighborhood_function="gaussian",
+            sigma_decay_function="asymptotic_decay",
+            num_iterations=500,
+            distance_params={"c": 1.0, "independent": True},
+            random_state=random_state,
+            verbose=False,
+            **kwargs,
+        )
+    elif c == "som-adtw":
+        return ElasticSOM(
+            distance="adtw",
+            init="random",
+            sigma=1.0,
+            learning_rate=0.5,
+            decay_function="asymptotic_decay",
+            neighborhood_function="gaussian",
+            sigma_decay_function="asymptotic_decay",
+            num_iterations=500,
+            distance_params={"warp_penalty": 1.0},
+            random_state=random_state,
+            verbose=False,
+            **kwargs,
+        )
+    elif c == "som-shape_dtw":
+        return ElasticSOM(
+            distance="shape_dtw",
+            init="random",
+            sigma=1.0,
+            learning_rate=0.5,
+            decay_function="asymptotic_decay",
+            neighborhood_function="gaussian",
+            sigma_decay_function="asymptotic_decay",
+            num_iterations=500,
+            distance_params={"descriptor": "identity", "reach": 30},
+            random_state=random_state,
+            verbose=False,
+            **kwargs,
+        )
+    elif c == "som-soft_dtw":
+        return ElasticSOM(
+            distance="soft_dtw",
+            init="random",
+            sigma=1.0,
+            learning_rate=0.5,
+            decay_function="asymptotic_decay",
+            neighborhood_function="gaussian",
+            sigma_decay_function="asymptotic_decay",
+            num_iterations=500,
+            random_state=random_state,
+            verbose=False,
+            **kwargs,
+        )
+    elif c == "kspectralcentroid" or c == "ksc":
         return KSpectralCentroid(
             # Max shift set to n_timepoints when max_shift is None
             max_shift=None,
@@ -317,14 +1346,6 @@ def _set_clusterer_distance_based(
             random_state=random_state,
             **kwargs,
         )
-    elif c == "timeserieskernelkmeans":
-        return TimeSeriesKernelKMeans(
-            n_init=10,
-            tol=1e-06,
-            random_state=random_state,
-            n_jobs=n_jobs,
-            **kwargs,
-        )
     elif c == "kasba":
         from aeon.clustering import KASBA
 
@@ -332,151 +1353,126 @@ def _set_clusterer_distance_based(
             random_state=random_state,
             **kwargs,
         )
-
-    # the remaining names end with the distance to use i.e. "kmeans-msm", the
-    # clusterer class names use dtw
-    if "-" in c:
-        name, distance = c.rsplit("-", 1)
-    else:
-        name, distance = c, "dtw"
-    distance_params = _get_distance_default_params(distance, data_vars, row_normalise)
-
-    if name == "kmeans" or name == "timeserieskmeans":
-        return TimeSeriesKMeans(
-            n_init=10,
-            init="random",
-            distance=distance,
-            distance_params=distance_params,
-            random_state=random_state,
-            averaging_method="mean",
-            **kwargs,
-        )
-    elif name == "kmeans-ba":
-        return TimeSeriesKMeans(
-            n_init=10,
-            init="random",
-            distance=distance,
-            distance_params=distance_params,
-            random_state=random_state,
-            averaging_method="ba",
-            average_params={"distance": distance, **distance_params},
-            **kwargs,
-        )
-    elif name == "kmeans-ssg-ba":
-        return TimeSeriesKMeans(
-            n_init=10,
-            init="random",
-            distance=distance,
-            distance_params=distance_params,
-            random_state=random_state,
-            averaging_method="ba",
-            # Sets to use subgradient BA
-            average_params={
-                "distance": distance,
-                **distance_params,
-                "method": "subgradient",
-            },
-            **kwargs,
-        )
-    elif name == "kmedoids" or name == "timeserieskmedoids":
-        return TimeSeriesKMedoids(
-            n_init=10,
-            init="random",
-            distance=distance,
-            distance_params=distance_params,
-            random_state=random_state,
-            method="alternate",
-            **kwargs,
-        )
-    elif name == "pam":
-        return TimeSeriesKMedoids(
-            n_init=10,
-            init="random",
-            distance=distance,
-            distance_params=distance_params,
-            random_state=random_state,
-            method="pam",
-            **kwargs,
-        )
-    elif name == "clarans" or name == "timeseriesclarans":
-        return TimeSeriesCLARANS(
-            n_init=10,
-            init="random",
-            distance=distance,
-            distance_params=distance_params,
-            random_state=random_state,
-            **kwargs,
-        )
-    elif name == "clara" or name == "timeseriesclara":
-        return TimeSeriesCLARA(
-            init="random",
-            distance=distance,
-            distance_params=distance_params,
-            random_state=random_state,
-            **kwargs,
-        )
-    elif name == "som" or name == "elasticsom":
-        return ElasticSOM(
-            distance=distance,
-            init="random",
-            sigma=1.0,
-            learning_rate=0.5,
-            decay_function="asymptotic_decay",
-            neighborhood_function="gaussian",
-            sigma_decay_function="asymptotic_decay",
-            num_iterations=500,
-            distance_params=distance_params,
-            random_state=random_state,
-            verbose=False,
-            **kwargs,
-        )
-    elif name == "agglomerative" or name == "timeseriesagglomerative":
+    elif c == "agglomerative-euclidean":
         from aeon.clustering import TimeSeriesAgglomerative
 
         return TimeSeriesAgglomerative(
-            distance=distance,
-            distance_params=distance_params,
+            distance="euclidean",
+            **kwargs,
+        )
+    elif c == "agglomerative-squared":
+        from aeon.clustering import TimeSeriesAgglomerative
+
+        return TimeSeriesAgglomerative(
+            distance="squared",
+            **kwargs,
+        )
+    elif c == "agglomerative-dtw" or c == "timeseriesagglomerative":
+        from aeon.clustering import TimeSeriesAgglomerative
+
+        return TimeSeriesAgglomerative(
+            distance="dtw",
+            distance_params={"window": 0.2},
+            **kwargs,
+        )
+    elif c == "agglomerative-ddtw":
+        from aeon.clustering import TimeSeriesAgglomerative
+
+        return TimeSeriesAgglomerative(
+            distance="ddtw",
+            distance_params={"window": 0.2},
+            **kwargs,
+        )
+    elif c == "agglomerative-wdtw":
+        from aeon.clustering import TimeSeriesAgglomerative
+
+        return TimeSeriesAgglomerative(
+            distance="wdtw",
+            **kwargs,
+        )
+    elif c == "agglomerative-wddtw":
+        from aeon.clustering import TimeSeriesAgglomerative
+
+        return TimeSeriesAgglomerative(
+            distance="wddtw",
+            **kwargs,
+        )
+    elif c == "agglomerative-lcss":
+        from aeon.clustering import TimeSeriesAgglomerative
+
+        return TimeSeriesAgglomerative(
+            distance="lcss",
+            distance_params={"epsilon": 1.0},
+            **kwargs,
+        )
+    elif c == "agglomerative-erp":
+        from aeon.clustering import TimeSeriesAgglomerative
+
+        g = _get_erp_g(data_vars, row_normalise)
+        return TimeSeriesAgglomerative(
+            distance="erp",
+            distance_params={"g": g},
+            **kwargs,
+        )
+    elif c == "agglomerative-edr":
+        from aeon.clustering import TimeSeriesAgglomerative
+
+        return TimeSeriesAgglomerative(
+            distance="edr",
+            distance_params={"epsilon": None},
+            **kwargs,
+        )
+    elif c == "agglomerative-twe":
+        from aeon.clustering import TimeSeriesAgglomerative
+
+        return TimeSeriesAgglomerative(
+            distance="twe",
+            distance_params={"nu": 0.001, "lmbda": 1.0},
+            **kwargs,
+        )
+    elif c == "agglomerative-msm":
+        from aeon.clustering import TimeSeriesAgglomerative
+
+        return TimeSeriesAgglomerative(
+            distance="msm",
+            distance_params={"c": 1.0, "independent": True},
+            **kwargs,
+        )
+    elif c == "agglomerative-adtw":
+        from aeon.clustering import TimeSeriesAgglomerative
+
+        return TimeSeriesAgglomerative(
+            distance="adtw",
+            distance_params={"warp_penalty": 1.0},
+            **kwargs,
+        )
+    elif c == "agglomerative-shape_dtw":
+        from aeon.clustering import TimeSeriesAgglomerative
+
+        return TimeSeriesAgglomerative(
+            distance="shape_dtw",
+            distance_params={"descriptor": "identity", "reach": 30},
             **kwargs,
         )
     else:
         raise ValueError(f"UNKNOWN CLUSTERER: {c} in get_clusterer_by_name")
 
 
-def _get_distance_default_params(
-    dist_name: str, data_vars: list, row_normalise: bool
-) -> dict:
-    if dist_name == "dtw" or dist_name == "ddtw":
-        return {"window": 0.2}
-    if dist_name == "lcss":
-        return {"epsilon": 1.0}
-    if dist_name == "erp":
-        # load dataset to get std if available
-        if data_vars is not None:
-            X_train, _, _, _, _ = load_experiment_data(*data_vars)
+def _get_erp_g(data_vars: list, row_normalise: bool) -> float:
+    # load dataset to get std if available
+    if data_vars is not None:
+        X_train, _, _, _, _ = load_experiment_data(*data_vars)
 
-            # can't handle unequal length series
-            if isinstance(X_train, np.ndarray):
-                if row_normalise:
-                    scaler = Normalizer()
-                    X_train = scaler.fit_transform(X_train)
+        # can't handle unequal length series
+        if isinstance(X_train, np.ndarray):
+            if row_normalise:
+                scaler = Normalizer()
+                X_train = scaler.fit_transform(X_train)
 
-                return {"g": X_train.std(axis=0).sum()}
-            elif not isinstance(X_train, list):
-                raise ValueError("Unknown data type in _get_distance_default_params")
-        return {"g": 0.05}
-    if dist_name == "msm":
-        return {"c": 1.0, "independent": True}
-    if dist_name == "edr":
-        return {"epsilon": None}
-    if dist_name == "twe":
-        return {"nu": 0.001, "lmbda": 1.0}
-    if dist_name == "psi_dtw":
-        return {"r": 0.5}
-    if dist_name == "adtw":
-        return {"warp_penalty": 1.0}
-    if dist_name == "shape_dtw":
-        return {"descriptor": "identity", "reach": 30}
-    return {}
+            return X_train.std(axis=0).sum()
+        elif not isinstance(X_train, list):
+            raise ValueError("Unknown data type in _get_erp_g")
+    return 0.05
 
 
 def _set_clusterer_feature_based(
