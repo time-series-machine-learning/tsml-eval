@@ -3,18 +3,7 @@
 __maintainer__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 import numpy as np
-from aeon.clustering import (
-    ElasticSOM,
-    KShape,
-    KSpectralCentroid,
-    TimeSeriesCLARA,
-    TimeSeriesCLARANS,
-    TimeSeriesKernelKMeans,
-    TimeSeriesKMeans,
-    TimeSeriesKMedoids,
-)
 from aeon.transformations.collection import Normalizer
-from sklearn.cluster import KMeans
 
 from tsml_eval.utils.datasets import load_experiment_data
 from tsml_eval.utils.functions import str_in_nested_list
@@ -242,6 +231,7 @@ def _set_clusterer_deep_learning(
     c, random_state, n_jobs, fit_contract, checkpoint, kwargs
 ):
     if c == "aefcnclusterer" or c == "aefcn":
+        from aeon.clustering import TimeSeriesKMeans
         from aeon.clustering.deep_learning import AEFCNClusterer
 
         return AEFCNClusterer(
@@ -250,6 +240,7 @@ def _set_clusterer_deep_learning(
             **kwargs,
         )
     elif c == "aeresnetclusterer" or c == "aeresnet":
+        from aeon.clustering import TimeSeriesKMeans
         from aeon.clustering.deep_learning import AEResNetClusterer
 
         return AEResNetClusterer(
@@ -258,6 +249,7 @@ def _set_clusterer_deep_learning(
             **kwargs,
         )
     elif c == "aeattentionbigruclusterer" or c == "aeattentionbigru":
+        from aeon.clustering import TimeSeriesKMeans
         from aeon.clustering.deep_learning import AEAttentionBiGRUClusterer
 
         return AEAttentionBiGRUClusterer(
@@ -266,6 +258,7 @@ def _set_clusterer_deep_learning(
             **kwargs,
         )
     elif c == "aebigruclusterer" or c == "aebigru":
+        from aeon.clustering import TimeSeriesKMeans
         from aeon.clustering.deep_learning import AEBiGRUClusterer
 
         return AEBiGRUClusterer(
@@ -274,6 +267,7 @@ def _set_clusterer_deep_learning(
             **kwargs,
         )
     elif c == "aedcnnclusterer" or c == "aedcnn":
+        from aeon.clustering import TimeSeriesKMeans
         from aeon.clustering.deep_learning import AEDCNNClusterer
 
         return AEDCNNClusterer(
@@ -282,6 +276,7 @@ def _set_clusterer_deep_learning(
             **kwargs,
         )
     elif c == "aedrnnclusterer" or c == "aedrnn":
+        from aeon.clustering import TimeSeriesKMeans
         from aeon.clustering.deep_learning import AEDRNNClusterer
 
         return AEDRNNClusterer(
@@ -302,6 +297,8 @@ def _set_clusterer_distance_based(
     kwargs,
 ):
     if c == "kmeans-euclidean":
+        from aeon.clustering import TimeSeriesKMeans
+
         return TimeSeriesKMeans(
             n_init=10,
             init="random",
@@ -311,6 +308,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmeans-squared":
+        from aeon.clustering import TimeSeriesKMeans
+
         return TimeSeriesKMeans(
             n_init=10,
             init="random",
@@ -320,6 +319,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmeans-dtw" or c == "timeserieskmeans":
+        from aeon.clustering import TimeSeriesKMeans
+
         return TimeSeriesKMeans(
             n_init=10,
             init="random",
@@ -330,6 +331,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmeans-ddtw":
+        from aeon.clustering import TimeSeriesKMeans
+
         return TimeSeriesKMeans(
             n_init=10,
             init="random",
@@ -340,6 +343,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmeans-wdtw":
+        from aeon.clustering import TimeSeriesKMeans
+
         return TimeSeriesKMeans(
             n_init=10,
             init="random",
@@ -349,6 +354,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmeans-wddtw":
+        from aeon.clustering import TimeSeriesKMeans
+
         return TimeSeriesKMeans(
             n_init=10,
             init="random",
@@ -358,6 +365,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmeans-lcss":
+        from aeon.clustering import TimeSeriesKMeans
+
         return TimeSeriesKMeans(
             n_init=10,
             init="random",
@@ -368,6 +377,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmeans-erp":
+        from aeon.clustering import TimeSeriesKMeans
+
         g = _get_erp_g(data_vars, row_normalise)
         return TimeSeriesKMeans(
             n_init=10,
@@ -379,6 +390,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmeans-edr":
+        from aeon.clustering import TimeSeriesKMeans
+
         return TimeSeriesKMeans(
             n_init=10,
             init="random",
@@ -389,6 +402,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmeans-twe":
+        from aeon.clustering import TimeSeriesKMeans
+
         return TimeSeriesKMeans(
             n_init=10,
             init="random",
@@ -399,6 +414,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmeans-msm":
+        from aeon.clustering import TimeSeriesKMeans
+
         return TimeSeriesKMeans(
             n_init=10,
             init="random",
@@ -409,6 +426,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmeans-adtw":
+        from aeon.clustering import TimeSeriesKMeans
+
         return TimeSeriesKMeans(
             n_init=10,
             init="random",
@@ -419,6 +438,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmeans-shape_dtw":
+        from aeon.clustering import TimeSeriesKMeans
+
         return TimeSeriesKMeans(
             n_init=10,
             init="random",
@@ -429,6 +450,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmedoids-euclidean":
+        from aeon.clustering import TimeSeriesKMedoids
+
         return TimeSeriesKMedoids(
             n_init=10,
             init="random",
@@ -438,6 +461,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmedoids-squared":
+        from aeon.clustering import TimeSeriesKMedoids
+
         return TimeSeriesKMedoids(
             n_init=10,
             init="random",
@@ -447,6 +472,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmedoids-dtw" or c == "timeserieskmedoids":
+        from aeon.clustering import TimeSeriesKMedoids
+
         return TimeSeriesKMedoids(
             n_init=10,
             init="random",
@@ -457,6 +484,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmedoids-ddtw":
+        from aeon.clustering import TimeSeriesKMedoids
+
         return TimeSeriesKMedoids(
             n_init=10,
             init="random",
@@ -467,6 +496,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmedoids-wdtw":
+        from aeon.clustering import TimeSeriesKMedoids
+
         return TimeSeriesKMedoids(
             n_init=10,
             init="random",
@@ -476,6 +507,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmedoids-wddtw":
+        from aeon.clustering import TimeSeriesKMedoids
+
         return TimeSeriesKMedoids(
             n_init=10,
             init="random",
@@ -485,6 +518,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmedoids-lcss":
+        from aeon.clustering import TimeSeriesKMedoids
+
         return TimeSeriesKMedoids(
             n_init=10,
             init="random",
@@ -495,6 +530,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmedoids-erp":
+        from aeon.clustering import TimeSeriesKMedoids
+
         g = _get_erp_g(data_vars, row_normalise)
         return TimeSeriesKMedoids(
             n_init=10,
@@ -506,6 +543,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmedoids-edr":
+        from aeon.clustering import TimeSeriesKMedoids
+
         return TimeSeriesKMedoids(
             n_init=10,
             init="random",
@@ -516,6 +555,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmedoids-twe":
+        from aeon.clustering import TimeSeriesKMedoids
+
         return TimeSeriesKMedoids(
             n_init=10,
             init="random",
@@ -526,6 +567,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmedoids-msm":
+        from aeon.clustering import TimeSeriesKMedoids
+
         return TimeSeriesKMedoids(
             n_init=10,
             init="random",
@@ -536,6 +579,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmedoids-adtw":
+        from aeon.clustering import TimeSeriesKMedoids
+
         return TimeSeriesKMedoids(
             n_init=10,
             init="random",
@@ -546,6 +591,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmedoids-shape_dtw":
+        from aeon.clustering import TimeSeriesKMedoids
+
         return TimeSeriesKMedoids(
             n_init=10,
             init="random",
@@ -556,6 +603,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "clarans-euclidean":
+        from aeon.clustering import TimeSeriesCLARANS
+
         return TimeSeriesCLARANS(
             n_init=10,
             init="random",
@@ -564,6 +613,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "clarans-squared":
+        from aeon.clustering import TimeSeriesCLARANS
+
         return TimeSeriesCLARANS(
             n_init=10,
             init="random",
@@ -572,6 +623,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "clarans-dtw" or c == "timeseriesclarans":
+        from aeon.clustering import TimeSeriesCLARANS
+
         return TimeSeriesCLARANS(
             n_init=10,
             init="random",
@@ -581,6 +634,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "clarans-ddtw":
+        from aeon.clustering import TimeSeriesCLARANS
+
         return TimeSeriesCLARANS(
             n_init=10,
             init="random",
@@ -590,6 +645,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "clarans-wdtw":
+        from aeon.clustering import TimeSeriesCLARANS
+
         return TimeSeriesCLARANS(
             n_init=10,
             init="random",
@@ -598,6 +655,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "clarans-wddtw":
+        from aeon.clustering import TimeSeriesCLARANS
+
         return TimeSeriesCLARANS(
             n_init=10,
             init="random",
@@ -606,6 +665,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "clarans-lcss":
+        from aeon.clustering import TimeSeriesCLARANS
+
         return TimeSeriesCLARANS(
             n_init=10,
             init="random",
@@ -615,6 +676,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "clarans-erp":
+        from aeon.clustering import TimeSeriesCLARANS
+
         g = _get_erp_g(data_vars, row_normalise)
         return TimeSeriesCLARANS(
             n_init=10,
@@ -625,6 +688,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "clarans-edr":
+        from aeon.clustering import TimeSeriesCLARANS
+
         return TimeSeriesCLARANS(
             n_init=10,
             init="random",
@@ -634,6 +699,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "clarans-twe":
+        from aeon.clustering import TimeSeriesCLARANS
+
         return TimeSeriesCLARANS(
             n_init=10,
             init="random",
@@ -643,6 +710,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "clarans-msm":
+        from aeon.clustering import TimeSeriesCLARANS
+
         return TimeSeriesCLARANS(
             n_init=10,
             init="random",
@@ -652,6 +721,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "clarans-adtw":
+        from aeon.clustering import TimeSeriesCLARANS
+
         return TimeSeriesCLARANS(
             n_init=10,
             init="random",
@@ -661,6 +732,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "clarans-shape_dtw":
+        from aeon.clustering import TimeSeriesCLARANS
+
         return TimeSeriesCLARANS(
             n_init=10,
             init="random",
@@ -670,6 +743,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "clara-euclidean":
+        from aeon.clustering import TimeSeriesCLARA
+
         return TimeSeriesCLARA(
             init="random",
             distance="euclidean",
@@ -677,6 +752,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "clara-squared":
+        from aeon.clustering import TimeSeriesCLARA
+
         return TimeSeriesCLARA(
             init="random",
             distance="squared",
@@ -684,6 +761,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "clara-dtw" or c == "timeseriesclara":
+        from aeon.clustering import TimeSeriesCLARA
+
         return TimeSeriesCLARA(
             init="random",
             distance="dtw",
@@ -692,6 +771,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "clara-ddtw":
+        from aeon.clustering import TimeSeriesCLARA
+
         return TimeSeriesCLARA(
             init="random",
             distance="ddtw",
@@ -700,6 +781,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "clara-wdtw":
+        from aeon.clustering import TimeSeriesCLARA
+
         return TimeSeriesCLARA(
             init="random",
             distance="wdtw",
@@ -707,6 +790,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "clara-wddtw":
+        from aeon.clustering import TimeSeriesCLARA
+
         return TimeSeriesCLARA(
             init="random",
             distance="wddtw",
@@ -714,6 +799,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "clara-lcss":
+        from aeon.clustering import TimeSeriesCLARA
+
         return TimeSeriesCLARA(
             init="random",
             distance="lcss",
@@ -722,6 +809,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "clara-erp":
+        from aeon.clustering import TimeSeriesCLARA
+
         g = _get_erp_g(data_vars, row_normalise)
         return TimeSeriesCLARA(
             init="random",
@@ -731,6 +820,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "clara-edr":
+        from aeon.clustering import TimeSeriesCLARA
+
         return TimeSeriesCLARA(
             init="random",
             distance="edr",
@@ -739,6 +830,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "clara-twe":
+        from aeon.clustering import TimeSeriesCLARA
+
         return TimeSeriesCLARA(
             init="random",
             distance="twe",
@@ -747,6 +840,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "clara-msm":
+        from aeon.clustering import TimeSeriesCLARA
+
         return TimeSeriesCLARA(
             init="random",
             distance="msm",
@@ -755,6 +850,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "clara-adtw":
+        from aeon.clustering import TimeSeriesCLARA
+
         return TimeSeriesCLARA(
             init="random",
             distance="adtw",
@@ -763,6 +860,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "clara-shape_dtw":
+        from aeon.clustering import TimeSeriesCLARA
+
         return TimeSeriesCLARA(
             init="random",
             distance="shape_dtw",
@@ -771,6 +870,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "pam-euclidean":
+        from aeon.clustering import TimeSeriesKMedoids
+
         return TimeSeriesKMedoids(
             n_init=10,
             init="random",
@@ -780,6 +881,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "pam-squared":
+        from aeon.clustering import TimeSeriesKMedoids
+
         return TimeSeriesKMedoids(
             n_init=10,
             init="random",
@@ -789,6 +892,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "pam-dtw":
+        from aeon.clustering import TimeSeriesKMedoids
+
         return TimeSeriesKMedoids(
             n_init=10,
             init="random",
@@ -799,6 +904,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "pam-ddtw":
+        from aeon.clustering import TimeSeriesKMedoids
+
         return TimeSeriesKMedoids(
             n_init=10,
             init="random",
@@ -809,6 +916,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "pam-wdtw":
+        from aeon.clustering import TimeSeriesKMedoids
+
         return TimeSeriesKMedoids(
             n_init=10,
             init="random",
@@ -818,6 +927,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "pam-wddtw":
+        from aeon.clustering import TimeSeriesKMedoids
+
         return TimeSeriesKMedoids(
             n_init=10,
             init="random",
@@ -827,6 +938,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "pam-lcss":
+        from aeon.clustering import TimeSeriesKMedoids
+
         return TimeSeriesKMedoids(
             n_init=10,
             init="random",
@@ -837,6 +950,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "pam-erp":
+        from aeon.clustering import TimeSeriesKMedoids
+
         g = _get_erp_g(data_vars, row_normalise)
         return TimeSeriesKMedoids(
             n_init=10,
@@ -848,6 +963,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "pam-edr":
+        from aeon.clustering import TimeSeriesKMedoids
+
         return TimeSeriesKMedoids(
             n_init=10,
             init="random",
@@ -858,6 +975,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "pam-twe":
+        from aeon.clustering import TimeSeriesKMedoids
+
         return TimeSeriesKMedoids(
             n_init=10,
             init="random",
@@ -868,6 +987,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "pam-msm":
+        from aeon.clustering import TimeSeriesKMedoids
+
         return TimeSeriesKMedoids(
             n_init=10,
             init="random",
@@ -878,6 +999,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "pam-adtw":
+        from aeon.clustering import TimeSeriesKMedoids
+
         return TimeSeriesKMedoids(
             n_init=10,
             init="random",
@@ -888,6 +1011,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "pam-shape_dtw":
+        from aeon.clustering import TimeSeriesKMedoids
+
         return TimeSeriesKMedoids(
             n_init=10,
             init="random",
@@ -898,6 +1023,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmeans-ba-dtw":
+        from aeon.clustering import TimeSeriesKMeans
+
         return TimeSeriesKMeans(
             n_init=10,
             init="random",
@@ -909,6 +1036,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmeans-ba-ddtw":
+        from aeon.clustering import TimeSeriesKMeans
+
         return TimeSeriesKMeans(
             n_init=10,
             init="random",
@@ -920,6 +1049,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmeans-ba-wdtw":
+        from aeon.clustering import TimeSeriesKMeans
+
         return TimeSeriesKMeans(
             n_init=10,
             init="random",
@@ -930,6 +1061,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmeans-ba-wddtw":
+        from aeon.clustering import TimeSeriesKMeans
+
         return TimeSeriesKMeans(
             n_init=10,
             init="random",
@@ -940,6 +1073,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmeans-ba-lcss":
+        from aeon.clustering import TimeSeriesKMeans
+
         return TimeSeriesKMeans(
             n_init=10,
             init="random",
@@ -951,6 +1086,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmeans-ba-erp":
+        from aeon.clustering import TimeSeriesKMeans
+
         g = _get_erp_g(data_vars, row_normalise)
         return TimeSeriesKMeans(
             n_init=10,
@@ -963,6 +1100,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmeans-ba-edr":
+        from aeon.clustering import TimeSeriesKMeans
+
         return TimeSeriesKMeans(
             n_init=10,
             init="random",
@@ -974,6 +1113,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmeans-ba-twe":
+        from aeon.clustering import TimeSeriesKMeans
+
         return TimeSeriesKMeans(
             n_init=10,
             init="random",
@@ -985,6 +1126,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmeans-ba-msm":
+        from aeon.clustering import TimeSeriesKMeans
+
         return TimeSeriesKMeans(
             n_init=10,
             init="random",
@@ -996,6 +1139,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmeans-ba-adtw":
+        from aeon.clustering import TimeSeriesKMeans
+
         return TimeSeriesKMeans(
             n_init=10,
             init="random",
@@ -1007,6 +1152,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmeans-ba-shape_dtw":
+        from aeon.clustering import TimeSeriesKMeans
+
         return TimeSeriesKMeans(
             n_init=10,
             init="random",
@@ -1022,6 +1169,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmeans-ssg-ba-dtw":
+        from aeon.clustering import TimeSeriesKMeans
+
         return TimeSeriesKMeans(
             n_init=10,
             init="random",
@@ -1033,6 +1182,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmeans-ssg-ba-ddtw":
+        from aeon.clustering import TimeSeriesKMeans
+
         return TimeSeriesKMeans(
             n_init=10,
             init="random",
@@ -1044,6 +1195,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmeans-ssg-ba-wdtw":
+        from aeon.clustering import TimeSeriesKMeans
+
         return TimeSeriesKMeans(
             n_init=10,
             init="random",
@@ -1054,6 +1207,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmeans-ssg-ba-wddtw":
+        from aeon.clustering import TimeSeriesKMeans
+
         return TimeSeriesKMeans(
             n_init=10,
             init="random",
@@ -1064,6 +1219,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmeans-ssg-ba-erp":
+        from aeon.clustering import TimeSeriesKMeans
+
         g = _get_erp_g(data_vars, row_normalise)
         return TimeSeriesKMeans(
             n_init=10,
@@ -1076,6 +1233,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmeans-ssg-ba-edr":
+        from aeon.clustering import TimeSeriesKMeans
+
         return TimeSeriesKMeans(
             n_init=10,
             init="random",
@@ -1091,6 +1250,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmeans-ssg-ba-twe":
+        from aeon.clustering import TimeSeriesKMeans
+
         return TimeSeriesKMeans(
             n_init=10,
             init="random",
@@ -1107,6 +1268,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmeans-ssg-ba-msm":
+        from aeon.clustering import TimeSeriesKMeans
+
         return TimeSeriesKMeans(
             n_init=10,
             init="random",
@@ -1123,6 +1286,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmeans-ssg-ba-adtw":
+        from aeon.clustering import TimeSeriesKMeans
+
         return TimeSeriesKMeans(
             n_init=10,
             init="random",
@@ -1138,6 +1303,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kmeans-ssg-ba-shape_dtw":
+        from aeon.clustering import TimeSeriesKMeans
+
         return TimeSeriesKMeans(
             n_init=10,
             init="random",
@@ -1154,6 +1321,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "som-dtw" or c == "elasticsom":
+        from aeon.clustering import ElasticSOM
+
         return ElasticSOM(
             distance="dtw",
             init="random",
@@ -1169,6 +1338,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "som-ddtw":
+        from aeon.clustering import ElasticSOM
+
         return ElasticSOM(
             distance="ddtw",
             init="random",
@@ -1184,6 +1355,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "som-wdtw":
+        from aeon.clustering import ElasticSOM
+
         return ElasticSOM(
             distance="wdtw",
             init="random",
@@ -1198,6 +1371,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "som-wddtw":
+        from aeon.clustering import ElasticSOM
+
         return ElasticSOM(
             distance="wddtw",
             init="random",
@@ -1212,6 +1387,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "som-lcss":
+        from aeon.clustering import ElasticSOM
+
         return ElasticSOM(
             distance="lcss",
             init="random",
@@ -1227,6 +1404,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "som-erp":
+        from aeon.clustering import ElasticSOM
+
         g = _get_erp_g(data_vars, row_normalise)
         return ElasticSOM(
             distance="erp",
@@ -1243,6 +1422,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "som-edr":
+        from aeon.clustering import ElasticSOM
+
         return ElasticSOM(
             distance="edr",
             init="random",
@@ -1258,6 +1439,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "som-twe":
+        from aeon.clustering import ElasticSOM
+
         return ElasticSOM(
             distance="twe",
             init="random",
@@ -1273,6 +1456,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "som-msm":
+        from aeon.clustering import ElasticSOM
+
         return ElasticSOM(
             distance="msm",
             init="random",
@@ -1288,6 +1473,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "som-adtw":
+        from aeon.clustering import ElasticSOM
+
         return ElasticSOM(
             distance="adtw",
             init="random",
@@ -1303,6 +1490,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "som-shape_dtw":
+        from aeon.clustering import ElasticSOM
+
         return ElasticSOM(
             distance="shape_dtw",
             init="random",
@@ -1318,6 +1507,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "som-soft_dtw":
+        from aeon.clustering import ElasticSOM
+
         return ElasticSOM(
             distance="soft_dtw",
             init="random",
@@ -1332,6 +1523,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "kspectralcentroid" or c == "ksc":
+        from aeon.clustering import KSpectralCentroid
+
         return KSpectralCentroid(
             # Max shift set to n_timepoints when max_shift is None
             max_shift=None,
@@ -1341,6 +1534,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "timeserieskshape" or c == "kshape":
+        from aeon.clustering import KShape
+
         return KShape(
             init="random",
             n_init=10,
@@ -1349,6 +1544,8 @@ def _set_clusterer_distance_based(
             **kwargs,
         )
     elif c == "timeserieskernelkmeans":
+        from aeon.clustering import TimeSeriesKernelKMeans
+
         return TimeSeriesKernelKMeans(
             n_init=10,
             tol=1e-06,
@@ -1490,18 +1687,21 @@ def _set_clusterer_feature_based(
 ):
     if c == "catch22" or c == "catch22clusterer":
         from aeon.clustering.feature_based import Catch22Clusterer
+        from sklearn.cluster import KMeans
 
         return Catch22Clusterer(
             estimator=KMeans(), random_state=random_state, n_jobs=n_jobs, **kwargs
         )
     elif c == "tsfresh" or c == "tsfreshclusterer":
         from aeon.clustering.feature_based import TSFreshClusterer
+        from sklearn.cluster import KMeans
 
         return TSFreshClusterer(
             estimator=KMeans(), random_state=random_state, n_jobs=n_jobs, **kwargs
         )
     elif c == "summary" or c == "summaryclusterer":
         from aeon.clustering.feature_based import SummaryClusterer
+        from sklearn.cluster import KMeans
 
         return SummaryClusterer(
             estimator=KMeans(), random_state=random_state, n_jobs=n_jobs, **kwargs
@@ -1518,6 +1718,8 @@ def _set_clusterer_other(c, random_state, n_jobs, fit_contract, checkpoint, kwar
 
         return DummyClusterer(strategy="random", random_state=random_state, **kwargs)
     elif c == "dummyclusterer-sklearn":
+        from sklearn.cluster import KMeans
+
         return KMeans(
             n_init=1,
             init="random",
