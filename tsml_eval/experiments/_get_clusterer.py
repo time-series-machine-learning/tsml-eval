@@ -7,6 +7,7 @@ from aeon.transformations.collection import Normalizer
 
 from tsml_eval.utils.datasets import load_experiment_data
 from tsml_eval.utils.functions import str_in_nested_list
+from tsml_eval.utils.resampling import stratified_resample_data
 
 deep_learning_clusterers = [
     ["aefcnclusterer", "aefcn"],
@@ -180,7 +181,9 @@ def get_clusterer_by_name(
         Checkpoint to save model
     data_vars: list, default=None
         List of arguments to load the dataset using
-        `tsml_eval.utils.experiments import load_experiment_data`.
+        `tsml_eval.utils.datasets.load_experiment_data`, used to find the ERP g
+        parameter from the train data. An optional fifth item is True if the train
+        and test data are combined.
     row_normalise: bool, default=False
         Whether to row normalise the data if it is loaded using data_vars.
     **kwargs
@@ -299,6 +302,7 @@ def _set_clusterer_distance_based(
         return TimeSeriesKMeans(
             distance="euclidean",
             random_state=random_state,
+            n_jobs=n_jobs,
             averaging_method="mean",
             **kwargs,
         )
@@ -308,6 +312,7 @@ def _set_clusterer_distance_based(
         return TimeSeriesKMeans(
             distance="squared",
             random_state=random_state,
+            n_jobs=n_jobs,
             averaging_method="mean",
             **kwargs,
         )
@@ -318,6 +323,7 @@ def _set_clusterer_distance_based(
             distance="dtw",
             distance_params={"window": 0.2},
             random_state=random_state,
+            n_jobs=n_jobs,
             averaging_method="mean",
             **kwargs,
         )
@@ -328,6 +334,7 @@ def _set_clusterer_distance_based(
             distance="ddtw",
             distance_params={"window": 0.2},
             random_state=random_state,
+            n_jobs=n_jobs,
             averaging_method="mean",
             **kwargs,
         )
@@ -337,6 +344,7 @@ def _set_clusterer_distance_based(
         return TimeSeriesKMeans(
             distance="wdtw",
             random_state=random_state,
+            n_jobs=n_jobs,
             averaging_method="mean",
             **kwargs,
         )
@@ -346,6 +354,7 @@ def _set_clusterer_distance_based(
         return TimeSeriesKMeans(
             distance="wddtw",
             random_state=random_state,
+            n_jobs=n_jobs,
             averaging_method="mean",
             **kwargs,
         )
@@ -355,6 +364,7 @@ def _set_clusterer_distance_based(
         return TimeSeriesKMeans(
             distance="lcss",
             random_state=random_state,
+            n_jobs=n_jobs,
             averaging_method="mean",
             **kwargs,
         )
@@ -366,6 +376,7 @@ def _set_clusterer_distance_based(
             distance="erp",
             distance_params={"g": g},
             random_state=random_state,
+            n_jobs=n_jobs,
             averaging_method="mean",
             **kwargs,
         )
@@ -375,6 +386,7 @@ def _set_clusterer_distance_based(
         return TimeSeriesKMeans(
             distance="edr",
             random_state=random_state,
+            n_jobs=n_jobs,
             averaging_method="mean",
             **kwargs,
         )
@@ -384,6 +396,7 @@ def _set_clusterer_distance_based(
         return TimeSeriesKMeans(
             distance="twe",
             random_state=random_state,
+            n_jobs=n_jobs,
             averaging_method="mean",
             **kwargs,
         )
@@ -393,6 +406,7 @@ def _set_clusterer_distance_based(
         return TimeSeriesKMeans(
             distance="msm",
             random_state=random_state,
+            n_jobs=n_jobs,
             averaging_method="mean",
             **kwargs,
         )
@@ -402,6 +416,7 @@ def _set_clusterer_distance_based(
         return TimeSeriesKMeans(
             distance="adtw",
             random_state=random_state,
+            n_jobs=n_jobs,
             averaging_method="mean",
             **kwargs,
         )
@@ -412,6 +427,7 @@ def _set_clusterer_distance_based(
             distance="shape_dtw",
             distance_params={"reach": 30},
             random_state=random_state,
+            n_jobs=n_jobs,
             averaging_method="mean",
             **kwargs,
         )
@@ -871,6 +887,7 @@ def _set_clusterer_distance_based(
             distance="dtw",
             distance_params={"window": 0.2},
             random_state=random_state,
+            n_jobs=n_jobs,
             average_params={"window": 0.2},
             **kwargs,
         )
@@ -881,6 +898,7 @@ def _set_clusterer_distance_based(
             distance="ddtw",
             distance_params={"window": 0.2},
             random_state=random_state,
+            n_jobs=n_jobs,
             average_params={"window": 0.2},
             **kwargs,
         )
@@ -890,6 +908,7 @@ def _set_clusterer_distance_based(
         return TimeSeriesKMeans(
             distance="wdtw",
             random_state=random_state,
+            n_jobs=n_jobs,
             **kwargs,
         )
     elif c == "kmeans-ba-wddtw":
@@ -898,6 +917,7 @@ def _set_clusterer_distance_based(
         return TimeSeriesKMeans(
             distance="wddtw",
             random_state=random_state,
+            n_jobs=n_jobs,
             **kwargs,
         )
     elif c == "kmeans-ba-edr":
@@ -906,6 +926,7 @@ def _set_clusterer_distance_based(
         return TimeSeriesKMeans(
             distance="edr",
             random_state=random_state,
+            n_jobs=n_jobs,
             **kwargs,
         )
     elif c == "kmeans-ba-twe":
@@ -914,6 +935,7 @@ def _set_clusterer_distance_based(
         return TimeSeriesKMeans(
             distance="twe",
             random_state=random_state,
+            n_jobs=n_jobs,
             **kwargs,
         )
     elif c == "kmeans-ba-msm":
@@ -922,6 +944,7 @@ def _set_clusterer_distance_based(
         return TimeSeriesKMeans(
             distance="msm",
             random_state=random_state,
+            n_jobs=n_jobs,
             **kwargs,
         )
     elif c == "kmeans-ba-adtw":
@@ -930,6 +953,7 @@ def _set_clusterer_distance_based(
         return TimeSeriesKMeans(
             distance="adtw",
             random_state=random_state,
+            n_jobs=n_jobs,
             **kwargs,
         )
     elif c == "kmeans-ba-shape_dtw":
@@ -939,6 +963,7 @@ def _set_clusterer_distance_based(
             distance="shape_dtw",
             distance_params={"reach": 30},
             random_state=random_state,
+            n_jobs=n_jobs,
             average_params={"reach": 30},
             **kwargs,
         )
@@ -949,6 +974,7 @@ def _set_clusterer_distance_based(
             distance="dtw",
             distance_params={"window": 0.2},
             random_state=random_state,
+            n_jobs=n_jobs,
             average_params={"window": 0.2, "method": "subgradient"},
             **kwargs,
         )
@@ -959,6 +985,7 @@ def _set_clusterer_distance_based(
             distance="ddtw",
             distance_params={"window": 0.2},
             random_state=random_state,
+            n_jobs=n_jobs,
             average_params={"window": 0.2, "method": "subgradient"},
             **kwargs,
         )
@@ -968,6 +995,7 @@ def _set_clusterer_distance_based(
         return TimeSeriesKMeans(
             distance="wdtw",
             random_state=random_state,
+            n_jobs=n_jobs,
             average_params={"method": "subgradient"},
             **kwargs,
         )
@@ -977,6 +1005,7 @@ def _set_clusterer_distance_based(
         return TimeSeriesKMeans(
             distance="wddtw",
             random_state=random_state,
+            n_jobs=n_jobs,
             average_params={"method": "subgradient"},
             **kwargs,
         )
@@ -986,6 +1015,7 @@ def _set_clusterer_distance_based(
         return TimeSeriesKMeans(
             distance="edr",
             random_state=random_state,
+            n_jobs=n_jobs,
             average_params={"method": "subgradient"},
             **kwargs,
         )
@@ -995,6 +1025,7 @@ def _set_clusterer_distance_based(
         return TimeSeriesKMeans(
             distance="twe",
             random_state=random_state,
+            n_jobs=n_jobs,
             average_params={"method": "subgradient"},
             **kwargs,
         )
@@ -1004,6 +1035,7 @@ def _set_clusterer_distance_based(
         return TimeSeriesKMeans(
             distance="msm",
             random_state=random_state,
+            n_jobs=n_jobs,
             average_params={"method": "subgradient"},
             **kwargs,
         )
@@ -1013,6 +1045,7 @@ def _set_clusterer_distance_based(
         return TimeSeriesKMeans(
             distance="adtw",
             random_state=random_state,
+            n_jobs=n_jobs,
             average_params={"method": "subgradient"},
             **kwargs,
         )
@@ -1023,6 +1056,7 @@ def _set_clusterer_distance_based(
             distance="shape_dtw",
             distance_params={"reach": 30},
             random_state=random_state,
+            n_jobs=n_jobs,
             average_params={"reach": 30, "method": "subgradient"},
             **kwargs,
         )
@@ -1132,6 +1166,7 @@ def _set_clusterer_distance_based(
 
         return KSpectralCentroid(
             random_state=random_state,
+            n_jobs=n_jobs,
             **kwargs,
         )
     elif c == "timeserieskshape" or c == "kshape":
@@ -1141,6 +1176,7 @@ def _set_clusterer_distance_based(
             n_init=10,
             tol=1e-06,
             random_state=random_state,
+            n_jobs=n_jobs,
             **kwargs,
         )
     elif c == "timeserieskernelkmeans":
@@ -1260,9 +1296,21 @@ def _set_clusterer_distance_based(
 
 
 def _get_erp_g(data_vars: list, row_normalise: bool) -> float:
-    # load dataset to get std if available
+    # load the experiment train data to get std if available
     if data_vars is not None:
-        X_train, _, _, _, _ = load_experiment_data(*data_vars)
+        X_train, y_train, X_test, y_test, resample = load_experiment_data(
+            *data_vars[:4]
+        )
+        if resample:
+            X_train, y_train, X_test, y_test = stratified_resample_data(
+                X_train, y_train, X_test, y_test, random_state=data_vars[2]
+            )
+        if len(data_vars) > 4 and data_vars[4]:
+            X_train = (
+                np.concatenate([X_train, X_test], axis=0)
+                if isinstance(X_train, np.ndarray)
+                else X_train + X_test
+            )
 
         # can't handle unequal length series
         if isinstance(X_train, np.ndarray):
