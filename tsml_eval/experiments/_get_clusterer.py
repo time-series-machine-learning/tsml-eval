@@ -1174,7 +1174,6 @@ def _set_clusterer_distance_based(
 
         return KShape(
             n_init=10,
-            tol=1e-06,
             random_state=random_state,
             n_jobs=n_jobs,
             **kwargs,
