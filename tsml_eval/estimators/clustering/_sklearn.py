@@ -5,6 +5,7 @@ __all__ = [
     "SklearnToAeonClusterer",
 ]
 
+import warnings
 from numbers import Integral
 
 import numpy as np
@@ -75,8 +76,8 @@ class SklearnToAeonClusterer(BaseClusterer):
 
         # sklearn clusterers such as DBSCAN label noise -1, it becomes the last cluster
         labels = self.clusterer_.labels_
-        self._noise_label = labels.max() + 1
-        self.labels_ = np.where(labels < 0, self._noise_label, labels)
+        self._noise_label = labels.max() + 1 if (labels < 0).any() else None
+        self.labels_ = self._relabel_noise(labels)
 
         # n_clusters can also be None or a clusterer, i.e. for Birch
         if isinstance(getattr(self.clusterer_, "n_clusters", None), Integral):
@@ -86,8 +87,7 @@ class SklearnToAeonClusterer(BaseClusterer):
 
     def _predict(self, X):
         X = self._check_and_convert(X)
-        preds = self.clusterer_.predict(X)
-        return np.where(preds < 0, self._noise_label, preds)
+        return self._relabel_noise(self.clusterer_.predict(X))
 
     def _predict_proba(self, X):
         m = getattr(self.clusterer_, "predict_proba", None)
@@ -96,6 +96,25 @@ class SklearnToAeonClusterer(BaseClusterer):
             return m(X)
 
         return super()._predict_proba(X)
+
+    def _relabel_noise(self, labels):
+        noise = labels < 0
+        if not noise.any():
+            return labels
+
+        if self._noise_label is None:
+            raise ValueError(
+                f"{type(self.clusterer_).__name__} labelled cases as noise, but no "
+                "training cases were labelled as noise, so there is no cluster to "
+                "relabel them as."
+            )
+
+        warnings.warn(
+            f"{type(self.clusterer_).__name__} labelled {noise.sum()} cases as noise, "
+            f"these are relabelled as cluster {self._noise_label}.",
+            stacklevel=2,
+        )
+        return np.where(noise, self._noise_label, labels)
 
     def _check_and_convert(self, X):
         if self.pad_unequal:

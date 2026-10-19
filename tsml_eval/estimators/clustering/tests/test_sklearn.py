@@ -176,7 +176,8 @@ def test_transductive_noise_labels():
 
     assert clf.get_tag("capability:predict") is False
 
-    clf.fit(X, y)
+    with pytest.warns(UserWarning, match="2 cases as noise"):
+        clf.fit(X, y)
 
     np.testing.assert_array_equal(clf.labels_, [0, 2, 1, 0, 2, 1])
     assert clf.n_clusters == 3
@@ -205,11 +206,30 @@ def test_predict_noise_labels():
     )
 
     clf = SklearnToAeonClusterer(clusterer=Birch(n_clusters=_SklearnNoiseClusterer()))
-    clf.fit(X, y)
+    with pytest.warns(UserWarning, match="as noise"):
+        clf.fit(X, y)
 
     assert np.unique(clf.clusterer_.predict(X[:, 0, :])).tolist() == [-1, 0, 1]
-    np.testing.assert_array_equal(clf.predict(X), clf.labels_)
-    np.testing.assert_array_equal(clf.predict_proba(X).argmax(axis=1), clf.labels_)
+    with pytest.warns(UserWarning, match="as noise"):
+        np.testing.assert_array_equal(clf.predict(X), clf.labels_)
+    with pytest.warns(UserWarning, match="as noise"):
+        proba = clf.predict_proba(X)
+    np.testing.assert_array_equal(proba.argmax(axis=1), clf.labels_)
+
+
+def test_predict_noise_without_train_noise():
+    """Noise from predict should raise if no training cases were noise."""
+    X, y = make_example_3d_numpy(
+        n_cases=6, n_channels=1, n_timepoints=4, random_state=0
+    )
+
+    clf = SklearnToAeonClusterer(
+        clusterer=_SklearnMockClusterer(n_clusters=3, predict_labels=[0, 1, 2, -1])
+    )
+    clf.fit(X, y)
+
+    with pytest.raises(ValueError, match="no training cases were labelled as noise"):
+        clf.predict(X)
 
 
 def test_rejects_multivariate_without_concatenation():
