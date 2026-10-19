@@ -7,6 +7,7 @@ from aeon.testing.data_generation import (
     make_example_3d_numpy_list,
 )
 from sklearn.base import BaseEstimator, ClusterMixin
+from sklearn.cluster import AgglomerativeClustering, Birch
 
 from tsml_eval.estimators.clustering._sklearn import SklearnToAeonClusterer
 
@@ -181,6 +182,34 @@ def test_transductive_noise_labels():
     assert clf.n_clusters == 3
     with pytest.raises(NotImplementedError, match="out-of-sample"):
         clf.predict(X)
+
+
+@pytest.mark.parametrize("n_clusters", [None, AgglomerativeClustering(n_clusters=2)])
+def test_n_clusters_not_int(n_clusters):
+    """Probabilities should cover the clusters found if n_clusters is not an int."""
+    X, y = make_example_3d_numpy(
+        n_cases=10, n_channels=1, n_timepoints=4, random_state=0
+    )
+
+    clf = SklearnToAeonClusterer(clusterer=Birch(n_clusters=n_clusters))
+    clf.fit(X, y)
+    proba = clf.predict_proba(X[:2])
+
+    assert proba.shape == (2, len(np.unique(clf.labels_)))
+
+
+def test_predict_noise_labels():
+    """Noise from predict should be the same cluster as noise in labels_."""
+    X, y = make_example_3d_numpy(
+        n_cases=10, n_channels=1, n_timepoints=4, random_state=0
+    )
+
+    clf = SklearnToAeonClusterer(clusterer=Birch(n_clusters=_SklearnNoiseClusterer()))
+    clf.fit(X, y)
+
+    assert np.unique(clf.clusterer_.predict(X[:, 0, :])).tolist() == [-1, 0, 1]
+    np.testing.assert_array_equal(clf.predict(X), clf.labels_)
+    np.testing.assert_array_equal(clf.predict_proba(X).argmax(axis=1), clf.labels_)
 
 
 def test_rejects_multivariate_without_concatenation():

@@ -5,6 +5,8 @@ __all__ = [
     "SklearnToAeonClusterer",
 ]
 
+from numbers import Integral
+
 import numpy as np
 from aeon.base._base import _clone_estimator
 from aeon.clustering import BaseClusterer
@@ -73,16 +75,19 @@ class SklearnToAeonClusterer(BaseClusterer):
 
         # sklearn clusterers such as DBSCAN label noise -1, it becomes the last cluster
         labels = self.clusterer_.labels_
-        self.labels_ = np.where(labels < 0, labels.max() + 1, labels)
+        self._noise_label = labels.max() + 1
+        self.labels_ = np.where(labels < 0, self._noise_label, labels)
 
-        if hasattr(self.clusterer_, "n_clusters"):
+        # n_clusters can also be None or a clusterer, i.e. for Birch
+        if isinstance(getattr(self.clusterer_, "n_clusters", None), Integral):
             self.n_clusters = self.clusterer_.n_clusters
         else:
             self.n_clusters = len(np.unique(self.labels_))
 
     def _predict(self, X):
         X = self._check_and_convert(X)
-        return self.clusterer_.predict(X)
+        preds = self.clusterer_.predict(X)
+        return np.where(preds < 0, self._noise_label, preds)
 
     def _predict_proba(self, X):
         m = getattr(self.clusterer_, "predict_proba", None)
