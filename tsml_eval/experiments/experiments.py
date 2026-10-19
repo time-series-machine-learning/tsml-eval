@@ -864,10 +864,16 @@ def run_clustering_experiment(
     if clusterer_name is None:
         clusterer_name = type(clusterer).__name__
 
-    if not isinstance(clusterer, BaseClusterer):
-        if not isinstance(clusterer, BaseEstimator) or not is_clusterer(clusterer):
-            raise TypeError("clusterer must be a tsml, aeon or sklearn clusterer.")
-
+    can_predict = True
+    # aeon clusterer
+    if isinstance(clusterer, BaseClusterer):
+        # transductive clusterers cannot predict, labels_ is used for train results.
+        # TimeSeriesAgglomerative does not set the tag in aeon 1.6.0
+        can_predict = (
+            clusterer.get_tag("capability:predict", False, True)
+            and type(clusterer).__name__ != "TimeSeriesAgglomerative"
+        )
+    elif isinstance(clusterer, BaseEstimator) and is_clusterer(clusterer):
         is_sklearn = True
         if _check_soft_dependencies("tsml", severity="none"):
             from tsml.base import BaseTimeSeriesEstimator
@@ -888,15 +894,9 @@ def run_clustering_experiment(
                     else None
                 ),
             )
-
-    can_predict = True
-    if isinstance(clusterer, BaseClusterer):
-        # transductive clusterers cannot predict, labels_ is used for train results.
-        # TimeSeriesAgglomerative does not set the tag in aeon 1.6.0
-        can_predict = (
-            clusterer.get_tag("capability:predict", False, True)
-            and type(clusterer).__name__ != "TimeSeriesAgglomerative"
-        )
+            can_predict = clusterer.get_tag("capability:predict")
+    else:
+        raise TypeError("clusterer must be a tsml, aeon or sklearn clusterer.")
 
     if build_test_file and (X_test is None or y_test is None):
         raise ValueError("Test data and labels not provided, cannot build test file.")
@@ -973,9 +973,12 @@ def run_clustering_experiment(
             if hasattr(clusterer, "labels_")
             else clusterer.predict(X_train)
         )
-        # labels may not be cluster indices, i.e. DBSCAN labels noise as -1
-        clusters, train_preds = np.unique(train_preds, return_inverse=True)
-        train_probs = np.zeros((len(train_preds), len(clusters)))
+        train_probs = np.zeros(
+            (
+                len(train_preds),
+                len(np.unique(train_preds)),
+            )
+        )
         train_probs[np.arange(len(train_preds)), train_preds] = 1
     train_time = int(round(time.time() * 1000)) - start
 

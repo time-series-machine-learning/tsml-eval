@@ -70,7 +70,10 @@ class SklearnToAeonClusterer(BaseClusterer):
         X = self._check_and_convert(X)
         self.clusterer_ = _clone_estimator(self.clusterer, self.random_state)
         self.clusterer_.fit(X)
-        self.labels_ = self.clusterer_.labels_
+
+        # sklearn clusterers such as DBSCAN label noise -1, it becomes the last cluster
+        labels = self.clusterer_.labels_
+        self.labels_ = np.where(labels < 0, labels.max() + 1, labels)
 
         if hasattr(self.clusterer_, "n_clusters"):
             self.n_clusters = self.clusterer_.n_clusters

@@ -37,6 +37,12 @@ class _SklearnProbaClusterer(_SklearnMockClusterer):
         return proba
 
 
+class _SklearnNoiseClusterer(BaseEstimator, ClusterMixin):
+    def fit(self, X, y=None):
+        self.labels_ = np.resize([0, -1, 1], X.shape[0])
+        return self
+
+
 @pytest.mark.parametrize("as_list", [False, True])
 def test_basic_univariate(as_list):
     """Wrap a standard sklearn-style clusterer on univariate equal-length data."""
@@ -157,6 +163,24 @@ def test_predict_proba_fall_back_multivariate():
     assert clf.clusterer_.predict_shape_ == (6, 8)
     assert proba.shape == (6, 3)
     np.testing.assert_allclose(proba.sum(axis=1), 1.0)
+
+
+def test_transductive_noise_labels():
+    """Clusterers without predict should not predict, and noise should be a cluster."""
+    X, y = make_example_3d_numpy(
+        n_cases=6, n_channels=1, n_timepoints=4, random_state=0
+    )
+
+    clf = SklearnToAeonClusterer(clusterer=_SklearnNoiseClusterer())
+
+    assert clf.get_tag("capability:predict") is False
+
+    clf.fit(X, y)
+
+    np.testing.assert_array_equal(clf.labels_, [0, 2, 1, 0, 2, 1])
+    assert clf.n_clusters == 3
+    with pytest.raises(NotImplementedError, match="out-of-sample"):
+        clf.predict(X)
 
 
 def test_rejects_multivariate_without_concatenation():
