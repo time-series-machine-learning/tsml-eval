@@ -847,7 +847,7 @@ def run_clustering_experiment(
         Calls fit_transform on the training data and transform on the test data.
     build_test_file : bool, default=False:
         Whether to generate test files or not. If True, X_test and y_test must be
-        provided.
+        provided, and the clusterer must be able to predict unseen cases.
     build_train_file : bool, default=True
         Whether to generate train files or not. The clusterer is fit using train data
         regardless of input.
@@ -864,16 +864,10 @@ def run_clustering_experiment(
     if clusterer_name is None:
         clusterer_name = type(clusterer).__name__
 
-    can_predict = True
-    # aeon clusterer
-    if isinstance(clusterer, BaseClusterer):
-        # transductive clusterers cannot predict, labels_ is used for train results.
-        # TimeSeriesAgglomerative does not set the tag in aeon 1.6.0
-        can_predict = (
-            clusterer.get_tag("capability:predict", False, True)
-            and type(clusterer).__name__ != "TimeSeriesAgglomerative"
-        )
-    elif isinstance(clusterer, BaseEstimator) and is_clusterer(clusterer):
+    if not isinstance(clusterer, BaseClusterer):
+        if not isinstance(clusterer, BaseEstimator) or not is_clusterer(clusterer):
+            raise TypeError("clusterer must be a tsml, aeon or sklearn clusterer.")
+
         is_sklearn = True
         if _check_soft_dependencies("tsml", severity="none"):
             from tsml.base import BaseTimeSeriesEstimator
@@ -894,11 +888,23 @@ def run_clustering_experiment(
                     else None
                 ),
             )
-    else:
-        raise TypeError("clusterer must be a tsml, aeon or sklearn clusterer.")
+
+    can_predict = True
+    if isinstance(clusterer, BaseClusterer):
+        # transductive clusterers cannot predict, labels_ is used for train results.
+        # TimeSeriesAgglomerative does not set the tag in aeon 1.6.0
+        can_predict = (
+            clusterer.get_tag("capability:predict", False, True)
+            and type(clusterer).__name__ != "TimeSeriesAgglomerative"
+        )
 
     if build_test_file and (X_test is None or y_test is None):
         raise ValueError("Test data and labels not provided, cannot build test file.")
+    if build_test_file and not can_predict:
+        raise ValueError(
+            f"{clusterer_name} cannot predict unseen cases, cannot build test file. "
+            "Set build_test_file to False or combine the train and test split."
+        )
 
     if data_transforms is not None:
         if not isinstance(data_transforms, list):
@@ -967,12 +973,9 @@ def run_clustering_experiment(
             if hasattr(clusterer, "labels_")
             else clusterer.predict(X_train)
         )
-        train_probs = np.zeros(
-            (
-                len(train_preds),
-                len(np.unique(train_preds)),
-            )
-        )
+        # labels may not be cluster indices, i.e. DBSCAN labels noise as -1
+        clusters, train_preds = np.unique(train_preds, return_inverse=True)
+        train_probs = np.zeros((len(train_preds), len(clusters)))
         train_probs[np.arange(len(train_preds)), train_preds] = 1
     train_time = int(round(time.time() * 1000)) - start
 
@@ -1102,7 +1105,7 @@ def load_and_run_clustering_experiment(
         Calls fit_transform on the training data and transform on the test data.
     build_test_file : bool, default=False
         Whether to generate test files or not. If true, the clusterer will assign
-        clusters to the loaded test data.
+        clusters to the loaded test data, so it must be able to predict unseen cases.
     benchmark_time : bool, default=True
         Whether to benchmark the hardware used with a simple function and write the
         results. This will typically take ~2 seconds, but is hardware dependent.

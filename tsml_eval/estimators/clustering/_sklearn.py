@@ -62,6 +62,7 @@ class SklearnToAeonClusterer(BaseClusterer):
             **{
                 "capability:multivariate": concatenate_channels,
                 "capability:unequal_length": pad_unequal,
+                "capability:predict": hasattr(clusterer, "predict"),
             }
         )
 
