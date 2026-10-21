@@ -55,7 +55,10 @@ clone at a known commit while collecting results; record `git rev-parse HEAD` an
 Put datasets and results on your scratch storage, not inside the Git checkout. The
 supplied Python script calls `load_eeg_classification` for each listed EEG problem,
 checks that both `.ts` splits exist, and writes only usable dataset names to a text
-file. Each line in that file is consumed by the Iridis submission scripts.
+file. It also retrieves the paired `_id_TRAIN.txt` and `_id_TEST.txt` files when
+they are present in the dataset's Zenodo record. These contain case or subject IDs
+in the archive. Each line in the dataset list is consumed by the Iridis submission
+scripts.
 
 ```bash
 EEG_WORK="/iridisfs/scratch/$USER/eeg"
@@ -80,6 +83,13 @@ eeg/data/SelfRegulationSCP1/SelfRegulationSCP1_TRAIN.ts
 eeg/data/SelfRegulationSCP1/SelfRegulationSCP1_TEST.ts
 eeg/datasets.txt
 ```
+
+Some problems also have `<name>_id_TRAIN.txt` and `<name>_id_TEST.txt` next to
+their `.ts` files. The downloader reports how many complete ID pairs it found.
+The `.ts` format preserves channel order and sometimes describes electrode names
+in header comments, but the archive does not consistently provide a separate
+channel-name file. Do not treat a channel index as a named electrode without
+checking that dataset's header or original documentation.
 
 If some names are unavailable or a download fails, the script exits with an error
 and prints a summary. It still writes the successfully staged names to

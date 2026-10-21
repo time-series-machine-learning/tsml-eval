@@ -2,8 +2,10 @@
 
 import runpy
 import sys
+from io import BytesIO
 from pathlib import Path
 from types import ModuleType
+from urllib.error import HTTPError
 
 import pytest
 
@@ -31,6 +33,14 @@ def test_download_eeg_classification_writes_only_ready_datasets(monkeypatch, tmp
         (problem_dir / f"{name}_TEST.ts").write_text("test")
 
     datasets.load_eeg_classification = load_eeg_classification
+
+    def urlopen(url, timeout):
+        assert timeout == 60
+        if "/records/1/" in url:
+            return BytesIO(b"subject-id\n")
+        raise HTTPError(url, 404, "No ID sidecar", None, None)
+
+    monkeypatch.setattr("urllib.request.urlopen", urlopen)
     monkeypatch.setitem(sys.modules, "aeon_neuro.datasets", datasets)
     monkeypatch.setitem(
         sys.modules, "aeon_neuro.datasets.classification_datasets", collection
@@ -55,3 +65,6 @@ def test_download_eeg_classification_writes_only_ready_datasets(monkeypatch, tmp
         runpy.run_path(str(script), run_name="__main__")
 
     assert dataset_list.read_text().splitlines() == ["Ready", "Download"]
+    assert (ready_dir / "Ready_id_TRAIN.txt").read_text() == "subject-id\n"
+    assert (ready_dir / "Ready_id_TEST.txt").read_text() == "subject-id\n"
+    assert not (data_dir / "Download" / "Download_id_TRAIN.txt").exists()
