@@ -262,7 +262,9 @@ def test_get_future_aeon_neuro_classifier(monkeypatch):
         def _predict(self, X):
             return [0] * len(X)
 
-    monkeypatch.setattr(classification, "FutureClassifier", FutureClassifier, raising=False)
+    monkeypatch.setattr(
+        classification, "FutureClassifier", FutureClassifier, raising=False
+    )
     classifier = get_classifier_by_name(
         "neuro:FutureClassifier", random_state=42, n_jobs=2
     )
