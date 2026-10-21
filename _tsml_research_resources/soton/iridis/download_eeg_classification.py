@@ -5,40 +5,7 @@ to the Iridis classification submission scripts.
 """
 
 import argparse
-import shutil
 from pathlib import Path
-from urllib.error import HTTPError
-from urllib.parse import quote
-from urllib.request import urlopen
-
-
-def download_id_files(name, record_id, problem_dir):
-    """Fetch subject/case ID sidecars when they are present in the Zenodo record."""
-    for split in ("TRAIN", "TEST"):
-        filename = f"{name}_id_{split}.txt"
-        target = problem_dir / filename
-        if target.is_file():
-            continue
-
-        url = (
-            f"https://zenodo.org/records/{record_id}/files/"
-            f"{quote(filename)}?download=1"
-        )
-        partial = problem_dir / f"{filename}.part"
-        try:
-            with urlopen(url, timeout=60) as response, partial.open("wb") as output:
-                shutil.copyfileobj(response, output)
-            partial.replace(target)
-        except HTTPError as exc:
-            if exc.code != 404:
-                raise
-        finally:
-            partial.unlink(missing_ok=True)
-
-    return all(
-        (problem_dir / f"{name}_id_{split}.txt").is_file()
-        for split in ("TRAIN", "TEST")
-    )
 
 
 def main():
@@ -64,7 +31,6 @@ def main():
     unavailable = []
     failed = []
     id_complete = []
-    id_failed = []
 
     for name in names:
         problem_dir = args.data_dir / name
@@ -93,13 +59,11 @@ def main():
                 failed.append(name)
                 continue
 
-        if record_id not in (None, 49):
-            try:
-                if download_id_files(name, record_id, problem_dir):
-                    id_complete.append(name)
-            except Exception as exc:
-                print(f"ID DOWNLOAD FAILED {name}: {exc}", flush=True)
-                id_failed.append(name)
+        if all(
+            (problem_dir / f"{name}_id_{split}.txt").is_file()
+            for split in ("TRAIN", "TEST")
+        ):
+            id_complete.append(name)
 
         print(f"READY {name}", flush=True)
         ready.append(name)
@@ -115,9 +79,7 @@ def main():
         print(f"Unavailable: {', '.join(unavailable)}", flush=True)
     if failed:
         print(f"Failed: {', '.join(failed)}", flush=True)
-    if id_failed:
-        print(f"ID download failed: {', '.join(id_failed)}", flush=True)
-    if unavailable or failed or id_failed:
+    if unavailable or failed:
         raise SystemExit(1)
 
 

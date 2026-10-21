@@ -15,12 +15,11 @@ extra. If the tsml-eval changes have not been merged into `main`, use the branch
 provided by your supervisor. The code below uses Python 3.13 because the aeon-neuro
 checkout inspected for this guide does not declare Python 3.14 support.
 
-The EEG dataset downloader depends on published download records. At the time this
-guide was written, the local aeon-neuro dataset map listed 31 problems but marked
-every record `49` (unavailable). The download step will report these names and write
-an empty dataset list until the records are provided. **Do not submit experiments
-against an empty list.** Ask your supervisor for the updated aeon-neuro release or
-staged `.ts` files if this happens.
+The EEG dataset downloader depends on published download records. Some entries in
+aeon-neuro's dataset map may still be marked `49` (unavailable). The download step
+reports these names. **Do not submit experiments against an empty dataset list.**
+Ask your supervisor for an updated aeon-neuro release or staged `.ts` files if this
+happens.
 
 ## 1. Connect and install the software
 
@@ -55,10 +54,11 @@ clone at a known commit while collecting results; record `git rev-parse HEAD` an
 Put datasets and results on your scratch storage, not inside the Git checkout. The
 supplied Python script calls `load_eeg_classification` for each listed EEG problem,
 checks that both `.ts` splits exist, and writes only usable dataset names to a text
-file. It also retrieves the paired `_id_TRAIN.txt` and `_id_TEST.txt` files when
-they are present in the dataset's Zenodo record. These contain case or subject IDs
-in the archive. Each line in the dataset list is consumed by the Iridis submission
-scripts.
+file. At the aeon-neuro repository's main HEAD, that loader calls aeon's
+`load_classification`, which downloads every file attached to the Zenodo record,
+including paired `_id_TRAIN.txt` and `_id_TEST.txt` files when published. These
+contain case or subject IDs in the archive. Each line in the dataset list is
+consumed by the Iridis submission scripts.
 
 ```bash
 EEG_WORK="/iridisfs/scratch/$USER/eeg"
@@ -86,6 +86,9 @@ eeg/datasets.txt
 
 Some problems also have `<name>_id_TRAIN.txt` and `<name>_id_TEST.txt` next to
 their `.ts` files. The downloader reports how many complete ID pairs it found.
+If the `.ts` files were staged before the current aeon download behavior, the loader
+reuses them and does not fetch missing sidecars; stage those from their Zenodo record
+if you need case IDs.
 The `.ts` format preserves channel order and sometimes describes electrode names
 in header comments, but the archive does not consistently provide a separate
 channel-name file. Do not treat a channel index as a named electrode without
