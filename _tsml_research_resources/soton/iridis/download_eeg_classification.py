@@ -5,11 +5,16 @@ to the Iridis classification submission scripts.
 """
 
 import argparse
+import logging
+import sys
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 def main():
     """Download published problems and write a list of usable datasets."""
+    logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stdout)
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--data-dir", type=Path, required=True)
     parser.add_argument("--dataset-list", type=Path, required=True)
@@ -39,7 +44,7 @@ def main():
         record_id = dataset_map.get(name)
         if not (train.is_file() and test.is_file()):
             if record_id in (None, 49):
-                print(f"UNAVAILABLE {name} (no download record yet)", flush=True)
+                logger.info("UNAVAILABLE %s (no download record yet)", name)
                 unavailable.append(name)
                 continue
 
@@ -55,7 +60,7 @@ def main():
                         f"Missing TRAIN or TEST file in {problem_dir}"
                     )
             except Exception as exc:
-                print(f"FAILED {name}: {exc}", flush=True)
+                logger.info("FAILED %s: %s", name, exc)
                 failed.append(name)
                 continue
 
@@ -65,20 +70,23 @@ def main():
         ):
             id_complete.append(name)
 
-        print(f"READY {name}", flush=True)
+        logger.info("READY %s", name)
         ready.append(name)
 
     args.dataset_list.write_text("".join(f"{name}\n" for name in ready))
-    print(
-        f"Ready: {len(ready)}; unavailable: {len(unavailable)}; failed: "
-        f"{len(failed)}; paired ID files: {len(id_complete)}. "
-        f"Dataset list: {args.dataset_list}",
-        flush=True,
+    logger.info(
+        "Ready: %s; unavailable: %s; failed: %s; paired ID files: %s. "
+        "Dataset list: %s",
+        len(ready),
+        len(unavailable),
+        len(failed),
+        len(id_complete),
+        args.dataset_list,
     )
     if unavailable:
-        print(f"Unavailable: {', '.join(unavailable)}", flush=True)
+        logger.info("Unavailable: %s", ", ".join(unavailable))
     if failed:
-        print(f"Failed: {', '.join(failed)}", flush=True)
+        logger.info("Failed: %s", ", ".join(failed))
     if unavailable or failed:
         raise SystemExit(1)
 
