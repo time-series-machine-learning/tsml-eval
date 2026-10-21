@@ -10,7 +10,7 @@ for current queue rules and account instructions.
 
 You need an Iridis account, access to the Southampton network or VPN, and an
 aeon-neuro release containing the EEG dataset downloader and classifiers. This guide
-expects aeon-neuro **0.3.0 or later** and a tsml-eval checkout containing its `neuro`
+expects aeon-neuro **0.1.0 or later** and a tsml-eval checkout containing its `neuro`
 extra. If the tsml-eval changes have not been merged into `main`, use the branch
 provided by your supervisor. The code below uses Python 3.13 because the aeon-neuro
 checkout inspected for this guide does not declare Python 3.14 support.

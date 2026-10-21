@@ -25,7 +25,7 @@ required, or install all of them using the `all_extras` extra dependency set:
 pip install tsml-eval[all_extras]
 ```
 
-To run EEG classifiers from `aeon-neuro` 0.3.0 or later, install the `neuro`
+To run EEG classifiers from `aeon-neuro` 0.1.0 or later, install the `neuro`
 extra:
 
 ```console

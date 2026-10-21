@@ -51,7 +51,7 @@ dependencies = [
 [project.optional-dependencies]
 all_extras = [
     "aeon[all_extras]",
-    "aeon-neuro>=0.3.0",
+    "aeon-neuro>=0.1.0",
     "tsml[all_extras]",
     "xgboost",
 ]
@@ -62,7 +62,7 @@ deep_learning = [
     "aeon[dl]",
 ]
 neuro = [
-    "aeon-neuro>=0.3.0",
+    "aeon-neuro>=0.1.0",
 ]
 
 dev = [
