@@ -116,7 +116,9 @@ python -u "$HOME/tsml-eval/tsml_eval/experiments/classification_experiments.py" 
 
 Replace `SelfRegulationSCP1` with a name actually present in your
 `datasets.txt`. `ROCKET` is an aeon classifier. For an aeon-neuro CPU classifier,
-replace it with `RiemannianMDMClassifier` or `CSPSVMClassifier`. The classifier
+replace it with `RiemannianMDMClassifier` or `CSPClassifier` (CSP with LDA).
+Use `CSPRandomForest` for CSP with a random forest or `CSPSVM` for CSP with a
+linear SVM. The classifier
 names and aliases implemented in this checkout are in
 [`tsml_eval/experiments/_get_classifier.py`](../../../tsml_eval/experiments/_get_classifier.py).
 New aeon-neuro classes exported by `aeon_neuro.classification` can be requested as

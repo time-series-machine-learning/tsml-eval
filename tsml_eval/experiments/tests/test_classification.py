@@ -222,7 +222,7 @@ def test_get_classifier_by_name_invalid():
         ("DeepConvNet", "DeepConvNetClassifier"),
         ("RiemannianMDM", "RiemannianMDMClassifier"),
         ("RiemannianKNN", "RiemannianKNNClassifier"),
-        ("CSPSVM", "CSPSVMClassifier"),
+        ("CSP", "CSPClassifier"),
     ],
 )
 def test_get_aeon_neuro_classifier(name, expected):
@@ -234,6 +234,28 @@ def test_get_aeon_neuro_classifier(name, expected):
         except ModuleNotFoundError as exc:
             pytest.skip(str(exc))
         assert type(classifier).__name__ == expected
+
+
+@pytest.mark.parametrize(
+    "name, expected",
+    [
+        ("CSPRandomForest", "RandomForestClassifier"),
+        ("CSPRF", "RandomForestClassifier"),
+        ("CSPSVM", "SVC"),
+        ("CSPSVMClassifier", "SVC"),
+    ],
+)
+def test_get_aeon_neuro_csp_variants(name, expected):
+    """CSP variants use the requested sklearn classifier."""
+    pytest.importorskip("aeon_neuro")
+    classifier = get_classifier_by_name(name, random_state=42, n_jobs=2)
+    assert type(classifier).__name__ == "CSPClassifier"
+    assert type(classifier.classifier).__name__ == expected
+    assert classifier.random_state == 42
+    if expected == "RandomForestClassifier":
+        assert classifier.classifier.n_jobs == 2
+    else:
+        assert classifier.classifier.probability
 
 
 def test_get_aeon_neuro_classifier_invalid():

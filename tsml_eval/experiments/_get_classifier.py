@@ -35,6 +35,8 @@ neuro_classifiers = [
     ["deepconvnetclassifier", "deepconvnet"],
     ["riemannianmdmclassifier", "riemannianmdm"],
     ["riemannianknnclassifier", "riemannianknn"],
+    ["cspclassifier", "csp", "csplda"],
+    ["csprandomforestclassifier", "csprandomforest", "csprf"],
     ["cspsvmclassifier", "cspsvm"],
 ]
 dictionary_based_classifiers = [
@@ -376,10 +378,34 @@ def _set_classifier_neuro(c, random_state, n_jobs, kwargs):
         from aeon_neuro.classification.distance_based import RiemannianKNNClassifier
 
         return RiemannianKNNClassifier(n_jobs=n_jobs, **kwargs)
-    elif c in ("cspsvmclassifier", "cspsvm"):
-        from aeon_neuro.classification.feature_based import CSPSVMClassifier
+    elif c in (
+        "cspclassifier",
+        "csp",
+        "csplda",
+        "csprandomforestclassifier",
+        "csprandomforest",
+        "csprf",
+        "cspsvmclassifier",
+        "cspsvm",
+    ):
+        from aeon_neuro.classification.feature_based import CSPClassifier
 
-        return CSPSVMClassifier(random_state=random_state, **kwargs)
+        if c in ("csprandomforestclassifier", "csprandomforest", "csprf"):
+            from sklearn.ensemble import RandomForestClassifier
+
+            classifier = RandomForestClassifier(
+                random_state=random_state, n_jobs=n_jobs
+            )
+        elif c in ("cspsvmclassifier", "cspsvm"):
+            from sklearn.svm import SVC
+
+            classifier = SVC(
+                kernel="linear", probability=True, random_state=random_state
+            )
+        else:
+            classifier = None
+        kwargs.setdefault("classifier", classifier)
+        return CSPClassifier(random_state=random_state, **kwargs)
     else:
         raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
 
