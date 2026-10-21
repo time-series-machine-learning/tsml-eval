@@ -215,6 +215,61 @@ def test_get_classifier_by_name_invalid():
         get_classifier_by_name("invalid")
 
 
+@pytest.mark.parametrize(
+    "name, expected",
+    [
+        ("EEGNet", "EEGNetClassifier"),
+        ("DeepConvNet", "DeepConvNetClassifier"),
+        ("RiemannianMDM", "RiemannianMDMClassifier"),
+        ("RiemannianKNN", "RiemannianKNNClassifier"),
+        ("CSPSVM", "CSPSVMClassifier"),
+    ],
+)
+def test_get_aeon_neuro_classifier(name, expected):
+    """Test native aeon-neuro classifiers are available by name and alias."""
+    pytest.importorskip("aeon_neuro")
+    for classifier_name in (name, expected, f"neuro:{expected}"):
+        try:
+            classifier = get_classifier_by_name(classifier_name)
+        except ModuleNotFoundError as exc:
+            pytest.skip(str(exc))
+        assert type(classifier).__name__ == expected
+
+
+def test_get_aeon_neuro_classifier_invalid():
+    """Test that the prefixed lookup only accepts exported neuro classifiers."""
+    pytest.importorskip("aeon_neuro")
+    with pytest.raises(ValueError, match="UNKNOWN CLASSIFIER"):
+        get_classifier_by_name("neuro:InvalidClassifier")
+
+
+def test_get_future_aeon_neuro_classifier(monkeypatch):
+    """Test discovery of a newly exported classifier and shared parameters."""
+    classification = pytest.importorskip("aeon_neuro.classification")
+    from aeon.classification.base import BaseClassifier
+
+    class FutureClassifier(BaseClassifier):
+        __module__ = "aeon_neuro.classification.future"
+
+        def __init__(self, random_state=None, n_jobs=1):
+            self.random_state = random_state
+            self.n_jobs = n_jobs
+            super().__init__()
+
+        def _fit(self, X, y):
+            return self
+
+        def _predict(self, X):
+            return [0] * len(X)
+
+    monkeypatch.setattr(classification, "FutureClassifier", FutureClassifier, raising=False)
+    classifier = get_classifier_by_name(
+        "neuro:FutureClassifier", random_state=42, n_jobs=2
+    )
+    assert isinstance(classifier, FutureClassifier)
+    assert (classifier.random_state, classifier.n_jobs) == (42, 2)
+
+
 def test_aeon_classifiers_available():
     """Test all aeon classifiers are available."""
     excluded = [
