@@ -1,3 +1,11 @@
+eeg_classification_students.md:
+    Student guide for downloading aeon-neuro EEG problems and running aeon and
+    aeon-neuro classification experiments on Iridis 6.
+
+download_eeg_classification.py:
+    Downloads the available EEG classification problems with aeon-neuro and writes
+    a dataset list for the submission scripts.
+
 serial_scripts:
     Simple(er) scripts which submit each experiment as a separate job and requests 1 core.
     This is fine for small numbers of experiments.
