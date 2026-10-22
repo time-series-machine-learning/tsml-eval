@@ -847,7 +847,7 @@ def run_clustering_experiment(
         Calls fit_transform on the training data and transform on the test data.
     build_test_file : bool, default=False:
         Whether to generate test files or not. If True, X_test and y_test must be
-        provided.
+        provided, and the clusterer must be able to predict unseen cases.
     build_train_file : bool, default=True
         Whether to generate train files or not. The clusterer is fit using train data
         regardless of input.
@@ -894,11 +894,17 @@ def run_clustering_experiment(
                     else None
                 ),
             )
+            can_predict = clusterer.get_tag("capability:predict")
     else:
         raise TypeError("clusterer must be a tsml, aeon or sklearn clusterer.")
 
     if build_test_file and (X_test is None or y_test is None):
         raise ValueError("Test data and labels not provided, cannot build test file.")
+    if build_test_file and not can_predict:
+        raise ValueError(
+            f"{clusterer_name} cannot predict unseen cases, cannot build test file. "
+            "Set build_test_file to False or combine the train and test split."
+        )
 
     if data_transforms is not None:
         if not isinstance(data_transforms, list):
@@ -1102,7 +1108,7 @@ def load_and_run_clustering_experiment(
         Calls fit_transform on the training data and transform on the test data.
     build_test_file : bool, default=False
         Whether to generate test files or not. If true, the clusterer will assign
-        clusters to the loaded test data.
+        clusters to the loaded test data, so it must be able to predict unseen cases.
     benchmark_time : bool, default=True
         Whether to benchmark the hardware used with a simple function and write the
         results. This will typically take ~2 seconds, but is hardware dependent.

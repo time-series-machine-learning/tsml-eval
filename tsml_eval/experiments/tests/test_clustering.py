@@ -5,12 +5,14 @@ __maintainer__ = ["MatthewMiddlehurst"]
 import os
 import runpy
 
+import numpy as np
 import pytest
 from aeon.classification import DummyClassifier
 from aeon.clustering import DummyClusterer
 from aeon.utils.discovery import all_estimators
 
 from tsml_eval.datasets._test_data._data_sizes import DATA_TEST_SIZES, DATA_TRAIN_SIZES
+from tsml_eval.evaluation.storage import load_clusterer_results
 from tsml_eval.experiments import (
     _get_clusterer,
     clustering_experiments,
@@ -246,14 +248,10 @@ def test_aeon_clusterers_available():
             continue
 
 
-# todo add "DBSCAN" back in when we have a better way to handle predict
-#  and predict_proba
-
-
 @pytest.mark.parametrize("n_clusters", ["4", "-1"])
 @pytest.mark.parametrize(
     "clusterer",
-    ["DummyClusterer-aeon", "DummyClusterer-sklearn", "Summary"],
+    ["DummyClusterer-aeon", "DummyClusterer-sklearn", "Summary", "DBSCAN"],
 )
 def test_n_clusters(n_clusters, clusterer):
     """Test n_clusters parameter."""
@@ -321,9 +319,9 @@ def test_combined_train_test(dataset):
     os.remove(train_file)
 
 
-def test_transductive_clusterer():
+@pytest.mark.parametrize("clusterer", ["TimeSeriesAgglomerative", "DBSCAN"])
+def test_transductive_clusterer(clusterer):
     """Test train results for a clusterer which cannot predict new cases."""
-    clusterer = "TimeSeriesAgglomerative"
     dataset = "MinimalChinatown"
 
     args = [
@@ -344,7 +342,25 @@ def test_transductive_clusterer():
     assert os.path.exists(train_file)
     _check_clustering_file_format(train_file)
 
+    results = load_clusterer_results(train_file)
+    assert (results.predictions == np.argmax(results.probabilities, axis=1)).all()
+
     os.remove(train_file)
+
+
+@pytest.mark.parametrize("clusterer", ["TimeSeriesAgglomerative", "DBSCAN"])
+def test_transductive_clusterer_test_file(clusterer):
+    """Test building a test file with a clusterer which cannot predict new cases."""
+    with pytest.raises(ValueError, match="cannot predict unseen cases"):
+        run_clustering_experiment(
+            [],
+            [],
+            get_clusterer_by_name(clusterer),
+            "",
+            X_test=[],
+            y_test=[],
+            build_test_file=True,
+        )
 
 
 def _check_clustering_file_n_clusters(file_path, expected):
