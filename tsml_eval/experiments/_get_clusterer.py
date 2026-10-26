@@ -3,21 +3,11 @@
 __maintainer__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
 import numpy as np
-from aeon.clustering import (
-    ElasticSOM,
-    KShape,
-    KSpectralCentroid,
-    TimeSeriesCLARA,
-    TimeSeriesCLARANS,
-    TimeSeriesKernelKMeans,
-    TimeSeriesKMeans,
-    TimeSeriesKMedoids,
-)
 from aeon.transformations.collection import Normalizer
-from sklearn.cluster import KMeans
 
 from tsml_eval.utils.datasets import load_experiment_data
 from tsml_eval.utils.functions import str_in_nested_list
+from tsml_eval.utils.resampling import stratified_resample_data
 
 deep_learning_clusterers = [
     ["aefcnclusterer", "aefcn"],
@@ -97,8 +87,6 @@ distance_based_clusterers = [
     "kmeans-ba-ddtw",
     "kmeans-ba-wdtw",
     "kmeans-ba-wddtw",
-    "kmeans-ba-lcss",
-    "kmeans-ba-erp",
     "kmeans-ba-edr",
     "kmeans-ba-twe",
     "kmeans-ba-msm",
@@ -108,7 +96,6 @@ distance_based_clusterers = [
     "kmeans-ssg-ba-ddtw",
     "kmeans-ssg-ba-wdtw",
     "kmeans-ssg-ba-wddtw",
-    "kmeans-ssg-ba-erp",
     "kmeans-ssg-ba-edr",
     "kmeans-ssg-ba-twe",
     "kmeans-ssg-ba-msm",
@@ -128,6 +115,7 @@ distance_based_clusterers = [
     "som-soft_dtw",
     ["kspectralcentroid", "ksc"],
     ["timeserieskshape", "kshape"],
+    "timeserieskernelkmeans",
     "kasba",
     "agglomerative-euclidean",
     "agglomerative-squared",
@@ -193,9 +181,13 @@ def get_clusterer_by_name(
         Checkpoint to save model
     data_vars: list, default=None
         List of arguments to load the dataset using
-        `tsml_eval.utils.experiments import load_experiment_data`.
+        `tsml_eval.utils.datasets.load_experiment_data`, used to find the ERP g
+        parameter from the train data. An optional fifth item is True if the train
+        and test data are combined.
     row_normalise: bool, default=False
         Whether to row normalise the data if it is loaded using data_vars.
+    **kwargs
+        Additional keyword arguments to be passed to the clusterer.
 
     Return
     ------
@@ -239,6 +231,7 @@ def _set_clusterer_deep_learning(
     c, random_state, n_jobs, fit_contract, checkpoint, kwargs
 ):
     if c == "aefcnclusterer" or c == "aefcn":
+        from aeon.clustering import TimeSeriesKMeans
         from aeon.clustering.deep_learning import AEFCNClusterer
 
         return AEFCNClusterer(
@@ -247,6 +240,7 @@ def _set_clusterer_deep_learning(
             **kwargs,
         )
     elif c == "aeresnetclusterer" or c == "aeresnet":
+        from aeon.clustering import TimeSeriesKMeans
         from aeon.clustering.deep_learning import AEResNetClusterer
 
         return AEResNetClusterer(
@@ -255,6 +249,7 @@ def _set_clusterer_deep_learning(
             **kwargs,
         )
     elif c == "aeattentionbigruclusterer" or c == "aeattentionbigru":
+        from aeon.clustering import TimeSeriesKMeans
         from aeon.clustering.deep_learning import AEAttentionBiGRUClusterer
 
         return AEAttentionBiGRUClusterer(
@@ -263,6 +258,7 @@ def _set_clusterer_deep_learning(
             **kwargs,
         )
     elif c == "aebigruclusterer" or c == "aebigru":
+        from aeon.clustering import TimeSeriesKMeans
         from aeon.clustering.deep_learning import AEBiGRUClusterer
 
         return AEBiGRUClusterer(
@@ -271,6 +267,7 @@ def _set_clusterer_deep_learning(
             **kwargs,
         )
     elif c == "aedcnnclusterer" or c == "aedcnn":
+        from aeon.clustering import TimeSeriesKMeans
         from aeon.clustering.deep_learning import AEDCNNClusterer
 
         return AEDCNNClusterer(
@@ -279,6 +276,7 @@ def _set_clusterer_deep_learning(
             **kwargs,
         )
     elif c == "aedrnnclusterer" or c == "aedrnn":
+        from aeon.clustering import TimeSeriesKMeans
         from aeon.clustering.deep_learning import AEDRNNClusterer
 
         return AEDRNNClusterer(
@@ -298,141 +296,892 @@ def _set_clusterer_distance_based(
     row_normalise,
     kwargs,
 ):
-    if "init_algorithm" in kwargs:
-        init_algorithm = kwargs["init_algorithm"]
-    else:
-        init_algorithm = "random"
+    if c == "kmeans-euclidean":
+        from aeon.clustering import TimeSeriesKMeans
 
-    if "distance" in kwargs:
-        distance = kwargs["distance"]
-    else:
-        if "-" not in c:
-            print("No distance metric specified, using default DTW")  # noqa: T201
-            distance = "dtw"
-        else:
-            distance = c.split("-")[-1]
-
-    if "distance_params" in kwargs:
-        distance_params = kwargs["distance_params"]
-    else:
-        distance_params = _get_distance_default_params(
-            distance, data_vars, row_normalise
+        return TimeSeriesKMeans(
+            distance="euclidean",
+            random_state=random_state,
+            n_jobs=n_jobs,
+            averaging_method="mean",
+            **kwargs,
         )
+    elif c == "kmeans-squared":
+        from aeon.clustering import TimeSeriesKMeans
 
-    if "kmeans" in c or "timeserieskmeans" in c:
-        if "average_params" in kwargs:
-            average_params = kwargs["average_params"]
-        else:
-            average_params = {"distance": distance, **distance_params.copy()}
+        return TimeSeriesKMeans(
+            distance="squared",
+            random_state=random_state,
+            n_jobs=n_jobs,
+            averaging_method="mean",
+            **kwargs,
+        )
+    elif c == "kmeans-dtw" or c == "timeserieskmeans":
+        from aeon.clustering import TimeSeriesKMeans
 
-        if "ssg" in c:
-            # Sets to use subgradient BA
-            average_params = {
-                **average_params,
-                "method": "subgradient",
-            }
-            return TimeSeriesKMeans(
-                n_init=10,
-                init=init_algorithm,
-                distance=distance,
-                distance_params=distance_params,
-                random_state=random_state,
-                averaging_method="ba",
-                average_params=average_params,
-                **kwargs,
-            )
-        elif "ba" in c:
-            return TimeSeriesKMeans(
-                n_init=10,
-                init=init_algorithm,
-                distance=distance,
-                distance_params=distance_params,
-                random_state=random_state,
-                averaging_method="ba",
-                average_params=average_params,
-                **kwargs,
-            )
-        else:
-            return TimeSeriesKMeans(
-                n_init=10,
-                init=init_algorithm,
-                distance=distance,
-                distance_params=distance_params,
-                random_state=random_state,
-                averaging_method="mean",
-                **kwargs,
-            )
-    elif "kmedoids" in c or "timeserieskmedoids" in c:
+        return TimeSeriesKMeans(
+            distance="dtw",
+            distance_params={"window": 0.2},
+            random_state=random_state,
+            n_jobs=n_jobs,
+            averaging_method="mean",
+            **kwargs,
+        )
+    elif c == "kmeans-ddtw":
+        from aeon.clustering import TimeSeriesKMeans
+
+        return TimeSeriesKMeans(
+            distance="ddtw",
+            distance_params={"window": 0.2},
+            random_state=random_state,
+            n_jobs=n_jobs,
+            averaging_method="mean",
+            **kwargs,
+        )
+    elif c == "kmeans-wdtw":
+        from aeon.clustering import TimeSeriesKMeans
+
+        return TimeSeriesKMeans(
+            distance="wdtw",
+            random_state=random_state,
+            n_jobs=n_jobs,
+            averaging_method="mean",
+            **kwargs,
+        )
+    elif c == "kmeans-wddtw":
+        from aeon.clustering import TimeSeriesKMeans
+
+        return TimeSeriesKMeans(
+            distance="wddtw",
+            random_state=random_state,
+            n_jobs=n_jobs,
+            averaging_method="mean",
+            **kwargs,
+        )
+    elif c == "kmeans-lcss":
+        from aeon.clustering import TimeSeriesKMeans
+
+        return TimeSeriesKMeans(
+            distance="lcss",
+            random_state=random_state,
+            n_jobs=n_jobs,
+            averaging_method="mean",
+            **kwargs,
+        )
+    elif c == "kmeans-erp":
+        from aeon.clustering import TimeSeriesKMeans
+
+        g = _get_erp_g(data_vars, row_normalise)
+        return TimeSeriesKMeans(
+            distance="erp",
+            distance_params={"g": g},
+            random_state=random_state,
+            n_jobs=n_jobs,
+            averaging_method="mean",
+            **kwargs,
+        )
+    elif c == "kmeans-edr":
+        from aeon.clustering import TimeSeriesKMeans
+
+        return TimeSeriesKMeans(
+            distance="edr",
+            random_state=random_state,
+            n_jobs=n_jobs,
+            averaging_method="mean",
+            **kwargs,
+        )
+    elif c == "kmeans-twe":
+        from aeon.clustering import TimeSeriesKMeans
+
+        return TimeSeriesKMeans(
+            distance="twe",
+            random_state=random_state,
+            n_jobs=n_jobs,
+            averaging_method="mean",
+            **kwargs,
+        )
+    elif c == "kmeans-msm":
+        from aeon.clustering import TimeSeriesKMeans
+
+        return TimeSeriesKMeans(
+            distance="msm",
+            random_state=random_state,
+            n_jobs=n_jobs,
+            averaging_method="mean",
+            **kwargs,
+        )
+    elif c == "kmeans-adtw":
+        from aeon.clustering import TimeSeriesKMeans
+
+        return TimeSeriesKMeans(
+            distance="adtw",
+            random_state=random_state,
+            n_jobs=n_jobs,
+            averaging_method="mean",
+            **kwargs,
+        )
+    elif c == "kmeans-shape_dtw":
+        from aeon.clustering import TimeSeriesKMeans
+
+        return TimeSeriesKMeans(
+            distance="shape_dtw",
+            distance_params={"reach": 30},
+            random_state=random_state,
+            n_jobs=n_jobs,
+            averaging_method="mean",
+            **kwargs,
+        )
+    elif c == "kmedoids-euclidean":
+        from aeon.clustering import TimeSeriesKMedoids
+
         return TimeSeriesKMedoids(
-            n_init=10,
-            init=init_algorithm,
-            distance=distance,
-            distance_params=distance_params,
+            distance="euclidean",
             random_state=random_state,
             method="alternate",
             **kwargs,
         )
-    elif "pam" in c or "timeseriespam" in c:
+    elif c == "kmedoids-squared":
+        from aeon.clustering import TimeSeriesKMedoids
+
         return TimeSeriesKMedoids(
-            n_init=10,
-            init=init_algorithm,
-            distance=distance,
-            distance_params=distance_params,
+            distance="squared",
             random_state=random_state,
-            method="pam",
+            method="alternate",
             **kwargs,
         )
-    elif "clarans" in c or "timeseriesclarans" in c:
+    elif c == "kmedoids-dtw" or c == "timeserieskmedoids":
+        from aeon.clustering import TimeSeriesKMedoids
+
+        return TimeSeriesKMedoids(
+            distance="dtw",
+            distance_params={"window": 0.2},
+            random_state=random_state,
+            method="alternate",
+            **kwargs,
+        )
+    elif c == "kmedoids-ddtw":
+        from aeon.clustering import TimeSeriesKMedoids
+
+        return TimeSeriesKMedoids(
+            distance="ddtw",
+            distance_params={"window": 0.2},
+            random_state=random_state,
+            method="alternate",
+            **kwargs,
+        )
+    elif c == "kmedoids-wdtw":
+        from aeon.clustering import TimeSeriesKMedoids
+
+        return TimeSeriesKMedoids(
+            distance="wdtw",
+            random_state=random_state,
+            method="alternate",
+            **kwargs,
+        )
+    elif c == "kmedoids-wddtw":
+        from aeon.clustering import TimeSeriesKMedoids
+
+        return TimeSeriesKMedoids(
+            distance="wddtw",
+            random_state=random_state,
+            method="alternate",
+            **kwargs,
+        )
+    elif c == "kmedoids-lcss":
+        from aeon.clustering import TimeSeriesKMedoids
+
+        return TimeSeriesKMedoids(
+            distance="lcss",
+            random_state=random_state,
+            method="alternate",
+            **kwargs,
+        )
+    elif c == "kmedoids-erp":
+        from aeon.clustering import TimeSeriesKMedoids
+
+        g = _get_erp_g(data_vars, row_normalise)
+        return TimeSeriesKMedoids(
+            distance="erp",
+            distance_params={"g": g},
+            random_state=random_state,
+            method="alternate",
+            **kwargs,
+        )
+    elif c == "kmedoids-edr":
+        from aeon.clustering import TimeSeriesKMedoids
+
+        return TimeSeriesKMedoids(
+            distance="edr",
+            random_state=random_state,
+            method="alternate",
+            **kwargs,
+        )
+    elif c == "kmedoids-twe":
+        from aeon.clustering import TimeSeriesKMedoids
+
+        return TimeSeriesKMedoids(
+            distance="twe",
+            random_state=random_state,
+            method="alternate",
+            **kwargs,
+        )
+    elif c == "kmedoids-msm":
+        from aeon.clustering import TimeSeriesKMedoids
+
+        return TimeSeriesKMedoids(
+            distance="msm",
+            random_state=random_state,
+            method="alternate",
+            **kwargs,
+        )
+    elif c == "kmedoids-adtw":
+        from aeon.clustering import TimeSeriesKMedoids
+
+        return TimeSeriesKMedoids(
+            distance="adtw",
+            random_state=random_state,
+            method="alternate",
+            **kwargs,
+        )
+    elif c == "kmedoids-shape_dtw":
+        from aeon.clustering import TimeSeriesKMedoids
+
+        return TimeSeriesKMedoids(
+            distance="shape_dtw",
+            distance_params={"reach": 30},
+            random_state=random_state,
+            method="alternate",
+            **kwargs,
+        )
+    elif c == "clarans-euclidean":
+        from aeon.clustering import TimeSeriesCLARANS
+
         return TimeSeriesCLARANS(
-            n_init=10,
-            init=init_algorithm,
-            distance=distance,
-            distance_params=distance_params,
+            distance="euclidean",
             random_state=random_state,
             **kwargs,
         )
-    elif "clara" in c or "timeseriesclara" in c:
+    elif c == "clarans-squared":
+        from aeon.clustering import TimeSeriesCLARANS
+
+        return TimeSeriesCLARANS(
+            distance="squared",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clarans-dtw" or c == "timeseriesclarans":
+        from aeon.clustering import TimeSeriesCLARANS
+
+        return TimeSeriesCLARANS(
+            distance="dtw",
+            distance_params={"window": 0.2},
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clarans-ddtw":
+        from aeon.clustering import TimeSeriesCLARANS
+
+        return TimeSeriesCLARANS(
+            distance="ddtw",
+            distance_params={"window": 0.2},
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clarans-wdtw":
+        from aeon.clustering import TimeSeriesCLARANS
+
+        return TimeSeriesCLARANS(
+            distance="wdtw",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clarans-wddtw":
+        from aeon.clustering import TimeSeriesCLARANS
+
+        return TimeSeriesCLARANS(
+            distance="wddtw",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clarans-lcss":
+        from aeon.clustering import TimeSeriesCLARANS
+
+        return TimeSeriesCLARANS(
+            distance="lcss",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clarans-erp":
+        from aeon.clustering import TimeSeriesCLARANS
+
+        g = _get_erp_g(data_vars, row_normalise)
+        return TimeSeriesCLARANS(
+            distance="erp",
+            distance_params={"g": g},
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clarans-edr":
+        from aeon.clustering import TimeSeriesCLARANS
+
+        return TimeSeriesCLARANS(
+            distance="edr",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clarans-twe":
+        from aeon.clustering import TimeSeriesCLARANS
+
+        return TimeSeriesCLARANS(
+            distance="twe",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clarans-msm":
+        from aeon.clustering import TimeSeriesCLARANS
+
+        return TimeSeriesCLARANS(
+            distance="msm",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clarans-adtw":
+        from aeon.clustering import TimeSeriesCLARANS
+
+        return TimeSeriesCLARANS(
+            distance="adtw",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clarans-shape_dtw":
+        from aeon.clustering import TimeSeriesCLARANS
+
+        return TimeSeriesCLARANS(
+            distance="shape_dtw",
+            distance_params={"reach": 30},
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clara-euclidean":
+        from aeon.clustering import TimeSeriesCLARA
+
         return TimeSeriesCLARA(
-            init=init_algorithm,
-            distance=distance,
-            distance_params=distance_params,
+            distance="euclidean",
             random_state=random_state,
             **kwargs,
         )
-    elif "som" in c or "elasticsom" in c:
+    elif c == "clara-squared":
+        from aeon.clustering import TimeSeriesCLARA
+
+        return TimeSeriesCLARA(
+            distance="squared",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clara-dtw" or c == "timeseriesclara":
+        from aeon.clustering import TimeSeriesCLARA
+
+        return TimeSeriesCLARA(
+            distance="dtw",
+            distance_params={"window": 0.2},
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clara-ddtw":
+        from aeon.clustering import TimeSeriesCLARA
+
+        return TimeSeriesCLARA(
+            distance="ddtw",
+            distance_params={"window": 0.2},
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clara-wdtw":
+        from aeon.clustering import TimeSeriesCLARA
+
+        return TimeSeriesCLARA(
+            distance="wdtw",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clara-wddtw":
+        from aeon.clustering import TimeSeriesCLARA
+
+        return TimeSeriesCLARA(
+            distance="wddtw",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clara-lcss":
+        from aeon.clustering import TimeSeriesCLARA
+
+        return TimeSeriesCLARA(
+            distance="lcss",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clara-erp":
+        from aeon.clustering import TimeSeriesCLARA
+
+        g = _get_erp_g(data_vars, row_normalise)
+        return TimeSeriesCLARA(
+            distance="erp",
+            distance_params={"g": g},
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clara-edr":
+        from aeon.clustering import TimeSeriesCLARA
+
+        return TimeSeriesCLARA(
+            distance="edr",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clara-twe":
+        from aeon.clustering import TimeSeriesCLARA
+
+        return TimeSeriesCLARA(
+            distance="twe",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clara-msm":
+        from aeon.clustering import TimeSeriesCLARA
+
+        return TimeSeriesCLARA(
+            distance="msm",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clara-adtw":
+        from aeon.clustering import TimeSeriesCLARA
+
+        return TimeSeriesCLARA(
+            distance="adtw",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "clara-shape_dtw":
+        from aeon.clustering import TimeSeriesCLARA
+
+        return TimeSeriesCLARA(
+            distance="shape_dtw",
+            distance_params={"reach": 30},
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "pam-euclidean":
+        from aeon.clustering import TimeSeriesKMedoids
+
+        return TimeSeriesKMedoids(
+            distance="euclidean",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "pam-squared":
+        from aeon.clustering import TimeSeriesKMedoids
+
+        return TimeSeriesKMedoids(
+            distance="squared",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "pam-dtw":
+        from aeon.clustering import TimeSeriesKMedoids
+
+        return TimeSeriesKMedoids(
+            distance="dtw",
+            distance_params={"window": 0.2},
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "pam-ddtw":
+        from aeon.clustering import TimeSeriesKMedoids
+
+        return TimeSeriesKMedoids(
+            distance="ddtw",
+            distance_params={"window": 0.2},
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "pam-wdtw":
+        from aeon.clustering import TimeSeriesKMedoids
+
+        return TimeSeriesKMedoids(
+            distance="wdtw",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "pam-wddtw":
+        from aeon.clustering import TimeSeriesKMedoids
+
+        return TimeSeriesKMedoids(
+            distance="wddtw",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "pam-lcss":
+        from aeon.clustering import TimeSeriesKMedoids
+
+        return TimeSeriesKMedoids(
+            distance="lcss",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "pam-erp":
+        from aeon.clustering import TimeSeriesKMedoids
+
+        g = _get_erp_g(data_vars, row_normalise)
+        return TimeSeriesKMedoids(
+            distance="erp",
+            distance_params={"g": g},
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "pam-edr":
+        from aeon.clustering import TimeSeriesKMedoids
+
+        return TimeSeriesKMedoids(
+            distance="edr",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "pam-twe":
+        from aeon.clustering import TimeSeriesKMedoids
+
+        return TimeSeriesKMedoids(
+            distance="twe",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "pam-msm":
+        from aeon.clustering import TimeSeriesKMedoids
+
+        return TimeSeriesKMedoids(
+            distance="msm",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "pam-adtw":
+        from aeon.clustering import TimeSeriesKMedoids
+
+        return TimeSeriesKMedoids(
+            distance="adtw",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "pam-shape_dtw":
+        from aeon.clustering import TimeSeriesKMedoids
+
+        return TimeSeriesKMedoids(
+            distance="shape_dtw",
+            distance_params={"reach": 30},
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "kmeans-ba-dtw":
+        from aeon.clustering import TimeSeriesKMeans
+
+        return TimeSeriesKMeans(
+            distance="dtw",
+            distance_params={"window": 0.2},
+            random_state=random_state,
+            n_jobs=n_jobs,
+            average_params={"window": 0.2},
+            **kwargs,
+        )
+    elif c == "kmeans-ba-ddtw":
+        from aeon.clustering import TimeSeriesKMeans
+
+        return TimeSeriesKMeans(
+            distance="ddtw",
+            distance_params={"window": 0.2},
+            random_state=random_state,
+            n_jobs=n_jobs,
+            average_params={"window": 0.2},
+            **kwargs,
+        )
+    elif c == "kmeans-ba-wdtw":
+        from aeon.clustering import TimeSeriesKMeans
+
+        return TimeSeriesKMeans(
+            distance="wdtw",
+            random_state=random_state,
+            n_jobs=n_jobs,
+            **kwargs,
+        )
+    elif c == "kmeans-ba-wddtw":
+        from aeon.clustering import TimeSeriesKMeans
+
+        return TimeSeriesKMeans(
+            distance="wddtw",
+            random_state=random_state,
+            n_jobs=n_jobs,
+            **kwargs,
+        )
+    elif c == "kmeans-ba-edr":
+        from aeon.clustering import TimeSeriesKMeans
+
+        return TimeSeriesKMeans(
+            distance="edr",
+            random_state=random_state,
+            n_jobs=n_jobs,
+            **kwargs,
+        )
+    elif c == "kmeans-ba-twe":
+        from aeon.clustering import TimeSeriesKMeans
+
+        return TimeSeriesKMeans(
+            distance="twe",
+            random_state=random_state,
+            n_jobs=n_jobs,
+            **kwargs,
+        )
+    elif c == "kmeans-ba-msm":
+        from aeon.clustering import TimeSeriesKMeans
+
+        return TimeSeriesKMeans(
+            distance="msm",
+            random_state=random_state,
+            n_jobs=n_jobs,
+            **kwargs,
+        )
+    elif c == "kmeans-ba-adtw":
+        from aeon.clustering import TimeSeriesKMeans
+
+        return TimeSeriesKMeans(
+            distance="adtw",
+            random_state=random_state,
+            n_jobs=n_jobs,
+            **kwargs,
+        )
+    elif c == "kmeans-ba-shape_dtw":
+        from aeon.clustering import TimeSeriesKMeans
+
+        return TimeSeriesKMeans(
+            distance="shape_dtw",
+            distance_params={"reach": 30},
+            random_state=random_state,
+            n_jobs=n_jobs,
+            average_params={"reach": 30},
+            **kwargs,
+        )
+    elif c == "kmeans-ssg-ba-dtw":
+        from aeon.clustering import TimeSeriesKMeans
+
+        return TimeSeriesKMeans(
+            distance="dtw",
+            distance_params={"window": 0.2},
+            random_state=random_state,
+            n_jobs=n_jobs,
+            average_params={"window": 0.2, "method": "subgradient"},
+            **kwargs,
+        )
+    elif c == "kmeans-ssg-ba-ddtw":
+        from aeon.clustering import TimeSeriesKMeans
+
+        return TimeSeriesKMeans(
+            distance="ddtw",
+            distance_params={"window": 0.2},
+            random_state=random_state,
+            n_jobs=n_jobs,
+            average_params={"window": 0.2, "method": "subgradient"},
+            **kwargs,
+        )
+    elif c == "kmeans-ssg-ba-wdtw":
+        from aeon.clustering import TimeSeriesKMeans
+
+        return TimeSeriesKMeans(
+            distance="wdtw",
+            random_state=random_state,
+            n_jobs=n_jobs,
+            average_params={"method": "subgradient"},
+            **kwargs,
+        )
+    elif c == "kmeans-ssg-ba-wddtw":
+        from aeon.clustering import TimeSeriesKMeans
+
+        return TimeSeriesKMeans(
+            distance="wddtw",
+            random_state=random_state,
+            n_jobs=n_jobs,
+            average_params={"method": "subgradient"},
+            **kwargs,
+        )
+    elif c == "kmeans-ssg-ba-edr":
+        from aeon.clustering import TimeSeriesKMeans
+
+        return TimeSeriesKMeans(
+            distance="edr",
+            random_state=random_state,
+            n_jobs=n_jobs,
+            average_params={"method": "subgradient"},
+            **kwargs,
+        )
+    elif c == "kmeans-ssg-ba-twe":
+        from aeon.clustering import TimeSeriesKMeans
+
+        return TimeSeriesKMeans(
+            distance="twe",
+            random_state=random_state,
+            n_jobs=n_jobs,
+            average_params={"method": "subgradient"},
+            **kwargs,
+        )
+    elif c == "kmeans-ssg-ba-msm":
+        from aeon.clustering import TimeSeriesKMeans
+
+        return TimeSeriesKMeans(
+            distance="msm",
+            random_state=random_state,
+            n_jobs=n_jobs,
+            average_params={"method": "subgradient"},
+            **kwargs,
+        )
+    elif c == "kmeans-ssg-ba-adtw":
+        from aeon.clustering import TimeSeriesKMeans
+
+        return TimeSeriesKMeans(
+            distance="adtw",
+            random_state=random_state,
+            n_jobs=n_jobs,
+            average_params={"method": "subgradient"},
+            **kwargs,
+        )
+    elif c == "kmeans-ssg-ba-shape_dtw":
+        from aeon.clustering import TimeSeriesKMeans
+
+        return TimeSeriesKMeans(
+            distance="shape_dtw",
+            distance_params={"reach": 30},
+            random_state=random_state,
+            n_jobs=n_jobs,
+            average_params={"reach": 30, "method": "subgradient"},
+            **kwargs,
+        )
+    elif c == "som-dtw" or c == "elasticsom":
+        from aeon.clustering import ElasticSOM
+
         return ElasticSOM(
-            distance=distance,
-            init="random",
-            sigma=1.0,
-            learning_rate=0.5,
-            decay_function="asymptotic_decay",
-            neighborhood_function="gaussian",
-            sigma_decay_function="asymptotic_decay",
-            num_iterations=500,
-            distance_params=distance_params,
+            distance="dtw",
+            distance_params={"window": 0.2},
             random_state=random_state,
-            verbose=False,
+            **kwargs,
         )
-    elif "ksc" in c or "kspectralcentroid" in c:
+    elif c == "som-ddtw":
+        from aeon.clustering import ElasticSOM
+
+        return ElasticSOM(
+            distance="ddtw",
+            distance_params={"window": 0.2},
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "som-wdtw":
+        from aeon.clustering import ElasticSOM
+
+        return ElasticSOM(
+            distance="wdtw",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "som-wddtw":
+        from aeon.clustering import ElasticSOM
+
+        return ElasticSOM(
+            distance="wddtw",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "som-lcss":
+        from aeon.clustering import ElasticSOM
+
+        return ElasticSOM(
+            distance="lcss",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "som-erp":
+        from aeon.clustering import ElasticSOM
+
+        g = _get_erp_g(data_vars, row_normalise)
+        return ElasticSOM(
+            distance="erp",
+            distance_params={"g": g},
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "som-edr":
+        from aeon.clustering import ElasticSOM
+
+        return ElasticSOM(
+            distance="edr",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "som-twe":
+        from aeon.clustering import ElasticSOM
+
+        return ElasticSOM(
+            distance="twe",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "som-msm":
+        from aeon.clustering import ElasticSOM
+
+        return ElasticSOM(
+            distance="msm",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "som-adtw":
+        from aeon.clustering import ElasticSOM
+
+        return ElasticSOM(
+            distance="adtw",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "som-shape_dtw":
+        from aeon.clustering import ElasticSOM
+
+        return ElasticSOM(
+            distance="shape_dtw",
+            distance_params={"reach": 30},
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "som-soft_dtw":
+        from aeon.clustering import ElasticSOM
+
+        return ElasticSOM(
+            distance="soft_dtw",
+            random_state=random_state,
+            **kwargs,
+        )
+    elif c == "kspectralcentroid" or c == "ksc":
+        from aeon.clustering import KSpectralCentroid
+
         return KSpectralCentroid(
-            # Max shift set to n_timepoints when max_shift is None
-            max_shift=None,
-            init=init_algorithm,
-            tol=1e-06,
             random_state=random_state,
+            n_jobs=n_jobs,
             **kwargs,
         )
-    elif "kshape" in c:
+    elif c == "timeserieskshape" or c == "kshape":
+        from aeon.clustering import KShape
+
         return KShape(
-            init=init_algorithm,
             n_init=10,
-            tol=1e-06,
             random_state=random_state,
+            n_jobs=n_jobs,
             **kwargs,
         )
-    elif "timeserieskernelkmeans" in c:
+    elif c == "timeserieskernelkmeans":
+        from aeon.clustering import TimeSeriesKernelKMeans
+
         return TimeSeriesKernelKMeans(
-            n_init=10,
             tol=1e-06,
             random_state=random_state,
             n_jobs=n_jobs,
@@ -445,51 +1194,133 @@ def _set_clusterer_distance_based(
             random_state=random_state,
             **kwargs,
         )
-    elif "agglomerative" in c:
+    elif c == "agglomerative-euclidean":
         from aeon.clustering import TimeSeriesAgglomerative
 
         return TimeSeriesAgglomerative(
-            distance=distance,
-            distance_params=distance_params,
+            distance="euclidean",
             **kwargs,
         )
+    elif c == "agglomerative-squared":
+        from aeon.clustering import TimeSeriesAgglomerative
+
+        return TimeSeriesAgglomerative(
+            distance="squared",
+            **kwargs,
+        )
+    elif c == "agglomerative-dtw" or c == "timeseriesagglomerative":
+        from aeon.clustering import TimeSeriesAgglomerative
+
+        return TimeSeriesAgglomerative(
+            distance="dtw",
+            distance_params={"window": 0.2},
+            **kwargs,
+        )
+    elif c == "agglomerative-ddtw":
+        from aeon.clustering import TimeSeriesAgglomerative
+
+        return TimeSeriesAgglomerative(
+            distance="ddtw",
+            distance_params={"window": 0.2},
+            **kwargs,
+        )
+    elif c == "agglomerative-wdtw":
+        from aeon.clustering import TimeSeriesAgglomerative
+
+        return TimeSeriesAgglomerative(
+            distance="wdtw",
+            **kwargs,
+        )
+    elif c == "agglomerative-wddtw":
+        from aeon.clustering import TimeSeriesAgglomerative
+
+        return TimeSeriesAgglomerative(
+            distance="wddtw",
+            **kwargs,
+        )
+    elif c == "agglomerative-lcss":
+        from aeon.clustering import TimeSeriesAgglomerative
+
+        return TimeSeriesAgglomerative(
+            distance="lcss",
+            **kwargs,
+        )
+    elif c == "agglomerative-erp":
+        from aeon.clustering import TimeSeriesAgglomerative
+
+        g = _get_erp_g(data_vars, row_normalise)
+        return TimeSeriesAgglomerative(
+            distance="erp",
+            distance_params={"g": g},
+            **kwargs,
+        )
+    elif c == "agglomerative-edr":
+        from aeon.clustering import TimeSeriesAgglomerative
+
+        return TimeSeriesAgglomerative(
+            distance="edr",
+            **kwargs,
+        )
+    elif c == "agglomerative-twe":
+        from aeon.clustering import TimeSeriesAgglomerative
+
+        return TimeSeriesAgglomerative(
+            distance="twe",
+            **kwargs,
+        )
+    elif c == "agglomerative-msm":
+        from aeon.clustering import TimeSeriesAgglomerative
+
+        return TimeSeriesAgglomerative(
+            distance="msm",
+            **kwargs,
+        )
+    elif c == "agglomerative-adtw":
+        from aeon.clustering import TimeSeriesAgglomerative
+
+        return TimeSeriesAgglomerative(
+            distance="adtw",
+            **kwargs,
+        )
+    elif c == "agglomerative-shape_dtw":
+        from aeon.clustering import TimeSeriesAgglomerative
+
+        return TimeSeriesAgglomerative(
+            distance="shape_dtw",
+            distance_params={"reach": 30},
+            **kwargs,
+        )
+    else:
+        raise ValueError(f"UNKNOWN CLUSTERER: {c} in get_clusterer_by_name")
 
 
-def _get_distance_default_params(
-    dist_name: str, data_vars: list, row_normalise: bool
-) -> dict:
-    if dist_name == "dtw" or dist_name == "ddtw":
-        return {"window": 0.2}
-    if dist_name == "lcss":
-        return {"epsilon": 1.0}
-    if dist_name == "erp":
-        # load dataset to get std if available
-        if data_vars is not None:
-            X_train, _, _, _, _ = load_experiment_data(*data_vars)
+def _get_erp_g(data_vars: list, row_normalise: bool) -> float:
+    # load the experiment train data to get std if available
+    if data_vars is not None:
+        X_train, y_train, X_test, y_test, resample = load_experiment_data(
+            *data_vars[:4]
+        )
+        if resample:
+            X_train, y_train, X_test, y_test = stratified_resample_data(
+                X_train, y_train, X_test, y_test, random_state=data_vars[2]
+            )
+        if len(data_vars) > 4 and data_vars[4]:
+            X_train = (
+                np.concatenate([X_train, X_test], axis=0)
+                if isinstance(X_train, np.ndarray)
+                else X_train + X_test
+            )
 
-            # can't handle unequal length series
-            if isinstance(X_train, np.ndarray):
-                if row_normalise:
-                    scaler = Normalizer()
-                    X_train = scaler.fit_transform(X_train)
+        # can't handle unequal length series
+        if isinstance(X_train, np.ndarray):
+            if row_normalise:
+                scaler = Normalizer()
+                X_train = scaler.fit_transform(X_train)
 
-                return {"g": X_train.std(axis=0).sum()}
-            elif not isinstance(X_train, list):
-                raise ValueError("Unknown data type in _get_distance_default_params")
-        return {"g": 0.05}
-    if dist_name == "msm":
-        return {"c": 1.0, "independent": True}
-    if dist_name == "edr":
-        return {"epsilon": None}
-    if dist_name == "twe":
-        return {"nu": 0.001, "lmbda": 1.0}
-    if dist_name == "psi_dtw":
-        return {"r": 0.5}
-    if dist_name == "adtw":
-        return {"warp_penalty": 1.0}
-    if dist_name == "shape_dtw":
-        return {"descriptor": "identity", "reach": 30}
-    return {}
+            return X_train.std(axis=0).sum()
+        elif not isinstance(X_train, list):
+            raise ValueError("Unknown data type in _get_erp_g")
+    return 0.05
 
 
 def _set_clusterer_feature_based(
@@ -497,18 +1328,21 @@ def _set_clusterer_feature_based(
 ):
     if c == "catch22" or c == "catch22clusterer":
         from aeon.clustering.feature_based import Catch22Clusterer
+        from sklearn.cluster import KMeans
 
         return Catch22Clusterer(
             estimator=KMeans(), random_state=random_state, n_jobs=n_jobs, **kwargs
         )
     elif c == "tsfresh" or c == "tsfreshclusterer":
         from aeon.clustering.feature_based import TSFreshClusterer
+        from sklearn.cluster import KMeans
 
         return TSFreshClusterer(
             estimator=KMeans(), random_state=random_state, n_jobs=n_jobs, **kwargs
         )
     elif c == "summary" or c == "summaryclusterer":
         from aeon.clustering.feature_based import SummaryClusterer
+        from sklearn.cluster import KMeans
 
         return SummaryClusterer(
             estimator=KMeans(), random_state=random_state, n_jobs=n_jobs, **kwargs
@@ -525,6 +1359,8 @@ def _set_clusterer_other(c, random_state, n_jobs, fit_contract, checkpoint, kwar
 
         return DummyClusterer(strategy="random", random_state=random_state, **kwargs)
     elif c == "dummyclusterer-sklearn":
+        from sklearn.cluster import KMeans
+
         return KMeans(
             n_init=1,
             init="random",
