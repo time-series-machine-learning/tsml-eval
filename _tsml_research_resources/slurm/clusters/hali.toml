@@ -1,0 +1,50 @@
+# Hali (UEA). Facts about the cluster, shared by every experiment that runs on it.
+# Experiments choose a [resources.*] section with `resources = "cpu"` (or "gpu") and
+# may override any of its keys in their own [slurm] table.
+#
+# Values come from the configurations used for the Multiverse and UCR runs in 2026.
+
+name = "hali"
+home = "/gpfs/home/{user}"
+repo_dir = "{home}/Code/tsml-eval"
+email = "{user}@uea.ac.uk"
+default_resources = "cpu"
+
+# Hali has run the supervisor on the login node in screen since the Multiverse runs.
+[supervisor]
+mode = "login"
+interval_minutes = 30
+
+# One Slurm array task per experiment. Hali does not limit the number of queued tasks
+# in practice (runs used up to 8000), so max_active is a courtesy cap: raise it for
+# big runs when the cluster is quiet.
+[resources.cpu]
+mode = "array"
+account = "cmp"
+partition = "compute"
+qos = "uea-core-default"
+time_limit = "7-00:00:00"
+memory_gb = [8, 16, 32, 64, 128]
+cpus_per_task = 1
+max_active = 2000
+module = "python/anaconda/2024.10/3.12.7"
+conda_sh = "/gpfs/software/hali/python/anaconda/2024.10/etc/profile.d/conda.sh"
+env_name = "tsml-eval"
+
+# Deep learners. A separate environment with GPU TensorFlow/PyTorch, see the guide.
+# gpu_check fails a job fast if the framework cannot see the GPU, rather than letting
+# it train silently on the CPU. Use gpu_check = "torch" for PyTorch-only learners.
+[resources.gpu]
+mode = "array"
+account = "cmp"
+partition = "gpu"
+qos = "gpu"
+gres = "gpu:1"
+time_limit = "2-12:00:00"
+memory_gb = [64, 128]
+cpus_per_task = 2
+max_active = 16
+module = "python/anaconda/2024.10/3.12.7"
+conda_sh = "/gpfs/software/hali/python/anaconda/2024.10/etc/profile.d/conda.sh"
+env_name = "tsml-eval-gpu"
+gpu_check = "tensorflow"
