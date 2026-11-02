@@ -231,8 +231,6 @@ def test_aeon_clusterers_available():
         # composable/wrapper
         "ClustererPipeline",
         "SklearnClustererWrapper",
-        # just missing
-        "TimeSeriesKernelKMeans",
     ]
 
     est = [e for e, _ in all_estimators(type_filter="clusterer")]
