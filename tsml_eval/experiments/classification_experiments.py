@@ -109,6 +109,7 @@ def run_experiment(args):
                 benchmark_time=args.benchmark_time,
                 overwrite=args.overwrite,
                 predefined_resample=args.predefined_resample,
+                cv_folds=args.cv_folds,
             )
     # local run (no args)
     else:

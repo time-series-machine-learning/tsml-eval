@@ -16,9 +16,9 @@ def parse_args(args):
 
     The following is the --help output for tsml_eval:
 
-    usage: tsml_eval [-h] [--version] [-ow] [-pr] [-rs RANDOM_SEED] [-nj N_JOBS]
-                     [-tr] [-te] [-fc FIT_CONTRACT] [-ch] [-rn] [-nc N_CLUSTERS]
-                     [-kw KEY VALUE TYPE]
+    usage: tsml_eval [-h] [--version] [-ow] [-pr] [-cv CV_FOLDS] [-rs RANDOM_SEED]
+                     [-nj N_JOBS] [-tr] [-te] [-fc FIT_CONTRACT] [-ch] [-rn]
+                     [-nc N_CLUSTERS] [-kw KEY VALUE TYPE]
                      data_path results_path estimator_name dataset_name
                      resample_id
 
@@ -47,6 +47,14 @@ def parse_args(args):
                             load a dataset file with a predefined resample. The
                             dataset file must follow the naming format
                             '{dataset_name}_{resample_id}.ts' (default: False).
+      -cv CV_FOLDS, --cv_folds CV_FOLDS
+                            combine train and test and use fold {resample_id}
+                            (from 0) of a stratified {cv_folds}-fold
+                            cross-validation instead of a resample. If
+                            {dataset_name}_id_TRAIN.txt and _id_TEST.txt hold
+                            subject IDs, each subject is kept on one side of the
+                            split, with at most one fold per subject. Only used in
+                            classification (default: None).
       -rs RANDOM_SEED, --random_seed RANDOM_SEED
                             use a different random seed than the resample ID. If
                             None use the {resample_id} (default: None).
@@ -162,6 +170,16 @@ def parse_args(args):
         help="load a dataset file with a predefined resample. The dataset file must "
         "follow the naming format '{dataset_name}{resample_id}.ts' "
         "(default: %(default)s).",
+    )
+    parser.add_argument(
+        "-cv",
+        "--cv_folds",
+        type=int,
+        help="combine train and test and use fold {resample_id} (from 0) of a "
+        "stratified {cv_folds}-fold cross-validation instead of a resample. If "
+        "{dataset_name}_id_TRAIN.txt and _id_TEST.txt hold subject IDs, each subject "
+        "is kept on one side of the split, with at most one fold per subject. Only "
+        "used in classification (default: %(default)s).",
     )
     parser.add_argument(
         "-rs",

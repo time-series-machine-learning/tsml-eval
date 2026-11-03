@@ -186,6 +186,7 @@ checkout) and `{name}` (the experiment name), as well as environment variables a
 | `estimators` | – | Flat list, results go straight under `results_dir`. Alternative to `[estimators]`. |
 | `resamples` | `30` | A count (`30` → 0..29) or an explicit list (`[0, 5, 9]`). |
 | `start_resample` | `0` | With a count: `start_resample = 10`, `resamples = 30` → 10..29. |
+| `cv_folds` | – | Classification only: k-fold cross-validation instead of resamples (`-cv`); see example 9. Replaces `resamples`: each dataset runs its own folds. |
 | `train_files` | `false` | Also write train predictions (`-tr`); a task then needs both files. |
 | `test_files` | `false` | Clustering only: also write test assignments (`-te`). |
 | `n_jobs` | `1` | Threads per experiment. Above 1, the threaded entry point is used with `-nj`, and more CPUs are requested. |
@@ -327,6 +328,20 @@ example, Hali (CPU) and Iridis X (GPU), give each cluster its own experiment wit
 disjoint set of estimators, then copy the results together afterwards. If two
 clusters must share an estimator, split the dataset list between them, or copy the
 finished results across first so the second cluster sees them as complete.
+
+### 9. Cross-validation, split by subject
+
+`cv_folds = 10` combines train and test and runs each of 10 stratified folds as its
+own experiment, written as `testResample0.csv` to `testResample9.csv`. If a dataset
+has subject IDs, `<Dataset>_id_TRAIN.txt` and `<Dataset>_id_TEST.txt` beside the .ts
+files (one ID per line, in case order), every subject is kept on one side of each
+split. With up to `cv_folds + 5` subjects that is leave one subject out; above that
+each test fold holds `round(subjects / cv_folds)` subjects and the last fold the rest,
+so the fold count stays close to `cv_folds`. The controller submits each dataset's own
+number of folds. Folds depend only on the labels and IDs,
+so every classifier sees the same ones. `check` lists which datasets are split by
+subject. The `*_eeg_*_cv.toml` experiments are the EEG runs done this way, with
+results in `~/Results/EEG-CV`.
 
 ## Monitoring and control
 

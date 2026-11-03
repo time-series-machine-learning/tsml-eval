@@ -707,3 +707,41 @@ def test_existing_hidden_state_dir_is_kept(world):
     assert make(world).state_dir == hidden
     (world["home"] / "tsml-slurm" / "exp").mkdir(parents=True)
     assert make(world).state_dir == world["home"] / "tsml-slurm" / "exp"
+
+
+def test_cv_folds_by_subject(world):
+    with pytest.raises(ts.ConfigError, match="remove resamples"):
+        make(world, body="cv_folds = 10\nresamples = 10")
+    # Small has 3 subjects (3 folds), Mid 25 (3 a fold, 9 folds), Big no subject IDs
+    data = world["home"] / "Data"
+    (data / "Small" / "Small_id_TRAIN.txt").write_text("1\n2\n2\n")
+    (data / "Small" / "Small_id_TEST.txt").write_text("3\n3\n")
+    (data / "Mid" / "Mid_id_TRAIN.txt").write_text("\n".join(map(str, range(12))))
+    (data / "Mid" / "Mid_id_TEST.txt").write_text("\n".join(map(str, range(12, 25))))
+    toml = """
+[experiment]
+name = "cv"
+cluster = "testcluster"
+resources = "cpu"
+task = "classification"
+data_dir = "{home}/Data"
+datasets = "{home}/list.txt"
+results_dir = "{home}/Results"
+cv_folds = 10
+estimators = ["A"]
+"""
+    path = world["tmp"] / "cv.toml"
+    path.write_text(toml.replace("classification", "regression"))
+    with pytest.raises(ts.ConfigError, match="only applies to classification"):
+        ts.load_experiment(path, cluster_dir=world["clusters"], user="tester")
+    path.write_text(toml)
+    e = ts.load_experiment(path, cluster_dir=world["clusters"], user="tester")
+    ts.read_datasets(e)
+    assert ts.dataset_folds(e) == {"Small": 3, "Big": 10, "Mid": 9}
+    per_fold = [ts.subjects_per_fold(n, 10) for n in (14, 15, 16, 29, 105)]
+    assert per_fold == [1, 1, 2, 3, 11]
+    tasks = list(ts.all_tasks(e))
+    assert sorted(t.resample for t in tasks if t.dataset == "Small") == [0, 1, 2]
+    assert len(tasks) == 22
+    args = ts._experiment_arguments(e, tasks[0])
+    assert args[args.index("-cv") + 1] == "10"

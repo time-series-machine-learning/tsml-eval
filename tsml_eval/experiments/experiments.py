@@ -41,14 +41,18 @@ from sklearn.model_selection import cross_val_predict
 from tsml_eval.estimators.classification._sklearn import SklearnToAeonClassifier
 from tsml_eval.estimators.clustering._sklearn import SklearnToAeonClusterer
 from tsml_eval.estimators.regression._sklearn import SklearnToAeonRegressor
-from tsml_eval.utils.datasets import load_experiment_data
+from tsml_eval.utils.datasets import load_experiment_data, load_subject_ids
 from tsml_eval.utils.experiments import (
     _check_existing_results,
     estimator_attributes_to_file,
     timing_benchmark,
 )
 from tsml_eval.utils.memory_recorder import record_max_memory
-from tsml_eval.utils.resampling import resample_data, stratified_resample_data
+from tsml_eval.utils.resampling import (
+    cv_fold_data,
+    resample_data,
+    stratified_resample_data,
+)
 from tsml_eval.utils.results_writing import (
     write_classification_results,
     write_clustering_results,
@@ -351,6 +355,7 @@ def load_and_run_classification_experiment(
     benchmark_time=True,
     overwrite=False,
     predefined_resample=False,
+    cv_folds=None,
 ):
     """Load a dataset and run a classification experiment.
 
@@ -396,9 +401,19 @@ def load_and_run_classification_experiment(
         Read a predefined resample from file instead of performing a resample. If True
         the file format must include the resample_id at the end of the dataset name i.e.
         <problem_path>/<dataset>/<dataset>+<resample_id>+"_TRAIN.ts".
+    cv_folds : int or None, default=None
+        If set, combine train and test and use fold ``resample_id`` (from 0) of a
+        stratified ``cv_folds``-fold cross-validation instead of a resample. If the
+        dataset has subject IDs (<problem_path>/<dataset>/<dataset>+"_id_TRAIN.txt"
+        and "_id_TEST.txt"), every subject is kept on one side of the split and the
+        number of folds is at most the number of subjects. Folds are the same for
+        every classifier; ``resample_id`` is still the classifier's seed and the
+        results file suffix.
     """
     if classifier_name is None:
         classifier_name = type(classifier).__name__
+    if cv_folds is not None and predefined_resample:
+        raise ValueError("cv_folds and predefined_resample cannot be used together")
 
     build_test_file, build_train_file = _check_existing_results(
         results_path,
@@ -418,7 +433,17 @@ def load_and_run_classification_experiment(
         problem_path, dataset, resample_id, predefined_resample
     )
 
-    if resample:
+    if cv_folds is not None:
+        X_train, y_train, X_test, y_test = cv_fold_data(
+            X_train,
+            y_train,
+            X_test,
+            y_test,
+            resample_id,
+            n_folds=cv_folds,
+            groups=load_subject_ids(problem_path, dataset),
+        )
+    elif resample:
         X_train, y_train, X_test, y_test = stratified_resample_data(
             X_train, y_train, X_test, y_test, random_state=resample_id
         )

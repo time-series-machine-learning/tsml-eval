@@ -206,6 +206,7 @@ class Experiment:
     require_clean: bool = True
     email_hours: float = 24.0
     numba_cache_dir: Path | None = None
+    cv_folds: int = 0
     datasets: tuple[str, ...] = field(default=())
 
     @property
@@ -344,7 +345,12 @@ def load_experiment(config_path, cluster_dir=CLUSTER_DIR, user=None):
             "[estimators] table of Category = [...]"
         )
 
-    resamples = exp.pop("resamples", 30)
+    if "cv_folds" in exp and ("resamples" in exp or "start_resample" in exp):
+        raise ConfigError(
+            "With cv_folds the folds are the resamples; remove resamples and "
+            "start_resample"
+        )
+    resamples = exp.pop("resamples", int(exp.get("cv_folds", 0)) or 30)
     start = int(exp.pop("start_resample", 0))
     if isinstance(resamples, list):
         resample_ids = tuple(int(r) for r in resamples)
@@ -400,6 +406,7 @@ def _simple_settings(exp):
         "pin_commit": bool,
         "require_clean": bool,
         "email_hours": float,
+        "cv_folds": int,
     }
     unknown = sorted(set(exp) - set(allowed))
     if unknown:
@@ -443,6 +450,13 @@ def validate(e):
         raise ConfigError("resamples must select at least one non-negative resample")
     if len(e.resamples) != len(set(e.resamples)):
         raise ConfigError("resamples must be unique")
+    if e.cv_folds:
+        if e.task != "classification":
+            raise ConfigError("cv_folds only applies to classification")
+        if e.cv_folds < 2:
+            raise ConfigError("cv_folds must be at least 2")
+        if {"-pr", "--predefined_resample"} & set(e.extra_args):
+            raise ConfigError("cv_folds cannot be used with a predefined resample")
     if e.max_attempts < 1 or e.n_jobs < 1:
         raise ConfigError("max_attempts and n_jobs must be at least 1")
     if e.priority not in ("resample", "estimator", "dataset"):
@@ -532,6 +546,7 @@ def fingerprints(e):
                 "test": e.test_files,
                 "extra_args": e.extra_args,
                 "data_dir": str(e.data_dir),
+                "cv_folds": e.cv_folds,
             },
             sort_keys=True,
         )
@@ -544,12 +559,67 @@ def fingerprints(e):
 # ======================================================================================
 
 
+def subject_count(e, dataset):
+    """Count the subjects in a dataset's _id_TRAIN/_id_TEST files, or None."""
+    folder = e.data_dir / dataset
+    paths = [folder / f"{dataset}_id_{split}.txt" for split in ("TRAIN", "TEST")]
+    if not any(p.is_file() for p in paths):
+        return None
+    subjects = set()
+    for path in paths:
+        with path.open(encoding="utf-8-sig") as file:
+            subjects.update(line.strip() for line in file if line.strip())
+    return len(subjects)
+
+
+def subjects_per_fold(n_subjects, n_folds):
+    """Subjects in each test fold but the last.
+
+    Must match tsml_eval.utils.resampling.cv_subjects_per_fold: leave one subject out
+    up to n_folds + 5 subjects, otherwise n_subjects / n_folds rounded.
+    """
+    if n_subjects <= n_folds + 5:
+        return 1
+    return int(n_subjects / n_folds + 0.5)
+
+
+def dataset_folds(e):
+    """Cross-validation folds per dataset.
+
+    cv_folds for a dataset without subject IDs. With IDs, matches
+    tsml_eval.utils.resampling.cv_n_folds: subjects_per_fold subjects to a fold,
+    the last fold holding the rest.
+    """
+    if not e.cv_folds:
+        return {}
+    cache = getattr(e, "_folds", None)
+    if cache is None or set(cache) != set(e.datasets):
+        cache = {}
+        for dataset in e.datasets:
+            try:
+                n = subject_count(e, dataset)
+            except OSError:
+                n = None
+            if n is None:
+                cache[dataset] = e.cv_folds
+            else:
+                cache[dataset] = -(-n // subjects_per_fold(n, e.cv_folds))
+        e._folds = cache
+    return cache
+
+
 def all_tasks(e):
-    """Yield every task the experiment asks for, minus exclusions."""
+    """Yield every task the experiment asks for, minus exclusions.
+
+    With cv_folds, the resamples of each dataset are its folds, 0 to
+    dataset_folds - 1.
+    """
     excluded = set(e.exclude_tasks)
+    folds = dataset_folds(e)
     for estimator in e.estimators:
         for dataset in e.datasets:
-            for resample in e.resamples:
+            resamples = range(folds[dataset]) if folds else e.resamples
+            for resample in resamples:
                 task = Task(estimator.name, estimator.category, dataset, resample)
                 if task.key not in excluded:
                     yield task
@@ -877,6 +947,8 @@ def _experiment_arguments(e, task):
         args.append("-te")
     if e.n_jobs > 1:
         args += ["-nj", str(e.n_jobs)]
+    if e.cv_folds:
+        args += ["-cv", str(e.cv_folds)]
     args += list(e.extra_args)
     for key, value in e.estimator_kwargs.get(task.estimator, {}).items():
         if isinstance(value, bool):
@@ -1749,6 +1821,20 @@ def cmd_check(e, args):
         f"  {len(e.estimators)} estimators x {len(e.datasets)} datasets x "
         f"{len(e.resamples)} resamples"
     )
+    if e.cv_folds:
+        folds = dataset_folds(e)
+        by_subject = {d: n for d, n in folds.items() if subject_count(e, d)}
+        print(
+            f"  {e.cv_folds}-fold cross-validation; by subject for "
+            f"{len(by_subject)} of {len(folds)} datasets"
+        )
+        for dataset, n in sorted(by_subject.items()):
+            subjects = subject_count(e, dataset)
+            per = subjects_per_fold(subjects, e.cv_folds)
+            last = subjects - per * (n - 1)
+            print(
+                f"    {dataset}: {subjects} subjects, {n} folds of {per}, last {last}"
+            )
     problems = []
     for label, path in (("repo_dir", e.repo_dir), ("data_dir", e.data_dir)):
         if not path.is_dir():
