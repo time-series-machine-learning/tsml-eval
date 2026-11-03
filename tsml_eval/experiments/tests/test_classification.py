@@ -215,6 +215,20 @@ def test_get_classifier_by_name_invalid():
         get_classifier_by_name("invalid")
 
 
+def _skip_if_not_in_aeon_neuro(class_name):
+    """Skip when the installed aeon-neuro release predates ``class_name``."""
+    import importlib
+
+    for package in ("deep_learning", "distance_based", "feature_based"):
+        try:
+            module = importlib.import_module(f"aeon_neuro.classification.{package}")
+        except ImportError as exc:
+            pytest.skip(str(exc))
+        if hasattr(module, class_name):
+            return
+    pytest.skip(f"{class_name} is not in the installed aeon-neuro")
+
+
 @pytest.mark.parametrize(
     "name, expected",
     [
@@ -223,11 +237,16 @@ def test_get_classifier_by_name_invalid():
         ("RiemannianMDM", "RiemannianMDMClassifier"),
         ("RiemannianKNN", "RiemannianKNNClassifier"),
         ("CSP", "CSPClassifier"),
+        ("EEGConformer", "EEGConformerClassifier"),
+        ("CBraMod", "CBraModClassifier"),
+        ("Labram", "LabramClassifier"),
+        ("XDAWN", "XDAWNClassifier"),
     ],
 )
 def test_get_aeon_neuro_classifier(name, expected):
     """Test native aeon-neuro classifiers are available by name and alias."""
     pytest.importorskip("aeon_neuro")
+    _skip_if_not_in_aeon_neuro(expected)
     for classifier_name in (name, expected, f"neuro:{expected}"):
         try:
             classifier = get_classifier_by_name(classifier_name)
@@ -256,6 +275,31 @@ def test_get_aeon_neuro_csp_variants(name, expected):
         assert classifier.classifier.n_jobs == 2
     else:
         assert classifier.classifier.probability
+
+
+def test_get_labram_channel_names_from_string():
+    """Comma-separated channel names, as given on the command line, become a list."""
+    pytest.importorskip("aeon_neuro.classification.deep_learning._labram")
+    classifier = get_classifier_by_name("Labram", ch_names="FP1, FP2,CZ")
+    assert classifier.ch_names == ["FP1", "FP2", "CZ"]
+
+
+def test_get_moabb_csp_pipelines():
+    """CSP+LDA and CSP+SVM follow the MOABB pipelines."""
+    _skip_if_not_in_aeon_neuro("CSPClassifier")
+    lda = get_classifier_by_name("CSP+LDA", random_state=1)
+    assert type(lda).__name__ == "CSPClassifier"
+    assert type(lda.classifier).__name__ == "LinearDiscriminantAnalysis"
+    assert (lda.n_components, lda.reg, lda.cov_est) == (6, "oas", "epoch")
+
+    svm = get_classifier_by_name("CSP+SVM", random_state=1, n_jobs=2)
+    assert type(svm).__name__ == "CSPClassifier"
+    assert (svm.n_components, svm.reg, svm.cov_est) == (6, "oas", "epoch")
+    search = svm.classifier
+    assert type(search).__name__ == "GridSearchCV"
+    assert type(search.estimator).__name__ == "SVC"
+    assert search.param_grid == {"C": [0.5, 1, 1.5], "kernel": ["rbf", "linear"]}
+    assert (search.cv.n_splits, search.cv.random_state, search.n_jobs) == (3, 1, 2)
 
 
 def test_get_aeon_neuro_classifier_invalid():

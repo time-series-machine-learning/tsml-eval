@@ -33,11 +33,17 @@ deep_learning_classifiers = [
 neuro_classifiers = [
     ["eegnetclassifier", "eegnet"],
     ["deepconvnetclassifier", "deepconvnet"],
+    ["eegconformerclassifier", "eegconformer"],
+    ["cbramodclassifier", "cbramod"],
+    ["labramclassifier", "labram"],
     ["riemannianmdmclassifier", "riemannianmdm"],
     ["riemannianknnclassifier", "riemannianknn"],
     ["cspclassifier", "csp", "csplda"],
     ["csprandomforestclassifier", "csprandomforest", "csprf"],
     ["cspsvmclassifier", "cspsvm"],
+    "csp+lda",
+    "csp+svm",
+    ["xdawnclassifier", "xdawn", "xdawnlda"],
 ]
 dictionary_based_classifiers = [
     ["bossensemble", "boss"],
@@ -370,6 +376,21 @@ def _set_classifier_neuro(c, random_state, n_jobs, kwargs):
         from aeon_neuro.classification.deep_learning import DeepConvNetClassifier
 
         return DeepConvNetClassifier(random_state=random_state, **kwargs)
+    elif c in ("eegconformerclassifier", "eegconformer"):
+        from aeon_neuro.classification.deep_learning import EEGConformerClassifier
+
+        return EEGConformerClassifier(random_state=random_state, **kwargs)
+    elif c in ("cbramodclassifier", "cbramod"):
+        from aeon_neuro.classification.deep_learning import CBraModClassifier
+
+        return CBraModClassifier(random_state=random_state, **kwargs)
+    elif c in ("labramclassifier", "labram"):
+        from aeon_neuro.classification.deep_learning import LabramClassifier
+
+        # ch_names can come from the command line as "FP1,FP2,...".
+        if isinstance(kwargs.get("ch_names"), str):
+            kwargs["ch_names"] = [n.strip() for n in kwargs["ch_names"].split(",")]
+        return LabramClassifier(random_state=random_state, **kwargs)
     elif c in ("riemannianmdmclassifier", "riemannianmdm"):
         from aeon_neuro.classification.distance_based import RiemannianMDMClassifier
 
@@ -406,18 +427,64 @@ def _set_classifier_neuro(c, random_state, n_jobs, kwargs):
             classifier = None
         kwargs.setdefault("classifier", classifier)
         return CSPClassifier(random_state=random_state, **kwargs)
+    elif c in ("csp+lda", "csp+svm"):
+        # The MOABB CSP pipelines (pipelines/CSP.yml and CSP_SVM_grid.yml): OAS
+        # covariance per trial, averaged per class, six CSP filters, log-variance.
+        from aeon_neuro.classification.feature_based import CSPClassifier
+
+        if c == "csp+lda":
+            from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+
+            classifier = LinearDiscriminantAnalysis()
+        else:
+            from sklearn.model_selection import GridSearchCV, StratifiedKFold
+            from sklearn.svm import SVC
+
+            # The search tunes the SVC on CSP features fitted to the whole training
+            # set. MOABB also tunes the number of filters (2-8), fixed at 6 here.
+            # probability=True so results files get probabilities; it does not
+            # change the predictions, which come from the decision function.
+            classifier = GridSearchCV(
+                SVC(kernel="linear", probability=True, random_state=random_state),
+                {"C": [0.5, 1, 1.5], "kernel": ["rbf", "linear"]},
+                cv=StratifiedKFold(3, shuffle=True, random_state=random_state),
+                n_jobs=n_jobs,
+            )
+        csp_kwargs = {
+            "classifier": classifier,
+            "n_components": 6,
+            "reg": "oas",
+            "cov_est": "epoch",
+        }
+        csp_kwargs.update(kwargs)
+        return CSPClassifier(random_state=random_state, **csp_kwargs)
+    elif c in ("xdawnclassifier", "xdawn", "xdawnlda"):
+        from aeon_neuro.classification.feature_based import XDAWNClassifier
+
+        return XDAWNClassifier(random_state=random_state, **kwargs)
     else:
         raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
 
 
 def _set_classifier_neuro_by_class_name(c, random_state, n_jobs, kwargs):
     """Create an aeon-neuro classifier exported by its classification package."""
+    from importlib import import_module
     from inspect import isclass, signature
 
     from aeon.classification.base import BaseClassifier
     from aeon_neuro import classification
 
-    for classifier in vars(classification).values():
+    # Some classifiers, e.g. CBraModClassifier, are only exported by a subpackage.
+    candidates = {}
+    for package in ("deep_learning", "distance_based", "feature_based"):
+        try:
+            candidates.update(
+                vars(import_module(f"{classification.__name__}.{package}"))
+            )
+        except ImportError:
+            pass
+    candidates.update(vars(classification))
+    for classifier in candidates.values():
         if (
             isclass(classifier)
             and classifier.__name__.casefold() == c
