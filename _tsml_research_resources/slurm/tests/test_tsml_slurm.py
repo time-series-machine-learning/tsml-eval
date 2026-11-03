@@ -169,7 +169,7 @@ def test_shipped_examples_load(config):
 def test_placeholders_and_defaults(world):
     e = make(world)
     assert e.data_dir == world["home"] / "Data"
-    assert e.state_dir == world["home"] / ".tsml-slurm" / "exp"
+    assert e.state_dir == world["home"] / "tsml-slurm" / "exp"
     assert e.resamples == (0, 1)
     assert [x.name for x in e.estimators] == ["A", "B"]
     assert e.resources.account == "acct"
@@ -685,3 +685,11 @@ def test_status_running_lists_elapsed_time(world):
     first = report.splitlines()[1]
     assert first.startswith(key) and "node42" in first
     assert "waiting in farm" in report  # the other tasks have not started
+
+
+def test_existing_hidden_state_dir_is_kept(world):
+    hidden = world["home"] / ".tsml-slurm" / "exp"
+    hidden.mkdir(parents=True)
+    assert make(world).state_dir == hidden
+    (world["home"] / "tsml-slurm" / "exp").mkdir(parents=True)
+    assert make(world).state_dir == world["home"] / "tsml-slurm" / "exp"

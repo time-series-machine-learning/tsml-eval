@@ -265,6 +265,21 @@ def load_cluster(name, cluster_dir=CLUSTER_DIR):
         return tomllib.load(file)
 
 
+def _state_dir(configured, path, values):
+    """Return the state directory: as configured, else ~/tsml-slurm/<name>.
+
+    Experiments started before the default moved from the hidden ~/.tsml-slurm keep
+    using it, so a running experiment never loses track of its jobs.
+    """
+    if configured is not None:
+        return path(configured)
+    visible = path("{home}/tsml-slurm/{name}")
+    hidden = path("{home}/.tsml-slurm/{name}")
+    if hidden.is_dir() and not visible.exists():
+        return hidden
+    return visible
+
+
 def load_experiment(config_path, cluster_dir=CLUSTER_DIR, user=None):
     """Load an experiment TOML, merge its cluster profile and validate."""
     config_path = Path(config_path).resolve()
@@ -354,7 +369,7 @@ def load_experiment(config_path, cluster_dir=CLUSTER_DIR, user=None):
         data_dir=path(exp.pop("data_dir")),
         dataset_list=path(exp.pop("datasets")),
         results_dir=path(exp.pop("results_dir")),
-        state_dir=path(exp.pop("state_dir", "{home}/.tsml-slurm/{name}")),
+        state_dir=_state_dir(exp.pop("state_dir", None), path, values),
         estimators=estimators,
         estimator_kwargs={
             str(k): dict(v) for k, v in raw.get("estimator_kwargs", {}).items()

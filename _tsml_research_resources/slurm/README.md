@@ -84,10 +84,11 @@ Results are written in the standard tsml-eval layout:
 
 `<Category>` is left out if you give the estimators as a flat list.
 
-Each experiment keeps its own state directory, by default `~/.tsml-slurm/<name>/`:
+Each experiment keeps its own state directory, by default `~/tsml-slurm/<name>/`. An
+experiment started before that default keeps using the hidden `~/.tsml-slurm/<name>/`:
 
 ```
-~/.tsml-slurm/<name>/
+~/tsml-slurm/<name>/
 ├── state.json      attempts, memory tier, job ID and failure history per task
 ├── report.txt      the latest progress report
 ├── STOP            present = no new submissions
@@ -199,7 +200,7 @@ checkout) and `{name}` (the experiment name), as well as environment variables a
 | `pin_commit` | `true` | Refuse to submit from a commit other than the experiment's first (see below). |
 | `email` | profile's `email` | Report recipient; `""` disables email. |
 | `email_hours` | `24` | Minimum time between progress emails. A final email is always sent. |
-| `repo_dir`, `state_dir`, `numba_cache_dir` | profile / `~/.tsml-slurm/{name}` | Rarely needed overrides. |
+| `repo_dir`, `state_dir`, `numba_cache_dir` | profile / `~/tsml-slurm/{name}` | Rarely needed overrides. |
 
 ### Other tables
 
@@ -354,7 +355,7 @@ failed tasks in `status`. The rest of the experiment carries on.
 - Array mode (one Slurm task per experiment): the matching array tasks are
   `scancel`led.
 - Farm mode: one farm job runs many tasks, so it is not cancelled. The controller
-  writes a marker for each task in `~/.tsml-slurm/<name>/cancel/`; the farm skips a
+  writes a marker for each task in `~/tsml-slurm/<name>/cancel/`; the farm skips a
   task with a marker that has not started, and kills a running one within 5 seconds,
   freeing its slot for the next task.
 - Tasks not yet submitted are simply never submitted.
@@ -380,7 +381,7 @@ Failed tasks (will not be retried; see `retry`): 6
        4  Time limit
        2  OOM at 620G
   DrCIF|PPGDalia_eq|3: Time limit
-      ~/.tsml-slurm/tser-interval/logs/DrCIF/PPGDalia_eq/123456_3.err
+      ~/tsml-slurm/tser-interval/logs/DrCIF/PPGDalia_eq/123456_3.err
 ```
 
 Each failed task points at its log. `scripts/<jobid>.sh` holds the exact job script.
@@ -456,7 +457,7 @@ process) counts as out of memory.
 | `TensorFlow sees no GPU` / `PyTorch sees no GPU` | The environment has a CPU-only build, or CUDA libraries are missing. See the GPU setup notes; test with an interactive GPU job. |
 | `sbatch: error: Invalid account or account/partition combination` | Iridis X `swarm_a100` needs `account = "ecs"`. Hali needs `cmp`. |
 | `Invalid generic resource (gres) specification` | Iridis X: the `gres` type must match the partition (`gpu:h200:1`, `gpu:a100:1`, `gpu:a100swarm:1`). |
-| Nothing is submitted, report says `STOP file present` | Run `start`, or delete `~/.tsml-slurm/<name>/STOP`. |
+| Nothing is submitted, report says `STOP file present` | Run `start`, or delete `~/tsml-slurm/<name>/STOP`. |
 | `Another cycle holds …controller.lock` | A cycle is running; `status` shows the last saved report. |
 | Farm jobs pending for a long time on Iridis 6 | A near-full-node request waits for an empty node. Lower `node_memory_gb` or `node_cpus` in `[slurm]` to fit partly used nodes. |
 | No emails | The host running the cycle has no `mail`/`sendmail` (possible on compute nodes). `report.txt` is always written; `status --email` from a login node sends it. |
