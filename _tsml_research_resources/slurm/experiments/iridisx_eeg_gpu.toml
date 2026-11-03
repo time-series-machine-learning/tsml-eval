@@ -1,0 +1,43 @@
+# aeon-neuro deep learners on the aeon-neuro EEG archive, on Iridis X H200s.
+#
+# EEGNet, DeepConvNet and EEGConformer are PyTorch (braindecode), so the GPU check
+# is torch, not the profile's TensorFlow default, and device = "cuda" makes a job
+# fail instead of quietly training on the CPU. Needs aeon-neuro >= 0.1.1.
+# To use the A100 queues instead, set resources = "gpu-a100" or "gpu-swarm".
+#
+# Runs from the separate GPU checkout ~/Code/tsml-eval-gpu (the Iridis X profile
+# default), which must be on the branch below. Data and dataset list are the ones
+# downloaded for the Iridis 6 runs.
+#
+#   python tsml_slurm.py check experiments/iridisx_eeg_gpu.toml
+#   python tsml_slurm.py start experiments/iridisx_eeg_gpu.toml
+
+[experiment]
+name = "eeg-gpu"
+cluster = "iridisx"
+resources = "gpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval-gpu"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{home}/DataSetLists/eeg.txt"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+[estimators]
+DeepLearning = ["EEGNet", "DeepConvNet", "EEGConformer"]
+
+[estimator_kwargs.EEGNet]
+device = "cuda"
+
+[estimator_kwargs.DeepConvNet]
+device = "cuda"
+
+[estimator_kwargs.EEGConformer]
+device = "cuda"
+
+[slurm]
+env_name = "tsml-eval-gpu"
+gpu_check = "torch"
+memory_gb = [32, 64, 128]
