@@ -42,6 +42,6 @@ device = "cuda"
 [slurm]
 container = ""                             # conda, not the TensorFlow sandbox
 module = "conda/python3"
-env_name = "tsml-eval"
+env_name = "tsml-eval-gpu"
 gpu_check = "torch"
 memory_gb = [32, 64, 128]
