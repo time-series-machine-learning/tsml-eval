@@ -3,8 +3,7 @@
 # Resample 0 only: the supplied train/test splits. Random resamples can put trials
 # from one subject in both train and test, so add more only once that is handled.
 #
-# XDAWN is not in aeon-neuro 0.1.0, so the env needs aeon-neuro from GitHub main:
-#   pip install "aeon-neuro @ git+https://github.com/aeon-toolkit/aeon-neuro.git"
+# Needs aeon-neuro >= 0.1.1 (XDAWN, and the CSP used by CSP+LDA and CSP+SVM).
 #
 # Setup (see ../soton/iridis/eeg_classification_students.md):
 #   python _tsml_research_resources/soton/iridis/download_eeg_classification.py \
@@ -17,7 +16,7 @@ name = "eeg-cpu"
 cluster = "hali"
 resources = "cpu"
 task = "classification"
-repo_dir = "{home}/tsml-eval"
+repo_dir = "{home}/Code/tsml-eval"
 branch = "ajb/slurm-runner"
 data_dir = "{home}/Data/EEG"
 datasets = "{home}/DataSetLists/EEG.txt"   # written by the downloader
@@ -32,4 +31,5 @@ DistanceBased = ["RiemannianMDM", "RiemannianKNN"]
 FeatureBased = ["CSP+LDA", "CSP+SVM", "XDAWN"]
 
 [slurm]
-env_name = "tsml-neuro"                    # tsml-eval[neuro] + aeon-neuro from GitHub main
+env_name = "tsml-eval"
+memory_gb = [16, 32, 64, 128]

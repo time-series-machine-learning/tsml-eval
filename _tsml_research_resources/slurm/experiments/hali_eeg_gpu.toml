@@ -1,9 +1,10 @@
 # aeon-neuro deep learners on the aeon-neuro EEG archive, on Hali GPUs.
 #
 # EEGNet, DeepConvNet and EEGConformer are PyTorch (braindecode), so the GPU check
-# is torch, not the profile's TensorFlow default. They use CUDA only "when available", so
-# device = "cuda" makes a job fail instead of quietly training on the CPU.
-# EEGConformer needs aeon-neuro from GitHub main (it is not in 0.1.0).
+# is torch, not the profile's TensorFlow default. They use CUDA only "when
+# available", so device = "cuda" makes a job fail instead of quietly training on
+# the CPU.
+# EEGConformer needs aeon-neuro >= 0.1.1.
 #
 # CBraMod and Labram (frozen pretrained encoders) are left out: they expect 200 Hz
 # data scaled to 0.1 mV, download weights from the Hugging Face Hub (compute nodes
@@ -18,7 +19,7 @@ name = "eeg-gpu"
 cluster = "hali"
 resources = "gpu"
 task = "classification"
-repo_dir = "{home}/tsml-eval"
+repo_dir = "{home}/Code/tsml-eval"
 branch = "ajb/slurm-runner"
 data_dir = "{home}/Data/EEG"
 datasets = "{home}/DataSetLists/EEG.txt"
@@ -39,6 +40,6 @@ device = "cuda"
 device = "cuda"
 
 [slurm]
-env_name = "tsml-neuro-gpu"                # as tsml-neuro, with a CUDA PyTorch
+env_name = "tsml-eval"
 gpu_check = "torch"
 memory_gb = [32, 64, 128]

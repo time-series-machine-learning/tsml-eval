@@ -1,0 +1,37 @@
+# aeon and aeon-neuro CPU classifiers on the aeon-neuro EEG archive, on Iridis 6.
+#
+# Resample 0 only: the supplied train/test splits. Random resamples can put trials
+# from one subject in both train and test, so add more only once that is handled.
+#
+# Needs aeon-neuro >= 0.1.1 (XDAWN, and the CSP used by CSP+LDA and CSP+SVM).
+# CSP+LDA and CSP+SVM follow MOABB's CSP.yml and CSP_SVM_grid.yml; CSP+SVM
+# grid-searches the SVC (C and kernel) on fixed six-filter CSP features.
+#
+# Setup (see ../soton/iridis/eeg_classification_students.md):
+#   python _tsml_research_resources/soton/iridis/download_eeg_classification.py \
+#       --data-dir ~/Data/EEG --dataset-list ~/DataSetLists/EEG.txt
+#   python tsml_slurm.py check experiments/iridis6_eeg_cpu.toml
+#   python tsml_slurm.py start experiments/iridis6_eeg_cpu.toml
+
+[experiment]
+name = "eeg-cpu"
+cluster = "iridis6"
+resources = "cpu"                          # task farm on batch nodes
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{home}/DataSetLists/EEG.txt"   # written by the downloader
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+# Grouped as aeon-neuro groups them.
+[estimators]
+ConvolutionBased = ["ROCKET", "MultiRocketHydra"]
+DistanceBased = ["RiemannianMDM", "RiemannianKNN"]
+FeatureBased = ["CSP+LDA", "CSP+SVM", "XDAWN"]
+
+[slurm]
+env_name = "tsml-eval"
+memory_gb = [16, 32, 64, 128, 256, 620]   # start at 16G: 39 experiments per node

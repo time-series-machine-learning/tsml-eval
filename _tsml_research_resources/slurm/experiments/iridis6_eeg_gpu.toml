@@ -1,0 +1,47 @@
+# aeon-neuro deep learners on the aeon-neuro EEG archive, on Iridis 6 GPUs.
+#
+# These are PyTorch (braindecode) models, so this runs from the conda env (with a CUDA
+# PyTorch) instead of the profile's TensorFlow Apptainer sandbox. The PyPI torch
+# wheels for Linux bundle CUDA; the job puts those libraries on LD_LIBRARY_PATH.
+# device = "cuda" makes a job fail instead of quietly training on the CPU.
+# EEGConformer needs aeon-neuro >= 0.1.1.
+#
+# CBraMod and Labram (frozen pretrained encoders) are left out: they expect 200 Hz
+# data scaled to 0.1 mV, download weights from the Hugging Face Hub (compute nodes
+# may have no internet: download once on the login node, then HF_HUB_OFFLINE=1),
+# and Labram needs the 10-20 channel names of each dataset.
+#
+#   python tsml_slurm.py check experiments/iridis6_eeg_gpu.toml
+#   python tsml_slurm.py start experiments/iridis6_eeg_gpu.toml
+
+[experiment]
+name = "eeg-gpu"
+cluster = "iridis6"
+resources = "gpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{home}/DataSetLists/EEG.txt"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+[estimators]
+DeepLearning = ["EEGNet", "DeepConvNet", "EEGConformer"]
+
+[estimator_kwargs.EEGNet]
+device = "cuda"
+
+[estimator_kwargs.DeepConvNet]
+device = "cuda"
+
+[estimator_kwargs.EEGConformer]
+device = "cuda"
+
+[slurm]
+container = ""                             # conda, not the TensorFlow sandbox
+module = "conda/python3"
+env_name = "tsml-eval"
+gpu_check = "torch"
+memory_gb = [32, 64, 128]
