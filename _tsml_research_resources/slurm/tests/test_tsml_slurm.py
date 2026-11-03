@@ -547,3 +547,141 @@ def test_state_file_is_json(world):
     ts.run_cycle(e, FakeSlurm())
     data = json.loads((e.state_dir / "state.json").read_text())
     assert data["commit"] and len(data["tasks"]) == 12
+
+
+# --------------------------------------------------------------------------- cancel
+
+
+class Filters:
+    def __init__(self, estimator=None, dataset=None, resample=None):
+        self.estimator = estimator
+        self.dataset = dataset
+        self.resample = resample
+
+
+def _queue_everything(e, slurm):
+    """Make every submitted job of the experiment show as RUNNING in squeue."""
+    state = ts.load_state(e)
+    slurm.entries = []
+    for key, record in state["tasks"].items():
+        index = None if record.get("kind") == "farm" else int(key.rsplit("|", 1)[1])
+        entry = ts.QueueEntry(record["job"], index, "RUNNING", "x", "p")
+        if entry not in slurm.entries:
+            slurm.entries.append(entry)
+
+
+def test_cancel_needs_a_filter(world):
+    e = make(world)
+    with pytest.raises(ts.ConfigError, match="stop --cancel"):
+        ts.cmd_cancel(e, Filters())
+    with pytest.raises(ts.ConfigError, match="Not in this experiment"):
+        ts.cmd_cancel(e, Filters(estimator=["Z"]))
+
+
+def test_cancel_array_tasks(world, monkeypatch):
+    e = make(world)
+    slurm = FakeSlurm()
+    ts.run_cycle(e, slurm)
+    _queue_everything(e, slurm)
+    cancelled = []
+    monkeypatch.setattr(ts, "Slurm", lambda: slurm)
+    monkeypatch.setattr(slurm, "cancel", lambda ids: cancelled.extend(ids))
+    ts.cmd_cancel(e, Filters(estimator=["A"], dataset=["Big"]))
+    state = ts.load_state(e)["tasks"]
+    assert len(cancelled) == 2
+    assert sorted(c.rsplit("_", 1)[1] for c in cancelled) == ["0", "1"]
+    assert state["A|Big|0"]["terminal"] == ts.CANCELLED_BY_USER
+    assert state["A|Big|0"]["job"] is None
+    assert "terminal" not in state["A|Small|0"]
+    # a cancelled task is not submitted again
+    slurm.entries = []
+    slurm.scripts = {}
+    age_submissions(e)
+    ts.run_cycle(e, slurm)
+    assert not any("-A-Big" in s for s in slurm.scripts.values())
+
+
+def test_cancel_farm_tasks_uses_markers_and_retry_undoes_it(world, monkeypatch):
+    e = make(world, resources="farm", body="resamples = 1")
+    slurm = FakeSlurm()
+    ts.run_cycle(e, slurm)
+    _queue_everything(e, slurm)
+    cancelled = []
+    monkeypatch.setattr(ts, "Slurm", lambda: slurm)
+    monkeypatch.setattr(slurm, "cancel", lambda ids: cancelled.extend(ids))
+    ts.cmd_cancel(e, Filters(dataset=["Small"]))
+    assert cancelled == []  # the farm itself keeps running
+    for estimator in ("A", "B"):
+        task = ts.Task(estimator, "", "Small", 0)
+        assert ts.cancel_marker(e, task).is_file()
+    script = next(iter(slurm.scripts.values()))
+    assert "CANCEL=" in script and "SETSID" in script
+
+    class Retry:
+        reason = "cancelled"
+        memory_tier = None
+
+    ts.cmd_retry(e, Retry)
+    state = ts.load_state(e)["tasks"]
+    assert "terminal" not in state["A|Small|0"]
+    assert not ts.cancel_marker(e, ts.Task("A", "", "Small", 0)).exists()
+
+
+@pytest.mark.skipif(BASH is None, reason="bash not available")
+def test_farm_skips_and_kills_cancelled_tasks(world, tmp_path):
+    e = make(world, resources="farm", body="resamples = 1")
+    ts.read_datasets(e)
+    tasks = [ts.Task("A", "", d, 0) for d in ("Small", "Mid", "Big")]
+    script = ts.farm_script(e, tasks, 4, "abc", 3)
+    # keep only the task functions and run them with a stand-in for python
+    body = script[script.index("task_args() {") : script.index("set +e")]
+    for task in tasks:
+        ts.task_log(e, task, "77").parent.mkdir(parents=True, exist_ok=True)
+    skipped, killed, ran = (ts.cancel_marker(e, t) for t in tasks)
+    skipped.parent.mkdir(parents=True, exist_ok=True)
+    skipped.write_text("x")
+    runner = tmp_path / "run.sh"
+    runner.write_text(
+        "SLURM_JOB_ID=77\n"
+        "PY=(bash -c 'sleep 30' x)\n" + body + f"run_task 0\n"
+        f"run_task 1 &\n"
+        f"sleep 1; mkdir -p {shlex_q(killed.parent)}; touch {shlex_q(killed)}\n"
+        "wait\n"
+        "PY=(true)\n"
+        "run_task 2\n",
+        newline="\n",
+    )
+    result = subprocess.run(
+        [BASH, str(runner)], capture_output=True, text=True, timeout=60
+    )
+    assert result.returncode == 0, result.stderr
+
+    def status(task):
+        return Path(f"{ts.task_log(e, task, '77')}.status").read_text()
+
+    assert status(tasks[0]).startswith("cancelled")
+    assert "started" in status(tasks[1]) and "cancelled" in status(tasks[1])
+    assert "exit 0" in status(tasks[2])
+
+
+def shlex_q(path):
+    import shlex
+
+    return shlex.quote(Path(path).as_posix())
+
+
+def test_status_running_lists_elapsed_time(world):
+    e = make(world, resources="farm", body="resamples = 1")
+    slurm = FakeSlurm()
+    ts.run_cycle(e, slurm)
+    _queue_everything(e, slurm)
+    state = ts.load_state(e)
+    key = "A|Small|0"
+    job = state["tasks"][key]["job"]
+    log = ts.task_log(e, ts.Task("A", "", "Small", 0), job)
+    log.parent.mkdir(parents=True, exist_ok=True)
+    Path(f"{log}.status").write_text("started 2000-01-01T00:00:00+00:00 node42\n")
+    report = ts.running_report(e, state, slurm.queue("tester"))
+    first = report.splitlines()[1]
+    assert first.startswith(key) and "node42" in first
+    assert "waiting in farm" in report  # the other tasks have not started

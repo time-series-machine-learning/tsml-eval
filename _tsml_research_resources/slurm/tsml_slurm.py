@@ -878,6 +878,14 @@ def task_log(e, task, job_id):
     return e.logs_dir / task.estimator / task.dataset / f"{job_id}_{task.resample}"
 
 
+CANCELLED_BY_USER = "cancelled by user"
+
+
+def cancel_marker(e, task):
+    """File whose existence tells a farm to skip or kill one task."""
+    return e.state_dir / "cancel" / task.estimator / task.dataset / str(task.resample)
+
+
 def array_script(e, tasks, memory_gb, commit):
     """One Slurm array for one estimator and dataset; index = resample."""
     first = tasks[0]
@@ -905,6 +913,8 @@ def array_script(e, tasks, memory_gb, commit):
     lines += [
         f'echo "experiment={e.name} estimator={first.estimator} '
         f'dataset={first.dataset} resample=$SLURM_ARRAY_TASK_ID memory={memory_gb}G"',
+        'echo "started $(date -Iseconds) $(hostname)" > '
+        f'{q(str(log_dir))}/"${{SLURM_ARRAY_JOB_ID}}_${{SLURM_ARRAY_TASK_ID}}.status"',
         f'"${{PY[@]}}" -u -m {_entry_module(e)} {q(str(e.data_dir))} {rendered}',
         "",
     ]
@@ -942,17 +952,36 @@ def farm_script(e, tasks, memory_gb, commit, slots):
     for i, task in enumerate(tasks):
         args = " ".join(q(a) for a in _experiment_arguments(e, task))
         log = q(str(task_log(e, task, "JOBID")).replace("JOBID", "@@"))
-        lines.append(f"        {i}) ARGS=({args}); LOG={log} ;;")
+        cancel = q(str(cancel_marker(e, task)))
+        lines.append(f"        {i}) ARGS=({args}); LOG={log}; CANCEL={cancel} ;;")
     lines += [
         "    esac",
         '    LOG="${LOG//@@/$SLURM_JOB_ID}"',
         "}",
         "",
+        "# A task whose cancel marker exists is skipped, or killed within 5 s if it",
+        "# is running (`tsml_slurm.py cancel`). setsid gives each task its own",
+        "# process group, so joblib workers are killed with it.",
+        "SETSID=(); command -v setsid > /dev/null && SETSID=(setsid)",
         "run_task() {",
         '    task_args "$1"',
+        '    if [[ -e "$CANCEL" ]]; then',
+        '        echo "cancelled $(date -Iseconds)" > "$LOG.status"',
+        "        return",
+        "    fi",
         '    echo "started $(date -Iseconds) $(hostname)" > "$LOG.status"',
-        f'    "${{PY[@]}}" -u -m {_entry_module(e)} {q(str(e.data_dir))} '
-        '"${ARGS[@]}" > "$LOG.out" 2> "$LOG.err"',
+        f'    "${{SETSID[@]}}" "${{PY[@]}}" -u -m {_entry_module(e)} '
+        f'{q(str(e.data_dir))} "${{ARGS[@]}}" > "$LOG.out" 2> "$LOG.err" &',
+        "    local pid=$!",
+        '    while kill -0 "$pid" 2>/dev/null; do',
+        '        if [[ -e "$CANCEL" ]]; then',
+        '            kill -TERM -- "-$pid" 2>/dev/null || kill "$pid" 2>/dev/null',
+        '            echo "cancelled $(date -Iseconds)" >> "$LOG.status"',
+        "            break",
+        "        fi",
+        "        sleep 5",
+        "    done",
+        '    wait "$pid"',
         "    local code=$?",
         '    echo "exit $code" >> "$LOG.status"',
         "}",
@@ -1825,6 +1854,9 @@ def cmd_status(e, args):
     except RuntimeError as error:  # a cycle is running: show its last report
         print(f"{error}; showing the last saved report")
         print((e.state_dir / "report.txt").read_text(encoding="utf-8"))
+    if args.running:
+        print()
+        print(running_report(e, load_state(e), slurm.queue(e.user)))
     if args.details:
         state = load_state(e)
         missing = [t for t in all_tasks(e) if not is_complete(e, t)]
@@ -1835,6 +1867,116 @@ def cmd_status(e, args):
                 f"memory={e.resources.memory_gb[record.get('tier', 0)]}G "
                 f"job={record.get('job')} {record.get('terminal', '')}"
             )
+    return 0
+
+
+def _matches(task, args):
+    """Whether a task passes the --estimator/--dataset/--resample filters."""
+    return (
+        (not args.estimator or task.estimator in args.estimator)
+        and (not args.dataset or task.dataset in args.dataset)
+        and (args.resample is None or task.resample in args.resample)
+    )
+
+
+def _started(log):
+    """(start time, host) from a task's .status file, or (None, "")."""
+    text = _read_tail(Path(f"{log}.status"))
+    match = re.search(r"^started (\S+) ?(\S*)", text, re.MULTILINE)
+    if not match:
+        return None, ""
+    try:
+        return datetime.fromisoformat(match.group(1)), match.group(2)
+    except ValueError:
+        return None, match.group(2)
+
+
+def _elapsed(start):
+    seconds = int((datetime.now(start.tzinfo) - start).total_seconds())
+    hours, rest = divmod(max(seconds, 0), 3600)
+    return f"{hours}:{rest // 60:02d}:{rest % 60:02d}"
+
+
+def running_report(e, state, queue):
+    """Table of tasks whose job is running, longest running first."""
+    live = {(q.job_id, q.index): q.state for q in queue}
+    live.update({(q.job_id, None): q.state for q in queue if q.index is None})
+    rows = []
+    for key, record in state["tasks"].items():
+        job = record.get("job")
+        estimator, dataset, resample = key.split("|")
+        farm = record.get("kind") == "farm"
+        if not job or live.get((job, None if farm else int(resample))) != "RUNNING":
+            continue
+        category = next(x.category for x in e.estimators if x.name == estimator)
+        task = Task(estimator, category, dataset, int(resample))
+        if is_complete(e, task):
+            continue
+        log = task_log(e, task, job)
+        start, host = _started(log)
+        status = _read_tail(Path(f"{log}.status"))
+        if farm and start is None:
+            note = "waiting in farm"
+        elif re.search(r"^(exit|cancelled)", status, re.MULTILINE):
+            note = "ended without a result; diagnosed when the farm ends"
+        else:
+            note = ""
+        memory = e.resources.memory_gb[record.get("tier", 0)]
+        rows.append((start, key, job, host, memory, note))
+    if not rows:
+        return "No tasks running."
+    rows.sort(key=lambda r: (r[0] is None, r[0].timestamp() if r[0] else 0))
+    lines = [f"{'task':<44}{'job':>10}{'memory':>8}{'elapsed':>11}  node"]
+    for start, key, job, host, memory, note in rows:
+        elapsed = _elapsed(start) if start else "-"
+        lines.append(
+            f"{key:<44}{job:>10}{f'{memory}G':>8}{elapsed:>11}  {host} {note}".rstrip()
+        )
+    return "\n".join(lines)
+
+
+def cmd_cancel(e, args):
+    """Cancel matching tasks and keep them from being submitted again."""
+    if not (args.estimator or args.dataset or args.resample is not None):
+        raise ConfigError(
+            "Give --estimator, --dataset and/or --resample; to cancel everything "
+            "use `stop --cancel`"
+        )
+    read_datasets(e)
+    unknown = sorted(set(args.estimator or []) - {x.name for x in e.estimators})
+    unknown += sorted(set(args.dataset or []) - set(e.datasets))
+    if unknown:
+        raise ConfigError(f"Not in this experiment: {', '.join(unknown)}")
+    slurm = Slurm()
+    queue = slurm.queue(e.user) if slurm.available() else []
+    live = {(q.job_id, q.index) for q in queue}
+    to_scancel, in_farms, held = set(), 0, 0
+    with Lock(e.state_dir / "controller.lock"):
+        state = load_state(e)
+        for task in all_tasks(e):
+            if not _matches(task, args) or is_complete(e, task):
+                continue
+            record = state["tasks"].setdefault(task.key, {"attempts": 0, "tier": 0})
+            job = record.get("job")
+            if job and record.get("kind") == "farm" and (job, None) in live:
+                marker = cancel_marker(e, task)
+                marker.parent.mkdir(parents=True, exist_ok=True)
+                marker.write_text(f"cancelled {_now()}\n", encoding="utf-8")
+                in_farms += 1
+            elif job and ((job, task.resample) in live or (job, None) in live):
+                to_scancel.add(f"{job}_{task.resample}")
+            else:
+                held += 1
+            record["job"] = None
+            record["terminal"] = CANCELLED_BY_USER
+        save_state(e, state)
+    slurm.cancel(to_scancel)
+    print(
+        f"Cancelled {len(to_scancel)} array task(s) and {in_farms} farm task(s) "
+        "(a running farm task is killed within seconds, a waiting one is skipped). "
+        f"{held} task(s) not in the queue will not be submitted."
+    )
+    print("Undo with: retry --reason cancelled")
     return 0
 
 
@@ -1869,7 +2011,7 @@ def cmd_retry(e, args):
     with Lock(e.state_dir / "controller.lock"):
         state = load_state(e)
         cleared = 0
-        for record in state["tasks"].values():
+        for key, record in state["tasks"].items():
             terminal = record.get("terminal")
             if not terminal or (
                 args.reason and args.reason.lower() not in terminal.lower()
@@ -1877,6 +2019,10 @@ def cmd_retry(e, args):
                 continue
             record.pop("terminal")
             record["attempts"] = 0
+            estimator, dataset, resample = key.split("|")
+            marker = e.state_dir / "cancel" / estimator / dataset / resample
+            if marker.is_file():
+                marker.unlink()
             if args.memory_tier is not None:
                 record["tier"] = min(args.memory_tier, len(e.resources.memory_gb) - 1)
             cleared += 1
@@ -1922,6 +2068,11 @@ def main(argv=None):
     p.add_argument("--accept-commit", action="store_true")
     p = add("status", cmd_status, "progress report (no submission)")
     p.add_argument("--details", action="store_true", help="list every missing task")
+    p.add_argument(
+        "--running",
+        action="store_true",
+        help="list running tasks with elapsed time, longest first",
+    )
     p.add_argument("--email", action="store_true", help="email the report now")
     p = add("stop", cmd_stop, "stop refilling; running jobs continue")
     p.add_argument(
@@ -1929,6 +2080,10 @@ def main(argv=None):
         action="store_true",
         help="also cancel this experiment's running and pending jobs",
     )
+    p = add("cancel", cmd_cancel, "cancel matching tasks; they are not resubmitted")
+    p.add_argument("--estimator", nargs="+", metavar="NAME")
+    p.add_argument("--dataset", nargs="+", metavar="NAME")
+    p.add_argument("--resample", nargs="+", type=int, metavar="N")
     p = add("retry", cmd_retry, "make failed tasks eligible for submission again")
     p.add_argument("--reason", help="only failures whose reason contains this text")
     p.add_argument(

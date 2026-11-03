@@ -332,13 +332,40 @@ finished results across first so the second cluster sees them as complete.
 ```bash
 tsml-slurm status EXP.toml             # summary: done / running / pending / failed per estimator
 tsml-slurm status EXP.toml --details   # every missing task with attempts, memory and job
+tsml-slurm status EXP.toml --running   # running tasks, longest first: elapsed time, node
 tsml-slurm status EXP.toml --email     # email the report now
 tsml-slurm stop   EXP.toml             # no new submissions; running jobs continue
 tsml-slurm stop   EXP.toml --cancel    # ... and cancel this experiment's jobs
 tsml-slurm start  EXP.toml             # resume (removes STOP)
+tsml-slurm cancel EXP.toml --estimator RotationForest --dataset Alzheimers
+                                       # cancel some tasks; the rest carry on
 tsml-slurm retry  EXP.toml             # give failed tasks another chance
 tsml-slurm retry  EXP.toml --reason OOM --memory-tier 3   # only OOM failures, from tier 3
+tsml-slurm retry  EXP.toml --reason cancelled             # undo a cancel
 ```
+
+### Cancelling some tasks
+
+`cancel` takes any mix of `--estimator`, `--dataset` and `--resample` (each accepts
+several names) and acts on the matching tasks that have no result yet. They are marked
+"cancelled by user", so the supervisor never resubmits them, and they appear with the
+failed tasks in `status`. The rest of the experiment carries on.
+
+- Array mode (one Slurm task per experiment): the matching array tasks are
+  `scancel`led.
+- Farm mode: one farm job runs many tasks, so it is not cancelled. The controller
+  writes a marker for each task in `~/.tsml-slurm/<name>/cancel/`; the farm skips a
+  task with a marker that has not started, and kills a running one within 5 seconds,
+  freeing its slot for the next task.
+- Tasks not yet submitted are simply never submitted.
+
+`retry --reason cancelled` makes them eligible again and removes the markers. To drop an
+estimator or dataset for good, cancel it and then take it out of the experiment file
+or dataset list. To cancel everything, use `stop --cancel`.
+
+`status --running` lists each running task with its job, memory, elapsed time and node,
+longest running first. That is the place to spot one that is stuck. In farm mode, tasks
+in a running farm that have not started yet are shown as waiting in the farm.
 
 A report looks like this:
 
