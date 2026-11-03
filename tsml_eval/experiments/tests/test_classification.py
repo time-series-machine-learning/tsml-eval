@@ -302,6 +302,40 @@ def test_get_moabb_csp_pipelines():
     assert (search.cv.n_splits, search.cv.random_state, search.n_jobs) == (3, 1, 2)
 
 
+@pytest.mark.parametrize(
+    "name, expected",
+    [
+        ("SVM", "SVC"),
+        ("RandomForest", "RandomForestClassifier"),
+        ("LogisticRegression", "LogisticRegression"),
+    ],
+)
+def test_get_eegbench_vector_classifiers(name, expected):
+    """EEGBench's standard classifier names resolve to scikit-learn classifiers."""
+    classifier = get_classifier_by_name(name, random_state=0)
+    assert type(classifier).__name__ == expected
+    assert classifier.random_state == 0
+
+
+@pytest.mark.parametrize(
+    "name, expected",
+    [
+        ("DCN", "DeepConvNetClassifier"),
+        ("R-MDM", "RiemannianMDMClassifier"),
+        ("R-KNN", "RiemannianKNNClassifier"),
+        ("CSP-SVM", "CSPClassifier"),
+    ],
+)
+def test_get_eegbench_neuro_names(name, expected):
+    """EEGBench's names for aeon-neuro classifiers resolve to the same classes."""
+    _skip_if_not_in_aeon_neuro(expected)
+    try:
+        classifier = get_classifier_by_name(name)
+    except ModuleNotFoundError as exc:
+        pytest.skip(str(exc))
+    assert type(classifier).__name__ == expected
+
+
 def test_get_aeon_neuro_classifier_invalid():
     """Test that the prefixed lookup only accepts exported neuro classifiers."""
     pytest.importorskip("aeon_neuro")

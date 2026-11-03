@@ -23,7 +23,7 @@ deep_learning_classifiers = [
     ["encoderclassifier", "encoder"],
     ["resnetclassifier", "resnet"],
     ["individualinceptionclassifier", "singleinception"],
-    ["inceptiontimeclassifier", "inceptiontime"],
+    ["inceptiontimeclassifier", "inceptiontime", "it"],
     ["h-inceptiontimeclassifier", "h-inceptiontime"],
     ["litetimeclassifier", "litetime"],
     "litetime-mv",
@@ -32,15 +32,15 @@ deep_learning_classifiers = [
 ]
 neuro_classifiers = [
     ["eegnetclassifier", "eegnet"],
-    ["deepconvnetclassifier", "deepconvnet"],
+    ["deepconvnetclassifier", "deepconvnet", "dcn"],
     ["eegconformerclassifier", "eegconformer"],
     ["cbramodclassifier", "cbramod"],
     ["labramclassifier", "labram"],
-    ["riemannianmdmclassifier", "riemannianmdm"],
-    ["riemannianknnclassifier", "riemannianknn"],
+    ["riemannianmdmclassifier", "riemannianmdm", "r-mdm"],
+    ["riemannianknnclassifier", "riemannianknn", "r-knn"],
     ["cspclassifier", "csp", "csplda"],
     ["csprandomforestclassifier", "csprandomforest", "csprf"],
-    ["cspsvmclassifier", "cspsvm"],
+    ["cspsvmclassifier", "cspsvm", "csp-svm"],
     "csp+lda",
     "csp+svm",
     ["xdawnclassifier", "xdawn", "xdawnlda"],
@@ -131,6 +131,8 @@ vector_classifiers = [
     ["rotationforestclassifier", "rotationforest", "rotf"],
     ["ridgeclassifiercv", "ridgecv"],
     ["logisticregression", "logistic"],
+    ["svc", "svm", "supportvectorclassifier"],
+    ["randomforestclassifier", "randomforest", "rf"],
     ["prevalidatedridgeclassifier", "prevalidatedridge"],
 ]
 
@@ -337,7 +339,7 @@ def _set_classifier_deep_learning(
         from aeon.classification.deep_learning import IndividualInceptionClassifier
 
         return IndividualInceptionClassifier(random_state=random_state, **kwargs)
-    elif c == "inceptiontimeclassifier" or c == "inceptiontime":
+    elif c in ("inceptiontimeclassifier", "inceptiontime", "it"):
         from aeon.classification.deep_learning import InceptionTimeClassifier
 
         return InceptionTimeClassifier(random_state=random_state, **kwargs)
@@ -372,7 +374,7 @@ def _set_classifier_neuro(c, random_state, n_jobs, kwargs):
         from aeon_neuro.classification.deep_learning import EEGNetClassifier
 
         return EEGNetClassifier(random_state=random_state, **kwargs)
-    elif c in ("deepconvnetclassifier", "deepconvnet"):
+    elif c in ("deepconvnetclassifier", "deepconvnet", "dcn"):
         from aeon_neuro.classification.deep_learning import DeepConvNetClassifier
 
         return DeepConvNetClassifier(random_state=random_state, **kwargs)
@@ -391,11 +393,11 @@ def _set_classifier_neuro(c, random_state, n_jobs, kwargs):
         if isinstance(kwargs.get("ch_names"), str):
             kwargs["ch_names"] = [n.strip() for n in kwargs["ch_names"].split(",")]
         return LabramClassifier(random_state=random_state, **kwargs)
-    elif c in ("riemannianmdmclassifier", "riemannianmdm"):
+    elif c in ("riemannianmdmclassifier", "riemannianmdm", "r-mdm"):
         from aeon_neuro.classification.distance_based import RiemannianMDMClassifier
 
         return RiemannianMDMClassifier(n_jobs=n_jobs, **kwargs)
-    elif c in ("riemannianknnclassifier", "riemannianknn"):
+    elif c in ("riemannianknnclassifier", "riemannianknn", "r-knn"):
         from aeon_neuro.classification.distance_based import RiemannianKNNClassifier
 
         return RiemannianKNNClassifier(n_jobs=n_jobs, **kwargs)
@@ -408,6 +410,7 @@ def _set_classifier_neuro(c, random_state, n_jobs, kwargs):
         "csprf",
         "cspsvmclassifier",
         "cspsvm",
+        "csp-svm",
     ):
         from aeon_neuro.classification.feature_based import CSPClassifier
 
@@ -417,7 +420,7 @@ def _set_classifier_neuro(c, random_state, n_jobs, kwargs):
             classifier = RandomForestClassifier(
                 random_state=random_state, n_jobs=n_jobs
             )
-        elif c in ("cspsvmclassifier", "cspsvm"):
+        elif c in ("cspsvmclassifier", "cspsvm", "csp-svm"):
             from sklearn.svm import SVC
 
             classifier = SVC(
@@ -1093,6 +1096,17 @@ def _set_classifier_vector(c, random_state, n_jobs, fit_contract, checkpoint, kw
         from sklearn.linear_model import LogisticRegression
 
         return LogisticRegression(random_state=random_state, **kwargs)
+    elif c in ("svc", "svm", "supportvectorclassifier"):
+        from sklearn.svm import SVC
+
+        # probability=True so results files get probability estimates.
+        return SVC(probability=True, random_state=random_state, **kwargs)
+    elif c in ("randomforestclassifier", "randomforest", "rf"):
+        from sklearn.ensemble import RandomForestClassifier
+
+        return RandomForestClassifier(
+            random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
     elif c == "prevalidatedridgeclassifier" or c == "prevalidatedridge":
         from aeon.classification.sklearn import PrevalidatedRidgeClassifier
 
