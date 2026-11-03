@@ -1,0 +1,40 @@
+# The aeon CPU classifiers from EEGBench (github.com/TonyBagnall/EEGBench), with the
+# tabular RotationForest and RandomForest, on Iridis 6. The HC2 components (Arsenal,
+# DrCIF, STC, TDE) are in iridis6_eeg_hc2_components.toml, which also writes train
+# files; the aeon-neuro classifiers are in iridis6_eeg_cpu.toml and the aeon deep
+# learners in iridisx_eeg_aeon_gpu.toml.
+#
+# Results go in ~/Results/EEG/<Category>/<Name>/Predictions/<Dataset>/, grouped by
+# aeon module like the other EEG experiments. Estimator names are EEGBench's; for
+# EEGBench's ingest, point predictions_path at each category directory. Default
+# (majority class) is not run; ingest builds it from the test labels. Resample 0
+# only: the given splits keep each subject on one side.
+#
+# The datasets are those in ~/DataSetLists/eeg.txt, one name per line (EEGBench's
+# 28 open problems are aeon's eeg2026 list). To add problems later, put their .ts
+# files in ~/Data/EEG/<Name>/ and add the names to eeg.txt; nothing else changes.
+
+[experiment]
+name = "eeg-aeon"
+cluster = "iridis6"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{home}/DataSetLists/eeg.txt"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+# Grouped as aeon groups them (aeon.classification.<module>).
+[estimators]
+Hybrid = ["HC2"]
+ConvolutionBased = ["MRHydra", "ROCKET", "MiniROCKET"]
+IntervalBased = ["QUANT"]
+FeatureBased = ["FreshPRINCE"]
+Tabular = ["RotationForest", "RandomForest"]
+
+[slurm]
+env_name = "tsml-eval"
+memory_gb = [16, 32, 64, 128, 256, 620]
