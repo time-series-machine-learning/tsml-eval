@@ -9,7 +9,7 @@
 #
 # Setup (see ../soton/iridis/eeg_classification_students.md):
 #   python _tsml_research_resources/soton/iridis/download_eeg_classification.py \
-#       --data-dir ~/Data/EEG --dataset-list ~/DataSetLists/EEG.txt
+#       --data-dir ~/Data/EEG --dataset-list ~/DataSetLists/eeg.txt
 #   python tsml_slurm.py check experiments/iridis6_eeg_cpu.toml
 #   python tsml_slurm.py start experiments/iridis6_eeg_cpu.toml
 
@@ -21,7 +21,7 @@ task = "classification"
 repo_dir = "{home}/Code/tsml-eval"
 branch = "ajb/slurm-runner"
 data_dir = "{home}/Data/EEG"
-datasets = "{home}/DataSetLists/EEG.txt"   # written by the downloader
+datasets = "{home}/DataSetLists/eeg.txt"   # written by the downloader
 results_dir = "{home}/Results/EEG"
 resamples = 1
 smallest_datasets_first = true
