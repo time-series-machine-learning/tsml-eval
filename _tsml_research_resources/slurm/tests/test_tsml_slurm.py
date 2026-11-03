@@ -264,7 +264,8 @@ def test_array_script_contents(world):
     assert "CUDA_VISIBLE_DEVICES" not in script
     assert "-kw n_estimators 500 int -kw verbose true bool" in script
     assert "-tr" in script
-    assert "deadbeef" in script
+    assert "branch=$branch commit=$commit" in script  # recorded in every job log
+    assert "deadbeef" not in script  # no commit check unless pin_commit = true
     assert "tsml_eval.experiments.classification_experiments" in script
 
 
@@ -463,14 +464,27 @@ def test_changed_kwargs_are_refused_but_new_estimators_allowed(world):
         ts.run_cycle(e, FakeSlurm())
 
 
-def test_commit_is_pinned(world):
+def test_commit_is_not_pinned_by_default(world):
     e = make(world)
+    ts.run_cycle(e, FakeSlurm())
+    (world["repo"] / "README").write_text("y")
+    _git(world["repo"], "commit", "-qam", "next")
+    slurm = FakeSlurm()
+    ts.run_cycle(e, slurm)  # a new commit is fine
+    assert not any("repository moved" in s for s in slurm.scripts.values())
+
+
+def test_commit_is_pinned_when_asked(world):
+    e = make(world, body="pin_commit = true")
     ts.run_cycle(e, FakeSlurm())
     (world["repo"] / "README").write_text("y")
     _git(world["repo"], "commit", "-qam", "next")
     with pytest.raises(RuntimeError, match="--accept-commit"):
         ts.run_cycle(e, FakeSlurm())
-    ts.run_cycle(e, FakeSlurm(), accept_commit=True)
+    slurm = FakeSlurm()
+    age_submissions(e)
+    ts.run_cycle(e, slurm, accept_commit=True)
+    assert all("repository moved" in s for s in slurm.scripts.values())
 
 
 def test_dirty_repository_is_refused(world):

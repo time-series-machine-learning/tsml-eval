@@ -197,7 +197,7 @@ checkout) and `{name}` (the experiment name), as well as environment variables a
 | `max_attempts` | `2` | Submissions allowed per task for failures other than out-of-memory. |
 | `branch` | `""` | Refuse to submit unless the checkout is on this branch. |
 | `require_clean` | `true` | Refuse to submit with uncommitted changes in the checkout. |
-| `pin_commit` | `true` | Refuse to submit from a commit other than the experiment's first (see below). |
+| `pin_commit` | `false` | If `true`, refuse to submit from a commit other than the experiment's first, and fail jobs whose checkout moved after submission (see below). |
 | `email` | profile's `email` | Report recipient; `""` disables email. |
 | `email_hours` | `24` | Minimum time between progress emails. A final email is always sent. |
 | `repo_dir`, `state_dir`, `numba_cache_dir` | profile / `~/tsml-slurm/{name}` | Rarely needed overrides. |
@@ -253,8 +253,8 @@ All of these are in `experiments/`. Copy one, change `name` and the paths, then
 
 `iridis6_quick_test.toml` runs ROCKET and DrCIF on the 30 Bakeoff problems with 5
 resamples. It uses `cpu-array`, one array task per experiment, which is the simplest
-route for small runs. `require_clean = false` and `pin_commit = false` let you iterate
-on uncommitted code. Do not use those two settings for results you intend to publish.
+route for small runs. `require_clean = false` lets you iterate on uncommitted code.
+Do not use it for results you intend to publish.
 
 ```bash
 tsml-slurm check experiments/iridis6_quick_test.toml
@@ -426,14 +426,13 @@ email and exits.
   `screen -r tsml-<name>`. If the login node reboots, run `start` again; nothing is
   lost.
 
-**Reproducibility.** Every job checks, before running, that the checkout is still at
-the commit it was submitted from. A `git pull` or branch switch therefore makes queued
-jobs fail loudly instead of silently running different code. The controller also
-records the experiment's first commit. With `pin_commit = true` it will not submit
-from a different commit unless you pass `--accept-commit`, which says you knowingly
-accept results from two code versions in one experiment. Job logs record the host,
-Python, aeon version and paths. Jobs set `PYTHONPATH` to the checkout, so they always
-import the code they were pinned to.
+**Reproducibility.** Every job log records the branch and commit it ran, the host,
+Python, the aeon version and paths, and jobs set `PYTHONPATH` to the checkout, so they import the
+code in it. By default you can `git pull` while an experiment runs: later jobs run the
+new code. For results that must all come from one commit, set `pin_commit = true`. The
+controller then refuses to submit from any commit other than the experiment's first
+unless you pass `--accept-commit`, and each job fails loudly if the checkout moved
+after it was submitted.
 
 **Threads.** Jobs set the BLAS/OpenMP thread variables to 1 and hide GPUs from CPU
 jobs, so an estimator cannot use more cores than were requested. `n_jobs > 1` asks

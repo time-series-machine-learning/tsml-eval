@@ -202,7 +202,7 @@ class Experiment:
     exclude_datasets: tuple[str, ...] = ()
     exclude_tasks: tuple[str, ...] = ()
     branch: str = ""
-    pin_commit: bool = True
+    pin_commit: bool = False
     require_clean: bool = True
     email_hours: float = 24.0
     numba_cache_dir: Path | None = None
@@ -843,11 +843,18 @@ def _environment_block(e, commit, threads):
     lines += [
         f"cd {q(str(e.repo_dir))}",
         "commit=$(git rev-parse HEAD)",
-        f'if [[ "$commit" != {q(commit)} ]]; then',
-        f'    echo "ERROR: repository moved from {commit} to $commit after submission"',
-        "    exit 1",
-        "fi",
-        'echo "host=$(hostname) job=${SLURM_JOB_ID} commit=$commit"',
+        "branch=$(git rev-parse --abbrev-ref HEAD)",
+    ]
+    if e.pin_commit:
+        lines += [
+            f'if [[ "$commit" != {q(commit)} ]]; then',
+            f'    echo "ERROR: repository moved from {commit} to $commit after '
+            'submission"',
+            "    exit 1",
+            "fi",
+        ]
+    lines += [
+        'echo "host=$(hostname) job=${SLURM_JOB_ID} branch=$branch commit=$commit"',
         '"${PY[@]}" -c "import sys, aeon, tsml_eval; print(\'python\', '
         "sys.version.split()[0], sys.executable); print('aeon', aeon.__version__, "
         "aeon.__file__); print('tsml_eval', tsml_eval.__file__)\"",
