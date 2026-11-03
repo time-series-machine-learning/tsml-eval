@@ -7,11 +7,9 @@
 # builds it from the test labels. Resample 0 only: the given splits keep each subject
 # on one side.
 #
-# The dataset list is the 28 open problems, aeon's eeg2026, one name per line:
-#   python -c 'from aeon.datasets.tsc_datasets import eeg2026
-#   print(*eeg2026, sep="\n")' > ~/DataSetLists/eegbench.txt
-# To add problems later (e.g. FibroLiverpool, FibroUEA), put their .ts files in
-# ~/Data/EEG/<Name>/ and add the names to eegbench.txt; nothing else changes.
+# The datasets are those in ~/DataSetLists/eeg.txt, one name per line (EEGBench's
+# 28 open problems are aeon's eeg2026 list). To add problems later, put their .ts
+# files in ~/Data/EEG/<Name>/ and add the names to eeg.txt; nothing else changes.
 
 [experiment]
 name = "eegbench-cpu"
@@ -21,7 +19,7 @@ task = "classification"
 repo_dir = "{home}/Code/tsml-eval"
 branch = "ajb/slurm-runner"
 data_dir = "{home}/Data/EEG"
-datasets = "{home}/DataSetLists/eegbench.txt"
+datasets = "{home}/DataSetLists/eeg.txt"
 results_dir = "{home}/Results/EEGBench"
 resamples = 1
 smallest_datasets_first = true
