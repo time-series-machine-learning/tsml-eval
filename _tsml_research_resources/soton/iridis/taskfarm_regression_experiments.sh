@@ -64,6 +64,24 @@ relative_preprocessing_file_path=""
 
 extra_args=""
 
+# Number of experiments (dataset/series x resample) to run sequentially in ONE python
+# process per task (default 100). With 1 every experiment is its own python process, as
+# before. With N > 1 the experiments are written to task files and run by
+# batch_experiments.py, so python imports, .tsf parsing, numba compilation and the
+# timing benchmark happen once per N experiments instead of once per experiment. This
+# is a large speedup for many cheap experiments (e.g. stats forecasters on the 100k M4
+# series, try 50-250), but N experiments must fit within max_time on one core, so keep
+# it at 1 for slow experiments. Failed/killed experiments are simply re-submitted on the
+# next run of this script, as their result files will be missing.
+series_per_task=100
+relative_batch_script_file_path="tsml-eval/tsml_eval/experiments/batch_experiments.py"
+
+# Seconds between memory usage samples while an experiment runs (MEMRECORD_INTERVAL in
+# tsml_eval). tsml-eval's default of 5 means every experiment takes at least 5 seconds,
+# which dominates fast experiments. Smaller values also give a more accurate peak. Set
+# to "" to use the tsml-eval default.
+memrecord_interval="0.1"
+
 # Retrain point selection for forecasting (only used with "-kw retrain true bool" in
 # extra_args). Selects which of the rolling one-step-ahead held-out points to run.
 # Format: "" (all points, default framework behaviour), a single 0-indexed point "3",
@@ -195,6 +213,7 @@ fi
 
 # The python script we are running
 full_script_file_path="$local_path/$relative_script_file_path"
+full_batch_script_file_path="$local_path/$relative_batch_script_file_path"
 
 full_preprocessing_file_path="$local_path/$relative_preprocessing_file_path"
 
@@ -264,6 +283,12 @@ EOV
 )
 fi
 
+if [ -n "${memrecord_interval:-}" ]; then
+    memrecord_instruction="export MEMRECORD_INTERVAL=${memrecord_interval}"
+else
+    memrecord_instruction=""
+fi
+
 # This creates the submission file to run and does clean up
 submit_jobs () {
 
@@ -289,6 +314,7 @@ ${gpu_instruction}
 . /etc/profile
 
 ${environment_instructions}
+${memrecord_instruction}
 
 ${taskfarm_file_path} ${out_dir}/generatedCommandList-${dt}.txt" > generatedSubmissionFile-${dt}.sub
 
@@ -300,14 +326,98 @@ rm generatedSubmissionFile-${dt}.sub
 
 }
 
+# Sets dataset_seasonal_period for series $1. The seasonal period file is read into an
+# associative array once, rather than scanned with awk for every series (for the
+# 100k-line M4 file that was ~10^10 line reads).
+declare -A seasonal_periods=()
+seasonal_periods_loaded=""
 get_seasonal_period () {
-    series_name=$1
+    dataset_seasonal_period=""
     if [ -n "${seasonal_period:-}" ]; then
-        echo "$seasonal_period"
+        dataset_seasonal_period="$seasonal_period"
     elif [ -n "${seasonal_period_file_path:-}" ] && [ -f "$seasonal_period_file_path" ]; then
-        awk -v series="$series_name" '$1 == series { print $2; exit }' "$seasonal_period_file_path"
-    else
-        echo ""
+        if [ "$seasonal_periods_loaded" != "$seasonal_period_file_path" ]; then
+            seasonal_periods=()
+            local name period
+            while read -r name period _; do
+                # first entry wins, as with the previous awk lookup
+                if [ -n "$name" ] && [ "${name:0:1}" != "#" ] && [ -z "${seasonal_periods[$name]+x}" ]; then
+                    seasonal_periods[$name]=$period
+                fi
+            done < "$seasonal_period_file_path"
+            seasonal_periods_loaded="$seasonal_period_file_path"
+        fi
+        dataset_seasonal_period="${seasonal_periods[$1]:-}"
+    fi
+}
+
+# Wait if we have too many jobs queued, see max_num_submitted.
+wait_for_queue () {
+    num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue}" -e "PD ${queue}" | wc -l)
+    echo "Number of Jobs currently running on the cluster: ${num_jobs}"
+    while [ "${num_jobs}" -ge "${max_num_submitted}" ]
+    do
+        echo Waiting 60s, ${num_jobs} currently submitted on ${queue}, user-defined max is ${max_num_submitted}
+        sleep 60
+        num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue}" -e "PD ${queue}" | wc -l)
+    done
+}
+
+# Unique name for each submission. Previously this was the time in seconds, needing a
+# "sleep 1" before every submission to keep names unique.
+run_dt=$(date +%Y%m%d%H%M%S)
+submitCount=0
+new_dt () {
+    submitCount=$((submitCount + 1))
+    dt="${run_dt}-${submitCount}"
+}
+
+# Submit the current command list and start a new one if the node is full.
+make_room_on_node () {
+    if ((cmdCount>(n_tasks_per_node-n_threads_per_task))); then
+        submit_jobs
+        wait_for_queue
+        cmdCount=0
+        new_dt
+    fi
+}
+
+# Add one command to the current node's command list.
+add_command () {
+    make_room_on_node
+    echo "$1" >> ${out_dir}/generatedCommandList-${dt}.txt
+    ((cmdCount=cmdCount+n_threads_per_task))
+}
+
+# With series_per_task > 1, experiments are collected into task files, each run by one
+# batch_experiments.py process (one command on the node).
+task_dir="${out_dir}/task_files"
+chunkCount=0
+chunkIndex=0
+chunk_file=""
+flush_chunk () {
+    if ((chunkCount>0)); then
+        add_command "${apptainer_instruction}conda run -p ${env_name} python -u ${full_batch_script_file_path} ${full_script_file_path} ${chunk_file} > ${chunk_file%.txt}.log 2>&1"
+        chunkCount=0
+    fi
+}
+
+# Queue one experiment. $1 = python script arguments, $2 = output file.
+queue_experiment () {
+    totalCount=$((totalCount + 1))
+    if ((series_per_task<=1)); then
+        add_command "${apptainer_instruction}conda run -p ${env_name} python -u ${full_script_file_path} $1 > $2 2>&1"
+        return
+    fi
+    if ((chunkCount==0)); then
+        chunkIndex=$((chunkIndex + 1))
+        chunk_file="${task_dir}/tasks-${run_dt}-${chunkIndex}.txt"
+        : > "$chunk_file"
+    fi
+    printf '%s\t%s\n' "$2" "$1" >> "$chunk_file"
+    chunkCount=$((chunkCount + 1))
+    if ((chunkCount>=series_per_task)); then
+        flush_chunk
     fi
 }
 
@@ -343,7 +453,12 @@ retrain_dataset_dir () {
 
 totalCount=0
 expCount=0
-dt=$(date +%Y%m%d%H%M%S)
+cmdCount=0
+list_of_series=""
+new_dt
+if ((series_per_task>1)); then
+    mkdir -p "${task_dir}"
+fi
 
 # turn a directory of files into a list
 if [[ -d $dataset_list ]]; then
@@ -374,10 +489,8 @@ for regressor in $regressors_to_run; do
 mkdir -p "${out_dir}/${regressor}/"
 
 if [ "${split_regressors,,}" == "true" ]; then
-    # we use time for unique names
-    sleep 1
     cmdCount=0
-    dt=$(date +%Y%m%d%H%M%S)
+    new_dt
     outDir=${out_dir}/${regressor}
 else
     outDir=${out_dir}
@@ -393,7 +506,8 @@ resamples_to_run=""
 for (( i=start_fold-1; i<max_folds; i++ ))
 do
     if [ -f "${results_dir}${regressor}/Predictions/${dataset}/testResample${i}.csv" ]; then
-        if [ "${generate_train_files}" == "true" ] && ! [ -f "${results_dir}${regressor}/Predictions/${dataset}/trainResample${i}.csv" ]; then
+        # generate_train_files has already been converted to the "-tr" flag above
+        if [ "${generate_train_files}" == "-tr" ] &&! [ -f "${results_dir}${regressor}/Predictions/${dataset}/trainResample${i}.csv" ]; then
             resamples_to_run="${resamples_to_run}${i} "
         fi
     else
@@ -401,7 +515,7 @@ do
     fi
 done
 # Seasonal period is per-dataset, so compute it once for all points/resamples.
-dataset_seasonal_period=$(get_seasonal_period "$dataset")
+get_seasonal_period "$dataset"
 if [ -n "${dataset_seasonal_period:-}" ]; then
     seasonal_period_args="-kw ${seasonal_period_parameter} ${dataset_seasonal_period} int"
 else
@@ -441,49 +555,48 @@ for point in $point_jobs; do
 
     # Skip if this point's result file already exists. Per-point/subset runs write to
     # a point-specific dataset directory, mirrored here by retrain_dataset_dir.
-    point_dataset=$(retrain_dataset_dir "$dataset" "${pt_start:-}" "${pt_end:-}")
+    # (inlined rather than $(retrain_dataset_dir ...) to avoid a subshell per series)
+    if [ -z "${pt_start:-}" ]; then
+        point_dataset="$dataset"
+    elif [ "$pt_start" == "$pt_end" ]; then
+        point_dataset="${dataset}_point${pt_start}"
+    else
+        point_dataset="${dataset}_points${pt_start}-${pt_end}"
+    fi
     if [ -f "${results_dir}${regressor}/Predictions/${point_dataset}/testResample${resample}.csv" ]; then
         continue
     fi
 
-    # submit the current command list if the node is full
-    if ((cmdCount>(n_tasks_per_node-n_threads_per_task))); then
-        submit_jobs
-
-        # This is the loop to stop you from dumping everything in the queue at once, see max_num_submitted jobs
-        num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue}" -e "PD ${queue}" | wc -l)
-        echo "Number of Jobs currently running on the cluster: ${num_jobs}"
-        while [ "${num_jobs}" -ge "${max_num_submitted}" ]
-        do
-            echo Waiting 60s, ${num_jobs} currently submitted on ${queue}, user-defined max is ${max_num_submitted}
-            sleep 60
-            num_jobs=$(squeue -u ${username} --format="%20P %5t" -r | awk '{print $2, $1}' | grep -e "R ${queue}" -e "PD ${queue}" | wc -l)
-        done
-
-        sleep 1
-        cmdCount=0
-        dt=$(date +%Y%m%d%H%M%S)
-    fi
     # Input args to the default classification_experiments are in main method of
     # https://github.com/time-series-machine-learning/tsml-eval/blob/main/tsml_eval/experiments/classification_experiments.py
-    echo "${apptainer_instruction}conda run -p ${env_name} python -u ${full_script_file_path} ${data_dir} ${results_dir} ${regressor} ${dataset} ${resample} ${generate_train_files} ${predefined_folds} ${normalise_data} -nj ${n_threads_per_task} ${seasonal_period_args} ${extra_args} ${retrain_args} > ${out_dir}/${regressor}/output-${dataset}-${resample}${output_suffix}-${dt}.txt 2>&1" >> ${out_dir}/generatedCommandList-${dt}.txt
-    ((cmdCount=cmdCount+n_threads_per_task))
-    totalCount=$((totalCount + 1))
+    queue_experiment "${data_dir} ${results_dir} ${regressor} ${dataset} ${resample} ${generate_train_files} ${predefined_folds} ${normalise_data} -nj ${n_threads_per_task} ${seasonal_period_args} ${extra_args} ${retrain_args}" \
+        "${out_dir}/${regressor}/output-${dataset}-${resample}${output_suffix}-${dt}.txt"
 done
 done
 fi
 done < ${dataset_file}
 
-if [[ "${split_regressors,,}" == "true" && $cmdCount -gt 0 ]]; then
-    # final submit for this regressor
-    submit_jobs
+if [[ "${split_regressors,,}" == "true" ]]; then
+    flush_chunk
+    if ((cmdCount>0)); then
+        # final submit for this regressor
+        submit_jobs
+        cmdCount=0
+        new_dt
+    fi
 fi
 
 done
 
-if [[ "${split_regressors,,}" != "true" && $cmdCount -gt 0 ]]; then
-    # final submit for this dataset list
-    submit_jobs
+if [[ "${split_regressors,,}" != "true" ]]; then
+    flush_chunk
+    if ((cmdCount>0)); then
+        # final submit for this dataset list. Reset so the next dataset list does not
+        # append to (and resubmit) the command list just submitted.
+        submit_jobs
+        cmdCount=0
+        new_dt
+    fi
 fi
 
 if [[ -s "$list_of_series" && "$dataset_file" == "$list_of_series" ]]; then

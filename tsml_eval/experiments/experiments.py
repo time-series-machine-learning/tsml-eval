@@ -20,6 +20,7 @@ import os
 import time
 import warnings
 from datetime import datetime
+from functools import lru_cache
 
 import numpy as np
 import pandas as pd
@@ -63,6 +64,19 @@ if isinstance(MEMRECORD_ENV, str):  # pragma: no cover
     MEMRECORD_INTERVAL = float(MEMRECORD_ENV)
 else:
     MEMRECORD_INTERVAL = 5.0
+
+
+@lru_cache(maxsize=2)
+def _load_tsf_cached(data_full_path):
+    """Load a .tsf file once per process, with a series name -> row index lookup.
+
+    Parsing a large .tsf (e.g. M4 monthly, ~75MB) takes seconds, so when many series
+    from the same file are run in one process (see batch_experiments.py) it is only
+    done once. The returned objects are shared, so callers must not modify them.
+    """
+    df, metadata = load_from_tsf_file(data_full_path)
+    index = {name: i for i, name in enumerate(df["series_name"].tolist())}
+    return df["series_value"].tolist(), index, metadata
 
 
 def run_classification_experiment(
@@ -1731,9 +1745,10 @@ def load_and_run_remote_forecasting_experiment(
             f"Cannot load {data_full_path} for dataset {dataset}. Did you run download_datasets.py beforehand?"
         )
     else:
-        df, metadata = load_from_tsf_file(data_full_path)
-        series = df.loc[df["series_name"].eq(series_name), "series_value"].iat[0]
-    series = np.asarray(series, dtype=float)
+        values, index, metadata = _load_tsf_cached(data_full_path)
+        series = values[index[series_name]]
+    # Copy, so nothing downstream can modify the cached series in place.
+    series = np.array(series, dtype=float)
     assert np.isfinite(series).all()
 
     # Opt-in adaptive_window: the window must be shrunk based on the length of the

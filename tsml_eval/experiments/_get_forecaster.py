@@ -16,6 +16,8 @@ ml_forecasters = [
 stats_forecasters = [
     ["arimaforecaster", "arima"],
     "autoarima",
+    ["sarimaforecaster", "sarima"],
+    "autosarima",
     ["etsforecaster", "ets"],
     "autoets",
     ["statsforecastets", "sfets", "statsforecastautoets"],
@@ -171,6 +173,14 @@ def _set_forecaster_stats(f, random_state, n_jobs, kwargs):
         from aeon.forecasting.stats import AutoARIMA
 
         return AutoARIMA(**kwargs)
+    elif f == "sarimaforecaster" or f == "sarima" or f == "autosarima":
+        from aeon.forecasting.stats import SARIMA, AutoSARIMA
+
+        # Accept either name for the per-series M4 seasonal period.
+        seasonal_period = kwargs.pop("season_length", 1)
+        seasonal_period = kwargs.pop("seasonal_period", seasonal_period)
+        cls = AutoSARIMA if f == "autosarima" else SARIMA
+        return cls(seasonal_period=int(seasonal_period), **kwargs)
     elif f == "etsforecaster" or f == "ets":
         from aeon.forecasting.stats import ETS
 
