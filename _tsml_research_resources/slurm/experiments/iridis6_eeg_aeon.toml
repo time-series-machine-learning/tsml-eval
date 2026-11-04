@@ -29,16 +29,18 @@ smallest_datasets_first = true
 
 # Grouped as aeon groups them (aeon.classification.<module>).
 [estimators]
-Hybrid = ["HC2"]
+# HC2 is held back until the other classifiers are done: uncomment it and its
+# [estimator_kwargs.HC2] block below, then `start` again.
+# Hybrid = ["HC2"]
 ConvolutionBased = ["MRHydra", "ROCKET", "MiniROCKET"]
 IntervalBased = ["QUANT"]
 FeatureBased = ["FreshPRINCE"]
 Tabular = ["RotationForest", "RandomForest", "SVM", "LogisticRegression"]
 
 # HC2 prints a time stamp and weight as each component (STC, DrCIF, Arsenal, TDE)
-# finishes, in the task's .out log. The components run alone have no verbose option.
-[estimator_kwargs.HC2]
-verbose = 1
+# finishes, in the task's .out log.
+# [estimator_kwargs.HC2]
+# verbose = 1
 
 [slurm]
 env_name = "tsml-eval"
