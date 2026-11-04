@@ -1361,6 +1361,13 @@ def _reconcile(e, state, queue, slurm, live_grace_seconds=600):
     live_jobs = {q.job_id: q.state for q in queue}
     active = {}
     ended = []
+    # estimators taken out of the experiment: drop their task records (their
+    # results files are left alone)
+    current = {x.name for x in e.estimators}
+    for key in [k for k in state["tasks"] if k.split("|", 1)[0] not in current]:
+        del state["tasks"][key]
+    for name in [n for n in state.get("fingerprints", {}) if n not in current]:
+        del state["fingerprints"][name]
     for key, record in state["tasks"].items():
         job = record.get("job")
         if not job:
@@ -2035,7 +2042,9 @@ def running_report(e, state, queue):
         farm = record.get("kind") == "farm"
         if not job or live.get((job, None if farm else int(resample))) != "RUNNING":
             continue
-        category = next(x.category for x in e.estimators if x.name == estimator)
+        category = next((x.category for x in e.estimators if x.name == estimator), None)
+        if category is None:  # no longer in the experiment
+            continue
         task = Task(estimator, category, dataset, int(resample))
         if is_complete(e, task):
             continue

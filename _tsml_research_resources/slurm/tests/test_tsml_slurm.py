@@ -778,3 +778,16 @@ def test_legacy_fingerprints_are_accepted(world):
     ts.run_cycle(e, slurm)
     assert slurm.scripts
     assert ts.load_state(e)["fingerprints"] == ts.fingerprints(e)
+
+
+def test_removed_estimator_with_old_job_is_ignored(world, capsys):
+    e = make(world)
+    ts.read_datasets(e)
+    state = ts.load_state(e)
+    state["tasks"]["Gone|Small|0"] = {"attempts": 1, "tier": 0, "job": "999"}
+    ts.save_state(e, state)
+    slurm = FakeSlurm()
+    slurm.entries = [ts.QueueEntry("999", None, "RUNNING", "x", "p")]
+    ts.run_cycle(e, slurm)
+    assert "Gone|Small|0" not in ts.load_state(e)["tasks"]
+    assert ts.running_report(e, ts.load_state(e), slurm.entries)
