@@ -34,4 +34,5 @@ FeatureBased = ["CSP+LDA", "CSP+SVM", "XDAWN"]
 
 [slurm]
 env_name = "tsml-eval"
+max_jobs = 1          # one node; eeg-aeon has another, eeg-hc2 two
 memory_gb = [16, 32, 64, 128, 256, 620]   # start at 16G: 39 experiments per node

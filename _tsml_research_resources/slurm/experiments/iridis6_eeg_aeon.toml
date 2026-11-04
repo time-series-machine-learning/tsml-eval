@@ -1,7 +1,7 @@
 # The aeon CPU classifiers from EEGBench (github.com/TonyBagnall/EEGBench), with the
-# tabular RotationForest and RandomForest, on Iridis 6. The HC2 components (Arsenal,
-# DrCIF, STC, TDE) are in iridis6_eeg_hc2_components.toml, which also writes train
-# files; the aeon-neuro classifiers are in iridis6_eeg_cpu.toml and the aeon deep
+# tabular RotationForest, RandomForest, SVM and LogisticRegression, on Iridis 6. HC2
+# is in iridis6_eeg_hc2.toml and its components (Arsenal, DrCIF, STC, TDE) in
+# iridis6_eeg_hc2_components.toml, which also writes train files; the aeon-neuro classifiers are in iridis6_eeg_cpu.toml and the aeon deep
 # learners in iridisx_eeg_aeon_gpu.toml.
 #
 # Results go in ~/Results/EEG/<Category>/<Name>/Predictions/<Dataset>/, grouped by
@@ -29,19 +29,12 @@ smallest_datasets_first = true
 
 # Grouped as aeon groups them (aeon.classification.<module>).
 [estimators]
-# HC2 is held back until the other classifiers are done: uncomment it and its
-# [estimator_kwargs.HC2] block below, then `start` again.
-# Hybrid = ["HC2"]
 ConvolutionBased = ["MRHydra", "ROCKET", "MiniROCKET"]
 IntervalBased = ["QUANT"]
 FeatureBased = ["FreshPRINCE"]
 Tabular = ["RotationForest", "RandomForest", "SVM", "LogisticRegression"]
 
-# HC2 prints a time stamp and weight as each component (STC, DrCIF, Arsenal, TDE)
-# finishes, in the task's .out log.
-# [estimator_kwargs.HC2]
-# verbose = 1
-
 [slurm]
 env_name = "tsml-eval"
+max_jobs = 1          # one node; eeg-cpu has another, eeg-hc2 two
 memory_gb = [16, 32, 64, 128, 256, 620]
