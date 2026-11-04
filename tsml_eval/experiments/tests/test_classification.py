@@ -397,3 +397,19 @@ def test_aeon_classifiers_available():
             assert get_classifier_by_name(e) is not None
         except ModuleNotFoundError:
             continue
+
+
+@pytest.mark.parametrize(
+    "name, expected",
+    [
+        ("RiemannianMDM-OAS", "RiemannianMDMClassifier"),
+        ("R-KNN-OAS", "RiemannianKNNClassifier"),
+    ],
+)
+def test_get_riemannian_oas(name, expected):
+    """The -OAS Riemannian names use the OAS covariance estimator."""
+    _skip_if_not_in_aeon_neuro(expected)
+    pytest.importorskip("pyriemann")
+    classifier = get_classifier_by_name(name)
+    assert type(classifier).__name__ == expected
+    assert classifier.covariance_estimator == "oas"

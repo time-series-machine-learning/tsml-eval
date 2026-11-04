@@ -29,7 +29,12 @@ smallest_datasets_first = true
 
 # Grouped as aeon-neuro groups them.
 [estimators]
-DistanceBased = ["RiemannianMDM", "RiemannianKNN"]
+# The -OAS versions use the OAS shrinkage covariance (as MOABB's MDM pipelines
+# do), which stays positive definite where the default sample covariance fails
+# (ButtonPress, FaceDetection, MindReading).
+DistanceBased = [
+    "RiemannianMDM", "RiemannianKNN", "RiemannianMDM-OAS", "RiemannianKNN-OAS",
+]
 FeatureBased = ["CSP+LDA", "CSP+SVM", "XDAWN"]
 
 [slurm]

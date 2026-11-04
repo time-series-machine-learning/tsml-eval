@@ -38,6 +38,8 @@ neuro_classifiers = [
     ["labramclassifier", "labram"],
     ["riemannianmdmclassifier", "riemannianmdm", "r-mdm"],
     ["riemannianknnclassifier", "riemannianknn", "r-knn"],
+    ["riemannianmdm-oas", "r-mdm-oas"],
+    ["riemannianknn-oas", "r-knn-oas"],
     ["cspclassifier", "csp", "csplda"],
     ["csprandomforestclassifier", "csprandomforest", "csprf"],
     ["cspsvmclassifier", "cspsvm", "csp-svm"],
@@ -402,6 +404,21 @@ def _set_classifier_neuro(c, random_state, n_jobs, kwargs):
         from aeon_neuro.classification.distance_based import RiemannianKNNClassifier
 
         return RiemannianKNNClassifier(n_jobs=n_jobs, **kwargs)
+    elif c in (
+        "riemannianmdm-oas",
+        "r-mdm-oas",
+        "riemannianknn-oas",
+        "r-knn-oas",
+    ):
+        # the OAS shrinkage covariance, as MOABB's MDM pipelines use: it stays
+        # positive definite where the sample covariance ("scm") is singular
+        from aeon_neuro.classification.distance_based import (
+            RiemannianKNNClassifier,
+            RiemannianMDMClassifier,
+        )
+
+        cls = RiemannianMDMClassifier if "mdm" in c else RiemannianKNNClassifier
+        return cls(n_jobs=n_jobs, **{"covariance_estimator": "oas", **kwargs})
     elif c in (
         "cspclassifier",
         "csp",
