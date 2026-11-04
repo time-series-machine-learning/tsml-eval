@@ -1,0 +1,30 @@
+# MRHydra alone on the EEG archive, on Iridis 6, starting at large memory: on the
+# biggest datasets it needs far more than the 16G share of the other aeon
+# classifiers (iridis6_eeg_aeon.toml), and a task that overruns its share in a farm
+# can take the whole node job down with it. 128G puts four tasks on a node.
+#
+# Same data, dataset list and results layout as iridis6_eeg_aeon.toml:
+# ~/Results/EEG/ConvolutionBased/MRHydra/. Finished results are kept and skipped.
+#
+#   python tsml_slurm.py start experiments/iridis6_eeg_mrhydra.toml
+
+[experiment]
+name = "eeg-mrhydra"
+cluster = "iridis6"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{home}/DataSetLists/eeg.txt"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+[estimators]
+ConvolutionBased = ["MRHydra"]
+
+[slurm]
+env_name = "tsml-eval"
+max_jobs = 1
+memory_gb = [128, 256, 620]

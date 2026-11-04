@@ -207,6 +207,7 @@ class Experiment:
     email_hours: float = 24.0
     numba_cache_dir: Path | None = None
     cv_folds: int = 0
+    retry_timeouts: bool = False
     datasets: tuple[str, ...] = field(default=())
 
     @property
@@ -407,6 +408,7 @@ def _simple_settings(exp):
         "require_clean": bool,
         "email_hours": float,
         "cv_folds": int,
+        "retry_timeouts": bool,
     }
     unknown = sorted(set(exp) - set(allowed))
     if unknown:
@@ -1335,7 +1337,10 @@ def apply_outcome(e, record, reason, detail):
         else:
             record["terminal"] = f"OOM at {tiers[-1]}G"
     elif reason == TIMEOUT:
-        record["terminal"] = TIMEOUT
+        # with checkpointing a timed-out task resumes where it stopped, so it is
+        # worth another attempt; otherwise rerunning it would time out again
+        if not e.retry_timeouts or record.get("attempts", 0) >= e.max_attempts:
+            record["terminal"] = TIMEOUT
     elif record.get("attempts", 0) >= e.max_attempts:
         record["terminal"] = reason
 

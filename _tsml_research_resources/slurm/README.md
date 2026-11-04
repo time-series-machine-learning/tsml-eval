@@ -186,6 +186,7 @@ checkout) and `{name}` (the experiment name), as well as environment variables a
 | `estimators` | – | Flat list, results go straight under `results_dir`. Alternative to `[estimators]`. |
 | `resamples` | `30` | A count (`30` → 0..29) or an explicit list (`[0, 5, 9]`). |
 | `start_resample` | `0` | With a count: `start_resample = 10`, `resamples = 30` → 10..29. |
+| `retry_timeouts` | `false` | Resubmit a task that hit the time limit (up to `max_attempts`) instead of marking it failed. For checkpointed runs (`-ch` in `extra_args`), which resume where they stopped. |
 | `cv_folds` | – | Classification only: k-fold cross-validation instead of resamples (`-cv`); see example 9. Replaces `resamples`: each dataset runs its own folds. |
 | `train_files` | `false` | Also write train predictions (`-tr`); a task then needs both files. |
 | `test_files` | `false` | Clustering only: also write test assignments (`-te`). |

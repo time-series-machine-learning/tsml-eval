@@ -70,8 +70,15 @@ def parse_args(args):
                             a time limit for estimator fit in minutes. Only used
                             if the estimator can contract fit (default: 0).
       -ch, --checkpoint     save the estimator fit to file periodically while
-                            building. Only used if the estimator can checkpoint
-                            (default: False).
+                            building, and resume from that file if it exists. Only
+                            used in classification, with an estimator that can
+                            checkpoint. The file is {results_path}/{estimator_name}/
+                            Checkpoints/{dataset_name}/Resample{resample_id}.ckpt,
+                            removed once the results are written (default: False).
+      -chi CHECKPOINT_INTERVAL, --checkpoint_interval CHECKPOINT_INTERVAL
+                            minimum minutes between periodic checkpoints with
+                            --checkpoint. If None, the estimator only saves at its
+                            own fixed points and on completion (default: None).
       -dtn DATA_TRANSFORM_NAME, --data_transform_name DATA_TRANSFORM_NAME
                             str to pass to get_data_transform_by_name to apply a
                             transformation to the data prior to running the experiment.
@@ -222,8 +229,20 @@ def parse_args(args):
         "-ch",
         "--checkpoint",
         action="store_true",
-        help="save the estimator fit to file periodically while building. Only used if "
-        "the estimator can checkpoint (default: %(default)s).",
+        help="save the estimator fit to file periodically while building, and resume "
+        "from that file if it exists. Only used in classification, with an estimator "
+        "that can checkpoint. The file is "
+        "{results_path}/{estimator_name}/Checkpoints/{dataset_name}/"
+        "Resample{resample_id}.ckpt, removed once the results are written "
+        "(default: %(default)s).",
+    )
+    parser.add_argument(
+        "-chi",
+        "--checkpoint_interval",
+        type=float,
+        help="minimum minutes between periodic checkpoints with --checkpoint. If None, "
+        "the estimator only saves at its own fixed points and on completion "
+        "(default: %(default)s).",
     )
     parser.add_argument(
         "-dtn",

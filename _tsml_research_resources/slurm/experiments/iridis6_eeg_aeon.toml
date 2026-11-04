@@ -29,7 +29,8 @@ smallest_datasets_first = true
 
 # Grouped as aeon groups them (aeon.classification.<module>).
 [estimators]
-ConvolutionBased = ["MRHydra", "ROCKET", "MiniROCKET"]
+# MRHydra is in iridis6_eeg_mrhydra.toml, starting at large memory; ROCKET and
+# MiniROCKET are not run (their existing results are kept).
 IntervalBased = ["QUANT"]
 FeatureBased = ["FreshPRINCE"]
 Tabular = ["RotationForest", "RandomForest", "SVM", "LogisticRegression"]

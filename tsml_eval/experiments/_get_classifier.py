@@ -122,6 +122,7 @@ shapelet_based_classifiers = [
     "stc-2hour",
     ["shapelettransformclassifier", "stc"],
     "stc-unequal",
+    "stc-aeon",
     ["rdstclassifier", "rdst"],
     ["randomshapeletforestclassifier", "randomshapeletforest", "rsf"],
     ["sastclassifier", "sast"],
@@ -1036,6 +1037,15 @@ def _set_classifier_shapelet_based(
         from tsml_eval._wip.shapelets.early_abandon._stc3 import (
             ShapeletTransformClassifier,
         )
+
+        return ShapeletTransformClassifier(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "stc-aeon":
+        from aeon.classification.shapelet_based import ShapeletTransformClassifier
 
         return ShapeletTransformClassifier(
             random_state=random_state,

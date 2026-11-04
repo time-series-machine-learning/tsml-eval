@@ -110,6 +110,8 @@ def run_experiment(args):
                 overwrite=args.overwrite,
                 predefined_resample=args.predefined_resample,
                 cv_folds=args.cv_folds,
+                checkpoint=args.checkpoint,
+                checkpoint_interval=args.checkpoint_interval,
             )
     # local run (no args)
     else:

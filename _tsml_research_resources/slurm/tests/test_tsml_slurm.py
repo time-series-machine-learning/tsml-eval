@@ -791,3 +791,24 @@ def test_removed_estimator_with_old_job_is_ignored(world, capsys):
     ts.run_cycle(e, slurm)
     assert "Gone|Small|0" not in ts.load_state(e)["tasks"]
     assert ts.running_report(e, ts.load_state(e), slurm.entries)
+
+
+def test_retry_timeouts_resubmits_until_max_attempts(world):
+    e = make(
+        world,
+        body="resamples = 1\nretry_timeouts = true\nmax_attempts = 2",
+        estimators='estimators = ["A"]',
+    )
+    slurm = FakeSlurm()
+    for attempt in (1, 2):
+        ts.run_cycle(e, slurm)
+        age_submissions(e)
+        state = ts.load_state(e)
+        job = state["tasks"]["A|Big|0"]["job"]
+        slurm.acct[(job, 0)] = "TIMEOUT"
+        ts.run_cycle(e, slurm, submit=False)
+        record = ts.load_state(e)["tasks"]["A|Big|0"]
+        if attempt == 1:
+            assert "terminal" not in record  # resumes from its checkpoint
+        else:
+            assert record["terminal"] == ts.TIMEOUT

@@ -85,6 +85,8 @@ def run_classification_experiment(
     attribute_file_path=None,
     att_max_shape=0,
     benchmark_time=True,
+    checkpoint_path=None,
+    checkpoint_interval=None,
 ):
     """Run a classification experiment and save the results to file.
 
@@ -150,6 +152,12 @@ def run_classification_experiment(
 
     if classifier_name is None:
         classifier_name = type(classifier).__name__
+
+    resuming = False
+    if checkpoint_path is not None:
+        classifier, resuming = _setup_checkpoint(
+            classifier, checkpoint_path, checkpoint_interval
+        )
 
     use_fit_predict = False
     # aeon classifier
@@ -241,7 +249,18 @@ def run_classification_experiment(
         cv_size = 10
         start = int(round(time.time() * 1000))
         if use_fit_predict:
-            train_probs = classifier.fit_predict_proba(X_train, y_train)
+            train_probs = None
+            if resuming:
+                try:
+                    train_probs = classifier.resume_fit_predict_proba(X_train, y_train)
+                    print(f"Resumed from checkpoint {checkpoint_path}")  # noqa: T201
+                except ValueError as error:
+                    # the checkpoint came from a fit without train estimates
+                    print(  # noqa: T201
+                        f"Cannot resume train estimates ({error}); fitting afresh"
+                    )
+            if train_probs is None:
+                train_probs = classifier.fit_predict_proba(X_train, y_train)
             needs_fit = False
             if hasattr(classifier, "fit_time_millis_"):
                 fit_time = classifier.fit_time_millis_
@@ -287,8 +306,10 @@ def run_classification_experiment(
 
     if build_test_file:
         if needs_fit:
+            if resuming:
+                print(f"Resuming from checkpoint {checkpoint_path}")  # noqa: T201
             mem_usage, fit_time = record_max_memory(
-                classifier.fit,
+                classifier.resume_fit if resuming else classifier.fit,
                 args=(X_train, y_train),
                 interval=MEMRECORD_INTERVAL,
                 return_func_time=True,
@@ -339,6 +360,41 @@ def run_classification_experiment(
             fit_and_estimate_time=fit_and_train_time,
         )
 
+    # the results are written, so the fit no longer needs to be resumable
+    if checkpoint_path is not None and os.path.isfile(checkpoint_path):
+        os.remove(checkpoint_path)
+
+
+def _setup_checkpoint(classifier, checkpoint_path, checkpoint_interval):
+    """Point a checkpointable classifier at its checkpoint, loading it if present.
+
+    Returns the classifier to use and whether it continues a saved fit. A
+    classifier that cannot checkpoint is returned unchanged. A loaded checkpoint
+    keeps its saved model, but takes the runtime settings (checkpoint path and
+    interval, n_jobs, verbose) of the classifier this run constructed.
+    """
+    if not (
+        isinstance(classifier, BaseClassifier)
+        and classifier.get_tag("capability:checkpointing", False, False)
+    ):
+        return classifier, False
+
+    os.makedirs(os.path.dirname(os.path.abspath(checkpoint_path)), exist_ok=True)
+    runtime = {"checkpoint_path": checkpoint_path}
+    if checkpoint_interval is not None:
+        runtime["checkpoint_interval"] = checkpoint_interval
+    params = classifier.get_params(deep=False)
+    for name in ("n_jobs", "verbose"):
+        if name in params:
+            runtime[name] = params[name]
+
+    if os.path.isfile(checkpoint_path):
+        loaded = type(classifier).load_checkpoint(checkpoint_path)
+        loaded.set_params(**runtime)
+        return loaded, True
+    classifier.set_params(**runtime)
+    return classifier, False
+
 
 def load_and_run_classification_experiment(
     problem_path,
@@ -356,6 +412,8 @@ def load_and_run_classification_experiment(
     overwrite=False,
     predefined_resample=False,
     cv_folds=None,
+    checkpoint=False,
+    checkpoint_interval=None,
 ):
     """Load a dataset and run a classification experiment.
 
@@ -409,6 +467,15 @@ def load_and_run_classification_experiment(
         number of folds is at most the number of subjects. Folds are the same for
         every classifier; ``resample_id`` is still the classifier's seed and the
         results file suffix.
+    checkpoint : bool, default=False
+        If True and the classifier can checkpoint, save its fit to
+        <results_path>/<classifier_name>/Checkpoints/<dataset>/Resample<id>.ckpt
+        and resume from that file if it already exists, so a run killed part way
+        (at a time limit, say) carries on from its last checkpoint. The file is
+        removed once the results are written.
+    checkpoint_interval : float or None, default=None
+        Minimum minutes between periodic checkpoints. None saves only at the
+        estimator's own fixed points and on completion.
     """
     if classifier_name is None:
         classifier_name = type(classifier).__name__
@@ -470,6 +537,13 @@ def load_and_run_classification_experiment(
         attribute_file_path=attribute_file_path,
         att_max_shape=att_max_shape,
         benchmark_time=benchmark_time,
+        checkpoint_path=(
+            f"{results_path}/{classifier_name}/Checkpoints/{dataset}/"
+            f"Resample{resample_id}.ckpt"
+            if checkpoint
+            else None
+        ),
+        checkpoint_interval=checkpoint_interval,
     )
 
 
