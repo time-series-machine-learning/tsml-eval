@@ -361,6 +361,15 @@ tsml-slurm retry  EXP.toml --reason OOM --memory-tier 3   # only OOM failures, f
 tsml-slurm retry  EXP.toml --reason cancelled             # undo a cancel
 ```
 
+### Watching progress inside a task
+
+`status EXP --progress` lists the running tasks as `--running` does, and under each
+one prints the last progress line from its `.out` log and, for checkpointed runs
+(`-ch`), how long ago its checkpoint was written. aeon estimators print progress
+lines, such as `[Arsenal] Progress: built=120/500, elapsed=5400s`, when run with
+`verbose = 1` in `[estimator_kwargs.<Name>]`; `verbose = 2` logs every member. A
+task with no progress line shows its last line of output instead.
+
 ### Cancelling some tasks
 
 `cancel` takes any mix of `--estimator`, `--dataset` and `--resample` (each accepts

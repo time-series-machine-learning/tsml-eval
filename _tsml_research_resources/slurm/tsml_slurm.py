@@ -1993,9 +1993,13 @@ def cmd_status(e, args):
     except RuntimeError as error:  # a cycle is running: show its last report
         print(f"{error}; showing the last saved report")
         print((e.state_dir / "report.txt").read_text(encoding="utf-8"))
-    if args.running:
+    if args.running or args.progress:
         print()
-        print(running_report(e, load_state(e), slurm.queue(e.user)))
+        print(
+            running_report(
+                e, load_state(e), slurm.queue(e.user), progress=args.progress
+            )
+        )
     if args.details:
         state = load_state(e)
         missing = [t for t in all_tasks(e) if not is_complete(e, t)]
@@ -2036,8 +2040,46 @@ def _elapsed(start):
     return f"{hours}:{rest // 60:02d}:{rest % 60:02d}"
 
 
-def running_report(e, state, queue):
-    """Table of tasks whose job is running, longest running first."""
+_PROGRESS_LINE = re.compile(r"^\[[A-Za-z][\w-]*\]")
+
+
+def _progress(log):
+    """Return the last progress line an estimator printed (aeon's verbose output)."""
+    lines = [x.strip() for x in _read_tail(Path(f"{log}.out")).splitlines()]
+    lines = [x for x in lines if x]
+    marked = [x for x in lines if _PROGRESS_LINE.match(x)]
+    line = (marked or lines or [""])[-1]
+    return line if len(line) <= 110 else line[:107] + "..."
+
+
+def checkpoint_file(e, task):
+    """Where tsml-eval's -ch writes this task's checkpoint."""
+    return (
+        e.results_dir
+        / task.category
+        / task.estimator
+        / "Checkpoints"
+        / task.dataset
+        / f"Resample{task.resample}.ckpt"
+    )
+
+
+def _age(path):
+    """How long ago a file was written, as h:mm, or None if it does not exist."""
+    try:
+        seconds = int(time.time() - path.stat().st_mtime)
+    except OSError:
+        return None
+    return f"{seconds // 3600}:{seconds % 3600 // 60:02d}"
+
+
+def running_report(e, state, queue, progress=False):
+    """Table of tasks whose job is running, longest running first.
+
+    With ``progress``, each row is followed by the last progress line from the
+    task's .out log (aeon estimators print these with verbose >= 1) and, when the
+    task is checkpointing, how long ago its checkpoint was written.
+    """
     live = {(q.job_id, q.index): q.state for q in queue}
     live.update({(q.job_id, None): q.state for q in queue if q.index is None})
     rows = []
@@ -2063,16 +2105,23 @@ def running_report(e, state, queue):
         else:
             note = ""
         memory = e.resources.memory_gb[record.get("tier", 0)]
-        rows.append((start, key, job, host, memory, note))
+        detail = []
+        if progress and start is not None:
+            detail.append(_progress(log) or "(no output yet)")
+            age = _age(checkpoint_file(e, task))
+            if age is not None:
+                detail.append(f"checkpoint written {age} ago")
+        rows.append((start, key, job, host, memory, note, detail))
     if not rows:
         return "No tasks running."
     rows.sort(key=lambda r: (r[0] is None, r[0].timestamp() if r[0] else 0))
     lines = [f"{'task':<44}{'job':>10}{'memory':>8}{'elapsed':>11}  node"]
-    for start, key, job, host, memory, note in rows:
+    for start, key, job, host, memory, note, detail in rows:
         elapsed = _elapsed(start) if start else "-"
         lines.append(
             f"{key:<44}{job:>10}{f'{memory}G':>8}{elapsed:>11}  {host} {note}".rstrip()
         )
+        lines.extend(f"    {x}" for x in detail)
     return "\n".join(lines)
 
 
@@ -2213,6 +2262,12 @@ def main(argv=None):
         "--running",
         action="store_true",
         help="list running tasks with elapsed time, longest first",
+    )
+    p.add_argument(
+        "--progress",
+        action="store_true",
+        help="as --running, also showing each task's last progress line from its "
+        "log (estimator verbose output) and how old its checkpoint is",
     )
     p.add_argument("--email", action="store_true", help="email the report now")
     p = add("stop", cmd_stop, "stop refilling; running jobs continue")

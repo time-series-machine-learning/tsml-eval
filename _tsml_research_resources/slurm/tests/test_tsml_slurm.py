@@ -812,3 +812,38 @@ def test_retry_timeouts_resubmits_until_max_attempts(world):
             assert "terminal" not in record  # resumes from its checkpoint
         else:
             assert record["terminal"] == ts.TIMEOUT
+
+
+def test_status_progress_shows_verbose_line_and_checkpoint(world):
+    e = make(
+        world,
+        resources="farm",
+        body="resamples = 1",
+        estimators="",
+        extra_sections='[estimators]\nConvolutionBased = ["A"]',
+    )
+    slurm = FakeSlurm()
+    ts.run_cycle(e, slurm)
+    _queue_everything(e, slurm)
+    state = ts.load_state(e)
+    task = ts.Task("A", "ConvolutionBased", "Small", 0)
+    log = ts.task_log(e, task, state["tasks"][task.key]["job"])
+    log.parent.mkdir(parents=True, exist_ok=True)
+    Path(f"{log}.status").write_text("started 2000-01-01T00:00:00+00:00 node42\n")
+    Path(f"{log}.out").write_text(
+        "Input args = [...]\n"
+        "[Arsenal] Starting fit: n_estimators=25\n"
+        "[Arsenal] Progress: built=10/25, elapsed=3600.00s\n"
+        "some other output\n"
+    )
+    checkpoint = ts.checkpoint_file(e, task)
+    checkpoint.parent.mkdir(parents=True, exist_ok=True)
+    checkpoint.write_bytes(b"x")
+
+    plain = ts.running_report(e, state, slurm.queue("tester"))
+    assert "Progress" not in plain
+    report = ts.running_report(e, state, slurm.queue("tester"), progress=True)
+    lines = report.splitlines()
+    row = next(i for i, x in enumerate(lines) if x.startswith(task.key))
+    assert lines[row + 1].strip() == "[Arsenal] Progress: built=10/25, elapsed=3600.00s"
+    assert lines[row + 2].strip().startswith("checkpoint written 0:0")
