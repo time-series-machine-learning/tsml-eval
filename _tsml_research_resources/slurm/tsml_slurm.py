@@ -928,6 +928,17 @@ def _environment_block(e, commit, threads):
         '"${PY[@]}" -c "import sys, aeon, tsml_eval; print(\'python\', '
         "sys.version.split()[0], sys.executable); print('aeon', aeon.__version__, "
         "aeon.__file__); print('tsml_eval', tsml_eval.__file__)\"",
+        # where aeon came from: pip's record of a git or local install, and the
+        # branch and commit if aeon is a git checkout (an editable install)
+        '"${PY[@]}" -c "import importlib.metadata as m; '
+        "d = m.distribution('aeon').read_text('direct_url.json'); "
+        "print('aeon source', d.strip() if d else 'index (PyPI)')\" || true",
+        'aeon_dir=$("${PY[@]}" -c "import aeon, os; '
+        'print(os.path.dirname(os.path.dirname(aeon.__file__)))")',
+        'if git -C "$aeon_dir" rev-parse --git-dir > /dev/null 2>&1; then',
+        '    echo "aeon branch=$(git -C "$aeon_dir" rev-parse --abbrev-ref HEAD) '
+        'commit=$(git -C "$aeon_dir" rev-parse HEAD)"',
+        "fi",
     ]
     return lines
 
