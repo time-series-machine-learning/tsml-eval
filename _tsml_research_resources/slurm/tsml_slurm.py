@@ -2052,6 +2052,68 @@ def _progress(log):
     return line if len(line) <= 110 else line[:107] + "..."
 
 
+_COUNT = re.compile(r"\b(built|evaluated|extracted)=(\d+)(?:/(\d+))?")
+_ELAPSED = re.compile(r"\belapsed=([\d.]+)s")
+# where a component's total is given, when its progress lines show only a count
+_TOTAL_IN_START = {
+    "built": re.compile(r"\bn_estimators=(\d+)"),
+    "evaluated": re.compile(r"\bparameter_samples=(\d+)"),
+    "extracted": re.compile(r"\bcandidate_samples=(\d+)"),
+}
+
+
+def _duration(seconds):
+    if seconds < 60:
+        return "under a minute"
+    hours, rest = divmod(int(seconds), 3600)
+    return f"{hours}:{rest // 60:02d} (h:mm)"
+
+
+def estimate_remaining(text):
+    """Estimate the time left in the fit an aeon verbose log is reporting on.
+
+    Takes the component named on the last progress line (Arsenal, a rotation
+    forest inside STC, ...), and its progress lines since its latest "Starting
+    fit" line: the rate between the first and last of those, applied to the work
+    left. Measuring from the first line of this run, not from zero, keeps a fit
+    resumed from a checkpoint from counting the members built before it. Returns
+    a short description, or "" if there is too little to go on.
+    """
+    lines = [x.strip() for x in text.splitlines()]
+    progress = [i for i, x in enumerate(lines) if "] Progress:" in x]
+    if not progress:
+        return ""
+    name = lines[progress[-1]].split("]", 1)[0] + "]"
+    start = max(
+        (i for i, x in enumerate(lines) if x.startswith(f"{name} Starting fit")),
+        default=-1,
+    )
+    points, kind, total = [], None, None
+    for i in progress:
+        if i < start or not lines[i].startswith(name):
+            continue
+        count, elapsed = _COUNT.search(lines[i]), _ELAPSED.search(lines[i])
+        if count and elapsed:
+            kind = count.group(1)
+            total = int(count.group(3)) if count.group(3) else total
+            points.append((int(count.group(2)), float(elapsed.group(1))))
+    if total is None and kind and start >= 0:
+        found = _TOTAL_IN_START[kind].search(lines[start])
+        total = int(found.group(1)) if found else None
+    label = name.strip("[]")
+    if not points or total is None:
+        return ""
+    done, now = points[-1]
+    if done >= total:
+        return f"{label}: {kind} {done}/{total}, finishing"
+    if len(points) < 2 or now <= points[0][1] or done <= points[0][0]:
+        return f"{label}: {kind} {done}/{total}, too early to estimate"
+    rate = (done - points[0][0]) / (now - points[0][1])
+    left = (total - done) / rate
+    then = ", then the rotation forest" if label == "RandomShapeletTransform" else ""
+    return f"{label}: {kind} {done}/{total}, about {_duration(left)} left{then}"
+
+
 def checkpoint_file(e, task):
     """Where tsml-eval's -ch writes this task's checkpoint."""
     return (
@@ -2108,6 +2170,11 @@ def running_report(e, state, queue, progress=False):
         detail = []
         if progress and start is not None:
             detail.append(_progress(log) or "(no output yet)")
+            estimate = estimate_remaining(
+                _read_tail(Path(f"{log}.out"), limit=2_000_000)
+            )
+            if estimate:
+                detail.append(estimate)
             age = _age(checkpoint_file(e, task))
             if age is not None:
                 detail.append(f"checkpoint written {age} ago")

@@ -370,6 +370,13 @@ lines, such as `[Arsenal] Progress: built=120/500, elapsed=5400s`, when run with
 `verbose = 1` in `[estimator_kwargs.<Name>]`; `verbose = 2` logs every member. A
 task with no progress line shows its last line of output instead.
 
+Once a fit has printed two progress lines it also shows an estimate, such as
+`Arsenal: built 14/25, about 6:10 (h:mm) left`, from its rate so far in this run
+(so a fit resumed from a checkpoint is not credited with work done before it). For
+STC the estimate covers the current phase, the shapelet search or the rotation
+forest after it, and members that slow down as a fit goes on (TDE's later
+parameter settings, say) make it optimistic.
+
 ### Cancelling some tasks
 
 `cancel` takes any mix of `--estimator`, `--dataset` and `--resample` (each accepts

@@ -846,4 +846,40 @@ def test_status_progress_shows_verbose_line_and_checkpoint(world):
     lines = report.splitlines()
     row = next(i for i, x in enumerate(lines) if x.startswith(task.key))
     assert lines[row + 1].strip() == "[Arsenal] Progress: built=10/25, elapsed=3600.00s"
-    assert lines[row + 2].strip().startswith("checkpoint written 0:0")
+    assert lines[row + 2].strip() == "Arsenal: built 10/25, too early to estimate"
+    assert lines[row + 3].strip().startswith("checkpoint written 0:0")
+
+
+def test_estimate_remaining_from_verbose_lines():
+    est = ts.estimate_remaining
+    arsenal = (
+        "[Arsenal] Starting fit: n_cases=30, n_estimators=25\n"
+        "[Arsenal] Progress: built=2/25, elapsed=100.00s\n"
+        "[Arsenal] Progress: built=4/25, elapsed=3700.00s\n"
+    )
+    # 2 members per hour, 21 to go
+    assert est(arsenal) == "Arsenal: built 4/25, about 10:30 (h:mm) left"
+    assert "too early" in est(arsenal.rsplit("\n", 2)[0])
+    # DrCIF shows only a count: the total comes from its Starting fit line
+    drcif = (
+        "[DrCIFClassifier] Starting fit: n_cases=30, n_estimators=200, n_jobs=1\n"
+        "[DrCIFClassifier] Progress: built=10, elapsed=10.00s\n"
+        "[DrCIFClassifier] Progress: built=110, elapsed=3610.00s\n"
+    )
+    assert est(drcif) == "DrCIFClassifier: built 110/200, about 0:54 (h:mm) left"
+    # a resumed fit: the rate is measured within this run, not from zero
+    resumed = (
+        "[TemporalDictionaryEnsemble] Starting fit: parameter_samples=250\n"
+        "[TemporalDictionaryEnsemble] Progress: evaluated=200, elapsed=10.00s\n"
+        "[TemporalDictionaryEnsemble] Progress: evaluated=210, elapsed=3610.00s\n"
+    )
+    assert "about 4:00 left" in est(resumed)
+    # STC: the latest component is what is estimated
+    stc = (
+        "[RandomShapeletTransform] Starting fit: candidate_samples=10000\n"
+        "[RandomShapeletTransform] Progress: extracted=1000/10000, elapsed=100.00s\n"
+        "[RandomShapeletTransform] Progress: extracted=2000/10000, elapsed=3700.00s\n"
+    )
+    assert est(stc).endswith("then the rotation forest")
+    assert "about 8:00 left" in est(stc)
+    assert est("no progress here\n") == ""
