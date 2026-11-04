@@ -35,6 +35,9 @@ train_files = true                  # completion needs train AND test files
 extra_args = ["-ch", "-chi", "420"]  # checkpoint, at least 7 hours apart
 retry_timeouts = true               # a timed-out task resumes from its checkpoint
 max_attempts = 4
+# all four components on each dataset together, smallest datasets first, so the
+# slow ones (STC, TDE) are not queued behind every Arsenal and DrCIF task
+priority = "dataset"
 
 [estimators]
 ConvolutionBased = ["Arsenal"]
@@ -59,4 +62,6 @@ verbose = 1
 [slurm]
 env_name = "tsml-eval"
 max_jobs = 2                        # two nodes; the other experiments share two
+waves = 1                           # a farm holds only what it runs at once, so
+                                    # every task starts with the full 60 hours
 memory_gb = [16, 32, 64, 128, 256, 620]
