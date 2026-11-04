@@ -765,3 +765,16 @@ def test_fingerprint_unchanged_without_cv_folds(world):
         ts.json.dumps(content, sort_keys=True).encode()
     ).hexdigest()[:12]
     assert ts.fingerprints(e)[e.estimators[0].name] == expected
+
+
+def test_legacy_fingerprints_are_accepted(world):
+    # experiments started while cv_folds was always in the fingerprint still run
+    e = make(world)
+    ts.read_datasets(e)
+    state = ts.load_state(e)
+    state["fingerprints"] = ts.fingerprints(e, legacy=True)
+    ts.save_state(e, state)
+    slurm = FakeSlurm()
+    ts.run_cycle(e, slurm)
+    assert slurm.scripts
+    assert ts.load_state(e)["fingerprints"] == ts.fingerprints(e)

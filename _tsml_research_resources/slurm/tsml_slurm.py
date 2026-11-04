@@ -528,12 +528,15 @@ def read_datasets(e):
     return e.datasets
 
 
-def fingerprints(e):
+def fingerprints(e, legacy=False):
     """Per-estimator hash of the settings that change what its results mean.
 
     Adding estimators, datasets or resamples to a running experiment is fine; changing
     the keyword arguments or flags of an estimator that already has results is not,
     because old and new results would sit side by side in one directory.
+
+    ``legacy=True`` gives the form briefly used (commit 9418789 to 027135d) that
+    always included cv_folds, so experiments started then are still recognised.
     """
     prints = {}
     for estimator in e.estimators:
@@ -548,7 +551,7 @@ def fingerprints(e):
         }
         # only when set, so experiments started before cv_folds existed keep the
         # fingerprints they were started with
-        if e.cv_folds:
+        if e.cv_folds or legacy:
             settings["cv_folds"] = e.cv_folds
         content = json.dumps(settings, sort_keys=True)
         prints[estimator.name] = hashlib.sha256(content.encode()).hexdigest()[:12]
@@ -1503,6 +1506,10 @@ def run_cycle(
     errors = []
 
     prints = fingerprints(e)
+    legacy = fingerprints(e, legacy=True)
+    for name, value in prints.items():
+        if state["fingerprints"].get(name) == legacy[name]:
+            state["fingerprints"][name] = value  # same settings, older form
     changed = sorted(
         name
         for name, value in prints.items()
