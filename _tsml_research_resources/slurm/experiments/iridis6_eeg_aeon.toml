@@ -35,6 +35,11 @@ IntervalBased = ["QUANT"]
 FeatureBased = ["FreshPRINCE"]
 Tabular = ["RotationForest", "RandomForest", "SVM", "LogisticRegression"]
 
+# HC2 prints a time stamp and weight as each component (STC, DrCIF, Arsenal, TDE)
+# finishes, in the task's .out log. The components run alone have no verbose option.
+[estimator_kwargs.HC2]
+verbose = 1
+
 [slurm]
 env_name = "tsml-eval"
 memory_gb = [16, 32, 64, 128, 256, 620]
