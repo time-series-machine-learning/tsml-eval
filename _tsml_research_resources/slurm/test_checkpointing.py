@@ -101,7 +101,11 @@ def check(name, train_estimate):
 
     with tempfile.TemporaryDirectory() as tmp:
         path = Path(tmp) / f"{name}.ckpt"
-        proc = mp.Process(target=child, args=(name, str(path), train_estimate))
+        # spawn, not fork: after the reference fit this process has started
+        # OpenMP, and GNU OpenMP aborts in a forked child (the Linux default)
+        proc = mp.get_context("spawn").Process(
+            target=child, args=(name, str(path), train_estimate)
+        )
         proc.start()
         deadline = time.time() + 600
         while not path.exists() and proc.is_alive() and time.time() < deadline:
