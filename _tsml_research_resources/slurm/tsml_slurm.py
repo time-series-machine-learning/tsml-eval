@@ -537,19 +537,20 @@ def fingerprints(e):
     """
     prints = {}
     for estimator in e.estimators:
-        content = json.dumps(
-            {
-                "task": e.task,
-                "results": str(e.estimator_results(estimator)),
-                "kwargs": e.estimator_kwargs.get(estimator.name, {}),
-                "train": e.train_files,
-                "test": e.test_files,
-                "extra_args": e.extra_args,
-                "data_dir": str(e.data_dir),
-                "cv_folds": e.cv_folds,
-            },
-            sort_keys=True,
-        )
+        settings = {
+            "task": e.task,
+            "results": str(e.estimator_results(estimator)),
+            "kwargs": e.estimator_kwargs.get(estimator.name, {}),
+            "train": e.train_files,
+            "test": e.test_files,
+            "extra_args": e.extra_args,
+            "data_dir": str(e.data_dir),
+        }
+        # only when set, so experiments started before cv_folds existed keep the
+        # fingerprints they were started with
+        if e.cv_folds:
+            settings["cv_folds"] = e.cv_folds
+        content = json.dumps(settings, sort_keys=True)
         prints[estimator.name] = hashlib.sha256(content.encode()).hexdigest()[:12]
     return prints
 

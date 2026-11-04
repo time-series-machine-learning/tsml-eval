@@ -745,3 +745,23 @@ estimators = ["A"]
     assert len(tasks) == 22
     args = ts._experiment_arguments(e, tasks[0])
     assert args[args.index("-cv") + 1] == "10"
+
+
+def test_fingerprint_unchanged_without_cv_folds(world):
+    # the fingerprint of an experiment without cv_folds must not depend on it,
+    # or every experiment started before cv_folds existed would be refused
+    e = make(world)
+    ts.read_datasets(e)
+    content = {
+        "task": e.task,
+        "results": str(e.estimator_results(e.estimators[0])),
+        "kwargs": {},
+        "train": False,
+        "test": False,
+        "extra_args": (),
+        "data_dir": str(e.data_dir),
+    }
+    expected = ts.hashlib.sha256(
+        ts.json.dumps(content, sort_keys=True).encode()
+    ).hexdigest()[:12]
+    assert ts.fingerprints(e)[e.estimators[0].name] == expected
