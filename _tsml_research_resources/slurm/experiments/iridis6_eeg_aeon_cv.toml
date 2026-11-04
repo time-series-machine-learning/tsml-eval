@@ -33,7 +33,7 @@ Hybrid = ["HC2"]
 ConvolutionBased = ["MRHydra", "ROCKET", "MiniROCKET"]
 IntervalBased = ["QUANT"]
 FeatureBased = ["FreshPRINCE"]
-Tabular = ["RotationForest", "RandomForest"]
+Tabular = ["RotationForest", "RandomForest", "SVM", "LogisticRegression"]
 
 [slurm]
 env_name = "tsml-eval"

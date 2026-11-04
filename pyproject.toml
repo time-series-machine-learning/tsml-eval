@@ -148,6 +148,7 @@ ignore = ["E203", "E741", "B904", "B905", "B028"]
 "tsml_eval/experiments/threaded_forecasting_experiments.py" = ["T201"]
 "tsml_eval/publications/*" = ["E402", "T201"]
 "_tsml_research_resources/slurm/tsml_slurm.py" = ["T201"]
+"_tsml_research_resources/slurm/move_eegbench_results.py" = ["T201"]
 "_tsml_research_resources/slurm/tests/*" = ["D"]
 
 [tool.ruff.lint.pydocstyle]
