@@ -43,6 +43,13 @@ from sklearn.model_selection import cross_val_predict
 
 from tsml_eval.estimators.classification._sklearn import SklearnToAeonClassifier
 from tsml_eval.estimators.clustering._sklearn import SklearnToAeonClusterer
+from tsml_eval.estimators.forecasting._adaptive_window import adaptive_window_length
+from tsml_eval.estimators.forecasting._iterative_guard import (
+    ITERATIVE_GUARD_FACTOR,
+    guarded_iterative_forecast,
+    is_ml_forecaster,
+    iterative_guard_bounds,
+)
 from tsml_eval.estimators.regression._sklearn import SklearnToAeonRegressor
 from tsml_eval.utils.datasets import load_experiment_data
 from tsml_eval.utils.experiments import (
@@ -1338,7 +1345,24 @@ def run_forecasting_experiment(
         # Fixed-horizon forecasting through the forecaster's own direct_forecast
         # (one model per step ahead) or iterative_forecast (one fit, recursive
         # forecasts). Fitting happens inside the call, so it is all fit time.
-        horizon_forecast = getattr(forecaster, forecasting_method)
+        guard_info = {}
+
+        def _guarded_forecast(y, h):
+            preds, guard_info["clipped"] = guarded_iterative_forecast(forecaster, y, h)
+            return preds
+
+        if (
+            forecasting_method == "iterative_forecast"
+            and is_ml_forecaster(forecaster)
+            and type(forecaster).__name__ != "AdaptiveWindowEnsemble"
+        ):
+            # ML one-step models can run away when their predictions are fed back
+            # in; bound each step (identical output wherever the guard is unused).
+            # AdaptiveWindowEnsemble applies the same guard to each member itself.
+            horizon_forecast = _guarded_forecast
+        else:
+            horizon_forecast = getattr(forecaster, forecasting_method)
+
         horizon_preds = []
         mem_usage, fit_time = record_max_memory(
             lambda: horizon_preds.append(horizon_forecast(train, prediction_horizon)),
@@ -1348,6 +1372,14 @@ def run_forecasting_experiment(
         test_true = test
         test_preds = np.asarray(horizon_preds[0], dtype=test.dtype).flatten()
         test_time = 0
+        n_clipped = guard_info.get(
+            "clipped", getattr(forecaster, "n_guard_clipped_", None)
+        )
+        if forecasting_method == "iterative_forecast" and n_clipped is not None:
+            first_comment += (
+                f" (ML iterative guard factor={ITERATIVE_GUARD_FACTOR}: "
+                f"{n_clipped} step(s) clipped)"
+            )
     else:
         mem_usage, fit_time = record_max_memory(
             forecaster.fit,
@@ -1365,8 +1397,15 @@ def run_forecasting_experiment(
             # inputs.
             test_true = test
             y_hist = train
+            guard = is_ml_forecaster(forecaster)
+            if guard:
+                lower, upper = iterative_guard_bounds(train, prediction_horizon)
             for index in range(prediction_horizon):
                 test_preds[index] = forecaster.predict(y_hist)
+                if guard:
+                    test_preds[index] = np.clip(
+                        test_preds[index], lower[index], upper[index]
+                    )
                 y_hist = np.append(y_hist, test_preds[index])
         elif test.ndim == 2:
             for index, prediction in enumerate(test):
@@ -1493,7 +1532,7 @@ def load_and_run_forecasting_experiment(
 
     # Opt-in: shrink a windowed forecaster's window for short training series.
     if adaptive_window:
-        _maybe_shrink_window(forecaster, len(train))
+        _maybe_shrink_window(forecaster, len(train), adaptive_window)
 
     run_forecasting_experiment(
         train,
@@ -1558,7 +1597,7 @@ def train_test_split(
 N_RETRAIN_POINTS = 30
 
 
-def _maybe_shrink_window(forecaster, series_length):
+def _maybe_shrink_window(forecaster, series_length, rule=True, full_horizon=None):
     """Shrink a windowed forecaster's window for short series.
 
     If ``forecaster`` exposes a ``window`` attribute, the window is reduced so the
@@ -1578,6 +1617,13 @@ def _maybe_shrink_window(forecaster, series_length):
     series_length : int
         Length of the (training) series the forecaster will be fit on.
 
+    rule : bool or str, default=True
+        Window rule, see ``adaptive_window_length``: True or "half" (the original
+        rule), "quarter" or "seasonal".
+    full_horizon : int or None, default=None
+        Number of steps that will be forecast, used by the "quarter" and "seasonal"
+        rules. Defaults to the forecaster's own horizon.
+
     Returns
     -------
     forecaster : BaseForecaster
@@ -1592,9 +1638,14 @@ def _maybe_shrink_window(forecaster, series_length):
     horizon = getattr(forecaster, "horizon", 1) or 1
     fit_length = series_length - order
 
-    max_window = fit_length - horizon - 3
-    if fit_length < 2 * window or window > max_window:
-        forecaster.window = max(1, min(fit_length // 2, max_window))
+    forecaster.window = adaptive_window_length(
+        rule,
+        window,
+        fit_length,
+        step_horizon=horizon,
+        full_horizon=full_horizon,
+        seasonal_period=getattr(forecaster, "seasonal_period", 1) or 1,
+    )
     return forecaster
 
 
@@ -1774,7 +1825,9 @@ def load_and_run_remote_forecasting_experiment(
         train = series[:-prediction_horizon]
         test = series[-prediction_horizon:]
         if adaptive_window:
-            _maybe_shrink_window(forecaster, len(train))
+            _maybe_shrink_window(
+                forecaster, len(train), adaptive_window, prediction_horizon
+            )
     elif retrain:
         if start is None:
             start = 0
@@ -1788,7 +1841,7 @@ def load_and_run_remote_forecasting_experiment(
         )
         # Shrink before forecaster.window is used to build the test arrays below.
         if adaptive_window:
-            _maybe_shrink_window(forecaster, len(base_train_item))
+            _maybe_shrink_window(forecaster, len(base_train_item), adaptive_window)
         train = np.empty((n_selected, len(base_train_item)), dtype=series.dtype)
         if isinstance(forecaster, RegressionForecaster):
             test = np.empty((n_selected, forecaster.window + 1), dtype=series.dtype)
@@ -1810,7 +1863,7 @@ def load_and_run_remote_forecasting_experiment(
     else:
         train, test = train_test_split(series)
         if adaptive_window:
-            _maybe_shrink_window(forecaster, len(train))
+            _maybe_shrink_window(forecaster, len(train), adaptive_window)
         if (
             isinstance(forecaster, RegressionForecaster)
             and len(test) > forecaster.window + 1

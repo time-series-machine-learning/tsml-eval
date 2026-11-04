@@ -488,6 +488,11 @@ for regressor in $regressors_to_run; do
 
 mkdir -p "${out_dir}/${regressor}/"
 
+# Results are written under -kw results_name <name> str if given in extra_args
+# (remote_forecasting_experiments.py), otherwise under the estimator name.
+results_name=$(echo " ${extra_args} " | sed -n 's/.* -kw results_name \([^ ]*\) str .*/\1/p')
+results_name=${results_name:-$regressor}
+
 if [ "${split_regressors,,}" == "true" ]; then
     cmdCount=0
     new_dt
@@ -505,9 +510,9 @@ if ((expCount>=start_point)); then
 resamples_to_run=""
 for (( i=start_fold-1; i<max_folds; i++ ))
 do
-    if [ -f "${results_dir}${regressor}/Predictions/${dataset}/testResample${i}.csv" ]; then
+    if [ -f "${results_dir}${results_name}/Predictions/${dataset}/testResample${i}.csv" ]; then
         # generate_train_files has already been converted to the "-tr" flag above
-        if [ "${generate_train_files}" == "-tr" ] &&! [ -f "${results_dir}${regressor}/Predictions/${dataset}/trainResample${i}.csv" ]; then
+        if [ "${generate_train_files}" == "-tr" ] && ! [ -f "${results_dir}${results_name}/Predictions/${dataset}/trainResample${i}.csv" ]; then
             resamples_to_run="${resamples_to_run}${i} "
         fi
     else
@@ -563,7 +568,7 @@ for point in $point_jobs; do
     else
         point_dataset="${dataset}_points${pt_start}-${pt_end}"
     fi
-    if [ -f "${results_dir}${regressor}/Predictions/${point_dataset}/testResample${resample}.csv" ]; then
+    if [ -f "${results_dir}${results_name}/Predictions/${point_dataset}/testResample${resample}.csv" ]; then
         continue
     fi
 

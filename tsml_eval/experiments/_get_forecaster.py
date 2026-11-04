@@ -119,6 +119,12 @@ def get_forecaster_by_name(forecaster_name, random_state=None, n_jobs=1, **kwarg
             seasonal_period = kwargs.pop("seasonal_period", 1)
             seasonal_period = kwargs.pop("season_length", seasonal_period)
             log = kwargs.pop("log", False)
+            # Comma separated adaptive window rules, e.g. "quarter,seasonal": average
+            # the forecasts of one copy of the forecaster per rule.
+            window_rules = kwargs.pop("window_rules", None)
+            # Clip the regressor's (normalised) predictions to its training target
+            # range, so recursive forecasts with linear models cannot explode.
+            clip = kwargs.pop("clip", False)
             try:
                 regressor = get_regressor_by_name(f[3:], random_state, n_jobs, **kwargs)
             except ValueError:
@@ -126,12 +132,27 @@ def get_forecaster_by_name(forecaster_name, random_state=None, n_jobs=1, **kwarg
             else:
                 from aeon.forecasting import ESNormalisedRegressionForecaster
 
-                return ESNormalisedRegressionForecaster(
+                if clip:
+                    from tsml_eval.estimators.forecasting._clipped_regressor import (
+                        ClippedRegressor,
+                    )
+
+                    regressor = ClippedRegressor(regressor)
+                forecaster = ESNormalisedRegressionForecaster(
                     window=window,
                     regressor=regressor,
                     seasonal_period=seasonal_period,
                     log=log,
                 )
+                if window_rules:
+                    from tsml_eval.estimators.forecasting.AdaptiveWindowEnsemble import (
+                        AdaptiveWindowEnsemble,
+                    )
+
+                    forecaster = AdaptiveWindowEnsemble(
+                        forecaster, window_rules=tuple(window_rules.split(","))
+                    )
+                return forecaster
 
         try:
             regressor = get_regressor_by_name(f, random_state, n_jobs, **kwargs)

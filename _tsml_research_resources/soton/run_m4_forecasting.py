@@ -19,6 +19,14 @@ python run_m4_forecasting.py <data_dir> <results_dir> <forecaster> [options]
     --datasets A,B     comma separated subset of M4 datasets (default: all six)
     --limit K          only run the first K series of each dataset (for testing)
     --timeout S        per-series time limit in seconds (default: 3600)
+    --window W         window for windowed forecasters (e.g. es-/d- regressors)
+    --adaptive-window [RULE]
+                       shrink the window for short series, as -kw adaptive_window;
+                       RULE is half (default), quarter or seasonal
+    --kw NAME VALUE TYPE
+                       extra forecaster kwarg, as -kw (TYPE int/float/bool/str),
+                       e.g. --kw log true bool --kw window_rules quarter,seasonal str
+    --method M         auto, iterative or direct, as -kw method (default: auto)
 """
 
 import os
@@ -113,9 +121,7 @@ def _run_one(key):
         # Same split as load_and_run_remote_forecasting_experiment(fixed_horizon=True)
         train = series[:-horizon]
         test = series[-horizon:]
-        forecaster = get_forecaster_by_name(
-            args.forecaster, random_state=0, n_jobs=1, season_length=period
-        )
+        forecaster = _make_forecaster(period, len(train), horizon)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             run_forecasting_experiment(
@@ -128,7 +134,7 @@ def _run_one(key):
                 random_seed=0,
                 benchmark_time=True,
                 prediction_horizon=horizon,
-                forecasting_method="auto",
+                forecasting_method=args.method,
             )
         status, msg = "ok", ""
     except _Timeout:
@@ -138,6 +144,21 @@ def _run_one(key):
     finally:
         signal.alarm(0)
     return key, status, time.time() - start, msg
+
+
+def _make_forecaster(period, train_length, horizon):
+    from tsml_eval.experiments._get_forecaster import get_forecaster_by_name
+    from tsml_eval.experiments.experiments import _maybe_shrink_window
+
+    kwargs = {"season_length": period, **_ARGS.kwargs}
+    if _ARGS.window is not None:
+        kwargs["window"] = _ARGS.window
+    forecaster = get_forecaster_by_name(
+        _ARGS.forecaster, random_state=0, n_jobs=1, **kwargs
+    )
+    if _ARGS.adaptive_window:
+        _maybe_shrink_window(forecaster, train_length, _ARGS.adaptive_window, horizon)
+    return forecaster
 
 
 def _init_worker(benchmark):
@@ -160,8 +181,27 @@ def main():
     parser.add_argument("--datasets", default=",".join(M4_DATASETS))
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--timeout", type=int, default=3600)
+    parser.add_argument("--window", type=int, default=None)
+    parser.add_argument(
+        "--adaptive-window",
+        nargs="?",
+        const=True,
+        default=False,
+        choices=[True, "half", "quarter", "seasonal"],
+    )
+    parser.add_argument("--kw", nargs=3, action="append", default=[])
+    parser.add_argument(
+        "--method", default="auto", choices=["auto", "iterative", "direct"]
+    )
     args = parser.parse_args()
     args.name = args.name or args.forecaster
+    casts = {
+        "int": int,
+        "float": float,
+        "str": str,
+        "bool": lambda v: v.lower() in ("true", "1", "yes"),
+    }
+    args.kwargs = {k: casts[t](v) for k, v, t in args.kw}
     args.results_dir = args.results_dir.rstrip("/")
     _ARGS = args
 
@@ -186,9 +226,9 @@ def main():
         series, horizon, period = _SERIES[todo[0]]
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            get_forecaster_by_name(
-                args.forecaster, random_state=0, n_jobs=1, season_length=period
-            ).iterative_forecast(series[:-horizon], horizon)
+            _make_forecaster(period, len(series) - horizon, horizon).iterative_forecast(
+                series[:-horizon], horizon
+            )
 
     # Longest series first so stragglers do not hold up the end of the run.
     todo.sort(key=lambda k: -len(_SERIES[k][0]))

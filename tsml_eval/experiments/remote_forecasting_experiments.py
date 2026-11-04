@@ -76,6 +76,9 @@ def run_experiment(args, overwrite=False):
         adaptive_window = args.kwargs.pop("adaptive_window", False)
         # Multi-step strategy for fixed_horizon runs, e.g. -kw method direct str.
         forecasting_method = args.kwargs.pop("method", "auto")
+        # Optional name to write results under, so that parameter variants of the
+        # same estimator (e.g. -kw log true bool) do not share a results directory.
+        results_name = args.kwargs.pop("results_name", args.estimator_name)
 
         # When running a subset of retrain points, results are written under a
         # point-specific dataset name (see load_and_run_remote_forecasting_experiment),
@@ -95,7 +98,7 @@ def run_experiment(args, overwrite=False):
         # print a message and make sure data is not loaded
         if not overwrite and _results_present(
             args.results_path,
-            args.estimator_name,
+            results_name,
             results_dataset_name,
             resample_id=args.resample_id,
             split="TEST",
@@ -116,7 +119,7 @@ def run_experiment(args, overwrite=False):
                     n_jobs=args.n_jobs,
                     **args.kwargs,
                 ),
-                forecaster_name=args.estimator_name,
+                forecaster_name=results_name,
                 random_seed=(
                     args.resample_id if args.random_seed is None else args.random_seed
                 ),
