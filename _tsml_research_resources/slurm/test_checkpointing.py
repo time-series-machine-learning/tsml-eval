@@ -7,7 +7,8 @@ checkpoint, calls resume_fit and checks that the resumed model predicts exactly 
 the uninterrupted one. Arsenal also checks its train estimates (the train-file
 predictions) survive the resume.
 
-Needs an aeon with checkpointing for all four (ajb/hc2-components-checkpoint). Takes a few minutes:
+Needs an aeon with checkpointing for all four (the ajb/hc2-components-checkpoint
+branch). Takes a few minutes:
 
     python test_checkpointing.py
 """
