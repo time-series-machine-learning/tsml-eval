@@ -873,7 +873,7 @@ def test_estimate_remaining_from_verbose_lines():
         "[TemporalDictionaryEnsemble] Progress: evaluated=200, elapsed=10.00s\n"
         "[TemporalDictionaryEnsemble] Progress: evaluated=210, elapsed=3610.00s\n"
     )
-    assert "about 4:00 left" in est(resumed)
+    assert "about 4:00 (h:mm) left" in est(resumed)
     # STC: the latest component is what is estimated
     stc = (
         "[RandomShapeletTransform] Starting fit: candidate_samples=10000\n"
@@ -881,5 +881,5 @@ def test_estimate_remaining_from_verbose_lines():
         "[RandomShapeletTransform] Progress: extracted=2000/10000, elapsed=3700.00s\n"
     )
     assert est(stc).endswith("then the rotation forest")
-    assert "about 8:00 left" in est(stc)
+    assert "about 8:00 (h:mm) left" in est(stc)
     assert est("no progress here\n") == ""
