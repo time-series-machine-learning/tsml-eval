@@ -9,6 +9,9 @@
 # default), which must be on the branch below. Data and dataset list are the ones
 # downloaded for the Iridis 6 runs.
 #
+# The conda env is tsml-eval-torch, made by `bash make_torch_env.sh` from the same
+# clone: tsml-eval-gpu is TensorFlow-only, and torch in it breaks TensorFlow.
+#
 #   python tsml_slurm.py check experiments/iridisx_eeg_gpu.toml
 #   python tsml_slurm.py start experiments/iridisx_eeg_gpu.toml
 
@@ -38,6 +41,6 @@ device = "cuda"
 device = "cuda"
 
 [slurm]
-env_name = "tsml-eval-gpu"
+env_name = "tsml-eval-torch"
 gpu_check = "torch"
 memory_gb = [32, 64, 128]
