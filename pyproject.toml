@@ -150,6 +150,7 @@ ignore = ["E203", "E741", "B904", "B905", "B028"]
 "_tsml_research_resources/slurm/tsml_slurm.py" = ["T201"]
 "_tsml_research_resources/slurm/move_eegbench_results.py" = ["T201"]
 "_tsml_research_resources/slurm/test_checkpointing.py" = ["T201"]
+"_tsml_research_resources/slurm/build_hc2_from_files.py" = ["T201"]
 "_tsml_research_resources/slurm/tests/*" = ["D"]
 
 [tool.ruff.lint.pydocstyle]
