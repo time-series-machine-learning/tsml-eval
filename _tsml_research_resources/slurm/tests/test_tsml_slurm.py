@@ -1024,3 +1024,30 @@ def test_farm_runs_inbox_tasks_then_closes(world, tmp_path):
         assert "exit 0" in Path(f"{ts.task_log(e, task, '77')}.status").read_text()
     assert (inbox / "closed").exists()
     assert not list(inbox.glob("*.task"))
+
+
+def test_farms_overview(world):
+    spec_f = importlib.util.spec_from_file_location("farms", ROOT / "farms.py")
+    farms = importlib.util.module_from_spec(spec_f)
+    spec_f.loader.exec_module(farms)
+    e = _top_up_world(world)
+    slurm = FakeSlurm()
+    ts.run_cycle(e, slurm)
+    ts.farm_inbox(e, "1001").mkdir(parents=True)
+    state = ts.load_state(e)
+    keys = [k for k, r in state["tasks"].items() if r["job"] == "1001"]
+    for key, status in zip(keys, ["exit 0", "exit 1", "", "exit 0"]):
+        est, ds, rs = key.split("|")
+        log = ts.task_log(e, ts.Task(est, "", ds, int(rs)), "1001")
+        Path(f"{log}.status").write_text(f"started now\n{status}\n")
+    jobs = {"1001": ("RUNNING", "1:00:00", "59:00", "node1")}
+    lines = farms.overview(e, jobs)
+    text = "\n".join(lines)
+    assert lines[0].startswith("exp: 0/36 complete")
+    assert "20 not yet submitted" in lines[0]
+    row = next(x for x in lines if x.strip().startswith("1001"))
+    # 8 slots: 2 done, 1 failed, 1 running, 4 not started
+    assert row.split()[5:10] == ["8", "1", "4", "2", "1"]
+    assert "top-up open" in row and "1002" not in text
+    assert "running: " in text
+    assert farms.overview(e, {}) == []
