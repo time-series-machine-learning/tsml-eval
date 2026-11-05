@@ -41,3 +41,5 @@ FeatureBased = ["CSP+LDA", "CSP+SVM", "XDAWN"]
 env_name = "tsml-eval"
 max_jobs = 1          # one node; eeg-aeon has another, eeg-hc2 two
 memory_gb = [16, 32, 64, 128, 256, 620]   # start at 16G: 39 experiments per node
+top_up = true         # a farm down to its slow tasks takes waiting ones,
+top_up_hours = 24     # while it has 24 hours or more of its 60 left

@@ -60,10 +60,11 @@ def overview(e, jobs):
         return []
     ts.read_datasets(e)
     tasks = list(ts.all_tasks(e))
-    complete = sum(1 for t in tasks if ts.is_complete(e, t))
-    queued = sum(1 for r in state["tasks"].values() if r.get("job"))
-    failed = sum(1 for r in state["tasks"].values() if r.get("terminal"))
-    waiting = len(tasks) - complete - queued - failed
+    missing = [t for t in tasks if not ts.is_complete(e, t)]
+    complete = len(tasks) - len(missing)
+    records = [state["tasks"].get(t.key, {}) for t in missing]
+    failed = sum(1 for r in records if r.get("terminal"))
+    waiting = sum(1 for r in records if not r.get("job") and not r.get("terminal"))
     lines = [
         f"{e.name}: {complete}/{len(tasks)} complete "
         f"({100 * complete / max(len(tasks), 1):.0f}%), {waiting} not yet "
@@ -88,7 +89,8 @@ def overview(e, jobs):
                 top_up = "  top-up open"
             else:
                 top_up = "  top-up not started"
-        slots = info.get("slots", "?")
+        # farms submitted before slots were recorded: the same rule that sized them
+        slots = info.get("slots") or ts.farm_shape(e, info["memory_gb"], info["tasks"])
         lines.append(
             f"  {job:>9} {slurm_state:<9}{used:>12}{left:>12}"
             f"{str(info['memory_gb']) + 'G':>6}{slots:>6}"

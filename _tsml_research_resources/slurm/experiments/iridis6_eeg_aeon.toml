@@ -39,3 +39,6 @@ Tabular = ["RotationForest", "RandomForest", "SVM", "LogisticRegression"]
 env_name = "tsml-eval"
 max_jobs = 1          # one node; eeg-cpu has another, eeg-hc2 two
 memory_gb = [16, 32, 64, 128, 256, 620]
+top_up = true         # a farm down to its slow tasks takes waiting ones,
+top_up_hours = 36     # while it has 36 hours or more of its 60 left: no
+                      # checkpoints, and RotationForest can take a day
