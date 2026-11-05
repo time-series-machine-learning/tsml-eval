@@ -57,10 +57,12 @@ change:
 
 | Resource | Runs |
 |---|---|
-| Iridis 6 CPU | HC2 components and HC2, then CV, then more aeon CPU classifiers; large datasets |
-| Iridis X GPU | braindecode on the medium and large datasets |
-| Hali | anything that times out at Iridis 6's 60 hours (Hali allows 7 days); aeon deep learners (TensorFlow); extra GPU capacity |
-| Hydra | smoke tests of every new port; feature pipelines and small datasets; merging all results; analysis |
+| Iridis 6 CPU | aeon: HC2 components on all four nodes until done (HC2 itself is built from them with `build_hc2_from_files.py`), then MRHydra, then QUANT/tabular, then CV; large datasets |
+| Iridis X GPU | aeon deep learners (TensorFlow: CNN, IT, LITETime-MV) |
+| Hali | aeon-neuro: braindecode ports on GPU, and anything over 60 hours (Hali allows 7 days) |
+| Hydra | aeon-neuro: smoke tests of every new port, feature pipelines, small datasets; merging all results; analysis |
+
+So all of aeon runs on Iridis, and aeon-neuro (braindecode and feature pipelines) on Hali and Hydra.
 
 The rules:
 - **One owner per (estimator, dataset).** Give each estimator family to one
