@@ -61,7 +61,8 @@ verbose = 1
 
 [slurm]
 env_name = "tsml-eval"
-max_jobs = 2                        # two nodes; the other experiments share two
+max_jobs = 4                        # all four nodes (the expert QOS limit): HC2
+                                    # first, then eeg-mrhydra once few are waiting
 waves = 1                           # a farm holds only what it runs at once, so
                                     # every task starts with the full 60 hours
 top_up = true                       # a farm down to its long tasks takes waiting
