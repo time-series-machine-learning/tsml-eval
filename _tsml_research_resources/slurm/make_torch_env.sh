@@ -12,6 +12,8 @@
 # are built for a newer CUDA than the node driver may support. The CUDA libraries
 # are pip packages inside the env; no CUDA module is needed.
 set -euo pipefail
+# keep pip to this env, ignoring packages installed with `pip install --user`
+export PYTHONNOUSERSITE=1
 
 env_name="${1:-tsml-eval-torch}"
 cuda="${TORCH_CUDA:-cu126}"
@@ -30,8 +32,8 @@ echo "Installing torch ($cuda)"
 "$py" -m pip install -q torch --index-url "https://download.pytorch.org/whl/$cuda"
 echo "Installing tsml-eval from $repo with aeon-neuro"
 "$py" -m pip install -q -e "$repo[neuro]"
-# TensorFlow is not wanted here: aeon's TensorFlow models run from tsml-eval-gpu
-"$py" -m pip uninstall -y -q tensorflow tensorflow-cpu keras 2>/dev/null || true
+# Nothing is uninstalled: a package found in ~/.local is shared by every env of the
+# same Python version, so removing it here would remove it from tsml-eval-gpu too.
 
 echo
 "$py" -m pip check || true
