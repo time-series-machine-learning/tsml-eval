@@ -1051,3 +1051,29 @@ def test_farms_overview(world):
     assert "top-up open" in row and "1002" not in text
     assert "running: " in text
     assert farms.overview(e, {}) == []
+
+
+def test_dataset_info_fills_kwargs_and_skips_missing(world):
+    (world["home"] / "info.csv").write_text("dataset,sfreq\nSmall,100\nBig,250.5\n")
+    e = make(
+        world,
+        body='dataset_info = "{home}/info.csv"',
+        extra_sections='[estimator_kwargs.A]\nsfreq = "{dataset.sfreq}"\nn = 3',
+    )
+    ts.read_datasets(e)
+    keys = {t.key for t in ts.all_tasks(e)}
+    assert "A|Mid|0" not in keys and "B|Mid|0" in keys  # Mid has no sfreq
+    assert ts.unresolved(e) == {"A": ["Mid"]}
+    args = ts._experiment_arguments(e, ts.Task("A", "", "Big", 0))
+    assert "-kw sfreq 250.5 float" in " ".join(args)
+    assert "-kw n 3 int" in " ".join(args)
+    small = ts._experiment_arguments(e, ts.Task("A", "", "Small", 1))
+    assert "-kw sfreq 100 int" in " ".join(small)
+    assert "sfreq" not in " ".join(
+        ts._experiment_arguments(e, ts.Task("B", "", "Big", 0))
+    )
+
+
+def test_dataset_refs_need_dataset_info(world):
+    with pytest.raises(ts.ConfigError, match="dataset_info"):
+        make(world, extra_sections='[estimator_kwargs.A]\nsfreq = "{dataset.sfreq}"')

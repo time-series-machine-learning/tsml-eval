@@ -195,6 +195,7 @@ checkout) and `{name}` (the experiment name), as well as environment variables a
 | `priority` | `"resample"` | Submission order: `resample` (all of resample 0 first), `estimator` (finish one estimator first), `dataset`. |
 | `smallest_datasets_first` | `false` | Within the order above, smallest data on disk first. |
 | `exclude_datasets` | `[]` | Datasets in the list to skip. |
+| `dataset_info` | none | CSV of per-dataset values: a `dataset` column, then e.g. `sfreq`. An `[estimator_kwargs]` value `"{dataset.sfreq}"` is replaced, task by task, with that dataset's value; an estimator's tasks on datasets without a value are not run (`check` lists them). See `experiments/iridis6_eeg_filtered.toml`. |
 | `exclude_tasks` | `[]` | Single tasks to skip, `"Estimator\|Dataset\|Resample"`. |
 | `max_attempts` | `2` | Submissions allowed per task for failures other than out-of-memory. |
 | `branch` | `""` | Refuse to submit unless the checkout is on this branch. |

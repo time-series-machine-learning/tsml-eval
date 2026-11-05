@@ -76,6 +76,9 @@ TASKS = {
 
 _SAFE_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._+\-]*$")
 _SAFE_PATH = re.compile(r"^[^\s'\"`$\\;|&<>]+$")
+# an estimator keyword whose value is "{dataset.<column>}" takes, for each task, that
+# column of the task's dataset in the dataset_info table (e.g. a sampling rate)
+_DATASET_REF = re.compile(r"^\{dataset\.([A-Za-z_][A-Za-z0-9_]*)\}$")
 
 # Failure reasons. See _diagnose and _apply_outcome for how each is treated.
 OOM = "OOM"
@@ -214,6 +217,7 @@ class Experiment:
     cv_folds: int = 0
     retry_timeouts: bool = False
     datasets: tuple[str, ...] = field(default=())
+    dataset_info: Path | None = None  # CSV: a dataset column, then per-dataset values
 
     @property
     def logs_dir(self) -> Path:
@@ -380,6 +384,7 @@ def load_experiment(config_path, cluster_dir=CLUSTER_DIR, user=None):
         repo_dir=path(values["repo"]),
         data_dir=path(exp.pop("data_dir")),
         dataset_list=path(exp.pop("datasets")),
+        dataset_info=(path(exp.pop("dataset_info")) if "dataset_info" in exp else None),
         results_dir=path(exp.pop("results_dir")),
         state_dir=_state_dir(exp.pop("state_dir", None), path, values),
         estimators=estimators,
@@ -453,6 +458,11 @@ def validate(e):
                 raise ConfigError(f"Bad keyword for {estimator}: {key!r}")
             if not isinstance(value, (bool, int, float, str)):
                 raise ConfigError(f"{estimator}.{key} must be bool, int, float or str")
+    if _dataset_refs(e) and e.dataset_info is None:
+        raise ConfigError(
+            "estimator_kwargs use {dataset.<column>} values: set dataset_info to "
+            "a CSV with a dataset column and those columns"
+        )
     if not e.resamples or min(e.resamples) < 0:
         raise ConfigError("resamples must select at least one non-negative resample")
     if len(e.resamples) != len(set(e.resamples)):
@@ -561,6 +571,65 @@ def read_datasets(e):
     return e.datasets
 
 
+def _dataset_refs(e):
+    """{estimator: {keyword: column}} for kwargs taking a dataset_info value."""
+    refs = {}
+    for estimator, kwargs in e.estimator_kwargs.items():
+        for key, value in kwargs.items():
+            match = _DATASET_REF.match(value) if isinstance(value, str) else None
+            if match:
+                refs.setdefault(estimator, {})[key] = match.group(1)
+    return refs
+
+
+def read_dataset_info(e):
+    """{dataset: {column: value}} from the dataset_info CSV, read once."""
+    cached = getattr(e, "_dataset_info", None)
+    if cached is not None:
+        return cached
+    import csv
+
+    if e.dataset_info is None:
+        e._dataset_info = {}
+        return e._dataset_info
+    if not e.dataset_info.is_file():
+        raise ConfigError(f"dataset_info not found: {e.dataset_info}")
+    with e.dataset_info.open(encoding="utf-8-sig", newline="") as file:
+        rows = list(csv.DictReader(file))
+    if not rows or "dataset" not in rows[0]:
+        raise ConfigError(f"dataset_info needs a 'dataset' column: {e.dataset_info}")
+    e._dataset_info = {
+        row["dataset"].strip(): {
+            k: v.strip() for k, v in row.items() if k != "dataset" and v and v.strip()
+        }
+        for row in rows
+    }
+    return e._dataset_info
+
+
+def _parse_value(text):
+    """Return a dataset_info cell as int, float or str."""
+    for kind in (int, float):
+        try:
+            return kind(text)
+        except ValueError:
+            pass
+    return text
+
+
+def task_kwargs(e, task):
+    """Estimator kwargs for one task, {dataset.<column>} filled in; None if absent."""
+    kwargs = dict(e.estimator_kwargs.get(task.estimator, {}))
+    refs = _dataset_refs(e).get(task.estimator)
+    if refs:
+        info = read_dataset_info(e).get(task.dataset, {})
+        for key, column in refs.items():
+            if column not in info:
+                return None
+            kwargs[key] = _parse_value(info[column])
+    return kwargs
+
+
 def fingerprints(e, legacy=False):
     """Per-estimator hash of the settings that change what its results mean.
 
@@ -653,13 +722,31 @@ def all_tasks(e):
     """
     excluded = set(e.exclude_tasks)
     folds = dataset_folds(e)
+    refs = _dataset_refs(e)
     for estimator in e.estimators:
         for dataset in e.datasets:
+            if estimator.name in refs:
+                probe = Task(estimator.name, estimator.category, dataset, 0)
+                if task_kwargs(e, probe) is None:
+                    continue  # no dataset_info value: see unresolved_tasks
             resamples = range(folds[dataset]) if folds else e.resamples
             for resample in resamples:
                 task = Task(estimator.name, estimator.category, dataset, resample)
                 if task.key not in excluded:
                     yield task
+
+
+def unresolved(e):
+    """{estimator: [datasets]} left out for want of a dataset_info value."""
+    missing = {}
+    for estimator in e.estimators:
+        if estimator.name not in _dataset_refs(e):
+            continue
+        for dataset in e.datasets:
+            probe = Task(estimator.name, estimator.category, dataset, 0)
+            if task_kwargs(e, probe) is None:
+                missing.setdefault(estimator.name, []).append(dataset)
+    return missing
 
 
 def result_files(e, task):
@@ -998,7 +1085,10 @@ def _experiment_arguments(e, task):
     if e.cv_folds:
         args += ["-cv", str(e.cv_folds)]
     args += list(e.extra_args)
-    for key, value in e.estimator_kwargs.get(task.estimator, {}).items():
+    kwargs = task_kwargs(e, task)
+    if kwargs is None:
+        raise ConfigError(f"No dataset_info value for {task.key}")
+    for key, value in kwargs.items():
         if isinstance(value, bool):
             args += ["-kw", key, "true" if value else "false", "bool"]
         elif isinstance(value, int):
@@ -2042,6 +2132,17 @@ def cmd_check(e, args):
                 problems.append("repository has uncommitted changes")
         except (OSError, subprocess.CalledProcessError) as error:
             problems.append(f"git failed in {e.repo_dir}: {error}")
+    if e.dataset_info is not None:
+        try:
+            info = read_dataset_info(e)
+            print(f"  dataset_info {e.dataset_info}: {len(info)} datasets")
+            for name, datasets in unresolved(e).items():
+                print(
+                    f"    {name}: no value for {len(datasets)} dataset(s), not run: "
+                    + ", ".join(datasets)
+                )
+        except ConfigError as error:
+            problems.append(str(error))
     report, failed = construct_estimators(e)
     print(report)
     if failed:
@@ -2082,12 +2183,16 @@ def construct_estimators(e):
         ), []
     lines, failed = [], []
     for estimator in e.estimators:
+        kwargs = e.estimator_kwargs.get(estimator.name, {})
+        if estimator.name in _dataset_refs(e):
+            # build with the first dataset that has the values
+            for dataset in e.datasets:
+                found = task_kwargs(e, Task(estimator.name, "", dataset, 0))
+                if found is not None:
+                    kwargs = found
+                    break
         try:
-            built = factory(
-                estimator.name,
-                random_state=0,
-                **e.estimator_kwargs.get(estimator.name, {}),
-            )
+            built = factory(estimator.name, random_state=0, **kwargs)
             lines.append(f"  ok   {estimator.name} -> {type(built).__name__}")
         except Exception as error:
             lines.append(f"  FAIL {estimator.name}: {type(error).__name__}: {error}")

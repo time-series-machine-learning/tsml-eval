@@ -181,6 +181,28 @@ def get_classifier_by_name(
     """
     c = classifier_name.casefold()
 
+    # -BP830, -BP140 (band-pass, needs sfreq) and -norm put a preprocessing step in
+    # front of any classifier, e.g. RiemannianMDM-OAS-BP830 or CNN-norm
+    from tsml_eval.estimators.classification._eeg_preprocessing import (
+        preprocessed_classifier,
+    )
+
+    pipeline = preprocessed_classifier(
+        c,
+        lambda base, kw: get_classifier_by_name(
+            base,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            fit_contract=fit_contract,
+            checkpoint=checkpoint,
+            **kw,
+        ),
+        random_state,
+        kwargs,
+    )
+    if pipeline is not None:
+        return pipeline
+
     if str_in_nested_list(convolution_based_classifiers, c):
         return _set_classifier_convolution_based(
             c, random_state, n_jobs, fit_contract, checkpoint, kwargs
