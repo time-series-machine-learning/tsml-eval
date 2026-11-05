@@ -15,7 +15,7 @@
 #   python tsml_slurm.py start experiments/iridis6_eeg_gpu.toml
 
 [experiment]
-name = "eeg-gpu"
+name = "eeg-gpu-iridis6"    # Iridis 6 and X share ~/tsml-slurm: names must differ
 cluster = "iridis6"
 resources = "gpu"
 task = "classification"
