@@ -118,6 +118,11 @@ class Resources:
     node_cpus: int = 192
     node_memory_gb: int = 630
     waves: int = 4
+    # top_up: when a farm has free slots (its own list is running out), the
+    # supervisor hands it waiting tasks, so long tasks do not leave a node idle.
+    # A farm takes no new task with less than top_up_hours of its time left.
+    top_up: bool = False
+    top_up_hours: float = 12.0
     # environment
     module: str = ""
     conda_sh: str = ""  # empty: derived from the conda on PATH after module load
@@ -488,6 +493,11 @@ def validate(e):
             raise ConfigError("memory_gb tiers cannot exceed node_memory_gb")
         if e.n_jobs > r.node_cpus:
             raise ConfigError("n_jobs cannot exceed node_cpus in farm mode")
+    if r.top_up:
+        if r.mode != "farm":
+            raise ConfigError("top_up only applies to farm mode")
+        if not 0 <= r.top_up_hours * 3600 < time_limit_seconds(r.time_limit):
+            raise ConfigError("top_up_hours must be at least 0 and below time_limit")
     if r.gpu_check not in ("none", "tensorflow", "torch"):
         raise ConfigError("gpu_check must be none, tensorflow or torch")
     if r.gpu_check != "none" and not r.gpu:
@@ -503,6 +513,27 @@ def validate(e):
         raise ConfigError("A slurm supervisor needs a partition")
     if e.branch and not re.fullmatch(r"[A-Za-z0-9._/\-]+", e.branch):
         raise ConfigError(f"Unsafe branch name {e.branch!r}")
+
+
+def time_limit_seconds(limit):
+    """Seconds in a Slurm time limit: M, M:S, H:M:S, D-H, D-H:M or D-H:M:S."""
+    text = str(limit).strip()
+    days = 0
+    if "-" in text:
+        day_part, text = text.split("-", 1)
+        days = int(day_part)
+        parts = [int(x) for x in text.split(":")]
+        parts += [0] * (3 - len(parts))  # D-H, D-H:M
+        hours, minutes, seconds = parts
+    else:
+        parts = [int(x) for x in text.split(":")]
+        if len(parts) == 1:
+            hours, minutes, seconds = 0, parts[0], 0
+        elif len(parts) == 2:
+            hours, minutes, seconds = 0, parts[0], parts[1]
+        else:
+            hours, minutes, seconds = parts
+    return ((days * 24 + hours) * 60 + minutes) * 60 + seconds
 
 
 def read_datasets(e):
@@ -997,6 +1028,20 @@ def cancel_marker(e, task):
     return e.state_dir / "cancel" / task.estimator / task.dataset / str(task.resample)
 
 
+def farm_inbox(e, job_id):
+    """Directory a running farm takes extra tasks from (top_up)."""
+    return e.state_dir / "farms" / "inbox" / str(job_id)
+
+
+def _task_shell(e, task, job_id):
+    """Shell assignments of ARGS, LOG and CANCEL for one task."""
+    q = shlex.quote
+    args = " ".join(q(a) for a in _experiment_arguments(e, task))
+    log = q(str(task_log(e, task, job_id)))
+    cancel = q(str(cancel_marker(e, task)))
+    return f"ARGS=({args}); LOG={log}; CANCEL={cancel}"
+
+
 def array_script(e, tasks, memory_gb, commit):
     """One Slurm array for one estimator and dataset; index = resample."""
     first = tasks[0]
@@ -1061,10 +1106,7 @@ def farm_script(e, tasks, memory_gb, commit, slots):
     lines += _environment_block(e, commit, e.n_jobs)
     lines += ["", "task_args() {", '    case "$1" in']
     for i, task in enumerate(tasks):
-        args = " ".join(q(a) for a in _experiment_arguments(e, task))
-        log = q(str(task_log(e, task, "JOBID")).replace("JOBID", "@@"))
-        cancel = q(str(cancel_marker(e, task)))
-        lines.append(f"        {i}) ARGS=({args}); LOG={log}; CANCEL={cancel} ;;")
+        lines.append(f"        {i}) {_task_shell(e, task, '@@')} ;;")
     lines += [
         "    esac",
         '    LOG="${LOG//@@/$SLURM_JOB_ID}"',
@@ -1076,6 +1118,17 @@ def farm_script(e, tasks, memory_gb, commit, slots):
         "SETSID=(); command -v setsid > /dev/null && SETSID=(setsid)",
         "run_task() {",
         '    task_args "$1"',
+        "    run_loaded",
+        "}",
+        "",
+        "# a task handed to this farm while it runs (top_up): a file of the same",
+        "# ARGS, LOG and CANCEL assignments",
+        "run_inbox() {",
+        '    source "$1"',
+        "    run_loaded",
+        "}",
+        "",
+        "run_loaded() {",
         '    if [[ -e "$CANCEL" ]]; then',
         '        echo "cancelled $(date -Iseconds)" > "$LOG.status"',
         "        return",
@@ -1098,6 +1151,7 @@ def farm_script(e, tasks, memory_gb, commit, slots):
         "}",
         "",
         "set +e",
+        "farm_start=$(date +%s)",
         f"slots={slots}",
         f'echo "experiment={e.name} farm of {len(tasks)} tasks, $slots at a time, '
         f'{memory_gb}G each"',
@@ -1105,6 +1159,34 @@ def farm_script(e, tasks, memory_gb, commit, slots):
         "    while (( $(jobs -rp | wc -l) >= slots )); do wait -n; done",
         '    run_task "$i" &',
         "done",
+    ]
+    r = e.resources
+    if r.top_up:
+        accept = time_limit_seconds(r.time_limit) - int(r.top_up_hours * 3600)
+        lines += [
+            "",
+            "# top_up: take extra tasks from the inbox while slots are free. The",
+            "# farm closes its inbox when it has under top_up_hours left, or when",
+            "# nothing is running, and ends when its last task does.",
+            f"INBOX={q(str(e.state_dir / 'farms' / 'inbox'))}/$SLURM_JOB_ID",
+            'mkdir -p "$INBOX/claimed"',
+            f"accept_until=$(( farm_start + {accept} ))",
+            "while :; do",
+            '    (( $(date +%s) < accept_until )) || touch "$INBOX/closed"',
+            '    (( $(jobs -rp | wc -l) > 0 )) || touch "$INBOX/closed"',
+            '    for f in "$INBOX"/*.task; do',
+            '        [[ -e "$f" ]] || break',
+            "        (( $(jobs -rp | wc -l) < slots )) || break",
+            '        claimed="$INBOX/claimed/${f##*/}"',
+            '        mv "$f" "$claimed" 2>/dev/null || continue',
+            '        echo "top-up ${f##*/} $(date -Iseconds)"',
+            '        run_inbox "$claimed" &',
+            "    done",
+            "    (( $(jobs -rp | wc -l) > 0 )) || break",
+            "    sleep 15",
+            "done",
+        ]
+    lines += [
         "wait",
         'echo "farm finished $(date -Iseconds)"',
         "",
@@ -1443,6 +1525,8 @@ def _plan(e, state, missing, active, queue):
         }
         free_jobs = r.max_jobs - len(live_farms)
         remaining = list(eligible)
+        if r.top_up:
+            jobs, remaining = _plan_top_up(e, state, remaining, tier_of, queue)
         while free_jobs > 0 and remaining:
             tier = tier_of[remaining[0].key]
             same = [t for t in remaining if tier_of[t.key] == tier]
@@ -1457,9 +1541,56 @@ def _plan(e, state, missing, active, queue):
     return jobs
 
 
+def _farm_task_finished(e, key, job):
+    """Whether a farm task's status file shows it has ended."""
+    estimator, dataset, resample = key.split("|")
+    log = task_log(e, Task(estimator, "", dataset, int(resample)), job)
+    status = _read_tail(Path(f"{log}.status"))
+    return bool(re.search(r"^(exit -?\d+|cancelled)", status, re.MULTILINE))
+
+
+def _plan_top_up(e, state, remaining, tier_of, queue):
+    """Hand waiting tasks to running farms with free slots (top_up).
+
+    Only farms submitted with top_up qualify: they open an inbox when they start
+    and close it when they have under top_up_hours left or nothing to run. A slot
+    is busy from when a task is assigned until its status file shows it ended. A
+    task goes only to a farm whose slots have at least its memory tier.
+    """
+    r = e.resources
+    running = {q.job_id for q in queue if q.state == "RUNNING"}
+    jobs = []
+    for info in state["submissions"]:
+        job = info["job"]
+        if not remaining or not info.get("top_up") or job not in running:
+            continue
+        inbox = farm_inbox(e, job)
+        if not inbox.is_dir() or (inbox / "closed").exists():
+            continue
+        busy = sum(
+            1
+            for key, record in state["tasks"].items()
+            if record.get("job") == job and not _farm_task_finished(e, key, job)
+        )
+        free = info.get("slots", 0) - busy
+        if free <= 0:
+            continue
+        chosen = [
+            t for t in remaining if r.memory_gb[tier_of[t.key]] <= info["memory_gb"]
+        ][:free]
+        if chosen:
+            keys = {t.key for t in chosen}
+            remaining = [t for t in remaining if t.key not in keys]
+            jobs.append(("top_up", job, chosen, None))
+    return jobs, remaining
+
+
 def _submit_jobs(e, state, jobs, commit, slurm, dry_run):
     submitted, errors, scripts = 0, [], []
     for kind, tier, tasks, slots in jobs:
+        if kind == "top_up":
+            submitted += _hand_to_farm(e, state, tier, tasks, dry_run)
+            continue
         memory = e.resources.memory_gb[tier]
         if kind == "array":
             script = array_script(e, tasks, memory, commit)
@@ -1491,6 +1622,11 @@ def _submit_jobs(e, state, jobs, commit, slurm, dry_run):
                 "memory_gb": memory,
                 "commit": commit,
                 "at": _now(),
+                **(
+                    {"slots": slots, "top_up": e.resources.top_up}
+                    if kind == "farm"
+                    else {}
+                ),
             }
         )
         for task in tasks:
@@ -1500,6 +1636,24 @@ def _submit_jobs(e, state, jobs, commit, slurm, dry_run):
             submitted += 1
         save_state(e, state)
     return submitted, errors, scripts
+
+
+def _hand_to_farm(e, state, job, tasks, dry_run):
+    """Write tasks into a running farm's inbox (top_up); returns how many."""
+    if dry_run:
+        return len(tasks)
+    inbox = farm_inbox(e, job)
+    for task in tasks:
+        task_log(e, task, job).parent.mkdir(parents=True, exist_ok=True)
+        name = f"{task.estimator}__{task.dataset}__{task.resample}.task"
+        tmp = inbox / f".{name}.tmp"
+        tmp.write_text(_task_shell(e, task, job) + "\n", encoding="utf-8")
+        tmp.replace(inbox / name)  # the farm only picks up whole files
+        record = state["tasks"].setdefault(task.key, {"attempts": 0, "tier": 0})
+        record.update(job=job, kind="farm", submitted_at=time.time())
+        record["attempts"] = record.get("attempts", 0) + 1
+    save_state(e, state)
+    return len(tasks)
 
 
 def run_cycle(

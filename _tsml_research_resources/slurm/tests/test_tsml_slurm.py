@@ -883,3 +883,144 @@ def test_estimate_remaining_from_verbose_lines():
     assert est(stc).endswith("then the rotation forest")
     assert "about 8:00 (h:mm) left" in est(stc)
     assert est("no progress here\n") == ""
+
+
+# --------------------------------------------------------------------------- top_up
+
+
+def test_time_limit_seconds():
+    assert ts.time_limit_seconds("30") == 1800
+    assert ts.time_limit_seconds("30:15") == 1815
+    assert ts.time_limit_seconds("1:00:00") == 3600
+    assert ts.time_limit_seconds("2-12") == 60 * 3600
+    assert ts.time_limit_seconds("2-12:30") == 60 * 3600 + 1800
+    assert ts.time_limit_seconds("2-12:00:00") == 60 * 3600
+
+
+def test_top_up_settings_are_checked(world):
+    with pytest.raises(ts.ConfigError, match="farm mode"):
+        make(world, extra_sections="[slurm]\ntop_up = true")
+    with pytest.raises(ts.ConfigError, match="top_up_hours"):
+        make(
+            world,
+            resources="farm",
+            extra_sections="[slurm]\ntop_up = true\ntop_up_hours = 2",
+        )
+
+
+def _top_up_world(world):
+    return make(
+        world,
+        resources="farm",
+        estimators='estimators = ["A", "B", "C"]',
+        body="resamples = 4",
+        extra_sections="[slurm]\ntop_up = true\ntop_up_hours = 0.25\nwaves = 1",
+    )
+
+
+def test_top_up_hands_waiting_tasks_to_running_farms(world):
+    e = _top_up_world(world)
+    slurm = FakeSlurm()
+    result = ts.run_cycle(e, slurm)
+    # max_jobs 2, 8 slots at 4G, 1 wave: 16 of 36 tasks submitted
+    assert result.submitted == 16
+    state = ts.load_state(e)
+    assert state["submissions"][0]["slots"] == 8
+    assert state["submissions"][0]["top_up"] is True
+    script = slurm.scripts["1001"]
+    assert "run_inbox" in script and "accept_until=$(( farm_start + 2700 ))" in script
+
+    # both farms pending: nothing to hand over, and no third farm
+    _queue_everything(e, slurm)
+    slurm.entries = [
+        ts.QueueEntry(q.job_id, None, "PENDING", "x", "p") for q in slurm.entries
+    ]
+    assert ts.run_cycle(e, slurm).submitted == 0
+
+    # farm 1001 runs, and three of its tasks have ended; its inbox is open
+    slurm.entries = [
+        ts.QueueEntry(q.job_id, None, "RUNNING", "x", "p") for q in slurm.entries
+    ]
+    ts.farm_inbox(e, "1001").mkdir(parents=True)
+    ts.farm_inbox(e, "1002").mkdir(parents=True)
+    (ts.farm_inbox(e, "1002") / "closed").write_text("")
+    state = ts.load_state(e)
+    ended = [k for k, r in state["tasks"].items() if r["job"] == "1001"][:3]
+    for key in ended:
+        est, ds, rs = key.split("|")
+        log = ts.task_log(e, ts.Task(est, "", ds, int(rs)), "1001")
+        Path(f"{log}.status").write_text("started now\nexit 0\n")
+    result = ts.run_cycle(e, slurm)
+    assert result.submitted == 3  # 1002 is closed
+    inbox = sorted(ts.farm_inbox(e, "1001").glob("*.task"))
+    assert len(inbox) == 3
+    state = ts.load_state(e)
+    handed = [k for k, r in state["tasks"].items() if r["job"] == "1001"]
+    assert len(handed) == 8 + 3
+    text = inbox[0].read_text()
+    assert text.startswith("ARGS=(") and "1001_" in text
+    # the slots are full again
+    assert ts.run_cycle(e, slurm).submitted == 0
+
+    # a handed task the farm never ran is diagnosed as not started, attempt refunded
+    slurm.entries = [q for q in slurm.entries if q.job_id != "1001"]
+    slurm.acct = {("1001", None): "COMPLETED"}
+    age_submissions(e)
+    ts.run_cycle(e, slurm, submit=False)
+    state = ts.load_state(e)
+    name = inbox[0].name[: -len(".task")].split("__")
+    record = state["tasks"]["|".join(name)]
+    assert record["job"] is None and record["attempts"] == 0
+
+
+def test_top_up_respects_memory_tier(world):
+    e = _top_up_world(world)
+    slurm = FakeSlurm()
+    ts.run_cycle(e, slurm)
+    _queue_everything(e, slurm)
+    ts.farm_inbox(e, "1001").mkdir(parents=True)
+    ts.farm_inbox(e, "1002").mkdir(parents=True)
+    state = ts.load_state(e)
+    for key, record in state["tasks"].items():
+        if record["job"] in ("1001", "1002"):
+            est, ds, rs = key.split("|")
+            log = ts.task_log(e, ts.Task(est, "", ds, int(rs)), record["job"])
+            Path(f"{log}.status").write_text("started now\nexit 0\n")
+    # every waiting task needs 8G: too big for the 4G slots
+    for task in ts.all_tasks(e):
+        record = state["tasks"].setdefault(task.key, {"attempts": 0, "tier": 0})
+        if not record.get("job"):
+            record["tier"] = 1
+    ts.save_state(e, state)
+    assert ts.run_cycle(e, slurm).submitted == 0
+
+
+@pytest.mark.skipif(BASH is None, reason="needs bash")
+def test_farm_runs_inbox_tasks_then_closes(world, tmp_path):
+    e = _top_up_world(world)
+    ts.read_datasets(e)
+    tasks = [ts.Task("A", "", d, 0) for d in ("Small", "Mid", "Big")]
+    script = ts.farm_script(e, tasks[:1], 4, "abc", 2)
+    body = script[script.index("task_args() {") :].replace("sleep 15", "sleep 1")
+    for task in tasks:
+        ts.task_log(e, task, "77").parent.mkdir(parents=True, exist_ok=True)
+    inbox = ts.farm_inbox(e, "77")
+    inbox.mkdir(parents=True)
+    for task in tasks[1:]:
+        (inbox / f"{task.dataset}.task").write_text(
+            ts._task_shell(e, task, "77") + "\n", newline="\n"
+        )
+    runner = tmp_path / "farm.sh"
+    # each "experiment" takes 2 s, so the inbox tasks start while the first runs
+    runner.write_text(
+        "SLURM_JOB_ID=77\nPY=(bash -c 'sleep 2' x)\n" + body, newline="\n"
+    )
+    result = subprocess.run(
+        [BASH, str(runner)], capture_output=True, text=True, timeout=60
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.count("top-up") == 2
+    for task in tasks:
+        assert "exit 0" in Path(f"{ts.task_log(e, task, '77')}.status").read_text()
+    assert (inbox / "closed").exists()
+    assert not list(inbox.glob("*.task"))

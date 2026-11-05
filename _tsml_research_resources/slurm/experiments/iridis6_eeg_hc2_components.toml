@@ -64,4 +64,7 @@ env_name = "tsml-eval"
 max_jobs = 2                        # two nodes; the other experiments share two
 waves = 1                           # a farm holds only what it runs at once, so
                                     # every task starts with the full 60 hours
+top_up = true                       # a farm down to its long tasks takes waiting
+top_up_hours = 12                   # ones while it has 12 hours or more left;
+                                    # checkpoints carry them over the limit
 memory_gb = [16, 32, 64, 128, 256, 620]

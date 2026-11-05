@@ -238,6 +238,7 @@ interval_minutes = 60
 | `max_active` | Array mode: maximum running plus pending tasks for this experiment. |
 | `max_user_tasks` | Array mode: also cap the user's total tasks in the partition (0 = off). |
 | `max_jobs`, `node_cpus`, `node_memory_gb`, `waves` | Farm mode: node jobs at once, node size, and how many rounds of tasks each job is given. |
+| `top_up`, `top_up_hours` | Farm mode: hand waiting tasks to running farms with free slots, until a farm has under `top_up_hours` (default 12) left. Off by default. |
 | `module`, `conda_sh`, `env_name` | Environment: `module load`, then `conda activate`. An empty `conda_sh` is found from the loaded `conda`. |
 | `container` | Apptainer image or sandbox; replaces conda (Iridis 6 GPU). |
 | `setup` | Extra shell lines run before the experiment, e.g. `["module load cuda/12.8.0"]`. |
@@ -288,6 +289,16 @@ Farms waste cores when experiment times vary widely, because the job holds its c
 until its slowest task ends. `smallest_datasets_first` helps by keeping similar sizes
 together. If a few huge datasets dominate, run them as a separate experiment with
 `resources = "cpu-array"` and list them in `exclude_datasets` of the farm experiment.
+
+`top_up = true` in `[slurm]` keeps those cores busy instead. A farm that has started
+its whole list watches an inbox in `farms/inbox/<job>/` of the state directory, and
+each cycle the supervisor puts waiting tasks there, one per free slot, if their
+memory tier fits the farm's slots. A farm closes its inbox when it has less than
+`top_up_hours` of its time limit left, or when nothing is running, and ends when its
+last task does. A task handed over gets only the time the farm has left, so set
+`top_up_hours` to more than a long task needs, or use it with checkpointing and
+`retry_timeouts`. Only farms submitted with `top_up` on take tasks; a task left in an
+inbox when its farm ends is resubmitted without using an attempt.
 
 ### 5. GPU deep learners
 
