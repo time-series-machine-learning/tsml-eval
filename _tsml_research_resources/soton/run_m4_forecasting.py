@@ -23,6 +23,8 @@ python run_m4_forecasting.py <data_dir> <results_dir> <forecaster> [options]
     --adaptive-window [RULE]
                        shrink the window for short series, as -kw adaptive_window;
                        RULE is half (default), quarter or seasonal
+    --min-window K     with --adaptive-window, never shrink the window below K
+                       (e.g. 5 for catch22-based regressors)
     --kw NAME VALUE TYPE
                        extra forecaster kwarg, as -kw (TYPE int/float/bool/str),
                        e.g. --kw log true bool --kw window_rules quarter,seasonal str
@@ -157,7 +159,13 @@ def _make_forecaster(period, train_length, horizon):
         _ARGS.forecaster, random_state=0, n_jobs=1, **kwargs
     )
     if _ARGS.adaptive_window:
-        _maybe_shrink_window(forecaster, train_length, _ARGS.adaptive_window, horizon)
+        _maybe_shrink_window(
+            forecaster,
+            train_length,
+            _ARGS.adaptive_window,
+            horizon,
+            min_window=_ARGS.min_window,
+        )
     return forecaster
 
 
@@ -189,6 +197,7 @@ def main():
         default=False,
         choices=[True, "half", "quarter", "seasonal"],
     )
+    parser.add_argument("--min-window", type=int, default=1)
     parser.add_argument("--kw", nargs=3, action="append", default=[])
     parser.add_argument(
         "--method", default="auto", choices=["auto", "iterative", "direct"]

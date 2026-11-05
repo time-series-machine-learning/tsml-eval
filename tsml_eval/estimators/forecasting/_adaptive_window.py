@@ -12,6 +12,7 @@ def adaptive_window_length(
     step_horizon=1,
     full_horizon=None,
     seasonal_period=1,
+    min_window=1,
 ):
     """Return the window to use for a series with ``fit_length`` training points.
 
@@ -38,7 +39,19 @@ def adaptive_window_length(
         ``step_horizon``.
     seasonal_period : int, default=1
         Seasonal period of the series, used by ``"seasonal"``.
+    min_window : int, default=1
+        Lower bound applied after the rule (but never above ``fit_length - 3``),
+        e.g. 5 for regressors using catch22 features, which need 5 points.
     """
+    w = _rule_window(rule, window, fit_length, step_horizon, full_horizon,
+                     seasonal_period)
+    if min_window > 1:
+        w = max(w, min(min_window, fit_length - 3))
+    return w
+
+
+def _rule_window(rule, window, fit_length, step_horizon, full_horizon,
+                 seasonal_period):
     if full_horizon is None:
         full_horizon = step_horizon
     # Largest window that keeps at least 3 training windows (as RegressionForecaster)

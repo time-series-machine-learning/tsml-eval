@@ -63,6 +63,8 @@ interval_based_regressors = [
     ["randomintervals-500", "catch22-intervals-500"],
     ["randomintervalregressor", "randomintervals", "catch22-intervals"],
     ["quantregressor", "quant"],
+    ["rstsfregressor", "rstsf"],
+    ["drcifvariantregressor", "drcif-variant"],
 ]
 other_regressors = [
     ["dummyregressor", "dummy", "dummyregressor-aeon"],
@@ -519,6 +521,18 @@ def _set_regressor_interval_based(
         from aeon.regression.interval_based import QUANTRegressor
 
         return QUANTRegressor(random_state=random_state, **kwargs)
+    elif r == "rstsfregressor" or r == "rstsf":
+        from tsml_eval.estimators.regression._drcif_variants import RSTSFRegressor
+
+        return RSTSFRegressor(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif r == "drcifvariantregressor" or r == "drcif-variant":
+        from tsml_eval.estimators.regression._drcif_variants import (
+            DrCIFVariantRegressor,
+        )
+
+        return DrCIFVariantRegressor(
+            random_state=random_state, n_jobs=n_jobs, **kwargs
+        )
 
 
 def _set_regressor_other(r, random_state, n_jobs, fit_contract, checkpoint, kwargs):

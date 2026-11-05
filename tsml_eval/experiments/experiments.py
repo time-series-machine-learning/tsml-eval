@@ -1597,7 +1597,9 @@ def train_test_split(
 N_RETRAIN_POINTS = 30
 
 
-def _maybe_shrink_window(forecaster, series_length, rule=True, full_horizon=None):
+def _maybe_shrink_window(
+    forecaster, series_length, rule=True, full_horizon=None, min_window=1
+):
     """Shrink a windowed forecaster's window for short series.
 
     If ``forecaster`` exposes a ``window`` attribute, the window is reduced so the
@@ -1623,6 +1625,8 @@ def _maybe_shrink_window(forecaster, series_length, rule=True, full_horizon=None
     full_horizon : int or None, default=None
         Number of steps that will be forecast, used by the "quarter" and "seasonal"
         rules. Defaults to the forecaster's own horizon.
+    min_window : int, default=1
+        Lower bound on the window, see ``adaptive_window_length``.
 
     Returns
     -------
@@ -1645,6 +1649,7 @@ def _maybe_shrink_window(forecaster, series_length, rule=True, full_horizon=None
         step_horizon=horizon,
         full_horizon=full_horizon,
         seasonal_period=getattr(forecaster, "seasonal_period", 1) or 1,
+        min_window=min_window,
     )
     return forecaster
 
