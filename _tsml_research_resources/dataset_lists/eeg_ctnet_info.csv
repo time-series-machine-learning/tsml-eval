@@ -30,7 +30,7 @@ ImaginedHandFeetTongue,200,~/Data/EEG/ImaginedHandFeetTongue/ImaginedHandFeetTon
 ImaginedHandSides,250,~/Data/EEG/ImaginedHandSides/ImaginedHandSides_id_TRAIN.txt
 ImaginedHandTraining,512,~/Data/EEG/ImaginedHandTraining/ImaginedHandTraining_id_TRAIN.txt
 ImaginedHandsFeet,250,~/Data/EEG/ImaginedHandsFeet/ImaginedHandsFeet_id_TRAIN.txt
-ImaginedHandsRobot,250,none
+ImaginedHandsRobot,250,~/Data/EEG/ImaginedHandsRobot/ImaginedHandsRobot_id_TRAIN.txt
 ImaginedHandsStroke,500,~/Data/EEG/ImaginedHandsStroke/ImaginedHandsStroke_id_TRAIN.txt
 ImaginedLeftRightHand,200,~/Data/EEG/ImaginedLeftRightHand/ImaginedLeftRightHand_id_TRAIN.txt
 ImaginedOpenCloseFist,160,~/Data/EEG/ImaginedOpenCloseFist/ImaginedOpenCloseFist_id_TRAIN.txt

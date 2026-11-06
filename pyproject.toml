@@ -153,6 +153,7 @@ ignore = ["E203", "E741", "B904", "B905", "B028"]
 "_tsml_research_resources/slurm/build_hc2_from_files.py" = ["T201"]
 "_tsml_research_resources/slurm/farms.py" = ["T201"]
 "_tsml_research_resources/slurm/run_local.py" = ["T201"]
+"_tsml_research_resources/dataset_lists/make_train_groups.py" = ["T201"]
 "_tsml_research_resources/slurm/tests/*" = ["D"]
 
 [tool.ruff.lint.pydocstyle]
