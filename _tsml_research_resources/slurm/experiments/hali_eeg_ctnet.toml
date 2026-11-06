@@ -1,0 +1,41 @@
+# braindecode CTNet trained from scratch with NeuralBench's recipe, on every EEG
+# problem, on Hali GPUs. Code: aeon-neuro branch ajb/eeg-baselines (on top of
+# ajb/braindecoder), aeon_neuro.classification.experimental; needs braindecode>=2,<3
+# and torch in the env.
+#
+#   CTNet-NB  NeuralBenchCTNetClassifier: resample to 120 Hz, robust scaling, clamp
+#             20; AdamW lr 1e-4, one-cycle, up to 40 epochs, early stopping on
+#             validation balanced accuracy (25% of train cases, stratified)
+#
+# Expect underfitting on small training sets (few updates at this learning rate);
+# the recipe is kept as published. device = "cuda" makes a job fail rather than
+# train on the CPU. sfreq comes per dataset from dataset_info.
+#
+#   python tsml_slurm.py check experiments/hali_eeg_ctnet.toml
+#   python tsml_slurm.py start experiments/hali_eeg_ctnet.toml
+
+[experiment]
+name = "eeg-ctnet"
+cluster = "hali"
+resources = "gpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{home}/DataSetLists/eeg.txt"
+dataset_info = "{repo}/_tsml_research_resources/dataset_lists/eeg_sampling_rates.csv"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+[estimators]
+DeepLearning = ["CTNet-NB"]
+
+[estimator_kwargs."CTNet-NB"]
+sfreq = "{dataset.sfreq}"
+device = "cuda"
+
+[slurm]
+env_name = "tsml-eval-gpu"
+gpu_check = "torch"
+memory_gb = [32, 64, 128]

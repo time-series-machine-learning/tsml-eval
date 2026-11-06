@@ -232,6 +232,23 @@ def _skip_if_not_in_aeon_neuro(class_name):
 @pytest.mark.parametrize(
     "name, expected",
     [
+        ("TSLR-NB", "NeuralBenchTSLRClassifier"),
+        ("TSLR-MOABB", "MOABBTSLRClassifier"),
+        ("CTNet-NB", "NeuralBenchCTNetClassifier"),
+    ],
+)
+def test_get_aeon_neuro_baseline(name, expected):
+    """Test the NeuralBench and MOABB baselines are available by name."""
+    pytest.importorskip("aeon_neuro.classification.experimental")
+    for classifier_name in (name, expected):
+        classifier = get_classifier_by_name(classifier_name, sfreq=250.0)
+        assert type(classifier).__name__ == expected
+        assert classifier.sfreq == 250.0
+
+
+@pytest.mark.parametrize(
+    "name, expected",
+    [
         ("EEGNet", "EEGNetClassifier"),
         ("DeepConvNet", "DeepConvNetClassifier"),
         ("RiemannianMDM", "RiemannianMDMClassifier"),

@@ -46,6 +46,9 @@ neuro_classifiers = [
     "csp+lda",
     "csp+svm",
     ["xdawnclassifier", "xdawn", "xdawnlda"],
+    ["neuralbenchtslrclassifier", "tslr-nb"],
+    ["moabbtslrclassifier", "tslr-moabb"],
+    ["neuralbenchctnetclassifier", "ctnet-nb"],
 ]
 dictionary_based_classifiers = [
     ["bossensemble", "boss"],
@@ -505,6 +508,22 @@ def _set_classifier_neuro(c, random_state, n_jobs, kwargs):
         from aeon_neuro.classification.feature_based import XDAWNClassifier
 
         return XDAWNClassifier(random_state=random_state, **kwargs)
+    # NeuralBench and MOABB baselines, from aeon-neuro's experimental package (not
+    # its public API). All need the dataset's sampling rate as sfreq.
+    elif c in ("neuralbenchtslrclassifier", "tslr-nb"):
+        from aeon_neuro.classification.experimental import NeuralBenchTSLRClassifier
+
+        return NeuralBenchTSLRClassifier(
+            n_jobs=n_jobs, random_state=random_state, **kwargs
+        )
+    elif c in ("moabbtslrclassifier", "tslr-moabb"):
+        from aeon_neuro.classification.experimental import MOABBTSLRClassifier
+
+        return MOABBTSLRClassifier(random_state=random_state, **kwargs)
+    elif c in ("neuralbenchctnetclassifier", "ctnet-nb"):
+        from aeon_neuro.classification.experimental import NeuralBenchCTNetClassifier
+
+        return NeuralBenchCTNetClassifier(random_state=random_state, **kwargs)
     else:
         raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
 

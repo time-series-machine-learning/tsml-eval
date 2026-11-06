@@ -1,0 +1,39 @@
+# MOABB's own TS-LR pipeline (TSLR.yml) on the motor imagery problems, on Hali CPUs,
+# for comparison with MOABB's published table. Code: aeon-neuro branch
+# ajb/eeg-baselines, aeon_neuro.classification.experimental.
+#
+#   TSLR-MOABB  MOABBTSLRClassifier: 8-32 Hz IIR band-pass (MOABB's motor imagery
+#               paradigm), OAS covariance, tangent space, LogisticRegression(C=1)
+#
+# The band is specific to motor imagery, so the dataset list is the motor imagery
+# problems (dataset_lists/eeg_motor_imagery.txt, in this repo). FeetHands and
+# OpenCloseFist are PhysioNet's executed-movement runs; the overt-movement sets
+# (HandMovementDirection, FingerMovements, ArmMovements, SitStand) are left out.
+# Add names to the list to include them.
+#
+#   python tsml_slurm.py check experiments/hali_eeg_baselines_mi.toml
+#   python tsml_slurm.py start experiments/hali_eeg_baselines_mi.toml
+
+[experiment]
+name = "eeg-baselines-mi"
+cluster = "hali"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_motor_imagery.txt"
+dataset_info = "{repo}/_tsml_research_resources/dataset_lists/eeg_sampling_rates.csv"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+[estimators]
+FeatureBased = ["TSLR-MOABB"]
+
+[estimator_kwargs."TSLR-MOABB"]
+sfreq = "{dataset.sfreq}"
+
+[slurm]
+env_name = "tsml-eval"
+memory_gb = [16, 32, 64, 128]
