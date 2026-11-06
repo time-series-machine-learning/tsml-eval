@@ -14,6 +14,9 @@
 #   python tsml_slurm.py check experiments/iridis6_eeg_cpu.toml
 #   python tsml_slurm.py start experiments/iridis6_eeg_cpu.toml
 
+# 2026-11-06: these estimators are also listed in iridis6_eeg_aeon.toml, so its
+# farm takes them on top-up. Do not start this experiment while they are there.
+
 [experiment]
 name = "eeg-cpu"
 cluster = "iridis6"

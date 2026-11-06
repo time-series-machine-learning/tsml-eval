@@ -34,6 +34,13 @@ smallest_datasets_first = true
 IntervalBased = ["QUANT"]
 # FreshPRINCE is not run (its existing results are kept).
 Tabular = ["RotationForest", "RandomForest", "SVM", "LogisticRegression"]
+# The aeon-neuro classifiers of iridis6_eeg_cpu.toml, moved here (2026-11-06) so the
+# open eeg-aeon farm tops up with them rather than waiting for a node of their own.
+# Do not start eeg-cpu while they are here: the two would run the same tasks.
+DistanceBased = [
+    "RiemannianMDM", "RiemannianKNN", "RiemannianMDM-OAS", "RiemannianKNN-OAS",
+]
+FeatureBased = ["CSP+LDA", "CSP+SVM", "XDAWN"]
 
 [slurm]
 env_name = "tsml-eval"
