@@ -10,10 +10,18 @@ repo_dir = "{home}/Code/tsml-eval"
 email = "{user}@uea.ac.uk"
 default_resources = "cpu"
 
-# Hali has run the supervisor on the login node in screen since the Multiverse runs.
+# The supervisor runs as a small Slurm job that resubmits itself, as on Iridis 6
+# (since 2026-11-06). Hali's login nodes alias python to a "start an interactive
+# session" message, so a login-node loop goes against the admins' guidance; jobs
+# may submit jobs (checked with sbatch --test-only from a compute node).
 [supervisor]
-mode = "login"
-interval_minutes = 30
+mode = "slurm"
+interval_minutes = 15
+partition = "compute"
+account = "cmp"
+qos = "uea-core-default"
+time_limit = "00:30:00"
+memory_gb = 2
 
 # One Slurm array task per experiment. Hali does not limit the number of queued tasks
 # in practice (runs used up to 8000), so max_active is a courtesy cap: raise it for
