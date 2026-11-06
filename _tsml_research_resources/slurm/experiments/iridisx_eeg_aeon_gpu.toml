@@ -26,3 +26,6 @@ DeepLearning = ["CNN", "IT", "LITETime-MV"]
 [slurm]
 env_name = "tsml-eval-gpu"
 memory_gb = [32, 64, 128]
+# more than the profile's 8 queued, so waiting tasks gain priority and start as soon
+# as an H200 frees, not at the next 30-minute supervisor cycle
+max_active = 20
