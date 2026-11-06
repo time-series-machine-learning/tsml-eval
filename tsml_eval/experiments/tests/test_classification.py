@@ -246,6 +246,25 @@ def test_get_aeon_neuro_baseline(name, expected):
         assert classifier.sfreq == 250.0
 
 
+@pytest.mark.parametrize(
+    "name, expected, setting, value",
+    [
+        ("EEGNet-NB", "NeuralBenchDeepClassifier", "model", "EEGNet"),
+        ("MDM-MOABB", "MOABBPipelineClassifier", "pipeline", "MDM"),
+        ("CSP-LDA-MOABB", "MOABBPipelineClassifier", "pipeline", "CSP_LDA"),
+    ],
+)
+def test_get_aeon_neuro_generic_baseline(name, expected, setting, value):
+    """Test the baselines built from aeon-neuro's generic experimental classes."""
+    experimental = pytest.importorskip("aeon_neuro.classification.experimental")
+    if not hasattr(experimental, expected):
+        pytest.skip(f"{expected} is not in the installed aeon-neuro")
+    classifier = get_classifier_by_name(name, sfreq=250.0)
+    assert type(classifier).__name__ == expected
+    assert getattr(classifier, setting) == value
+    assert classifier.sfreq == 250.0
+
+
 def test_get_ctnet_train_groups(tmp_path):
     """Test CTNet-NB reads subject IDs from a file, and "none" gives None."""
     pytest.importorskip("aeon_neuro.classification.experimental")

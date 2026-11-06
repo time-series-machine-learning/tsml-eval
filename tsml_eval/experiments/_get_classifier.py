@@ -49,6 +49,9 @@ neuro_classifiers = [
     ["neuralbenchtslrclassifier", "tslr-nb"],
     ["moabbtslrclassifier", "tslr-moabb"],
     ["neuralbenchctnetclassifier", "ctnet-nb"],
+    "eegnet-nb",
+    "mdm-moabb",
+    "csp-lda-moabb",
 ]
 dictionary_based_classifiers = [
     ["bossensemble", "boss"],
@@ -523,21 +526,47 @@ def _set_classifier_neuro(c, random_state, n_jobs, kwargs):
     elif c in ("neuralbenchctnetclassifier", "ctnet-nb"):
         from aeon_neuro.classification.experimental import NeuralBenchCTNetClassifier
 
-        # train_groups can come from the command line as the path of a file with one
-        # subject ID per training case (whitespace separated, in TRAIN file order),
-        # or "none". The IDs make the early stopping validation split subject-wise.
-        groups = kwargs.get("train_groups")
-        if isinstance(groups, str):
-            if groups.casefold() == "none":
-                kwargs["train_groups"] = None
-            else:
-                from pathlib import Path
-
-                path = Path(groups).expanduser()
-                kwargs["train_groups"] = path.read_text(encoding="utf-8").split()
+        _read_train_groups(kwargs)
         return NeuralBenchCTNetClassifier(random_state=random_state, **kwargs)
+    elif c == "eegnet-nb":
+        # braindecode's EEGNet with NeuralBench's recipe (not EEGNetClassifier)
+        from aeon_neuro.classification.experimental import NeuralBenchDeepClassifier
+
+        _read_train_groups(kwargs)
+        return NeuralBenchDeepClassifier(
+            model="EEGNet", random_state=random_state, **kwargs
+        )
+    elif c == "mdm-moabb":
+        from aeon_neuro.classification.experimental import MOABBPipelineClassifier
+
+        return MOABBPipelineClassifier(
+            pipeline="MDM", n_jobs=n_jobs, random_state=random_state, **kwargs
+        )
+    elif c == "csp-lda-moabb":
+        from aeon_neuro.classification.experimental import MOABBPipelineClassifier
+
+        return MOABBPipelineClassifier(
+            pipeline="CSP_LDA", random_state=random_state, **kwargs
+        )
     else:
         raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
+
+
+def _read_train_groups(kwargs):
+    """Turn a train_groups file path (or "none") from the command line into IDs.
+
+    The file has one subject ID per training case, whitespace separated, in TRAIN
+    file order. The IDs make the early stopping validation split subject-wise.
+    """
+    groups = kwargs.get("train_groups")
+    if isinstance(groups, str):
+        if groups.casefold() == "none":
+            kwargs["train_groups"] = None
+        else:
+            from pathlib import Path
+
+            path = Path(groups).expanduser()
+            kwargs["train_groups"] = path.read_text(encoding="utf-8").split()
 
 
 def _set_classifier_neuro_by_class_name(c, random_state, n_jobs, kwargs):
