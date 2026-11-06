@@ -246,6 +246,17 @@ def test_get_aeon_neuro_baseline(name, expected):
         assert classifier.sfreq == 250.0
 
 
+def test_get_ctnet_train_groups(tmp_path):
+    """Test CTNet-NB reads subject IDs from a file, and "none" gives None."""
+    pytest.importorskip("aeon_neuro.classification.experimental")
+    path = tmp_path / "ids.txt"
+    path.write_text("s1\ns1\ns2\ns2", encoding="utf-8")  # no final newline
+    classifier = get_classifier_by_name("CTNet-NB", sfreq=250.0, train_groups=str(path))
+    assert classifier.train_groups == ["s1", "s1", "s2", "s2"]
+    classifier = get_classifier_by_name("CTNet-NB", sfreq=250.0, train_groups="none")
+    assert classifier.train_groups is None
+
+
 @pytest.mark.parametrize(
     "name, expected",
     [

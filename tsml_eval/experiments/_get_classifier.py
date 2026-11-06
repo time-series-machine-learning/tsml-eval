@@ -523,6 +523,18 @@ def _set_classifier_neuro(c, random_state, n_jobs, kwargs):
     elif c in ("neuralbenchctnetclassifier", "ctnet-nb"):
         from aeon_neuro.classification.experimental import NeuralBenchCTNetClassifier
 
+        # train_groups can come from the command line as the path of a file with one
+        # subject ID per training case (whitespace separated, in TRAIN file order),
+        # or "none". The IDs make the early stopping validation split subject-wise.
+        groups = kwargs.get("train_groups")
+        if isinstance(groups, str):
+            if groups.casefold() == "none":
+                kwargs["train_groups"] = None
+            else:
+                from pathlib import Path
+
+                path = Path(groups).expanduser()
+                kwargs["train_groups"] = path.read_text(encoding="utf-8").split()
         return NeuralBenchCTNetClassifier(random_state=random_state, **kwargs)
     else:
         raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")

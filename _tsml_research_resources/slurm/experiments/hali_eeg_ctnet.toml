@@ -9,7 +9,13 @@
 #
 # Expect underfitting on small training sets (few updates at this learning rate);
 # the recipe is kept as published. device = "cuda" makes a job fail rather than
-# train on the CPU. sfreq comes per dataset from dataset_info.
+# train on the CPU.
+#
+# dataset_info (eeg_ctnet_info.csv) gives each dataset's sfreq and train_groups: the
+# path of <Name>_id_TRAIN.txt, one subject ID per TRAIN case in file order, or
+# "none" where the archive has no subject IDs. With IDs, the validation split holds
+# out whole subjects, as NeuralBench does; it affects early stopping only. The IDs
+# follow the archive's own split, so this is right for resample 0 only.
 #
 #   python tsml_slurm.py check experiments/hali_eeg_ctnet.toml
 #   python tsml_slurm.py start experiments/hali_eeg_ctnet.toml
@@ -23,7 +29,7 @@ repo_dir = "{home}/Code/tsml-eval"
 branch = "ajb/slurm-runner"
 data_dir = "{home}/Data/EEG"
 datasets = "{home}/DataSetLists/eeg.txt"
-dataset_info = "{repo}/_tsml_research_resources/dataset_lists/eeg_sampling_rates.csv"
+dataset_info = "{repo}/_tsml_research_resources/dataset_lists/eeg_ctnet_info.csv"
 results_dir = "{home}/Results/EEG"
 resamples = 1
 smallest_datasets_first = true
@@ -33,6 +39,7 @@ DeepLearning = ["CTNet-NB"]
 
 [estimator_kwargs."CTNet-NB"]
 sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
 device = "cuda"
 
 [slurm]
