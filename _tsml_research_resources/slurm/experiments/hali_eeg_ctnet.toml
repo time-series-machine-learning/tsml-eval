@@ -1,7 +1,8 @@
 # braindecode CTNet trained from scratch with NeuralBench's recipe, on every EEG
 # problem, on Hali GPUs. Code: aeon-neuro branch ajb/eeg-baselines (on top of
-# ajb/braindecoder), aeon_neuro.classification.experimental; needs braindecode>=2,<3
-# and torch in the env.
+# ajb/braindecoder), aeon_neuro.classification.experimental. aeon-neuro brings
+# torch and braindecode, so the CPU env tsml-eval serves (no TensorFlow in it:
+# two CUDA stacks break both).
 #
 #   CTNet-NB  NeuralBenchCTNetClassifier: resample to 120 Hz, robust scaling, clamp
 #             20; AdamW lr 1e-4, one-cycle, up to 40 epochs, early stopping on
@@ -43,6 +44,6 @@ train_groups = "{dataset.train_groups}"
 device = "cuda"
 
 [slurm]
-env_name = "tsml-eval-gpu"
+env_name = "tsml-eval"
 gpu_check = "torch"
 memory_gb = [32, 64, 128]
