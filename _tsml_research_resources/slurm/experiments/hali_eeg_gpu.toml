@@ -40,6 +40,6 @@ device = "cuda"
 device = "cuda"
 
 [slurm]
-env_name = "tsml-eval-gpu"
+env_name = "tsml-eval"   # one env on Hali: aeon-neuro brings torch; never add TensorFlow
 gpu_check = "torch"
 memory_gb = [32, 64, 128]
