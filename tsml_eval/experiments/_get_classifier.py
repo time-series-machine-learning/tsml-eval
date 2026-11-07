@@ -30,6 +30,26 @@ deep_learning_classifiers = [
     ["individualliteclassifier", "individuallite"],
     ["disjointcnnclassifier", "disjointcnn"],
 ]
+# tsml-eval names for aeon-neuro's MOABBPipelineClassifier pipelines, named after
+# MOABB's pipeline files (aeon_neuro...experimental.MOABB_PIPELINES)
+moabb_pipelines = {
+    "mdm-moabb": "MDM",
+    "fgmdm-moabb": "FgMDM",
+    "tssvm-moabb": "TSSVM",
+    "tsen-moabb": "TSEN",
+    "csp-lda-moabb": "CSP_LDA",
+    "csp-svm-moabb": "CSP_SVM",
+    "dlcsp-shlda-moabb": "DLCSPauto_shLDA",
+    "trcsp-lda-moabb": "TRCSP_LDA",
+    "fbcsp-svm-moabb": "FBCSP_SVM",
+    "logvar-lda-moabb": "LogVar_LDA",
+    "logvar-svm-moabb": "LogVar_SVM",
+    "aug-tang-svm-moabb": "AUG_TANG_SVM",
+    "xdawncov-mdm-moabb": "XdawnCov_MDM",
+    "xdawncov-ts-svm-moabb": "XdawnCov_TS_SVM",
+    "erpcov-mdm-moabb": "ERPCov_MDM",
+    "xdawn-lda-moabb": "xDAWN_LDA",
+}
 neuro_classifiers = [
     ["eegnetclassifier", "eegnet"],
     ["deepconvnetclassifier", "deepconvnet", "dcn"],
@@ -50,8 +70,7 @@ neuro_classifiers = [
     ["moabbtslrclassifier", "tslr-moabb"],
     ["neuralbenchctnetclassifier", "ctnet-nb"],
     "eegnet-nb",
-    "mdm-moabb",
-    "csp-lda-moabb",
+    *moabb_pipelines,
 ]
 dictionary_based_classifiers = [
     ["bossensemble", "boss"],
@@ -536,17 +555,14 @@ def _set_classifier_neuro(c, random_state, n_jobs, kwargs):
         return NeuralBenchDeepClassifier(
             model="EEGNet", random_state=random_state, **kwargs
         )
-    elif c == "mdm-moabb":
+    elif c in moabb_pipelines:
         from aeon_neuro.classification.experimental import MOABBPipelineClassifier
 
         return MOABBPipelineClassifier(
-            pipeline="MDM", n_jobs=n_jobs, random_state=random_state, **kwargs
-        )
-    elif c == "csp-lda-moabb":
-        from aeon_neuro.classification.experimental import MOABBPipelineClassifier
-
-        return MOABBPipelineClassifier(
-            pipeline="CSP_LDA", random_state=random_state, **kwargs
+            pipeline=moabb_pipelines[c],
+            n_jobs=n_jobs,
+            random_state=random_state,
+            **kwargs,
         )
     else:
         raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
