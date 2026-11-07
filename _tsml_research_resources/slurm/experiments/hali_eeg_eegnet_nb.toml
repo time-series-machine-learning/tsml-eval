@@ -1,0 +1,38 @@
+# braindecode's EEGNet trained from scratch with NeuralBench's recipe (the recipe of
+# hali_eeg_ctnet.toml: 120 Hz, robust scaling, clamp 20, AdamW lr 1e-4, one-cycle,
+# up to 40 epochs, early stopping on subject-wise validation balanced accuracy where
+# IDs exist), on every EEG problem, on Hali GPUs. Code: aeon-neuro branch
+# ajb/eeg-baselines, aeon_neuro.classification.experimental.NeuralBenchDeepClassifier
+# with model="EEGNet". This is NeuralBench's EEGNet entry, not aeon-neuro's
+# EEGNetClassifier (hali_eeg_gpu.toml). Same env, dataset_info and train_groups as
+# CTNet-NB; device = "cuda" makes a job fail rather than train on the CPU.
+#
+#   python tsml_slurm.py check experiments/hali_eeg_eegnet_nb.toml
+#   python tsml_slurm.py start experiments/hali_eeg_eegnet_nb.toml
+
+[experiment]
+name = "eeg-eegnet-nb"
+cluster = "hali"
+resources = "gpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{home}/DataSetLists/eeg.txt"
+dataset_info = "{repo}/_tsml_research_resources/dataset_lists/eeg_ctnet_info.csv"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+[estimators]
+DeepLearning = ["EEGNet-NB"]
+
+[estimator_kwargs."EEGNet-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[slurm]
+env_name = "tsml-eval"
+gpu_check = "torch"
+memory_gb = [32, 64, 128]
