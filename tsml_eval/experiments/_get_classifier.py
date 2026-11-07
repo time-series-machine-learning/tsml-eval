@@ -50,6 +50,14 @@ moabb_pipelines = {
     "erpcov-mdm-moabb": "ERPCov_MDM",
     "xdawn-lda-moabb": "xDAWN_LDA",
 }
+# braindecode models trained with NeuralBench's recipe (NeuralBenchDeepClassifier),
+# not aeon-neuro's own classifiers of the same models
+neuralbench_deep_models = {
+    "eegnet-nb": "EEGNet",
+    "deep4net-nb": "Deep4Net",
+    "eegconformer-nb": "EEGConformer",
+    "shallowfbcspnet-nb": "ShallowFBCSPNet",
+}
 neuro_classifiers = [
     ["eegnetclassifier", "eegnet"],
     ["deepconvnetclassifier", "deepconvnet", "dcn"],
@@ -69,7 +77,7 @@ neuro_classifiers = [
     ["neuralbenchtslrclassifier", "tslr-nb"],
     ["moabbtslrclassifier", "tslr-moabb"],
     ["neuralbenchctnetclassifier", "ctnet-nb"],
-    "eegnet-nb",
+    *neuralbench_deep_models,
     *moabb_pipelines,
 ]
 dictionary_based_classifiers = [
@@ -547,13 +555,12 @@ def _set_classifier_neuro(c, random_state, n_jobs, kwargs):
 
         _read_train_groups(kwargs)
         return NeuralBenchCTNetClassifier(random_state=random_state, **kwargs)
-    elif c == "eegnet-nb":
-        # braindecode's EEGNet with NeuralBench's recipe (not EEGNetClassifier)
+    elif c in neuralbench_deep_models:
         from aeon_neuro.classification.experimental import NeuralBenchDeepClassifier
 
         _read_train_groups(kwargs)
         return NeuralBenchDeepClassifier(
-            model="EEGNet", random_state=random_state, **kwargs
+            model=neuralbench_deep_models[c], random_state=random_state, **kwargs
         )
     elif c in moabb_pipelines:
         from aeon_neuro.classification.experimental import MOABBPipelineClassifier
