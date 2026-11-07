@@ -1,0 +1,22 @@
+# Deep learners on the Multiverse core (66 problems), resample 0, on Hali GPUs.
+# Keras learners are checked with TensorFlow (the profile default); PyTorch learners
+# get device = "cuda" so they fail loudly rather than falling back to the CPU.
+
+[experiment]
+name = "multiverse-core-deep"
+cluster = "hali"
+resources = "gpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval-gpu"   # GPU work runs from its own checkout
+branch = "ajb/gpu"                        # refuse to submit from any other branch
+data_dir = "{home}/Data/Multiverse"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/MultivariateClassification66-MultiverseMini.txt"
+results_dir = "{home}/Results/Multiverse"
+resamples = 1
+smallest_datasets_first = true
+
+[estimators]
+DeepLearning = ["ResNet", "H-InceptionTime", "LITETime-MV", "ConvTran"]
+
+[estimator_kwargs.ConvTran]
+device = "cuda"

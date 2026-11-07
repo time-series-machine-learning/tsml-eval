@@ -1,0 +1,34 @@
+# HC2 alone on the EEG archive, on Iridis 6, so it can have its own share of nodes
+# (max_jobs below) while the other aeon classifiers run in iridis6_eeg_aeon.toml and
+# its components, with train files, in iridis6_eeg_hc2_components.toml.
+#
+# Test files only. verbose = 1 prints a time stamp and weight as each component
+# (STC, DrCIF, Arsenal, TDE) finishes, in each task's .out log. Same data, dataset
+# list and results layout as iridis6_eeg_aeon.toml: ~/Results/EEG/Hybrid/HC2/.
+#
+#   python tsml_slurm.py check experiments/iridis6_eeg_hc2.toml
+#   python tsml_slurm.py start experiments/iridis6_eeg_hc2.toml
+
+[experiment]
+name = "eeg-hc2"
+cluster = "iridis6"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{home}/DataSetLists/eeg.txt"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+[estimators]
+Hybrid = ["HC2"]
+
+[estimator_kwargs.HC2]
+verbose = 1
+
+[slurm]
+env_name = "tsml-eval"
+max_jobs = 2          # two nodes; eeg-aeon and eeg-cpu have one each
+memory_gb = [16, 32, 64, 128, 256, 620]

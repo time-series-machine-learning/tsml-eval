@@ -1,0 +1,35 @@
+# aeon and aeon-neuro CPU classifiers on the aeon-neuro EEG archive, on Hali.
+#
+# Resample 0 only: the supplied train/test splits. Random resamples can put trials
+# from one subject in both train and test, so add more only once that is handled.
+#
+# Needs aeon-neuro >= 0.1.1 (XDAWN, and the CSP used by CSP+LDA and CSP+SVM).
+#
+# Setup (see ../soton/iridis/eeg_classification_students.md):
+#   python _tsml_research_resources/soton/iridis/download_eeg_classification.py \
+#       --data-dir ~/Data/EEG --dataset-list ~/DataSetLists/eeg.txt
+#   python tsml_slurm.py check experiments/hali_eeg_cpu.toml
+#   python tsml_slurm.py start experiments/hali_eeg_cpu.toml
+
+[experiment]
+name = "eeg-cpu"
+cluster = "hali"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{home}/DataSetLists/eeg.txt"   # written by the downloader
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+# Grouped as aeon-neuro groups them.
+[estimators]
+ConvolutionBased = ["ROCKET", "MultiRocketHydra"]
+DistanceBased = ["RiemannianMDM", "RiemannianKNN"]
+FeatureBased = ["CSP+LDA", "CSP+SVM", "XDAWN"]
+
+[slurm]
+env_name = "tsml-eval"
+memory_gb = [16, 32, 64, 128]

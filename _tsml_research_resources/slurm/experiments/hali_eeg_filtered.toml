@@ -1,0 +1,70 @@
+# The aeon-neuro CSP and Riemannian classifiers on band-passed data, on Hali.
+# The unfiltered versions (iridis6_eeg_cpu.toml) see the raw signal; these filter
+# each channel of each case first, with a zero-phase 4th-order Butterworth band-pass:
+#   -BP830  8-30 Hz, the motor imagery (mu/beta) band CSP and MDM are designed for
+#   -BP140  1-40 Hz, broadband: drops drift and line noise, keeps ERP/SSVEP bands
+# Riemannian uses the OAS covariance (the scm versions fail on singular data).
+#
+# The filter needs each dataset's sampling rate: "{dataset.sfreq}" takes it, task by
+# task, from dataset_info (built from the datasets' metadata sidecars and the
+# EEGBench registry). Datasets without a rate (NBackAudioCondition) are not run;
+# `check` lists them. Results go beside the unfiltered ones, under the new names.
+#
+#   python tsml_slurm.py check experiments/hali_eeg_filtered.toml
+#   python tsml_slurm.py start experiments/hali_eeg_filtered.toml
+
+[experiment]
+name = "eeg-filtered"
+cluster = "hali"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{home}/DataSetLists/eeg.txt"
+dataset_info = "{repo}/_tsml_research_resources/dataset_lists/eeg_sampling_rates.csv"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+[estimators]
+DistanceBased = [
+    "RiemannianMDM-OAS-BP830",
+    "RiemannianKNN-OAS-BP830",
+    "RiemannianMDM-OAS-BP140",
+    "RiemannianKNN-OAS-BP140",
+]
+FeatureBased = [
+    "CSP+LDA-BP830",
+    "CSP+SVM-BP830",
+    "CSP+LDA-BP140",
+    "CSP+SVM-BP140",
+]
+
+[estimator_kwargs."RiemannianMDM-OAS-BP830"]
+sfreq = "{dataset.sfreq}"
+
+[estimator_kwargs."RiemannianKNN-OAS-BP830"]
+sfreq = "{dataset.sfreq}"
+
+[estimator_kwargs."RiemannianMDM-OAS-BP140"]
+sfreq = "{dataset.sfreq}"
+
+[estimator_kwargs."RiemannianKNN-OAS-BP140"]
+sfreq = "{dataset.sfreq}"
+
+[estimator_kwargs."CSP+LDA-BP830"]
+sfreq = "{dataset.sfreq}"
+
+[estimator_kwargs."CSP+SVM-BP830"]
+sfreq = "{dataset.sfreq}"
+
+[estimator_kwargs."CSP+LDA-BP140"]
+sfreq = "{dataset.sfreq}"
+
+[estimator_kwargs."CSP+SVM-BP140"]
+sfreq = "{dataset.sfreq}"
+
+[slurm]
+env_name = "tsml-eval"
+memory_gb = [16, 32, 64, 128]

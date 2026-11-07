@@ -1,0 +1,17 @@
+# Keras deep learners on UCR, on the Iridis 6 gpu partition in an Apptainer sandbox.
+
+[experiment]
+name = "ucr-deep-iridis6"
+cluster = "iridis6"
+resources = "gpu"
+task = "classification"
+data_dir = "{home}/Data/UCR"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/UnivariateClassification112-UCR2018Clean.txt"
+results_dir = "{home}/Results/UCR"
+resamples = 5
+
+[estimators]
+DeepLearning = ["FCNClassifier", "ResNetClassifier", "InceptionTimeClassifier"]
+
+[slurm]
+container = "{home}/scratch/tensorflow_sandbox"   # your sandbox, see the guide

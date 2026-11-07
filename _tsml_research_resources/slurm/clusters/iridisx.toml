@@ -1,0 +1,62 @@
+# Iridis X (Southampton GPU cluster). Facts shared by every experiment on it.
+#
+# Iridis X is for GPU work; run CPU estimators on Iridis 6. The gres type string
+# differs per partition and must match exactly, otherwise sbatch rejects the job.
+# Partition table (sinfo, 14/08/2026):
+#
+#   a100        gpu:a100:1        2-12:00:00  open to all; QoS caps 2 GPUs at once
+#   swarm_a100  gpu:a100swarm:1   5-00:00:00  ECS/ORC staff and PGR, account "ecs"
+#   i7_h200     gpu:h200:1        2-12:00:00  H200 early access
+#   scavenger_4a100  gpu:a100swarm:1  12:00:00  preemptible; fine for this workload,
+#                                    a preempted task writes nothing and is resubmitted
+#
+# There is no "batch" partition here, and --nodes=1 is required (always generated).
+
+name = "iridisx"
+home = "/home/{user}"
+repo_dir = "{home}/Code/tsml-eval-gpu"
+email = "{user}@soton.ac.uk"
+default_resources = "gpu"
+
+# Iridis X runs have used a login-node supervisor in screen.
+[supervisor]
+mode = "login"
+interval_minutes = 30
+
+# H200 nodes: the queue used for most 2026 deep-learning runs.
+[resources.gpu]
+mode = "array"
+partition = "i7_h200"
+gres = "gpu:h200:1"
+time_limit = "2-12:00:00"
+memory_gb = [32, 64, 128]
+cpus_per_task = 2
+max_active = 8
+module = "conda/python3"
+env_name = "tsml-eval-gpu"
+gpu_check = "tensorflow"
+
+[resources.gpu-a100]
+mode = "array"
+partition = "a100"
+gres = "gpu:a100:1"
+time_limit = "2-12:00:00"
+memory_gb = [32, 64, 128]
+cpus_per_task = 2
+max_active = 2
+module = "conda/python3"
+env_name = "tsml-eval-gpu"
+gpu_check = "tensorflow"
+
+[resources.gpu-swarm]
+mode = "array"
+account = "ecs"
+partition = "swarm_a100"
+gres = "gpu:a100swarm:1"
+time_limit = "5-00:00:00"
+memory_gb = [32, 64, 128]
+cpus_per_task = 2
+max_active = 8
+module = "conda/python3"
+env_name = "tsml-eval-gpu"
+gpu_check = "tensorflow"

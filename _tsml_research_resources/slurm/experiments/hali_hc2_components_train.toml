@@ -1,0 +1,29 @@
+# HC2 components with train files (needed for ensemble weights), on Hali.
+# Shows estimator keyword arguments, train files and a larger memory start.
+
+[experiment]
+name = "ucr-hc2-components"
+cluster = "hali"
+resources = "cpu"
+task = "classification"
+data_dir = "{home}/Data/UCR"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/UnivariateClassification112-UCR2018Clean.txt"
+results_dir = "{home}/Results/UCR-HC2"
+resamples = 30
+train_files = true                  # completion then needs train AND test files
+email = "{user}@uea.ac.uk"
+email_hours = 12
+
+[estimators]
+ConvolutionBased = ["Arsenal"]
+IntervalBased = ["DrCIF"]
+DictionaryBased = ["TDE"]
+ShapeletBased = ["STC"]
+
+# Passed to the estimator as -kw key value type. Quote names containing "-".
+[estimator_kwargs.DrCIF]
+n_estimators = 500
+
+# Overrides of the cluster's [resources.cpu] section for this experiment only.
+[slurm]
+memory_gb = [16, 32, 64, 128]

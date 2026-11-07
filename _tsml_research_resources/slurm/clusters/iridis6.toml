@@ -1,0 +1,64 @@
+# Iridis 6 (Southampton). Facts about the cluster, shared by every experiment on it.
+# Experiments choose a [resources.*] section with `resources = "cpu"` and may override
+# any of its keys in their own [slurm] table.
+#
+# Values come from the 2026 UCR, TSER and Multiverse runs on the batch partition.
+
+name = "iridis6"
+home = "/iridisfs/home/{user}"
+repo_dir = "{home}/Code/tsml-eval"
+email = "{user}@soton.ac.uk"
+default_resources = "cpu"
+
+# The supervisor is a small batch job that resubmits itself, so nothing needs to stay
+# running on a login node.
+[supervisor]
+mode = "slurm"
+interval_minutes = 15
+partition = "batch"
+time_limit = "00:30:00"
+memory_gb = 2
+
+# Task farm: each job takes part of a 192-core batch node and runs many experiments
+# in it, one per core. Only a few node jobs may run at once, so this is far faster than
+# one array task per experiment for anything bigger than a handful of jobs.
+# Slurm caps one batch job at 634 GiB, hence node_memory_gb = 630. Memory is per
+# experiment: at 4G a job runs 157 at once, at 64G it runs 9.
+[resources.cpu]
+mode = "farm"
+partition = "batch"
+time_limit = "60:00:00"
+memory_gb = [4, 8, 16, 32, 64, 128, 256, 620]
+max_jobs = 4
+node_cpus = 192
+node_memory_gb = 630
+waves = 4
+module = "conda/python3"
+env_name = "tsml-eval"
+
+# One array task per experiment on batch: the simple route for small runs, and the
+# right one when experiment run times differ so much that a farm would sit mostly
+# idle waiting for its slowest task.
+[resources.cpu-array]
+mode = "array"
+partition = "batch"
+time_limit = "60:00:00"
+memory_gb = [8, 16, 32, 64]
+max_active = 100
+module = "conda/python3"
+env_name = "tsml-eval"
+
+# GPU jobs run in an Apptainer sandbox built from an NVIDIA TensorFlow image (see the
+# guide). Set container to your own sandbox path in the experiment's [slurm] table if
+# it is not at the default.
+[resources.gpu]
+mode = "array"
+partition = "gpu"
+gres = "gpu:1"
+time_limit = "60:00:00"
+memory_gb = [16, 32, 64, 128]
+cpus_per_task = 4
+max_active = 12
+module = "apptainer/1.5.0"
+container = "{home}/scratch/tensorflow_sandbox"
+gpu_check = "tensorflow"
