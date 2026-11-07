@@ -14,6 +14,11 @@ node from this directory, in the tsml-eval env:
 
     python build_hc2_from_files.py               # build what is complete
     python build_hc2_from_files.py --dry-run     # only report what would be built
+
+HC2 without TDE, written to Hybrid/HC2-noTDE:
+
+    python build_hc2_from_files.py --name HC2-noTDE --components \
+        ConvolutionBased/Arsenal IntervalBased/DrCIF ShapeletBased/STC-aeon
 """
 
 import argparse
