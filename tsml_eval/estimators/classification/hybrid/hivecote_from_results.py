@@ -266,6 +266,8 @@ def _predict_and_write(
         # the corrected ones, so the file's argmax matches the predictions.
         probabilities = probabilities / (prior**beta)
         probabilities = probabilities / probabilities.sum(axis=1, keepdims=True)
+    # normalising can leave 1.0000000000000002, which the file reader rejects
+    probabilities = np.clip(probabilities, 0, 1)
 
     # Tie breaking matches the aeon HIVE-COTE classifiers.
     rng = check_random_state(resample_id)

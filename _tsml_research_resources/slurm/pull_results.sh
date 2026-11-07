@@ -22,8 +22,9 @@ echo "$(date +%H:%M) listing $dest:$remote"
 "${SSH[@]}" "$dest" "cd '$remote' && find . -path '$pattern' -type f -printf '%s %p\n'" \
     > "$tmp/remote" || { echo "cannot list $dest:$remote"; exit 1; }
 (cd "$local" && find . -path "$pattern" -type f -printf '%s %p\n') > "$tmp/local"
-# files absent locally or of a different size
-awk 'NR==FNR {have[$2]=$1; next} !($2 in have) || have[$2] != $1 {print $2}' \
+# files absent locally or of a different size; FILENAME, not NR==FNR, so an
+# empty local list still works
+awk 'FILENAME == ARGV[1] {have[$2]=$1; next} !($2 in have) || have[$2] != $1 {print $2}' \
     "$tmp/local" "$tmp/remote" > "$tmp/need"
 n=$(wc -l < "$tmp/need")
 echo "$(wc -l < "$tmp/remote") remote files, $n to fetch"

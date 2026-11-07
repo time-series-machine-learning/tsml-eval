@@ -48,7 +48,10 @@ If the key is offered but refused (`ssh -v` shows "Offering public key" then no
 more methods), check permissions on the cluster, which Tony can run in PuTTY:
 `ls -ld ~ ~/.ssh ~/.ssh/authorized_keys`. sshd ignores keys if the home folder is
 group- or world-writable: Hali's home was `drwxrwsrwx`, and `chmod go-w ~` fixed
-it. `~/.ssh` must be `drwx------` and `authorized_keys` `-rw-------`.
+it. `~/.ssh` must be `drwx------` and `authorized_keys` `-rw-------`: on Iridis
+`~/.ssh` was `drwxrwxrwx`, fixed with `chmod 700 ~/.ssh`. If the password step of
+`iridis_key.sh` fails, paste the `echo '<pubkey>' >> ~/.ssh/authorized_keys` line
+in PuTTY instead (right-click pastes there).
 
 To revoke: delete the `tony-laptop` line from `~/.ssh/authorized_keys` on Iridis.
 
@@ -71,8 +74,9 @@ To revoke: delete the `tony-laptop` line from `~/.ssh/authorized_keys` on Iridis
 `pull_results.sh` (this directory) pulls new or changed files only, without rsync,
 in two logins: it lists the remote files with sizes, compares with the local copy,
 and streams the missing ones as a gzip tar. It never deletes or changes anything.
-Not yet run against Iridis: it was written on a day neither cluster's VPN was up
-on the desktop. Test it on one estimator first (see the pattern argument).
+Tested against Iridis 6 on 2026-11-06 from the laptop: 1622 Predictions files
+(165 MB) in about a minute, and a rerun fetched nothing. The laptop copy is in
+`C:/Results/EEG`. The default pattern also takes `_superseded/` and `NBack/`.
 
 ```
 bash pull_results.sh ajb2u23@iridis6_b.soton.ac.uk Results/EEG <local results dir>
