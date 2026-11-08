@@ -11,6 +11,11 @@
 # (HandMovementDirection, FingerMovements, ArmMovements, SitStand) are left out.
 # Add names to the list to include them.
 #
+# Since 2026-11-08 on every EEG problem (~/DataSetLists/eeg.txt), not only the
+# motor imagery list: the 8-32 Hz band is a motor imagery choice, so expect weak
+# results on sleep, seizure and ERP problems. The experiment name is kept so
+# finished motor imagery results count as done.
+#
 #   python tsml_slurm.py check experiments/hali_eeg_baselines_mi.toml
 #   python tsml_slurm.py start experiments/hali_eeg_baselines_mi.toml
 
@@ -22,7 +27,7 @@ task = "classification"
 repo_dir = "{home}/Code/tsml-eval"
 branch = "ajb/slurm-runner"
 data_dir = "{home}/Data/EEG"
-datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_motor_imagery.txt"
+datasets = "{home}/DataSetLists/eeg.txt"
 dataset_info = "{repo}/_tsml_research_resources/dataset_lists/eeg_sampling_rates.csv"
 results_dir = "{home}/Results/EEG"
 resamples = 1
