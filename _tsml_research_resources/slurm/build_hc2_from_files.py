@@ -33,7 +33,7 @@ from tsml_eval.estimators.classification.hybrid.hivecote_from_results import (
 # the layout of iridis6_eeg_hc2_components.toml
 COMPONENTS = [
     "ConvolutionBased/Arsenal",
-    "IntervalBased/DrCIF",
+    "IntervalBased/DrCIF-500",
     "ShapeletBased/STC-aeon",
     "DictionaryBased/TDE",
 ]
@@ -72,6 +72,12 @@ def main(argv=None):
     )
     parser.add_argument(
         "--datasets", help="file of dataset names, one per line (default: all found)"
+    )
+    parser.add_argument(
+        "--prior-correction",
+        type=float,
+        default=0.0,
+        help="beta for dividing by the train class prior (default 0, plain HC2)",
     )
     parser.add_argument("--overwrite", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
@@ -121,6 +127,7 @@ def main(argv=None):
                     str(output),
                     classifier_name=args.name,
                     write_train_file=True,
+                    prior_correction=args.prior_correction,
                 )
                 built.append(f"{dataset} {i}")
                 print(f"built {dataset} resample {i}", flush=True)

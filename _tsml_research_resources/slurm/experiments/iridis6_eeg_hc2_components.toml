@@ -41,7 +41,9 @@ priority = "dataset"
 
 [estimators]
 ConvolutionBased = ["Arsenal"]
-IntervalBased = ["DrCIF"]
+# DrCIF-500 since 2026-11-08: HC2 builds its DrCIF with 500 trees, so HC2 from
+# file uses DrCIF-500. DrCIF (default 200 trees) stays as a standalone entry.
+IntervalBased = ["DrCIF", "DrCIF-500"]
 ShapeletBased = ["STC-aeon"]
 DictionaryBased = ["TDE"]
 
@@ -51,6 +53,9 @@ DictionaryBased = ["TDE"]
 verbose = 1
 
 [estimator_kwargs.DrCIF]
+verbose = 1
+
+[estimator_kwargs."DrCIF-500"]
 verbose = 1
 
 [estimator_kwargs."STC-aeon"]
