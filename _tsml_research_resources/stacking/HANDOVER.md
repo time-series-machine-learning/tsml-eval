@@ -27,6 +27,13 @@ Each dataset and resample is turned into a standard tabular classification probl
 
 **UCR is the primary target, then EEG.** Multiverse is optional.
 
+**Status (8 November 2026): nothing has been run yet. Run everything on Hydra:**
+- the reference and classical models;
+- the foundation models.
+
+A laptop run of the classical models was stopped part-way, and its results were
+deleted.
+
 ### Problem sizes
 
 - **UCR:**
@@ -89,7 +96,7 @@ All three are fitted on the same train file.
 `CAWPE` reproduces the HC2 built from files (checked on three EEG datasets), so it is
 the baseline to beat.
 
-### Classical stackers (running on the laptop)
+### Classical stackers
 
 - `LR`: logistic regression on the probabilities.
 - `LR-log`: logistic regression on the log probabilities.
@@ -98,7 +105,7 @@ the baseline to beat.
 - `RF`, `ET`: random forest and extra trees, 500 trees each.
 - `HGB`: histogram gradient boosting.
 
-These are cheap, so they could equally be rerun on Hydra.
+These are cheap, and they run on CPU.
 
 ### Foundation models (`--foundation`)
 
@@ -155,8 +162,9 @@ python run_stacking.py EEG --foundation --jobs 1 --device cuda \
 python run_stacking.py UCR --foundation --models TabICL --datasets Beef Adiac Crop \
     --device cuda --data ~/Data/Stacking --results ~/Results/Stacking
 
-# classical stackers and references (CPU), if not copying them from the laptop
+# classical stackers and references (CPU); needed for the comparison
 python run_stacking.py UCR --jobs 16 --data ~/Data/Stacking --results ~/Results/Stacking
+python run_stacking.py EEG --jobs 16 --data ~/Data/Stacking --results ~/Results/Stacking
 ```
 
 `--jobs` is the number of datasets in parallel. With several GPUs, run one process per
