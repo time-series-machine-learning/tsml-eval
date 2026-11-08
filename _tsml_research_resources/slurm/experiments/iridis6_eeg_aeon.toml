@@ -31,6 +31,11 @@ smallest_datasets_first = true
 # handed out in this order (estimator, then smallest dataset first), so the fast
 # aeon-neuro classifiers come before RotationForest.
 [estimators]
+# QUANT and RDST first (2026-11-08). MRHydra is in iridis6_eeg_mrhydra.toml,
+# starting at large memory; ROCKET and MiniROCKET are not run (their existing
+# results are kept).
+IntervalBased = ["QUANT"]
+ShapeletBased = ["RDST"]
 # The aeon-neuro classifiers of iridis6_eeg_cpu.toml, moved here (2026-11-06) so the
 # open eeg-aeon farm tops up with them rather than waiting for a node of their own.
 # Do not start eeg-cpu while they are here: the two would run the same tasks.
@@ -38,9 +43,6 @@ DistanceBased = [
     "RiemannianMDM-OAS", "RiemannianKNN-OAS", "RiemannianMDM", "RiemannianKNN",
 ]
 FeatureBased = ["CSP+LDA", "CSP+SVM", "XDAWN"]
-# MRHydra is in iridis6_eeg_mrhydra.toml, starting at large memory; ROCKET and
-# MiniROCKET are not run (their existing results are kept).
-IntervalBased = ["QUANT"]
 # FreshPRINCE is not run (its existing results are kept).
 Tabular = ["RandomForest", "SVM", "LogisticRegression", "RotationForest"]
 
