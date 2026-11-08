@@ -252,6 +252,13 @@ def test_get_aeon_neuro_baseline(name, expected):
         ("EEGNet-NB", "NeuralBenchDeepClassifier", "model", "EEGNet"),
         ("MDM-MOABB", "MOABBPipelineClassifier", "pipeline", "MDM"),
         ("CSP-LDA-MOABB", "MOABBPipelineClassifier", "pipeline", "CSP_LDA"),
+        ("ATCNet-NB", "NeuralBenchDeepClassifier", "model", "ATCNet"),
+        (
+            "SleepStagerChambon2018-NB",
+            "NeuralBenchDeepClassifier",
+            "model",
+            "SleepStagerChambon2018",
+        ),
     ],
 )
 def test_get_aeon_neuro_generic_baseline(name, expected, setting, value):
