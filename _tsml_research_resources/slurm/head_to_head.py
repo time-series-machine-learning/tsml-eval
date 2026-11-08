@@ -9,6 +9,7 @@ Wilcoxon signed-rank p value. Reads the layout pulled by pull_results.sh:
 
     python head_to_head.py Hybrid/HC2FromFile
     python head_to_head.py Hybrid/HC2FromFile --results C:/Results/EEG --csv h2h.csv
+    python head_to_head.py Hybrid/HC2FromFile --only CTNet-NB TSLR-NB         --datasets ../dataset_lists/eeg_motor_imagery.txt
 
 Folders whose name starts with _ (e.g. _superseded) are skipped.
 """
@@ -30,6 +31,8 @@ def scores(file):
     rows = [line.split(",", 2) for line in file.read_text().splitlines()[3:]]
     y = np.array([int(r[0]) for r in rows if len(r) > 1])
     p = np.array([int(r[1]) for r in rows if len(r) > 1])
+    if len(y) == 0:
+        return None
     return float(np.mean(y == p)), float(balanced_accuracy_score(y, p))
 
 
@@ -41,7 +44,9 @@ def load(estimator_dir):
         for f in d.glob("testResample*.csv"):
             m = _TEST.match(f.name)
             if m and f.stat().st_size > 0:
-                out.setdefault(d.name, {})[int(m.group(1))] = scores(f)
+                found = scores(f)
+                if found is not None:  # skip a file with no case rows
+                    out.setdefault(d.name, {})[int(m.group(1))] = found
     return out
 
 
@@ -65,10 +70,24 @@ def main(argv=None):
     parser.add_argument(
         "--min-datasets", type=int, default=5, help="skip pairs with fewer shared"
     )
+    parser.add_argument(
+        "--datasets", help="file of dataset names, one per line: compare only these"
+    )
+    parser.add_argument(
+        "--only", nargs="+", help="estimator names (no category) to compare with"
+    )
     args = parser.parse_args(argv)
 
     results = Path(args.results).expanduser()
-    ref = load(results / args.reference)
+    keep = None
+    if args.datasets:
+        keep = set(Path(args.datasets).expanduser().read_text().split())
+
+    def load_kept(estimator_dir):
+        found = load(estimator_dir)
+        return found if keep is None else {d: r for d, r in found.items() if d in keep}
+
+    ref = load_kept(results / args.reference)
     if not ref:
         sys.exit(f"No test files for {args.reference} in {results}")
     print(f"{args.reference}: {len(ref)} datasets\n")
@@ -78,7 +97,9 @@ def main(argv=None):
         name = f"{est.parent.parent.name}/{est.parent.name}"
         if name == args.reference or any(p.startswith("_") for p in name.split("/")):
             continue
-        a, b = compare(ref, load(est.parent))
+        if args.only and est.parent.name not in args.only:
+            continue
+        a, b = compare(ref, load_kept(est.parent))
         if len(a) < args.min_datasets:
             continue
         row = [name, len(a)]
