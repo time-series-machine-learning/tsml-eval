@@ -144,5 +144,9 @@ device = "cuda"
 
 [slurm]
 env_name = "tsml-eval-torch"
+# 12 h, not the profile's 2.5 days, so jobs can start before a maintenance
+# reservation; NeuralBench training stops after at most 40 epochs
+time_limit = "12:00:00"
+max_active = 20
 gpu_check = "torch"
 memory_gb = [32, 64, 128]
