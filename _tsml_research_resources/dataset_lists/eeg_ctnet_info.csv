@@ -57,6 +57,7 @@ MatchingPennies,5000,~/Data/EEG/MatchingPennies/MatchingPennies_id_TRAIN.txt
 MentalArithmetic,200,~/Data/EEG/MentalArithmetic/MentalArithmetic_id_TRAIN.txt
 MindReading,200,none
 MotorImagery,1000,none
+NBackAudioCondition,200,~/Data/EEG/NBackAudioCondition/NBackAudioCondition_id_TRAIN.txt
 ObsessiveCompulsiveSymptoms,500,~/Data/EEG/ObsessiveCompulsiveSymptoms/ObsessiveCompulsiveSymptoms_id_TRAIN.txt
 OpenCloseFist,160,~/Data/EEG/OpenCloseFist/OpenCloseFist_id_TRAIN.txt
 ParkinsonsPedalling,500,~/Data/EEG/ParkinsonsPedalling/ParkinsonsPedalling_id_TRAIN.txt

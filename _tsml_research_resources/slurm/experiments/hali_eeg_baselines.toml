@@ -7,8 +7,8 @@
 #            shrinkage 0.1, tangent space, StandardScaler, LogisticRegressionCV
 #
 # The MOABB TS-LR (motor imagery only) is hali_eeg_baselines_mi.toml and CTNet (GPU)
-# is hali_eeg_ctnet.toml. sfreq comes per dataset from dataset_info; datasets without
-# a rate (NBackAudioCondition) are not run. n_jobs goes to LogisticRegressionCV's
+# is hali_eeg_ctnet.toml. sfreq comes per dataset from dataset_info. `check`
+# lists any datasets still missing a rate. n_jobs goes to LogisticRegressionCV's
 # 5 folds.
 #
 #   python tsml_slurm.py check experiments/hali_eeg_baselines.toml

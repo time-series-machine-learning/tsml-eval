@@ -7,8 +7,8 @@
 #
 # The filter needs each dataset's sampling rate: "{dataset.sfreq}" takes it, task by
 # task, from dataset_info (built from the datasets' metadata sidecars and the
-# EEGBench registry). Datasets without a rate (NBackAudioCondition) are not run;
-# `check` lists them. Results go beside the unfiltered ones, under the new names.
+# EEGBench registry). `check` lists any datasets still missing a rate. Results
+# go beside the unfiltered ones, under the new names.
 #
 #   python tsml_slurm.py check experiments/iridis6_eeg_filtered.toml
 #   python tsml_slurm.py start experiments/iridis6_eeg_filtered.toml
