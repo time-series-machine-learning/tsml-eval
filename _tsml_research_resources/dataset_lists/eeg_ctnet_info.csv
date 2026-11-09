@@ -1,6 +1,7 @@
 dataset,sfreq,train_groups
 ALSAttention,256,~/Data/EEG/ALSAttention/ALSAttention_id_TRAIN.txt
 Alzheimers,500,~/Data/EEG/Alzheimers/Alzheimers_id_TRAIN.txt
+AlzheimersAuditory,250,~/Data/EEG/AlzheimersAuditory/AlzheimersAuditory_id_TRAIN.txt
 ArmCoordination,500,~/Data/EEG/ArmCoordination/ArmCoordination_id_TRAIN.txt
 ArmMovements,512,~/Data/EEG/ArmMovements/ArmMovements_id_TRAIN.txt
 Blink,255,none
@@ -32,6 +33,7 @@ ImaginedGripForce,128,~/Data/EEG/ImaginedGripForce/ImaginedGripForce_id_TRAIN.tx
 ImaginedHandFeetTongue,200,~/Data/EEG/ImaginedHandFeetTongue/ImaginedHandFeetTongue_id_TRAIN.txt
 ImaginedHandFootActions,125,~/Data/EEG/ImaginedHandFootActions/ImaginedHandFootActions_id_TRAIN.txt
 ImaginedHandGestures,500,~/Data/EEG/ImaginedHandGestures/ImaginedHandGestures_id_TRAIN.txt
+ImaginedHandMusicTempo,1000,~/Data/EEG/ImaginedHandMusicTempo/ImaginedHandMusicTempo_id_TRAIN.txt
 ImaginedHandPupils,512,~/Data/EEG/ImaginedHandPupils/ImaginedHandPupils_id_TRAIN.txt
 ImaginedHandSides,250,~/Data/EEG/ImaginedHandSides/ImaginedHandSides_id_TRAIN.txt
 ImaginedHandTraining,512,~/Data/EEG/ImaginedHandTraining/ImaginedHandTraining_id_TRAIN.txt
@@ -62,6 +64,8 @@ ObsessiveCompulsiveSymptoms,500,~/Data/EEG/ObsessiveCompulsiveSymptoms/Obsessive
 OpenCloseFist,160,~/Data/EEG/OpenCloseFist/OpenCloseFist_id_TRAIN.txt
 ParkinsonsPedalling,500,~/Data/EEG/ParkinsonsPedalling/ParkinsonsPedalling_id_TRAIN.txt
 ParkinsonsRest,500,~/Data/EEG/ParkinsonsRest/ParkinsonsRest_id_TRAIN.txt
+ParkinsonsRestIowa,500,~/Data/EEG/ParkinsonsRestIowa/ParkinsonsRestIowa_id_TRAIN.txt
+ParkinsonsRestUCSD,512,~/Data/EEG/ParkinsonsRestUCSD/ParkinsonsRestUCSD_id_TRAIN.txt
 PhotoStimulation,500,~/Data/EEG/PhotoStimulation/PhotoStimulation_id_TRAIN.txt
 PronouncedSpeech,1024,~/Data/EEG/PronouncedSpeech/PronouncedSpeech_id_TRAIN.txt
 RestingEyeState,512,~/Data/EEG/RestingEyeState/RestingEyeState_id_TRAIN.txt
