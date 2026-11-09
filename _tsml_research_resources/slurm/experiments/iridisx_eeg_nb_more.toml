@@ -9,6 +9,8 @@
 # model on one cluster only (separate filesystems): hali_eeg_nb_more.toml has the
 # convolutional and filter-bank models, iridisx_eeg_nb_more.toml the attention,
 # transformer, graph and task-specific ones.
+# Since 2026-11-09 the last six of those (SyncNet to ContraWR) run on Hali
+# instead, in hali_eeg_nb_more2.toml.
 #
 # aeon-neuro pads short cases only for the five original NeuralBench models, so a
 # model here may fail on the short problems: report those failures to aeon-neuro.
@@ -49,12 +51,6 @@ DeepLearning = [
     "EEGInceptionERP-NB",
     "TSception-NB",
     "EEGMiner-NB",
-    "SyncNet-NB",
-    "BDTCN-NB",
-    "SPARCNet-NB",
-    "BrainModule-NB",
-    "SleepStagerChambon2018-NB",
-    "ContraWR-NB",
 ]
 
 [estimator_kwargs."ATCNet-NB"]
@@ -108,36 +104,6 @@ train_groups = "{dataset.train_groups}"
 device = "cuda"
 
 [estimator_kwargs."EEGMiner-NB"]
-sfreq = "{dataset.sfreq}"
-train_groups = "{dataset.train_groups}"
-device = "cuda"
-
-[estimator_kwargs."SyncNet-NB"]
-sfreq = "{dataset.sfreq}"
-train_groups = "{dataset.train_groups}"
-device = "cuda"
-
-[estimator_kwargs."BDTCN-NB"]
-sfreq = "{dataset.sfreq}"
-train_groups = "{dataset.train_groups}"
-device = "cuda"
-
-[estimator_kwargs."SPARCNet-NB"]
-sfreq = "{dataset.sfreq}"
-train_groups = "{dataset.train_groups}"
-device = "cuda"
-
-[estimator_kwargs."BrainModule-NB"]
-sfreq = "{dataset.sfreq}"
-train_groups = "{dataset.train_groups}"
-device = "cuda"
-
-[estimator_kwargs."SleepStagerChambon2018-NB"]
-sfreq = "{dataset.sfreq}"
-train_groups = "{dataset.train_groups}"
-device = "cuda"
-
-[estimator_kwargs."ContraWR-NB"]
 sfreq = "{dataset.sfreq}"
 train_groups = "{dataset.train_groups}"
 device = "cuda"
