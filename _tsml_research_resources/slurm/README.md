@@ -342,6 +342,18 @@ disjoint set of estimators, then copy the results together afterwards. If two
 clusters must share an estimator, split the dataset list between them, or copy the
 finished results across first so the second cluster sees them as complete.
 
+A task also counts as complete when its result files are listed in
+`<results_dir>/completed.txt`, one path per line relative to `results_dir`. Build it
+from the master copy of the results and copy it to every machine; results can then be
+deleted from a machine short of space without being run again:
+
+```
+python registry.py D:/Results/EEG
+scp D:/Results/EEG/completed.txt ajb@hali.uea.ac.uk:Results/EEG/
+```
+
+`registry.py` only adds entries. To rerun a task, delete its lines from the file.
+
 ### 9. Cross-validation, split by subject
 
 `cv_folds = 10` combines train and test and runs each of 10 stratified folds as its

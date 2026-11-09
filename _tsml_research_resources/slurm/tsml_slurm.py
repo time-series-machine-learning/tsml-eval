@@ -761,9 +761,47 @@ def result_files(e, task):
     return [test, train] if e.train_files else [test]
 
 
+REGISTRY_NAME = "completed.txt"
+
+
+def read_registry(results_dir):
+    """Result files recorded as complete in <results_dir>/completed.txt.
+
+    The registry lets results be deleted or moved off a machine without the
+    runner resubmitting them: one path per line, relative to results_dir
+    (e.g. ``IntervalBased/QUANT/Predictions/Sleep/testResample0.csv``), with
+    ``#`` comments. Built by registry.py from a master copy of the results and
+    copied to every machine. Re-read whenever the file changes.
+    """
+    path = Path(results_dir) / REGISTRY_NAME
+    try:
+        info = path.stat()
+        stamp = (info.st_mtime_ns, info.st_size)
+    except OSError:
+        return frozenset()
+    cached = _REGISTRY_CACHE.get(path)
+    if cached and cached[0] == stamp:
+        return cached[1]
+    with path.open(encoding="utf-8") as file:
+        entries = frozenset(
+            line.strip().replace("\\", "/")
+            for line in file
+            if line.strip() and not line.lstrip().startswith("#")
+        )
+    _REGISTRY_CACHE[path] = (stamp, entries)
+    return entries
+
+
+_REGISTRY_CACHE = {}
+
+
 def is_complete(e, task):
-    """Whether every required result file exists and is non-empty."""
+    """Whether every required result file exists and is non-empty, or is in
+    the results registry (see read_registry)."""
+    registry = read_registry(e.results_dir)
     for path in result_files(e, task):
+        if registry and path.relative_to(e.results_dir).as_posix() in registry:
+            continue
         try:
             if path.stat().st_size == 0:
                 return False

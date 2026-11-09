@@ -202,6 +202,33 @@ def test_categories_set_results_layout(world):
     )
 
 
+def test_registry_counts_deleted_results_as_complete(world):
+    e = make(world, body="train_files = true")
+    ts.read_datasets(e)
+    task = next(ts.all_tasks(e))
+    assert not ts.is_complete(e, task)
+    write_result(e, task, train=True)
+    assert ts.is_complete(e, task)
+
+    spec = importlib.util.spec_from_file_location("registry", ROOT / "registry.py")
+    registry = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(registry)
+    registry.main([str(e.results_dir)])
+    for path in ts.result_files(e, task):
+        path.unlink()
+    assert ts.is_complete(e, task)
+
+    # train file no longer registered: the task is incomplete again
+    reg = e.results_dir / ts.REGISTRY_NAME
+    lines = [ln for ln in reg.read_text().splitlines() if "train" not in ln]
+    reg.write_text("\n".join(lines) + "\n")
+    assert not ts.is_complete(e, task)
+
+    # rebuilding never drops entries for files that are gone
+    registry.main([str(e.results_dir)])
+    assert any("testResample0" in ln for ln in reg.read_text().splitlines())
+
+
 def test_clustering_requires_train_file(world):
     with pytest.raises(ts.ConfigError, match="only applies to clustering"):
         make(world, body="test_files = true")
