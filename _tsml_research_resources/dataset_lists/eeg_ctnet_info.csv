@@ -32,12 +32,15 @@ ImaginedGripForce,128,~/Data/EEG/ImaginedGripForce/ImaginedGripForce_id_TRAIN.tx
 ImaginedHandFeetTongue,200,~/Data/EEG/ImaginedHandFeetTongue/ImaginedHandFeetTongue_id_TRAIN.txt
 ImaginedHandFootActions,125,~/Data/EEG/ImaginedHandFootActions/ImaginedHandFootActions_id_TRAIN.txt
 ImaginedHandGestures,500,~/Data/EEG/ImaginedHandGestures/ImaginedHandGestures_id_TRAIN.txt
+ImaginedHandPupils,512,~/Data/EEG/ImaginedHandPupils/ImaginedHandPupils_id_TRAIN.txt
 ImaginedHandSides,250,~/Data/EEG/ImaginedHandSides/ImaginedHandSides_id_TRAIN.txt
 ImaginedHandTraining,512,~/Data/EEG/ImaginedHandTraining/ImaginedHandTraining_id_TRAIN.txt
+ImaginedHandsCrossSession,250,~/Data/EEG/ImaginedHandsCrossSession/ImaginedHandsCrossSession_id_TRAIN.txt
 ImaginedHandsEmbodiment,500,~/Data/EEG/ImaginedHandsEmbodiment/ImaginedHandsEmbodiment_id_TRAIN.txt
 ImaginedHandsFeedback,250,~/Data/EEG/ImaginedHandsFeedback/ImaginedHandsFeedback_id_TRAIN.txt
 ImaginedHandsFeet,250,~/Data/EEG/ImaginedHandsFeet/ImaginedHandsFeet_id_TRAIN.txt
 ImaginedHandsHaptics,500,~/Data/EEG/ImaginedHandsHaptics/ImaginedHandsHaptics_id_TRAIN.txt
+ImaginedHandsOnline,250,~/Data/EEG/ImaginedHandsOnline/ImaginedHandsOnline_id_TRAIN.txt
 ImaginedHandsRobot,250,~/Data/EEG/ImaginedHandsRobot/ImaginedHandsRobot_id_TRAIN.txt
 ImaginedHandsStroke,500,~/Data/EEG/ImaginedHandsStroke/ImaginedHandsStroke_id_TRAIN.txt
 ImaginedLeftRightHand,200,~/Data/EEG/ImaginedLeftRightHand/ImaginedLeftRightHand_id_TRAIN.txt

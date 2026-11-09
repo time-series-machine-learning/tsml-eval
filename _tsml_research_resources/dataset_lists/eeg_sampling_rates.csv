@@ -32,12 +32,15 @@ ImaginedGripForce,128
 ImaginedHandFeetTongue,200
 ImaginedHandFootActions,125
 ImaginedHandGestures,500
+ImaginedHandPupils,512
 ImaginedHandSides,250
 ImaginedHandTraining,512
+ImaginedHandsCrossSession,250
 ImaginedHandsEmbodiment,500
 ImaginedHandsFeedback,250
 ImaginedHandsFeet,250
 ImaginedHandsHaptics,500
+ImaginedHandsOnline,250
 ImaginedHandsRobot,250
 ImaginedHandsStroke,500
 ImaginedLeftRightHand,200
