@@ -108,6 +108,13 @@ neuro_classifiers = [
     ["neuralbenchtslrclassifier", "tslr-nb"],
     ["moabbtslrclassifier", "tslr-moabb"],
     ["neuralbenchctnetclassifier", "ctnet-nb"],
+    # standard EEG baselines: differential entropy (emotion/cognitive state) and
+    # TRCA/template CCA (visual evoked potentials; run them band-passed, e.g.
+    # TRCA-BP640, as slow drift swamps the raw signal)
+    ["differentialentropyclassifier", "de-lr"],
+    "de-svm",
+    ["trcaclassifier", "trca"],
+    ["templateccaclassifier", "templatecca"],
     *neuralbench_deep_models,
     *moabb_pipelines,
 ]
@@ -593,6 +600,29 @@ def _set_classifier_neuro(c, random_state, n_jobs, kwargs):
         return NeuralBenchDeepClassifier(
             model=neuralbench_deep_models[c], random_state=random_state, **kwargs
         )
+    elif c in ("differentialentropyclassifier", "de-lr", "de-svm"):
+        from aeon_neuro.classification.feature_based import (
+            DifferentialEntropyClassifier,
+        )
+
+        if c == "de-svm" and "classifier" not in kwargs:
+            from sklearn.pipeline import make_pipeline
+            from sklearn.preprocessing import StandardScaler
+            from sklearn.svm import SVC
+
+            kwargs["classifier"] = make_pipeline(
+                StandardScaler(), SVC(probability=True, random_state=random_state)
+            )
+        return DifferentialEntropyClassifier(random_state=random_state, **kwargs)
+    elif c in ("trcaclassifier", "trca"):
+        from aeon_neuro.classification.distance_based import TRCAClassifier
+
+        # deterministic: no random_state
+        return TRCAClassifier(**kwargs)
+    elif c in ("templateccaclassifier", "templatecca"):
+        from aeon_neuro.classification.distance_based import TemplateCCAClassifier
+
+        return TemplateCCAClassifier(**kwargs)
     elif c in moabb_pipelines:
         from aeon_neuro.classification.experimental import MOABBPipelineClassifier
 

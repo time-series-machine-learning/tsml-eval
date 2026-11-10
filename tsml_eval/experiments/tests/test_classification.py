@@ -272,6 +272,30 @@ def test_get_aeon_neuro_generic_baseline(name, expected, setting, value):
     assert classifier.sfreq == 250.0
 
 
+@pytest.mark.parametrize(
+    "name, module, expected",
+    [
+        ("DE-LR", "feature_based", "DifferentialEntropyClassifier"),
+        ("DE-SVM", "feature_based", "DifferentialEntropyClassifier"),
+        ("TRCA", "distance_based", "TRCAClassifier"),
+        ("TemplateCCA", "distance_based", "TemplateCCAClassifier"),
+    ],
+)
+def test_get_eeg_feature_baselines(name, module, expected):
+    """Test the differential entropy, TRCA and template CCA baselines."""
+    mod = pytest.importorskip(f"aeon_neuro.classification.{module}")
+    if not hasattr(mod, expected):
+        pytest.skip(f"{expected} is not in the installed aeon-neuro")
+    kwargs = {"sfreq": 250.0} if name.startswith("DE") else {}
+    classifier = get_classifier_by_name(name, random_state=0, **kwargs)
+    assert type(classifier).__name__ == expected
+    if name == "DE-SVM":
+        assert type(classifier.classifier[-1]).__name__ == "SVC"
+    # band-passed variant: a pipeline with the filter in front
+    piped = get_classifier_by_name(f"{name}-BP640", sfreq=250.0)
+    assert type(piped).__name__ == "ClassifierPipeline"
+
+
 def test_get_ctnet_train_groups(tmp_path):
     """Test CTNet-NB reads subject IDs from a file, and "none" gives None."""
     pytest.importorskip("aeon_neuro.classification.experimental")

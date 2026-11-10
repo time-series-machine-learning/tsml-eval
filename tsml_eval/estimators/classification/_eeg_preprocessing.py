@@ -1,7 +1,7 @@
 """Preprocessing for EEG classifiers: band-pass filtering and normalisation.
 
 ``get_classifier_by_name`` puts these in front of any classifier by name suffix:
-``-BP830`` (8-30 Hz) and ``-BP140`` (1-40 Hz) band-pass each channel and need the
+``-BP830`` (8-30 Hz), ``-BP140`` (1-40 Hz) and ``-BP640`` (6-40 Hz) band-pass each channel and need the
 dataset's sampling rate as ``sfreq``; ``-norm`` z-normalises each channel of each
 case. For example ``RiemannianMDM-OAS-BP830`` or ``CNN-norm``.
 """
@@ -13,7 +13,8 @@ import numpy as np
 from aeon.transformations.collection import BaseCollectionTransformer
 
 #: name suffix -> (low, high) cut-offs in Hz
-BANDS = {"bp830": (8.0, 30.0), "bp140": (1.0, 40.0)}
+# bp640 (6-40 Hz) is for steady-state visual evoked potentials, e.g. TRCA-BP640
+BANDS = {"bp830": (8.0, 30.0), "bp140": (1.0, 40.0), "bp640": (6.0, 40.0)}
 
 
 class BandPassFilter(BaseCollectionTransformer):
