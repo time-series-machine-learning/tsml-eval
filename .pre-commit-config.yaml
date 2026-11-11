@@ -27,7 +27,7 @@ repos:
         args: [ "--create", "--python-folders", "tsml_eval" ]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.17.3
+    rev: v0.17.4
     hooks:
       - id: ruff
         args: [ "--fix"]
@@ -54,7 +54,7 @@ repos:
         exclude: "tsml_eval/_wip/"
 
   - repo: https://github.com/nbQA-dev/nbQA
-    rev: 1.9.1
+    rev: 1.10.0
     hooks:
       - id: nbqa-isort
         additional_dependencies: [ isort ]
