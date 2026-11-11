@@ -106,12 +106,14 @@ copybutton_exclude = ".linenos, .gp, .go"
 remove_from_toctrees = ["auto_generated/*"]
 
 # sphinx-reredirects
-# publication pages which have moved to their own repositories keep their old URLs
-rist_repo = "https://github.com/time-series-machine-learning/rist-pipeline-2023"
 redirects = {
     "redirect": "index",
-    "publications/2023/rist_pipeline/rist_pipeline": rist_repo,
-    "publications/y2023/rist_pipeline/rist_pipeline": rist_repo,
+    "publications/2023/rist_pipeline/rist_pipeline": (
+        "https://github.com/time-series-machine-learning/rist-pipeline-2023"
+    ),
+    "publications/y2023/rist_pipeline/rist_pipeline": (
+        "https://github.com/time-series-machine-learning/rist-pipeline-2023"
+    ),
 }
 
 # nbsphinx
