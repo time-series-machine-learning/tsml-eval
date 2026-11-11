@@ -8,11 +8,6 @@ The paper introduces RIST, a pipeline which combines features extracted from ran
 intervals and random dilated shapelets, and evaluates it for both time series
 classification and extrinsic regression.
 
-![Critical difference diagram of RMSE ranks for RIST and five other regressors](https://raw.githubusercontent.com/time-series-machine-learning/rist-pipeline-2023/main/figures/regression_cd.png)
-
-RMSE critical difference diagram comparing RIST with five regression algorithms,
-using the average over 5 resamples on 55 regression datasets (Figure 6 in the paper).
-
 The code and results for the paper are in the
 [rist-pipeline-2023](https://github.com/time-series-machine-learning/rist-pipeline-2023)
 repository:
