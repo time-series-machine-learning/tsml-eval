@@ -1,7 +1,11 @@
 # TRACE (Temporal Riemannian Adaptive Classification Ensemble, aeon-neuro PR #296).
-# Its fit cross-validates 56 (intervals, k) settings, so it runs on the 50 problems
-# under 200M values (eeg_no_pigs.txt, smallest first); extend to the rest if the
-# largest of these finish comfortably.
+# Run as the student wrote it (byte-identical to PR head 6d1f62d) but with
+# cross_validate = false (Tony, 11/11/2026): the default tunes 56 (intervals, k)
+# settings, 334 s on EyesOpenShut's 56 cases, infeasible here. So intervals = 5,
+# k = 10. Runs on the 50 problems under 200M values (eeg_no_pigs.txt, smallest
+# first); extend to the rest if the largest of these finish comfortably. Problems
+# where every window scores equally raise "cannot convert float NaN to integer":
+# leave those as failures, the code is not patched.
 # Needs aeon-neuro ajb/eeg-baselines with TRACE exported from distance_based.
 #
 #   python tsml_slurm.py check experiments/hali_eeg_trace.toml
@@ -22,6 +26,9 @@ smallest_datasets_first = true
 
 [estimators]
 DistanceBased = ["TRACE"]
+
+[estimator_kwargs."TRACE"]
+cross_validate = false
 
 [slurm]
 env_name = "tsml-eval"
