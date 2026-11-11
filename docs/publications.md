@@ -27,4 +27,4 @@ of publication for the paper.
 
 ### 2023
 
-[Extracting Features from Random Subseries: A Hybrid Pipeline for Time Series Classification and Extrinsic Regression](./publications/2023/rist_pipeline/rist_pipeline.md)
+[Extracting Features from Random Subseries: A Hybrid Pipeline for Time Series Classification and Extrinsic Regression](https://github.com/time-series-machine-learning/rist-pipeline-2023)
