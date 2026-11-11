@@ -107,7 +107,6 @@ remove_from_toctrees = ["auto_generated/*"]
 
 # sphinx-reredirects
 redirects = {
-    "redirect": "index",
     "publications/2023/rist_pipeline/rist_pipeline": (
         "https://github.com/time-series-machine-learning/rist-pipeline-2023"
     ),
