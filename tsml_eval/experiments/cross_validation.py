@@ -69,6 +69,8 @@ def classification_cross_validation(
         Whether to generate a train-estimate file for each selected outer fold. This
         uses the classifier's own train estimates when available, otherwise an inner
         cross-validation on that outer fold's training partition.
+        Cannot be combined with external ``data_transforms``: the underlying runner
+        fits these before the inner split, which can leak validation information.
     ignore_custom_train_estimate : bool, default=False
         todo
     attribute_file_path : str or None, default=None
@@ -89,7 +91,7 @@ def classification_cross_validation(
         If False, existing fold result files are skipped. If True, existing files are
         overwritten.
     """
-    _validate_file_options(build_test_file, build_train_file)
+    _validate_file_options(build_test_file, build_train_file, data_transforms)
     folds = classification_cross_validation_folds(X, y, cv=cv)
     fold_ids = _normalise_fold_ids(fold_ids, len(folds))
 
@@ -197,6 +199,8 @@ def regression_cross_validation(
         Whether to generate a train-estimate file for each selected outer fold. This
         uses the regressor's own train estimates when available, otherwise an inner
         cross-validation on that outer fold's training partition.
+        Cannot be combined with external ``data_transforms``: the underlying runner
+        fits these before the inner split, which can leak validation information.
     ignore_custom_train_estimate : bool, default=False
         todo
     attribute_file_path : str or None, default=None
@@ -215,7 +219,7 @@ def regression_cross_validation(
         If False, existing fold result files are skipped. If True, existing files are
         overwritten.
     """
-    _validate_file_options(build_test_file, build_train_file)
+    _validate_file_options(build_test_file, build_train_file, data_transforms)
     folds = regression_cross_validation_folds(X, y, cv=cv)
     fold_ids = _normalise_fold_ids(fold_ids, len(folds))
 
@@ -396,10 +400,21 @@ def _fold_attribute_path(attribute_file_path, fold):
     return f"{attribute_file_path}/fold{fold}/"
 
 
-def _validate_file_options(build_test_file, build_train_file):
-    """Require at least one result file for a CV experiment."""
+def _validate_file_options(build_test_file, build_train_file, data_transforms):
+    """Validate output options before any folds are fitted or files are written."""
     if not build_test_file and not build_train_file:
         raise ValueError(
             "Both test_file and train_file are set to False. At least one must be "
             "written."
+        )
+    has_transforms = data_transforms is not None and not (
+        isinstance(data_transforms, list) and len(data_transforms) == 0
+    )
+    if build_train_file and has_transforms:
+        raise ValueError(
+            "build_train_file=True cannot be combined with data_transforms. "
+            "External transforms are fitted before the inner train-estimation "
+            "splits and can leak validation information. Set build_train_file=False "
+            "or use an estimator pipeline that refits preprocessing within each "
+            "train-estimation split."
         )
