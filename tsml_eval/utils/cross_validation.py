@@ -9,6 +9,7 @@ __all__ = [
 from numbers import Integral
 
 import numpy as np
+import pandas as pd
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils import indexable
 from sklearn.utils.validation import _num_samples
@@ -44,9 +45,10 @@ def _get_sequence_indices(n_samples, groups):
     if groups is None:
         return [np.arange(n_samples, dtype=int)]
 
-    groups = np.asarray(groups)
-    if groups.ndim != 1:
+    if np.ndim(groups) != 1:
         raise ValueError("groups must be one-dimensional.")
+    if np.any(pd.isna(groups)):
+        raise ValueError("groups must not contain missing values.")
 
     sequence_ids, inverse = np.unique(groups, return_inverse=True)
     return [
@@ -184,7 +186,7 @@ class HVBlockCrossValidator(BaseCrossValidator):
             Target values. Not used.
         groups : array-like of shape (n_cases,), default=None
             Independent sequence ID for each case. If supplied, the total is the sum
-            of the valid test blocks across all sequences.
+            of the valid test blocks across all sequences. IDs must not be missing.
 
         Returns
         -------
@@ -216,7 +218,7 @@ class HVBlockCrossValidator(BaseCrossValidator):
             blocks and their exclusion buffers stay within that sequence. If
             ``None``, all cases are treated as one continuous sequence. The cases are
             not sorted or shuffled, so they must already be in chronological order
-            within each sequence.
+            within each sequence. IDs must not be missing.
 
         Yields
         ------
@@ -321,7 +323,8 @@ class BufferedBlockedKFold(BaseCrossValidator):
             cases from the same sequence may remain in training. Each ID must occur
             at least ``n_splits`` times. If ``None``, all cases are treated as one
             continuous sequence. The cases are not sorted or shuffled, so they must
-            already be in chronological order within each sequence.
+            already be in chronological order within each sequence. IDs must not be
+            missing.
 
         Yields
         ------

@@ -1,6 +1,7 @@
 """Tests for dependent time-series cross-validation utilities."""
 
 import numpy as np
+import pandas as pd
 import pytest
 from sklearn import config_context
 from sklearn.dummy import DummyRegressor
@@ -17,6 +18,56 @@ def _assert_split_equal(split, expected_train, expected_test):
     train, test = split
     np.testing.assert_array_equal(train, expected_train)
     np.testing.assert_array_equal(test, expected_test)
+
+
+@pytest.mark.parametrize(
+    "cv", [HVBlockCrossValidator(h=1), BufferedBlockedKFold(n_splits=2)]
+)
+@pytest.mark.parametrize(
+    "groups",
+    [
+        np.array([0, 0, 0, np.nan, np.nan, np.nan]),
+        np.array([0, 0, 0, np.nan, np.nan, np.nan], dtype=object),
+        ["a", "a", "a", np.nan, np.nan, np.nan],
+        ["a", "a", "a", None, None, None],
+        np.array(["2020-01-01"] * 3 + ["NaT"] * 3, dtype="datetime64[D]"),
+        pd.Series([0, 0, 0, pd.NA, pd.NA, pd.NA], dtype="Int64"),
+        pd.Series(["a", "a", "a", pd.NA, pd.NA, pd.NA], dtype="string"),
+        pd.Categorical(["a", "a", "a", None, None, None]),
+    ],
+    ids=[
+        "float",
+        "object",
+        "string-list-nan",
+        "none",
+        "nat",
+        "nullable-int",
+        "nullable-string",
+        "categorical",
+    ],
+)
+def test_missing_sequence_ids_are_rejected(cv, groups):
+    """Reject missing IDs before they can create spurious independent sequences."""
+    X = np.arange(6)
+    with pytest.raises(ValueError, match="groups must not contain missing values"):
+        next(cv.split(X, groups=groups))
+    if isinstance(cv, HVBlockCrossValidator):
+        with pytest.raises(ValueError, match="groups must not contain missing values"):
+            cv.get_n_splits(X, groups=groups)
+
+
+@pytest.mark.parametrize(
+    "cv", [HVBlockCrossValidator(h=1), BufferedBlockedKFold(n_splits=2)]
+)
+def test_literal_nan_sequence_id_is_valid(cv):
+    """A literal string ID named nan is not a missing value."""
+    X = np.arange(6)
+    groups = ["a", "a", "a", "nan", "nan", "nan"]
+    actual = list(cv.split(X, groups=groups))
+    expected = list(cv.split(X, groups=[0, 0, 0, 1, 1, 1]))
+    assert len(actual) == len(expected)
+    for split, (train, test) in zip(actual, expected):
+        _assert_split_equal(split, train, test)
 
 
 def test_hv_block_v_zero_expected_indices():
