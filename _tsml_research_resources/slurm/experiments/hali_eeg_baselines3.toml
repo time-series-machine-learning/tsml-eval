@@ -1,0 +1,41 @@
+# Last classical baselines from the cross-benchmark survey (EEGBench
+# docs/benchmark_algorithms_survey.md): NeuralBench's ERP baseline (xDAWN covariances,
+# tangent space, logistic regression), its spectral baseline (Welch co-spectra, log1p,
+# logistic regression), and filter-bank TRCA (Nakanishi et al. 2018, 5 sub-bands,
+# filters itself so no -BP suffix). All CPU, all need the sampling rate.
+# Needs aeon-neuro ajb/eeg-baselines with NeuralBenchXdawnTSLRClassifier,
+# NeuralBenchCoSpectraLRClassifier and TRCAClassifier(filter_bank=...).
+#
+#   python tsml_slurm.py check experiments/hali_eeg_baselines3.toml
+#   python tsml_slurm.py start experiments/hali_eeg_baselines3.toml
+
+[experiment]
+name = "eeg-baselines3"
+cluster = "hali"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{home}/DataSetLists/eeg.txt"
+dataset_info = "{repo}/_tsml_research_resources/dataset_lists/eeg_sampling_rates.csv"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+[estimators]
+FeatureBased = ["XdawnTSLR-NB", "CoSpectraLR-NB"]
+DistanceBased = ["FBTRCA"]
+
+[estimator_kwargs."XdawnTSLR-NB"]
+sfreq = "{dataset.sfreq}"
+
+[estimator_kwargs."CoSpectraLR-NB"]
+sfreq = "{dataset.sfreq}"
+
+[estimator_kwargs."FBTRCA"]
+sfreq = "{dataset.sfreq}"
+
+[slurm]
+env_name = "tsml-eval"
+memory_gb = [16, 32, 64, 128]

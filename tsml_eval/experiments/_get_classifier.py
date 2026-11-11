@@ -106,6 +106,8 @@ neuro_classifiers = [
     "csp+svm",
     ["xdawnclassifier", "xdawn", "xdawnlda"],
     ["neuralbenchtslrclassifier", "tslr-nb"],
+    ["neuralbenchxdawntslrclassifier", "xdawntslr-nb"],
+    ["neuralbenchcospectralrclassifier", "cospectralr-nb"],
     ["moabbtslrclassifier", "tslr-moabb"],
     ["neuralbenchctnetclassifier", "ctnet-nb"],
     # standard EEG baselines: differential entropy (emotion/cognitive state) and
@@ -114,6 +116,11 @@ neuro_classifiers = [
     ["differentialentropyclassifier", "de-lr"],
     "de-svm",
     ["trcaclassifier", "trca"],
+    # filter-bank TRCA (Nakanishi et al. 2018, 5 sub-bands); needs sfreq, filters
+    # itself so no -BP suffix
+    "fbtrca",
+    # TRACE: Riemannian interval ensemble (aeon-neuro PR #296)
+    ["trace", "traceclassifier"],
     ["templateccaclassifier", "templatecca"],
     *neuralbench_deep_models,
     *moabb_pipelines,
@@ -584,6 +591,22 @@ def _set_classifier_neuro(c, random_state, n_jobs, kwargs):
         return NeuralBenchTSLRClassifier(
             n_jobs=n_jobs, random_state=random_state, **kwargs
         )
+    elif c in ("neuralbenchxdawntslrclassifier", "xdawntslr-nb"):
+        from aeon_neuro.classification.experimental import (
+            NeuralBenchXdawnTSLRClassifier,
+        )
+
+        return NeuralBenchXdawnTSLRClassifier(
+            n_jobs=n_jobs, random_state=random_state, **kwargs
+        )
+    elif c in ("neuralbenchcospectralrclassifier", "cospectralr-nb"):
+        from aeon_neuro.classification.experimental import (
+            NeuralBenchCoSpectraLRClassifier,
+        )
+
+        return NeuralBenchCoSpectraLRClassifier(
+            n_jobs=n_jobs, random_state=random_state, **kwargs
+        )
     elif c in ("moabbtslrclassifier", "tslr-moabb"):
         from aeon_neuro.classification.experimental import MOABBTSLRClassifier
 
@@ -619,6 +642,15 @@ def _set_classifier_neuro(c, random_state, n_jobs, kwargs):
 
         # deterministic: no random_state
         return TRCAClassifier(**kwargs)
+    elif c == "fbtrca":
+        from aeon_neuro.classification.distance_based import TRCAClassifier
+
+        kwargs.setdefault("filter_bank", 5)
+        return TRCAClassifier(**kwargs)
+    elif c in ("trace", "traceclassifier"):
+        from aeon_neuro.classification.distance_based import TRACE
+
+        return TRACE(random_state=random_state, **kwargs)
     elif c in ("templateccaclassifier", "templatecca"):
         from aeon_neuro.classification.distance_based import TemplateCCAClassifier
 

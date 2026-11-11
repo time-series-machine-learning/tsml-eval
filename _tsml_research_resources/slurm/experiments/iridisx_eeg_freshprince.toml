@@ -1,0 +1,26 @@
+# FreshPRINCE on the Iridis X amd CPU partition, on the 50 problems under 200M values (it extracts ~780 tsfresh features per channel; the first eeg-aeon attempt made little progress).
+# Uses the Iridis 6 checkout and env (shared home); no aeon-neuro needed.
+#
+#   python tsml_slurm.py check experiments/iridisx_eeg_freshprince.toml
+#   python tsml_slurm.py start experiments/iridisx_eeg_freshprince.toml
+
+[experiment]
+name = "eeg-freshprince-x"
+cluster = "iridisx"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_no_pigs.txt"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+[estimators]
+FeatureBased = ["FreshPRINCE"]
+
+[slurm]
+env_name = "tsml-eval"
+max_jobs = 2
+memory_gb = [16, 32, 64, 128, 230]
