@@ -113,6 +113,12 @@ redirects = {
     "publications/y2023/rist_pipeline/rist_pipeline": (
         "https://github.com/time-series-machine-learning/rist-pipeline-2023"
     ),
+    "publications/2023/tser_archive_expansion/tser_archive_expansion": (
+        "https://github.com/time-series-machine-learning/tser-archive-expansion-2024"
+    ),
+    "publications/y2023/tser_archive_expansion/tser_archive_expansion": (
+        "https://github.com/time-series-machine-learning/tser-archive-expansion-2024"
+    ),
 }
 
 # nbsphinx
