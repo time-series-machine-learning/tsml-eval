@@ -1,0 +1,44 @@
+# Cross-validation on the 26 motor imagery problems (eeg_mi_only.txt), cheap CPU
+# classifiers first, on the Iridis X amd CPU partition. Train and test are combined
+# and split by subject: up to 15 subjects it is leave one subject out (3 folds for
+# ImaginedLeftRightHandRest, up to 15), above that each test fold holds
+# round(subjects / 10) subjects, giving about 10 folds. Folds are the same for every
+# classifier; fold k is written as testResample<k>.csv.
+#
+# Needs {dataset}_id_TRAIN.txt and _id_TEST.txt for all 26. The TEST files are
+# written from cases_test.tsv / _rows.tsv by
+#   python _tsml_research_resources/dataset_lists/make_train_groups.py ~/Data/EEG --split test --write --datasets <list>
+#
+# Results go to ~/Results/EEG-CV, apart from the default-split results in
+# ~/Results/EEG. The expensive classifiers (HC2 components, RotationForest,
+# FreshPRINCE, MRHydra) are for a later experiment.
+#
+#   python tsml_slurm.py check experiments/iridisx_eeg_mi_cv.toml
+#   python tsml_slurm.py start experiments/iridisx_eeg_mi_cv.toml
+
+[experiment]
+name = "eeg-mi-cv-x"
+cluster = "iridisx"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_mi_only.txt"
+results_dir = "{home}/Results/EEG-CV"
+cv_folds = 10
+smallest_datasets_first = true
+
+[estimators]
+DistanceBased = [
+    "RiemannianMDM", "RiemannianKNN", "RiemannianMDM-OAS", "RiemannianKNN-OAS",
+]
+FeatureBased = ["CSP+LDA", "CSP+SVM", "XDAWN", "Catch22"]
+ConvolutionBased = ["ROCKET", "MiniROCKET"]
+IntervalBased = ["QUANT"]
+Tabular = ["RandomForest", "SVM", "LogisticRegression"]
+
+[slurm]
+env_name = "tsml-eval"
+max_jobs = 4
+memory_gb = [16, 32, 64, 128, 230]
