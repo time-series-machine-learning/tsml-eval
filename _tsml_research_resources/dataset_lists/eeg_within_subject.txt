@@ -1,0 +1,39 @@
+# Candidates for subject-specific (within-subject) CV with contiguous folds; see
+# the design agreed on 12 Nov 2026. Labels vary within each subject, classes are
+# interleaved in time, at least 8 trials per class per subject, and each problem
+# has a case table giving trial order. SSVEP candidates (FlickerAttention,
+# WirelessFlicker, CodedFlickerTargets) not yet agreed.
+# Motor imagery (21 of eeg_mi_only.txt)
+ImaginedAnkleRest
+ImaginedArmMovements
+ImaginedArmTasks
+ImaginedGrasps
+ImaginedHandFeetTongue
+ImaginedHandPupils
+ImaginedHandSides
+ImaginedHandTraining
+ImaginedHandsCrossSession
+ImaginedHandsEmbodiment
+ImaginedHandsFeedback
+ImaginedHandsFeet
+ImaginedHandsHaptics
+ImaginedHandsOnline
+ImaginedHandsPhysiology
+ImaginedHandsRobot
+ImaginedHandsStroke
+ImaginedLeftRightHand
+ImaginedLeftRightHandRest
+ImaginedRightHandFeet
+ImaginedRightHandFeetRest
+# Motor execution and other imagery
+ArmMovements
+ImaginedCommands
+ImaginedHandMusicTempo
+# ERP / P300
+ALSAttention
+SpellerFlashes
+VisualSubjects
+GameTargets
+SymbolAttention
+WalkingTargets
+WordRelatedness

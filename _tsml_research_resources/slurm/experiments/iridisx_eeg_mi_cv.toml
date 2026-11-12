@@ -1,4 +1,5 @@
-# Cross-validation on the 26 motor imagery problems (eeg_mi_only.txt), cheap CPU
+# Cross-validation on the 26 motor imagery problems (eeg_mi_only.txt) and, since 12 Nov 2026,
+# the 7 ERP/P300 problems: eeg_mi_erp.txt, cheap CPU
 # classifiers first, on the Iridis X amd CPU partition. Train and test are combined
 # and split by subject: up to 15 subjects it is leave one subject out (3 folds for
 # ImaginedLeftRightHandRest, up to 15), above that each test fold holds
@@ -24,7 +25,7 @@ task = "classification"
 repo_dir = "{home}/Code/tsml-eval"
 branch = "ajb/slurm-runner"
 data_dir = "{home}/Data/EEG"
-datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_mi_only.txt"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_mi_erp.txt"  # 26 MI + 7 ERP/P300 (added 12 Nov)
 results_dir = "{home}/Results/EEG-CV"
 cv_folds = 10
 smallest_datasets_first = true
