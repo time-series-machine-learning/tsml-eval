@@ -588,12 +588,12 @@ def _set_classifier_distance_based(
 
         return GRAILClassifier(**kwargs)
     elif c == "proximitytree" or c == "proximitytreeclassifier":
-        from tsml_eval._wip.pf._pt import ProximityTree
+        from aeon.classification.distance_based import ProximityTree
 
         return ProximityTree(random_state=random_state, **kwargs)
 
     elif c == "proximityforest" or c == "pf":
-        from tsml_eval._wip.pf._pf import ProximityForest
+        from aeon.classification.distance_based import ProximityForest
 
         return ProximityForest(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "proximityforest2" or c == "pf2":
