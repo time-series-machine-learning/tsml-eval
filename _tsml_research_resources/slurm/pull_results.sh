@@ -4,6 +4,11 @@
 # files with their sizes, one streams the missing or changed ones as a gzip tar.
 # Safe to rerun; nothing local is deleted and nothing remote is changed.
 #
+# For the EEG benchmark prefer the Neuroverse registry (C:/Code/EEGBench), which
+# asks the cluster only for cells it reports done and the desktop lacks:
+#   python tools/results_registry.py pull iridis     (or hali)
+# This script remains the fallback for other results trees, or to resync everything.
+#
 #   bash pull_results.sh <user@host> <remote_dir> <local_dir> [pattern]
 #   bash pull_results.sh ajb2u23@iridis6.soton.ac.uk Results/EEG /d/Results/EEG
 #

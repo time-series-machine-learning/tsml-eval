@@ -1,0 +1,41 @@
+# RotationForest on the 8 problems where it hit Iridis 6's 60 hour limit in eeg-aeon,
+# rerun checkpointed on the Iridis X amd CPU partition (2.5 day limit, 8 nodes).
+# With -ch, "RotationForest" builds CheckpointedRotationForestClassifier: the same
+# model (channels concatenated, forest seeded as before, identical probabilities),
+# but resumable. A task killed at the limit is resubmitted and continues from its
+# last saved tree, up to max_attempts runs (10 days in all). Results go to the same
+# Tabular/RotationForest folder as eeg-aeon's.
+# Needs the tsml-eval env's aeon to have checkpointing (ajb/hc2-components-checkpoint,
+# as for eeg-hc2-components). If this fails, fall back to Hali (7 day limit, no
+# checkpointing).
+#
+#   python tsml_slurm.py check experiments/iridisx_eeg_rotf_ch.toml
+#   python tsml_slurm.py start experiments/iridisx_eeg_rotf_ch.toml
+
+[experiment]
+name = "eeg-rotf-ch-x"
+cluster = "iridisx"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_rotf_retry.txt"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+extra_args = ["-ch", "-chi", "420"]  # checkpoint, at least 7 hours apart
+retry_timeouts = true                # a timed-out task resumes from its checkpoint
+max_attempts = 4
+
+[estimators]
+Tabular = ["RotationForest"]
+
+[estimator_kwargs.RotationForest]
+verbose = 1
+
+[slurm]
+env_name = "tsml-eval"
+max_jobs = 2
+waves = 1                            # every task starts with the full 2.5 days
+memory_gb = [32, 64, 128, 230]

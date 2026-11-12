@@ -1304,7 +1304,23 @@ def _set_classifier_shapelet_based(
 
 
 def _set_classifier_vector(c, random_state, n_jobs, fit_contract, checkpoint, kwargs):
-    if c == "rotationforestclassifier" or c == "rotationforest" or c == "rotf":
+    if (
+        c == "rotationforestclassifier" or c == "rotationforest" or c == "rotf"
+    ) and checkpoint:
+        # the same model, as an aeon classifier that can checkpoint and resume (the
+        # sklearn route below is wrapped in a fresh clone, so it cannot); needs an
+        # aeon with checkpointing, e.g. the ajb/hc2-components-checkpoint branch
+        from tsml_eval.estimators.classification._checkpointed_rotation_forest import (
+            CheckpointedRotationForestClassifier,
+        )
+
+        return CheckpointedRotationForestClassifier(
+            random_state=random_state,
+            n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
+            **kwargs,
+        )
+    elif c == "rotationforestclassifier" or c == "rotationforest" or c == "rotf":
         from aeon.classification.sklearn import RotationForestClassifier
 
         return RotationForestClassifier(
