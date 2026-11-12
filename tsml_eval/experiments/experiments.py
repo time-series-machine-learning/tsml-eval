@@ -1329,7 +1329,7 @@ def run_forecasting_experiment(
         )
 
     start = int(round(time.time() * 1000))
-    test_preds = forecaster.predict(np.arange(1, len(test) + 1))
+    test_preds = forecaster.iterative_forecast(train, len(test))
     test_time = (
         int(round(time.time() * 1000))
         - start
