@@ -1,0 +1,48 @@
+# Riemannian MDM and KNN with the Ledoit-Wolf shrinkage covariance (-LWF), against
+# the OAS versions already run (-OAS in eeg-aeon/eeg-cpu, -OAS-BP830/-BP140 in
+# eeg-filtered). TRACE uses Ledoit-Wolf; OAS's shrinkage is derived assuming
+# Gaussian data, which raw EEG may not match. Same problems, same band-pass
+# variants, so each -LWF result pairs with an -OAS one.
+#
+#   python tsml_slurm.py check experiments/hali_eeg_lwf.toml
+#   python tsml_slurm.py start experiments/hali_eeg_lwf.toml
+
+[experiment]
+name = "eeg-lwf"
+cluster = "hali"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{home}/DataSetLists/eeg.txt"
+dataset_info = "{repo}/_tsml_research_resources/dataset_lists/eeg_sampling_rates.csv"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+[estimators]
+DistanceBased = [
+    "RiemannianMDM-LWF",
+    "RiemannianKNN-LWF",
+    "RiemannianMDM-LWF-BP830",
+    "RiemannianKNN-LWF-BP830",
+    "RiemannianMDM-LWF-BP140",
+    "RiemannianKNN-LWF-BP140",
+]
+
+[estimator_kwargs."RiemannianMDM-LWF-BP830"]
+sfreq = "{dataset.sfreq}"
+
+[estimator_kwargs."RiemannianKNN-LWF-BP830"]
+sfreq = "{dataset.sfreq}"
+
+[estimator_kwargs."RiemannianMDM-LWF-BP140"]
+sfreq = "{dataset.sfreq}"
+
+[estimator_kwargs."RiemannianKNN-LWF-BP140"]
+sfreq = "{dataset.sfreq}"
+
+[slurm]
+env_name = "tsml-eval"
+memory_gb = [16, 32, 64, 128, 256]

@@ -99,6 +99,8 @@ neuro_classifiers = [
     ["riemannianknnclassifier", "riemannianknn", "r-knn"],
     ["riemannianmdm-oas", "r-mdm-oas"],
     ["riemannianknn-oas", "r-knn-oas"],
+    ["riemannianmdm-lwf", "r-mdm-lwf"],
+    ["riemannianknn-lwf", "r-knn-lwf"],
     ["cspclassifier", "csp", "csplda"],
     ["csprandomforestclassifier", "csprandomforest", "csprf"],
     ["cspsvmclassifier", "cspsvm", "csp-svm"],
@@ -509,16 +511,23 @@ def _set_classifier_neuro(c, random_state, n_jobs, kwargs):
         "r-mdm-oas",
         "riemannianknn-oas",
         "r-knn-oas",
+        "riemannianmdm-lwf",
+        "r-mdm-lwf",
+        "riemannianknn-lwf",
+        "r-knn-lwf",
     ):
-        # the OAS shrinkage covariance, as MOABB's MDM pipelines use: it stays
-        # positive definite where the sample covariance ("scm") is singular
+        # Shrinkage covariances, which stay positive definite where the sample
+        # covariance ("scm") is singular. -OAS is oracle approximating shrinkage, as
+        # MOABB's MDM pipelines use; its shrinkage is derived assuming Gaussian data.
+        # -LWF is Ledoit-Wolf, which makes no such assumption (TRACE uses it).
         from aeon_neuro.classification.distance_based import (
             RiemannianKNNClassifier,
             RiemannianMDMClassifier,
         )
 
         cls = RiemannianMDMClassifier if "mdm" in c else RiemannianKNNClassifier
-        return cls(n_jobs=n_jobs, **{"covariance_estimator": "oas", **kwargs})
+        est = "lwf" if c.endswith("-lwf") else "oas"
+        return cls(n_jobs=n_jobs, **{"covariance_estimator": est, **kwargs})
     elif c in (
         "cspclassifier",
         "csp",

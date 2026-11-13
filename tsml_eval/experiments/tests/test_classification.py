@@ -491,3 +491,19 @@ def test_get_riemannian_oas(name, expected):
     classifier = get_classifier_by_name(name)
     assert type(classifier).__name__ == expected
     assert classifier.covariance_estimator == "oas"
+
+
+@pytest.mark.parametrize(
+    "name, expected",
+    [
+        ("RiemannianMDM-LWF", "RiemannianMDMClassifier"),
+        ("R-KNN-LWF", "RiemannianKNNClassifier"),
+    ],
+)
+def test_get_riemannian_lwf(name, expected):
+    """The -LWF Riemannian names use the Ledoit-Wolf covariance estimator."""
+    _skip_if_not_in_aeon_neuro(expected)
+    pytest.importorskip("pyriemann")
+    classifier = get_classifier_by_name(name)
+    assert type(classifier).__name__ == expected
+    assert classifier.covariance_estimator == "lwf"
