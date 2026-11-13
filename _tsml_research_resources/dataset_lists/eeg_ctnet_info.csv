@@ -57,6 +57,7 @@ LowCost,125,~/Data/EEG/LowCost/LowCost_id_TRAIN.txt
 MatchWords,1000,none
 MatchingPennies,5000,~/Data/EEG/MatchingPennies/MatchingPennies_id_TRAIN.txt
 MentalArithmetic,200,~/Data/EEG/MentalArithmetic/MentalArithmetic_id_TRAIN.txt
+MigraineRest,512,~/Data/EEG/MigraineRest/MigraineRest_id_TRAIN.txt
 MindReading,200,none
 MotorImagery,1000,none
 NBackAudioCondition,200,~/Data/EEG/NBackAudioCondition/NBackAudioCondition_id_TRAIN.txt
@@ -68,12 +69,15 @@ ParkinsonsRestIowa,500,~/Data/EEG/ParkinsonsRestIowa/ParkinsonsRestIowa_id_TRAIN
 ParkinsonsRestUCSD,512,~/Data/EEG/ParkinsonsRestUCSD/ParkinsonsRestUCSD_id_TRAIN.txt
 PhotoStimulation,500,~/Data/EEG/PhotoStimulation/PhotoStimulation_id_TRAIN.txt
 PronouncedSpeech,1024,~/Data/EEG/PronouncedSpeech/PronouncedSpeech_id_TRAIN.txt
+PsychosisRestFirst,1000,~/Data/EEG/PsychosisRestFirst/PsychosisRestFirst_id_TRAIN.txt
+PsychosisRestSecond,1000,~/Data/EEG/PsychosisRestSecond/PsychosisRestSecond_id_TRAIN.txt
 RestingEyeState,512,~/Data/EEG/RestingEyeState/RestingEyeState_id_TRAIN.txt
 SelfRegulationSCP1,256,none
 SelfRegulationSCP2,256,none
 ShortIntervalTask,500,~/Data/EEG/ShortIntervalTask/ShortIntervalTask_id_TRAIN.txt
 SitStand,250,~/Data/EEG/SitStand/SitStand_id_TRAIN.txt
 Sleep,100,none
+SleepDeprivation,500,~/Data/EEG/SleepDeprivation/SleepDeprivation_id_TRAIN.txt
 SongFamiliarity,1000,~/Data/EEG/SongFamiliarity/SongFamiliarity_id_TRAIN.txt
 SpellerFlashes,256,~/Data/EEG/SpellerFlashes/SpellerFlashes_id_TRAIN.txt
 SymbolAttention,256,~/Data/EEG/SymbolAttention/SymbolAttention_id_TRAIN.txt
