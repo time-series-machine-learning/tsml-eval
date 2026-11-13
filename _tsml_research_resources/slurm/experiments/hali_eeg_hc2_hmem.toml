@@ -18,7 +18,7 @@
 [experiment]
 name = "eeg-hc2-hmem"
 cluster = "hali"
-resources = "hmem"
+resources = "cpu"                    # with the hmem overrides in [slurm]
 task = "classification"
 repo_dir = "{home}/Code/tsml-eval"
 branch = "ajb/slurm-runner"
@@ -52,3 +52,10 @@ verbose = 1
 
 [slurm]
 env_name = "tsml-eval"
+# The hmem partition, as [resources.hmem] in clusters/hali.toml, set here so the
+# experiment does not depend on the checkout having that profile.
+partition = "hmem"
+qos = "hmem"
+memory_gb = [740, 2000, 4000]
+node_memory_gb = 4026
+max_active = 4                       # hmem is shared across UEA
