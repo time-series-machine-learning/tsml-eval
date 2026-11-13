@@ -60,8 +60,8 @@ desktop (Git Bash, ssh key)  --VPN-->  Iridis 6 login   iridis6_b.soton.ac.uk
 - **Git for Windows**, which brings Git Bash with `ssh`, `scp`, `tar` and `gzip`.
   There is no `rsync`; `pull_results.sh` and `push_data.sh` exist to work around that.
 - **The University of Southampton VPN.** Iridis is reachable only through it. In
-  practice you can be on one university VPN at a time, so Iridis and Hali (UEA) are not
-  reachable together.
+  practice you can be on one VPN at a time, so drop any other VPN while working on
+  Iridis.
 - **A local clone of tsml-eval** on the runner branch (`ajb/slurm-runner`), for
   editing experiment files and pushing them.
 - Python 3.11 or later, with pandas, for the results tools.
@@ -271,7 +271,7 @@ there too.
 | A few slow or very uneven CPU tasks | Iridis 6 `cpu-array` | One Slurm task each; a farm would idle waiting for its slowest task. |
 | More than 240 GB | Iridis 6 | Memory tiers go to 620 GB there. |
 | GPU | Iridis X `gpu` (H200), `gpu-a100`, `gpu-swarm` | Each has its own `gres` string, set in the profile. Swarm needs `account = "ecs"`. |
-| Longer than 2.5 days or 60 h | Hali (7 days) | Or checkpoint (`-ch`) and `retry_timeouts`. |
+| Longer than 60 h | Checkpointing | Iridis 6 jobs stop at 60 h and Iridis X at 2.5 days. Run with `-ch` and set `retry_timeouts`, so a timed-out task resumes from its checkpoint. |
 
 **Out of memory** is handled for you: the task is resubmitted at the next memory tier
 until the top tier. To restart OOM failures from a higher tier after raising the
@@ -281,35 +281,26 @@ tiers:
 tsml-slurm retry experiments/<file>.toml --reason OOM --memory-tier 4
 ```
 
-**Time limits are not retried.** Move those tasks to a cluster with longer jobs, or
-use checkpointing.
+**Time limits are not retried.** Rerun those tasks with checkpointing (`-ch`) and
+`retry_timeouts`, or with a longer `time_limit` up to the partition's maximum, then
+`retry --reason "Time limit"`.
 
 ## 7. Getting results back
 
 Results land in `~/Results/<Archive>/<Category>/<Estimator>/Predictions/<Dataset>/`.
 
-- **EEG benchmark:** use the Neuroverse registry on the desktop. It asks the cluster
-  which cells are done, fetches only those the desktop lacks, and rebuilds the list
-  of what is missing and why:
+`pull_results.sh` copies new or changed `Predictions` files in two logins, and never
+deletes or changes anything, so rerun it as often as you like:
 
-  ```bash
-  cd C:/Code/EEGBench
-  python tools/results_registry.py pull iridis           # refresh, fetch, rebuild
-  python tools/results_registry.py pull iridis --dry-run
-  ```
+```bash
+bash pull_results.sh <user>@iridis6_b.soton.ac.uk Results/EEG /d/Results/EEG
+bash pull_results.sh <user>@iridis6_b.soton.ac.uk Results/UCR /d/Results/UCR "./*/QUANT/Predictions/*"
+```
 
-  `results/registry/summary.md` then says what is still running, failed or
-  unscheduled.
-
-- **Anything else:** `pull_results.sh` copies new or changed `Predictions` files in
-  two logins, never deleting or changing anything:
-
-  ```bash
-  bash pull_results.sh <user>@iridis6_b.soton.ac.uk Results/EEG /d/Results/EEG
-  bash pull_results.sh <user>@iridis6_b.soton.ac.uk Results/UCR /d/Results/UCR "./*/QUANT/Predictions/*"
-  ```
-
-Skip `Checkpoints/`: they are large and are deleted when a task finishes.
+Skip `Checkpoints/`: they are large and are deleted when a task finishes. (The
+Neuroverse `tools/results_registry.py pull` does the same job more selectively for
+the EEG benchmark, but its hosts are set to our account; change `CLUSTERS` at its top
+to use it with yours.)
 
 To stop a cluster rerunning work whose files you have moved off it, build
 `completed.txt` from the master copy and copy it up:
