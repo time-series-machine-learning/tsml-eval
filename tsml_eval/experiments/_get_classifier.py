@@ -112,6 +112,11 @@ neuro_classifiers = [
     ["neuralbenchcospectralrclassifier", "cospectralr-nb"],
     ["moabbtslrclassifier", "tslr-moabb"],
     ["neuralbenchctnetclassifier", "ctnet-nb"],
+    # fine-tuned foundation models and their random-weight controls
+    "cbramod-ft",
+    "cbramod-ft-random",
+    "labram-ft",
+    "labram-ft-random",
     # standard EEG baselines: differential entropy (emotion/cognitive state) and
     # TRCA/template CCA (visual evoked potentials; run them band-passed, e.g.
     # TRCA-BP640, as slow drift swamps the raw signal)
@@ -625,6 +630,22 @@ def _set_classifier_neuro(c, random_state, n_jobs, kwargs):
 
         _read_train_groups(kwargs)
         return NeuralBenchCTNetClassifier(random_state=random_state, **kwargs)
+    elif c in ("cbramod-ft", "cbramod-ft-random", "labram-ft", "labram-ft-random"):
+        # Fine-tuned foundation models (NeuralBench's finetune_mean recipe); -random
+        # is the random-weight control. Need sfreq, input_units, weights_path,
+        # train_groups and, for LaBraM, ch_names.
+        from aeon_neuro.classification import experimental
+
+        cls = (
+            experimental.CBraModFineTuneClassifier
+            if c.startswith("cbramod")
+            else experimental.LabramFineTuneClassifier
+        )
+        _read_train_groups(kwargs)
+        if isinstance(kwargs.get("ch_names"), str):
+            kwargs["ch_names"] = [n.strip() for n in kwargs["ch_names"].split(",")]
+        kwargs.setdefault("pretrained", not c.endswith("-random"))
+        return cls(random_state=random_state, **kwargs)
     elif c in neuralbench_deep_models:
         from aeon_neuro.classification.experimental import NeuralBenchDeepClassifier
 
