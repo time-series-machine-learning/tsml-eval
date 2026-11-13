@@ -2,6 +2,7 @@ dataset,sfreq,train_groups
 ALSAttention,256,~/Data/EEG/ALSAttention/ALSAttention_id_TRAIN.txt
 Alzheimers,500,~/Data/EEG/Alzheimers/Alzheimers_id_TRAIN.txt
 AlzheimersAuditory,250,~/Data/EEG/AlzheimersAuditory/AlzheimersAuditory_id_TRAIN.txt
+ArithmeticDifficulty,250,~/Data/EEG/ArithmeticDifficulty/ArithmeticDifficulty_id_TRAIN.txt
 ArmCoordination,500,~/Data/EEG/ArmCoordination/ArmCoordination_id_TRAIN.txt
 ArmMovements,512,~/Data/EEG/ArmMovements/ArmMovements_id_TRAIN.txt
 Blink,255,none
@@ -9,6 +10,7 @@ ChildhoodSeizures,200,~/Data/EEG/ChildhoodSeizures/ChildhoodSeizures_id_TRAIN.tx
 ClinicalSleepStages,200,~/Data/EEG/ClinicalSleepStages/ClinicalSleepStages_id_TRAIN.txt
 CodedFlickerTargets,500,~/Data/EEG/CodedFlickerTargets/CodedFlickerTargets_id_TRAIN.txt
 CodedSymbols,512,~/Data/EEG/CodedSymbols/CodedSymbols_id_TRAIN.txt
+CognitiveLoadTasks,250,~/Data/EEG/CognitiveLoadTasks/CognitiveLoadTasks_id_TRAIN.txt
 CovidSurvivors,200,~/Data/EEG/CovidSurvivors/CovidSurvivors_id_TRAIN.txt
 EpilepticSeizures,173.61,none
 EyesOpenShut,128,none
@@ -21,6 +23,7 @@ FingerMovements,100,none
 FlickerAttention,256,~/Data/EEG/FlickerAttention/FlickerAttention_id_TRAIN.txt
 FlickerSymbols,250,~/Data/EEG/FlickerSymbols/FlickerSymbols_id_TRAIN.txt
 FlickerTargets,256,~/Data/EEG/FlickerTargets/FlickerTargets_id_TRAIN.txt
+FuzzySemantics,200,~/Data/EEG/FuzzySemantics/FuzzySemantics_id_TRAIN.txt
 GameTargets,250,~/Data/EEG/GameTargets/GameTargets_id_TRAIN.txt
 HandMovementDirection,400,none
 ImaginedAnkleRest,250,~/Data/EEG/ImaginedAnkleRest/ImaginedAnkleRest_id_TRAIN.txt
@@ -28,6 +31,7 @@ ImaginedArmMovements,512,~/Data/EEG/ImaginedArmMovements/ImaginedArmMovements_id
 ImaginedArmTasks,1000,~/Data/EEG/ImaginedArmTasks/ImaginedArmTasks_id_TRAIN.txt
 ImaginedCommands,200,~/Data/EEG/ImaginedCommands/ImaginedCommands_id_TRAIN.txt
 ImaginedFeetHands,160,~/Data/EEG/ImaginedFeetHands/ImaginedFeetHands_id_TRAIN.txt
+ImaginedFingers,512,~/Data/EEG/ImaginedFingers/ImaginedFingers_id_TRAIN.txt
 ImaginedGrasps,250,~/Data/EEG/ImaginedGrasps/ImaginedGrasps_id_TRAIN.txt
 ImaginedGripForce,128,~/Data/EEG/ImaginedGripForce/ImaginedGripForce_id_TRAIN.txt
 ImaginedHandFeetTongue,200,~/Data/EEG/ImaginedHandFeetTongue/ImaginedHandFeetTongue_id_TRAIN.txt
@@ -52,6 +56,7 @@ ImaginedOpenCloseFist,160,~/Data/EEG/ImaginedOpenCloseFist/ImaginedOpenCloseFist
 ImaginedRightHandFeet,512,~/Data/EEG/ImaginedRightHandFeet/ImaginedRightHandFeet_id_TRAIN.txt
 ImaginedRightHandFeetRest,250,~/Data/EEG/ImaginedRightHandFeetRest/ImaginedRightHandFeetRest_id_TRAIN.txt
 InnerSpeech,1024,~/Data/EEG/InnerSpeech/InnerSpeech_id_TRAIN.txt
+InternalAttention,250,~/Data/EEG/InternalAttention/InternalAttention_id_TRAIN.txt
 LongIntervalTask,500,~/Data/EEG/LongIntervalTask/LongIntervalTask_id_TRAIN.txt
 LowCost,125,~/Data/EEG/LowCost/LowCost_id_TRAIN.txt
 MatchWords,1000,none
@@ -60,17 +65,22 @@ MentalArithmetic,200,~/Data/EEG/MentalArithmetic/MentalArithmetic_id_TRAIN.txt
 MigraineRest,512,~/Data/EEG/MigraineRest/MigraineRest_id_TRAIN.txt
 MindReading,200,none
 MotorImagery,1000,none
+MultitaskWorkload,250,~/Data/EEG/MultitaskWorkload/MultitaskWorkload_id_TRAIN.txt
 NBackAudioCondition,200,~/Data/EEG/NBackAudioCondition/NBackAudioCondition_id_TRAIN.txt
+NBackDifficulty,250,~/Data/EEG/NBackDifficulty/NBackDifficulty_id_TRAIN.txt
+NaturalisticEmotion,250,~/Data/EEG/NaturalisticEmotion/NaturalisticEmotion_id_TRAIN.txt
 ObsessiveCompulsiveSymptoms,500,~/Data/EEG/ObsessiveCompulsiveSymptoms/ObsessiveCompulsiveSymptoms_id_TRAIN.txt
 OpenCloseFist,160,~/Data/EEG/OpenCloseFist/OpenCloseFist_id_TRAIN.txt
 ParkinsonsPedalling,500,~/Data/EEG/ParkinsonsPedalling/ParkinsonsPedalling_id_TRAIN.txt
 ParkinsonsRest,500,~/Data/EEG/ParkinsonsRest/ParkinsonsRest_id_TRAIN.txt
 ParkinsonsRestIowa,500,~/Data/EEG/ParkinsonsRestIowa/ParkinsonsRestIowa_id_TRAIN.txt
 ParkinsonsRestUCSD,512,~/Data/EEG/ParkinsonsRestUCSD/ParkinsonsRestUCSD_id_TRAIN.txt
+ParkinsonsWalking,250,~/Data/EEG/ParkinsonsWalking/ParkinsonsWalking_id_TRAIN.txt
 PhotoStimulation,500,~/Data/EEG/PhotoStimulation/PhotoStimulation_id_TRAIN.txt
 PronouncedSpeech,1024,~/Data/EEG/PronouncedSpeech/PronouncedSpeech_id_TRAIN.txt
 PsychosisRestFirst,1000,~/Data/EEG/PsychosisRestFirst/PsychosisRestFirst_id_TRAIN.txt
 PsychosisRestSecond,1000,~/Data/EEG/PsychosisRestSecond/PsychosisRestSecond_id_TRAIN.txt
+PythonCodeReading,256,~/Data/EEG/PythonCodeReading/PythonCodeReading_id_TRAIN.txt
 RestingEyeState,512,~/Data/EEG/RestingEyeState/RestingEyeState_id_TRAIN.txt
 SelfRegulationSCP1,256,none
 SelfRegulationSCP2,256,none
@@ -80,7 +90,9 @@ Sleep,100,none
 SleepDeprivation,500,~/Data/EEG/SleepDeprivation/SleepDeprivation_id_TRAIN.txt
 SongFamiliarity,1000,~/Data/EEG/SongFamiliarity/SongFamiliarity_id_TRAIN.txt
 SpellerFlashes,256,~/Data/EEG/SpellerFlashes/SpellerFlashes_id_TRAIN.txt
+SternbergMemory,250,~/Data/EEG/SternbergMemory/SternbergMemory_id_TRAIN.txt
 SymbolAttention,256,~/Data/EEG/SymbolAttention/SymbolAttention_id_TRAIN.txt
+TBIAuditoryOddball,500,~/Data/EEG/TBIAuditoryOddball/TBIAuditoryOddball_id_TRAIN.txt
 VideoEmotions,200,~/Data/EEG/VideoEmotions/VideoEmotions_id_TRAIN.txt
 VisualSpeech,1024,~/Data/EEG/VisualSpeech/VisualSpeech_id_TRAIN.txt
 VisualSubjects,512,~/Data/EEG/VisualSubjects/VisualSubjects_id_TRAIN.txt

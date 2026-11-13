@@ -2,6 +2,7 @@ dataset,sfreq
 ALSAttention,256
 Alzheimers,500
 AlzheimersAuditory,250
+ArithmeticDifficulty,250
 ArmCoordination,500
 ArmMovements,512
 Blink,255
@@ -9,6 +10,7 @@ ChildhoodSeizures,200
 ClinicalSleepStages,200
 CodedFlickerTargets,500
 CodedSymbols,512
+CognitiveLoadTasks,250
 CovidSurvivors,200
 EpilepticSeizures,173.61
 EyesOpenShut,128
@@ -21,6 +23,7 @@ FingerMovements,100
 FlickerAttention,256
 FlickerSymbols,250
 FlickerTargets,256
+FuzzySemantics,200
 GameTargets,250
 HandMovementDirection,400
 ImaginedAnkleRest,250
@@ -28,6 +31,7 @@ ImaginedArmMovements,512
 ImaginedArmTasks,1000
 ImaginedCommands,200
 ImaginedFeetHands,160
+ImaginedFingers,512
 ImaginedGrasps,250
 ImaginedGripForce,128
 ImaginedHandFeetTongue,200
@@ -52,6 +56,7 @@ ImaginedOpenCloseFist,160
 ImaginedRightHandFeet,512
 ImaginedRightHandFeetRest,250
 InnerSpeech,1024
+InternalAttention,250
 LongIntervalTask,500
 LowCost,125
 MatchWords,1000
@@ -60,17 +65,22 @@ MentalArithmetic,200
 MigraineRest,512
 MindReading,200
 MotorImagery,1000
+MultitaskWorkload,250
 NBackAudioCondition,200
+NBackDifficulty,250
+NaturalisticEmotion,250
 ObsessiveCompulsiveSymptoms,500
 OpenCloseFist,160
 ParkinsonsPedalling,500
 ParkinsonsRest,500
 ParkinsonsRestIowa,500
 ParkinsonsRestUCSD,512
+ParkinsonsWalking,250
 PhotoStimulation,500
 PronouncedSpeech,1024
 PsychosisRestFirst,1000
 PsychosisRestSecond,1000
+PythonCodeReading,256
 RestingEyeState,512
 SelfRegulationSCP1,256
 SelfRegulationSCP2,256
@@ -80,7 +90,9 @@ Sleep,100
 SleepDeprivation,500
 SongFamiliarity,1000
 SpellerFlashes,256
+SternbergMemory,250
 SymbolAttention,256
+TBIAuditoryOddball,500
 VideoEmotions,200
 VisualSpeech,1024
 VisualSubjects,512
