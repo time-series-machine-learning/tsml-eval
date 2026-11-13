@@ -103,7 +103,8 @@ failure diagnosis of a new one.
 
 ## One-time setup
 
-Do this once per cluster. The detailed environment guides are still the existing ones:
+Do this once per cluster. For Iridis driven from a Windows desktop over ssh, follow
+[IRIDIS_SETUP.md](IRIDIS_SETUP.md). The detailed environment guides are still the existing ones:
 [Iridis 6](../soton/iridis/iridis_python.md) and Iridis X (`iridisx_python.md` on the
 `ajb/gpu` branch). The short version:
 
