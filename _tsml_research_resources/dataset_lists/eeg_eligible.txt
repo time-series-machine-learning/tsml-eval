@@ -51,6 +51,7 @@ LongIntervalTask
 LowCost
 MatchingPennies
 MentalArithmetic
+MigraineRest
 NBackAudioCondition
 ObsessiveCompulsiveSymptoms
 OpenCloseFist
@@ -60,11 +61,14 @@ ParkinsonsRestIowa
 ParkinsonsRestUCSD
 PhotoStimulation
 PronouncedSpeech
+PsychosisRestFirst
+PsychosisRestSecond
 RestingEyeState
 SelfRegulationSCP1
 SelfRegulationSCP2
 ShortIntervalTask
 SitStand
+SleepDeprivation
 SongFamiliarity
 SpellerFlashes
 SymbolAttention

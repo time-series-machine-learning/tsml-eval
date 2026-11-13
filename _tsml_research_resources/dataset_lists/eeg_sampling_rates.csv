@@ -57,6 +57,7 @@ LowCost,125
 MatchWords,1000
 MatchingPennies,5000
 MentalArithmetic,200
+MigraineRest,512
 MindReading,200
 MotorImagery,1000
 NBackAudioCondition,200
@@ -68,12 +69,15 @@ ParkinsonsRestIowa,500
 ParkinsonsRestUCSD,512
 PhotoStimulation,500
 PronouncedSpeech,1024
+PsychosisRestFirst,1000
+PsychosisRestSecond,1000
 RestingEyeState,512
 SelfRegulationSCP1,256
 SelfRegulationSCP2,256
 ShortIntervalTask,500
 SitStand,250
 Sleep,100
+SleepDeprivation,500
 SongFamiliarity,1000
 SpellerFlashes,256
 SymbolAttention,256
