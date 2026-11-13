@@ -8,7 +8,7 @@
 # The longest of the 50 test fits took 5.5 h, so about 2.5 days, inside Hali's 7.
 # The folds are not subject-wise. Same settings as the first run: the student's code
 # unchanged, cross_validate = false (intervals = 5, k = 10). SymbolAttention may not
-# fit in 7 days or 128 GB; NaN failures are left as failures.
+# fit in 7 days or 480 GB; NaN failures are left as failures.
 #
 #   python tsml_slurm.py check experiments/hali_eeg_trace_train.toml
 #   python tsml_slurm.py start experiments/hali_eeg_trace_train.toml
@@ -35,4 +35,4 @@ cross_validate = false
 
 [slurm]
 env_name = "tsml-eval"
-memory_gb = [32, 64, 128]
+memory_gb = [32, 64, 128, 256, 480]  # 256/480 added 13 Nov 2026 for OOM retries

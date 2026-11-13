@@ -32,7 +32,11 @@ account = "cmp"
 partition = "compute"
 qos = "uea-core-default"
 time_limit = "7-00:00:00"
-memory_gb = [8, 16, 32, 64, 128]
+# Compute nodes have 510433 MB (498 GiB), with no per-node memory cap: 480 GB jobs are
+# accepted (sbatch --test-only, 13 Nov 2026). The hmem partition needs the hmem QoS,
+# which the cmp account does not have.
+memory_gb = [8, 16, 32, 64, 128, 256, 480]
+node_memory_gb = 498
 cpus_per_task = 1
 max_active = 2000
 module = "python/anaconda/2024.10/3.12.7"

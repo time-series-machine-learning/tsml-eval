@@ -46,4 +46,4 @@ sfreq = "{dataset.sfreq}"
 
 [slurm]
 env_name = "tsml-eval"
-memory_gb = [16, 32, 64, 128]
+memory_gb = [16, 32, 64, 128, 256, 480]  # 256/480 added 13 Nov 2026 for OOM retries
