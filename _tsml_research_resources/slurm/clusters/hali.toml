@@ -33,12 +33,35 @@ partition = "compute"
 qos = "uea-core-default"
 time_limit = "7-00:00:00"
 # Compute nodes have 510433 MB (498 GiB), with no per-node memory cap: 480 GB jobs are
-# accepted (sbatch --test-only, 13 Nov 2026). The hmem partition needs the hmem QoS,
-# which the cmp account does not have.
+# accepted (sbatch --test-only, 13 Nov 2026). Beyond that, use [resources.hmem].
 memory_gb = [8, 16, 32, 64, 128, 256, 480]
 node_memory_gb = 498
 cpus_per_task = 1
 max_active = 2000
+module = "python/anaconda/2024.10/3.12.7"
+conda_sh = "/gpfs/software/hali/python/anaconda/2024.10/etc/profile.d/conda.sh"
+env_name = "tsml-eval"
+
+# High-memory CPU jobs, for tasks that run out of memory at 480 GB on compute. The
+# hmem QoS was granted to ajb on 13 Nov 2026 and must be given with the partition.
+# Nodes (sinfo, 13 Nov 2026): hmem003-006 24 cores, 750 GiB; hmem001-002 64 cores,
+# 2 TiB; hmem007-010 64 cores, 4 TiB, shared by the whole university. The QoS caps
+# a user at 100 CPUs, but memory is the scarce resource (other users queue 500 GB to
+# 4 TB jobs there), so keep at most 4 of our jobs in it at once. max_active is per
+# experiment: run one hmem experiment at a time. Start at the 740 GB tier, which fits
+# the 750 GiB nodes, and only go higher on an out-of-memory failure. No UEA usage
+# guidance was found beyond the QoS (13 Nov 2026). sbatch --test-only accepted 740G
+# and 1900G jobs.
+[resources.hmem]
+mode = "array"
+account = "cmp"
+partition = "hmem"
+qos = "hmem"
+time_limit = "7-00:00:00"
+memory_gb = [740, 2000, 4000]
+node_memory_gb = 4026
+cpus_per_task = 1
+max_active = 4
 module = "python/anaconda/2024.10/3.12.7"
 conda_sh = "/gpfs/software/hali/python/anaconda/2024.10/etc/profile.d/conda.sh"
 env_name = "tsml-eval"
