@@ -77,7 +77,6 @@ SleepDeprivation
 SongFamiliarity
 SpellerFlashes
 SternbergMemory
-SymbolAttention
 VideoEmotions
 VisualSpeech
 VisualSubjects

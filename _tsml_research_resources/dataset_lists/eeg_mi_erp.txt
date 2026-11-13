@@ -28,6 +28,5 @@ ALSAttention
 SpellerFlashes
 VisualSubjects
 GameTargets
-SymbolAttention
 WalkingTargets
 WordRelatedness
