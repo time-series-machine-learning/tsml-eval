@@ -99,3 +99,15 @@ VisualSubjects,512,~/Data/EEG/VisualSubjects/VisualSubjects_id_TRAIN.txt
 WalkingTargets,100,~/Data/EEG/WalkingTargets/WalkingTargets_id_TRAIN.txt
 WirelessFlicker,128,~/Data/EEG/WirelessFlicker/WirelessFlicker_id_TRAIN.txt
 WordRelatedness,1024,~/Data/EEG/WordRelatedness/WordRelatedness_id_TRAIN.txt
+AffectiveMusic,1000,~/Data/EEG/AffectiveMusic/AffectiveMusic_id_TRAIN.txt
+AuditoryDeviance,1024,~/Data/EEG/AuditoryDeviance/AuditoryDeviance_id_TRAIN.txt
+BanditGambling,500,~/Data/EEG/BanditGambling/BanditGambling_id_TRAIN.txt
+FaceStimuli,1024,~/Data/EEG/FaceStimuli/FaceStimuli_id_TRAIN.txt
+FlankerConflict,500,~/Data/EEG/FlankerConflict/FlankerConflict_id_TRAIN.txt
+MoralConflict,512,~/Data/EEG/MoralConflict/MoralConflict_id_TRAIN.txt
+NarrativeReward,1000,~/Data/EEG/NarrativeReward/NarrativeReward_id_TRAIN.txt
+ProbabilisticFeedback,500,~/Data/EEG/ProbabilisticFeedback/ProbabilisticFeedback_id_TRAIN.txt
+SentenceViolations,500,~/Data/EEG/SentenceViolations/SentenceViolations_id_TRAIN.txt
+SpatialAttention,1024,~/Data/EEG/SpatialAttention/SpatialAttention_id_TRAIN.txt
+VerbalWorkingMemory,500,~/Data/EEG/VerbalWorkingMemory/VerbalWorkingMemory_id_TRAIN.txt
+VisualSymmetry,512,~/Data/EEG/VisualSymmetry/VisualSymmetry_id_TRAIN.txt

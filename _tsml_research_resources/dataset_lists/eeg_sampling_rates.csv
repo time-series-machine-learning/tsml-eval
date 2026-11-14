@@ -99,3 +99,15 @@ VisualSubjects,512
 WalkingTargets,100
 WirelessFlicker,128
 WordRelatedness,1024
+AffectiveMusic,1000
+AuditoryDeviance,1024
+BanditGambling,500
+FaceStimuli,1024
+FlankerConflict,500
+MoralConflict,512
+NarrativeReward,1000
+ProbabilisticFeedback,500
+SentenceViolations,500
+SpatialAttention,1024
+VerbalWorkingMemory,500
+VisualSymmetry,512

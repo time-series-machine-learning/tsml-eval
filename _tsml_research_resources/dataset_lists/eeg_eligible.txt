@@ -89,3 +89,15 @@ VisualSubjects
 WalkingTargets
 WirelessFlicker
 WordRelatedness
+AffectiveMusic
+AuditoryDeviance
+BanditGambling
+FaceStimuli
+FlankerConflict
+MoralConflict
+NarrativeReward
+ProbabilisticFeedback
+SentenceViolations
+SpatialAttention
+VerbalWorkingMemory
+VisualSymmetry
