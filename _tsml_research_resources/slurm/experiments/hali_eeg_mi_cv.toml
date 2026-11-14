@@ -1,0 +1,40 @@
+# Cross-validation of the cheap CPU classifiers on the 30 motor imagery problems plus
+# the 6 ERP/P300 extras (eeg_mi_cv.txt), moved from Iridis X (iridisx_eeg_mi_cv.toml)
+# on 14 Nov 2026 because Iridis X holds a user to 4 nodes. The 654 folds Iridis X
+# finished were copied into ~/Results/EEG-CV first, so they are not run again. Same
+# folds as there: train and test are combined and split by subject (leave one subject
+# out up to 15 subjects, otherwise about 10 folds of round(subjects / 10) subjects);
+# fold k is written as testResample<k>.csv. Needs _id_TRAIN.txt and _id_TEST.txt for
+# every problem.
+#
+#   python tsml_slurm.py check experiments/hali_eeg_mi_cv.toml
+#   python tsml_slurm.py start experiments/hali_eeg_mi_cv.toml
+
+[experiment]
+name = "eeg-mi-cv"
+cluster = "hali"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_mi_cv.txt"  # the 30 MI problems + 6 ERP/P300 extras
+results_dir = "{home}/Results/EEG-CV"
+cv_folds = 10
+smallest_datasets_first = true
+retry_timeouts = true
+max_attempts = 4
+
+[estimators]
+DistanceBased = [
+    "RiemannianMDM", "RiemannianKNN", "RiemannianMDM-OAS", "RiemannianKNN-OAS",
+]
+FeatureBased = ["CSP+LDA", "CSP+SVM", "XDAWN", "Catch22"]
+ConvolutionBased = ["ROCKET", "MiniROCKET"]
+IntervalBased = ["QUANT"]
+Tabular = ["RandomForest", "SVM", "LogisticRegression"]
+
+[slurm]
+env_name = "tsml-eval"
+memory_gb = [16, 32, 64, 128, 256, 480]
+max_active = 400

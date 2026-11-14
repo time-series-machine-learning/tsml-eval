@@ -1,3 +1,4 @@
+# STOPPED 14 Nov 2026: moved to Hali (hali_eeg_mi_cv.toml); its 654 finished folds were copied there.
 # Cross-validation on the 26 motor imagery problems (eeg_mi_only.txt) and, since 12 Nov 2026,
 # the 7 ERP/P300 problems: eeg_mi_erp.txt, cheap CPU
 # classifiers first, on the Iridis X amd CPU partition. Train and test are combined
