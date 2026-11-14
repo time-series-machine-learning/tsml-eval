@@ -1,3 +1,6 @@
+# MOVED to Hali (hali_eeg_mi_cv_big.toml) on 14 Nov 2026 and stopped here before any fold had
+# finished: the 4-node limit kept it queued, and Iridis 6 shuts down on 14 Dec.
+#
 # Subject-wise cross-validation of the other expensive classifiers (RotationForest,
 # FreshPRINCE, MRHydra) on the 26 motor imagery problems (eeg_mi_only.txt) and, since 12 Nov 2026,
 # the 7 ERP/P300 problems: eeg_mi_erp.txt, on
