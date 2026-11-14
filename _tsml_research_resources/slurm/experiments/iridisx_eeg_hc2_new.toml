@@ -1,0 +1,60 @@
+# HC2 components (Arsenal, DrCIF, DrCIF-500, STC, TDE) on the 36 problems of the
+# MI/Clinical/Cognitive 30/30/30 set that Iridis lacked until 14 Nov 2026
+# (eeg_iridis_new.txt), on Iridis X CPU nodes as a priority (Tony, 14 Nov). Same
+# settings as iridis6_eeg_hc2_components.toml: train and test files, checkpointed,
+# a timed-out task resumes from its checkpoint.
+#
+# Hali runs the same components on most of these problems (hali_eeg_hc2_new.toml,
+# hali_eeg_hc2_rest.toml); whichever cluster finishes a task first supplies the
+# result, and the other copy can then be cancelled. A task that runs out at 230 GB
+# here is left to Hali (480 GB, then hmem).
+#
+#   python tsml_slurm.py check experiments/iridisx_eeg_hc2_new.toml
+#   python tsml_slurm.py start experiments/iridisx_eeg_hc2_new.toml
+
+[experiment]
+name = "eeg-hc2-new-x"
+cluster = "iridisx"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_iridis_new.txt"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+train_files = true                   # completion needs train AND test files
+extra_args = ["-ch", "-chi", "420"]  # checkpoint, at least 7 hours apart
+retry_timeouts = true                # a timed-out task resumes from its checkpoint
+max_attempts = 4
+priority = "dataset"
+
+[estimators]
+ConvolutionBased = ["Arsenal"]
+IntervalBased = ["DrCIF", "DrCIF-500"]
+ShapeletBased = ["STC-aeon"]
+DictionaryBased = ["TDE"]
+
+[estimator_kwargs.Arsenal]
+verbose = 1
+
+[estimator_kwargs.DrCIF]
+verbose = 1
+
+[estimator_kwargs."DrCIF-500"]
+verbose = 1
+
+[estimator_kwargs."STC-aeon"]
+verbose = 1
+
+[estimator_kwargs.TDE]
+verbose = 1
+
+[slurm]
+env_name = "tsml-eval"
+max_jobs = 4                         # Iridis X holds a user to 4 nodes
+waves = 1                            # every task starts with the full time limit
+top_up = true
+top_up_hours = 12
+memory_gb = [16, 32, 64, 128, 230]
