@@ -1,0 +1,27 @@
+# The aeon deep TSC models of iridisx_eeg_aeon_gpu.toml (CNN, InceptionTime, LITETime)
+# on the problems that are on Hali but not on Iridis (eeg_not_on_iridis.txt), on Hali
+# GPUs (14 Nov 2026).
+#
+#   python tsml_slurm.py check experiments/hali_eeg_aeon_gpu.toml
+#   python tsml_slurm.py start experiments/hali_eeg_aeon_gpu.toml
+
+[experiment]
+name = "eeg-aeon-gpu"
+cluster = "hali"
+resources = "gpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_not_on_iridis.txt"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+[estimators]
+DeepLearning = ["IT", "CNN", "LITETime-MV"]
+
+[slurm]
+env_name = "tsml-eval"
+gpu_check = "torch"
+memory_gb = [32, 64, 128]

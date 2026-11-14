@@ -1,0 +1,36 @@
+# The TSC classifiers of the main comparison that Iridis 6 runs (iridis6_eeg_aeon.toml,
+# iridis6_eeg_mrhydra.toml, iridisx_eeg_features.toml), on the problems that are on
+# Hali but not on Iridis (eeg_not_on_iridis.txt: the resting-state and newly assimilated
+# problems). Iridis holds 75 problems and is capped at 4 nodes per user, so these
+# problems had no TSC results (14 Nov 2026). The HC2 components are in
+# hali_eeg_hc2_new.toml and the deep TSC models in hali_eeg_aeon_gpu.toml.
+#
+#   python tsml_slurm.py check experiments/hali_eeg_tsc.toml
+#   python tsml_slurm.py start experiments/hali_eeg_tsc.toml
+
+[experiment]
+name = "eeg-tsc"
+cluster = "hali"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_not_on_iridis.txt"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+retry_timeouts = true
+max_attempts = 4
+
+[estimators]
+IntervalBased = ["QUANT"]
+ShapeletBased = ["RDST"]
+ConvolutionBased = ["MRHydra"]
+FeatureBased = ["Catch22"]
+Tabular = ["RotationForest"]
+
+[slurm]
+env_name = "tsml-eval"
+memory_gb = [32, 64, 128, 256, 480]
+max_active = 150

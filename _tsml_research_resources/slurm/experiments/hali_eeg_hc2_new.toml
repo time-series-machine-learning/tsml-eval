@@ -1,0 +1,51 @@
+# HC2 components (Arsenal, DrCIF-500, STC, TDE) on the problems that are on Hali but not
+# on Iridis (eeg_not_on_iridis.txt), so HC2-noTDE-500-pc can be built from their train
+# estimates. The four resting-state problems of hali_eeg_hc2_rest.toml are excluded:
+# that experiment is already running them. Same settings as hali_eeg_hc2_rest.toml; a
+# task that runs out at 480 GB goes to eeg-hc2-hmem (14 Nov 2026).
+#
+#   python tsml_slurm.py check experiments/hali_eeg_hc2_new.toml
+#   python tsml_slurm.py start experiments/hali_eeg_hc2_new.toml
+
+[experiment]
+name = "eeg-hc2-new"
+cluster = "hali"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_not_on_iridis.txt"
+exclude_datasets = [
+    "MigraineRest", "PsychosisRestFirst", "PsychosisRestSecond", "SleepDeprivation",
+]
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+train_files = true                   # HC2 is built from the train estimates
+extra_args = ["-ch", "-chi", "420"]  # checkpoint, at least 7 hours apart
+retry_timeouts = true                # a timed-out task resumes from its checkpoint
+max_attempts = 4
+
+[estimators]
+ConvolutionBased = ["Arsenal"]
+IntervalBased = ["DrCIF-500"]
+ShapeletBased = ["STC-aeon"]
+DictionaryBased = ["TDE"]
+
+[estimator_kwargs.Arsenal]
+verbose = 1
+
+[estimator_kwargs."DrCIF-500"]
+verbose = 1
+
+[estimator_kwargs."STC-aeon"]
+verbose = 1
+
+[estimator_kwargs.TDE]
+verbose = 1
+
+[slurm]
+env_name = "tsml-eval"
+memory_gb = [64, 128, 256, 480]
+max_active = 120
