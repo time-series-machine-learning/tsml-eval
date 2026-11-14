@@ -1,0 +1,32 @@
+# aeon's deep learners (CNN, InceptionTime, LITETime-MV) on z-normalised input, on
+# Iridis X H200s. The unnormalised versions (iridisx_eeg_aeon_gpu.toml) take raw
+# amplitudes, which range from about 1e-6 (volts) to hundreds (microvolts) across
+# datasets; CNN predicts a single class on several motor imagery problems. The
+# -norm versions z-normalise each channel of each case before the network
+# (aeon's Normalizer), and are otherwise the defaults.
+#
+# Results go beside the unnormalised ones, under the new names:
+# ~/Results/EEG/DeepLearning/<Name>-norm/Predictions/<Dataset>/.
+#
+#   python tsml_slurm.py check experiments/iridisx_eeg_aeon_gpu_norm.toml
+#   python tsml_slurm.py start experiments/iridisx_eeg_aeon_gpu_norm.toml
+
+[experiment]
+name = "eeg-aeon-gpu-norm"
+cluster = "iridisx"
+resources = "gpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval-gpu"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{home}/DataSetLists/eeg.txt"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+[estimators]
+DeepLearning = ["CNN-norm", "IT-norm", "LITETime-MV-norm"]
+
+[slurm]
+env_name = "tsml-eval-gpu"
+memory_gb = [32, 64, 128]

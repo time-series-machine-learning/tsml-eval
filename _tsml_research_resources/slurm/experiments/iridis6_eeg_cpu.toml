@@ -1,0 +1,48 @@
+# aeon-neuro CPU classifiers on the aeon-neuro EEG archive, on Iridis 6. The aeon
+# classifiers are in iridis6_eeg_aeon.toml and iridis6_eeg_hc2_components.toml.
+#
+# Resample 0 only: the supplied train/test splits. Random resamples can put trials
+# from one subject in both train and test, so add more only once that is handled.
+#
+# Needs aeon-neuro >= 0.1.1 (XDAWN, and the CSP used by CSP+LDA and CSP+SVM).
+# CSP+LDA and CSP+SVM follow MOABB's CSP.yml and CSP_SVM_grid.yml; CSP+SVM
+# grid-searches the SVC (C and kernel) on fixed six-filter CSP features.
+#
+# Setup (see ../soton/iridis/eeg_classification_students.md):
+#   python _tsml_research_resources/soton/iridis/download_eeg_classification.py \
+#       --data-dir ~/Data/EEG --dataset-list ~/DataSetLists/eeg.txt
+#   python tsml_slurm.py check experiments/iridis6_eeg_cpu.toml
+#   python tsml_slurm.py start experiments/iridis6_eeg_cpu.toml
+
+# 2026-11-06: these estimators are also listed in iridis6_eeg_aeon.toml, so its
+# farm takes them on top-up. Do not start this experiment while they are there.
+
+[experiment]
+name = "eeg-cpu"
+cluster = "iridis6"
+resources = "cpu"                          # task farm on batch nodes
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{home}/DataSetLists/eeg.txt"   # written by the downloader
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+# Grouped as aeon-neuro groups them.
+[estimators]
+# The -OAS versions use the OAS shrinkage covariance (as MOABB's MDM pipelines
+# do), which stays positive definite where the default sample covariance fails
+# (ButtonPress, FaceDetection, MindReading).
+DistanceBased = [
+    "RiemannianMDM", "RiemannianKNN", "RiemannianMDM-OAS", "RiemannianKNN-OAS",
+]
+FeatureBased = ["CSP+LDA", "CSP+SVM", "XDAWN"]
+
+[slurm]
+env_name = "tsml-eval"
+max_jobs = 1          # one node; eeg-aeon has another, eeg-hc2 two
+memory_gb = [16, 32, 64, 128, 256, 620]   # start at 16G: 39 experiments per node
+top_up = true         # a farm down to its slow tasks takes waiting ones,
+top_up_hours = 24     # while it has 24 hours or more of its 60 left

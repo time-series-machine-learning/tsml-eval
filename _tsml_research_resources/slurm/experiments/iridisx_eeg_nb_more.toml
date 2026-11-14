@@ -1,0 +1,115 @@
+# EEGMiner-NB moved to Hali CPUs (hali_eeg_eegminer_cpu.toml) on 14 Nov 2026, before any
+# task was submitted here: this cluster is held at 4 nodes per user.
+#
+# braindecode models trained from scratch with NeuralBench's recipe, as CTNet-NB,
+# EEGNet-NB and the hali_eeg_nb_deep.toml models are (120 Hz, robust scaling, clamp
+# 20, AdamW lr 1e-4, one-cycle, up to 40 epochs, early stopping on subject-wise
+# validation balanced accuracy where IDs exist), on every EEG problem. Code:
+# aeon-neuro branch ajb/eeg-baselines, NeuralBenchDeepClassifier(model=...) with
+# braindecode's default settings for each model.
+#
+# The 29 braindecode models not yet run are split between Hali and Iridis X, each
+# model on one cluster only (separate filesystems): hali_eeg_nb_more.toml has the
+# convolutional and filter-bank models, iridisx_eeg_nb_more.toml the attention,
+# transformer, graph and task-specific ones.
+# Since 2026-11-09 the last six of those (SyncNet to ContraWR) run on Hali
+# instead, in hali_eeg_nb_more2.toml.
+#
+# aeon-neuro pads short cases only for the five original NeuralBench models, so a
+# model here may fail on the short problems: report those failures to aeon-neuro.
+#
+# Runs from ~/Code/tsml-eval-gpu (the Iridis X default) in the PyTorch env
+# tsml-eval-torch (make_torch_env.sh), which needs aeon-neuro from ajb/eeg-baselines:
+#   ~/.conda/envs/tsml-eval-torch/bin/python -m pip install "aeon-neuro @ git+https://github.com/aeon-toolkit/aeon-neuro.git@ajb/eeg-baselines"
+# Iridis's ~/DataSetLists/eeg.txt and ~/Data/EEG need the same problems and
+# <Name>_id_TRAIN.txt files as Hali's for the results to line up.
+#
+#   python tsml_slurm.py check experiments/iridisx_eeg_nb_more.toml
+#   python tsml_slurm.py start experiments/iridisx_eeg_nb_more.toml
+
+[experiment]
+name = "eeg-nb-more-x"
+cluster = "iridisx"
+resources = "gpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval-gpu"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{home}/DataSetLists/eeg.txt"
+dataset_info = "{repo}/_tsml_research_resources/dataset_lists/eeg_ctnet_info.csv"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+[estimators]
+DeepLearning = [
+    "ATCNet-NB",
+    "MSVTNet-NB",
+    "AttentionBaseNet-NB",
+    "SSTDPN-NB",
+    "MSCFormer-NB",
+    "TMSANet-NB",
+    "TCFormer-NB",
+    "GCNsNet-NB",
+    "EEGInceptionERP-NB",
+    "TSception-NB",
+]
+
+[estimator_kwargs."ATCNet-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."MSVTNet-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."AttentionBaseNet-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."SSTDPN-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."MSCFormer-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."TMSANet-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."TCFormer-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."GCNsNet-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."EEGInceptionERP-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."TSception-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[slurm]
+env_name = "tsml-eval-torch"
+# 12 h, not the profile's 2.5 days, so jobs can start before a maintenance
+# reservation; NeuralBench training stops after at most 40 epochs
+time_limit = "12:00:00"
+max_active = 20
+gpu_check = "torch"
+memory_gb = [32, 64, 128]

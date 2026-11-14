@@ -1,0 +1,16 @@
+# A small run with one array task per experiment: the quickest way to try a new
+# estimator on a few problems. Results go straight under results_dir/<Estimator>/
+# because estimators is a flat list rather than a [estimators] table.
+
+[experiment]
+name = "quick-test"
+cluster = "iridis6"
+resources = "cpu-array"
+task = "classification"
+data_dir = "{home}/Data/UCR"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/UnivariateClassification30-Bakeoff2024.txt"
+results_dir = "{home}/Results/QuickTest"
+resamples = 5
+estimators = ["ROCKET", "DrCIF"]
+require_clean = false             # allow uncommitted changes while developing
+pin_commit = false

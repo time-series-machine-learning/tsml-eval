@@ -1,0 +1,52 @@
+# MOVED to Hali (hali_eeg_mi_cv_big.toml) on 14 Nov 2026 and stopped here before any fold had
+# finished: the 4-node limit kept it queued, and Iridis 6 shuts down on 14 Dec.
+#
+# Subject-wise cross-validation of the other expensive classifiers (RotationForest,
+# FreshPRINCE, MRHydra) on the 26 motor imagery problems (eeg_mi_only.txt) and, since 12 Nov 2026,
+# the 7 ERP/P300 problems: eeg_mi_erp.txt, on
+# Iridis 6, with the same folds as iridisx_eeg_mi_cv.toml and
+# iridis6_eeg_mi_cv_hc2.toml.
+#
+# RotationForest is checkpointed (-ch builds CheckpointedRotationForestClassifier),
+# so a fold killed at the 60 hour limit resumes; FreshPRINCE and MRHydra cannot
+# checkpoint and ignore -ch. MRHydra needed 128 GB or more on the larger problems
+# in the default split, so memory starts at 32 GB and climbs to 620 GB.
+#
+# Iridis 6 allows 4 nodes per user (expert QoS) across all experiments, so this
+# waits for nodes the default-split runs free.
+#
+#   python tsml_slurm.py check experiments/iridis6_eeg_mi_cv_big.toml
+#   python tsml_slurm.py start experiments/iridis6_eeg_mi_cv_big.toml
+
+[experiment]
+name = "eeg-mi-cv-big"
+cluster = "iridis6"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_mi_erp.txt"  # 26 MI + 7 ERP/P300 (added 12 Nov)
+results_dir = "{home}/Results/EEG-CV"
+cv_folds = 10
+smallest_datasets_first = true
+# SymbolAttention (26 GB, ~700k trials) is cross-validated only by the cheap
+# classifiers (iridisx_eeg_mi_cv.toml): here it would hold the 4 nodes for weeks.
+exclude_datasets = ["SymbolAttention"]
+extra_args = ["-ch", "-chi", "420"]  # RotationForest checkpoints; others ignore it
+retry_timeouts = true
+max_attempts = 4
+
+[estimators]
+Tabular = ["RotationForest"]
+FeatureBased = ["FreshPRINCE"]
+ConvolutionBased = ["MRHydra"]
+
+[estimator_kwargs.RotationForest]
+verbose = 1
+
+[slurm]
+env_name = "tsml-eval"
+max_jobs = 2
+waves = 1
+memory_gb = [32, 64, 128, 256, 620]

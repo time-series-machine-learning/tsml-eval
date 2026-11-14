@@ -1,0 +1,45 @@
+# Cross-validation version of iridisx_eeg_gpu.toml: same classifiers, but train and test are
+# combined and each of 10 stratified folds is one experiment (fold k is written as
+# testResample<k>.csv, from 0). Datasets with subject IDs ({dataset}_id_TRAIN.txt
+# and _id_TEST.txt next to the .ts files) are split by subject, so no subject is on
+# both sides. Up to 15 subjects it is leave one subject out (9-14 folds); above
+# that each test fold holds round(subjects / 10) subjects, the last fold the rest,
+# giving 9-11 folds. Datasets without ID files get a plain stratified 10-fold CV.
+# Folds are the same for every classifier.
+#
+# Results go to ~/Results/EEG-CV, apart from the default-split results in
+# ~/Results/EEG. `check` reports how many datasets are split by subject: if the ID
+# files are missing on the cluster those datasets are silently split by case.
+#
+#   python tsml_slurm.py check experiments/iridisx_eeg_gpu_cv.toml
+#   python tsml_slurm.py start experiments/iridisx_eeg_gpu_cv.toml
+
+[experiment]
+name = "eeg-gpu-cv"
+cluster = "iridisx"
+resources = "gpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval-gpu"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{home}/DataSetLists/eeg.txt"
+results_dir = "{home}/Results/EEG-CV"
+cv_folds = 10                    # 10 folds, or per subject as above
+smallest_datasets_first = true
+
+[estimators]
+DeepLearning = ["EEGNet", "DeepConvNet", "EEGConformer"]
+
+[estimator_kwargs.EEGNet]
+device = "cuda"
+
+[estimator_kwargs.DeepConvNet]
+device = "cuda"
+
+[estimator_kwargs.EEGConformer]
+device = "cuda"
+
+[slurm]
+env_name = "tsml-eval-torch"
+gpu_check = "torch"
+memory_gb = [32, 64, 128]

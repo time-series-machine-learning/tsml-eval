@@ -1,0 +1,44 @@
+# Subject-wise cross-validation of the other expensive classifiers (RotationForest,
+# FreshPRINCE, MRHydra) on the 26 motor imagery and 7 ERP/P300 problems
+# (eeg_mi_erp.txt), on Hali. Moved from Iridis 6 (iridis6_eeg_mi_cv_big.toml) on
+# 14 Nov 2026 before any fold had finished there: Iridis 6 allows 4 nodes per user,
+# so it could not start before the 14 Dec shutdown. Same folds as
+# iridisx_eeg_mi_cv.toml and hali_eeg_mi_cv_hc2.toml (set by the subject ID files).
+#
+# RotationForest is checkpointed (-ch builds CheckpointedRotationForestClassifier);
+# FreshPRINCE and MRHydra cannot checkpoint and ignore -ch. MRHydra needed 128 GB or
+# more on the larger problems in the default split, so memory climbs to 480 GB, the
+# most a compute node takes. A task that runs out at 480 GB needs hmem (one hmem
+# experiment at a time, at most 4 jobs).
+#
+#   python tsml_slurm.py check experiments/hali_eeg_mi_cv_big.toml
+#   python tsml_slurm.py start experiments/hali_eeg_mi_cv_big.toml
+
+[experiment]
+name = "eeg-mi-cv-big"
+cluster = "hali"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_mi_erp.txt"
+results_dir = "{home}/Results/EEG-CV"
+cv_folds = 10
+smallest_datasets_first = true
+extra_args = ["-ch", "-chi", "420"]  # RotationForest checkpoints; others ignore it
+retry_timeouts = true
+max_attempts = 4
+
+[estimators]
+Tabular = ["RotationForest"]
+FeatureBased = ["FreshPRINCE"]
+ConvolutionBased = ["MRHydra"]
+
+[estimator_kwargs.RotationForest]
+verbose = 1
+
+[slurm]
+env_name = "tsml-eval"
+memory_gb = [32, 64, 128, 256, 480]
+max_active = 400

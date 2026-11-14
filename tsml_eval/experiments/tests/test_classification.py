@@ -215,6 +215,98 @@ def test_get_classifier_by_name_invalid():
         get_classifier_by_name("invalid")
 
 
+def _skip_if_not_in_aeon_neuro(class_name):
+    """Skip when the installed aeon-neuro release predates ``class_name``."""
+    import importlib
+
+    for package in ("deep_learning", "distance_based", "feature_based"):
+        try:
+            module = importlib.import_module(f"aeon_neuro.classification.{package}")
+        except ImportError as exc:
+            pytest.skip(str(exc))
+        if hasattr(module, class_name):
+            return
+    pytest.skip(f"{class_name} is not in the installed aeon-neuro")
+
+
+@pytest.mark.parametrize(
+    "name, expected",
+    [
+        ("TSLR-NB", "NeuralBenchTSLRClassifier"),
+        ("TSLR-MOABB", "MOABBTSLRClassifier"),
+        ("CTNet-NB", "NeuralBenchCTNetClassifier"),
+    ],
+)
+def test_get_aeon_neuro_baseline(name, expected):
+    """Test the NeuralBench and MOABB baselines are available by name."""
+    pytest.importorskip("aeon_neuro.classification.experimental")
+    for classifier_name in (name, expected):
+        classifier = get_classifier_by_name(classifier_name, sfreq=250.0)
+        assert type(classifier).__name__ == expected
+        assert classifier.sfreq == 250.0
+
+
+@pytest.mark.parametrize(
+    "name, expected, setting, value",
+    [
+        ("EEGNet-NB", "NeuralBenchDeepClassifier", "model", "EEGNet"),
+        ("MDM-MOABB", "MOABBPipelineClassifier", "pipeline", "MDM"),
+        ("CSP-LDA-MOABB", "MOABBPipelineClassifier", "pipeline", "CSP_LDA"),
+        ("ATCNet-NB", "NeuralBenchDeepClassifier", "model", "ATCNet"),
+        (
+            "SleepStagerChambon2018-NB",
+            "NeuralBenchDeepClassifier",
+            "model",
+            "SleepStagerChambon2018",
+        ),
+    ],
+)
+def test_get_aeon_neuro_generic_baseline(name, expected, setting, value):
+    """Test the baselines built from aeon-neuro's generic experimental classes."""
+    experimental = pytest.importorskip("aeon_neuro.classification.experimental")
+    if not hasattr(experimental, expected):
+        pytest.skip(f"{expected} is not in the installed aeon-neuro")
+    classifier = get_classifier_by_name(name, sfreq=250.0)
+    assert type(classifier).__name__ == expected
+    assert getattr(classifier, setting) == value
+    assert classifier.sfreq == 250.0
+
+
+@pytest.mark.parametrize(
+    "name, module, expected",
+    [
+        ("DE-LR", "feature_based", "DifferentialEntropyClassifier"),
+        ("DE-SVM", "feature_based", "DifferentialEntropyClassifier"),
+        ("TRCA", "distance_based", "TRCAClassifier"),
+        ("TemplateCCA", "distance_based", "TemplateCCAClassifier"),
+    ],
+)
+def test_get_eeg_feature_baselines(name, module, expected):
+    """Test the differential entropy, TRCA and template CCA baselines."""
+    mod = pytest.importorskip(f"aeon_neuro.classification.{module}")
+    if not hasattr(mod, expected):
+        pytest.skip(f"{expected} is not in the installed aeon-neuro")
+    kwargs = {"sfreq": 250.0} if name.startswith("DE") else {}
+    classifier = get_classifier_by_name(name, random_state=0, **kwargs)
+    assert type(classifier).__name__ == expected
+    if name == "DE-SVM":
+        assert type(classifier.classifier[-1]).__name__ == "SVC"
+    # band-passed variant: a pipeline with the filter in front
+    piped = get_classifier_by_name(f"{name}-BP640", sfreq=250.0)
+    assert type(piped).__name__ == "ClassifierPipeline"
+
+
+def test_get_ctnet_train_groups(tmp_path):
+    """Test CTNet-NB reads subject IDs from a file, and "none" gives None."""
+    pytest.importorskip("aeon_neuro.classification.experimental")
+    path = tmp_path / "ids.txt"
+    path.write_text("s1\ns1\ns2\ns2", encoding="utf-8")  # no final newline
+    classifier = get_classifier_by_name("CTNet-NB", sfreq=250.0, train_groups=str(path))
+    assert classifier.train_groups == ["s1", "s1", "s2", "s2"]
+    classifier = get_classifier_by_name("CTNet-NB", sfreq=250.0, train_groups="none")
+    assert classifier.train_groups is None
+
+
 @pytest.mark.parametrize(
     "name, expected",
     [
@@ -223,11 +315,16 @@ def test_get_classifier_by_name_invalid():
         ("RiemannianMDM", "RiemannianMDMClassifier"),
         ("RiemannianKNN", "RiemannianKNNClassifier"),
         ("CSP", "CSPClassifier"),
+        ("EEGConformer", "EEGConformerClassifier"),
+        ("CBraMod", "CBraModClassifier"),
+        ("Labram", "LabramClassifier"),
+        ("XDAWN", "XDAWNClassifier"),
     ],
 )
 def test_get_aeon_neuro_classifier(name, expected):
     """Test native aeon-neuro classifiers are available by name and alias."""
     pytest.importorskip("aeon_neuro")
+    _skip_if_not_in_aeon_neuro(expected)
     for classifier_name in (name, expected, f"neuro:{expected}"):
         try:
             classifier = get_classifier_by_name(classifier_name)
@@ -256,6 +353,65 @@ def test_get_aeon_neuro_csp_variants(name, expected):
         assert classifier.classifier.n_jobs == 2
     else:
         assert classifier.classifier.probability
+
+
+def test_get_labram_channel_names_from_string():
+    """Comma-separated channel names, as given on the command line, become a list."""
+    pytest.importorskip("aeon_neuro.classification.deep_learning._labram")
+    classifier = get_classifier_by_name("Labram", ch_names="FP1, FP2,CZ")
+    assert classifier.ch_names == ["FP1", "FP2", "CZ"]
+
+
+def test_get_moabb_csp_pipelines():
+    """CSP+LDA and CSP+SVM follow the MOABB pipelines."""
+    _skip_if_not_in_aeon_neuro("CSPClassifier")
+    lda = get_classifier_by_name("CSP+LDA", random_state=1)
+    assert type(lda).__name__ == "CSPClassifier"
+    assert type(lda.classifier).__name__ == "LinearDiscriminantAnalysis"
+    assert (lda.n_components, lda.reg, lda.cov_est) == (6, "oas", "epoch")
+
+    svm = get_classifier_by_name("CSP+SVM", random_state=1, n_jobs=2)
+    assert type(svm).__name__ == "CSPClassifier"
+    assert (svm.n_components, svm.reg, svm.cov_est) == (6, "oas", "epoch")
+    search = svm.classifier
+    assert type(search).__name__ == "GridSearchCV"
+    assert type(search.estimator).__name__ == "SVC"
+    assert search.param_grid == {"C": [0.5, 1, 1.5], "kernel": ["rbf", "linear"]}
+    assert (search.cv.n_splits, search.cv.random_state, search.n_jobs) == (3, 1, 2)
+
+
+@pytest.mark.parametrize(
+    "name, expected",
+    [
+        ("SVM", "SVC"),
+        ("RandomForest", "RandomForestClassifier"),
+        ("LogisticRegression", "LogisticRegression"),
+    ],
+)
+def test_get_eegbench_vector_classifiers(name, expected):
+    """EEGBench's standard classifier names resolve to scikit-learn classifiers."""
+    classifier = get_classifier_by_name(name, random_state=0)
+    assert type(classifier).__name__ == expected
+    assert classifier.random_state == 0
+
+
+@pytest.mark.parametrize(
+    "name, expected",
+    [
+        ("DCN", "DeepConvNetClassifier"),
+        ("R-MDM", "RiemannianMDMClassifier"),
+        ("R-KNN", "RiemannianKNNClassifier"),
+        ("CSP-SVM", "CSPClassifier"),
+    ],
+)
+def test_get_eegbench_neuro_names(name, expected):
+    """EEGBench's names for aeon-neuro classifiers resolve to the same classes."""
+    _skip_if_not_in_aeon_neuro(expected)
+    try:
+        classifier = get_classifier_by_name(name)
+    except ModuleNotFoundError as exc:
+        pytest.skip(str(exc))
+    assert type(classifier).__name__ == expected
 
 
 def test_get_aeon_neuro_classifier_invalid():
@@ -319,3 +475,35 @@ def test_aeon_classifiers_available():
             assert get_classifier_by_name(e) is not None
         except ModuleNotFoundError:
             continue
+
+
+@pytest.mark.parametrize(
+    "name, expected",
+    [
+        ("RiemannianMDM-OAS", "RiemannianMDMClassifier"),
+        ("R-KNN-OAS", "RiemannianKNNClassifier"),
+    ],
+)
+def test_get_riemannian_oas(name, expected):
+    """The -OAS Riemannian names use the OAS covariance estimator."""
+    _skip_if_not_in_aeon_neuro(expected)
+    pytest.importorskip("pyriemann")
+    classifier = get_classifier_by_name(name)
+    assert type(classifier).__name__ == expected
+    assert classifier.covariance_estimator == "oas"
+
+
+@pytest.mark.parametrize(
+    "name, expected",
+    [
+        ("RiemannianMDM-LWF", "RiemannianMDMClassifier"),
+        ("R-KNN-LWF", "RiemannianKNNClassifier"),
+    ],
+)
+def test_get_riemannian_lwf(name, expected):
+    """The -LWF Riemannian names use the Ledoit-Wolf covariance estimator."""
+    _skip_if_not_in_aeon_neuro(expected)
+    pytest.importorskip("pyriemann")
+    classifier = get_classifier_by_name(name)
+    assert type(classifier).__name__ == expected
+    assert classifier.covariance_estimator == "lwf"

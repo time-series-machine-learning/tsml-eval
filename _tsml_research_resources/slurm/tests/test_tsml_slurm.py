@@ -1,0 +1,1106 @@
+"""Offline tests for tsml_slurm.py. No Slurm, cluster or tsml-eval import needed.
+
+python -m pytest _tsml_research_resources/slurm/tests -q
+"""
+
+import importlib.util
+import json
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+import pytest
+
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parent
+spec = importlib.util.spec_from_file_location("tsml_slurm", ROOT / "tsml_slurm.py")
+ts = importlib.util.module_from_spec(spec)
+sys.modules["tsml_slurm"] = ts
+spec.loader.exec_module(ts)
+
+BASH = shutil.which("bash")
+
+
+class FakeSlurm(ts.Slurm):
+    def __init__(self):
+        self.entries = []
+        self.acct = {}
+        self.scripts = {}
+        self.next_id = 1000
+
+    def available(self):
+        return True
+
+    def queue(self, user):
+        return list(self.entries)
+
+    def accounting(self, job_ids):
+        return {k: v for k, v in self.acct.items() if k[0] in job_ids}
+
+    def submit(self, script):
+        self.next_id += 1
+        self.scripts[str(self.next_id)] = script
+        return str(self.next_id)
+
+    def cancel(self, job_ids):
+        self.entries = [q for q in self.entries if q.job_id not in job_ids]
+
+
+CLUSTER = """
+name = "testcluster"
+home = "{home}"
+repo_dir = "{home}/repo"
+
+[supervisor]
+mode = "slurm"
+partition = "short"
+
+[resources.cpu]
+mode = "array"
+partition = "compute"
+account = "acct"
+time_limit = "1:00:00"
+memory_gb = [4, 8, 16]
+max_active = 50
+module = "python"
+env_name = "tsml-eval"
+
+[resources.farm]
+mode = "farm"
+partition = "batch"
+time_limit = "1:00:00"
+memory_gb = [4, 8, 64]
+max_jobs = 2
+node_cpus = 8
+node_memory_gb = 64
+waves = 2
+env_name = "tsml-eval"
+
+[resources.gpu]
+partition = "gpu"
+gres = "gpu:1"
+time_limit = "1:00:00"
+memory_gb = [32]
+env_name = "tsml-eval-gpu"
+gpu_check = "torch"
+"""
+
+
+def _git(repo, *args):
+    subprocess.run(["git", "-C", str(repo), *args], check=True, capture_output=True)
+
+
+@pytest.fixture
+def world(tmp_path):
+    home = tmp_path / "home"
+    repo = home / "repo"
+    repo.mkdir(parents=True)
+    _git(repo, "init", "-q")
+    _git(repo, "config", "user.email", "t@example.com")
+    _git(repo, "config", "user.name", "t")
+    (repo / "README").write_text("x")
+    _git(repo, "add", "README")
+    _git(repo, "commit", "-q", "-m", "init")
+    data = home / "Data"
+    for dataset, size in (("Small", 10), ("Big", 1000), ("Mid", 100)):
+        (data / dataset).mkdir(parents=True)
+        (data / dataset / f"{dataset}_TRAIN.ts").write_text("x" * size)
+    (home / "list.txt").write_text("# comment\nSmall\nBig\n\nMid\n")
+    clusters = tmp_path / "clusters"
+    clusters.mkdir()
+    (clusters / "testcluster.toml").write_text(
+        CLUSTER.replace("{home}", home.as_posix())
+    )
+    return {"home": home, "repo": repo, "clusters": clusters, "tmp": tmp_path}
+
+
+def make(
+    world,
+    body="",
+    resources="cpu",
+    estimators='estimators = ["A", "B"]',
+    extra_sections="",
+    task="classification",
+):
+    path = world["tmp"] / "exp.toml"
+    path.write_text(f"""
+[experiment]
+name = "exp"
+cluster = "testcluster"
+resources = "{resources}"
+task = "{task}"
+data_dir = "{{home}}/Data"
+datasets = "{{home}}/list.txt"
+results_dir = "{{home}}/Results"
+{"" if "resamples" in body else "resamples = 2"}
+{estimators}
+{body}
+{extra_sections}
+""")
+    return ts.load_experiment(path, cluster_dir=world["clusters"], user="tester")
+
+
+def write_result(e, task, train=False):
+    for path in ts.result_files(e, task)[: 2 if train else 1]:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("result")
+
+
+def age_submissions(e):
+    state = ts.load_state(e)
+    for record in state["tasks"].values():
+        record["submitted_at"] = 0
+    ts.save_state(e, state)
+
+
+# --------------------------------------------------------------------------- config
+
+
+@pytest.mark.parametrize(
+    "config", sorted((ROOT / "experiments").glob("*.toml")), ids=lambda p: p.stem
+)
+def test_shipped_examples_load(config):
+    e = ts.load_experiment(config, user="tester")
+    assert e.resources.partition
+    assert str(e.results_dir).startswith(str(e.home))
+
+
+def test_placeholders_and_defaults(world):
+    e = make(world)
+    assert e.data_dir == world["home"] / "Data"
+    assert e.state_dir == world["home"] / "tsml-slurm" / "exp"
+    assert e.resamples == (0, 1)
+    assert [x.name for x in e.estimators] == ["A", "B"]
+    assert e.resources.account == "acct"
+
+
+def test_unknown_keys_are_rejected(world):
+    with pytest.raises(ts.ConfigError, match="memroy_gb"):
+        make(world, extra_sections="[slurm]\nmemroy_gb = [1]")
+    with pytest.raises(ts.ConfigError, match="resampels"):
+        make(world, body="resampels = 3")
+
+
+def test_bad_settings_are_rejected(world):
+    with pytest.raises(ts.ConfigError, match="overwrite"):
+        make(world, body='extra_args = ["-ow"]')
+    with pytest.raises(ts.ConfigError, match="train_files"):
+        make(world, body='extra_args = ["-tr"]')
+    with pytest.raises(ts.ConfigError, match="increasing"):
+        make(world, extra_sections="[slurm]\nmemory_gb = [8, 4]")
+    with pytest.raises(ts.ConfigError, match="farm mode"):
+        make(world, resources="farm", extra_sections='[slurm]\ngres = "gpu:1"')
+
+
+def test_categories_set_results_layout(world):
+    e = make(world, estimators="", extra_sections='[estimators]\nCat = ["A"]')
+    ts.read_datasets(e)
+    task = next(ts.all_tasks(e))
+    assert ts.result_files(e, task)[0] == (
+        world["home"] / "Results/Cat/A/Predictions/Small/testResample0.csv"
+    )
+
+
+def test_registry_counts_deleted_results_as_complete(world):
+    e = make(world, body="train_files = true")
+    ts.read_datasets(e)
+    task = next(ts.all_tasks(e))
+    assert not ts.is_complete(e, task)
+    write_result(e, task, train=True)
+    assert ts.is_complete(e, task)
+
+    spec = importlib.util.spec_from_file_location("registry", ROOT / "registry.py")
+    registry = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(registry)
+    registry.main([str(e.results_dir)])
+    for path in ts.result_files(e, task):
+        path.unlink()
+    assert ts.is_complete(e, task)
+
+    # train file no longer registered: the task is incomplete again
+    reg = e.results_dir / ts.REGISTRY_NAME
+    lines = [ln for ln in reg.read_text().splitlines() if "train" not in ln]
+    reg.write_text("\n".join(lines) + "\n")
+    assert not ts.is_complete(e, task)
+
+    # rebuilding never drops entries for files that are gone
+    registry.main([str(e.results_dir)])
+    assert any("testResample0" in ln for ln in reg.read_text().splitlines())
+
+
+def test_clustering_requires_train_file(world):
+    with pytest.raises(ts.ConfigError, match="only applies to clustering"):
+        make(world, body="test_files = true")
+    e = make(world, body="test_files = true", task="clustering")
+    ts.read_datasets(e)
+    files = ts.result_files(e, next(ts.all_tasks(e)))
+    assert [f.name for f in files] == ["trainResample0.csv", "testResample0.csv"]
+
+
+def test_dataset_list_and_ordering(world):
+    e = make(world, body="smallest_datasets_first = true")
+    assert ts.read_datasets(e) == ("Small", "Big", "Mid")
+    order = ts.order_tasks(e, list(ts.all_tasks(e)))
+    assert [(t.resample, t.estimator, t.dataset) for t in order[:3]] == [
+        (0, "A", "Small"),
+        (0, "A", "Mid"),
+        (0, "A", "Big"),
+    ]
+
+
+# --------------------------------------------------------------------------- scripts
+
+
+@pytest.mark.skipif(BASH is None, reason="bash not available")
+@pytest.mark.parametrize("resources", ["cpu", "farm", "gpu"])
+def test_generated_scripts_are_valid_bash(world, tmp_path, resources):
+    e = make(
+        world,
+        resources=resources,
+        extra_sections='[estimator_kwargs.A]\nn = 5\nname = "it\'s"\nf = 0.5\n',
+    )
+    ts.read_datasets(e)
+    tasks = list(ts.all_tasks(e))[:3]
+    scripts = [ts.supervisor_script(e, "/usr/bin/python3")]
+    if e.resources.mode == "array":
+        scripts.append(ts.array_script(e, tasks[:1], 4, "abc"))
+    else:
+        scripts.append(ts.farm_script(e, tasks, 4, "abc", 2))
+    for i, script in enumerate(scripts):
+        path = tmp_path / f"s{i}.sh"
+        path.write_text(script, newline="\n")
+        result = subprocess.run([BASH, "-n", str(path)], capture_output=True, text=True)
+        assert result.returncode == 0, result.stderr + script
+
+
+def test_array_script_contents(world):
+    e = make(
+        world,
+        resources="gpu",
+        body="train_files = true",
+        extra_sections="[estimator_kwargs.A]\nn_estimators = 500\nverbose = true",
+    )
+    ts.read_datasets(e)
+    tasks = [t for t in ts.all_tasks(e) if t.estimator == "A" and t.dataset == "Big"]
+    script = ts.array_script(e, tasks, 32, "deadbeef")
+    assert "#SBATCH --array=0,1" in script
+    assert "#SBATCH --gres=gpu:1" in script
+    assert "#SBATCH --mem=32G" in script
+    assert "import torch" in script
+    assert "CUDA_VISIBLE_DEVICES" not in script
+    assert "-kw n_estimators 500 int -kw verbose true bool" in script
+    assert "-tr" in script
+    assert "branch=$branch commit=$commit" in script  # recorded in every job log
+    assert "deadbeef" not in script  # no commit check unless pin_commit = true
+    assert "tsml_eval.experiments.classification_experiments" in script
+
+
+def test_threaded_entry_point(world):
+    e = make(world, body="n_jobs = 4")
+    ts.read_datasets(e)
+    script = ts.array_script(e, list(ts.all_tasks(e))[:1], 4, "c")
+    assert "threaded_classification_experiments" in script
+    assert "-nj 4" in script
+    assert "--cpus-per-task=4" in script
+
+
+# --------------------------------------------------------------------------- cycles
+
+
+def test_cycle_submits_only_missing_work(world):
+    e = make(world)
+    ts.read_datasets(e)
+    write_result(e, ts.Task("A", "", "Small", 0))
+    slurm = FakeSlurm()
+    result = ts.run_cycle(e, slurm)
+    assert result.submitted == 11
+    # one array per estimator/dataset
+    assert len(slurm.scripts) == 6
+    assert not any(
+        "--array=0,1" in s and "-A-Small" in s for s in slurm.scripts.values()
+    )
+    assert "Complete 1/12" in result.report
+
+
+def test_capacity_counts_live_tasks(world):
+    e = make(world, extra_sections="[slurm]\nmax_active = 5")
+    slurm = FakeSlurm()
+    assert ts.run_cycle(e, slurm).submitted == 5
+    state = ts.load_state(e)
+    slurm.entries = [
+        ts.QueueEntry(r["job"], int(k.rsplit("|", 1)[1]), "PENDING", "x", "compute")
+        for k, r in state["tasks"].items()
+    ]
+    assert ts.run_cycle(e, slurm).submitted == 0
+
+
+def test_oom_escalates_memory_and_timeout_is_terminal(world):
+    e = make(world, body="resamples = 1", estimators='estimators = ["A"]')
+    slurm = FakeSlurm()
+    ts.run_cycle(e, slurm)
+    age_submissions(e)
+    state = ts.load_state(e)
+    jobs = {k.split("|")[1]: r["job"] for k, r in state["tasks"].items()}
+    slurm.acct = {
+        (jobs["Small"], 0): "OUT_OF_MEMORY",
+        (jobs["Big"], 0): "TIMEOUT",
+        (jobs["Mid"], 0): "COMPLETED",
+    }
+    write_result(e, ts.Task("A", "", "Mid", 0))
+    slurm.scripts.clear()
+    result = ts.run_cycle(e, slurm)
+    assert result.submitted == 1
+    (script,) = slurm.scripts.values()
+    assert "-A-Small" in script and "--mem=8G" in script
+    state = ts.load_state(e)
+    assert state["tasks"]["A|Big|0"]["terminal"] == ts.TIMEOUT
+    assert state["tasks"]["A|Small|0"]["tier"] == 1
+    assert state["tasks"]["A|Small|0"]["attempts"] == 1
+    assert "Time limit" in result.report and not result.settled
+
+    # Small fails again at the top tier: settled with failures
+    age_submissions(e)
+    state = ts.load_state(e)
+    state["tasks"]["A|Small|0"]["tier"] = 2
+    ts.save_state(e, state)
+    slurm.acct[(state["tasks"]["A|Small|0"]["job"], 0)] = "OUT_OF_MEMORY"
+    result = ts.run_cycle(e, slurm)
+    assert result.submitted == 0
+    assert result.settled
+    assert "OOM at 16G" in result.report
+
+
+def test_python_errors_retry_until_max_attempts(world, tmp_path):
+    e = make(
+        world, body="resamples = 1\nmax_attempts = 2", estimators='estimators = ["A"]'
+    )
+    slurm = FakeSlurm()
+    ts.run_cycle(e, slurm)
+    for _attempt in range(2):
+        age_submissions(e)
+        record = ts.load_state(e)["tasks"]["A|Small|0"]
+        log = ts.task_log(e, ts.Task("A", "", "Small", 0), record["job"])
+        Path(f"{log}.err").write_text(
+            "Traceback (most recent call last):\nValueError: bad input\n"
+        )
+        slurm.acct[(record["job"], 0)] = "FAILED"
+        for other in ("Big", "Mid"):
+            write_result(e, ts.Task("A", "", other, 0))
+        result = ts.run_cycle(e, slurm)
+    state = ts.load_state(e)["tasks"]["A|Small|0"]
+    assert state["terminal"] == ts.ERROR
+    assert state["events"][-1]["detail"] == "ValueError: bad input"
+    assert result.settled
+
+
+def test_lost_job_is_resubmitted_without_using_an_attempt(world):
+    e = make(world, body="resamples = 1", estimators='estimators = ["A"]')
+    slurm = FakeSlurm()
+    ts.run_cycle(e, slurm)
+    age_submissions(e)
+    result = ts.run_cycle(e, slurm)  # vanished: no logs, no accounting
+    assert result.submitted == 3
+    assert ts.load_state(e)["tasks"]["A|Small|0"]["attempts"] == 1
+
+
+def test_recent_submission_not_yet_in_queue_is_active(world):
+    e = make(world, body="resamples = 1", estimators='estimators = ["A"]')
+    slurm = FakeSlurm()
+    ts.run_cycle(e, slurm)
+    assert ts.run_cycle(e, slurm).submitted == 0
+
+
+def test_farm_packing_and_status_files(world):
+    e = make(
+        world,
+        resources="farm",
+        estimators='estimators = ["A", "B", "C"]',
+        body="resamples = 4",
+    )
+    slurm = FakeSlurm()
+    result = ts.run_cycle(e, slurm)
+    # max_jobs 2, 8 slots at 4G, 2 waves -> 16 tasks per job
+    assert len(slurm.scripts) == 2
+    assert result.submitted == 32
+    first = slurm.scripts["1001"]
+    assert "--cpus-per-task=8" in first and "--mem=32G" in first
+    assert "slots=8" in first
+
+    age_submissions(e)
+    state = ts.load_state(e)
+    keys = [k for k, r in state["tasks"].items() if r["job"] == "1001"]
+    oom_key, done_key, quiet_key = keys[0], keys[1], keys[2]
+
+    def log(key):
+        est, ds, rs = key.split("|")
+        return ts.task_log(e, ts.Task(est, "", ds, int(rs)), "1001")
+
+    Path(f"{log(oom_key)}.status").write_text("started now\nexit 137\n")
+    Path(f"{log(done_key)}.status").write_text("started now\nexit 1\n")
+    Path(f"{log(done_key)}.err").write_text("Traceback (most recent call last):\nX\n")
+    slurm.acct = {("1001", None): "COMPLETED", ("1002", None): "TIMEOUT"}
+    ts.run_cycle(e, slurm, submit=False)
+    state = ts.load_state(e)
+    assert state["tasks"][oom_key]["tier"] == 1
+    assert state["tasks"][done_key]["events"][-1]["reason"] == ts.ERROR
+    assert state["tasks"][quiet_key]["attempts"] == 0  # never started
+    # tasks of the timed-out farm that never started are also refunded
+    assert all(
+        r["attempts"] == 0
+        for k, r in state["tasks"].items()
+        if r.get("events") and r["events"][-1]["job"] == "1002"
+    )
+
+
+def test_farm_shape_respects_memory():
+    class E:
+        n_jobs = 1
+        resources = ts.Resources(
+            partition="b",
+            time_limit="1",
+            memory_gb=(4, 64),
+            node_cpus=192,
+            node_memory_gb=630,
+        )
+
+    assert ts.farm_shape(E, 4, 1000) == 157
+    assert ts.farm_shape(E, 64, 1000) == 9
+    assert ts.farm_shape(E, 4, 3) == 3
+
+
+def test_stop_file_blocks_submission(world):
+    e = make(world)
+    e.state_dir.mkdir(parents=True)
+    (e.state_dir / "STOP").write_text("x")
+    result = ts.run_cycle(e, FakeSlurm())
+    assert result.submitted == 0 and "STOP" in result.report
+
+
+def test_changed_kwargs_are_refused_but_new_estimators_allowed(world):
+    e = make(world, extra_sections="[estimator_kwargs.A]\nn = 1")
+    ts.run_cycle(e, FakeSlurm())
+    e = make(
+        world,
+        estimators='estimators = ["A", "B", "C"]',
+        extra_sections="[estimator_kwargs.A]\nn = 1",
+    )
+    ts.run_cycle(e, FakeSlurm())
+    e = make(world, extra_sections="[estimator_kwargs.A]\nn = 2")
+    with pytest.raises(RuntimeError, match="changed since"):
+        ts.run_cycle(e, FakeSlurm())
+
+
+def test_commit_is_not_pinned_by_default(world):
+    e = make(world)
+    ts.run_cycle(e, FakeSlurm())
+    (world["repo"] / "README").write_text("y")
+    _git(world["repo"], "commit", "-qam", "next")
+    slurm = FakeSlurm()
+    ts.run_cycle(e, slurm)  # a new commit is fine
+    assert not any("repository moved" in s for s in slurm.scripts.values())
+
+
+def test_commit_is_pinned_when_asked(world):
+    e = make(world, body="pin_commit = true")
+    ts.run_cycle(e, FakeSlurm())
+    (world["repo"] / "README").write_text("y")
+    _git(world["repo"], "commit", "-qam", "next")
+    with pytest.raises(RuntimeError, match="--accept-commit"):
+        ts.run_cycle(e, FakeSlurm())
+    slurm = FakeSlurm()
+    age_submissions(e)
+    ts.run_cycle(e, slurm, accept_commit=True)
+    assert all("repository moved" in s for s in slurm.scripts.values())
+
+
+def test_dirty_repository_is_refused(world):
+    e = make(world)
+    (world["repo"] / "README").write_text("dirty")
+    with pytest.raises(RuntimeError, match="uncommitted"):
+        ts.run_cycle(e, FakeSlurm())
+
+
+def test_dry_run_changes_nothing(world):
+    e = make(world)
+    slurm = FakeSlurm()
+    result = ts.run_cycle(e, slurm, dry_run=True)
+    assert result.submitted == 12 and not slurm.scripts
+    assert "#!/bin/bash" in result.report
+    assert not (e.state_dir / "state.json").exists()
+
+
+def test_retry_command_clears_failures(world, capsys):
+    e = make(world, body="resamples = 1", estimators='estimators = ["A"]')
+    e.state_dir.mkdir(parents=True)
+    ts.save_state(
+        e,
+        {
+            "version": 1,
+            "experiment": "exp",
+            "fingerprints": {},
+            "commit": None,
+            "submissions": [],
+            "last_email": 0,
+            "tasks": {
+                "A|Small|0": {"attempts": 2, "tier": 2, "terminal": "OOM at 16G"},
+                "A|Big|0": {"attempts": 2, "tier": 0, "terminal": ts.ERROR},
+            },
+        },
+    )
+
+    class Args:
+        reason = "oom"
+        memory_tier = 1
+
+    ts.cmd_retry(e, Args)
+    state = ts.load_state(e)["tasks"]
+    assert "terminal" not in state["A|Small|0"] and state["A|Small|0"]["tier"] == 1
+    assert state["A|Big|0"]["terminal"] == ts.ERROR
+
+
+def test_queue_failure_submits_nothing(world):
+    class Broken(FakeSlurm):
+        def available(self):
+            return False
+
+    result = ts.run_cycle(make(world), Broken())
+    assert result.submitted == 0 and "squeue not found" in result.report
+    assert not result.settled
+
+
+def test_diagnosis_from_logs_without_accounting(world):
+    e = make(world)
+    task = ts.Task("A", "", "Small", 0)
+    record = {"job": "7", "kind": "array"}
+    log = ts.task_log(e, task, "7")
+    log.parent.mkdir(parents=True)
+    Path(f"{log}.err").write_text("slurmstepd: error: Detected 1 oom_kill event")
+    assert ts.diagnose(e, task, record, None)[0] == ts.OOM
+    Path(f"{log}.err").write_text("torch.OutOfMemoryError: CUDA out of memory.")
+    assert ts.diagnose(e, task, record, None)[0] == ts.GPU_OOM
+    Path(f"{log}.err").write_text("CANCELLED AT 2026 DUE TO TIME LIMIT")
+    assert ts.diagnose(e, task, record, None)[0] == ts.TIMEOUT
+
+
+def test_state_file_is_json(world):
+    e = make(world)
+    ts.run_cycle(e, FakeSlurm())
+    data = json.loads((e.state_dir / "state.json").read_text())
+    assert data["commit"] and len(data["tasks"]) == 12
+
+
+# --------------------------------------------------------------------------- cancel
+
+
+class Filters:
+    def __init__(self, estimator=None, dataset=None, resample=None):
+        self.estimator = estimator
+        self.dataset = dataset
+        self.resample = resample
+
+
+def _queue_everything(e, slurm):
+    """Make every submitted job of the experiment show as RUNNING in squeue."""
+    state = ts.load_state(e)
+    slurm.entries = []
+    for key, record in state["tasks"].items():
+        index = None if record.get("kind") == "farm" else int(key.rsplit("|", 1)[1])
+        entry = ts.QueueEntry(record["job"], index, "RUNNING", "x", "p")
+        if entry not in slurm.entries:
+            slurm.entries.append(entry)
+
+
+def test_cancel_needs_a_filter(world):
+    e = make(world)
+    with pytest.raises(ts.ConfigError, match="stop --cancel"):
+        ts.cmd_cancel(e, Filters())
+    with pytest.raises(ts.ConfigError, match="Not in this experiment"):
+        ts.cmd_cancel(e, Filters(estimator=["Z"]))
+
+
+def test_cancel_array_tasks(world, monkeypatch):
+    e = make(world)
+    slurm = FakeSlurm()
+    ts.run_cycle(e, slurm)
+    _queue_everything(e, slurm)
+    cancelled = []
+    monkeypatch.setattr(ts, "Slurm", lambda: slurm)
+    monkeypatch.setattr(slurm, "cancel", lambda ids: cancelled.extend(ids))
+    ts.cmd_cancel(e, Filters(estimator=["A"], dataset=["Big"]))
+    state = ts.load_state(e)["tasks"]
+    assert len(cancelled) == 2
+    assert sorted(c.rsplit("_", 1)[1] for c in cancelled) == ["0", "1"]
+    assert state["A|Big|0"]["terminal"] == ts.CANCELLED_BY_USER
+    assert state["A|Big|0"]["job"] is None
+    assert "terminal" not in state["A|Small|0"]
+    # a cancelled task is not submitted again
+    slurm.entries = []
+    slurm.scripts = {}
+    age_submissions(e)
+    ts.run_cycle(e, slurm)
+    assert not any("-A-Big" in s for s in slurm.scripts.values())
+
+
+def test_cancel_farm_tasks_uses_markers_and_retry_undoes_it(world, monkeypatch):
+    e = make(world, resources="farm", body="resamples = 1")
+    slurm = FakeSlurm()
+    ts.run_cycle(e, slurm)
+    _queue_everything(e, slurm)
+    cancelled = []
+    monkeypatch.setattr(ts, "Slurm", lambda: slurm)
+    monkeypatch.setattr(slurm, "cancel", lambda ids: cancelled.extend(ids))
+    ts.cmd_cancel(e, Filters(dataset=["Small"]))
+    assert cancelled == []  # the farm itself keeps running
+    for estimator in ("A", "B"):
+        task = ts.Task(estimator, "", "Small", 0)
+        assert ts.cancel_marker(e, task).is_file()
+    script = next(iter(slurm.scripts.values()))
+    assert "CANCEL=" in script and "SETSID" in script
+
+    class Retry:
+        reason = "cancelled"
+        memory_tier = None
+
+    ts.cmd_retry(e, Retry)
+    state = ts.load_state(e)["tasks"]
+    assert "terminal" not in state["A|Small|0"]
+    assert not ts.cancel_marker(e, ts.Task("A", "", "Small", 0)).exists()
+
+
+@pytest.mark.skipif(BASH is None, reason="bash not available")
+def test_farm_skips_and_kills_cancelled_tasks(world, tmp_path):
+    e = make(world, resources="farm", body="resamples = 1")
+    ts.read_datasets(e)
+    tasks = [ts.Task("A", "", d, 0) for d in ("Small", "Mid", "Big")]
+    script = ts.farm_script(e, tasks, 4, "abc", 3)
+    # keep only the task functions and run them with a stand-in for python
+    body = script[script.index("task_args() {") : script.index("set +e")]
+    for task in tasks:
+        ts.task_log(e, task, "77").parent.mkdir(parents=True, exist_ok=True)
+    skipped, killed, ran = (ts.cancel_marker(e, t) for t in tasks)
+    skipped.parent.mkdir(parents=True, exist_ok=True)
+    skipped.write_text("x")
+    runner = tmp_path / "run.sh"
+    runner.write_text(
+        "SLURM_JOB_ID=77\n"
+        "PY=(bash -c 'sleep 30' x)\n" + body + f"run_task 0\n"
+        f"run_task 1 &\n"
+        f"sleep 1; mkdir -p {shlex_q(killed.parent)}; touch {shlex_q(killed)}\n"
+        "wait\n"
+        "PY=(true)\n"
+        "run_task 2\n",
+        newline="\n",
+    )
+    result = subprocess.run(
+        [BASH, str(runner)], capture_output=True, text=True, timeout=60
+    )
+    assert result.returncode == 0, result.stderr
+
+    def status(task):
+        return Path(f"{ts.task_log(e, task, '77')}.status").read_text()
+
+    assert status(tasks[0]).startswith("cancelled")
+    assert "started" in status(tasks[1]) and "cancelled" in status(tasks[1])
+    assert "exit 0" in status(tasks[2])
+
+
+def shlex_q(path):
+    import shlex
+
+    return shlex.quote(Path(path).as_posix())
+
+
+def test_status_running_lists_elapsed_time(world):
+    e = make(world, resources="farm", body="resamples = 1")
+    slurm = FakeSlurm()
+    ts.run_cycle(e, slurm)
+    _queue_everything(e, slurm)
+    state = ts.load_state(e)
+    key = "A|Small|0"
+    job = state["tasks"][key]["job"]
+    log = ts.task_log(e, ts.Task("A", "", "Small", 0), job)
+    log.parent.mkdir(parents=True, exist_ok=True)
+    Path(f"{log}.status").write_text("started 2000-01-01T00:00:00+00:00 node42\n")
+    report = ts.running_report(e, state, slurm.queue("tester"))
+    first = report.splitlines()[1]
+    assert first.startswith(key) and "node42" in first
+    assert "waiting in farm" in report  # the other tasks have not started
+
+
+def test_existing_hidden_state_dir_is_kept(world):
+    hidden = world["home"] / ".tsml-slurm" / "exp"
+    hidden.mkdir(parents=True)
+    assert make(world).state_dir == hidden
+    (world["home"] / "tsml-slurm" / "exp").mkdir(parents=True)
+    assert make(world).state_dir == world["home"] / "tsml-slurm" / "exp"
+
+
+def test_cv_folds_by_subject(world):
+    with pytest.raises(ts.ConfigError, match="remove resamples"):
+        make(world, body="cv_folds = 10\nresamples = 10")
+    # Small has 3 subjects (3 folds), Mid 25 (3 a fold, 9 folds), Big no subject IDs
+    data = world["home"] / "Data"
+    (data / "Small" / "Small_id_TRAIN.txt").write_text("1\n2\n2\n")
+    (data / "Small" / "Small_id_TEST.txt").write_text("3\n3\n")
+    (data / "Mid" / "Mid_id_TRAIN.txt").write_text("\n".join(map(str, range(12))))
+    (data / "Mid" / "Mid_id_TEST.txt").write_text("\n".join(map(str, range(12, 25))))
+    toml = """
+[experiment]
+name = "cv"
+cluster = "testcluster"
+resources = "cpu"
+task = "classification"
+data_dir = "{home}/Data"
+datasets = "{home}/list.txt"
+results_dir = "{home}/Results"
+cv_folds = 10
+estimators = ["A"]
+"""
+    path = world["tmp"] / "cv.toml"
+    path.write_text(toml.replace("classification", "regression"))
+    with pytest.raises(ts.ConfigError, match="only applies to classification"):
+        ts.load_experiment(path, cluster_dir=world["clusters"], user="tester")
+    path.write_text(toml)
+    e = ts.load_experiment(path, cluster_dir=world["clusters"], user="tester")
+    ts.read_datasets(e)
+    assert ts.dataset_folds(e) == {"Small": 3, "Big": 10, "Mid": 9}
+    per_fold = [ts.subjects_per_fold(n, 10) for n in (14, 15, 16, 29, 105)]
+    assert per_fold == [1, 1, 2, 3, 11]
+    tasks = list(ts.all_tasks(e))
+    assert sorted(t.resample for t in tasks if t.dataset == "Small") == [0, 1, 2]
+    assert len(tasks) == 22
+    args = ts._experiment_arguments(e, tasks[0])
+    assert args[args.index("-cv") + 1] == "10"
+
+
+def test_fingerprint_unchanged_without_cv_folds(world):
+    # the fingerprint of an experiment without cv_folds must not depend on it,
+    # or every experiment started before cv_folds existed would be refused
+    e = make(world)
+    ts.read_datasets(e)
+    content = {
+        "task": e.task,
+        "results": str(e.estimator_results(e.estimators[0])),
+        "kwargs": {},
+        "train": False,
+        "test": False,
+        "extra_args": (),
+        "data_dir": str(e.data_dir),
+    }
+    expected = ts.hashlib.sha256(
+        ts.json.dumps(content, sort_keys=True).encode()
+    ).hexdigest()[:12]
+    assert ts.fingerprints(e)[e.estimators[0].name] == expected
+
+
+def test_legacy_fingerprints_are_accepted(world):
+    # experiments started while cv_folds was always in the fingerprint still run
+    e = make(world)
+    ts.read_datasets(e)
+    state = ts.load_state(e)
+    state["fingerprints"] = ts.fingerprints(e, legacy=True)
+    ts.save_state(e, state)
+    slurm = FakeSlurm()
+    ts.run_cycle(e, slurm)
+    assert slurm.scripts
+    assert ts.load_state(e)["fingerprints"] == ts.fingerprints(e)
+
+
+def test_removed_estimator_with_old_job_is_ignored(world, capsys):
+    e = make(world)
+    ts.read_datasets(e)
+    state = ts.load_state(e)
+    state["tasks"]["Gone|Small|0"] = {"attempts": 1, "tier": 0, "job": "999"}
+    ts.save_state(e, state)
+    slurm = FakeSlurm()
+    slurm.entries = [ts.QueueEntry("999", None, "RUNNING", "x", "p")]
+    ts.run_cycle(e, slurm)
+    assert "Gone|Small|0" not in ts.load_state(e)["tasks"]
+    assert ts.running_report(e, ts.load_state(e), slurm.entries)
+
+
+def test_retry_timeouts_resubmits_until_max_attempts(world):
+    e = make(
+        world,
+        body="resamples = 1\nretry_timeouts = true\nmax_attempts = 2",
+        estimators='estimators = ["A"]',
+    )
+    slurm = FakeSlurm()
+    for attempt in (1, 2):
+        ts.run_cycle(e, slurm)
+        age_submissions(e)
+        state = ts.load_state(e)
+        job = state["tasks"]["A|Big|0"]["job"]
+        slurm.acct[(job, 0)] = "TIMEOUT"
+        ts.run_cycle(e, slurm, submit=False)
+        record = ts.load_state(e)["tasks"]["A|Big|0"]
+        if attempt == 1:
+            assert "terminal" not in record  # resumes from its checkpoint
+        else:
+            assert record["terminal"] == ts.TIMEOUT
+
+
+def test_status_progress_shows_verbose_line_and_checkpoint(world):
+    e = make(
+        world,
+        resources="farm",
+        body="resamples = 1",
+        estimators="",
+        extra_sections='[estimators]\nConvolutionBased = ["A"]',
+    )
+    slurm = FakeSlurm()
+    ts.run_cycle(e, slurm)
+    _queue_everything(e, slurm)
+    state = ts.load_state(e)
+    task = ts.Task("A", "ConvolutionBased", "Small", 0)
+    log = ts.task_log(e, task, state["tasks"][task.key]["job"])
+    log.parent.mkdir(parents=True, exist_ok=True)
+    Path(f"{log}.status").write_text("started 2000-01-01T00:00:00+00:00 node42\n")
+    Path(f"{log}.out").write_text(
+        "Input args = [...]\n"
+        "[Arsenal] Starting fit: n_estimators=25\n"
+        "[Arsenal] Progress: built=10/25, elapsed=3600.00s\n"
+        "some other output\n"
+    )
+    checkpoint = ts.checkpoint_file(e, task)
+    checkpoint.parent.mkdir(parents=True, exist_ok=True)
+    checkpoint.write_bytes(b"x")
+
+    plain = ts.running_report(e, state, slurm.queue("tester"))
+    assert "Progress" not in plain
+    report = ts.running_report(e, state, slurm.queue("tester"), progress=True)
+    lines = report.splitlines()
+    row = next(i for i, x in enumerate(lines) if x.startswith(task.key))
+    assert lines[row + 1].strip() == "[Arsenal] Progress: built=10/25, elapsed=3600.00s"
+    assert lines[row + 2].strip() == "Arsenal: built 10/25, too early to estimate"
+    assert lines[row + 3].strip().startswith("checkpoint written 0:0")
+
+
+def test_estimate_remaining_from_verbose_lines():
+    est = ts.estimate_remaining
+    arsenal = (
+        "[Arsenal] Starting fit: n_cases=30, n_estimators=25\n"
+        "[Arsenal] Progress: built=2/25, elapsed=100.00s\n"
+        "[Arsenal] Progress: built=4/25, elapsed=3700.00s\n"
+    )
+    # 2 members per hour, 21 to go
+    assert est(arsenal) == "Arsenal: built 4/25, about 10:30 (h:mm) left"
+    assert "too early" in est(arsenal.rsplit("\n", 2)[0])
+    # DrCIF shows only a count: the total comes from its Starting fit line
+    drcif = (
+        "[DrCIFClassifier] Starting fit: n_cases=30, n_estimators=200, n_jobs=1\n"
+        "[DrCIFClassifier] Progress: built=10, elapsed=10.00s\n"
+        "[DrCIFClassifier] Progress: built=110, elapsed=3610.00s\n"
+    )
+    assert est(drcif) == "DrCIFClassifier: built 110/200, about 0:54 (h:mm) left"
+    # a resumed fit: the rate is measured within this run, not from zero
+    resumed = (
+        "[TemporalDictionaryEnsemble] Starting fit: parameter_samples=250\n"
+        "[TemporalDictionaryEnsemble] Progress: evaluated=200, elapsed=10.00s\n"
+        "[TemporalDictionaryEnsemble] Progress: evaluated=210, elapsed=3610.00s\n"
+    )
+    assert "about 4:00 (h:mm) left" in est(resumed)
+    # STC: the latest component is what is estimated
+    stc = (
+        "[RandomShapeletTransform] Starting fit: candidate_samples=10000\n"
+        "[RandomShapeletTransform] Progress: extracted=1000/10000, elapsed=100.00s\n"
+        "[RandomShapeletTransform] Progress: extracted=2000/10000, elapsed=3700.00s\n"
+    )
+    assert est(stc).endswith("then the rotation forest")
+    assert "about 8:00 (h:mm) left" in est(stc)
+    assert est("no progress here\n") == ""
+
+
+# --------------------------------------------------------------------------- top_up
+
+
+def test_time_limit_seconds():
+    assert ts.time_limit_seconds("30") == 1800
+    assert ts.time_limit_seconds("30:15") == 1815
+    assert ts.time_limit_seconds("1:00:00") == 3600
+    assert ts.time_limit_seconds("2-12") == 60 * 3600
+    assert ts.time_limit_seconds("2-12:30") == 60 * 3600 + 1800
+    assert ts.time_limit_seconds("2-12:00:00") == 60 * 3600
+
+
+def test_top_up_settings_are_checked(world):
+    with pytest.raises(ts.ConfigError, match="farm mode"):
+        make(world, extra_sections="[slurm]\ntop_up = true")
+    with pytest.raises(ts.ConfigError, match="top_up_hours"):
+        make(
+            world,
+            resources="farm",
+            extra_sections="[slurm]\ntop_up = true\ntop_up_hours = 2",
+        )
+
+
+def _top_up_world(world):
+    return make(
+        world,
+        resources="farm",
+        estimators='estimators = ["A", "B", "C"]',
+        body="resamples = 4",
+        extra_sections="[slurm]\ntop_up = true\ntop_up_hours = 0.25\nwaves = 1",
+    )
+
+
+def test_top_up_hands_waiting_tasks_to_running_farms(world):
+    e = _top_up_world(world)
+    slurm = FakeSlurm()
+    result = ts.run_cycle(e, slurm)
+    # max_jobs 2, 8 slots at 4G, 1 wave: 16 of 36 tasks submitted
+    assert result.submitted == 16
+    state = ts.load_state(e)
+    assert state["submissions"][0]["slots"] == 8
+    assert state["submissions"][0]["top_up"] is True
+    script = slurm.scripts["1001"]
+    assert "run_inbox" in script and "accept_until=$(( farm_start + 2700 ))" in script
+
+    # both farms pending: nothing to hand over, and no third farm
+    _queue_everything(e, slurm)
+    slurm.entries = [
+        ts.QueueEntry(q.job_id, None, "PENDING", "x", "p") for q in slurm.entries
+    ]
+    assert ts.run_cycle(e, slurm).submitted == 0
+
+    # farm 1001 runs, and three of its tasks have ended; its inbox is open
+    slurm.entries = [
+        ts.QueueEntry(q.job_id, None, "RUNNING", "x", "p") for q in slurm.entries
+    ]
+    ts.farm_inbox(e, "1001").mkdir(parents=True)
+    ts.farm_inbox(e, "1002").mkdir(parents=True)
+    (ts.farm_inbox(e, "1002") / "closed").write_text("")
+    state = ts.load_state(e)
+    ended = [k for k, r in state["tasks"].items() if r["job"] == "1001"][:3]
+    for key in ended:
+        est, ds, rs = key.split("|")
+        log = ts.task_log(e, ts.Task(est, "", ds, int(rs)), "1001")
+        Path(f"{log}.status").write_text("started now\nexit 0\n")
+    result = ts.run_cycle(e, slurm)
+    assert result.submitted == 3  # 1002 is closed
+    inbox = sorted(ts.farm_inbox(e, "1001").glob("*.task"))
+    assert len(inbox) == 3
+    state = ts.load_state(e)
+    handed = [k for k, r in state["tasks"].items() if r["job"] == "1001"]
+    assert len(handed) == 8 + 3
+    text = inbox[0].read_text()
+    assert text.startswith("ARGS=(") and "1001_" in text
+    # the slots are full again
+    assert ts.run_cycle(e, slurm).submitted == 0
+
+    # a handed task the farm never ran is diagnosed as not started, attempt refunded
+    slurm.entries = [q for q in slurm.entries if q.job_id != "1001"]
+    slurm.acct = {("1001", None): "COMPLETED"}
+    age_submissions(e)
+    ts.run_cycle(e, slurm, submit=False)
+    state = ts.load_state(e)
+    name = inbox[0].name[: -len(".task")].split("__")
+    record = state["tasks"]["|".join(name)]
+    assert record["job"] is None and record["attempts"] == 0
+
+
+def test_top_up_respects_memory_tier(world):
+    e = _top_up_world(world)
+    slurm = FakeSlurm()
+    ts.run_cycle(e, slurm)
+    _queue_everything(e, slurm)
+    ts.farm_inbox(e, "1001").mkdir(parents=True)
+    ts.farm_inbox(e, "1002").mkdir(parents=True)
+    state = ts.load_state(e)
+    for key, record in state["tasks"].items():
+        if record["job"] in ("1001", "1002"):
+            est, ds, rs = key.split("|")
+            log = ts.task_log(e, ts.Task(est, "", ds, int(rs)), record["job"])
+            Path(f"{log}.status").write_text("started now\nexit 0\n")
+    # every waiting task needs 8G: too big for the 4G slots
+    for task in ts.all_tasks(e):
+        record = state["tasks"].setdefault(task.key, {"attempts": 0, "tier": 0})
+        if not record.get("job"):
+            record["tier"] = 1
+    ts.save_state(e, state)
+    assert ts.run_cycle(e, slurm).submitted == 0
+
+
+@pytest.mark.skipif(BASH is None, reason="needs bash")
+def test_farm_runs_inbox_tasks_then_closes(world, tmp_path):
+    e = _top_up_world(world)
+    ts.read_datasets(e)
+    tasks = [ts.Task("A", "", d, 0) for d in ("Small", "Mid", "Big")]
+    script = ts.farm_script(e, tasks[:1], 4, "abc", 2)
+    body = script[script.index("task_args() {") :].replace("sleep 15", "sleep 1")
+    for task in tasks:
+        ts.task_log(e, task, "77").parent.mkdir(parents=True, exist_ok=True)
+    inbox = ts.farm_inbox(e, "77")
+    inbox.mkdir(parents=True)
+    for task in tasks[1:]:
+        (inbox / f"{task.dataset}.task").write_text(
+            ts._task_shell(e, task, "77") + "\n", newline="\n"
+        )
+    runner = tmp_path / "farm.sh"
+    # each "experiment" takes 2 s, so the inbox tasks start while the first runs
+    runner.write_text(
+        "SLURM_JOB_ID=77\nPY=(bash -c 'sleep 2' x)\n" + body, newline="\n"
+    )
+    result = subprocess.run(
+        [BASH, str(runner)], capture_output=True, text=True, timeout=60
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.count("top-up") == 2
+    for task in tasks:
+        assert "exit 0" in Path(f"{ts.task_log(e, task, '77')}.status").read_text()
+    assert (inbox / "closed").exists()
+    assert not list(inbox.glob("*.task"))
+
+
+def test_farms_overview(world):
+    spec_f = importlib.util.spec_from_file_location("farms", ROOT / "farms.py")
+    farms = importlib.util.module_from_spec(spec_f)
+    spec_f.loader.exec_module(farms)
+    e = _top_up_world(world)
+    slurm = FakeSlurm()
+    ts.run_cycle(e, slurm)
+    ts.farm_inbox(e, "1001").mkdir(parents=True)
+    state = ts.load_state(e)
+    keys = [k for k, r in state["tasks"].items() if r["job"] == "1001"]
+    for key, status in zip(keys, ["exit 0", "exit 1", "", "exit 0"]):
+        est, ds, rs = key.split("|")
+        log = ts.task_log(e, ts.Task(est, "", ds, int(rs)), "1001")
+        Path(f"{log}.status").write_text(f"started now\n{status}\n")
+    jobs = {"1001": ("RUNNING", "1:00:00", "59:00", "node1")}
+    lines = farms.overview(e, jobs)
+    text = "\n".join(lines)
+    assert lines[0].startswith("exp: 0/36 complete")
+    assert "20 not yet submitted" in lines[0]
+    row = next(x for x in lines if x.strip().startswith("1001"))
+    # 8 slots: 2 done, 1 failed, 1 running, 4 not started
+    assert row.split()[5:10] == ["8", "1", "4", "2", "1"]
+    assert "top-up open" in row and "1002" not in text
+    assert "running: " in text
+    assert farms.overview(e, {}) == []
+
+
+def test_dataset_info_fills_kwargs_and_skips_missing(world):
+    (world["home"] / "info.csv").write_text("dataset,sfreq\nSmall,100\nBig,250.5\n")
+    e = make(
+        world,
+        body='dataset_info = "{home}/info.csv"',
+        extra_sections='[estimator_kwargs.A]\nsfreq = "{dataset.sfreq}"\nn = 3',
+    )
+    ts.read_datasets(e)
+    keys = {t.key for t in ts.all_tasks(e)}
+    assert "A|Mid|0" not in keys and "B|Mid|0" in keys  # Mid has no sfreq
+    assert ts.unresolved(e) == {"A": ["Mid"]}
+    args = ts._experiment_arguments(e, ts.Task("A", "", "Big", 0))
+    assert "-kw sfreq 250.5 float" in " ".join(args)
+    assert "-kw n 3 int" in " ".join(args)
+    small = ts._experiment_arguments(e, ts.Task("A", "", "Small", 1))
+    assert "-kw sfreq 100 int" in " ".join(small)
+    assert "sfreq" not in " ".join(
+        ts._experiment_arguments(e, ts.Task("B", "", "Big", 0))
+    )
+
+
+def test_dataset_refs_need_dataset_info(world):
+    with pytest.raises(ts.ConfigError, match="dataset_info"):
+        make(world, extra_sections='[estimator_kwargs.A]\nsfreq = "{dataset.sfreq}"')

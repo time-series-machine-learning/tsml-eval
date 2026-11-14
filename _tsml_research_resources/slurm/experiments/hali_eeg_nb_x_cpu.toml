@@ -1,0 +1,91 @@
+# The Iridis X braindecode models (iridisx_eeg_nb_more.toml) on the 28 problems that
+# are on Hali but not on Iridis (eeg_not_on_iridis.txt: the resting-state and newly
+# assimilated problems), run on Hali CPUs because Iridis X is held at 4 nodes per
+# user and Hali's GPUs are taken by the other GPU experiments (14 Nov 2026).
+# Same NeuralBench recipe and braindecode defaults as on Iridis X; only the device
+# differs, so results line up with the GPU runs up to floating-point differences.
+# SSTDPN-NB is left out (dropped: too short for many problems). EEGMiner-NB runs on
+# every problem in hali_eeg_eegminer_cpu.toml.
+#
+# Each task gets 8 cores (n_jobs = 8 sets the torch/BLAS thread variables).
+#
+#   python tsml_slurm.py check experiments/hali_eeg_nb_x_cpu.toml
+#   python tsml_slurm.py start experiments/hali_eeg_nb_x_cpu.toml
+
+[experiment]
+name = "eeg-nb-x-cpu"
+cluster = "hali"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_not_on_iridis.txt"
+dataset_info = "{repo}/_tsml_research_resources/dataset_lists/eeg_ctnet_info.csv"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+n_jobs = 8
+
+[estimators]
+DeepLearning = [
+    "ATCNet-NB",
+    "MSVTNet-NB",
+    "AttentionBaseNet-NB",
+    "MSCFormer-NB",
+    "TMSANet-NB",
+    "TCFormer-NB",
+    "GCNsNet-NB",
+    "EEGInceptionERP-NB",
+    "TSception-NB",
+]
+
+[estimator_kwargs."ATCNet-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cpu"
+
+[estimator_kwargs."MSVTNet-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cpu"
+
+[estimator_kwargs."AttentionBaseNet-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cpu"
+
+[estimator_kwargs."MSCFormer-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cpu"
+
+[estimator_kwargs."TMSANet-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cpu"
+
+[estimator_kwargs."TCFormer-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cpu"
+
+[estimator_kwargs."GCNsNet-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cpu"
+
+[estimator_kwargs."EEGInceptionERP-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cpu"
+
+[estimator_kwargs."TSception-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cpu"
+
+[slurm]
+env_name = "tsml-eval"
+memory_gb = [32, 64, 128, 256]
+max_active = 40

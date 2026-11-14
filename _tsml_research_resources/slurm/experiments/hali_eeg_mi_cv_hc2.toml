@@ -1,0 +1,51 @@
+# Subject-wise cross-validation of the HC2 components (Arsenal, DrCIF-500, STC-aeon,
+# TDE) on the 26 motor imagery and 7 ERP/P300 problems (eeg_mi_erp.txt), on Hali.
+# Moved from Iridis 6 (iridis6_eeg_mi_cv_hc2.toml) on 14 Nov 2026 before any fold had
+# finished there: Iridis 6 allows 4 nodes per user, so it could not start before the
+# 14 Dec shutdown. The cheap classifiers are in iridisx_eeg_mi_cv.toml, with the same
+# folds (set by the subject ID files).
+#
+# Train files are written too, so HC2 can be built from these results per fold, as
+# for the default split. Checkpointed: a fold killed at the time limit resumes from
+# its last checkpoint, up to 4 runs. DrCIF-500 only, as HC2 uses it.
+#
+#   python tsml_slurm.py check experiments/hali_eeg_mi_cv_hc2.toml
+#   python tsml_slurm.py start experiments/hali_eeg_mi_cv_hc2.toml
+
+[experiment]
+name = "eeg-mi-cv-hc2"
+cluster = "hali"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_mi_erp.txt"
+results_dir = "{home}/Results/EEG-CV"
+cv_folds = 10
+smallest_datasets_first = true
+train_files = true                   # completion needs train AND test files
+extra_args = ["-ch", "-chi", "420"]  # checkpoint, at least 7 hours apart
+retry_timeouts = true                # a timed-out fold resumes from its checkpoint
+max_attempts = 4
+priority = "dataset"                 # all four components on a dataset together
+
+[estimators]
+ConvolutionBased = ["Arsenal"]
+IntervalBased = ["DrCIF-500"]
+ShapeletBased = ["STC-aeon"]
+DictionaryBased = ["TDE"]
+
+[estimator_kwargs.Arsenal]
+verbose = 1
+[estimator_kwargs."DrCIF-500"]
+verbose = 1
+[estimator_kwargs."STC-aeon"]
+verbose = 1
+[estimator_kwargs.TDE]
+verbose = 1
+
+[slurm]
+env_name = "tsml-eval"
+memory_gb = [16, 32, 64, 128, 256, 480]
+max_active = 400

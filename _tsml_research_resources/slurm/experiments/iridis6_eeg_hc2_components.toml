@@ -1,0 +1,76 @@
+# The HC2 components (Arsenal, DrCIF, STC, TDE) on Iridis 6, with train files as
+# well as test files, verbose and checkpointed. The train files hold each
+# component's own train estimate, so HC2 can be built from these results (its
+# weights come from them) without refitting. Same data, dataset list and results
+# layout as iridis6_eeg_aeon.toml, which runs the other aeon classifiers.
+#
+# Needs aeon with checkpointing and resume_fit_predict_proba for all four: the
+# ajb/hc2-components-checkpoint branch, installed in the tsml-eval env. Check with
+# `python test_checkpointing.py`.
+#
+# Checkpointing: -ch saves each fit to
+# ~/Results/EEG/<Category>/<Name>/Checkpoints/<Dataset>/Resample0.ckpt, at least
+# 420 minutes apart (-chi), so around 7, 14, ... 49 and 56 hours into the 60 hour
+# limit. A task killed at the limit is resubmitted (retry_timeouts) and resumes from
+# its last checkpoint, train estimates included; the file is removed once results
+# are written. A periodic write happens at the next safe point after the interval,
+# so a long batch can delay it.
+#
+# STC-aeon is aeon's ShapeletTransformClassifier: tsml-eval's "STC" is its own
+# work-in-progress version, which cannot checkpoint.
+
+[experiment]
+name = "eeg-hc2-components"
+cluster = "iridis6"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{home}/DataSetLists/eeg.txt"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+train_files = true                  # completion needs train AND test files
+extra_args = ["-ch", "-chi", "420"]  # checkpoint, at least 7 hours apart
+retry_timeouts = true               # a timed-out task resumes from its checkpoint
+max_attempts = 4
+# all four components on each dataset together, smallest datasets first, so the
+# slow ones (STC, TDE) are not queued behind every Arsenal and DrCIF task
+priority = "dataset"
+
+[estimators]
+ConvolutionBased = ["Arsenal"]
+# DrCIF-500 since 2026-11-08: HC2 builds its DrCIF with 500 trees, so HC2 from
+# file uses DrCIF-500. DrCIF (default 200 trees) stays as a standalone entry.
+IntervalBased = ["DrCIF", "DrCIF-500"]
+ShapeletBased = ["STC-aeon"]
+DictionaryBased = ["TDE"]
+
+# Progress in each task's .out log: 1 = configuration, periodic progress and a
+# summary; 2 also logs every estimator.
+[estimator_kwargs.Arsenal]
+verbose = 1
+
+[estimator_kwargs.DrCIF]
+verbose = 1
+
+[estimator_kwargs."DrCIF-500"]
+verbose = 1
+
+[estimator_kwargs."STC-aeon"]
+verbose = 1
+
+[estimator_kwargs.TDE]
+verbose = 1
+
+[slurm]
+env_name = "tsml-eval"
+max_jobs = 4                        # all four nodes (the expert QOS limit): HC2
+                                    # first, then eeg-mrhydra once few are waiting
+waves = 1                           # a farm holds only what it runs at once, so
+                                    # every task starts with the full 60 hours
+top_up = true                       # a farm down to its long tasks takes waiting
+top_up_hours = 12                   # ones while it has 12 hours or more left;
+                                    # checkpoints carry them over the limit
+memory_gb = [16, 32, 64, 128, 256, 620]

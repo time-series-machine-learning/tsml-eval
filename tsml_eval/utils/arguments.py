@@ -16,9 +16,9 @@ def parse_args(args):
 
     The following is the --help output for tsml_eval:
 
-    usage: tsml_eval [-h] [--version] [-ow] [-pr] [-rs RANDOM_SEED] [-nj N_JOBS]
-                     [-tr] [-te] [-fc FIT_CONTRACT] [-ch] [-rn] [-nc N_CLUSTERS]
-                     [-kw KEY VALUE TYPE]
+    usage: tsml_eval [-h] [--version] [-ow] [-pr] [-cv CV_FOLDS] [-rs RANDOM_SEED]
+                     [-nj N_JOBS] [-tr] [-te] [-fc FIT_CONTRACT] [-ch] [-rn]
+                     [-nc N_CLUSTERS] [-kw KEY VALUE TYPE]
                      data_path results_path estimator_name dataset_name
                      resample_id
 
@@ -47,6 +47,14 @@ def parse_args(args):
                             load a dataset file with a predefined resample. The
                             dataset file must follow the naming format
                             '{dataset_name}_{resample_id}.ts' (default: False).
+      -cv CV_FOLDS, --cv_folds CV_FOLDS
+                            combine train and test and use fold {resample_id}
+                            (from 0) of a stratified {cv_folds}-fold
+                            cross-validation instead of a resample. If
+                            {dataset_name}_id_TRAIN.txt and _id_TEST.txt hold
+                            subject IDs, each subject is kept on one side of the
+                            split, with at most one fold per subject. Only used in
+                            classification (default: None).
       -rs RANDOM_SEED, --random_seed RANDOM_SEED
                             use a different random seed than the resample ID. If
                             None use the {resample_id} (default: None).
@@ -62,8 +70,15 @@ def parse_args(args):
                             a time limit for estimator fit in minutes. Only used
                             if the estimator can contract fit (default: 0).
       -ch, --checkpoint     save the estimator fit to file periodically while
-                            building. Only used if the estimator can checkpoint
-                            (default: False).
+                            building, and resume from that file if it exists. Only
+                            used in classification, with an estimator that can
+                            checkpoint. The file is {results_path}/{estimator_name}/
+                            Checkpoints/{dataset_name}/Resample{resample_id}.ckpt,
+                            removed once the results are written (default: False).
+      -chi CHECKPOINT_INTERVAL, --checkpoint_interval CHECKPOINT_INTERVAL
+                            minimum minutes between periodic checkpoints with
+                            --checkpoint. If None, the estimator only saves at its
+                            own fixed points and on completion (default: None).
       -dtn DATA_TRANSFORM_NAME, --data_transform_name DATA_TRANSFORM_NAME
                             str to pass to get_data_transform_by_name to apply a
                             transformation to the data prior to running the experiment.
@@ -164,6 +179,16 @@ def parse_args(args):
         "(default: %(default)s).",
     )
     parser.add_argument(
+        "-cv",
+        "--cv_folds",
+        type=int,
+        help="combine train and test and use fold {resample_id} (from 0) of a "
+        "stratified {cv_folds}-fold cross-validation instead of a resample. If "
+        "{dataset_name}_id_TRAIN.txt and _id_TEST.txt hold subject IDs, each subject "
+        "is kept on one side of the split, with at most one fold per subject. Only "
+        "used in classification (default: %(default)s).",
+    )
+    parser.add_argument(
         "-rs",
         "--random_seed",
         type=int,
@@ -204,8 +229,20 @@ def parse_args(args):
         "-ch",
         "--checkpoint",
         action="store_true",
-        help="save the estimator fit to file periodically while building. Only used if "
-        "the estimator can checkpoint (default: %(default)s).",
+        help="save the estimator fit to file periodically while building, and resume "
+        "from that file if it exists. Only used in classification, with an estimator "
+        "that can checkpoint. The file is "
+        "{results_path}/{estimator_name}/Checkpoints/{dataset_name}/"
+        "Resample{resample_id}.ckpt, removed once the results are written "
+        "(default: %(default)s).",
+    )
+    parser.add_argument(
+        "-chi",
+        "--checkpoint_interval",
+        type=float,
+        help="minimum minutes between periodic checkpoints with --checkpoint. If None, "
+        "the estimator only saves at its own fixed points and on completion "
+        "(default: %(default)s).",
     )
     parser.add_argument(
         "-dtn",

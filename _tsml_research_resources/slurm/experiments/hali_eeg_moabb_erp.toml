@@ -1,0 +1,49 @@
+# MOABB's ERP (P300) pipelines on every EEG problem, on Hali CPUs, alongside the
+# motor imagery ones (hali_eeg_moabb_mi*.toml). Code: aeon-neuro branch
+# ajb/eeg-baselines, MOABBPipelineClassifier, after MOABB's 1-24 Hz P300 band-pass,
+# with each pipeline file's settings:
+#
+#   XdawnCov-MDM-MOABB     XdawnCov_MDM.yml: XdawnCovariances(oas), MDM
+#   XdawnCov-TS-SVM-MOABB  XdawnCov_TS_SVM.yml: XdawnCovariances(oas), tangent
+#                          space, SVC (C=10, kernel tuned)
+#   ERPCov-MDM-MOABB       ERPCov_MDM.yml: ERPCovariances(oas), MDM
+#   xDAWN-LDA-MOABB        xDAWN_LDA.yml: Xdawn(oas), LDA
+#
+# These suit event-related potential problems; expect weak results elsewhere.
+#
+#   python tsml_slurm.py check experiments/hali_eeg_moabb_erp.toml
+#   python tsml_slurm.py start experiments/hali_eeg_moabb_erp.toml
+
+[experiment]
+name = "eeg-moabb-erp"
+cluster = "hali"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{home}/DataSetLists/eeg.txt"
+dataset_info = "{repo}/_tsml_research_resources/dataset_lists/eeg_sampling_rates.csv"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+[estimators]
+DistanceBased = ["XdawnCov-MDM-MOABB", "ERPCov-MDM-MOABB"]
+FeatureBased = ["XdawnCov-TS-SVM-MOABB", "xDAWN-LDA-MOABB"]
+
+[estimator_kwargs."XdawnCov-MDM-MOABB"]
+sfreq = "{dataset.sfreq}"
+
+[estimator_kwargs."XdawnCov-TS-SVM-MOABB"]
+sfreq = "{dataset.sfreq}"
+
+[estimator_kwargs."ERPCov-MDM-MOABB"]
+sfreq = "{dataset.sfreq}"
+
+[estimator_kwargs."xDAWN-LDA-MOABB"]
+sfreq = "{dataset.sfreq}"
+
+[slurm]
+env_name = "tsml-eval"
+memory_gb = [16, 32, 64, 128, 256, 480]  # 256/480 added 13 Nov 2026 for OOM retries

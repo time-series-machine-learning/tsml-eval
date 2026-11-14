@@ -14,6 +14,10 @@ from tsml_eval.datasets._loaders import (
 )
 from tsml_eval.testing.testing_utils import _TEST_RESULTS_PATH
 from tsml_eval.utils.resampling import (
+    cv_fold_data,
+    cv_fold_indices,
+    cv_n_folds,
+    cv_subjects_per_fold,
     resample_data,
     resample_data_indices,
     stratified_resample_data,
@@ -219,3 +223,71 @@ def test_compare_result_file_resample_invalid():
 
     with pytest.raises(ValueError, match="Input results file have different"):
         compare_result_file_resample(p1, p3)
+
+
+def _cv_labels():
+    rng = np.random.RandomState(1)
+    y = rng.choice(["a", "b", "c"], 120)
+    return y[:70], y[70:]
+
+
+def test_cv_folds_partition_cases():
+    """Each case is in exactly one test fold, and folds are stratified."""
+    y_train, y_test = _cv_labels()
+    seen = []
+    for fold in range(10):
+        train, test = cv_fold_indices(y_train, y_test, fold)
+        assert len(set(train) & set(test)) == 0
+        assert len(train) + len(test) == 120
+        seen.extend(test)
+    assert sorted(seen) == list(range(120))
+    a, b = cv_fold_indices(y_train, y_test, 3)
+    c, d = cv_fold_indices(y_train, y_test, 3)
+    assert np.array_equal(a, c) and np.array_equal(b, d)
+
+
+@pytest.mark.parametrize(
+    "n_subjects,per_fold,expected",
+    [(9, 1, 9), (14, 1, 14), (15, 1, 15), (16, 2, 8), (29, 3, 10), (32, 3, 11)],
+)
+def test_cv_folds_by_subject(n_subjects, per_fold, expected):
+    """Subjects never span train and test; equal subjects per fold but the last."""
+    y_train, y_test = _cv_labels()
+    groups = np.arange(120) % n_subjects
+    assert cv_subjects_per_fold(n_subjects) == per_fold
+    assert cv_n_folds(10, groups) == expected
+    seen, sizes = [], []
+    for fold in range(expected):
+        train, test = cv_fold_indices(y_train, y_test, fold, groups=groups)
+        assert not set(groups[train]) & set(groups[test])
+        seen.extend(test)
+        sizes.append(len(set(groups[test])))
+    assert sorted(seen) == list(range(120))
+    assert sizes[:-1] == [per_fold] * (expected - 1)
+    assert 1 <= sizes[-1] <= per_fold
+    with pytest.raises(ValueError, match="fold must be"):
+        cv_fold_indices(y_train, y_test, expected, groups=groups)
+
+
+def test_cv_folds_bad_groups():
+    """Group IDs must match the cases."""
+    y_train, y_test = _cv_labels()
+    with pytest.raises(ValueError, match="one per case"):
+        cv_fold_indices(y_train, y_test, 0, groups=np.zeros(5))
+
+
+@pytest.mark.parametrize(
+    "loader", [load_minimal_chinatown, load_unequal_minimal_chinatown]
+)
+def test_cv_fold_data(loader):
+    """Fold data matches the fold indices, for arrays and lists."""
+    X_train, y_train = loader(split="TRAIN")
+    X_test, y_test = loader(split="TEST")
+    groups = np.arange(len(y_train) + len(y_test)) // 3
+    train_X, train_y, test_X, test_y = cv_fold_data(
+        X_train, y_train, X_test, y_test, 2, groups=groups
+    )
+    train, test = cv_fold_indices(y_train, y_test, 2, groups=groups)
+    y = np.concatenate((y_train, y_test))
+    assert np.array_equal(train_y, y[train]) and np.array_equal(test_y, y[test])
+    assert len(train_X) == len(train) and len(test_X) == len(test)

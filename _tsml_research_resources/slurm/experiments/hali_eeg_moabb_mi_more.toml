@@ -1,0 +1,94 @@
+# The rest of MOABB's motor imagery pipelines on the motor imagery problems, on Hali
+# CPUs, to line up with MDM-MOABB, CSP-LDA-MOABB (hali_eeg_moabb_mi.toml) and
+# TSLR-MOABB (hali_eeg_baselines_mi.toml). Code: aeon-neuro branch
+# ajb/eeg-baselines, aeon_neuro.classification.experimental.MOABBPipelineClassifier,
+# after MOABB's 8-32 Hz IIR band-pass (FBCSP uses its own six 4 Hz bands instead).
+# Each is MOABB's pipeline file with its settings, grid searches by 3-fold CV:
+#
+#   FgMDM-MOABB         FgMDM.yml: OAS covariance, FgMDM
+#   TSSVM-MOABB         TSSVM_grid.yml: OAS, tangent space, SVC (kernel tuned)
+#   TSEN-MOABB          EN_grid.yml: OAS, tangent space, elastic net LR (l1_ratio)
+#   CSP-SVM-MOABB       CSP_SVM_grid.yml: OAS, pyriemann CSP (2-8 filters), SVC
+#   DLCSP-shLDA-MOABB   regCSP+shLDA.yml: OAS, CSP(6), shrinkage LDA
+#   FBCSP-SVM-MOABB     FBCSP.py: CSP(4) on six bands, 10 best by mutual
+#                       information, linear SVC with C tuned
+#   LogVar-LDA-MOABB    LogVar.yml: log variance, LDA
+#   LogVar-SVM-MOABB    LogVar_grid.yml: log variance, linear SVC (C tuned)
+#   AUG-TANG-SVM-MOABB  AUG_TANG_SVM_grid.yml: time-delay embedding (order and lag
+#                       1-10), covariance, tangent space, SVC: 200 settings, by far
+#                       the slowest
+#
+# Same dataset list and dataset_info as TSLR-MOABB.
+#
+# TRCSP-LDA-MOABB (WTRCSP.py: SCM, Tikhonov-regularised CSP(6), LDA) was removed on
+# 14 Nov 2026. It is a two-class method: it fails with "TRCSP only supports 2 classes"
+# on every multiclass problem, and on two binary ones with non-positive-definite
+# covariances, so it cannot cover the archive. Plain CSP pipelines (CSP+LDA,
+# CSP-LDA-MOABB, DLCSP-shLDA-MOABB) cover the same idea on every problem. Its 51
+# results stay on disk; Neuroverse docs/evaluation.md lists it under Dropped Classifiers.
+#
+# Since 2026-11-08 on every EEG problem (~/DataSetLists/eeg.txt), not only the
+# motor imagery list: the 8-32 Hz band is a motor imagery choice, so expect weak
+# results on sleep, seizure and ERP problems. The experiment name is kept so
+# finished motor imagery results count as done.
+#
+#   python tsml_slurm.py check experiments/hali_eeg_moabb_mi_more.toml
+#   python tsml_slurm.py start experiments/hali_eeg_moabb_mi_more.toml
+
+[experiment]
+name = "eeg-moabb-mi-more"
+cluster = "hali"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{home}/DataSetLists/eeg.txt"
+dataset_info = "{repo}/_tsml_research_resources/dataset_lists/eeg_sampling_rates.csv"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+[estimators]
+DistanceBased = ["FgMDM-MOABB"]
+FeatureBased = [
+    "TSSVM-MOABB",
+    "TSEN-MOABB",
+    "CSP-SVM-MOABB",
+    "DLCSP-shLDA-MOABB",
+    "FBCSP-SVM-MOABB",
+    "LogVar-LDA-MOABB",
+    "LogVar-SVM-MOABB",
+    "AUG-TANG-SVM-MOABB",
+]
+
+[estimator_kwargs."FgMDM-MOABB"]
+sfreq = "{dataset.sfreq}"
+
+[estimator_kwargs."TSSVM-MOABB"]
+sfreq = "{dataset.sfreq}"
+
+[estimator_kwargs."TSEN-MOABB"]
+sfreq = "{dataset.sfreq}"
+
+[estimator_kwargs."CSP-SVM-MOABB"]
+sfreq = "{dataset.sfreq}"
+
+[estimator_kwargs."DLCSP-shLDA-MOABB"]
+sfreq = "{dataset.sfreq}"
+
+[estimator_kwargs."FBCSP-SVM-MOABB"]
+sfreq = "{dataset.sfreq}"
+
+[estimator_kwargs."LogVar-LDA-MOABB"]
+sfreq = "{dataset.sfreq}"
+
+[estimator_kwargs."LogVar-SVM-MOABB"]
+sfreq = "{dataset.sfreq}"
+
+[estimator_kwargs."AUG-TANG-SVM-MOABB"]
+sfreq = "{dataset.sfreq}"
+
+[slurm]
+env_name = "tsml-eval"
+memory_gb = [16, 32, 64, 128, 256, 480]  # 256/480 added 13 Nov 2026 for OOM retries
