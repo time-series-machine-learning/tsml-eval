@@ -1,3 +1,6 @@
+# EEGMiner-NB moved to Hali CPUs (hali_eeg_eegminer_cpu.toml) on 14 Nov 2026, before any
+# task was submitted here: this cluster is held at 4 nodes per user.
+#
 # braindecode models trained from scratch with NeuralBench's recipe, as CTNet-NB,
 # EEGNet-NB and the hali_eeg_nb_deep.toml models are (120 Hz, robust scaling, clamp
 # 20, AdamW lr 1e-4, one-cycle, up to 40 epochs, early stopping on subject-wise
@@ -50,7 +53,6 @@ DeepLearning = [
     "GCNsNet-NB",
     "EEGInceptionERP-NB",
     "TSception-NB",
-    "EEGMiner-NB",
 ]
 
 [estimator_kwargs."ATCNet-NB"]
@@ -99,11 +101,6 @@ train_groups = "{dataset.train_groups}"
 device = "cuda"
 
 [estimator_kwargs."TSception-NB"]
-sfreq = "{dataset.sfreq}"
-train_groups = "{dataset.train_groups}"
-device = "cuda"
-
-[estimator_kwargs."EEGMiner-NB"]
 sfreq = "{dataset.sfreq}"
 train_groups = "{dataset.train_groups}"
 device = "cuda"
