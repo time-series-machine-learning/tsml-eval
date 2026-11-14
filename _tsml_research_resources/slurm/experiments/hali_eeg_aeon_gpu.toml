@@ -22,6 +22,6 @@ smallest_datasets_first = true
 DeepLearning = ["IT", "CNN", "LITETime-MV"]
 
 [slurm]
-env_name = "tsml-eval"
+env_name = "tsml-eval-gpu"   # TensorFlow, for the aeon deep models
 gpu_check = "torch"
 memory_gb = [32, 64, 128]
