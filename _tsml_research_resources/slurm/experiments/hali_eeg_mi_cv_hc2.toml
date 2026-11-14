@@ -24,7 +24,6 @@ datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_mi_erp.txt"
 results_dir = "{home}/Results/EEG-CV"
 cv_folds = 10
 smallest_datasets_first = true
-exclude_datasets = ["SymbolAttention"]  # dropped from the benchmark on 13 Nov 2026
 train_files = true                   # completion needs train AND test files
 extra_args = ["-ch", "-chi", "420"]  # checkpoint, at least 7 hours apart
 retry_timeouts = true                # a timed-out fold resumes from its checkpoint
