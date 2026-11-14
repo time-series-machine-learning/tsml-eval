@@ -10,8 +10,6 @@
 #   TSEN-MOABB          EN_grid.yml: OAS, tangent space, elastic net LR (l1_ratio)
 #   CSP-SVM-MOABB       CSP_SVM_grid.yml: OAS, pyriemann CSP (2-8 filters), SVC
 #   DLCSP-shLDA-MOABB   regCSP+shLDA.yml: OAS, CSP(6), shrinkage LDA
-#   TRCSP-LDA-MOABB     WTRCSP.py: SCM, Tikhonov-regularised CSP(6), LDA. Two
-#                       classes only: fails on the multiclass problems, as in MOABB
 #   FBCSP-SVM-MOABB     FBCSP.py: CSP(4) on six bands, 10 best by mutual
 #                       information, linear SVC with C tuned
 #   LogVar-LDA-MOABB    LogVar.yml: log variance, LDA
@@ -21,6 +19,13 @@
 #                       the slowest
 #
 # Same dataset list and dataset_info as TSLR-MOABB.
+#
+# TRCSP-LDA-MOABB (WTRCSP.py: SCM, Tikhonov-regularised CSP(6), LDA) was removed on
+# 14 Nov 2026. It is a two-class method: it fails with "TRCSP only supports 2 classes"
+# on every multiclass problem, and on two binary ones with non-positive-definite
+# covariances, so it cannot cover the archive. Plain CSP pipelines (CSP+LDA,
+# CSP-LDA-MOABB, DLCSP-shLDA-MOABB) cover the same idea on every problem. Its 51
+# results stay on disk; Neuroverse docs/evaluation.md lists it under Dropped Classifiers.
 #
 # Since 2026-11-08 on every EEG problem (~/DataSetLists/eeg.txt), not only the
 # motor imagery list: the 8-32 Hz band is a motor imagery choice, so expect weak
@@ -51,7 +56,6 @@ FeatureBased = [
     "TSEN-MOABB",
     "CSP-SVM-MOABB",
     "DLCSP-shLDA-MOABB",
-    "TRCSP-LDA-MOABB",
     "FBCSP-SVM-MOABB",
     "LogVar-LDA-MOABB",
     "LogVar-SVM-MOABB",
@@ -71,9 +75,6 @@ sfreq = "{dataset.sfreq}"
 sfreq = "{dataset.sfreq}"
 
 [estimator_kwargs."DLCSP-shLDA-MOABB"]
-sfreq = "{dataset.sfreq}"
-
-[estimator_kwargs."TRCSP-LDA-MOABB"]
 sfreq = "{dataset.sfreq}"
 
 [estimator_kwargs."FBCSP-SVM-MOABB"]
