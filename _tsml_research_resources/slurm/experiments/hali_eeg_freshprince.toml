@@ -1,0 +1,35 @@
+# FreshPRINCE, a core classifier of the main comparison, on the 69 problems of the
+# 90-problem MI/Clinical/Cognitive set that still lack it (15 Nov 2026). Before this it
+# ran only on Iridis X (iridisx_eeg_freshprince.toml, 50 problems under 200M values),
+# where its jobs wait in the amd queue. Hali has a 7 day limit, so the larger problems
+# are worth trying here; whichever cluster finishes a problem first supplies the result.
+# FreshPRINCE cannot checkpoint.
+#
+# The list is ~/DataSetLists/eeg_freshprince_core.txt on Hali (copied from the
+# desktop's registry of missing results).
+#
+#   python tsml_slurm.py check experiments/hali_eeg_freshprince.toml
+#   python tsml_slurm.py start experiments/hali_eeg_freshprince.toml
+
+[experiment]
+name = "eeg-freshprince"
+cluster = "hali"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{home}/DataSetLists/eeg_freshprince_core.txt"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+retry_timeouts = false               # no checkpoint: a 7 day timeout would only repeat
+max_attempts = 4
+
+[estimators]
+FeatureBased = ["FreshPRINCE"]
+
+[slurm]
+env_name = "tsml-eval"
+memory_gb = [32, 64, 128, 256, 480]
+max_active = 69
