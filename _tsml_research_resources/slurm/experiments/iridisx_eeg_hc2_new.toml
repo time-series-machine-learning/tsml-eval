@@ -1,3 +1,5 @@
+# STOPPED 15 Nov 2026 before any task ran: moved to iridis6_eeg_hc2_new.toml.
+#
 # HC2 components (Arsenal, DrCIF, DrCIF-500, STC, TDE) on the 36 problems of the
 # MI/Clinical/Cognitive 30/30/30 set that Iridis lacked until 14 Nov 2026
 # (eeg_iridis_new.txt), on Iridis X CPU nodes as a priority (Tony, 14 Nov). Same
