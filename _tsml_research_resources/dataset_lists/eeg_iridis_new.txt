@@ -7,10 +7,12 @@ AuditoryDeviance
 BanditGambling
 CognitiveLoadTasks
 FaceStimuli
+FamilialAlzheimersRest
 FlankerConflict
 FuzzySemantics
 ImaginedFingers
 InternalAttention
+LearningDifficulties
 MigraineRest
 MoralConflict
 MultitaskWorkload
