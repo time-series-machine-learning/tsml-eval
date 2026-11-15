@@ -1,3 +1,4 @@
+AcuteTBIVisualMemory
 AdultSeizures
 AffectiveMusic
 AlcoholBandit
@@ -16,6 +17,7 @@ MultitaskWorkload
 NBackDifficulty
 NarrativeReward
 NaturalisticEmotion
+ParkinsonsReinforcement
 ParkinsonsWalking
 PostCovidVigilance
 ProbabilisticFeedback

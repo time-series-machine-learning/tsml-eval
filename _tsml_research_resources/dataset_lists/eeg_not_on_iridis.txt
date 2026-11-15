@@ -34,3 +34,5 @@ TBIAuditoryOddball
 VerbalWorkingMemory
 VisualSymmetry
 ZosterNeuralgiaSleep
+AcuteTBIVisualMemory
+ParkinsonsReinforcement
