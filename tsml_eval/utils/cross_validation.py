@@ -45,16 +45,28 @@ def _get_sequence_indices(n_samples, groups):
     if groups is None:
         return [np.arange(n_samples, dtype=int)]
 
-    if np.ndim(groups) != 1:
-        raise ValueError("groups must be one-dimensional.")
-    if np.any(pd.isna(groups)):
+    if isinstance(groups, (list, tuple)):
+        if any(
+            isinstance(
+                item, (list, tuple, np.ndarray, pd.Series, pd.Index, pd.DataFrame)
+            )
+            for item in groups
+        ):
+            raise ValueError("groups must be one-dimensional.")
+        groups_array = np.empty(len(groups), dtype=object)
+        groups_array[:] = groups
+    else:
+        if np.ndim(groups) != 1:
+            raise ValueError("groups must be one-dimensional.")
+        groups_array = groups
+
+    if np.any(pd.isna(groups_array)):
         raise ValueError("groups must not contain missing values.")
 
-    sequence_ids, inverse = np.unique(groups, return_inverse=True)
-    return [
-        np.flatnonzero(inverse == sequence_index)
-        for sequence_index in range(len(sequence_ids))
-    ]
+    codes, _ = pd.factorize(groups_array, sort=False, use_na_sentinel=False)
+    order = np.argsort(codes, kind="stable")
+    counts = np.bincount(codes)
+    return np.split(order, np.cumsum(counts[:-1]))
 
 
 def _get_exclusion_bounds(test_start, test_stop, sequence_size, h):
@@ -62,22 +74,51 @@ def _get_exclusion_bounds(test_start, test_stop, sequence_size, h):
     return max(0, test_start - h), min(sequence_size, test_stop + h)
 
 
+def _validate_test_size(sequence_indices, test_size):
+    """Validate that every sequence can contain a complete test block."""
+    min_sequence_size = min(len(indices) for indices in sequence_indices)
+    if min_sequence_size < test_size:
+        raise ValueError(
+            "Each sequence must contain at least 2 * v + 1 cases. "
+            f"Found a test block size of {test_size} and a smallest sequence "
+            f"size of {min_sequence_size}."
+        )
+
+
+def _validate_hv_inputs(X, y, groups, h, v):
+    """Validate hv-block inputs and return sample count and per-sequence indices."""
+    X, y, groups = indexable(X, y, groups)
+    n_samples = _num_samples(X)
+    if n_samples < 2:
+        raise ValueError(
+            "HVBlockCrossValidator requires at least 2 cases, "
+            f"but found {n_samples}."
+        )
+
+    sequence_indices = _get_sequence_indices(n_samples, groups)
+    test_size = 2 * v + 1
+    _validate_test_size(sequence_indices, test_size)
+
+    if len(sequence_indices) == 1 and n_samples <= 2 * h + test_size:
+        parameters = "h" if v == 0 else "h or v"
+        raise ValueError(
+            f"A split has no training cases. Reduce {parameters}, or provide "
+            "more cases or independent sequences."
+        )
+
+    return n_samples, sequence_indices
+
+
 def _yield_sliding_block_splits(n_samples, sequence_indices, h, v):
     """Yield two-sided buffered splits for every valid sliding test block."""
     test_size = 2 * v + 1
     split_specs = []
-    parameters = "h" if v == 0 else "h or v"
     for indices in sequence_indices:
         for test_start in range(len(indices) - test_size + 1):
             test_stop = test_start + test_size
             excluded_start, excluded_stop = _get_exclusion_bounds(
                 test_start, test_stop, len(indices), h
             )
-            if excluded_stop - excluded_start == n_samples:
-                raise ValueError(
-                    f"A split has no training cases. Reduce {parameters}, or provide "
-                    "more cases or independent sequences."
-                )
             split_specs.append(
                 (
                     indices[test_start],
@@ -94,18 +135,7 @@ def _yield_sliding_block_splits(n_samples, sequence_indices, h, v):
         train_mask = np.ones(n_samples, dtype=bool)
         train_mask[indices[excluded_start:excluded_stop]] = False
         train = np.flatnonzero(train_mask)
-        yield train, indices[test_start:test_stop]
-
-
-def _validate_test_size(sequence_indices, test_size):
-    """Validate that every sequence can contain a complete test block."""
-    min_sequence_size = min(len(indices) for indices in sequence_indices)
-    if min_sequence_size < test_size:
-        raise ValueError(
-            "Each sequence must contain at least 2 * v + 1 cases. "
-            f"Found a test block size of {test_size} and a smallest sequence "
-            f"size of {min_sequence_size}."
-        )
+        yield train, indices[test_start:test_stop].copy()
 
 
 class HVBlockCrossValidator(BaseCrossValidator):
@@ -193,14 +223,7 @@ class HVBlockCrossValidator(BaseCrossValidator):
         n_splits : int
             Total number of valid sliding test blocks.
         """
-        X, y, groups = indexable(X, y, groups)
-        n_samples = _num_samples(X)
-        if n_samples == 0:
-            raise ValueError("HVBlockCrossValidator requires at least one case.")
-
-        sequence_indices = _get_sequence_indices(n_samples, groups)
-        test_size = 2 * self.v + 1
-        _validate_test_size(sequence_indices, test_size)
+        _, sequence_indices = _validate_hv_inputs(X, y, groups, h=self.h, v=self.v)
         return sum(len(indices) - 2 * self.v for indices in sequence_indices)
 
     def split(self, X, y=None, groups=None):
@@ -227,16 +250,9 @@ class HVBlockCrossValidator(BaseCrossValidator):
         test : np.ndarray
             Test block indices.
         """
-        X, y, groups = indexable(X, y, groups)
-        n_samples = _num_samples(X)
-        if n_samples < 2:
-            raise ValueError(
-                "HVBlockCrossValidator requires at least 2 cases, "
-                f"but found {n_samples}."
-            )
-
-        sequence_indices = _get_sequence_indices(n_samples, groups)
-        _validate_test_size(sequence_indices, 2 * self.v + 1)
+        n_samples, sequence_indices = _validate_hv_inputs(
+            X, y, groups, h=self.h, v=self.v
+        )
         yield from _yield_sliding_block_splits(
             n_samples, sequence_indices, h=self.h, v=self.v
         )
