@@ -74,7 +74,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-24.04, macos-14, windows-2022 ]
+        os: [ ubuntu-24.04, macos-15, windows-2022 ]
         python-version: [ "3.12", "3.13", "3.14" ]
         # skip python versions unless the PR has the 'full pytest actions' label
         pr-testing:
@@ -83,7 +83,7 @@ jobs:
           - pr-testing: true
             python-version: "3.13"
           - pr-testing: true
-            os: macos-14
+            os: macos-15
 
     steps:
       - uses: actions/checkout@v7
