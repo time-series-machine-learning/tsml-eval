@@ -15,7 +15,7 @@ of publication for the paper.
 
 ### 2023
 
-{doc}`A Review and Evaluation of Elastic Distance Functions for Time Series Clustering <publications/2023/distance_based_clustering/distance_based_clustering>`
+{doc}`A Review and Evaluation of Elastic Distance Functions for Time Series Clustering <publications/distance_based_clustering>`
 
 ## Regression
 
