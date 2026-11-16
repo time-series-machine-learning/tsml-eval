@@ -119,6 +119,12 @@ redirects = {
     "publications/y2023/tser_archive_expansion/tser_archive_expansion": (
         "https://github.com/time-series-machine-learning/tser-archive-expansion-2024"
     ),
+    "publications/2023/tsc_bakeoff/tsc_bakeoff_2023": (
+        "https://github.com/time-series-machine-learning/tsc-bakeoff-2024"
+    ),
+    "publications/y2023/tsc_bakeoff/tsc_bakeoff_2023": (
+        "https://github.com/time-series-machine-learning/tsc-bakeoff-2024"
+    ),
 }
 
 # nbsphinx
