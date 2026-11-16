@@ -56,10 +56,11 @@ def _check_existing_results(
     """Check if results are present already and if they should be overwritten."""
     if not overwrite:
         resample_str = "Result" if resample_id is None else f"Resample{resample_id}"
+        d = "" if dataset is None or dataset == "" or dataset == "N/A" else dataset
 
         if build_test_file:
             full_path = (
-                f"{results_path}/{estimator_name}/Predictions/{dataset}/"
+                f"{results_path}/{estimator_name}/Predictions/{d}/"
                 f"/test{resample_str}.csv"
             )
 
@@ -68,7 +69,7 @@ def _check_existing_results(
 
         if build_train_file:
             full_path = (
-                f"{results_path}/{estimator_name}/Predictions/{dataset}/"
+                f"{results_path}/{estimator_name}/Predictions/{d}/"
                 f"/train{resample_str}.csv"
             )
 
