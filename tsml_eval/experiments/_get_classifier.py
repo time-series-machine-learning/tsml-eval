@@ -588,12 +588,12 @@ def _set_classifier_distance_based(
 
         return GRAILClassifier(**kwargs)
     elif c == "proximitytree" or c == "proximitytreeclassifier":
-        from tsml_eval._wip.pf._pt import ProximityTree
+        from aeon.classification.distance_based import ProximityTree
 
         return ProximityTree(random_state=random_state, **kwargs)
 
     elif c == "proximityforest" or c == "pf":
-        from tsml_eval._wip.pf._pf import ProximityForest
+        from aeon.classification.distance_based import ProximityForest
 
         return ProximityForest(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "proximityforest2" or c == "pf2":
@@ -952,9 +952,7 @@ def _set_classifier_shapelet_based(
     c, random_state, n_jobs, fit_contract, checkpoint, kwargs
 ):
     if c == "stc-2hour":
-        from tsml_eval._wip.shapelets.early_abandon._stc3 import (
-            ShapeletTransformClassifier,
-        )
+        from aeon.classification.shapelet_based import ShapeletTransformClassifier
 
         return ShapeletTransformClassifier(
             transform_limit_in_minutes=120,
@@ -963,9 +961,7 @@ def _set_classifier_shapelet_based(
             **kwargs,
         )
     elif c == "shapelettransformclassifier" or c == "stc":
-        from tsml_eval._wip.shapelets.early_abandon._stc3 import (
-            ShapeletTransformClassifier,
-        )
+        from aeon.classification.shapelet_based import ShapeletTransformClassifier
 
         return ShapeletTransformClassifier(
             random_state=random_state,
