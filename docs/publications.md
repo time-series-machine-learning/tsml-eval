@@ -13,6 +13,10 @@ of publication for the paper.
 
 ## Clustering
 
+### 2024
+
+{doc}`Rock the KASBA: Blazingly Fast and Accurate Time Series Clustering <publications/kasba>`
+
 ### 2023
 
 {doc}`A Review and Evaluation of Elastic Distance Functions for Time Series Clustering <publications/distance_based_clustering>`
