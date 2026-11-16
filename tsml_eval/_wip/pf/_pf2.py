@@ -17,6 +17,7 @@ from aeon.distances.pointwise._minkowski import (
     _univariate_minkowski_distance,
     minkowski_distance,
 )
+from aeon.utils.validation import check_n_jobs
 
 
 class ProximityForest2(BaseClassifier):
@@ -110,6 +111,7 @@ class ProximityForest2(BaseClassifier):
 
     def _fit(self, X, y):
         rng = check_random_state(self.random_state)
+        self._n_jobs = check_n_jobs(self.n_jobs)
         seeds = rng.randint(np.iinfo(np.int32).max, size=self.n_trees)
         self.trees_ = Parallel(
             n_jobs=self._n_jobs, backend=self.parallel_backend, prefer="threads"
