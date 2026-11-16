@@ -61,14 +61,7 @@ extensions = [
 ]
 
 templates_path = ["_templates"]
-exclude_patterns = [
-    "_build",
-    ".ipynb_checkpoints",
-    "Thumbs.db",
-    ".DS_Store",
-    # GitHub landing page for a folder printed in a paper, not a docs page
-    "publications/*/tsc_bakeoff/README.md",
-]
+exclude_patterns = ["_build", ".ipynb_checkpoints", "Thumbs.db", ".DS_Store"]
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
