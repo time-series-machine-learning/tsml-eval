@@ -899,6 +899,9 @@ def _set_classifier_interval_based(
                 np.sqrt(X.shape[2]) * np.sqrt(X.shape[1]) * 15 + 5
             )  # pragma: no cover
 
+        def ar_order(X):
+            return int(12 * (X.shape[2] / 100.0) ** 0.25)  # pragma: no cover
+
         interval_features = [
             Catch22(outlier_norm=True, replace_nans=True),
             row_mean,
@@ -914,7 +917,7 @@ def _set_classifier_interval_based(
             None,
             FunctionTransformer(func=first_order_differences_3d, validate=False),
             PeriodogramTransformer(),
-            ARCoefficientTransformer(replace_nan=True),
+            ARCoefficientTransformer(order=ar_order, replace_nan=True),
         ]
 
         return RandomIntervalClassifier(
