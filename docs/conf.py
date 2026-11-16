@@ -125,6 +125,18 @@ redirects = {
     "publications/y2023/tsc_bakeoff/tsc_bakeoff_2023": (
         "https://github.com/time-series-machine-learning/tsc-bakeoff-2024"
     ),
+    "publications/2023/distance_based_clustering/distance_based_clustering": (
+        "https://github.com/time-series-machine-learning/elastic-distance-clustering-2023"
+    ),
+    "publications/y2023/distance_based_clustering/distance_based_clustering": (
+        "https://github.com/time-series-machine-learning/elastic-distance-clustering-2023"
+    ),
+    "publications/2023/distance_based_clustering/alignment_and_paths_figures": (
+        "https://github.com/time-series-machine-learning/elastic-distance-clustering-2023/blob/main/alignment_and_paths_figures.ipynb"
+    ),
+    "publications/y2023/distance_based_clustering/alignment_and_paths_figures": (
+        "https://github.com/time-series-machine-learning/elastic-distance-clustering-2023/blob/main/alignment_and_paths_figures.ipynb"
+    ),
 }
 
 # nbsphinx
