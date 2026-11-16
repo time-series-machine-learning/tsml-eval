@@ -16,6 +16,7 @@ from sklearn.utils import check_random_state
 from aeon.base._base import _clone_estimator
 from aeon.classification.base import BaseClassifier
 from aeon.classification.sklearn import RotationForestClassifier
+from aeon.utils.validation import check_n_jobs
 
 from tsml_eval._wip.unequal_length.other._shapelet_transform6 import \
     RandomShapeletTransform
@@ -317,6 +318,7 @@ class ShapeletTransformClassifier(BaseClassifier):
     def _fit_stc_shared(self, X, y):
         self.n_instances_ = len(X)
         self.n_channels_ = X[0].shape[0]
+        self._n_jobs = check_n_jobs(self.n_jobs)
 
         self._transform_limit_in_minutes = 0
         self._classifier_limit_in_minutes = 0
