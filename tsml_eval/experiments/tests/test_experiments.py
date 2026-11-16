@@ -2,11 +2,18 @@
 
 import os
 
+import numpy as np
+import pytest
 from aeon.classification import DummyClassifier
+from aeon.regression import DummyRegressor
+from aeon.testing.data_generation import make_example_3d_numpy
+from aeon.transformations.collection import BaseCollectionTransformer
 
 from tsml_eval.experiments import (
     classification_experiments,
     load_and_run_classification_experiment,
+    run_classification_experiment,
+    run_regression_experiment,
 )
 from tsml_eval.experiments.tests import _CLASSIFIER_RESULTS_PATH
 from tsml_eval.testing.testing_utils import _TEST_DATA_PATH, _TEST_OUTPUT_PATH
@@ -70,3 +77,74 @@ def test_experiments_predefined_resample_data_loading():
     _check_classification_file_format(test_file)
 
     os.remove(test_file)
+
+
+class _RecordingTransformer(BaseCollectionTransformer):
+    """Records the case ids (first value of each series) seen in fit and transform."""
+
+    calls = []
+
+    def __init__(self):
+        super().__init__()
+
+    def _fit(self, X, y=None):
+        self.fit_ids_ = set(X[:, 0, 0])
+        return self
+
+    def _transform(self, X, y=None):
+        _RecordingTransformer.calls.append((self.fit_ids_, set(X[:, 0, 0])))
+        return X
+
+
+@pytest.mark.parametrize(
+    "run_experiment, estimator, kwargs",
+    [
+        (run_classification_experiment, DummyClassifier(), {}),
+        (
+            run_classification_experiment,
+            DummyClassifier(),
+            {"transform_train_only": True},
+        ),
+        (run_regression_experiment, DummyRegressor(), {}),
+    ],
+)
+def test_train_estimate_refits_data_transforms(
+    run_experiment, estimator, kwargs, tmp_path
+):
+    """Test the CV train estimate fits data transforms on inner train cases only."""
+    X, y = make_example_3d_numpy(
+        n_cases=20,
+        regression_target=run_experiment is run_regression_experiment,
+        random_state=0,
+    )
+    X[:, 0, 0] = np.arange(20)
+    X_test = X.copy()
+    X_test[:, 0, 0] += 100
+    _RecordingTransformer.calls = []
+
+    run_experiment(
+        X,
+        y,
+        X_test,
+        y,
+        estimator,
+        str(tmp_path),
+        data_transforms=_RecordingTransformer(),
+        build_test_file=False,
+        build_train_file=True,
+        benchmark_time=False,
+        **kwargs,
+    )
+
+    train_ids = set(range(20))
+    calls = _RecordingTransformer.calls
+    fold_fits = [fit for fit, ids in calls if fit == ids and fit < train_ids]
+    held_out = [(fit, ids) for fit, ids in calls if fit != ids and ids <= train_ids]
+
+    # every train case is left out of exactly one fold fit
+    assert sorted(i for fit in fold_fits for i in train_ids - fit) == sorted(train_ids)
+    # each validation part is transformed by the fit that left it out
+    if kwargs.get("transform_train_only"):
+        assert held_out == []
+    else:
+        assert held_out == [(fit, train_ids - fit) for fit in fold_fits]
