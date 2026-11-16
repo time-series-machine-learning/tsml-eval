@@ -137,12 +137,6 @@ redirects = {
     "publications/y2023/distance_based_clustering/alignment_and_paths_figures": (
         "https://github.com/time-series-machine-learning/elastic-distance-clustering-2023/blob/main/alignment_and_paths_figures.ipynb"
     ),
-    "publications/2023/distance_based_clustering/package_distance_timing": (
-        "https://github.com/time-series-machine-learning/elastic-distance-clustering-2023/blob/main/package_distance_timing.ipynb"
-    ),
-    "publications/y2023/distance_based_clustering/package_distance_timing": (
-        "https://github.com/time-series-machine-learning/elastic-distance-clustering-2023/blob/main/package_distance_timing.ipynb"
-    ),
 }
 
 # nbsphinx
