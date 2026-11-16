@@ -9,7 +9,7 @@ of publication for the paper.
 
 ### 2023
 
-{doc}`Bake off redux: a review and experimental evaluation of recent time series classification algorithms <publications/2023/tsc_bakeoff/tsc_bakeoff_2023>`
+{doc}`Bake off redux: a review and experimental evaluation of recent time series classification algorithms <publications/tsc_bakeoff>`
 
 ## Clustering
 

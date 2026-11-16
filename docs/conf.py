@@ -61,7 +61,14 @@ extensions = [
 ]
 
 templates_path = ["_templates"]
-exclude_patterns = ["_build", ".ipynb_checkpoints", "Thumbs.db", ".DS_Store"]
+exclude_patterns = [
+    "_build",
+    ".ipynb_checkpoints",
+    "Thumbs.db",
+    ".DS_Store",
+    # GitHub landing page for a folder printed in a paper, not a docs page
+    "publications/*/tsc_bakeoff/README.md",
+]
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
@@ -118,6 +125,12 @@ redirects = {
     ),
     "publications/y2023/tser_archive_expansion/tser_archive_expansion": (
         "https://github.com/time-series-machine-learning/tser-archive-expansion-2024"
+    ),
+    "publications/2023/tsc_bakeoff/tsc_bakeoff_2023": (
+        "https://github.com/time-series-machine-learning/tsc-bakeoff-2024"
+    ),
+    "publications/y2023/tsc_bakeoff/tsc_bakeoff_2023": (
+        "https://github.com/time-series-machine-learning/tsc-bakeoff-2024"
     ),
 }
 
