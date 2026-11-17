@@ -7,6 +7,10 @@ the year the page was created, not the year of publication for the paper.
 
 ## Classification
 
+### 2026
+
+{doc}`Classifying Unequal Length Time Series with HIVE-COTE 2.0 <publications/classification/unequal_length_hc2/unequal_length_hc2>`
+
 ### 2023
 
 {doc}`Bake off redux: a review and experimental evaluation of recent time series classification algorithms <publications/y2023/tsc_bakeoff/README>`
