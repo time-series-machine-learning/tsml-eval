@@ -1,0 +1,112 @@
+# braindecode models trained from scratch with NeuralBench's recipe, as CTNet-NB,
+# EEGNet-NB and the hali_eeg_nb_deep.toml models are (120 Hz, robust scaling, clamp
+# 20, AdamW lr 1e-4, one-cycle, up to 40 epochs, early stopping on subject-wise
+# validation balanced accuracy where IDs exist), on every EEG problem. Code:
+# aeon-neuro branch ajb/eeg-baselines, NeuralBenchDeepClassifier(model=...) with
+# braindecode's default settings for each model.
+#
+# The 29 braindecode models not yet run are split between Hali and Iridis X, each
+# model on one cluster only (separate filesystems): hali_eeg_nb_more.toml has the
+# convolutional and filter-bank models, iridisx_eeg_nb_more.toml the attention,
+# transformer, graph and task-specific ones.
+#
+# aeon-neuro pads short cases only for the five original NeuralBench models, so a
+# model here may fail on the short problems: report those failures to aeon-neuro.
+#
+#   python tsml_slurm.py check experiments/hali_eeg_nb_more.toml
+#   python tsml_slurm.py start experiments/hali_eeg_nb_more.toml
+
+[experiment]
+name = "eeg-nb-more"
+cluster = "hali"
+resources = "gpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{home}/DataSetLists/eeg.txt"
+dataset_info = "{repo}/_tsml_research_resources/dataset_lists/eeg_ctnet_info.csv"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+[estimators]
+DeepLearning = [
+    "EEGInceptionMI-NB",
+    "EEGITNet-NB",
+    "EEGNeX-NB",
+    "EEGSimpleConv-NB",
+    "EEGTCNet-NB",
+    "SCCNet-NB",
+    "TIDNet-NB",
+    "SincShallowNet-NB",
+    "FBCNet-NB",
+    "FBMSNet-NB",
+    "FBLightConvNet-NB",
+    "IFNet-NB",
+]
+
+[estimator_kwargs."EEGInceptionMI-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."EEGITNet-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."EEGNeX-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."EEGSimpleConv-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."EEGTCNet-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."SCCNet-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."TIDNet-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."SincShallowNet-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."FBCNet-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."FBMSNet-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."FBLightConvNet-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."IFNet-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[slurm]
+env_name = "tsml-eval"
+gpu_check = "torch"
+memory_gb = [32, 64, 128]

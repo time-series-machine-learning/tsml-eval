@@ -1,0 +1,38 @@
+# EEGMiner-NB on every EEG problem, on Hali CPUs. Moved from Iridis X
+# (iridisx_eeg_nb_more.toml) on 14 Nov 2026 before any task had been submitted there:
+# Iridis X is held at 4 nodes per user. Same NeuralBench recipe, device "cpu".
+#
+# Each task gets 8 cores (n_jobs = 8 sets the torch/BLAS thread variables).
+#
+#   python tsml_slurm.py check experiments/hali_eeg_eegminer_cpu.toml
+#   python tsml_slurm.py start experiments/hali_eeg_eegminer_cpu.toml
+
+[experiment]
+name = "eeg-eegminer-cpu"
+cluster = "hali"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{home}/DataSetLists/eeg.txt"
+dataset_info = "{repo}/_tsml_research_resources/dataset_lists/eeg_ctnet_info.csv"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+n_jobs = 8
+
+[estimators]
+DeepLearning = [
+    "EEGMiner-NB",
+]
+
+[estimator_kwargs."EEGMiner-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cpu"
+
+[slurm]
+env_name = "tsml-eval"
+memory_gb = [32, 64, 128, 256]
+max_active = 40

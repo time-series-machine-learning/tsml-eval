@@ -1,0 +1,20 @@
+# CPU classifiers over the 112 UCR problems, 30 resamples, on Hali.
+#
+#   python tsml_slurm.py check experiments/hali_ucr_cpu.toml
+#   python tsml_slurm.py start experiments/hali_ucr_cpu.toml
+
+[experiment]
+name = "ucr-convolution"            # names the state directory and the Slurm jobs
+cluster = "hali"
+resources = "cpu"
+task = "classification"
+data_dir = "{home}/Data/UCR"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/UnivariateClassification112-UCR2018Clean.txt"
+results_dir = "{home}/Results/UCR"
+resamples = 30                      # resamples 0..29
+priority = "resample"               # all of resample 0 first, then 1, ...
+smallest_datasets_first = true
+
+# Results go to {results_dir}/<Category>/<Estimator>/Predictions/<Dataset>/
+[estimators]
+ConvolutionBased = ["ROCKET", "MiniRocket", "MultiRocket", "Hydra"]

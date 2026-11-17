@@ -1,0 +1,24 @@
+# PyTorch ConvTran on Iridis X H200s. Shows switching the GPU check to torch.
+# To use the A100 queues instead, set resources = "gpu-a100" or "gpu-swarm".
+
+[experiment]
+name = "multiverse-convtran"
+cluster = "iridisx"
+resources = "gpu"
+task = "classification"
+branch = "ajb/gpu"
+data_dir = "{home}/Data/Multiverse"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/MultivariateClassification66-MultiverseMini.txt"
+results_dir = "{home}/Results/Multiverse"
+resamples = 1
+smallest_datasets_first = true
+
+[estimators]
+DeepLearning = ["ConvTran"]
+
+[estimator_kwargs.ConvTran]
+device = "cuda"
+
+[slurm]
+gpu_check = "torch"
+memory_gb = [64, 128]

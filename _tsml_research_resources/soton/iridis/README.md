@@ -1,3 +1,7 @@
+For new experiments use the standard controller in ../../slurm/ (see its README.md),
+which replaces the serial, threaded, taskfarm and GPU scripts below. They are kept for
+reference and for existing workflows.
+
 eeg_classification_students.md:
     Student guide for downloading aeon-neuro EEG problems and running aeon and
     aeon-neuro classification experiments on Iridis 6.

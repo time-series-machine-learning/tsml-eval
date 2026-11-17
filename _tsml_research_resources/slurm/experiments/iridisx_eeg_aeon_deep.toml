@@ -1,0 +1,32 @@
+# DRAFT, 2026-11-09, not started: the rest of aeon's deep learners on every EEG
+# problem, after the foundation models. CNN, IT and LITETime-MV run in
+# iridisx_eeg_aeon_gpu.toml. These are the same TensorFlow models as the
+# Multiverse runs, with aeon's defaults. TapNet is left out: tsml-eval has no
+# name for it.
+#
+# Runs from ~/Code/tsml-eval-gpu in the TensorFlow env tsml-eval-gpu, as eeg-aeon-gpu.
+#
+#   python tsml_slurm.py check experiments/iridisx_eeg_aeon_deep.toml
+#   python tsml_slurm.py start experiments/iridisx_eeg_aeon_deep.toml
+
+[experiment]
+name = "eeg-aeon-deep"
+cluster = "iridisx"
+resources = "gpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval-gpu"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{home}/DataSetLists/eeg.txt"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+[estimators]
+DeepLearning = ["ResNet", "FCNN", "MLP", "H-InceptionTime", "DisjointCNN", "Encoder"]
+
+[slurm]
+env_name = "tsml-eval-gpu"
+memory_gb = [32, 64, 128]
+time_limit = "12:00:00"
+max_active = 20

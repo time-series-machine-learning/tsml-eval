@@ -51,7 +51,7 @@ dependencies = [
 [project.optional-dependencies]
 all_extras = [
     "aeon[all_extras]",
-    "aeon-neuro>=0.1.0; python_version < '3.14'",
+    "aeon-neuro>=0.1.1; python_version < '3.14'",
     "tsml[all_extras]",
     "xgboost",
 ]
@@ -62,7 +62,7 @@ deep_learning = [
     "aeon[dl]",
 ]
 neuro = [
-    "aeon-neuro>=0.1.0; python_version < '3.14'",
+    "aeon-neuro>=0.1.1; python_version < '3.14'",
 ]
 
 dev = [
@@ -147,6 +147,14 @@ ignore = ["E203", "E741", "B904", "B905", "B028"]
 "tsml_eval/experiments/forecasting_experiments.py" = ["E402", "T201"]
 "tsml_eval/experiments/threaded_forecasting_experiments.py" = ["T201"]
 "tsml_eval/publications/*" = ["E402", "T201"]
+"_tsml_research_resources/slurm/tsml_slurm.py" = ["T201"]
+"_tsml_research_resources/slurm/move_eegbench_results.py" = ["T201"]
+"_tsml_research_resources/slurm/test_checkpointing.py" = ["T201"]
+"_tsml_research_resources/slurm/build_hc2_from_files.py" = ["T201"]
+"_tsml_research_resources/slurm/farms.py" = ["T201"]
+"_tsml_research_resources/slurm/run_local.py" = ["T201"]
+"_tsml_research_resources/dataset_lists/make_train_groups.py" = ["T201"]
+"_tsml_research_resources/slurm/tests/*" = ["D"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"

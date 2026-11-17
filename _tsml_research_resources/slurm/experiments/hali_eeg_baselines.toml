@@ -1,0 +1,40 @@
+# NeuralBench's classical baseline (CovTsLR, Banville et al. 2026, arXiv 2605.08495)
+# on every EEG problem, on Hali CPUs. Code: aeon-neuro branch ajb/eeg-baselines,
+# aeon_neuro.classification.experimental (not the public API); its module docstring
+# lists every difference from NeuralBench. All defaults are the intended settings.
+#
+#   TSLR-NB  NeuralBenchTSLRClassifier: NeuralBench preprocessing, OAS covariance,
+#            shrinkage 0.1, tangent space, StandardScaler, LogisticRegressionCV
+#
+# The MOABB TS-LR (motor imagery only) is hali_eeg_baselines_mi.toml and CTNet (GPU)
+# is hali_eeg_ctnet.toml. sfreq comes per dataset from dataset_info. `check`
+# lists any datasets still missing a rate. n_jobs goes to LogisticRegressionCV's
+# 5 folds.
+#
+#   python tsml_slurm.py check experiments/hali_eeg_baselines.toml
+#   python tsml_slurm.py start experiments/hali_eeg_baselines.toml
+
+[experiment]
+name = "eeg-baselines"
+cluster = "hali"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{home}/DataSetLists/eeg.txt"
+dataset_info = "{repo}/_tsml_research_resources/dataset_lists/eeg_sampling_rates.csv"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+n_jobs = 5
+
+[estimators]
+FeatureBased = ["TSLR-NB"]
+
+[estimator_kwargs."TSLR-NB"]
+sfreq = "{dataset.sfreq}"
+
+[slurm]
+env_name = "tsml-eval"
+memory_gb = [16, 32, 64, 128]

@@ -1,0 +1,45 @@
+# HC2 components (Arsenal, DrCIF-500, STC, TDE) on the four resting-state problems
+# added on 13 Nov 2026 (MigraineRest, PsychosisRestFirst/Second, SleepDeprivation),
+# which only Hali has. Compute nodes, up to 480 GB. Central memory estimates from the
+# finished problems (see hali_eeg_hc2_hmem.toml) are at most about 140 GB (DrCIF-500
+# on PsychosisRestFirst, 9.1 GB of training data); a task that runs out at 480 GB goes
+# to eeg-hc2-hmem.
+
+[experiment]
+name = "eeg-hc2-rest"
+cluster = "hali"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{home}/DataSetLists/eeg_rest_new.txt"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+train_files = true                   # HC2 is built from the train estimates
+extra_args = ["-ch", "-chi", "420"]  # checkpoint, at least 7 hours apart
+retry_timeouts = true                # a timed-out task resumes from its checkpoint
+max_attempts = 4
+priority = "dataset"
+
+[estimators]
+ConvolutionBased = ["Arsenal"]
+IntervalBased = ["DrCIF-500"]
+ShapeletBased = ["STC-aeon"]
+DictionaryBased = ["TDE"]
+
+[estimator_kwargs.Arsenal]
+verbose = 1
+
+[estimator_kwargs."DrCIF-500"]
+verbose = 1
+
+[estimator_kwargs."STC-aeon"]
+verbose = 1
+
+[estimator_kwargs.TDE]
+verbose = 1
+
+[slurm]
+env_name = "tsml-eval"
+memory_gb = [64, 128, 256, 480]

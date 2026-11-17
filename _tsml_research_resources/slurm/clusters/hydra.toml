@@ -1,0 +1,36 @@
+# Hydra: a 32-CPU, 4-GPU workstation with no Slurm. Experiments naming this cluster
+# are run by run_local.py, not tsml_slurm.py start/submit:
+#
+#   python run_local.py experiments/hydra_*.toml
+#
+# partition is unused here but required by the profile format. memory_gb tiers are
+# per task, as on the clusters: a task starts at the first and moves up one after
+# running out of memory; run_local.py keeps the running tasks' tiers within the
+# machine's memory. time_limit is per task: past it a task is stopped.
+# Check the tiers against the machine's memory (free -g) and adjust.
+
+name = "hydra"
+home = "~"
+repo_dir = "{home}/Code/tsml-eval"
+email = ""
+default_resources = "cpu"
+
+[supervisor]
+mode = "login"
+
+[resources.cpu]
+partition = "local"
+time_limit = "7-00:00:00"
+memory_gb = [8, 16, 32, 64, 128]
+env_name = "tsml-eval"
+
+# One whole GPU per task. TensorFlow and PyTorch need separate envs (two CUDA stacks
+# in one env break both): an experiment sets env_name and gpu_check to match.
+[resources.gpu]
+partition = "local"
+gres = "gpu:1"
+time_limit = "3-00:00:00"
+memory_gb = [32, 64, 128]
+cpus_per_task = 4
+env_name = "tsml-eval-torch"
+gpu_check = "torch"

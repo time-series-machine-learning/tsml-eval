@@ -1,0 +1,17 @@
+# Clustering on UCR, writing both train and test cluster assignments, on Hali.
+# For clustering the train file is always written; test_files adds -te.
+
+[experiment]
+name = "ucr-clustering"
+cluster = "hali"
+resources = "cpu"
+task = "clustering"
+data_dir = "{home}/Data/UCR"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/UnivariateClassification112-UCR2018Clean.txt"
+results_dir = "{home}/Results/UCRClustering"
+resamples = 10
+test_files = true
+extra_args = ["-rn"]               # any other tsml-eval flag, here row normalisation
+
+[estimators]
+DistanceBased = ["KMeans-dtw", "KMeans-msm", "KShape"]

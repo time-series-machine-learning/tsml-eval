@@ -3,6 +3,7 @@
 __maintainer__ = ["MatthewMiddlehurst"]
 __all__ = [
     "load_experiment_data",
+    "load_subject_ids",
     "copy_dataset_ts_files",
     "save_merged_dataset_splits",
 ]
@@ -69,6 +70,39 @@ def load_experiment_data(
         resample_data = True if resample_id != 0 else False
 
     return X_train, y_train, X_test, y_test, resample_data
+
+
+def load_subject_ids(problem_path: str, dataset: str):
+    """Load the subject ID of each case, if the dataset has them.
+
+    Reads ``<problem_path>/<dataset>/<dataset>_id_TRAIN.txt`` and ``_id_TEST.txt``,
+    one ID per line in the same order as the cases in the .ts files.
+
+    Parameters
+    ----------
+    problem_path : str
+        Path to the problem folder.
+    dataset : str
+        Name of the dataset.
+
+    Returns
+    -------
+    ids : np.ndarray or None
+        Subject IDs of the train cases followed by the test cases, as strings, or
+        None if the dataset has no ID files.
+    """
+    paths = [
+        f"{problem_path}/{dataset}/{dataset}_id_{s}.txt" for s in ("TRAIN", "TEST")
+    ]
+    if not exists(paths[0]) and not exists(paths[1]):
+        return None
+    ids = []
+    for path in paths:
+        if not exists(path):
+            raise FileNotFoundError(f"{path} is missing but the other ID file exists")
+        with open(path, encoding="utf-8-sig") as file:
+            ids.append([line.strip() for line in file if line.strip()])
+    return np.array(ids[0] + ids[1])
 
 
 def copy_dataset_ts_files(

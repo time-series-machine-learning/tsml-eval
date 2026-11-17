@@ -1,0 +1,47 @@
+# MOABB's own MDM and CSP pipelines on the motor imagery problems, on Hali CPUs, for
+# comparison with MOABB's published table (as hali_eeg_baselines_mi.toml does for
+# TS-LR). Code: aeon-neuro branch ajb/eeg-baselines,
+# aeon_neuro.classification.experimental.MOABBPipelineClassifier, after MOABB's
+# 8-32 Hz IIR band-pass:
+#
+#   MDM-MOABB      pipeline="MDM" (MDM.yml): OAS covariance, MDM, Riemannian metric
+#   CSP-LDA-MOABB  pipeline="CSP_LDA" (CSP.yml): OAS covariance, pyriemann CSP (6
+#                  filters, log-variance), LDA (svd solver)
+#
+# Same dataset list and dataset_info as TSLR-MOABB.
+#
+# Since 2026-11-08 on every EEG problem (~/DataSetLists/eeg.txt), not only the
+# motor imagery list: the 8-32 Hz band is a motor imagery choice, so expect weak
+# results on sleep, seizure and ERP problems. The experiment name is kept so
+# finished motor imagery results count as done.
+#
+#   python tsml_slurm.py check experiments/hali_eeg_moabb_mi.toml
+#   python tsml_slurm.py start experiments/hali_eeg_moabb_mi.toml
+
+[experiment]
+name = "eeg-moabb-mi"
+cluster = "hali"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{home}/DataSetLists/eeg.txt"
+dataset_info = "{repo}/_tsml_research_resources/dataset_lists/eeg_sampling_rates.csv"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+[estimators]
+DistanceBased = ["MDM-MOABB"]
+FeatureBased = ["CSP-LDA-MOABB"]
+
+[estimator_kwargs."MDM-MOABB"]
+sfreq = "{dataset.sfreq}"
+
+[estimator_kwargs."CSP-LDA-MOABB"]
+sfreq = "{dataset.sfreq}"
+
+[slurm]
+env_name = "tsml-eval"
+memory_gb = [16, 32, 64, 128]

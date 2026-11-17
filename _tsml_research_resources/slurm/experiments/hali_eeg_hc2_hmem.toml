@@ -1,0 +1,61 @@
+# HC2 components (Arsenal, DrCIF-500, STC, TDE) on the three largest problems still
+# missing them, on Hali's high-memory nodes. These were running on Iridis 6 (13 Nov
+# 2026), whose top tier is 620 GB and which shuts down on 14 Dec. Whichever cluster
+# finishes a task first wins; the other copy is then cancelled.
+#
+# Memory: peak memory from the finished components scales roughly with training data
+# size (cases x channels x length x 8 bytes). Fitted over about 65 problems each:
+#   Arsenal 6.3*GB^0.81, DrCIF-500 21.7*GB^0.83, STC 8.9*GB^0.67, TDE 10.4*GB^1.06,
+# with wide scatter (TDE up to 300x the data size). For ClinicalSleepStages (18.7 GB of
+# training data) the central estimates are 70, 250, 65 and 230 GB, but the worst ratios
+# seen give 310, 840, 700 GB and several TB, so every task starts at the 740 GB tier.
+#
+# Tasks done elsewhere (listed in ~/Results/EEG/completed.txt, built from the desktop)
+# are not rerun: Arsenal and STC on ChildhoodSeizures are already done.
+#
+# hmem is shared across UEA: at most 4 of these jobs at once (profile max_active).
+
+[experiment]
+name = "eeg-hc2-hmem"
+cluster = "hali"
+resources = "cpu"                    # with the hmem overrides in [slurm]
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{home}/DataSetLists/eeg_hc2_hmem.txt"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+train_files = true                   # HC2 is built from the train estimates
+extra_args = ["-ch", "-chi", "420"]  # checkpoint, at least 7 hours apart
+retry_timeouts = true                # a timed-out task resumes from its checkpoint
+max_attempts = 4
+priority = "dataset"
+
+[estimators]
+ConvolutionBased = ["Arsenal"]
+IntervalBased = ["DrCIF-500"]
+ShapeletBased = ["STC-aeon"]
+DictionaryBased = ["TDE"]
+
+[estimator_kwargs.Arsenal]
+verbose = 1
+
+[estimator_kwargs."DrCIF-500"]
+verbose = 1
+
+[estimator_kwargs."STC-aeon"]
+verbose = 1
+
+[estimator_kwargs.TDE]
+verbose = 1
+
+[slurm]
+env_name = "tsml-eval"
+# The hmem partition, as [resources.hmem] in clusters/hali.toml, set here so the
+# experiment does not depend on the checkout having that profile.
+partition = "hmem"
+qos = "hmem"
+memory_gb = [740, 2000, 4000]
+node_memory_gb = 4026
+max_active = 4                       # hmem is shared across UEA

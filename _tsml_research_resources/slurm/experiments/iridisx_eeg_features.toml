@@ -1,0 +1,26 @@
+# Catch22 on the Iridis X amd CPU partition, on all 76 eligible problems.
+# Uses the Iridis 6 checkout and env (shared home); no aeon-neuro needed.
+#
+#   python tsml_slurm.py check experiments/iridisx_eeg_features.toml
+#   python tsml_slurm.py start experiments/iridisx_eeg_features.toml
+
+[experiment]
+name = "eeg-features-x"
+cluster = "iridisx"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_eligible.txt"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+[estimators]
+FeatureBased = ["Catch22"]
+
+[slurm]
+env_name = "tsml-eval"
+max_jobs = 2
+memory_gb = [16, 32, 64, 128, 230]

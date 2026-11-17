@@ -1,0 +1,38 @@
+# TRACE train files (trainResample0.csv) on all 76 problems in eeg_eligible.txt, plus
+# the test files for the 26 the first run (hali_eeg_trace.toml, eeg_no_pigs.txt) left
+# out; the 50 test files already on disk are not refitted. Replaces eeg-trace-rest
+# (stopped 12 Nov 2026 a few minutes in), which wrote test files only.
+#
+# TRACE has no built-in train estimate, so tsml-eval estimates it with 10-fold
+# stratified cross_val_predict on the train split: about 10x the cost of a test fit.
+# The longest of the 50 test fits took 5.5 h, so about 2.5 days, inside Hali's 7.
+# The folds are not subject-wise. Same settings as the first run: the student's code
+# unchanged, cross_validate = false (intervals = 5, k = 10). SymbolAttention may not
+# fit in 7 days or 480 GB; NaN failures are left as failures.
+#
+#   python tsml_slurm.py check experiments/hali_eeg_trace_train.toml
+#   python tsml_slurm.py start experiments/hali_eeg_trace_train.toml
+
+[experiment]
+name = "eeg-trace-train"
+cluster = "hali"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_eligible.txt"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+train_files = true
+smallest_datasets_first = true
+
+[estimators]
+DistanceBased = ["TRACE"]
+
+[estimator_kwargs."TRACE"]
+cross_validate = false
+
+[slurm]
+env_name = "tsml-eval"
+memory_gb = [32, 64, 128, 256, 480]  # 256/480 added 13 Nov 2026 for OOM retries

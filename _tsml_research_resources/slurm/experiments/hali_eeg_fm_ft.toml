@@ -1,0 +1,67 @@
+# Fine-tuned EEG foundation models on Hali's GPUs: CBraMod and LaBraM, each with all
+# weights trained (NeuralBench's finetune_mean recipe, aeon-neuro's
+# CBraModFineTuneClassifier / LabramFineTuneClassifier), and their random-weight
+# controls (-random: same architecture, head, preprocessing and training).
+#
+# eeg_fm_info.csv gives each problem's sampling rate, training subject IDs (for the
+# subject-wise validation split), units (uV or V, estimated from the data and checked
+# against the metadata; FlickerAttention is ambiguous and set to mV) and, for LaBraM,
+# 10-20 channel names. A LaBraM task whose ch_names cell is empty is not run: 18
+# problems lack names in LaBraM's electrode list and 6 have cases longer than its
+# 16 s limit, leaving 56 of 80.
+#
+# Pretrained weights are read from ~/hf_models (copied from the desktop's
+# D:/hf_models); nothing is downloaded.
+#
+#   python tsml_slurm.py check experiments/hali_eeg_fm_ft.toml
+#   python tsml_slurm.py start experiments/hali_eeg_fm_ft.toml
+
+[experiment]
+name = "eeg-fm-ft"
+cluster = "hali"
+resources = "gpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{home}/DataSetLists/eeg.txt"
+dataset_info = "{repo}/_tsml_research_resources/dataset_lists/eeg_fm_info.csv"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+[estimators]
+DeepLearning = ["CBraMod-FT", "CBraMod-FT-random", "LaBraM-FT", "LaBraM-FT-random"]
+
+[estimator_kwargs."CBraMod-FT"]
+sfreq = "{dataset.sfreq}"
+input_units = "{dataset.input_units}"
+train_groups = "{dataset.train_groups}"
+weights_path = "/gpfs/home/ajb/hf_models/braindecode--cbramod-pretrained"
+device = "cuda"
+
+[estimator_kwargs."CBraMod-FT-random"]
+sfreq = "{dataset.sfreq}"
+input_units = "{dataset.input_units}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."LaBraM-FT"]
+sfreq = "{dataset.sfreq}"
+input_units = "{dataset.input_units}"
+train_groups = "{dataset.train_groups}"
+ch_names = "{dataset.ch_names}"
+weights_path = "/gpfs/home/ajb/hf_models/braindecode--labram-pretrained"
+device = "cuda"
+
+[estimator_kwargs."LaBraM-FT-random"]
+sfreq = "{dataset.sfreq}"
+input_units = "{dataset.input_units}"
+train_groups = "{dataset.train_groups}"
+ch_names = "{dataset.ch_names}"
+device = "cuda"
+
+[slurm]
+env_name = "tsml-eval"
+gpu_check = "torch"
+memory_gb = [32, 64, 128]

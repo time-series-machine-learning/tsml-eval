@@ -1,0 +1,86 @@
+# DRAFT, 2026-11-09, not started: the supervised braindecode 2.0 models not yet
+# in the study (sleep: AttnSleep, DeepSleepNet, SleepStagerBlanco2020, USleep;
+# general: TCN, HybridNet, MEDFormer; seizures: SeizureTransformer). They use the
+# same NeuralBench recipe as hali_eeg_nb_more.toml. Run after the foundation models.
+#
+# Before this can run:
+#   1. aeon-neuro: add the models to SUPPORTED_MODELS in
+#      classification/deep_learning/_braindecode.py (the aeon-neuro session).
+#   2. tsml-eval: add "<model>-nb" entries to neuralbench_deep_models in
+#      tsml_eval/experiments/_get_classifier.py.
+# DGCNN and EEGSym are supported already but need channel_names; they need a
+# dataset_info column of channel names first, and only 70 of 81 problems have them.
+#
+#   python tsml_slurm.py check experiments/hali_eeg_nb_extra.toml
+#   python tsml_slurm.py start experiments/hali_eeg_nb_extra.toml
+
+[experiment]
+name = "eeg-nb-extra"
+cluster = "hali"
+resources = "gpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{home}/DataSetLists/eeg.txt"
+dataset_info = "{repo}/_tsml_research_resources/dataset_lists/eeg_ctnet_info.csv"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+[estimators]
+DeepLearning = [
+    "AttnSleep-NB",
+    "DeepSleepNet-NB",
+    "SleepStagerBlanco2020-NB",
+    "USleep-NB",
+    "TCN-NB",
+    "HybridNet-NB",
+    "MEDFormer-NB",
+    "SeizureTransformer-NB",
+]
+
+[estimator_kwargs."AttnSleep-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."DeepSleepNet-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."SleepStagerBlanco2020-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."USleep-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."TCN-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."HybridNet-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."MEDFormer-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."SeizureTransformer-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[slurm]
+env_name = "tsml-eval"
+gpu_check = "torch"
+memory_gb = [32, 64, 128]

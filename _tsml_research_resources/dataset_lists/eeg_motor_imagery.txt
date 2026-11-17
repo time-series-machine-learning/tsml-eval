@@ -1,0 +1,14 @@
+FeetHands
+ImaginedFeetHands
+OpenCloseFist
+ImaginedOpenCloseFist
+MotorImagery
+ImaginedHandsFeet
+ImaginedHandSides
+ImaginedHandsStroke
+ImaginedHandTraining
+ImaginedLeftRightHand
+ImaginedRightHandFeet
+ImaginedHandFeetTongue
+ImaginedArmMovements
+ImaginedGripForce

@@ -1,0 +1,28 @@
+# SVM on ClinicalSleepStages and CSP+SVM on SymbolAttention, which hit Iridis 6's
+# 60 hour limit in eeg-aeon, rerun with Hali's 7 day limit. Neither can checkpoint.
+# Both are pigs (64,889 and 521,259 training cases), so they may fail again; if so
+# they are dropped.
+#
+#   python tsml_slurm.py check experiments/hali_eeg_retry.toml
+#   python tsml_slurm.py start experiments/hali_eeg_retry.toml
+
+[experiment]
+name = "eeg-retry"
+cluster = "hali"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_retry_pigs.txt"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+exclude_tasks = ["SVM|SymbolAttention|0", "CSP+SVM|ClinicalSleepStages|0"]
+
+[estimators]
+Tabular = ["SVM"]
+FeatureBased = ["CSP+SVM"]
+
+[slurm]
+env_name = "tsml-eval"
+memory_gb = [64, 128]

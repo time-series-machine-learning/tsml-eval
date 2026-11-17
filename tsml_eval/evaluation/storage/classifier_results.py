@@ -399,6 +399,11 @@ def load_classifier_results(file_path, calculate_stats=True, verify_values=True)
             if pred_descriptions is not None:
                 pred_descriptions.append(",".join(line[6 + n_classes :]).strip())
 
+        # float noise from normalising, e.g. 1.0000000000000002, which sklearn's
+        # log_loss rejects; values further outside [0, 1] are left to fail
+        probabilities[(probabilities > 1) & (probabilities <= 1 + 1e-9)] = 1
+        probabilities[(probabilities < 0) & (probabilities >= -1e-9)] = 0
+
         # compatibility with old results files
         if len(line3) > 6:
             error_estimate_method = line3[6]

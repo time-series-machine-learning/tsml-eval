@@ -1,0 +1,54 @@
+# The other braindecode models NeuralBench trains from scratch with its recipe, as
+# EEGNet-NB and CTNet-NB are (120 Hz, robust scaling, clamp 20, AdamW lr 1e-4,
+# one-cycle, up to 40 epochs, early stopping on subject-wise validation balanced
+# accuracy where IDs exist), on every EEG problem, on Hali GPUs. Code: aeon-neuro
+# branch ajb/eeg-baselines, NeuralBenchDeepClassifier with braindecode's default
+# settings for each model:
+#
+#   Deep4Net-NB         Deep4Net (aeon-neuro's DeepConvNetClassifier architecture)
+#   EEGConformer-NB     EEGConformer
+#   ShallowFBCSPNet-NB  ShallowFBCSPNet
+#
+# These replace aeon-neuro's DeepConvNetClassifier and EEGConformerClassifier run
+# with defaults (hali_eeg_gpu.toml). Same env, dataset_info and train_groups as
+# EEGNet-NB; device = "cuda" makes a job fail rather than train on the CPU.
+#
+#   python tsml_slurm.py check experiments/hali_eeg_nb_deep.toml
+#   python tsml_slurm.py start experiments/hali_eeg_nb_deep.toml
+
+[experiment]
+name = "eeg-nb-deep"
+cluster = "hali"
+resources = "gpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{home}/DataSetLists/eeg.txt"
+dataset_info = "{repo}/_tsml_research_resources/dataset_lists/eeg_ctnet_info.csv"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+[estimators]
+DeepLearning = ["Deep4Net-NB", "EEGConformer-NB", "ShallowFBCSPNet-NB"]
+
+[estimator_kwargs."Deep4Net-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."EEGConformer-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."ShallowFBCSPNet-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[slurm]
+env_name = "tsml-eval"
+gpu_check = "torch"
+memory_gb = [32, 64, 128]

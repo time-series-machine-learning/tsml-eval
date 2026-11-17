@@ -1,0 +1,18 @@
+# Interval regressors over the 63 TSER problems, 30 resamples, on Iridis 6.
+# The cpu resources on Iridis 6 are a task farm: up to four node jobs at once, each
+# running as many experiments in parallel as its memory tier allows.
+
+[experiment]
+name = "tser-interval"
+cluster = "iridis6"
+resources = "cpu"
+task = "regression"
+data_dir = "{home}/Data/TSER"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/Regression63-MonashExtendedClean.txt"
+results_dir = "{home}/Results/TSER"
+resamples = 30
+smallest_datasets_first = true
+max_attempts = 2
+
+[estimators]
+IntervalBased = ["DrCIF", "CIF", "TSF", "QUANT", "RISE"]

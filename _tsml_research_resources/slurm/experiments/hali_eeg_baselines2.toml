@@ -1,0 +1,46 @@
+# Standard EEG baselines that each task family favours but the benchmark lacked:
+# differential entropy (DE-LR, DE-SVM: emotion and cognitive state; it filters into
+# delta to gamma bands itself) and TRCA / template CCA for visual evoked
+# potentials. TRCA and template CCA learn their templates from training data, so
+# no stimulation frequencies are needed, but they must see band-passed data: slow
+# drift swamps the raw signal (TRCA 0.106 raw vs 0.994 at 6-40 Hz on
+# FlickerTargets, from the aeon-neuro tests), hence the -BP640 suffix.
+# Run on every problem; TRCA/TemplateCCA are reported for the VEP problems.
+# Needs aeon-neuro ajb/eeg-baselines with these classes (after e799ee6).
+#
+#   python tsml_slurm.py check experiments/hali_eeg_baselines2.toml
+#   python tsml_slurm.py start experiments/hali_eeg_baselines2.toml
+
+[experiment]
+name = "eeg-baselines2"
+cluster = "hali"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{home}/DataSetLists/eeg.txt"
+dataset_info = "{repo}/_tsml_research_resources/dataset_lists/eeg_sampling_rates.csv"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+[estimators]
+FeatureBased = ["DE-LR", "DE-SVM"]
+DistanceBased = ["TRCA-BP640", "TemplateCCA-BP640"]
+
+[estimator_kwargs."DE-LR"]
+sfreq = "{dataset.sfreq}"
+
+[estimator_kwargs."DE-SVM"]
+sfreq = "{dataset.sfreq}"
+
+[estimator_kwargs."TRCA-BP640"]
+sfreq = "{dataset.sfreq}"
+
+[estimator_kwargs."TemplateCCA-BP640"]
+sfreq = "{dataset.sfreq}"
+
+[slurm]
+env_name = "tsml-eval"
+memory_gb = [16, 32, 64, 128]

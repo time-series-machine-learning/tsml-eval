@@ -1,0 +1,66 @@
+# Six braindecode models moved from Iridis X (iridisx_eeg_nb_more.toml) to Hali on
+# 2026-11-09, when Hali's GPUs were idle and Iridis X had not started them: the
+# same NeuralBench recipe as hali_eeg_nb_more.toml. Each model runs on one cluster
+# only.
+#
+#   python tsml_slurm.py check experiments/hali_eeg_nb_more2.toml
+#   python tsml_slurm.py start experiments/hali_eeg_nb_more2.toml
+
+[experiment]
+name = "eeg-nb-more2"
+cluster = "hali"
+resources = "gpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{home}/DataSetLists/eeg.txt"
+dataset_info = "{repo}/_tsml_research_resources/dataset_lists/eeg_ctnet_info.csv"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+[estimators]
+DeepLearning = [
+    "SyncNet-NB",
+    "BDTCN-NB",
+    "SPARCNet-NB",
+    "BrainModule-NB",
+    "SleepStagerChambon2018-NB",
+    "ContraWR-NB",
+]
+
+[estimator_kwargs."SyncNet-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."BDTCN-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."SPARCNet-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."BrainModule-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."SleepStagerChambon2018-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[estimator_kwargs."ContraWR-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[slurm]
+env_name = "tsml-eval"
+gpu_check = "torch"
+memory_gb = [32, 64, 128]

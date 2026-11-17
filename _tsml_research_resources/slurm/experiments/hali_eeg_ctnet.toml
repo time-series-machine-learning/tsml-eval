@@ -1,0 +1,49 @@
+# braindecode CTNet trained from scratch with NeuralBench's recipe, on every EEG
+# problem, on Hali GPUs. Code: aeon-neuro branch ajb/eeg-baselines (on top of
+# ajb/braindecoder), aeon_neuro.classification.experimental. aeon-neuro brings
+# torch and braindecode, so the CPU env tsml-eval serves (no TensorFlow in it:
+# two CUDA stacks break both).
+#
+#   CTNet-NB  NeuralBenchCTNetClassifier: resample to 120 Hz, robust scaling, clamp
+#             20; AdamW lr 1e-4, one-cycle, up to 40 epochs, early stopping on
+#             validation balanced accuracy (25% of train cases, stratified)
+#
+# Expect underfitting on small training sets (few updates at this learning rate);
+# the recipe is kept as published. device = "cuda" makes a job fail rather than
+# train on the CPU.
+#
+# dataset_info (eeg_ctnet_info.csv) gives each dataset's sfreq and train_groups: the
+# path of <Name>_id_TRAIN.txt, one subject ID per TRAIN case in file order, or
+# "none" where the archive has no subject IDs. With IDs, the validation split holds
+# out whole subjects, as NeuralBench does; it affects early stopping only. The IDs
+# follow the archive's own split, so this is right for resample 0 only.
+#
+#   python tsml_slurm.py check experiments/hali_eeg_ctnet.toml
+#   python tsml_slurm.py start experiments/hali_eeg_ctnet.toml
+
+[experiment]
+name = "eeg-ctnet"
+cluster = "hali"
+resources = "gpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{home}/DataSetLists/eeg.txt"
+dataset_info = "{repo}/_tsml_research_resources/dataset_lists/eeg_ctnet_info.csv"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+[estimators]
+DeepLearning = ["CTNet-NB"]
+
+[estimator_kwargs."CTNet-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[slurm]
+env_name = "tsml-eval"
+gpu_check = "torch"
+memory_gb = [32, 64, 128]
