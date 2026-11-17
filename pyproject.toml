@@ -117,9 +117,6 @@ ignore = [
     # Ignore local files
     "local/**",
     "examples/generated_results/**",
-    # Ignore the publication pages, excluded from distributions
-    "tsml_eval/publications",
-    "tsml_eval/publications/**",
     # Ignore the docs symlinks and its contents
     "docs/examples",
     "docs/examples/**",
