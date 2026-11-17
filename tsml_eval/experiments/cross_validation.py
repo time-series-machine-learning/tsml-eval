@@ -8,6 +8,8 @@ __all__ = [
     "regression_cross_validation_folds",
 ]
 
+import warnings
+
 import numpy as np
 import pandas as pd
 from aeon.utils.conversion import convert_collection
@@ -42,6 +44,12 @@ def classification_cross_validation(
     groups=None,
 ):
     """Run a classification experiment using cross-validation.
+
+    Each fold is written with the same file names as a resample from
+    ``load_and_run_classification_experiment``, i.e. ``testResample{fold}.csv``, and
+    the fold is noted in the comment on the first line of each file. Use a different
+    ``results_path`` or ``classifier_name`` to resample experiments to avoid mixing
+    the two.
 
     Parameters
     ----------
@@ -125,6 +133,10 @@ def classification_cross_validation(
             build_train_file,
         )
         if not fold_build_test and not fold_build_train:
+            warnings.warn(
+                f"All files exist for fold {fold} and not overwriting, skipping.",
+                stacklevel=2,
+            )
             continue
 
         train, test = folds[fold]
@@ -150,6 +162,10 @@ def classification_cross_validation(
             ),
             att_max_shape=att_max_shape,
             benchmark_time=benchmark_time,
+            extra_comment=(
+                f"Cross-validation fold {fold} of {len(folds)} from "
+                "classification_cross_validation."
+            ),
         )
 
 
@@ -186,7 +202,7 @@ def regression_cross_validation(
     cv=None,
     fold_ids=None,
     regressor_name=None,
-    dataset_name="",
+    dataset_name="N/A",
     build_test_file=True,
     build_train_file=False,
     ignore_custom_train_estimate=False,
@@ -199,12 +215,18 @@ def regression_cross_validation(
 ):
     """Run a regression experiment using cross-validation.
 
+    Each fold is written with the same file names as a resample from
+    ``load_and_run_regression_experiment``, i.e. ``testResample{fold}.csv``, and the
+    fold is noted in the comment on the first line of each file. Use a different
+    ``results_path`` or ``regressor_name`` to resample experiments to avoid mixing
+    the two.
+
     Parameters
     ----------
     X : array-like
         Feature data.
     y : array-like
-        Target labels.
+        Target values. Cast to float before running the experiments.
     estimator : object
         The regressor to be evaluated.
     results_path : str
@@ -217,7 +239,7 @@ def regression_cross_validation(
     regressor_name : str or None, default=None
         Name of regressor used in writing results. If None, the name is taken from
         the regressor.
-    dataset_name : str, default=""
+    dataset_name : str, default="N/A"
         Name of dataset.
     build_test_file : bool, default=True
         Whether to generate test files or not. If the regressor can generate its own
@@ -253,6 +275,7 @@ def regression_cross_validation(
         )
 
     X, y = _convert_X_y(X, y)
+    y = y.astype(float)
     folds = _regression_folds(X, y, cv, groups)
     fold_ids = _check_fold_ids(fold_ids, len(folds))
 
@@ -270,6 +293,10 @@ def regression_cross_validation(
             build_train_file,
         )
         if not fold_build_test and not fold_build_train:
+            warnings.warn(
+                f"All files exist for fold {fold} and not overwriting, skipping.",
+                stacklevel=2,
+            )
             continue
 
         train, test = folds[fold]
@@ -294,6 +321,10 @@ def regression_cross_validation(
             ),
             att_max_shape=att_max_shape,
             benchmark_time=benchmark_time,
+            extra_comment=(
+                f"Cross-validation fold {fold} of {len(folds)} from "
+                "regression_cross_validation."
+            ),
         )
 
 

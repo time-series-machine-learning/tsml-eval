@@ -284,6 +284,9 @@ def test_cross_validation_train_file(tmp_path, task):
         else _check_regression_file_format
     )
     check_format(str(directory / "trainResample0.csv"), num_results_lines=6)
+    first_line = (directory / "trainResample0.csv").read_text().splitlines()[0]
+    assert "Data transformers: None." in first_line
+    assert f"Cross-validation fold 0 of 2 from {task}_cross_validation." in first_line
     assert not (directory / "testResample0.csv").exists()
     assert not (directory / "trainResample1.csv").exists()
 
@@ -436,17 +439,18 @@ def test_cross_validation_existing_result_policy(tmp_path, task, dataset_name):
         else {"regressor_name": est_name}
     )
 
-    run_cv(
-        X,
-        y,
-        estimator,
-        str(tmp_path),
-        cv=2,
-        fold_ids=0,
-        dataset_name=dataset_name,
-        benchmark_time=False,
-        **name_kwarg,
-    )
+    with pytest.warns(UserWarning, match="not overwriting"):
+        run_cv(
+            X,
+            y,
+            estimator,
+            str(tmp_path),
+            cv=2,
+            fold_ids=0,
+            dataset_name=dataset_name,
+            benchmark_time=False,
+            **name_kwarg,
+        )
     assert test_file.read_text(encoding="utf-8") == "existing result"
 
     run_cv(
