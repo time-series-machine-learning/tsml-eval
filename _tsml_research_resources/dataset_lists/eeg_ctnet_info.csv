@@ -123,3 +123,5 @@ AcuteTBIVisualMemory,500,~/Data/EEG/AcuteTBIVisualMemory/AcuteTBIVisualMemory_id
 ParkinsonsReinforcement,500,~/Data/EEG/ParkinsonsReinforcement/ParkinsonsReinforcement_id_TRAIN.txt
 FamilialAlzheimersRest,1000,~/Data/EEG/FamilialAlzheimersRest/FamilialAlzheimersRest_id_TRAIN.txt
 LearningDifficulties,256,~/Data/EEG/LearningDifficulties/LearningDifficulties_id_TRAIN.txt
+IllusoryMovement,500,~/Data/EEG/IllusoryMovement/IllusoryMovement_id_TRAIN.txt
+StylisedFaceEmotion,500,~/Data/EEG/StylisedFaceEmotion/StylisedFaceEmotion_id_TRAIN.txt

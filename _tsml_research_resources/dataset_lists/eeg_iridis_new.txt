@@ -38,3 +38,5 @@ TBIAuditoryOddball
 VerbalWorkingMemory
 VisualSymmetry
 ZosterNeuralgiaSleep
+IllusoryMovement
+StylisedFaceEmotion

@@ -38,3 +38,5 @@ AcuteTBIVisualMemory
 ParkinsonsReinforcement
 FamilialAlzheimersRest
 LearningDifficulties
+IllusoryMovement
+StylisedFaceEmotion
