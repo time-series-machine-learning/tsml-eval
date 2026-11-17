@@ -1,3 +1,6 @@
+# STOPPED REFILLING 17 Nov 2026: held at the Iridis 6 node cap, its pending farms
+# were cancelled and the remaining tasks moved to iridisx_eeg_hc2_new.toml.
+#
 # HC2 components (Arsenal, DrCIF, DrCIF-500, STC, TDE) on the 36 problems of the
 # MI/Clinical/Cognitive 30/30/30 set that Iridis lacked until 14 Nov 2026
 # (eeg_iridis_new.txt), on Iridis 6 batch nodes. Moved here from Iridis X

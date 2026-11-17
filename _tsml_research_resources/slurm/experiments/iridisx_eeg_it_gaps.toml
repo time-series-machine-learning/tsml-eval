@@ -1,0 +1,31 @@
+# InceptionTime (core) on the core-90 problems that lacked it on 17 Nov 2026
+# (dataset_lists/eeg_gpu_gaps_it.txt), on Iridis X GPUs while they were idle and
+# Hali's GPU queue was full. Same name, env and results layout as
+# iridisx_eeg_aeon_gpu.toml, so results join ~/Results/EEG/DeepLearning/IT/.
+# ClinicalSleepStages is left out: it is being subsampled.
+# Before starting, drop from the list any problem Hali has finished or is running
+# (hali_eeg_aeon_gpu.toml), so no task runs on both clusters.
+#
+#   python tsml_slurm.py check experiments/iridisx_eeg_it_gaps.toml
+#   python tsml_slurm.py start experiments/iridisx_eeg_it_gaps.toml
+
+[experiment]
+name = "eeg-it-gaps-x"
+cluster = "iridisx"
+resources = "gpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval-gpu"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_gpu_gaps_it.txt"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+[estimators]
+DeepLearning = ["IT"]
+
+[slurm]
+env_name = "tsml-eval-gpu"
+memory_gb = [32, 64, 128]
+max_active = 20

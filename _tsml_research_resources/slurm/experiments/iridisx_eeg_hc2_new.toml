@@ -1,4 +1,8 @@
-# STOPPED 15 Nov 2026 before any task ran: moved to iridis6_eeg_hc2_new.toml.
+# RESTARTED 17 Nov 2026: Iridis 6 (iridis6_eeg_hc2_new.toml) is held at its 4-node
+# cap, so it stopped refilling and its pending farms were cancelled; this config
+# takes the rest. The problems still running there are excluded below. Results and
+# checkpoints are shared (same home), so whichever cluster ran a task, the other sees it.
+# (First stopped 15 Nov 2026 before any task ran, when the amd partition was full.)
 #
 # HC2 components (Arsenal, DrCIF, DrCIF-500, STC, TDE) on the 36 problems of the
 # MI/Clinical/Cognitive 30/30/30 set that Iridis lacked until 14 Nov 2026
@@ -23,6 +27,8 @@ repo_dir = "{home}/Code/tsml-eval"
 branch = "ajb/slurm-runner"
 data_dir = "{home}/Data/EEG"
 datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_iridis_new.txt"
+# still running on Iridis 6 (farms 4929425, 4929426) on 17 Nov 2026
+exclude_datasets = ["PsychosisRestFirst", "IllusoryMovement", "StylisedFaceEmotion"]
 results_dir = "{home}/Results/EEG"
 resamples = 1
 smallest_datasets_first = true
@@ -55,7 +61,7 @@ verbose = 1
 
 [slurm]
 env_name = "tsml-eval"
-max_jobs = 4                         # Iridis X holds a user to 4 nodes
+max_jobs = 3                         # 4-node cap; RotationForest (eeg-rotf-ch-x) holds one
 waves = 1                            # every task starts with the full time limit
 top_up = true
 top_up_hours = 12
