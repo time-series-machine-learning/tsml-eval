@@ -1,5 +1,5 @@
 # InceptionTime (core) on the core-90 problems that lacked it on 17 Nov 2026
-# (dataset_lists/eeg_gpu_gaps_it.txt), on Iridis X GPUs while they were idle and
+# (dataset_lists/eeg_gpu_gaps_it.txt, trimmed to the 2 Hali had not done), on Iridis X GPUs while they were idle and
 # Hali's GPU queue was full. Same name, env and results layout as
 # iridisx_eeg_aeon_gpu.toml, so results join ~/Results/EEG/DeepLearning/IT/.
 # ClinicalSleepStages is left out: it is being subsampled.
