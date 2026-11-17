@@ -13,12 +13,9 @@ repository:
 
 - [Results](https://github.com/time-series-machine-learning/kasba-clustering-2026/tree/main/results)
   for each experiment in Section 5 of the paper
-- [Datasets](https://github.com/time-series-machine-learning/kasba-clustering-2026#datasets)
-  used in the experiments
-- [Running the experiments](https://github.com/time-series-machine-learning/kasba-clustering-2026#running-the-experiments)
-  with the latest versions or the versions used in the paper
 - [Clusterer configurations](https://github.com/time-series-machine-learning/kasba-clustering-2026/blob/main/_model_configuration.py)
-  and a [table of parameters](https://github.com/time-series-machine-learning/kasba-clustering-2026#parameters)
+  and the
+  [experiment script](https://github.com/time-series-machine-learning/kasba-clustering-2026/blob/main/_experiment_script.py)
 - [Example notebook](https://github.com/time-series-machine-learning/kasba-clustering-2026/blob/main/kasba.ipynb)
   using KASBA, and a
   [notebook for the results figures](https://github.com/time-series-machine-learning/kasba-clustering-2026/blob/main/result_visualisation.ipynb)
