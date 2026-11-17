@@ -119,6 +119,9 @@ def test_classification_cross_validation_reduces_default_folds(tmp_path):
 class _RecordingTransform(BaseEstimator):
     """Learn an offset and record training cases, rejecting fitted-state reuse."""
 
+    def __init__(self, random_state=None):
+        self.random_state = random_state
+
     def fit_transform(self, X, y=None):
         """Fit the offset on training cases and transform X."""
         assert not hasattr(self, "fit_ids_")
@@ -164,6 +167,7 @@ def test_cross_validation_clones_and_indexes_list_data(tmp_path, monkeypatch, ta
     assert len(fitted) == 2
     assert not estimator.is_fitted
     assert not hasattr(transform, "fit_ids_")
+    assert transform.random_state is None
 
     name = type(estimator).__name__
     check_format = (
@@ -175,6 +179,8 @@ def test_cross_validation_clones_and_indexes_list_data(tmp_path, monkeypatch, ta
         fold_estimator, fold_transform = fitted[fold]
         assert fold_estimator is not estimator
         assert fold_estimator.is_fitted
+        assert fold_estimator.get_params().get("random_state", fold) == fold
+        assert fold_transform.random_state == fold
         assert fold_transform.fit_ids_ == tuple(train)
         test_file = (
             tmp_path
@@ -378,6 +384,9 @@ def test_cross_validation_groups_and_precomputed_splits(tmp_path, task):
     assert (pre_dir / "testResample0.csv").exists()
     assert not (pre_dir / "testResample1.csv").exists()
     assert (pre_dir / "testResample2.csv").exists()
+
+    with pytest.warns(UserWarning, match="ignored by pre-computed splits"):
+        get_folds(X, y, cv=folds, groups=groups)
 
 
 @pytest.mark.parametrize("fold_ids", [-1, [10], [0, 10]])

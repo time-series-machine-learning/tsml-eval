@@ -58,7 +58,8 @@ def classification_cross_validation(
     y : array-like
         Target labels.
     estimator : object
-        The classifier to be evaluated.
+        The classifier to be evaluated. A clone is fitted for each fold, with its
+        ``random_state`` set to the fold id if it has one.
     results_path : str
         Path to save results.
     cv : int, splitter object, iterable of splits or None, default=None
@@ -90,7 +91,7 @@ def classification_cross_validation(
         but is hardware dependent.
     data_transforms : transformer, list of transformers or None, default=None
         Transformer(s) to apply within each fold. Transformers are cloned for each
-        fold.
+        fold, with their ``random_state`` set to the fold id if they have one.
     transform_train_only : bool, default=False
         If True, apply data transforms only to the training data in each fold.
     overwrite : bool, default=False
@@ -145,12 +146,12 @@ def classification_cross_validation(
             y[train],
             _index_cases(X, test),
             y[test],
-            clone(estimator),
+            _clone_with_seed(estimator, fold),
             results_path,
             classifier_name=classifier_name,
             dataset_name=dataset_name,
             resample_id=fold,
-            data_transforms=_clone_transforms(data_transforms),
+            data_transforms=_clone_transforms(data_transforms, fold),
             transform_train_only=transform_train_only,
             build_test_file=fold_build_test,
             build_train_file=fold_build_train,
@@ -228,7 +229,8 @@ def regression_cross_validation(
     y : array-like
         Target values. Cast to float before running the experiments.
     estimator : object
-        The regressor to be evaluated.
+        The regressor to be evaluated. A clone is fitted for each fold, with its
+        ``random_state`` set to the fold id if it has one.
     results_path : str
         Path to save results.
     cv : int, splitter object, iterable of splits or None, default=None
@@ -260,7 +262,7 @@ def regression_cross_validation(
         but is hardware dependent.
     data_transforms : transformer, list of transformers or None, default=None
         Transformer(s) to apply within each fold. Transformers are cloned for each
-        fold.
+        fold, with their ``random_state`` set to the fold id if they have one.
     overwrite : bool, default=False
         If False, existing fold result files are skipped. If True, existing files are
         overwritten.
@@ -305,12 +307,12 @@ def regression_cross_validation(
             y[train],
             _index_cases(X, test),
             y[test],
-            clone(estimator),
+            _clone_with_seed(estimator, fold),
             results_path,
             regressor_name=regressor_name,
             dataset_name=dataset_name,
             resample_id=fold,
-            data_transforms=_clone_transforms(data_transforms),
+            data_transforms=_clone_transforms(data_transforms, fold),
             build_test_file=fold_build_test,
             build_train_file=fold_build_train,
             ignore_custom_train_estimate=ignore_custom_train_estimate,
@@ -382,6 +384,10 @@ def _regression_folds(X, y, cv, groups):
 
 
 def _split(X, y, cv, groups):
+    if groups is not None and not hasattr(cv, "split"):
+        warnings.warn(
+            "The groups parameter is ignored by pre-computed splits.", stacklevel=4
+        )
     return [
         (np.asarray(train), np.asarray(test))
         for train, test in check_cv(cv).split(X, y, groups)
@@ -404,9 +410,16 @@ def _index_cases(X, indices):
     return X[indices]
 
 
-def _clone_transforms(data_transforms):
+def _clone_with_seed(estimator, fold):
+    estimator = clone(estimator)
+    if "random_state" in estimator.get_params():
+        estimator.set_params(random_state=fold)
+    return estimator
+
+
+def _clone_transforms(data_transforms, fold):
     if data_transforms is None:
         return None
     if isinstance(data_transforms, (list, tuple)):
-        return [clone(transform) for transform in data_transforms]
-    return clone(data_transforms)
+        return [_clone_with_seed(transform, fold) for transform in data_transforms]
+    return _clone_with_seed(data_transforms, fold)
