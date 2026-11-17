@@ -117,9 +117,9 @@ ignore = [
     # Ignore local files
     "local/**",
     "examples/generated_results/**",
-    # Ignore the publications symlinks and its contents
-    "tsml_eval/publications/2023",
-    "tsml_eval/publications/2023/**",
+    # Ignore the publication pages, excluded from distributions
+    "tsml_eval/publications",
+    "tsml_eval/publications/**",
     # Ignore the docs symlinks and its contents
     "docs/examples",
     "docs/examples/**",
@@ -146,7 +146,6 @@ ignore = ["E203", "E741", "B904", "B905", "B028"]
 "tsml_eval/experiments/threaded_clustering_experiments.py" = ["T201"]
 "tsml_eval/experiments/forecasting_experiments.py" = ["E402", "T201"]
 "tsml_eval/experiments/threaded_forecasting_experiments.py" = ["T201"]
-"tsml_eval/publications/*" = ["E402", "T201"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
@@ -156,8 +155,6 @@ ignore_missing_imports = true
 follow_imports = "silent"
 exclude = [
     "_wip/",
-    # Ignore the publications symlinks and its contents
-    "tsml_eval/publications/2023",
 ]
 
 
@@ -165,7 +162,6 @@ exclude = [
 testpaths = "tsml_eval"
 addopts = '''
     --ignore tsml_eval/_wip
-    --ignore tsml_eval/publications/2023
     --doctest-modules
     --durations 20
     --timeout 600

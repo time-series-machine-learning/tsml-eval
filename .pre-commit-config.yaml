@@ -13,7 +13,7 @@ repos:
       - id: check-yaml
       - id: debug-statements
       - id: end-of-file-fixer
-        exclude: "docs/examples|docs/publications|tsml_eval/publications/2023"
+        exclude: "docs/examples|docs/publications"
       - id: fix-byte-order-marker
       - id: name-tests-test
         args: [ "--pytest-test-first" ]

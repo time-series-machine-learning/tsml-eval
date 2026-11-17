@@ -151,7 +151,9 @@ current_file = "{{ env.doc2path(env.docname, base=None) }}"
 # points to latest stable release, not main
 notebook_url = f"https://github.com/time-series-machine-learning/tsml-eval/tree/{github_tag}/{current_file}"  # noqa
 binder_url = f"https://mybinder.org/v2/gh/time-series-machine-learning/tsml-eval/{github_tag}?filepath={current_file}"  # noqa
+# the publication pages are single markdown cells, so they get no epilog
 nbsphinx_epilog = f"""
+{{% if not env.docname.startswith("publications/") %}}
 ----
 
 Generated using nbsphinx_. The Jupyter notebook can be found here_.
@@ -161,6 +163,7 @@ Generated using nbsphinx_. The Jupyter notebook can be found here_.
 .. _here: {notebook_url}
 .. |binder| image:: https://mybinder.org/badge_logo.svg
 .. _Binder: {binder_url}
+{{% endif %}}
 """
 
 # MyST Parser configuration
@@ -263,3 +266,18 @@ html_theme_options = {
         },
     ],
 }
+
+
+def _orphan_publication_pages(app, doctree):
+    """Keep the publication pages out of the toctree check and the sidebar.
+
+    The pages are linked from publications.md rather than a toctree. Setting this
+    here keeps the files unchanged, as some sit at GitHub paths printed in papers.
+    """
+    if app.env.docname.startswith("publications/"):
+        app.env.metadata[app.env.docname]["orphan"] = True
+
+
+def setup(app):
+    """Connect the publication page handler after the metadata is collected."""
+    app.connect("doctree-read", _orphan_publication_pages, priority=900)
