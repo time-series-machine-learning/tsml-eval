@@ -263,3 +263,18 @@ html_theme_options = {
         },
     ],
 }
+
+
+def _orphan_publication_pages(app, doctree):
+    """Keep the publication pages out of the toctree check and the sidebar.
+
+    The pages are linked from publications.md rather than a toctree. Setting this
+    here keeps the files unchanged, as some sit at GitHub paths printed in papers.
+    """
+    if app.env.docname.startswith("publications/"):
+        app.env.metadata[app.env.docname]["orphan"] = True
+
+
+def setup(app):
+    """Connect the publication page handler after the metadata is collected."""
+    app.connect("doctree-read", _orphan_publication_pages, priority=900)
