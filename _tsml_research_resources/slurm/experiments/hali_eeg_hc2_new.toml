@@ -18,6 +18,7 @@ data_dir = "{home}/Data/EEG"
 datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_not_on_iridis.txt"
 exclude_datasets = [
     "MigraineRest", "PsychosisRestFirst", "PsychosisRestSecond", "SleepDeprivation",
+    "HaaglandenSleepStages",  # HC2 runs on Iridis X (iridisx_eeg_hc2_new.toml)
 ]
 results_dir = "{home}/Results/EEG"
 resamples = 1

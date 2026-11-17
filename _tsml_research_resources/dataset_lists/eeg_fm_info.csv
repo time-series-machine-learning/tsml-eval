@@ -117,3 +117,4 @@ FamilialAlzheimersRest,1000,~/Data/EEG/FamilialAlzheimersRest/FamilialAlzheimers
 LearningDifficulties,256,~/Data/EEG/LearningDifficulties/LearningDifficulties_id_TRAIN.txt,uV,"FP1,FP2,F7,F3,Fz,F4,F8,FT10,FT9,T7,FC5,C3,FC1,FC2,FC6,C4,Cz,CP1,CP5,TP9,CP2,CP6,TP10,T8,P7,P3,Pz,P4,P8,O1,Oz,O2"
 IllusoryMovement,500,~/Data/EEG/IllusoryMovement/IllusoryMovement_id_TRAIN.txt,uV,"Fz,FC3,FC1,FCz,FC2,FC4,C3,C1,Cz,C2,C4,CP3,CP1,CPz,CP2,CP4"
 StylisedFaceEmotion,500,~/Data/EEG/StylisedFaceEmotion/StylisedFaceEmotion_id_TRAIN.txt,uV,"Fp1,Fz,F3,F7,FC5,FC1,Cz,C3,T7,CP5,CP1,P3,P7,Pz,O1,Oz,O2,P4,P8,CP6,CP2,C4,T8,FC6,FC2,F4,F8,Fp2"
+HaaglandenSleepStages,256,~/Data/EEG/HaaglandenSleepStages/HaaglandenSleepStages_id_TRAIN.txt,uV,
