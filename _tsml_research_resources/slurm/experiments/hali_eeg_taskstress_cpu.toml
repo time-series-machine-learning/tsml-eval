@@ -1,0 +1,25 @@
+# Classical methods on the replacement TaskStress dataset. These methods are
+# normally covered by Iridis or completed historical runs; the other Hali
+# experiments cover its HC2 components, features and neural classifiers.
+[experiment]
+name = "eeg-taskstress-cpu"
+cluster = "hali"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_taskstress.txt"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+
+[estimators]
+ConvolutionBased = ["ROCKET", "MiniROCKET"]
+DistanceBased = ["RiemannianMDM", "RiemannianKNN", "RiemannianMDM-OAS", "RiemannianKNN-OAS"]
+FeatureBased = ["CSP+LDA", "CSP+SVM", "XDAWN"]
+Tabular = ["RandomForest", "SVM", "LogisticRegression"]
+
+[slurm]
+env_name = "tsml-eval"
+memory_gb = [16, 32, 64, 128]
+max_active = 12

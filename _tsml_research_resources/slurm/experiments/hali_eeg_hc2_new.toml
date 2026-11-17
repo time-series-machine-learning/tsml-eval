@@ -20,6 +20,7 @@ exclude_datasets = [
     "MigraineRest", "PsychosisRestFirst", "PsychosisRestSecond", "SleepDeprivation",
     "HaaglandenSleepStages",  # HC2 runs on Iridis X (iridisx_eeg_hc2_new.toml)
 ]
+exclude_tasks = ["TDE|TaskStress|0"]  # TDE remains paused for new problems
 results_dir = "{home}/Results/EEG"
 resamples = 1
 smallest_datasets_first = true

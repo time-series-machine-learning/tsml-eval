@@ -68,7 +68,6 @@ MoralConflict
 MultitaskWorkload
 NarrativeReward
 NaturalisticEmotion
-NBackAudioCondition
 NBackDifficulty
 ObsessiveCompulsiveSymptoms
 OpenCloseFist
@@ -116,3 +115,4 @@ LearningDifficulties
 IllusoryMovement
 StylisedFaceEmotion
 HaaglandenSleepStages
+TaskStress

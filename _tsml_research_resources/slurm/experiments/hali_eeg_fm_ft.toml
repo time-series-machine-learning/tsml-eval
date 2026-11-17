@@ -6,9 +6,9 @@
 # eeg_fm_info.csv gives each problem's sampling rate, training subject IDs (for the
 # subject-wise validation split), units (uV or V, estimated from the data and checked
 # against the metadata; FlickerAttention is ambiguous and set to mV) and, for LaBraM,
-# 10-20 channel names. A LaBraM task whose ch_names cell is empty is not run: 18
-# problems lack names in LaBraM's electrode list and 6 have cases longer than its
-# 16 s limit, leaving 56 of 80.
+# 10-20 channel names. LaBraM tasks with empty ch_names cells are not run.
+# These cells also keep problems longer than its 16 s limit out of LaBraM;
+# channel-name coverage changes as source metadata is recovered.
 #
 # Pretrained weights are read from ~/hf_models (copied from the desktop's
 # D:/hf_models); nothing is downloaded.
