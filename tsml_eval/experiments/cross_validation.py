@@ -406,10 +406,18 @@ def _split(X, y, cv, groups):
     n_cases = get_n_cases(X)
     folds = []
     for fold, split in enumerate(check_cv(cv).split(X, y, groups)):
-        train, test = (
-            np.flatnonzero(idx) if idx.dtype == bool else idx
-            for idx in map(np.asarray, split)
-        )
+        indices = []
+        for idx in map(np.asarray, split):
+            if idx.dtype == bool:
+                if len(idx) != n_cases:
+                    raise ValueError(
+                        f"Fold {fold} boolean masks must have length {n_cases}."
+                    )
+                idx = np.flatnonzero(idx)
+            if len(idx) == 0:
+                raise ValueError(f"Fold {fold} train and test sets must not be empty.")
+            indices.append(idx)
+        train, test = indices
         if np.intersect1d(train, test).size > 0:
             raise ValueError(f"Fold {fold} train and test indices overlap.")
         all_idx = np.concatenate([train, test])
@@ -426,6 +434,8 @@ def _check_fold_ids(fold_ids, n_folds):
         return list(range(n_folds))
     if isinstance(fold_ids, Integral):
         fold_ids = [fold_ids]
+    if not all(isinstance(fold, Integral) for fold in fold_ids):
+        raise TypeError("fold_ids must be an integer or a list of integers.")
     if any(fold < 0 or fold >= n_folds for fold in fold_ids):
         raise ValueError(f"fold_ids must be between 0 and {n_folds - 1}.")
     return sorted({int(fold) for fold in fold_ids})
@@ -436,6 +446,10 @@ def _fold_seeds(random_seed, n_folds):
         return list(range(n_folds))
     if isinstance(random_seed, Integral):
         return [int(random_seed)] * n_folds
+    if isinstance(random_seed, str) or not all(
+        isinstance(seed, Integral) for seed in random_seed
+    ):
+        raise TypeError("random_seed must be an integer or a list of integers.")
     if len(random_seed) != n_folds:
         raise ValueError(
             f"random_seed must have one seed per fold, got {len(random_seed)} seeds "

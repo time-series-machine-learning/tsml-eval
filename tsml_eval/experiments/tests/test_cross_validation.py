@@ -413,6 +413,12 @@ def test_cross_validation_precomputed_split_checks():
         classification_cross_validation_folds(X, y, cv=[([-1, 0], [1, 2])])
     with pytest.raises(ValueError, match="between 0 and 7"):
         classification_cross_validation_folds(X, y, cv=[([0, 1], [2, 8])])
+    with pytest.raises(ValueError, match="length 8"):
+        classification_cross_validation_folds(
+            X, y, cv=[(train_mask[:6], ~train_mask[:6])]
+        )
+    with pytest.raises(ValueError, match="must not be empty"):
+        classification_cross_validation_folds(X, y, cv=[([0, 1, 2, 3], [])])
 
     for np_fold, int_fold in zip(
         classification_cross_validation_folds(X, y, cv=np.int64(2)),
@@ -444,6 +450,18 @@ def test_classification_cross_validation_invalid_options(tmp_path):
 
     with pytest.raises(ValueError, match="at least 2 values"):
         classification_cross_validation_folds(X, np.array([0, 0, 0, 1]))
+
+    for bad_kwargs in ({"fold_ids": [1.7]}, {"random_seed": "12"}):
+        with pytest.raises(TypeError, match="integer or a list of integers"):
+            classification_cross_validation(
+                X,
+                np.array([0, 1, 0, 1]),
+                DummyClassifier(),
+                str(tmp_path),
+                cv=2,
+                benchmark_time=False,
+                **bad_kwargs,
+            )
 
     with pytest.raises(ValueError, match="one seed per fold"):
         classification_cross_validation(
