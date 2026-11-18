@@ -17,6 +17,7 @@ tsml-eval checkouts and separate queues.
 | ShortIntervalTask | ParkinsonsShortInterval |
 | SleepDeprivation | SleepDeprivationRest |
 | FuzzySemantics | SemanticTargets |
+| PhotoStimulation | DementiaPhotic |
 
 LongIntervalTask is excluded from the main benchmark. Preserve its archived data
 and results; cancel unfinished EEG experiment tasks through the standard runner

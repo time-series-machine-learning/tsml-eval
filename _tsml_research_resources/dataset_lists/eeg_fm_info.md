@@ -12,8 +12,8 @@ column with `{dataset.<column>}`; a blank required cell excludes that task.
 
 On 18 November 2026, the Core 90 have 86 populated `ch_names` cells and 89 populated
 `ch_names_any_length` cells. The additional datasets are Alzheimers,
-ImaginedHandMusicTempo and PhotoStimulation. Their ordered 19-channel names were
-read from `D:/Data/EEG/<dataset>/channels.txt` (Alzheimers and PhotoStimulation) or
+ImaginedHandMusicTempo and DementiaPhotic. Their ordered 19-channel names were
+read from `D:/Data/EEG/<dataset>/channels.txt` (Alzheimers and DementiaPhotic) or
 `channels.tsv` (ImaginedHandMusicTempo), and checked against both train and test
 case dimensions. Existing cells, including the 12 Option 1 channel mappings,
 were preserved. PostCovidVigilance remains unnamed in both columns.

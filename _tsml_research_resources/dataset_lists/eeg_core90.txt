@@ -62,7 +62,7 @@ ParkinsonsRest
 ParkinsonsRestIowa
 ParkinsonsRestUCSD
 ParkinsonsWalking
-PhotoStimulation
+DementiaPhotic
 PostCovidVigilance
 ProbabilisticFeedback
 PsychosisRestCohort1

@@ -85,7 +85,7 @@ ParkinsonsRest,500,~/Data/EEG/ParkinsonsRest/ParkinsonsRest_id_TRAIN.txt
 ParkinsonsRestIowa,500,~/Data/EEG/ParkinsonsRestIowa/ParkinsonsRestIowa_id_TRAIN.txt
 ParkinsonsRestUCSD,512,~/Data/EEG/ParkinsonsRestUCSD/ParkinsonsRestUCSD_id_TRAIN.txt
 ParkinsonsWalking,250,~/Data/EEG/ParkinsonsWalking/ParkinsonsWalking_id_TRAIN.txt
-PhotoStimulation,500,~/Data/EEG/PhotoStimulation/PhotoStimulation_id_TRAIN.txt
+DementiaPhotic,500,~/Data/EEG/DementiaPhotic/DementiaPhotic_id_TRAIN.txt
 PostCovidVigilance,1000,~/Data/EEG/PostCovidVigilance/PostCovidVigilance_id_TRAIN.txt
 ProbabilisticFeedback,500,~/Data/EEG/ProbabilisticFeedback/ProbabilisticFeedback_id_TRAIN.txt
 PronouncedSpeech,1024,~/Data/EEG/PronouncedSpeech/PronouncedSpeech_id_TRAIN.txt

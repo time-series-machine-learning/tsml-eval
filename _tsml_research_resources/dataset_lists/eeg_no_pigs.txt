@@ -9,7 +9,7 @@ ImaginedDominantHandRest
 ImaginedRightHandFeet
 ImaginedAnkleRest
 WirelessFlicker
-PhotoStimulation
+DementiaPhotic
 ImaginedLeftRightHandRest
 RestingEyeState
 FlickerTargets
