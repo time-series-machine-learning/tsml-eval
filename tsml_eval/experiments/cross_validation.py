@@ -42,6 +42,7 @@ def classification_cross_validation(
     transform_train_only=False,
     overwrite=False,
     groups=None,
+    random_seed=None,
 ):
     """Run a classification experiment using cross-validation.
 
@@ -59,7 +60,7 @@ def classification_cross_validation(
         Target labels.
     estimator : object
         The classifier to be evaluated. A clone is fitted for each fold, with its
-        ``random_state`` set to the fold id if it has one.
+        ``random_state`` set to the fold id (or ``random_seed``) if it has one.
     results_path : str
         Path to save results.
     cv : int, splitter object, iterable of splits or None, default=None
@@ -91,7 +92,8 @@ def classification_cross_validation(
         but is hardware dependent.
     data_transforms : transformer, list of transformers or None, default=None
         Transformer(s) to apply within each fold. Transformers are cloned for each
-        fold, with their ``random_state`` set to the fold id if they have one.
+        fold, with their ``random_state`` set to the fold id (or ``random_seed``) if
+        they have one.
     transform_train_only : bool, default=False
         If True, apply data transforms only to the training data in each fold.
     overwrite : bool, default=False
@@ -100,6 +102,9 @@ def classification_cross_validation(
     groups : array-like or None, default=None
         Group labels for the cases used while splitting the dataset into train and
         test folds. Only used in conjunction with a ``cv`` splitter.
+    random_seed : int, list of int or None, default=None
+        Use a different random seed than the fold id. An int is used for every fold,
+        a list gives one seed per fold. If None, the fold id is used.
     """
     if not build_test_file and not build_train_file:
         raise ValueError(
@@ -110,6 +115,7 @@ def classification_cross_validation(
     X, y = _convert_X_y(X, y)
     folds = _classification_folds(X, y, cv, groups)
     fold_ids = _check_fold_ids(fold_ids, len(folds))
+    seeds = _fold_seeds(random_seed, len(folds))
 
     classes = np.unique(y)
     for fold in fold_ids:
@@ -141,17 +147,18 @@ def classification_cross_validation(
             continue
 
         train, test = folds[fold]
+        seed = seeds[fold]
         run_classification_experiment(
             _index_cases(X, train),
             y[train],
             _index_cases(X, test),
             y[test],
-            _clone_with_seed(estimator, fold),
+            _clone_with_seed(estimator, seed),
             results_path,
             classifier_name=classifier_name,
             dataset_name=dataset_name,
             resample_id=fold,
-            data_transforms=_clone_transforms(data_transforms, fold),
+            data_transforms=_clone_transforms(data_transforms, seed),
             transform_train_only=transform_train_only,
             build_test_file=fold_build_test,
             build_train_file=fold_build_train,
@@ -213,6 +220,7 @@ def regression_cross_validation(
     data_transforms=None,
     overwrite=False,
     groups=None,
+    random_seed=None,
 ):
     """Run a regression experiment using cross-validation.
 
@@ -230,7 +238,7 @@ def regression_cross_validation(
         Target values. Cast to float before running the experiments.
     estimator : object
         The regressor to be evaluated. A clone is fitted for each fold, with its
-        ``random_state`` set to the fold id if it has one.
+        ``random_state`` set to the fold id (or ``random_seed``) if it has one.
     results_path : str
         Path to save results.
     cv : int, splitter object, iterable of splits or None, default=None
@@ -262,13 +270,17 @@ def regression_cross_validation(
         but is hardware dependent.
     data_transforms : transformer, list of transformers or None, default=None
         Transformer(s) to apply within each fold. Transformers are cloned for each
-        fold, with their ``random_state`` set to the fold id if they have one.
+        fold, with their ``random_state`` set to the fold id (or ``random_seed``) if
+        they have one.
     overwrite : bool, default=False
         If False, existing fold result files are skipped. If True, existing files are
         overwritten.
     groups : array-like or None, default=None
         Group labels for the cases used while splitting the dataset into train and
         test folds. Only used in conjunction with a ``cv`` splitter.
+    random_seed : int, list of int or None, default=None
+        Use a different random seed than the fold id. An int is used for every fold,
+        a list gives one seed per fold. If None, the fold id is used.
     """
     if not build_test_file and not build_train_file:
         raise ValueError(
@@ -280,6 +292,7 @@ def regression_cross_validation(
     y = y.astype(float)
     folds = _regression_folds(X, y, cv, groups)
     fold_ids = _check_fold_ids(fold_ids, len(folds))
+    seeds = _fold_seeds(random_seed, len(folds))
 
     if regressor_name is None:
         regressor_name = type(estimator).__name__
@@ -302,17 +315,18 @@ def regression_cross_validation(
             continue
 
         train, test = folds[fold]
+        seed = seeds[fold]
         run_regression_experiment(
             _index_cases(X, train),
             y[train],
             _index_cases(X, test),
             y[test],
-            _clone_with_seed(estimator, fold),
+            _clone_with_seed(estimator, seed),
             results_path,
             regressor_name=regressor_name,
             dataset_name=dataset_name,
             resample_id=fold,
-            data_transforms=_clone_transforms(data_transforms, fold),
+            data_transforms=_clone_transforms(data_transforms, seed),
             build_test_file=fold_build_test,
             build_train_file=fold_build_train,
             ignore_custom_train_estimate=ignore_custom_train_estimate,
@@ -404,22 +418,35 @@ def _check_fold_ids(fold_ids, n_folds):
     return sorted(set(fold_ids))
 
 
+def _fold_seeds(random_seed, n_folds):
+    if random_seed is None:
+        return list(range(n_folds))
+    if isinstance(random_seed, int):
+        return [random_seed] * n_folds
+    if len(random_seed) != n_folds:
+        raise ValueError(
+            f"random_seed must have one seed per fold, got {len(random_seed)} seeds "
+            f"for {n_folds} folds."
+        )
+    return list(random_seed)
+
+
 def _index_cases(X, indices):
     if isinstance(X, list):
         return [X[i] for i in indices]
     return X[indices]
 
 
-def _clone_with_seed(estimator, fold):
+def _clone_with_seed(estimator, seed):
     estimator = clone(estimator)
     if "random_state" in estimator.get_params():
-        estimator.set_params(random_state=fold)
+        estimator.set_params(random_state=seed)
     return estimator
 
 
-def _clone_transforms(data_transforms, fold):
+def _clone_transforms(data_transforms, seed):
     if data_transforms is None:
         return None
     if isinstance(data_transforms, (list, tuple)):
-        return [_clone_with_seed(transform, fold) for transform in data_transforms]
-    return _clone_with_seed(data_transforms, fold)
+        return [_clone_with_seed(transform, seed) for transform in data_transforms]
+    return _clone_with_seed(data_transforms, seed)

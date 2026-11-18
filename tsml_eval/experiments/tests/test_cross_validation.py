@@ -135,7 +135,13 @@ class _RecordingTransform(BaseEstimator):
 
 
 @pytest.mark.parametrize("task", ["classification", "regression"])
-def test_cross_validation_clones_and_indexes_list_data(tmp_path, monkeypatch, task):
+@pytest.mark.parametrize(
+    ("random_seed", "expected_seeds"),
+    [(None, [0, 1]), (5, [5, 5]), ([3, 4], [3, 4])],
+)
+def test_cross_validation_clones_and_indexes_list_data(
+    tmp_path, monkeypatch, task, random_seed, expected_seeds
+):
     """Check estimators and transforms are fitted per fold on unequal length data."""
     X = [np.full((1, 3 + i % 3), float(i)) for i in range(12)]
     y = np.tile([0, 1], 6) if task == "classification" else np.arange(12, dtype=float)
@@ -162,6 +168,7 @@ def test_cross_validation_clones_and_indexes_list_data(tmp_path, monkeypatch, ta
         attribute_file_path=str(tmp_path / "attributes"),
         benchmark_time=False,
         data_transforms=transform,
+        random_seed=random_seed,
     )
 
     assert len(fitted) == 2
@@ -179,8 +186,9 @@ def test_cross_validation_clones_and_indexes_list_data(tmp_path, monkeypatch, ta
         fold_estimator, fold_transform = fitted[fold]
         assert fold_estimator is not estimator
         assert fold_estimator.is_fitted
-        assert fold_estimator.get_params().get("random_state", fold) == fold
-        assert fold_transform.random_state == fold
+        seed = expected_seeds[fold]
+        assert fold_estimator.get_params().get("random_state", seed) == seed
+        assert fold_transform.random_state == seed
         assert fold_transform.fit_ids_ == tuple(train)
         test_file = (
             tmp_path
@@ -412,6 +420,17 @@ def test_classification_cross_validation_invalid_options(tmp_path):
 
     with pytest.raises(ValueError, match="at least 2 values"):
         classification_cross_validation_folds(X, np.array([0, 0, 0, 1]))
+
+    with pytest.raises(ValueError, match="one seed per fold"):
+        classification_cross_validation(
+            X,
+            np.array([0, 1, 0, 1]),
+            DummyClassifier(),
+            str(tmp_path),
+            cv=2,
+            random_seed=[0, 1, 2],
+            benchmark_time=False,
+        )
 
     with pytest.raises(ValueError, match="At least one must be written"):
         classification_cross_validation(
