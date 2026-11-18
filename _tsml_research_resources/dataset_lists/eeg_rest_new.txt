@@ -1,4 +1,4 @@
 MigraineRest
-PsychosisRestFirst
-PsychosisRestSecond
+PsychosisRestCohort1
+PsychosisRestCohort2
 SleepDeprivation

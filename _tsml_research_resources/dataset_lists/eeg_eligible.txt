@@ -1,6 +1,6 @@
 AdultSeizures
 AffectiveMusic
-AlcoholBandit
+AlcoholUseBandit
 ALSAttention
 Alzheimers
 AlzheimersAuditory
@@ -80,8 +80,8 @@ PhotoStimulation
 PostCovidVigilance
 ProbabilisticFeedback
 PronouncedSpeech
-PsychosisRestFirst
-PsychosisRestSecond
+PsychosisRestCohort1
+PsychosisRestCohort2
 PythonCodeReading
 RestingEyeState
 SchizophreniaConflict

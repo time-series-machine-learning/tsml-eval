@@ -1,7 +1,7 @@
 dataset,sfreq
 AdultSeizures,512
 AffectiveMusic,1000
-AlcoholBandit,500
+AlcoholUseBandit,500
 ALSAttention,256
 Alzheimers,500
 AlzheimersAuditory,250
@@ -89,8 +89,8 @@ PhotoStimulation,500
 PostCovidVigilance,1000
 ProbabilisticFeedback,500
 PronouncedSpeech,1024
-PsychosisRestFirst,1000
-PsychosisRestSecond,1000
+PsychosisRestCohort1,1000
+PsychosisRestCohort2,1000
 PythonCodeReading,256
 RestingEyeState,512
 SchizophreniaConflict,1000

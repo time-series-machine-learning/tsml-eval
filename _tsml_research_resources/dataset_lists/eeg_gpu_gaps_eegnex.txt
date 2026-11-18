@@ -1,6 +1,6 @@
 AcuteTBIVisualMemory
 AdultSeizures
-AlcoholBandit
+AlcoholUseBandit
 FamilialAlzheimersRest
 IllusoryMovement
 LearningDifficulties

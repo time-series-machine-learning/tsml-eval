@@ -1,7 +1,7 @@
 dataset,sfreq,train_groups
 AdultSeizures,512,~/Data/EEG/AdultSeizures/AdultSeizures_id_TRAIN.txt
 AffectiveMusic,1000,~/Data/EEG/AffectiveMusic/AffectiveMusic_id_TRAIN.txt
-AlcoholBandit,500,~/Data/EEG/AlcoholBandit/AlcoholBandit_id_TRAIN.txt
+AlcoholUseBandit,500,~/Data/EEG/AlcoholUseBandit/AlcoholUseBandit_id_TRAIN.txt
 ALSAttention,256,~/Data/EEG/ALSAttention/ALSAttention_id_TRAIN.txt
 Alzheimers,500,~/Data/EEG/Alzheimers/Alzheimers_id_TRAIN.txt
 AlzheimersAuditory,250,~/Data/EEG/AlzheimersAuditory/AlzheimersAuditory_id_TRAIN.txt
@@ -89,8 +89,8 @@ PhotoStimulation,500,~/Data/EEG/PhotoStimulation/PhotoStimulation_id_TRAIN.txt
 PostCovidVigilance,1000,~/Data/EEG/PostCovidVigilance/PostCovidVigilance_id_TRAIN.txt
 ProbabilisticFeedback,500,~/Data/EEG/ProbabilisticFeedback/ProbabilisticFeedback_id_TRAIN.txt
 PronouncedSpeech,1024,~/Data/EEG/PronouncedSpeech/PronouncedSpeech_id_TRAIN.txt
-PsychosisRestFirst,1000,~/Data/EEG/PsychosisRestFirst/PsychosisRestFirst_id_TRAIN.txt
-PsychosisRestSecond,1000,~/Data/EEG/PsychosisRestSecond/PsychosisRestSecond_id_TRAIN.txt
+PsychosisRestCohort1,1000,~/Data/EEG/PsychosisRestCohort1/PsychosisRestCohort1_id_TRAIN.txt
+PsychosisRestCohort2,1000,~/Data/EEG/PsychosisRestCohort2/PsychosisRestCohort2_id_TRAIN.txt
 PythonCodeReading,256,~/Data/EEG/PythonCodeReading/PythonCodeReading_id_TRAIN.txt
 RestingEyeState,512,~/Data/EEG/RestingEyeState/RestingEyeState_id_TRAIN.txt
 SchizophreniaConflict,1000,~/Data/EEG/SchizophreniaConflict/SchizophreniaConflict_id_TRAIN.txt

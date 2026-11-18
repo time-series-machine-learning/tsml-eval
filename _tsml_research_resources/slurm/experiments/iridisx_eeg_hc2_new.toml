@@ -28,7 +28,7 @@ branch = "ajb/slurm-runner"
 data_dir = "{home}/Data/EEG"
 datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_iridis_new.txt"
 # still running on Iridis 6 (farms 4929425, 4929426) on 17 Nov 2026
-exclude_datasets = ["PsychosisRestFirst", "IllusoryMovement", "StylisedFaceEmotion"]
+exclude_datasets = ["PsychosisRestCohort1", "IllusoryMovement", "StylisedFaceEmotion"]
 results_dir = "{home}/Results/EEG"
 resamples = 1
 smallest_datasets_first = true

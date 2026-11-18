@@ -1,7 +1,7 @@
 AcuteTBIVisualMemory
 AdultSeizures
 AffectiveMusic
-AlcoholBandit
+AlcoholUseBandit
 ArithmeticDifficulty
 AuditoryDeviance
 BanditGambling
@@ -23,8 +23,8 @@ ParkinsonsReinforcement
 ParkinsonsWalking
 PostCovidVigilance
 ProbabilisticFeedback
-PsychosisRestFirst
-PsychosisRestSecond
+PsychosisRestCohort1
+PsychosisRestCohort2
 PythonCodeReading
 SchizophreniaConflict
 SchizophreniaMotion
