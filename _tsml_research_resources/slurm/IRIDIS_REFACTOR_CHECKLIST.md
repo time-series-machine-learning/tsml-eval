@@ -19,6 +19,7 @@ tsml-eval checkouts and separate queues.
 | FuzzySemantics | SemanticTargets |
 | PhotoStimulation | DementiaPhotic |
 | CovidSurvivors | PostCovidRest |
+| StrokeMotorImagery | StrokeHandCues |
 
 LongIntervalTask is excluded from the main benchmark. Preserve its archived data
 and results; cancel unfinished EEG experiment tasks through the standard runner

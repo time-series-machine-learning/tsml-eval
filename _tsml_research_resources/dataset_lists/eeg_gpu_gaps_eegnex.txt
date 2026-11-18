@@ -9,6 +9,6 @@ PostCovidVigilance
 SchizophreniaConflict
 SchizophreniaMotion
 SchizophreniaUltimatum
-StrokeMotorImagery
+StrokeHandCues
 StylisedFaceEmotion
 ZosterNeuralgiaSleep

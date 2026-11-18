@@ -75,7 +75,7 @@ SleepDeprivationRest
 SongFamiliarity
 SpatialAttention
 SternbergMemory
-StrokeMotorImagery
+StrokeHandCues
 StylisedFaceEmotion
 TBIAuditoryOddball
 TaskStress

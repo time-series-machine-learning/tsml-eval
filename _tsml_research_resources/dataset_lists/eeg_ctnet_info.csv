@@ -107,7 +107,7 @@ SongFamiliarity,1000,~/Data/EEG/SongFamiliarity/SongFamiliarity_id_TRAIN.txt
 SpatialAttention,1024,~/Data/EEG/SpatialAttention/SpatialAttention_id_TRAIN.txt
 SpellerFlashes,256,~/Data/EEG/SpellerFlashes/SpellerFlashes_id_TRAIN.txt
 SternbergMemory,250,~/Data/EEG/SternbergMemory/SternbergMemory_id_TRAIN.txt
-StrokeMotorImagery,1000,~/Data/EEG/StrokeMotorImagery/StrokeMotorImagery_id_TRAIN.txt
+StrokeHandCues,1000,~/Data/EEG/StrokeHandCues/StrokeHandCues_id_TRAIN.txt
 SymbolAttention,256,~/Data/EEG/SymbolAttention/SymbolAttention_id_TRAIN.txt
 TBIAuditoryOddball,500,~/Data/EEG/TBIAuditoryOddball/TBIAuditoryOddball_id_TRAIN.txt
 VerbalWorkingMemory,500,~/Data/EEG/VerbalWorkingMemory/VerbalWorkingMemory_id_TRAIN.txt

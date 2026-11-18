@@ -35,7 +35,7 @@ SentenceViolations
 SleepDeprivationRest
 SpatialAttention
 SternbergMemory
-StrokeMotorImagery
+StrokeHandCues
 StylisedFaceEmotion
 TBIAuditoryOddball
 VerbalWorkingMemory

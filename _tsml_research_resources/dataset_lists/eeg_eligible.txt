@@ -94,7 +94,7 @@ SongFamiliarity
 SpatialAttention
 SpellerFlashes
 SternbergMemory
-StrokeMotorImagery
+StrokeHandCues
 TBIAuditoryOddball
 VerbalWorkingMemory
 VideoEmotions
