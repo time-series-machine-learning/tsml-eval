@@ -9,6 +9,8 @@
 # 10-20 channel names. LaBraM tasks with empty ch_names cells are not run.
 # These cells also keep problems longer than its 16 s limit out of LaBraM;
 # channel-name coverage changes as source metadata is recovered.
+# REVE/LUNA configurations must instead use ch_names = "{dataset.ch_names_any_length}"
+# to include named problems longer than 16 s. Keep LaBraM on dataset.ch_names.
 #
 # Pretrained weights are read from ~/hf_models (copied from the desktop's
 # D:/hf_models); nothing is downloaded.

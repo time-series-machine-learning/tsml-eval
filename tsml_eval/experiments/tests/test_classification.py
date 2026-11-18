@@ -264,6 +264,7 @@ def test_get_aeon_neuro_baseline(name, expected):
 def test_get_aeon_neuro_generic_baseline(name, expected, setting, value):
     """Test the baselines built from aeon-neuro's generic experimental classes."""
     experimental = pytest.importorskip("aeon_neuro.classification.experimental")
+    pytest.importorskip("braindecode")
     if not hasattr(experimental, expected):
         pytest.skip(f"{expected} is not in the installed aeon-neuro")
     classifier = get_classifier_by_name(name, sfreq=250.0)
@@ -360,6 +361,32 @@ def test_get_labram_channel_names_from_string():
     pytest.importorskip("aeon_neuro.classification.deep_learning._labram")
     classifier = get_classifier_by_name("Labram", ch_names="FP1, FP2,CZ")
     assert classifier.ch_names == ["FP1", "FP2", "CZ"]
+
+
+@pytest.mark.parametrize("name, expected", [
+    ("REVE-FT", "REVEFineTuneClassifier"),
+    ("LUNA-FT", "LUNAFineTuneClassifier"),
+])
+@pytest.mark.parametrize("random_control", [False, True])
+def test_get_spatial_foundation_finetuners(name, expected, random_control, tmp_path):
+    """CLI aliases route spatial metadata and enforce the pretraining control."""
+    experimental = pytest.importorskip("aeon_neuro.classification.experimental")
+    if not hasattr(experimental, expected):
+        pytest.skip(f"{expected} is not in the installed aeon-neuro")
+    groups = tmp_path / "subjects.txt"
+    groups.write_text("a\na\nb\nb\n")
+    alias = name + ("-random" if random_control else "")
+    clf = get_classifier_by_name(
+        alias, random_state=42, sfreq=250, ch_names="F3, Cz,P4",
+        train_groups=str(groups), weights_path="local-weights",
+    )
+    assert type(clf).__name__ == expected
+    assert clf.pretrained is not random_control
+    assert clf.ch_names == ["F3", "Cz", "P4"]
+    assert clf.train_groups == ["a", "a", "b", "b"]
+    assert clf.random_state == 42
+    with pytest.raises(ValueError, match="requires pretrained="):
+        get_classifier_by_name(alias, pretrained=random_control)
 
 
 def test_get_moabb_csp_pipelines():
