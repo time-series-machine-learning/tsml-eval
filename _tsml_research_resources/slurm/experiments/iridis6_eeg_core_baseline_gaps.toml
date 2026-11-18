@@ -1,0 +1,25 @@
+# Core comparison cells missing and unscheduled in the registry on 18 Nov 2026.
+# Existing results are skipped; one farm stays within the shared four-node cap.
+[experiment]
+name = "eeg-core-baseline-gaps-6"
+cluster = "iridis6"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_core_baseline_gaps.txt"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+[estimators]
+DistanceBased = ["RiemannianMDM-OAS", "RiemannianKNN-OAS"]
+Tabular = ["RandomForest", "SVM", "LogisticRegression"]
+
+[slurm]
+env_name = "tsml-eval"
+max_jobs = 1
+memory_gb = [16, 32, 64, 128, 256, 620]
+top_up = true
+top_up_hours = 36
