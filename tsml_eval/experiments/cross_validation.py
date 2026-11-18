@@ -9,10 +9,11 @@ __all__ = [
 ]
 
 import warnings
+from numbers import Integral
 
 import numpy as np
-import pandas as pd
 from aeon.utils.conversion import convert_collection
+from aeon.utils.validation.collection import get_n_cases, get_type, is_equal_length
 from sklearn.base import clone
 from sklearn.model_selection import KFold, StratifiedKFold, check_cv
 
@@ -370,8 +371,8 @@ def regression_cross_validation_folds(X, y, cv=None, groups=None):
 
 
 def _convert_X_y(X, y):
-    if isinstance(X, pd.DataFrame):
-        X = convert_collection(X, "np-list")
+    if get_type(X) not in ("numpy3D", "numpy2D", "np-list"):
+        X = convert_collection(X, "numpy3D" if is_equal_length(X) else "np-list")
     return X, np.asarray(y)
 
 
@@ -384,16 +385,16 @@ def _classification_folds(X, y, cv, groups):
                 "All classes must have at least 2 values to run the default "
                 "cross-validation."
             )
-    if isinstance(cv, int):
-        cv = StratifiedKFold(n_splits=cv, shuffle=True, random_state=0)
+    if isinstance(cv, Integral):
+        cv = StratifiedKFold(n_splits=int(cv), shuffle=True, random_state=0)
     return _split(X, y, cv, groups)
 
 
 def _regression_folds(X, y, cv, groups):
     if cv is None:
         cv = 10
-    if isinstance(cv, int):
-        cv = KFold(n_splits=cv, shuffle=True, random_state=0)
+    if isinstance(cv, Integral):
+        cv = KFold(n_splits=int(cv), shuffle=True, random_state=0)
     return _split(X, y, cv, groups)
 
 
@@ -402,33 +403,45 @@ def _split(X, y, cv, groups):
         warnings.warn(
             "The groups parameter is ignored by pre-computed splits.", stacklevel=4
         )
-    return [
-        (np.asarray(train), np.asarray(test))
-        for train, test in check_cv(cv).split(X, y, groups)
-    ]
+    n_cases = get_n_cases(X)
+    folds = []
+    for fold, split in enumerate(check_cv(cv).split(X, y, groups)):
+        train, test = (
+            np.flatnonzero(idx) if idx.dtype == bool else idx
+            for idx in map(np.asarray, split)
+        )
+        if np.intersect1d(train, test).size > 0:
+            raise ValueError(f"Fold {fold} train and test indices overlap.")
+        all_idx = np.concatenate([train, test])
+        if np.any((all_idx < 0) | (all_idx >= n_cases)):
+            raise ValueError(
+                f"Fold {fold} indices must be between 0 and {n_cases - 1}."
+            )
+        folds.append((train, test))
+    return folds
 
 
 def _check_fold_ids(fold_ids, n_folds):
     if fold_ids is None:
         return list(range(n_folds))
-    if isinstance(fold_ids, int):
+    if isinstance(fold_ids, Integral):
         fold_ids = [fold_ids]
     if any(fold < 0 or fold >= n_folds for fold in fold_ids):
         raise ValueError(f"fold_ids must be between 0 and {n_folds - 1}.")
-    return sorted(set(fold_ids))
+    return sorted({int(fold) for fold in fold_ids})
 
 
 def _fold_seeds(random_seed, n_folds):
     if random_seed is None:
         return list(range(n_folds))
-    if isinstance(random_seed, int):
-        return [random_seed] * n_folds
+    if isinstance(random_seed, Integral):
+        return [int(random_seed)] * n_folds
     if len(random_seed) != n_folds:
         raise ValueError(
             f"random_seed must have one seed per fold, got {len(random_seed)} seeds "
             f"for {n_folds} folds."
         )
-    return list(random_seed)
+    return [int(seed) for seed in random_seed]
 
 
 def _index_cases(X, indices):

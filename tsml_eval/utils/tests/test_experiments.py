@@ -2,6 +2,7 @@
 
 import os
 
+import numpy as np
 import pytest
 from aeon.classification.shapelet_based import ShapeletTransformClassifier
 from aeon.classification.sklearn import RotationForestClassifier
@@ -9,10 +10,12 @@ from aeon.classification.sklearn import RotationForestClassifier
 from tsml_eval.datasets._loaders import load_minimal_chinatown
 from tsml_eval.testing.testing_utils import _TEST_OUTPUT_PATH
 from tsml_eval.utils.experiments import (
+    _check_existing_results,
     _results_present,
     estimator_attributes_to_file,
     timing_benchmark,
 )
+from tsml_eval.utils.results_writing import write_regression_results
 
 
 @pytest.mark.parametrize("split", ["BOTH", "TRAIN", "TEST", None, "invalid"])
@@ -33,6 +36,27 @@ def test_results_present_split_inputs(split):
             "test",
             split=split,
         )
+
+
+@pytest.mark.parametrize("dataset_name", ["Data", "N/A"])
+@pytest.mark.parametrize("resample_id", [None, 0])
+def test_check_existing_results_finds_written_files(
+    tmp_path, dataset_name, resample_id
+):
+    """Test _check_existing_results finds files where the results writer puts them."""
+    write_regression_results(
+        np.arange(3.0),
+        np.arange(3.0),
+        "Est",
+        dataset_name,
+        str(tmp_path),
+        full_path=False,
+        split="TEST",
+        resample_id=resample_id,
+    )
+    assert _check_existing_results(
+        str(tmp_path), "Est", dataset_name, resample_id, False, True, True
+    ) == (False, True)
 
 
 def test_timing_benchmark_invalid_input():

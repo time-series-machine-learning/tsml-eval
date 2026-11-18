@@ -137,7 +137,7 @@ class _RecordingTransform(BaseEstimator):
 @pytest.mark.parametrize("task", ["classification", "regression"])
 @pytest.mark.parametrize(
     ("random_seed", "expected_seeds"),
-    [(None, [0, 1]), (5, [5, 5]), ([3, 4], [3, 4])],
+    [(None, [0, 1]), (np.int64(5), [5, 5]), ([3, 4], [3, 4])],
 )
 def test_cross_validation_clones_and_indexes_list_data(
     tmp_path, monkeypatch, task, random_seed, expected_seeds
@@ -286,7 +286,7 @@ def test_cross_validation_train_file(tmp_path, task):
         estimator,
         str(tmp_path),
         cv=2,
-        fold_ids=0,
+        fold_ids=np.int64(0),
         build_test_file=False,
         build_train_file=True,
         benchmark_time=False,
@@ -395,6 +395,30 @@ def test_cross_validation_groups_and_precomputed_splits(tmp_path, task):
 
     with pytest.warns(UserWarning, match="ignored by pre-computed splits"):
         get_folds(X, y, cv=folds, groups=groups)
+
+
+def test_cross_validation_precomputed_split_checks():
+    """Test boolean masks become indices and invalid splits are rejected."""
+    X = [np.full((1, 3 + i % 3), float(i)) for i in range(8)]
+    y = np.tile([0, 1], 4)
+    train_mask = np.arange(8) < 4
+
+    folds = classification_cross_validation_folds(X, y, cv=[(train_mask, ~train_mask)])
+    assert folds[0][0].tolist() == [0, 1, 2, 3]
+    assert folds[0][1].tolist() == [4, 5, 6, 7]
+
+    with pytest.raises(ValueError, match="overlap"):
+        classification_cross_validation_folds(X, y, cv=[([0, 1, 2, 3], [3, 4])])
+    with pytest.raises(ValueError, match="between 0 and 7"):
+        classification_cross_validation_folds(X, y, cv=[([-1, 0], [1, 2])])
+    with pytest.raises(ValueError, match="between 0 and 7"):
+        classification_cross_validation_folds(X, y, cv=[([0, 1], [2, 8])])
+
+    for np_fold, int_fold in zip(
+        classification_cross_validation_folds(X, y, cv=np.int64(2)),
+        classification_cross_validation_folds(X, y, cv=2),
+    ):
+        assert np.array_equal(np_fold[1], int_fold[1])
 
 
 @pytest.mark.parametrize("fold_ids", [-1, [10], [0, 10]])
