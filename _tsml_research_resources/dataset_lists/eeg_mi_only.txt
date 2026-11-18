@@ -20,7 +20,7 @@ ImaginedHandsPhysiology
 ImaginedHandsRobot
 ImaginedHandsStroke
 ImaginedLeftRightHand
-ImaginedLeftRightHandRest
 ImaginedOpenCloseFist
 ImaginedRightHandFeet
-ImaginedRightHandFeetRest
+ImaginedArmGraspElbow
+ImaginedLimbActions

@@ -25,12 +25,12 @@ ImaginedHandsPhysiology
 ImaginedHandsRobot
 ImaginedHandsStroke
 ImaginedLeftRightHand
-ImaginedLeftRightHandRest
 ImaginedOpenCloseFist
 ImaginedRightHandFeet
-ImaginedRightHandFeetRest
 ImaginedSitStand
 SpellerFlashes
 VisualSubjects
 WalkingTargets
 WordRelatedness
+ImaginedArmGraspElbow
+ImaginedLimbActions

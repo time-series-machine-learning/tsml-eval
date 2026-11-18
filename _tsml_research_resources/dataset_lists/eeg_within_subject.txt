@@ -37,3 +37,5 @@ GameTargets
 SymbolAttention
 WalkingTargets
 WordRelatedness
+ImaginedArmGraspElbow
+ImaginedLimbActions

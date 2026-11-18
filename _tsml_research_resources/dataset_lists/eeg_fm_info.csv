@@ -119,3 +119,5 @@ IllusoryMovement,500,~/Data/EEG/IllusoryMovement/IllusoryMovement_id_TRAIN.txt,u
 StylisedFaceEmotion,500,~/Data/EEG/StylisedFaceEmotion/StylisedFaceEmotion_id_TRAIN.txt,uV,"Fp1,Fz,F3,F7,FC5,FC1,Cz,C3,T7,CP5,CP1,P3,P7,Pz,O1,Oz,O2,P4,P8,CP6,CP2,C4,T8,FC6,FC2,F4,F8,Fp2","Fp1,Fz,F3,F7,FC5,FC1,Cz,C3,T7,CP5,CP1,P3,P7,Pz,O1,Oz,O2,P4,P8,CP6,CP2,C4,T8,FC6,FC2,F4,F8,Fp2"
 HaaglandenSleepStages,256,~/Data/EEG/HaaglandenSleepStages/HaaglandenSleepStages_id_TRAIN.txt,uV,"F4,C4,O2,C3","F4,C4,O2,C3"
 TaskStress,128,~/Data/EEG/TaskStress/TaskStress_id_TRAIN.txt,uV,"Cz,Fz,Fp1,F7,F3,FC1,C3,FC5,FT9,T7,CP5,CP1,P3,P7,PO9,O1,Pz,Oz,O2,PO10,P8,P4,CP2,CP6,T8,FT10,FC6,C4,FC2,F4,F8,Fp2","Cz,Fz,Fp1,F7,F3,FC1,C3,FC5,FT9,T7,CP5,CP1,P3,P7,PO9,O1,Pz,Oz,O2,PO10,P8,P4,CP2,CP6,T8,FT10,FC6,C4,FC2,F4,F8,Fp2"
+ImaginedArmGraspElbow,1000,~/Data/EEG/ImaginedArmGraspElbow/ImaginedArmGraspElbow_id_TRAIN.txt,uV,,
+ImaginedLimbActions,500,~/Data/EEG/ImaginedLimbActions/ImaginedLimbActions_id_TRAIN.txt,uV,"C3,C4,Cz,CP1,CP2,CP5,CP6,FC1,FC2,FC5,FC6,Fp2,O1,O2,Oz,P3,P4,Pz","C3,C4,Cz,CP1,CP2,CP5,CP6,FC1,FC2,FC5,FC6,Fp2,O1,O2,Oz,P3,P4,Pz"

@@ -3,14 +3,12 @@ FingerMovements
 ImaginedGripForce
 SelfRegulationSCP1
 SelfRegulationSCP2
-ImaginedRightHandFeetRest
 FlickerAttention
 ImaginedDominantHandRest
 ImaginedRightHandFeet
 ImaginedAnkleRest
 WirelessFlicker
 DementiaPhotic
-ImaginedLeftRightHandRest
 RestingEyeState
 FlickerTargets
 WalkingTargets
@@ -48,3 +46,5 @@ FeetHands
 ImaginedOpenCloseFist
 OpenCloseFist
 ImaginedFeetHands
+ImaginedArmGraspElbow
+ImaginedLimbActions

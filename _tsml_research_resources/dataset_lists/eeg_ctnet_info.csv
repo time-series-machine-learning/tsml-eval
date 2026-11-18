@@ -127,3 +127,5 @@ IllusoryMovement,500,~/Data/EEG/IllusoryMovement/IllusoryMovement_id_TRAIN.txt
 StylisedFaceEmotion,500,~/Data/EEG/StylisedFaceEmotion/StylisedFaceEmotion_id_TRAIN.txt
 HaaglandenSleepStages,256,~/Data/EEG/HaaglandenSleepStages/HaaglandenSleepStages_id_TRAIN.txt
 TaskStress,128,~/Data/EEG/TaskStress/TaskStress_id_TRAIN.txt
+ImaginedArmGraspElbow,1000,~/Data/EEG/ImaginedArmGraspElbow/ImaginedArmGraspElbow_id_TRAIN.txt
+ImaginedLimbActions,500,~/Data/EEG/ImaginedLimbActions/ImaginedLimbActions_id_TRAIN.txt

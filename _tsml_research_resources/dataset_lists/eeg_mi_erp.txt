@@ -20,13 +20,13 @@ ImaginedHandsPhysiology
 ImaginedHandsRobot
 ImaginedHandsStroke
 ImaginedLeftRightHand
-ImaginedLeftRightHandRest
 ImaginedOpenCloseFist
 ImaginedRightHandFeet
-ImaginedRightHandFeetRest
 ALSAttention
 SpellerFlashes
 VisualSubjects
 GameTargets
 WalkingTargets
 WordRelatedness
+ImaginedArmGraspElbow
+ImaginedLimbActions

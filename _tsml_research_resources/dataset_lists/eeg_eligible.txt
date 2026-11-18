@@ -53,10 +53,8 @@ ImaginedHandsRobot
 ImaginedHandsStroke
 ImaginedHandTraining
 ImaginedLeftRightHand
-ImaginedLeftRightHandRest
 ImaginedOpenCloseFist
 ImaginedRightHandFeet
-ImaginedRightHandFeetRest
 InnerSpeech
 InternalAttention
 ImaginedDominantHandRest
@@ -115,3 +113,5 @@ IllusoryMovement
 StylisedFaceEmotion
 HaaglandenSleepStages
 TaskStress
+ImaginedArmGraspElbow
+ImaginedLimbActions

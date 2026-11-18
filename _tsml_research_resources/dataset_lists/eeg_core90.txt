@@ -41,10 +41,8 @@ ImaginedHandsPhysiology
 ImaginedHandsRobot
 ImaginedHandsStroke
 ImaginedLeftRightHand
-ImaginedLeftRightHandRest
 ImaginedOpenCloseFist
 ImaginedRightHandFeet
-ImaginedRightHandFeetRest
 ImaginedSitStand
 InternalAttention
 LearningDifficulties
@@ -87,3 +85,5 @@ VideoEmotions
 VisualSymmetry
 WordRelatedness
 ZosterNeuralgiaSleep
+ImaginedArmGraspElbow
+ImaginedLimbActions
