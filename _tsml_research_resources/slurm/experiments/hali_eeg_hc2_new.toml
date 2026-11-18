@@ -18,7 +18,7 @@ data_dir = "{home}/Data/EEG"
 datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_not_on_iridis.txt"
 exclude_datasets = [
     "MigraineRest", "PsychosisRestCohort1", "PsychosisRestCohort2", "SleepDeprivationRest",
-    "HaaglandenSleepStages", "DepressionRest",  # HC2 runs on Iridis X (iridisx_eeg_hc2_new.toml)
+    "HaaglandenSleepStages", "DepressionRest", "AdultADHDAttention",  # HC2 runs on Iridis X (iridisx_eeg_hc2_new.toml)
 ]
 exclude_tasks = ["TDE|TaskStress|0"]  # TDE remains paused for new problems
 results_dir = "{home}/Results/EEG"

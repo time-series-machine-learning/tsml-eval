@@ -130,3 +130,4 @@ TaskStress,128,~/Data/EEG/TaskStress/TaskStress_id_TRAIN.txt
 ImaginedArmGraspElbow,1000,~/Data/EEG/ImaginedArmGraspElbow/ImaginedArmGraspElbow_id_TRAIN.txt
 ImaginedLimbActions,500,~/Data/EEG/ImaginedLimbActions/ImaginedLimbActions_id_TRAIN.txt
 DepressionRest,500,~/Data/EEG/DepressionRest/DepressionRest_id_TRAIN.txt
+AdultADHDAttention,512,~/Data/EEG/AdultADHDAttention/AdultADHDAttention_id_TRAIN.txt
