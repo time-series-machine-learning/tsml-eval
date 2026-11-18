@@ -14,7 +14,6 @@ FaceStimuli
 FamilialAlzheimersRest
 FlankerConflict
 SemanticTargets
-HaaglandenSleepStages
 IllusoryMovement
 ImaginedAnkleRest
 ImaginedArmMovements
