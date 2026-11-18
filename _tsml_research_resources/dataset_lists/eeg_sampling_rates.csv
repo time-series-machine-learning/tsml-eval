@@ -129,3 +129,4 @@ HaaglandenSleepStages,256
 TaskStress,128
 ImaginedArmGraspElbow,1000
 ImaginedLimbActions,500
+DepressionRest,500
