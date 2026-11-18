@@ -8,7 +8,17 @@ to the repository with its code, results and notebooks.
 
 {doc}`Classifying Unequal Length Time Series with HIVE-COTE 2.0 (2026) <publications/classification/unequal_length_hc2/unequal_length_hc2>`
 
+{doc}`e-SMOTE: A Train Set Rebalancing Algorithm for Time Series Classification (2025) <publications/classification/esmote/esmote>`
+
 {doc}`Bake off redux: a review and experimental evaluation of recent time series classification algorithms (2024) <publications/y2023/tsc_bakeoff/README>`
+
+{doc}`HIVE-COTE 2.0: a new meta ensemble for time series classification (2021) <publications/classification/hivecote2/hivecote2>`
+
+{doc}`The great multivariate time series classification bake off: a review and experimental evaluation of recent algorithmic advances (2021) <publications/classification/multivariate_bakeoff/multivariate_bakeoff>`
+
+{doc}`The Temporal Dictionary Ensemble (TDE) Classifier for Time Series Classification (2020) <publications/classification/tde/tde>`
+
+{doc}`The Canonical Interval Forest (CIF) Classifier for Time Series Classification (2020) <publications/classification/cif/cif>`
 
 ## Clustering
 
