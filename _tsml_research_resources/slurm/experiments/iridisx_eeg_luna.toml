@@ -1,0 +1,41 @@
+# LUNA Base, full encoder fine-tuning, split from eeg-reve-luna-x (18 Nov 2026) so it runs on
+# the a100 partition alongside REVE on i7_h200. Same estimator settings, snapshot and weights
+# as eeg-reve-luna-x; results land in the same place, so nothing runs twice.
+[experiment]
+name = "eeg-luna-x"
+cluster = "iridisx"
+resources = "gpu-a100"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval-gpu"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_core90.txt"
+dataset_info = "{repo}/_tsml_research_resources/dataset_lists/eeg_fm_info.csv"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+[estimators]
+DeepLearning = ["LUNA-FT"]
+
+[estimator_kwargs."LUNA-FT"]
+sfreq = "{dataset.sfreq}"
+input_units = "{dataset.input_units}"
+train_groups = "{dataset.train_groups}"
+ch_names = "{dataset.ch_names_any_length}"
+weights_path = "/home/ajb2u23/hf_models/PulpBio--LUNA/LUNA_base.bin"
+batch_size = 64
+device = "cuda"
+verbose = true
+variant = "base"
+
+[slurm]
+env_name = "tsml-eval-torch"
+gpu_check = "torch"
+memory_gb = [64, 128]
+max_active = 2  # a100 QoS caps a user at 2 GPUs
+setup = [
+  'export PYTHONNOUSERSITE=1 HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1',
+  'export PYTHONPATH=/home/ajb2u23/Code/aeon-neuro-fm-20261118:$PYTHONPATH',
+  'cd /home/ajb2u23/Code/aeon-neuro-fm-20261118 && sha256sum --quiet -c SNAPSHOT.sha256',
+]

@@ -17,7 +17,7 @@ resamples = 1
 smallest_datasets_first = true
 
 [estimators]
-DeepLearning = ["REVE-FT", "LUNA-FT"]
+DeepLearning = ["REVE-FT"]  # LUNA moved to iridisx_eeg_luna.toml (a100 partition), 18 Nov 2026
 
 [estimator_kwargs."REVE-FT"]
 sfreq = "{dataset.sfreq}"
@@ -30,16 +30,6 @@ device = "cuda"
 verbose = true
 positions_path = "/home/ajb2u23/hf_models/brain-bzh--reve-base/reve_positions.json"
 
-[estimator_kwargs."LUNA-FT"]
-sfreq = "{dataset.sfreq}"
-input_units = "{dataset.input_units}"
-train_groups = "{dataset.train_groups}"
-ch_names = "{dataset.ch_names_any_length}"
-weights_path = "/home/ajb2u23/hf_models/PulpBio--LUNA/LUNA_base.bin"
-batch_size = 64
-device = "cuda"
-verbose = true
-variant = "base"
 
 [slurm]
 env_name = "tsml-eval-torch"
