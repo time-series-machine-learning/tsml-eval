@@ -63,3 +63,14 @@ explicitly supplied.
 Desktop migration reports and Hali backup locations are recorded in the local,
 untracked `CODEX_HANDOVER.md` and `analysis/`. No cluster downloads or package
 installations are needed for these name changes.
+
+## MI replacements (18 Nov)
+
+ImaginedArmGraspElbow and ImaginedLimbActions replace ImaginedLeftRightHandRest and
+ImaginedRightHandFeetRest in the benchmark and MI lists (commit 522c3e8). Their data is on
+the desktop (`C:/Data/EEG`) and Hali only. They run on Hali through `eeg_not_on_iridis.txt`.
+Before restarting any Iridis controller on the new commit, either copy their data to Iridis or
+exclude them from Iridis configs that read `eeg_core90.txt`, `eeg_eligible.txt` or the MI
+lists. Otherwise tasks will fail on missing data or duplicate Hali's work. Cancel unfinished
+Iridis tasks on the two old problems with the standard runner (Hali's were cancelled
+18 Nov). Keep them in `eeg_within_subject.txt`.
