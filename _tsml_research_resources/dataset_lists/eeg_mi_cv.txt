@@ -3,6 +3,7 @@ GameTargets
 ImaginedAnkleRest
 ImaginedArmMovements
 ImaginedArmTasks
+ImaginedDominantHandRest
 ImaginedFeetHands
 ImaginedFingers
 ImaginedGrasps
@@ -28,8 +29,7 @@ ImaginedLeftRightHandRest
 ImaginedOpenCloseFist
 ImaginedRightHandFeet
 ImaginedRightHandFeetRest
-LowCost
-SitStand
+ImaginedSitStand
 SpellerFlashes
 VisualSubjects
 WalkingTargets

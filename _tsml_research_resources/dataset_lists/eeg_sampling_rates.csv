@@ -65,7 +65,7 @@ ImaginedRightHandFeetRest,250
 InnerSpeech,1024
 InternalAttention,250
 LongIntervalTask,500
-LowCost,125
+ImaginedDominantHandRest,125
 MatchingPennies,5000
 MatchWords,1000
 MentalArithmetic,200
@@ -100,7 +100,7 @@ SelfRegulationSCP1,256
 SelfRegulationSCP2,256
 SentenceViolations,500
 ShortIntervalTask,500
-SitStand,250
+ImaginedSitStand,250
 Sleep,100
 SleepDeprivation,500
 SongFamiliarity,1000

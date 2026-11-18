@@ -5,7 +5,7 @@ SelfRegulationSCP1
 SelfRegulationSCP2
 ImaginedRightHandFeetRest
 FlickerAttention
-LowCost
+ImaginedDominantHandRest
 ImaginedRightHandFeet
 ImaginedAnkleRest
 WirelessFlicker
@@ -34,7 +34,7 @@ ImaginedHandsCrossSession
 ParkinsonsRestUCSD
 ImaginedHandsOnline
 ImaginedHandsStroke
-SitStand
+ImaginedSitStand
 SongFamiliarity
 MatchingPennies
 WordRelatedness

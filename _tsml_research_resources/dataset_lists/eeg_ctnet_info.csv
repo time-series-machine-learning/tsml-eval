@@ -65,7 +65,7 @@ ImaginedRightHandFeetRest,250,~/Data/EEG/ImaginedRightHandFeetRest/ImaginedRight
 InnerSpeech,1024,~/Data/EEG/InnerSpeech/InnerSpeech_id_TRAIN.txt
 InternalAttention,250,~/Data/EEG/InternalAttention/InternalAttention_id_TRAIN.txt
 LongIntervalTask,500,~/Data/EEG/LongIntervalTask/LongIntervalTask_id_TRAIN.txt
-LowCost,125,~/Data/EEG/LowCost/LowCost_id_TRAIN.txt
+ImaginedDominantHandRest,125,~/Data/EEG/ImaginedDominantHandRest/ImaginedDominantHandRest_id_TRAIN.txt
 MatchingPennies,5000,~/Data/EEG/MatchingPennies/MatchingPennies_id_TRAIN.txt
 MatchWords,1000,none
 MentalArithmetic,200,~/Data/EEG/MentalArithmetic/MentalArithmetic_id_TRAIN.txt
@@ -100,7 +100,7 @@ SelfRegulationSCP1,256,none
 SelfRegulationSCP2,256,none
 SentenceViolations,500,~/Data/EEG/SentenceViolations/SentenceViolations_id_TRAIN.txt
 ShortIntervalTask,500,~/Data/EEG/ShortIntervalTask/ShortIntervalTask_id_TRAIN.txt
-SitStand,250,~/Data/EEG/SitStand/SitStand_id_TRAIN.txt
+ImaginedSitStand,250,~/Data/EEG/ImaginedSitStand/ImaginedSitStand_id_TRAIN.txt
 Sleep,100,none
 SleepDeprivation,500,~/Data/EEG/SleepDeprivation/SleepDeprivation_id_TRAIN.txt
 SongFamiliarity,1000,~/Data/EEG/SongFamiliarity/SongFamiliarity_id_TRAIN.txt

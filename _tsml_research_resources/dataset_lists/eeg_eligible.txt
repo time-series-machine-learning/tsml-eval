@@ -60,7 +60,7 @@ ImaginedRightHandFeetRest
 InnerSpeech
 InternalAttention
 LongIntervalTask
-LowCost
+ImaginedDominantHandRest
 MatchingPennies
 MentalArithmetic
 MigraineRest
@@ -91,7 +91,7 @@ SelfRegulationSCP1
 SelfRegulationSCP2
 SentenceViolations
 ShortIntervalTask
-SitStand
+ImaginedSitStand
 SleepDeprivation
 SongFamiliarity
 SpatialAttention
