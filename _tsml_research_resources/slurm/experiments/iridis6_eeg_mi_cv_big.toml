@@ -30,9 +30,6 @@ datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_mi_erp.txt"  # 26 
 results_dir = "{home}/Results/EEG-CV"
 cv_folds = 10
 smallest_datasets_first = true
-# SymbolAttention (26 GB, ~700k trials) is cross-validated only by the cheap
-# classifiers (iridisx_eeg_mi_cv.toml): here it would hold the 4 nodes for weeks.
-exclude_datasets = ["SymbolAttention"]
 extra_args = ["-ch", "-chi", "420"]  # RotationForest checkpoints; others ignore it
 retry_timeouts = true
 max_attempts = 4
