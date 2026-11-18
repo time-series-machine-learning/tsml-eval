@@ -543,12 +543,7 @@ def write_results_to_tsml_format(
 
     # If the full directory path is not passed, make the standard structure
     if not full_path:
-        d = (
-            ""
-            if dataset_name is None or dataset_name == "" or dataset_name == "N/A"
-            else f"{dataset_name}/"
-        )
-        file_path = f"{file_path}/{estimator_name}/Predictions/{d}"
+        file_path = _predictions_path(file_path, estimator_name, dataset_name)
 
     os.makedirs(file_path, exist_ok=True)
 
@@ -612,3 +607,11 @@ def write_results_to_tsml_format(
                 for j in predicted_probabilities[i]:
                     file.write(f",{j}")
             file.write("\n")
+
+
+def _predictions_path(results_path, estimator_name, dataset_name):
+    """Return the directory results files are written to for an estimator."""
+    path = f"{results_path}/{estimator_name}/Predictions"
+    if dataset_name is None or dataset_name == "" or dataset_name == "N/A":
+        return path
+    return f"{path}/{dataset_name}"
