@@ -7,7 +7,7 @@ BanditGambling
 CognitiveLoadTasks
 FaceStimuli
 FlankerConflict
-FuzzySemantics
+SemanticTargets
 ImaginedFingers
 InternalAttention
 MigraineRest
@@ -26,7 +26,7 @@ SchizophreniaConflict
 SchizophreniaMotion
 SchizophreniaUltimatum
 SentenceViolations
-SleepDeprivation
+SleepDeprivationRest
 SpatialAttention
 SternbergMemory
 StrokeMotorImagery

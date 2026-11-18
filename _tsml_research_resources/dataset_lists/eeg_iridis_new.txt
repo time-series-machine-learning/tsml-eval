@@ -9,7 +9,7 @@ CognitiveLoadTasks
 FaceStimuli
 FamilialAlzheimersRest
 FlankerConflict
-FuzzySemantics
+SemanticTargets
 ImaginedFingers
 InternalAttention
 LearningDifficulties
@@ -30,7 +30,7 @@ SchizophreniaConflict
 SchizophreniaMotion
 SchizophreniaUltimatum
 SentenceViolations
-SleepDeprivation
+SleepDeprivationRest
 SpatialAttention
 SternbergMemory
 StrokeMotorImagery

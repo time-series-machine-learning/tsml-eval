@@ -13,7 +13,7 @@ CovidSurvivors
 FaceStimuli
 FamilialAlzheimersRest
 FlankerConflict
-FuzzySemantics
+SemanticTargets
 HaaglandenSleepStages
 IllusoryMovement
 ImaginedAnkleRest
@@ -74,7 +74,7 @@ SchizophreniaMotion
 SchizophreniaUltimatum
 SentenceViolations
 ParkinsonsShortInterval
-SleepDeprivation
+SleepDeprivationRest
 SongFamiliarity
 SpatialAttention
 SternbergMemory

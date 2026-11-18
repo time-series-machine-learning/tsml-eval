@@ -30,7 +30,7 @@ FlankerConflict,500
 FlickerAttention,256
 FlickerSymbols,250
 FlickerTargets,256
-FuzzySemantics,200
+SemanticTargets,200
 GameTargets,250
 HandMovementDirection,400
 ImaginedAnkleRest,250
@@ -102,7 +102,7 @@ SentenceViolations,500
 ParkinsonsShortInterval,500
 ImaginedSitStand,250
 Sleep,100
-SleepDeprivation,500
+SleepDeprivationRest,500
 SongFamiliarity,1000
 SpatialAttention,1024
 SpellerFlashes,256

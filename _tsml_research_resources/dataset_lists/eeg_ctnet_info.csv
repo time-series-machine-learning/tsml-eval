@@ -30,7 +30,7 @@ FlankerConflict,500,~/Data/EEG/FlankerConflict/FlankerConflict_id_TRAIN.txt
 FlickerAttention,256,~/Data/EEG/FlickerAttention/FlickerAttention_id_TRAIN.txt
 FlickerSymbols,250,~/Data/EEG/FlickerSymbols/FlickerSymbols_id_TRAIN.txt
 FlickerTargets,256,~/Data/EEG/FlickerTargets/FlickerTargets_id_TRAIN.txt
-FuzzySemantics,200,~/Data/EEG/FuzzySemantics/FuzzySemantics_id_TRAIN.txt
+SemanticTargets,200,~/Data/EEG/SemanticTargets/SemanticTargets_id_TRAIN.txt
 GameTargets,250,~/Data/EEG/GameTargets/GameTargets_id_TRAIN.txt
 HandMovementDirection,400,none
 ImaginedAnkleRest,250,~/Data/EEG/ImaginedAnkleRest/ImaginedAnkleRest_id_TRAIN.txt
@@ -102,7 +102,7 @@ SentenceViolations,500,~/Data/EEG/SentenceViolations/SentenceViolations_id_TRAIN
 ParkinsonsShortInterval,500,~/Data/EEG/ParkinsonsShortInterval/ParkinsonsShortInterval_id_TRAIN.txt
 ImaginedSitStand,250,~/Data/EEG/ImaginedSitStand/ImaginedSitStand_id_TRAIN.txt
 Sleep,100,none
-SleepDeprivation,500,~/Data/EEG/SleepDeprivation/SleepDeprivation_id_TRAIN.txt
+SleepDeprivationRest,500,~/Data/EEG/SleepDeprivationRest/SleepDeprivationRest_id_TRAIN.txt
 SongFamiliarity,1000,~/Data/EEG/SongFamiliarity/SongFamiliarity_id_TRAIN.txt
 SpatialAttention,1024,~/Data/EEG/SpatialAttention/SpatialAttention_id_TRAIN.txt
 SpellerFlashes,256,~/Data/EEG/SpellerFlashes/SpellerFlashes_id_TRAIN.txt

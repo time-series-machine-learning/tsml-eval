@@ -1,5 +1,5 @@
 # HC2 components (Arsenal, DrCIF-500, STC, TDE) on the four resting-state problems
-# added on 13 Nov 2026 (MigraineRest, PsychosisRestCohort1/PsychosisRestCohort2, SleepDeprivation),
+# added on 13 Nov 2026 (MigraineRest, PsychosisRestCohort1/PsychosisRestCohort2, SleepDeprivationRest),
 # which only Hali has. Compute nodes, up to 480 GB. Central memory estimates from the
 # finished problems (see hali_eeg_hc2_hmem.toml) are at most about 140 GB (DrCIF-500
 # on PsychosisRestCohort1, 9.1 GB of training data); a task that runs out at 480 GB goes
