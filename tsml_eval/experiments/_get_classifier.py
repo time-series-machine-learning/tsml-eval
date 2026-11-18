@@ -63,6 +63,8 @@ distance_based_classifiers = [
     ["twe", "1nn-twe"],
     "1nn-dtw-cv",
     ["elasticensemble", "ee"],
+    ["fastee", "fast-ee"],
+    ["ts-quad", "tsquad"],
     ["grailclassifier", "grail"],
     ["proximitytree", "proximitytreeclassifier"],
     ["proximityforest", "pf"],
@@ -571,6 +573,25 @@ def _set_classifier_distance_based(
         from aeon.classification.distance_based import ElasticEnsemble
 
         return ElasticEnsemble(random_state=random_state, n_jobs=n_jobs, **kwargs)
+    elif c == "fastee" or c == "fast-ee":
+        from aeon.classification.distance_based import ElasticEnsemble
+
+        return ElasticEnsemble(
+            proportion_of_param_options=0.5,
+            proportion_train_in_param_finding=0.1,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            **kwargs,
+        )
+    elif c == "ts-quad" or c == "tsquad":
+        from aeon.classification.distance_based import ElasticEnsemble
+
+        return ElasticEnsemble(
+            distance_measures=["wdtw", "ddtw", "lcss", "msm"],
+            random_state=random_state,
+            n_jobs=n_jobs,
+            **kwargs,
+        )
     elif c == "1nn-dtw-cv":
         from aeon.classification.distance_based import KNeighborsTimeSeriesClassifier
         from sklearn.model_selection import GridSearchCV
