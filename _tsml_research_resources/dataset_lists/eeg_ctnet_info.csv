@@ -16,7 +16,7 @@ ClinicalSleepStages,200,~/Data/EEG/ClinicalSleepStages/ClinicalSleepStages_id_TR
 CodedFlickerTargets,500,~/Data/EEG/CodedFlickerTargets/CodedFlickerTargets_id_TRAIN.txt
 CodedSymbols,512,~/Data/EEG/CodedSymbols/CodedSymbols_id_TRAIN.txt
 CognitiveLoadTasks,250,~/Data/EEG/CognitiveLoadTasks/CognitiveLoadTasks_id_TRAIN.txt
-CovidSurvivors,200,~/Data/EEG/CovidSurvivors/CovidSurvivors_id_TRAIN.txt
+PostCovidRest,200,~/Data/EEG/PostCovidRest/PostCovidRest_id_TRAIN.txt
 EpilepticSeizures,173.61,none
 EyesOpenShut,128,none
 FaceDetection,250,none

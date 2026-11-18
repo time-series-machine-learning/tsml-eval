@@ -16,7 +16,7 @@ ClinicalSleepStages,200
 CodedFlickerTargets,500
 CodedSymbols,512
 CognitiveLoadTasks,250
-CovidSurvivors,200
+PostCovidRest,200
 EpilepticSeizures,173.61
 EyesOpenShut,128
 FaceDetection,250

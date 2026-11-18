@@ -9,7 +9,7 @@ AuditoryDeviance
 BanditGambling
 ChildhoodSeizures
 CognitiveLoadTasks
-CovidSurvivors
+PostCovidRest
 FaceStimuli
 FamilialAlzheimersRest
 FlankerConflict

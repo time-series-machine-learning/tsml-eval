@@ -14,7 +14,7 @@ ClinicalSleepStages
 CodedFlickerTargets
 CodedSymbols
 CognitiveLoadTasks
-CovidSurvivors
+PostCovidRest
 EyesOpenShut
 FaceStimuli
 FeedbackButton
