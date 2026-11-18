@@ -59,7 +59,6 @@ ImaginedRightHandFeet
 ImaginedRightHandFeetRest
 InnerSpeech
 InternalAttention
-LongIntervalTask
 ImaginedDominantHandRest
 MatchingPennies
 MentalArithmetic
@@ -90,7 +89,7 @@ SchizophreniaUltimatum
 SelfRegulationSCP1
 SelfRegulationSCP2
 SentenceViolations
-ShortIntervalTask
+ParkinsonsShortInterval
 ImaginedSitStand
 SleepDeprivation
 SongFamiliarity

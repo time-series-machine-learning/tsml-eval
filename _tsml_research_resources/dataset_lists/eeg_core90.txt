@@ -48,7 +48,6 @@ ImaginedRightHandFeetRest
 ImaginedSitStand
 InternalAttention
 LearningDifficulties
-LongIntervalTask
 MentalArithmetic
 MigraineRest
 MoralConflict
@@ -74,7 +73,7 @@ SchizophreniaConflict
 SchizophreniaMotion
 SchizophreniaUltimatum
 SentenceViolations
-ShortIntervalTask
+ParkinsonsShortInterval
 SleepDeprivation
 SongFamiliarity
 SpatialAttention

@@ -99,7 +99,7 @@ SchizophreniaUltimatum,2048,~/Data/EEG/SchizophreniaUltimatum/SchizophreniaUltim
 SelfRegulationSCP1,256,none
 SelfRegulationSCP2,256,none
 SentenceViolations,500,~/Data/EEG/SentenceViolations/SentenceViolations_id_TRAIN.txt
-ShortIntervalTask,500,~/Data/EEG/ShortIntervalTask/ShortIntervalTask_id_TRAIN.txt
+ParkinsonsShortInterval,500,~/Data/EEG/ParkinsonsShortInterval/ParkinsonsShortInterval_id_TRAIN.txt
 ImaginedSitStand,250,~/Data/EEG/ImaginedSitStand/ImaginedSitStand_id_TRAIN.txt
 Sleep,100,none
 SleepDeprivation,500,~/Data/EEG/SleepDeprivation/SleepDeprivation_id_TRAIN.txt

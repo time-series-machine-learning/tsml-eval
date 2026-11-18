@@ -99,7 +99,7 @@ SchizophreniaUltimatum,2048
 SelfRegulationSCP1,256
 SelfRegulationSCP2,256
 SentenceViolations,500
-ShortIntervalTask,500
+ParkinsonsShortInterval,500
 ImaginedSitStand,250
 Sleep,100
 SleepDeprivation,500
