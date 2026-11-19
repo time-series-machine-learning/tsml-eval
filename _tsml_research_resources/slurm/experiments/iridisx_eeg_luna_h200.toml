@@ -1,0 +1,42 @@
+# LUNA Base on the i7_h200 partition, freed once REVE-FT finished (19 Nov 2026). Runs the
+# larger share of the core 90 (eeg_luna_h200.txt); iridisx_eeg_luna.toml runs the rest
+# (eeg_luna_a100.txt) on the a100 partition. No problem is on both lists. Same estimator
+# settings, snapshot and weights as eeg-luna-x, and the same results folder.
+[experiment]
+name = "eeg-luna-h200-x"
+cluster = "iridisx"
+resources = "gpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval-gpu"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_luna_h200.txt"
+dataset_info = "{repo}/_tsml_research_resources/dataset_lists/eeg_fm_info.csv"
+results_dir = "{home}/Results/EEG"
+resamples = 1
+smallest_datasets_first = true
+
+[estimators]
+DeepLearning = ["LUNA-FT"]
+
+[estimator_kwargs."LUNA-FT"]
+sfreq = "{dataset.sfreq}"
+input_units = "{dataset.input_units}"
+train_groups = "{dataset.train_groups}"
+ch_names = "{dataset.ch_names_any_length}"
+weights_path = "/home/ajb2u23/hf_models/PulpBio--LUNA/LUNA_base.bin"
+batch_size = 64
+device = "cuda"
+verbose = true
+variant = "base"
+
+[slurm]
+env_name = "tsml-eval-torch"
+gpu_check = "torch"
+memory_gb = [64, 128]
+max_active = 4
+setup = [
+  'export PYTHONNOUSERSITE=1 HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1',
+  'export PYTHONPATH=/home/ajb2u23/Code/aeon-neuro-fm-20261118:$PYTHONPATH',
+  'cd /home/ajb2u23/Code/aeon-neuro-fm-20261118 && sha256sum --quiet -c SNAPSHOT.sha256',
+]
