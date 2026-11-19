@@ -117,6 +117,7 @@ neuro_classifiers = [
     "cbramod-ft-random",
     "labram-ft",
     "labram-ft-random",
+    "labram-ft-mid16",
     "reve-ft",
     "reve-ft-random",
     "luna-ft",
@@ -666,6 +667,14 @@ def _set_classifier_neuro(c, random_state, n_jobs, kwargs):
             raise ValueError(f"{c} requires pretrained={pretrained}")
         kwargs["pretrained"] = pretrained
         return cls(random_state=random_state, **kwargs)
+    elif c == "labram-ft-mid16":
+        # LaBraM-FT on the middle 16 s of each case. The pretrained checkpoint has
+        # 16 temporal embeddings (1 s patches at 200 Hz), so longer windows cannot
+        # be passed whole; shorter windows are left unchanged.
+        _read_train_groups(kwargs)
+        if isinstance(kwargs.get("ch_names"), str):
+            kwargs["ch_names"] = [n.strip() for n in kwargs["ch_names"].split(",")]
+        return _labram_middle_crop(16.0)(random_state=random_state, **kwargs)
     elif c in neuralbench_deep_models:
         from aeon_neuro.classification.experimental import NeuralBenchDeepClassifier
 
@@ -733,6 +742,33 @@ def _read_train_groups(kwargs):
 
             path = Path(groups).expanduser()
             kwargs["train_groups"] = path.read_text(encoding="utf-8").split()
+
+
+def _labram_middle_crop(seconds):
+    """Return a LabramFineTuneClassifier subclass that keeps the middle seconds.
+
+    Cases longer than ``seconds`` at the estimator's ``sfreq`` are cropped to the
+    centred ``seconds`` before preprocessing, in both fit and predict; shorter cases
+    are unchanged. The subclass keeps LaBraM's constructor, so get_params and
+    cloning behave as for LabramFineTuneClassifier.
+    """
+    from aeon_neuro.classification.experimental import LabramFineTuneClassifier
+
+    class LabramMiddleCropFineTuneClassifier(LabramFineTuneClassifier):
+        def _middle(self, X):
+            if self.sfreq is None:
+                raise ValueError("labram-ft-mid16 needs sfreq to crop by seconds.")
+            n_keep = int(round(seconds * self.sfreq))
+            start = (X.shape[2] - n_keep) // 2
+            return X[:, :, start : start + n_keep] if start > 0 else X
+
+        def _fit(self, X, y):
+            return super()._fit(self._middle(X), y)
+
+        def _predict_proba(self, X):
+            return super()._predict_proba(self._middle(X))
+
+    return LabramMiddleCropFineTuneClassifier
 
 
 def _set_classifier_neuro_by_class_name(c, random_state, n_jobs, kwargs):

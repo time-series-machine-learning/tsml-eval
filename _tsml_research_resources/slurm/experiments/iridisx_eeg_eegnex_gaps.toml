@@ -4,6 +4,7 @@
 # Iridis torch env has aeon-neuro e799ee6 (ajb/eeg-baselines); Hali has 2b13d5c,
 # which only adds LR baselines on top, so NeuralBenchDeepClassifier is the same.
 # Before starting, drop from the list any problem Hali has finished or is running.
+# 19 Nov: added TaskStress and the four new core-90 problems, cancelled in Hali eeg-nb-more.
 #
 #   python tsml_slurm.py check experiments/iridisx_eeg_eegnex_gaps.toml
 #   python tsml_slurm.py start experiments/iridisx_eeg_eegnex_gaps.toml
