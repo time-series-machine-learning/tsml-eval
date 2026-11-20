@@ -113,28 +113,32 @@ def run_classification_experiment(
     dataset_name : str, default="N/A"
         Name of dataset.
     resample_id : int or None, default=None
-        Seed for resampling. If set to 0, the default train/test split from file is
-        used. Also used in output file name.
+        Resample id used in the output file names. The data is not resampled.
     data_transforms : transformer, list of transformers or None, default=None
         Transformer(s) to apply to the data before running the experiment.
         If a list, the transformers are applied in order.
         If None, no transformation is applied.
         Calls fit_transform on the training data and transform on the test data.
     transform_train_only : bool, default=False
-        if True, the data_transforms are limited to the training data only.
-    build_test_file : bool, default=True:
-        Whether to generate test files or not. If the classifier can generate its own
-        train probabilities, the classifier will be built but no file will be output.
+        If True, the data transforms are only applied to the training data.
+    build_test_file : bool, default=True
+        Whether to generate test files or not.
     build_train_file : bool, default=False
-        Whether to generate train files or not. If true, it performs a 10-fold
-        cross-validation on the train data and saves. If the classifier can produce its
-        own estimates, those are used instead.
+        Whether to generate train files or not. The train estimate is the classifier's
+        own if it can produce one, otherwise a cross-validation on the train data with
+        up to 10 folds.
     ignore_custom_train_estimate : bool, default=False
-        todo
+        Whether to ignore the classifier's own train estimate. If False and the
+        classifier has the ``capability:train_estimate`` tag, the train file uses its
+        own estimate. Otherwise, a cross-validation on the train data is used.
     attribute_file_path : str or None, default=None
-        todo (only test)
+        Directory to write the fitted classifier's attributes to using
+        ``estimator_attributes_to_file``. Attributes are only written when
+        ``build_test_file`` is True. If None, no attributes are written.
     att_max_shape : int, default=0
-        todo
+        Maximum list shape when writing attributes, passed to
+        ``estimator_attributes_to_file`` as ``max_list_shape``. At 0, estimators in
+        lists are not written. At 1, estimators in one-dimensional lists are written.
     benchmark_time : bool, default=True
         Whether to benchmark the hardware used with a simple function and write the
         results. This will typically take ~2 seconds, but is hardware dependent.
@@ -387,17 +391,25 @@ def load_and_run_classification_experiment(
         If None, no transformation is applied.
         Calls fit_transform on the training data and transform on the test data.
     transform_train_only : bool, default=False
-        if the data_transforms are limited to the training data only.
+        If True, the data transforms are only applied to the training data.
     build_train_file : bool, default=False
-        Whether to generate train files or not. If true, it performs a 10-fold
-        cross-validation on the train data and saves. If the classifier can produce its
-        own estimates, those are used instead.
+        Whether to generate train files or not. The train estimate is the classifier's
+        own if it can produce one, otherwise a cross-validation on the train data with
+        up to 10 folds.
+    write_attributes : bool, default=False
+        Whether to write the fitted classifier's attributes to
+        ``<results_path>/<classifier_name>/Workspace/<dataset>/``. Attributes are only
+        written when the test file is built.
+    att_max_shape : int, default=0
+        Maximum list shape when writing attributes, passed to
+        ``estimator_attributes_to_file`` as ``max_list_shape``. At 0, estimators in
+        lists are not written. At 1, estimators in one-dimensional lists are written.
     benchmark_time : bool, default=True
         Whether to benchmark the hardware used with a simple function and write the
         results. This will typically take ~2 seconds, but is hardware dependent.
     overwrite : bool, default=False
-        If set to False, this will only build results if there is not a result file
-        already present. If True, it will overwrite anything already there.
+        If False, existing result files are skipped. If True, existing files are
+        overwritten.
     predefined_resample : bool, default=False
         Read a predefined resample from file instead of performing a resample. If True
         the file format must include the resample_id at the end of the dataset name i.e.
@@ -503,26 +515,30 @@ def run_regression_experiment(
     dataset_name : str, default="N/A"
         Name of dataset.
     resample_id : int or None, default=None
-        Seed for resampling. If set to 0, the default train/test split from file is
-        used. Also used in output file name.
+        Resample id used in the output file names. The data is not resampled.
     data_transforms : transformer, list of transformers or None, default=None
         Transformer(s) to apply to the data before running the experiment.
         If a list, the transformers are applied in order.
         If None, no transformation is applied.
         Calls fit_transform on the training data and transform on the test data.
-    build_test_file : bool, default=True:
-        Whether to generate test files or not. If the regressor can generate its own
-        train predictions, the regressor will be built but no file will be output.
+    build_test_file : bool, default=True
+        Whether to generate test files or not.
     build_train_file : bool, default=False
-        Whether to generate train files or not. If true, it performs a 10-fold
-        cross-validation on the train data and saves. If the regressor can produce its
-        own estimates, those are used instead.
+        Whether to generate train files or not. The train estimate is the regressor's
+        own if it can produce one, otherwise a cross-validation on the train data with
+        up to 10 folds.
     ignore_custom_train_estimate : bool, default=False
-        todo
+        Whether to ignore the regressor's own train estimate. If False and the
+        regressor has the ``capability:train_estimate`` tag, the train file uses its
+        own estimate. Otherwise, a cross-validation on the train data is used.
     attribute_file_path : str or None, default=None
-        todo (only test)
+        Directory to write the fitted regressor's attributes to using
+        ``estimator_attributes_to_file``. Attributes are only written when
+        ``build_test_file`` is True. If None, no attributes are written.
     att_max_shape : int, default=0
-        todo
+        Maximum list shape when writing attributes, passed to
+        ``estimator_attributes_to_file`` as ``max_list_shape``. At 0, estimators in
+        lists are not written. At 1, estimators in one-dimensional lists are written.
     benchmark_time : bool, default=True
         Whether to benchmark the hardware used with a simple function and write the
         results. This will typically take ~2 seconds, but is hardware dependent.
@@ -725,15 +741,23 @@ def load_and_run_regression_experiment(
         If None, no transformation is applied.
         Calls fit_transform on the training data and transform on the test data.
     build_train_file : bool, default=False
-        Whether to generate train files or not. If true, it performs a 10-fold
-        cross-validation on the train data and saves. If the regressor can produce its
-        own estimates, those are used instead.
+        Whether to generate train files or not. The train estimate is the regressor's
+        own if it can produce one, otherwise a cross-validation on the train data with
+        up to 10 folds.
+    write_attributes : bool, default=False
+        Whether to write the fitted regressor's attributes to
+        ``<results_path>/<regressor_name>/Workspace/<dataset>/``. Attributes are only
+        written when the test file is built.
+    att_max_shape : int, default=0
+        Maximum list shape when writing attributes, passed to
+        ``estimator_attributes_to_file`` as ``max_list_shape``. At 0, estimators in
+        lists are not written. At 1, estimators in one-dimensional lists are written.
     benchmark_time : bool, default=True
         Whether to benchmark the hardware used with a simple function and write the
         results. This will typically take ~2 seconds, but is hardware dependent.
     overwrite : bool, default=False
-        If set to False, this will only build results if there is not a result file
-        already present. If True, it will overwrite anything already there.
+        If False, existing result files are skipped. If True, existing files are
+        overwritten.
     predefined_resample : bool, default=False
         Read a predefined resample from file instead of performing a resample. If True
         the file format must include the resample_id at the end of the dataset name i.e.
@@ -830,15 +854,15 @@ def run_clustering_experiment(
         Clusterer to be used in the experiment.
     results_path : str
         Location of where to write results. Any required directories will be created.
-    X_test : np.ndarray or list of np.ndarray
+    X_test : np.ndarray, list of np.ndarray or None, default=None
         The data used to test the trained clusterer. Numpy array or list of numpy
         arrays in the ``aeon`` data format.
-    y_test : np.array
+    y_test : np.array or None, default=None
         Testing data class labels. One label per case in the testing data using the
         same ordering.
     n_clusters : int or None, default=None
         Number of clusters to use if the clusterer has an `n_clusters` parameter.
-        If None, the clusterers default is used. If -1, the number of classes in the
+        If None, the clusterer's default is used. If -1, the number of classes in the
         dataset is used.
 
         The `n_clusters` parameter for arguments which are estimators will also be
@@ -852,19 +876,25 @@ def run_clustering_experiment(
     dataset_name : str, default="N/A"
         Name of dataset.
     resample_id : int or None, default=None
-        Seed for resampling. If set to 0, the default train/test split from file is
-        used. Also used in output file name.
+        Resample id used in the output file names. The data is not resampled.
     data_transforms : transformer, list of transformers or None, default=None
         Transformer(s) to apply to the data before running the experiment.
         If a list, the transformers are applied in order.
         If None, no transformation is applied.
         Calls fit_transform on the training data and transform on the test data.
-    build_test_file : bool, default=False:
+    build_test_file : bool, default=False
         Whether to generate test files or not. If True, X_test and y_test must be
         provided, and the clusterer must be able to predict unseen cases.
     build_train_file : bool, default=True
         Whether to generate train files or not. The clusterer is fit using train data
         regardless of input.
+    attribute_file_path : str or None, default=None
+        Directory to write the fitted clusterer's attributes to using
+        ``estimator_attributes_to_file``. If None, no attributes are written.
+    att_max_shape : int, default=0
+        Maximum list shape when writing attributes, passed to
+        ``estimator_attributes_to_file`` as ``max_list_shape``. At 0, estimators in
+        lists are not written. At 1, estimators in one-dimensional lists are written.
     benchmark_time : bool, default=True
         Whether to benchmark the hardware used with a simple function and write the
         results. This will typically take ~2 seconds, but is hardware dependent.
@@ -1110,10 +1140,10 @@ def load_and_run_clustering_experiment(
         Clusterer to be used in the experiment.
     n_clusters : int or None, default=None
         Number of clusters to use if the clusterer has an `n_clusters` parameter.
-        If None, the clusterers default is used. If -1, the number of classes in the
+        If None, the clusterer's default is used. If -1, the number of classes in the
         dataset is used.
 
-        The `n_clusters` parameter for attributes which are estimators will also be
+        The `n_clusters` parameter for arguments which are estimators will also be
         set to this value if it exists.
     clusterer_name : str or None, default=None
         Name of clusterer used in writing results. If None, the name is taken from
@@ -1127,19 +1157,26 @@ def load_and_run_clustering_experiment(
         If None, no transformation is applied.
         Calls fit_transform on the training data and transform on the test data.
     build_test_file : bool, default=False
-        Whether to generate test files or not. If true, the clusterer will assign
+        Whether to generate test files or not. If True, the clusterer will assign
         clusters to the loaded test data, so it must be able to predict unseen cases.
+    write_attributes : bool, default=False
+        Whether to write the fitted clusterer's attributes to
+        ``<results_path>/<clusterer_name>/Workspace/<dataset>/``.
+    att_max_shape : int, default=0
+        Maximum list shape when writing attributes, passed to
+        ``estimator_attributes_to_file`` as ``max_list_shape``. At 0, estimators in
+        lists are not written. At 1, estimators in one-dimensional lists are written.
     benchmark_time : bool, default=True
         Whether to benchmark the hardware used with a simple function and write the
         results. This will typically take ~2 seconds, but is hardware dependent.
     overwrite : bool, default=False
-        If set to False, this will only build results if there is not a result file
-        already present. If True, it will overwrite anything already there.
+        If False, existing result files are skipped. If True, existing files are
+        overwritten.
     predefined_resample : bool, default=False
         Read a predefined resample from file instead of performing a resample. If True
         the file format must include the resample_id at the end of the dataset name i.e.
         <problem_path>/<dataset>/<dataset>+<resample_id>+"_TRAIN.ts".
-    combine_train_test_split: bool, default=False
+    combine_train_test_split : bool, default=False
         Whether the train/test split should be combined. If True then
         the train/test split is combined into a single train set. If False then the
         train/test split is used as normal.
@@ -1245,6 +1282,13 @@ def run_forecasting_experiment(
     random_seed : int or None, default=None
         Indicates what random seed was used as a random_state for the forecaster. Only
         used for the results file name.
+    attribute_file_path : str or None, default=None
+        Directory to write the fitted forecaster's attributes to using
+        ``estimator_attributes_to_file``. If None, no attributes are written.
+    att_max_shape : int, default=0
+        Maximum list shape when writing attributes, passed to
+        ``estimator_attributes_to_file`` as ``max_list_shape``. At 0, estimators in
+        lists are not written. At 1, estimators in one-dimensional lists are written.
     benchmark_time : bool, default=True
         Whether to benchmark the hardware used with a simple function and write the
         results. This will typically take ~2 seconds, but is hardware dependent.
@@ -1351,12 +1395,19 @@ def load_and_run_forecasting_experiment(
     random_seed : int or None, default=None
         Indicates what random seed was used as a random_state for the forecaster. Only
         used for the results file name.
+    write_attributes : bool, default=False
+        Whether to write the fitted forecaster's attributes to
+        ``<results_path>/<forecaster_name>/Workspace/<dataset>/``.
+    att_max_shape : int, default=0
+        Maximum list shape when writing attributes, passed to
+        ``estimator_attributes_to_file`` as ``max_list_shape``. At 0, estimators in
+        lists are not written. At 1, estimators in one-dimensional lists are written.
     benchmark_time : bool, default=True
         Whether to benchmark the hardware used with a simple function and write the
         results. This will typically take ~2 seconds, but is hardware dependent.
     overwrite : bool, default=False
-        If set to False, this will only build results if there is not a result file
-        already present. If True, it will overwrite anything already there.
+        If False, existing result files are skipped. If True, existing files are
+        overwritten.
     """
     if forecaster_name is None:
         forecaster_name = type(forecaster).__name__
