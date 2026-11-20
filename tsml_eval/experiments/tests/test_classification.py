@@ -366,6 +366,8 @@ def test_get_labram_channel_names_from_string():
 @pytest.mark.parametrize("name, expected", [
     ("REVE-FT", "REVEFineTuneClassifier"),
     ("LUNA-FT", "LUNAFineTuneClassifier"),
+    ("EEGPT-FT", "EEGPTFineTuneClassifier"),
+    ("BIOT-FT", "BIOTFineTuneClassifier"),
 ])
 @pytest.mark.parametrize("random_control", [False, True])
 def test_get_spatial_foundation_finetuners(name, expected, random_control, tmp_path):

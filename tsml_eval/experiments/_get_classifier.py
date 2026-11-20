@@ -122,6 +122,10 @@ neuro_classifiers = [
     "reve-ft-random",
     "luna-ft",
     "luna-ft-random",
+    "eegpt-ft",
+    "eegpt-ft-random",
+    "biot-ft",
+    "biot-ft-random",
     # standard EEG baselines: differential entropy (emotion/cognitive state) and
     # TRCA/template CCA (visual evoked potentials; run them band-passed, e.g.
     # TRCA-BP640, as slow drift swamps the raw signal)
@@ -644,6 +648,10 @@ def _set_classifier_neuro(c, random_state, n_jobs, kwargs):
         "reve-ft-random",
         "luna-ft",
         "luna-ft-random",
+        "eegpt-ft",
+        "eegpt-ft-random",
+        "biot-ft",
+        "biot-ft-random",
     ):
         # Fine-tuned foundation models (NeuralBench's finetune_mean recipe); -random
         # is the random-weight control. Need sfreq, input_units, weights_path,
@@ -657,6 +665,8 @@ def _set_classifier_neuro(c, random_state, n_jobs, kwargs):
                 "labram": "LabramFineTuneClassifier",
                 "reve": "REVEFineTuneClassifier",
                 "luna": "LUNAFineTuneClassifier",
+                "eegpt": "EEGPTFineTuneClassifier",
+                "biot": "BIOTFineTuneClassifier",
             }[c.split("-")[0]],
         )
         _read_train_groups(kwargs)
