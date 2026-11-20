@@ -1,0 +1,39 @@
+# MI cross-validation, best in class (20 Nov 2026): EEGNeX-NB, the best deep model on the
+# 89 core problems and on MI alone. Same 36 problems (eeg_mi_cv.txt) and subject-wise
+# folds as eeg-mi-cv-hc2. On Hali's GPUs (the gpu QoS allows 4 per user).
+#
+# train_groups: in CV mode tsml-eval replaces it with the subject IDs of each fold's
+# training cases, so early stopping validates on held-out subjects. The TRAIN-file IDs
+# given here only keep older tsml-eval from silently falling back to a random split
+# (their length does not match a fold, so fit fails loudly).
+#
+#   python tsml_slurm.py check experiments/hali_eeg_mi_cv_eegnex.toml
+#   python tsml_slurm.py start experiments/hali_eeg_mi_cv_eegnex.toml
+
+[experiment]
+name = "eeg-mi-cv-eegnex"
+cluster = "hali"
+resources = "gpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_mi_cv.txt"  # 30 MI + 6 ERP/P300
+dataset_info = "{repo}/_tsml_research_resources/dataset_lists/eeg_ctnet_info.csv"
+results_dir = "{home}/Results/EEG-CV"
+cv_folds = 10
+smallest_datasets_first = true
+
+[estimators]
+DeepLearning = ["EEGNeX-NB"]
+
+[estimator_kwargs."EEGNeX-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[slurm]
+env_name = "tsml-eval"
+gpu_check = "torch"
+memory_gb = [32, 64, 128]
+max_active = 4  # Hali gpu QoS: 4 GPUs per user

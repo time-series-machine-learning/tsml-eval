@@ -92,6 +92,50 @@ def test_experiments_cv_folds_by_subject(tmp_path):
     _check_classification_file_format(str(test_file))
 
 
+class _GroupsMock(DummyClassifier):
+    """Dummy classifier with a train_groups parameter, recording what fit sees."""
+
+    seen = []
+
+    def __init__(self, train_groups=None):
+        self.train_groups = train_groups
+        super().__init__()
+
+    def _fit(self, X, y):
+        _GroupsMock.seen.append((len(y), self.train_groups))
+        return super()._fit(X, y)
+
+
+def test_experiments_cv_folds_set_train_groups(tmp_path):
+    """A train_groups estimator gets the subject IDs of the fold's training cases."""
+    dataset = "MinimalChinatown"
+    data = tmp_path / "data"
+    shutil.copytree(f"{_TEST_DATA_PATH}/{dataset}", data / dataset)
+    # 20 train and 20 test cases, 9 subjects: leave one subject out, 9 folds
+    ids = {
+        "TRAIN": [str(i % 9) for i in range(20)],
+        "TEST": [str((20 + i) % 9) for i in range(20)],
+    }
+    for split, values in ids.items():
+        (data / dataset / f"{dataset}_id_{split}.txt").write_text("\n".join(values))
+
+    _GroupsMock.seen.clear()
+    load_and_run_classification_experiment(
+        str(data),
+        str(tmp_path / "results"),
+        dataset,
+        _GroupsMock(train_groups=["stale"] * 20),
+        classifier_name="GroupsMock",
+        resample_id=3,
+        cv_folds=10,
+    )
+    ((n_train, groups),) = _GroupsMock.seen
+    assert len(groups) == n_train
+    # fold 3 of leave one subject out holds one subject, absent from training
+    assert len(set(groups)) == 8
+    assert set(groups) < set(ids["TRAIN"] + ids["TEST"])
+
+
 _CHECKPOINT_CALLS = []
 
 

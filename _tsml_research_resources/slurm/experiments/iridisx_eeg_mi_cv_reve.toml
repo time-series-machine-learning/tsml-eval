@@ -1,0 +1,50 @@
+# MI cross-validation, best in class (20 Nov 2026): REVE-FT, the best foundation model on
+# the 89 core problems and on MI alone. Same 36 problems (eeg_mi_cv.txt) and subject-wise
+# folds as eeg-mi-cv-hc2. Same estimator settings, snapshot (aeon-neuro-fm-20261118) and
+# weights as eeg-reve-luna-x, on the i7_h200 partition.
+#
+# train_groups: in CV mode tsml-eval replaces it with the subject IDs of each fold's
+# training cases, so early stopping validates on held-out subjects. The TRAIN-file IDs
+# given here only keep older tsml-eval from silently falling back to a random split.
+#
+#   python tsml_slurm.py check experiments/iridisx_eeg_mi_cv_reve.toml
+#   python tsml_slurm.py start experiments/iridisx_eeg_mi_cv_reve.toml
+
+[experiment]
+name = "eeg-mi-cv-reve-x"
+cluster = "iridisx"
+resources = "gpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval-gpu"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_mi_cv.txt"  # 30 MI + 6 ERP/P300
+dataset_info = "{repo}/_tsml_research_resources/dataset_lists/eeg_fm_info.csv"
+results_dir = "{home}/Results/EEG-CV"
+cv_folds = 10
+smallest_datasets_first = true
+
+[estimators]
+DeepLearning = ["REVE-FT"]
+
+[estimator_kwargs."REVE-FT"]
+sfreq = "{dataset.sfreq}"
+input_units = "{dataset.input_units}"
+train_groups = "{dataset.train_groups}"
+ch_names = "{dataset.ch_names_any_length}"
+weights_path = "/home/ajb2u23/hf_models/brain-bzh--reve-base/pytorch_model.bin"
+batch_size = 8
+device = "cuda"
+verbose = true
+positions_path = "/home/ajb2u23/hf_models/brain-bzh--reve-base/reve_positions.json"
+
+[slurm]
+env_name = "tsml-eval-torch"
+gpu_check = "torch"
+memory_gb = [64, 128]
+max_active = 4
+setup = [
+  'export PYTHONNOUSERSITE=1 HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1',
+  'export PYTHONPATH=/home/ajb2u23/Code/aeon-neuro-fm-20261118:$PYTHONPATH',
+  'cd /home/ajb2u23/Code/aeon-neuro-fm-20261118 && sha256sum --quiet -c SNAPSHOT.sha256',
+]

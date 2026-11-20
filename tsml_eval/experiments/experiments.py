@@ -50,6 +50,7 @@ from tsml_eval.utils.experiments import (
 from tsml_eval.utils.memory_recorder import record_max_memory
 from tsml_eval.utils.resampling import (
     cv_fold_data,
+    cv_fold_indices,
     resample_data,
     stratified_resample_data,
 )
@@ -466,7 +467,8 @@ def load_and_run_classification_experiment(
         and "_id_TEST.txt"), every subject is kept on one side of the split and the
         number of folds is at most the number of subjects. Folds are the same for
         every classifier; ``resample_id`` is still the classifier's seed and the
-        results file suffix.
+        results file suffix. A classifier with a ``train_groups`` parameter has it set
+        to the subject IDs of the fold's training cases.
     checkpoint : bool, default=False
         If True and the classifier can checkpoint, save its fit to
         <results_path>/<classifier_name>/Checkpoints/<dataset>/Resample<id>.ckpt
@@ -501,6 +503,15 @@ def load_and_run_classification_experiment(
     )
 
     if cv_folds is not None:
+        groups = load_subject_ids(problem_path, dataset)
+        if groups is not None and "train_groups" in classifier.get_params(deep=False):
+            # the subject IDs of this fold's training cases, for estimators that split
+            # a validation set by subject (a train_groups file follows the TRAIN file,
+            # which is not this fold's training set)
+            train_idx, _ = cv_fold_indices(
+                y_train, y_test, resample_id, cv_folds, groups
+            )
+            classifier.set_params(train_groups=list(groups[train_idx]))
         X_train, y_train, X_test, y_test = cv_fold_data(
             X_train,
             y_train,
@@ -508,7 +519,7 @@ def load_and_run_classification_experiment(
             y_test,
             resample_id,
             n_folds=cv_folds,
-            groups=load_subject_ids(problem_path, dataset),
+            groups=groups,
         )
     elif resample:
         X_train, y_train, X_test, y_test = stratified_resample_data(
