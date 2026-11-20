@@ -63,7 +63,7 @@ def classification_cross_validation(
         The classifier to be evaluated. A clone is fitted for each fold, with its
         ``random_state`` set to the fold id (or ``random_seed``) if it has one.
     results_path : str
-        Path to save results.
+        Location of where to write results. Any required directories will be created.
     cv : int, splitter object, iterable of splits or None, default=None
         Cross-validation strategy, number of folds, or an iterable of ``(train, test)``
         index splits. If None, up to 10-fold stratified cross-validation will be used.
@@ -75,18 +75,25 @@ def classification_cross_validation(
     dataset_name : str, default="N/A"
         Name of dataset.
     build_test_file : bool, default=True
-        Whether to generate test files or not. If the classifier can generate its own
-        train probabilities, the classifier will be built but no file will be output.
+        Whether to generate test files or not.
     build_train_file : bool, default=False
-        Whether to generate a train-estimate file for each selected fold. This uses
-        the classifier's own train estimates when available, otherwise a
-        cross-validation on that fold's training data.
+        Whether to generate train files or not. The train estimate is the classifier's
+        own if it can produce one, otherwise a cross-validation on each fold's
+        training data with up to 10 folds.
     ignore_custom_train_estimate : bool, default=False
-        todo
+        Whether to ignore the classifier's own train estimate. If False and the
+        classifier has the ``capability:train_estimate`` tag, each fold's train file
+        uses its own estimate. Otherwise, a cross-validation on that fold's training
+        data is used.
     attribute_file_path : str or None, default=None
-        todo (only test)
+        Directory to write the fitted classifier's attributes to using
+        ``estimator_attributes_to_file``. Each fold writes to a ``fold{i}``
+        subfolder, where ``i`` is the fold id. Attributes are only written when the
+        fold's test file is built. If None, no attributes are written.
     att_max_shape : int, default=0
-        todo
+        Maximum list shape when writing attributes, passed to
+        ``estimator_attributes_to_file`` as ``max_list_shape``. At 0, estimators in
+        lists are not written. At 1, estimators in one-dimensional lists are written.
     benchmark_time : bool, default=True
         Whether to benchmark the hardware for each selected fold using a simple
         function and write the result. This will typically take ~2 seconds per fold,
@@ -96,7 +103,8 @@ def classification_cross_validation(
         fold, with their ``random_state`` set to the fold id (or ``random_seed``) if
         they have one.
     transform_train_only : bool, default=False
-        If True, apply data transforms only to the training data in each fold.
+        If True, the data transforms are only applied to the training data in each
+        fold.
     overwrite : bool, default=False
         If False, existing fold result files are skipped. If True, existing files are
         overwritten.
@@ -241,7 +249,7 @@ def regression_cross_validation(
         The regressor to be evaluated. A clone is fitted for each fold, with its
         ``random_state`` set to the fold id (or ``random_seed``) if it has one.
     results_path : str
-        Path to save results.
+        Location of where to write results. Any required directories will be created.
     cv : int, splitter object, iterable of splits or None, default=None
         Cross-validation strategy, number of folds, or an iterable of ``(train, test)``
         index splits. If None, 10-fold shuffled cross-validation will be used.
@@ -253,18 +261,25 @@ def regression_cross_validation(
     dataset_name : str, default="N/A"
         Name of dataset.
     build_test_file : bool, default=True
-        Whether to generate test files or not. If the regressor can generate its own
-        train predictions, the regressor will be built but no file will be output.
+        Whether to generate test files or not.
     build_train_file : bool, default=False
-        Whether to generate a train-estimate file for each selected fold. This uses
-        the regressor's own train estimates when available, otherwise a
-        cross-validation on that fold's training data.
+        Whether to generate train files or not. The train estimate is the regressor's
+        own if it can produce one, otherwise a cross-validation on each fold's
+        training data with up to 10 folds.
     ignore_custom_train_estimate : bool, default=False
-        todo
+        Whether to ignore the regressor's own train estimate. If False and the
+        regressor has the ``capability:train_estimate`` tag, each fold's train file
+        uses its own estimate. Otherwise, a cross-validation on that fold's training
+        data is used.
     attribute_file_path : str or None, default=None
-        todo (only test)
+        Directory to write the fitted regressor's attributes to using
+        ``estimator_attributes_to_file``. Each fold writes to a ``fold{i}``
+        subfolder, where ``i`` is the fold id. Attributes are only written when the
+        fold's test file is built. If None, no attributes are written.
     att_max_shape : int, default=0
-        todo
+        Maximum list shape when writing attributes, passed to
+        ``estimator_attributes_to_file`` as ``max_list_shape``. At 0, estimators in
+        lists are not written. At 1, estimators in one-dimensional lists are written.
     benchmark_time : bool, default=True
         Whether to benchmark the hardware for each selected fold using a simple
         function and write the result. This will typically take ~2 seconds per fold,
@@ -353,7 +368,7 @@ def regression_cross_validation_folds(X, y, cv=None, groups=None):
     X : array-like
         Feature data.
     y : array-like
-        Target labels.
+        Target values.
     cv : int, splitter object, iterable of splits or None, default=None
         Cross-validation strategy, number of folds, or an iterable of ``(train, test)``
         index splits. If None, 10-fold shuffled cross-validation will be used.
