@@ -3,6 +3,9 @@
 # as eeg-reve-luna-x; results land in the same place, so nothing runs twice.
 # 19 Nov: the core 90 is split with iridisx_eeg_luna_h200.toml by expected finish time
 # (eeg_luna_a100.txt here, eeg_luna_h200.txt there; no problem is on both lists).
+# 20 Nov: the four not yet submitted here (ImaginedHandsPhysiology, ParkinsonsRestIowa,
+# PsychosisRestCohort2, ParkinsonsShortInterval) moved to the h200 list: h200 was idle and
+# a100 runs at most 2 GPUs at a time.
 [experiment]
 name = "eeg-luna-x"
 cluster = "iridisx"

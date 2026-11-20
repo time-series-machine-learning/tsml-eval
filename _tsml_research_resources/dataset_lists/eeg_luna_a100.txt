@@ -8,17 +8,13 @@ ImaginedDominantHandRest
 ImaginedFeetHands
 ImaginedGripForce
 ImaginedHandsFeet
-ImaginedHandsPhysiology
 ImaginedRightHandFeet
 InternalAttention
 MoralConflict
 NarrativeReward
 ParkinsonsRest
-ParkinsonsRestIowa
 ParkinsonsWalking
-PsychosisRestCohort2
 PythonCodeReading
 RestingEyeState
-ParkinsonsShortInterval
 StrokeHandCues
 VisualSymmetry
