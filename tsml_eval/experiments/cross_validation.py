@@ -18,6 +18,7 @@ from sklearn.base import clone
 from sklearn.model_selection import KFold, StratifiedKFold, check_cv
 
 from tsml_eval.experiments.experiments import (
+    _index_cases,
     run_classification_experiment,
     run_regression_experiment,
 )
@@ -471,12 +472,6 @@ def _fold_seeds(random_seed, n_folds):
             f"for {n_folds} folds."
         )
     return [int(seed) for seed in random_seed]
-
-
-def _index_cases(X, indices):
-    if isinstance(X, list):
-        return [X[i] for i in indices]
-    return X[indices]
 
 
 def _clone_with_seed(estimator, seed):

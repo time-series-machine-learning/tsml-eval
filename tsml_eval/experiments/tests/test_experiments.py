@@ -148,3 +148,51 @@ def test_train_estimate_refits_data_transforms(
         assert held_out == []
     else:
         assert held_out == [(fit, train_ids - fit) for fit in fold_fits]
+
+
+class _StatelessRecordingTransformer(BaseCollectionTransformer):
+    """Records the number of cases in each transform call, with no fitted state."""
+
+    _tags = {"fit_is_empty": True}
+    calls = []
+
+    def __init__(self):
+        super().__init__()
+
+    def _transform(self, X, y=None):
+        _StatelessRecordingTransformer.calls.append(len(X))
+        return X
+
+
+@pytest.mark.parametrize(
+    "run_experiment, estimator",
+    [
+        (run_classification_experiment, DummyClassifier()),
+        (run_regression_experiment, DummyRegressor()),
+    ],
+)
+def test_train_estimate_does_not_refit_fit_is_empty_transforms(
+    run_experiment, estimator, tmp_path
+):
+    """Test transforms with no fitted state are applied once, not in each fold."""
+    X, y = make_example_3d_numpy(
+        n_cases=20,
+        regression_target=run_experiment is run_regression_experiment,
+        random_state=0,
+    )
+    _StatelessRecordingTransformer.calls = []
+
+    run_experiment(
+        X,
+        y,
+        X,
+        y,
+        estimator,
+        str(tmp_path),
+        data_transforms=_StatelessRecordingTransformer(),
+        build_test_file=False,
+        build_train_file=True,
+        benchmark_time=False,
+    )
+
+    assert _StatelessRecordingTransformer.calls == [20, 20]

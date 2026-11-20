@@ -43,7 +43,6 @@ from sklearn.metrics import (
     mean_squared_error,
 )
 from sklearn.model_selection import KFold, StratifiedKFold
-from sklearn.utils import _safe_indexing
 
 from tsml_eval.estimators.classification._sklearn import SklearnToAeonClassifier
 from tsml_eval.estimators.clustering._sklearn import SklearnToAeonClusterer
@@ -127,7 +126,8 @@ def run_classification_experiment(
         If None, no transformation is applied.
         Calls fit_transform on the training data and transform on the test data.
         A cross-validated train estimate refits clones of the transforms in each
-        fold.
+        fold, unless every transform has the aeon ``fit_is_empty`` tag and
+        ``transform_train_only`` is False.
     transform_train_only : bool, default=False
         If True, the data transforms are only applied to the training data.
     build_test_file : bool, default=True
@@ -199,8 +199,8 @@ def run_classification_experiment(
     y_test = le.transform(y_test)
     encoder_dict = {label: i for i, label in enumerate(le.classes_)}
 
-    # untransformed train data, the CV train estimate refits transforms in each fold
-    X_cv, y_cv = X_train, y_train
+    # the CV train estimate refits transforms in each fold unless fit learns nothing
+    X_cv, y_cv, fold_transforms = X_train, y_train, []
     if data_transforms is not None:
         if not isinstance(data_transforms, list):
             data_transforms = [data_transforms]
@@ -208,6 +208,11 @@ def run_classification_experiment(
         X_train, y_train, X_test, y_test = _transform_data(
             data_transforms, X_train, y_train, X_test, y_test, transform_train_only
         )
+
+        if transform_train_only or not _fit_is_empty(data_transforms):
+            fold_transforms = data_transforms
+        else:
+            X_cv, y_cv = X_train, y_train
 
     n_classes = len(np.unique(y_train))
 
@@ -249,10 +254,10 @@ def run_classification_experiment(
             train_probs = np.zeros((len(y_cv), n_classes))
             for train, val in StratifiedKFold(n_splits=cv_size).split(X_cv, y_cv):
                 X_fold, y_fold, X_val, _ = _transform_data(
-                    [clone(t) for t in data_transforms or []],
-                    _safe_indexing(X_cv, train),
+                    [clone(t) for t in fold_transforms],
+                    _index_cases(X_cv, train),
                     y_cv[train],
-                    _safe_indexing(X_cv, val),
+                    _index_cases(X_cv, val),
                     y_cv[val],
                     transform_train_only,
                 )
@@ -524,7 +529,7 @@ def run_regression_experiment(
         If None, no transformation is applied.
         Calls fit_transform on the training data and transform on the test data.
         A cross-validated train estimate refits clones of the transforms in each
-        fold.
+        fold, unless every transform has the aeon ``fit_is_empty`` tag.
     build_test_file : bool, default=True
         Whether to generate test files or not.
     build_train_file : bool, default=False
@@ -589,8 +594,8 @@ def run_regression_experiment(
     else:
         raise TypeError("regressor must be a tsml, aeon or sklearn regressor.")
 
-    # untransformed train data, the CV train estimate refits transforms in each fold
-    X_cv, y_cv = X_train, y_train
+    # the CV train estimate refits transforms in each fold unless fit learns nothing
+    X_cv, y_cv, fold_transforms = X_train, y_train, []
     if data_transforms is not None:
         if not isinstance(data_transforms, list):
             data_transforms = [data_transforms]
@@ -598,6 +603,11 @@ def run_regression_experiment(
         X_train, y_train, X_test, y_test = _transform_data(
             data_transforms, X_train, y_train, X_test, y_test, False
         )
+
+        if not _fit_is_empty(data_transforms):
+            fold_transforms = data_transforms
+        else:
+            X_cv, y_cv = X_train, y_train
 
     needs_fit = True
     fit_time = -1
@@ -631,10 +641,10 @@ def run_regression_experiment(
             train_preds = np.zeros(len(y_cv))
             for train, val in KFold(n_splits=cv_size).split(X_cv):
                 X_fold, y_fold, X_val, _ = _transform_data(
-                    [clone(t) for t in data_transforms or []],
-                    _safe_indexing(X_cv, train),
+                    [clone(t) for t in fold_transforms],
+                    _index_cases(X_cv, train),
                     y_cv[train],
-                    _safe_indexing(X_cv, val),
+                    _index_cases(X_cv, val),
                     y_cv[val],
                     False,
                 )
@@ -1499,3 +1509,19 @@ def _transform_data(transforms, X_train, y_train, X_test, y_test, train_only):
             )
 
     return X_train, y_train, X_test, y_test
+
+
+def _fit_is_empty(transforms):
+    """Return True if every transform has the aeon fit_is_empty tag."""
+    return all(
+        hasattr(transform, "get_tag")
+        and transform.get_tag("fit_is_empty", False, False)
+        for transform in transforms
+    )
+
+
+def _index_cases(X, indices):
+    """Select cases from a numpy array or a list of numpy arrays."""
+    if isinstance(X, list):
+        return [X[i] for i in indices]
+    return X[indices]
