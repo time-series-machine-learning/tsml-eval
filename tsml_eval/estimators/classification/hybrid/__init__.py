@@ -2,10 +2,12 @@
 
 __all__ = [
     "FromFileHIVECOTE",
+    "HIVECOTEV2NoTDE",
     "build_hivecote_from_results",
     "component_prediction_paths",
 ]
 
+from tsml_eval.estimators.classification.hybrid.hc2_no_tde import HIVECOTEV2NoTDE
 from tsml_eval.estimators.classification.hybrid.hivecote_from_file import (
     FromFileHIVECOTE,
 )

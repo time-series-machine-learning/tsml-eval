@@ -1,0 +1,23 @@
+# Within-subject MI case study (21 Nov 2026): the core-90 MI problems in
+# eeg_within_subject.txt that are also in the between-subject CV (eeg_mi_cv.txt) and
+# have case tables giving trial order. ImaginedHandFeetTongue, ImaginedLeftRightHand
+# and ImaginedRightHandFeet have no case tables. 19 problems, 381 subjects.
+ImaginedAnkleRest
+ImaginedArmMovements
+ImaginedArmTasks
+ImaginedGrasps
+ImaginedHandPupils
+ImaginedHandSides
+ImaginedHandTraining
+ImaginedHandsCrossSession
+ImaginedHandsEmbodiment
+ImaginedHandsFeedback
+ImaginedHandsFeet
+ImaginedHandsHaptics
+ImaginedHandsOnline
+ImaginedHandsPhysiology
+ImaginedHandsRobot
+ImaginedHandsStroke
+ImaginedHandMusicTempo
+ImaginedArmGraspElbow
+ImaginedLimbActions

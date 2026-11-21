@@ -189,6 +189,16 @@ def parse_args(args):
         "used in classification (default: %(default)s).",
     )
     parser.add_argument(
+        "-ws",
+        "--within_subject_folds",
+        type=int,
+        help="run {within_subject_folds}-fold cross-validation within one subject "
+        "instead of a resample: subject {resample_id} (from 0, in sorted subject ID "
+        "order), its cases in recording order from the dataset's case tables, cut into "
+        "contiguous folds. Writes one file for the subject under WithinSubject. Only "
+        "used in classification (default: %(default)s).",
+    )
+    parser.add_argument(
         "-rs",
         "--random_seed",
         type=int,

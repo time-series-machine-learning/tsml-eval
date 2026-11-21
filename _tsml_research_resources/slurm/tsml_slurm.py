@@ -215,6 +215,7 @@ class Experiment:
     email_hours: float = 24.0
     numba_cache_dir: Path | None = None
     cv_folds: int = 0
+    within_subject_folds: int = 0
     retry_timeouts: bool = False
     datasets: tuple[str, ...] = field(default=())
     dataset_info: Path | None = None  # CSV: a dataset column, then per-dataset values
@@ -360,6 +361,13 @@ def load_experiment(config_path, cluster_dir=CLUSTER_DIR, user=None):
             "With cv_folds the folds are the resamples; remove resamples and "
             "start_resample"
         )
+    if "within_subject_folds" in exp and (
+        "resamples" in exp or "start_resample" in exp
+    ):
+        raise ConfigError(
+            "With within_subject_folds the subjects are the resamples; remove "
+            "resamples and start_resample"
+        )
     resamples = exp.pop("resamples", int(exp.get("cv_folds", 0)) or 30)
     start = int(exp.pop("start_resample", 0))
     if isinstance(resamples, list):
@@ -418,6 +426,7 @@ def _simple_settings(exp):
         "require_clean": bool,
         "email_hours": float,
         "cv_folds": int,
+        "within_subject_folds": int,
         "retry_timeouts": bool,
     }
     unknown = sorted(set(exp) - set(allowed))
@@ -467,6 +476,15 @@ def validate(e):
         raise ConfigError("resamples must select at least one non-negative resample")
     if len(e.resamples) != len(set(e.resamples)):
         raise ConfigError("resamples must be unique")
+    if e.within_subject_folds:
+        if e.task != "classification":
+            raise ConfigError("within_subject_folds only applies to classification")
+        if e.within_subject_folds < 2:
+            raise ConfigError("within_subject_folds must be at least 2")
+        if e.cv_folds:
+            raise ConfigError("Use cv_folds or within_subject_folds, not both")
+        if e.train_files:
+            raise ConfigError("within_subject_folds writes no train files")
     if e.cv_folds:
         if e.task != "classification":
             raise ConfigError("cv_folds only applies to classification")
@@ -655,6 +673,8 @@ def fingerprints(e, legacy=False):
         # fingerprints they were started with
         if e.cv_folds or legacy:
             settings["cv_folds"] = e.cv_folds
+        if e.within_subject_folds:
+            settings["within_subject_folds"] = e.within_subject_folds
         content = json.dumps(settings, sort_keys=True)
         prints[estimator.name] = hashlib.sha256(content.encode()).hexdigest()[:12]
     return prints
@@ -696,6 +716,8 @@ def dataset_folds(e):
     tsml_eval.utils.resampling.cv_n_folds: subjects_per_fold subjects to a fold,
     the last fold holding the rest.
     """
+    if e.within_subject_folds:
+        return _subject_tasks(e)
     if not e.cv_folds:
         return {}
     cache = getattr(e, "_folds", None)
@@ -714,11 +736,29 @@ def dataset_folds(e):
     return cache
 
 
+def _subject_tasks(e):
+    """Subjects per dataset, for within_subject_folds: one task per subject.
+
+    Task resample r is the r-th subject in sorted ID order, matching
+    tsml_eval.experiments.within_subject. A dataset without subject IDs has none.
+    """
+    cache = getattr(e, "_subjects", None)
+    if cache is None or set(cache) != set(e.datasets):
+        cache = {}
+        for dataset in e.datasets:
+            try:
+                cache[dataset] = subject_count(e, dataset) or 0
+            except OSError:
+                cache[dataset] = 0
+        e._subjects = cache
+    return cache
+
+
 def all_tasks(e):
     """Yield every task the experiment asks for, minus exclusions.
 
     With cv_folds, the resamples of each dataset are its folds, 0 to
-    dataset_folds - 1.
+    dataset_folds - 1. With within_subject_folds they are its subjects.
     """
     excluded = set(e.exclude_tasks)
     folds = dataset_folds(e)
@@ -751,6 +791,9 @@ def unresolved(e):
 
 def result_files(e, task):
     """Files that must exist for a task to count as complete."""
+    if e.within_subject_folds:
+        folder = e.results_dir / task.category / task.estimator / "WithinSubject"
+        return [folder / task.dataset / f"subject{task.resample}.csv"]
     folder = (
         e.results_dir / task.category / task.estimator / "Predictions" / task.dataset
     )
@@ -1122,6 +1165,8 @@ def _experiment_arguments(e, task):
         args += ["-nj", str(e.n_jobs)]
     if e.cv_folds:
         args += ["-cv", str(e.cv_folds)]
+    if e.within_subject_folds:
+        args += ["-ws", str(e.within_subject_folds)]
     args += list(e.extra_args)
     kwargs = task_kwargs(e, task)
     if kwargs is None:

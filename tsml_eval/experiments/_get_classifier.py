@@ -186,6 +186,7 @@ feature_based_classifiers = [
 hybrid_classifiers = [
     ["hivecotev1", "hc1"],
     ["hivecotev2", "hc2"],
+    ["hivecotev2notde", "hc2-notde-500-pc"],
     ["ristclassifier", "rist", "rist-extrat"],
 ]
 interval_based_classifiers = [
@@ -1075,6 +1076,12 @@ def _set_classifier_hybrid(c, random_state, n_jobs, fit_contract, checkpoint, kw
             time_limit_in_minutes=fit_contract,
             **kwargs,
         )
+    elif c == "hivecotev2notde" or c == "hc2-notde-500-pc":
+        # HIVE-COTE 2 without TDE (Arsenal, DrCIF-500, STC) and prior correction 0.5,
+        # fitted in memory: the counterpart of HC2-noTDE-500-pc built from files
+        from tsml_eval.estimators.classification.hybrid import HIVECOTEV2NoTDE
+
+        return HIVECOTEV2NoTDE(random_state=random_state, n_jobs=n_jobs, **kwargs)
     elif c == "ristclassifier" or c == "rist" or c == "rist-extrat":
         from aeon.classification.hybrid import RISTClassifier
         from sklearn.ensemble import ExtraTreesClassifier

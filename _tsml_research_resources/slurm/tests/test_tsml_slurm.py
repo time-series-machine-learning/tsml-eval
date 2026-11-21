@@ -774,6 +774,48 @@ estimators = ["A"]
     assert args[args.index("-cv") + 1] == "10"
 
 
+def test_within_subject_folds(world):
+    with pytest.raises(ts.ConfigError, match="subjects are the resamples"):
+        make(world, body="within_subject_folds = 10\nresamples = 10")
+    data = world["home"] / "Data"
+    (data / "Small" / "Small_id_TRAIN.txt").write_text("1\n2\n2\n")
+    (data / "Small" / "Small_id_TEST.txt").write_text("3\n3\n")
+    (data / "Mid" / "Mid_id_TRAIN.txt").write_text("\n".join(map(str, range(12))))
+    (data / "Mid" / "Mid_id_TEST.txt").write_text("\n".join(map(str, range(12, 25))))
+    toml = """
+[experiment]
+name = "ws"
+cluster = "testcluster"
+resources = "cpu"
+task = "classification"
+data_dir = "{home}/Data"
+datasets = "{home}/list.txt"
+results_dir = "{home}/Results"
+within_subject_folds = 10
+estimators = ["A"]
+"""
+    path = world["tmp"] / "ws.toml"
+    both = toml.replace(
+        "within_subject_folds = 10", "within_subject_folds = 10\ncv_folds = 10"
+    )
+    path.write_text(both)
+    with pytest.raises(ts.ConfigError, match="not both"):
+        ts.load_experiment(path, cluster_dir=world["clusters"], user="tester")
+    path.write_text(toml)
+    e = ts.load_experiment(path, cluster_dir=world["clusters"], user="tester")
+    ts.read_datasets(e)
+    # one task per subject; Big has no subject IDs, so none
+    assert ts.dataset_folds(e) == {"Small": 3, "Big": 0, "Mid": 25}
+    tasks = list(ts.all_tasks(e))
+    assert len(tasks) == 28
+    task = next(t for t in tasks if t.dataset == "Small" and t.resample == 2)
+    assert ts.result_files(e, task) == [
+        e.results_dir / task.category / "A" / "WithinSubject" / "Small" / "subject2.csv"
+    ]
+    args = ts._experiment_arguments(e, task)
+    assert args[args.index("-ws") + 1] == "10" and "-cv" not in args
+
+
 def test_fingerprint_unchanged_without_cv_folds(world):
     # the fingerprint of an experiment without cv_folds must not depend on it,
     # or every experiment started before cv_folds existed would be refused

@@ -63,9 +63,34 @@ def run_experiment(args):
         print("Input args = ", args)
         args = parse_args(args)
 
+        if args.within_subject_folds:
+            from tsml_eval.experiments.within_subject import (
+                run_within_subject_experiment,
+            )
+
+            run_within_subject_experiment(
+                args.data_path,
+                args.results_path,
+                args.dataset_name,
+                get_classifier_by_name(
+                    args.estimator_name,
+                    random_state=(
+                        args.resample_id
+                        if args.random_seed is None
+                        else args.random_seed
+                    ),
+                    n_jobs=args.n_jobs,
+                    fit_contract=args.fit_contract,
+                    **args.kwargs,
+                ),
+                classifier_name=args.estimator_name,
+                subject_index=args.resample_id,
+                n_folds=args.within_subject_folds,
+                overwrite=args.overwrite,
+            )
         # this is also checked in load_and_run, but doing a quick check here so can
         # print a message and make sure data is not loaded
-        if not args.overwrite and _results_present(
+        elif not args.overwrite and _results_present(
             args.results_path,
             args.estimator_name,
             args.dataset_name,
