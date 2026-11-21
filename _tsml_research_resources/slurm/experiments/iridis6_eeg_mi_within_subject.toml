@@ -1,0 +1,57 @@
+# Within-subject MI case study (21 Nov 2026), the counterpart of the between-subject MI
+# CV (eeg-mi-cv-*). For each subject, its trials in recording order (session, run,
+# start, from the case tables) are cut into 10 contiguous folds; each fold is the test
+# set once. One task per (classifier, problem, subject) writes one file,
+# ~/Results/EEG-WS/<category>/<classifier>/WithinSubject/<problem>/subject<k>.csv, with
+# every trial's fold, label, prediction and probabilities. Report the mean and standard
+# deviation over subjects of each subject's accuracy (and balanced accuracy).
+#
+# CPU classifiers of the best-in-class set, on Iridis 6 batch:
+# - HC2-noTDE-500-pc: HIVE-COTE 2 without TDE fitted in memory per fold (Arsenal,
+#   DrCIF-500, STC; CAWPE weights from train estimates; prior correction 0.5), the
+#   counterpart of the HC2 built from files for the main results.
+# - XdawnTSLR-NB: needs aeon_neuro.classification.experimental, which this env's
+#   aeon-neuro (0.1.1) lacks, so the aeon-neuro-fm-20261119 snapshot goes first on
+#   PYTHONPATH (it does not affect HC2).
+# EEGNeX-NB and REVE-FT need GPUs and are a separate experiment.
+#
+# A task killed at the time limit resumes from its last finished fold.
+#
+# 21 Nov 2026: split with iridisx_eeg_mi_within_subject.toml by problem (5 here, 14 on
+# Iridis X; eeg_mi_within_subject_6.txt and _6.txt), so no task is on both.
+#
+#   python tsml_slurm.py check experiments/iridis6_eeg_mi_within_subject.toml
+#   python tsml_slurm.py start experiments/iridis6_eeg_mi_within_subject.toml
+
+[experiment]
+name = "eeg-mi-ws-6"
+cluster = "iridis6"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_mi_within_subject_6.txt"
+dataset_info = "{repo}/_tsml_research_resources/dataset_lists/eeg_sampling_rates.csv"
+results_dir = "{home}/Results/EEG-WS"
+within_subject_folds = 10
+smallest_datasets_first = true
+retry_timeouts = true
+max_attempts = 4
+
+[estimators]
+Hybrid = ["HC2-noTDE-500-pc"]
+FeatureBased = ["XdawnTSLR-NB"]
+
+[estimator_kwargs."XdawnTSLR-NB"]
+sfreq = "{dataset.sfreq}"
+
+[slurm]
+env_name = "tsml-eval"
+max_jobs = 3  # Iridis 6 allows 4 nodes; one runs the DrCIF-500 MusicTempo job
+memory_gb = [8, 16, 32, 64, 128, 256]
+setup = [
+  'export PYTHONNOUSERSITE=1',
+  'export PYTHONPATH=/iridisfs/home/ajb2u23/Code/aeon-neuro-fm-20261119:$PYTHONPATH',
+  'cd /iridisfs/home/ajb2u23/Code/aeon-neuro-fm-20261119 && sha256sum --quiet -c SNAPSHOT.sha256',
+]

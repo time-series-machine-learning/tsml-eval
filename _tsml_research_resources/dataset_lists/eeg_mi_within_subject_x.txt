@@ -1,0 +1,16 @@
+# Within-subject MI case study, the Iridis X share (21 Nov 2026): 14 of the 19 problems in
+# eeg_mi_within_subject.txt, 180 subjects. The other 5 are in eeg_mi_within_subject_6.txt.
+ImaginedAnkleRest
+ImaginedArmMovements
+ImaginedArmTasks
+ImaginedGrasps
+ImaginedHandSides
+ImaginedHandsCrossSession
+ImaginedHandsEmbodiment
+ImaginedHandsFeet
+ImaginedHandsHaptics
+ImaginedHandsOnline
+ImaginedHandsRobot
+ImaginedHandMusicTempo
+ImaginedArmGraspElbow
+ImaginedLimbActions

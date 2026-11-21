@@ -17,6 +17,9 @@
 #
 # A task killed at the time limit resumes from its last finished fold.
 #
+# 21 Nov 2026: split with iridis6_eeg_mi_within_subject.toml by problem (14 here, 5 on
+# Iridis 6; eeg_mi_within_subject_x.txt and _6.txt), so no task is on both.
+#
 #   python tsml_slurm.py check experiments/iridisx_eeg_mi_within_subject.toml
 #   python tsml_slurm.py start experiments/iridisx_eeg_mi_within_subject.toml
 
@@ -28,7 +31,7 @@ task = "classification"
 repo_dir = "{home}/Code/tsml-eval"
 branch = "ajb/slurm-runner"
 data_dir = "{home}/Data/EEG"
-datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_mi_within_subject.txt"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_mi_within_subject_x.txt"
 dataset_info = "{repo}/_tsml_research_resources/dataset_lists/eeg_sampling_rates.csv"
 results_dir = "{home}/Results/EEG-WS"
 within_subject_folds = 10
