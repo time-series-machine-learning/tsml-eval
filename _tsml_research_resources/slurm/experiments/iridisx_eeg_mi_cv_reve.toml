@@ -3,6 +3,9 @@
 # folds as eeg-mi-cv-hc2. Same estimator settings, snapshot (aeon-neuro-fm-20261118) and
 # weights as eeg-reve-luna-x, on the i7_h200 partition.
 #
+# 21 Nov 2026: 8 folds at a time and a 10-minute refill (from 4 and 30). A fold takes a
+# few minutes, so the 30-minute cycle left the GPUs idle; h200 is free since EEGPT finished.
+#
 # train_groups: in CV mode tsml-eval replaces it with the subject IDs of each fold's
 # training cases, so early stopping validates on held-out subjects. The TRAIN-file IDs
 # given here only keep older tsml-eval from silently falling back to a random split.
@@ -42,9 +45,12 @@ positions_path = "/home/ajb2u23/hf_models/brain-bzh--reve-base/reve_positions.js
 env_name = "tsml-eval-torch"
 gpu_check = "torch"
 memory_gb = [64, 128]
-max_active = 4
+max_active = 8
 setup = [
   'export PYTHONNOUSERSITE=1 HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1',
   'export PYTHONPATH=/home/ajb2u23/Code/aeon-neuro-fm-20261118:$PYTHONPATH',
   'cd /home/ajb2u23/Code/aeon-neuro-fm-20261118 && sha256sum --quiet -c SNAPSHOT.sha256',
 ]
+
+[supervisor]
+interval_minutes = 10
