@@ -1,0 +1,37 @@
+# MI cross-validation, best in class (20 Nov 2026): XdawnTSLR-NB, the best
+# feature/Riemannian pipeline on the 89 core problems and on MI alone. Same 36 problems
+# (eeg_mi_cv.txt) and subject-wise folds as Hali's eeg-mi-cv-hc2: train and test are
+# combined and split by subject, the folds set by the subject ID files, so every
+# classifier sees the same folds. Fold k is written as testResample<k>.csv.
+#
+# On Hali, as the main XdawnTSLR-NB results were: Iridis X's tsml-eval env has aeon-neuro
+# 0.1.1, without aeon_neuro.classification.experimental, so the Iridis X run
+# (iridisx_eeg_mi_cv_xdawntslr.toml) failed on every fold on 20 Nov 2026.
+#
+#   python tsml_slurm.py check experiments/hali_eeg_mi_cv_xdawntslr.toml
+#   python tsml_slurm.py start experiments/hali_eeg_mi_cv_xdawntslr.toml
+
+[experiment]
+name = "eeg-mi-cv-xdawntslr"
+cluster = "hali"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_mi_cv.txt"  # 30 MI + 6 ERP/P300
+dataset_info = "{repo}/_tsml_research_resources/dataset_lists/eeg_sampling_rates.csv"
+results_dir = "{home}/Results/EEG-CV"
+cv_folds = 10
+smallest_datasets_first = true
+
+[estimators]
+FeatureBased = ["XdawnTSLR-NB"]
+
+[estimator_kwargs."XdawnTSLR-NB"]
+sfreq = "{dataset.sfreq}"
+
+[slurm]
+env_name = "tsml-eval"
+max_active = 100
+memory_gb = [16, 32, 64, 128, 256]  # no hmem tier: XdawnTSLR-NB is cheap

@@ -1,3 +1,5 @@
+# MOVED to Hali (hali_eeg_mi_cv_xdawntslr.toml) on 21 Nov 2026: this env's aeon-neuro (0.1.1) has no
+# aeon_neuro.classification.experimental, so all 368 folds failed with ModuleNotFoundError.
 # MI cross-validation, best in class (20 Nov 2026): XdawnTSLR-NB, the best
 # feature/Riemannian pipeline on the 89 core problems and on MI alone. Same 36 problems
 # (eeg_mi_cv.txt) and subject-wise folds as Hali's eeg-mi-cv-hc2: train and test are
