@@ -1,0 +1,44 @@
+# Within-subject MI case study (22 Nov 2026), GPU part: EEGNeX-NB on the i7_h200 partition.
+# Same protocol as iridisx_eeg_mi_within_subject.toml (10 contiguous folds per subject in
+# recording order, one file per subject under WithinSubject) on all 19 problems in
+# eeg_mi_within_subject.txt. Same env and settings as the main EEGNeX-NB runs on Iridis X
+# (iridisx_eeg_eegnex_gaps.toml). One subject cannot be split by subject, so tsml-eval
+# sets train_groups to None and early stopping validates on a random 20% of the training
+# trials; the train_groups file given here is only read and then replaced.
+#
+#   python tsml_slurm.py check experiments/iridisx_eeg_mi_within_subject_eegnex.toml
+#   python tsml_slurm.py start experiments/iridisx_eeg_mi_within_subject_eegnex.toml
+
+[experiment]
+name = "eeg-mi-ws-eegnex-x"
+cluster = "iridisx"
+resources = "gpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval-gpu"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG"
+datasets = "{repo}/_tsml_research_resources/dataset_lists/eeg_mi_within_subject.txt"
+dataset_info = "{repo}/_tsml_research_resources/dataset_lists/eeg_ctnet_info.csv"
+results_dir = "{home}/Results/EEG-WS"
+within_subject_folds = 10
+smallest_datasets_first = true
+retry_timeouts = true
+max_attempts = 4
+
+[estimators]
+DeepLearning = ["EEGNeX-NB"]
+
+[estimator_kwargs."EEGNeX-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+device = "cuda"
+
+[slurm]
+env_name = "tsml-eval-torch"
+time_limit = "12:00:00"
+max_active = 4
+gpu_check = "torch"
+memory_gb = [32, 64, 128]
+
+[supervisor]
+interval_minutes = 10
