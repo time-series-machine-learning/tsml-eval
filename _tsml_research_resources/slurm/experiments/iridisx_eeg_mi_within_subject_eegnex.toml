@@ -1,3 +1,9 @@
+# SUPERSEDED 22 Nov 2026 by iridisx_eeg_mi_within_subject_eegnex_b8.toml. With batch size 64
+# a subject's ~100 training trials (after the 25% validation split, last partial batch
+# dropped) give one optimiser step per epoch, early stopping keeps the untrained first
+# epoch, and 35% of the 152 subject files predicted a single class. Do not report its
+# results (~/Results/EEG-WS/DeepLearning/EEGNeX-NB/WithinSubject).
+#
 # Within-subject MI case study (22 Nov 2026), GPU part: EEGNeX-NB on the i7_h200 partition.
 # Same protocol as iridisx_eeg_mi_within_subject.toml (10 contiguous folds per subject in
 # recording order, one file per subject under WithinSubject) on all 19 problems in

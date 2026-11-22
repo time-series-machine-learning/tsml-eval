@@ -37,7 +37,9 @@ results_dir = "{home}/Results/EEG-WS"
 within_subject_folds = 10
 smallest_datasets_first = true
 retry_timeouts = true
-max_attempts = 4
+# 10 since 22 Nov: an HC2 fold on ImaginedHandMusicTempo takes over 19 h, so a
+# subject needs several 60 h attempts, each resuming from its last finished fold
+max_attempts = 10
 
 [estimators]
 Hybrid = ["HC2-noTDE-500-pc"]

@@ -51,4 +51,5 @@ setup = [
 ]
 
 [supervisor]
-interval_minutes = 10
+# jobs take 1 to 4 minutes, so refill often (was 10 until 22 Nov)
+interval_minutes = 2
