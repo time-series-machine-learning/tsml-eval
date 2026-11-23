@@ -82,7 +82,7 @@ def test_experiments_predefined_resample_data_loading():
 class _RecordingTransformer(BaseCollectionTransformer):
     """Records the case ids (first value of each series) seen in fit and transform."""
 
-    calls = []
+    calls: list[tuple[set, set]] = []
 
     def __init__(self):
         super().__init__()
@@ -154,7 +154,7 @@ class _StatelessRecordingTransformer(BaseCollectionTransformer):
     """Records the number of cases in each transform call, with no fitted state."""
 
     _tags = {"fit_is_empty": True}
-    calls = []
+    calls: list[int] = []
 
     def __init__(self):
         super().__init__()

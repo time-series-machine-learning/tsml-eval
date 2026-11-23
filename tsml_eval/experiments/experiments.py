@@ -50,6 +50,8 @@ from tsml_eval.estimators.regression._sklearn import SklearnToAeonRegressor
 from tsml_eval.utils.datasets import load_experiment_data
 from tsml_eval.utils.experiments import (
     _check_existing_results,
+    _fit_is_empty,
+    _index_cases,
     estimator_attributes_to_file,
     timing_benchmark,
 )
@@ -1509,19 +1511,3 @@ def _transform_data(transforms, X_train, y_train, X_test, y_test, train_only):
             )
 
     return X_train, y_train, X_test, y_test
-
-
-def _fit_is_empty(transforms):
-    """Return True if every transform has the aeon fit_is_empty tag."""
-    return all(
-        hasattr(transform, "get_tag")
-        and transform.get_tag("fit_is_empty", False, False)
-        for transform in transforms
-    )
-
-
-def _index_cases(X, indices):
-    """Select cases from a numpy array or a list of numpy arrays."""
-    if isinstance(X, list):
-        return [X[i] for i in indices]
-    return X[indices]

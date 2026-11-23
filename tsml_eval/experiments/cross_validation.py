@@ -18,11 +18,10 @@ from sklearn.base import clone
 from sklearn.model_selection import KFold, StratifiedKFold, check_cv
 
 from tsml_eval.experiments.experiments import (
-    _index_cases,
     run_classification_experiment,
     run_regression_experiment,
 )
-from tsml_eval.utils.experiments import _check_existing_results
+from tsml_eval.utils.experiments import _check_existing_results, _index_cases
 
 
 def classification_cross_validation(

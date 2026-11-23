@@ -46,6 +46,22 @@ def _results_present(path, estimator, dataset, resample_id=None, split="TEST"):
     return False
 
 
+def _fit_is_empty(transforms):
+    """Return True if every transform has the aeon fit_is_empty tag."""
+    return all(
+        hasattr(transform, "get_tag")
+        and transform.get_tag("fit_is_empty", False, False)
+        for transform in transforms
+    )
+
+
+def _index_cases(X, indices):
+    """Select cases from a numpy array or a list of numpy arrays."""
+    if isinstance(X, list):
+        return [X[i] for i in indices]
+    return X[indices]
+
+
 def _check_existing_results(
     results_path,
     estimator_name,
