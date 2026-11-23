@@ -33,7 +33,7 @@ from tsml_eval.utils.arguments import parse_args
 from tsml_eval.utils.experiments import _results_present, assign_gpu
 
 
-def run_experiment(args, overwrite=False):
+def run_experiment(args):
     """Mechanism for testing forecasters using a csv data format.
 
     Attempts to avoid the use of threading as much as possible.
@@ -59,7 +59,7 @@ def run_experiment(args, overwrite=False):
 
         # this is also checked in load_and_run, but doing a quick check here so can
         # print a message and make sure data is not loaded
-        if not overwrite and _results_present(
+        if not args.overwrite and _results_present(
             args.results_path,
             args.estimator_name,
             args.dataset_name,

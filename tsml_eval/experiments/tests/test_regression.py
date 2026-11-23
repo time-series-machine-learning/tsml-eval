@@ -140,6 +140,39 @@ def test_run_threaded_regression_experiment():
     os.remove(test_file)
 
 
+def test_threaded_regression_experiment_arguments(monkeypatch, tmp_path):
+    """Test the threaded script passes the same arguments as the unthreaded one."""
+    args = [
+        _TEST_DATA_PATH,
+        str(tmp_path),
+        "ROCKET",
+        "MinimalGasPrices",
+        "0",
+        "-tr",
+        "--data_transform_name",
+        "Padder",
+    ]
+
+    calls = []
+    for module in (regression_experiments, threaded_regression_experiments):
+        monkeypatch.setattr(
+            module, "get_regressor_by_name", lambda *a, **kw: calls.append(kw)
+        )
+        monkeypatch.setattr(
+            module,
+            "load_and_run_regression_experiment",
+            lambda *a, **kw: calls.append(kw),
+        )
+        module.run_experiment(args)
+
+    # transforms are compared by their repr
+    getter, run, threaded_getter, threaded_run = (
+        {k: repr(v) for k, v in kw.items()} for kw in calls
+    )
+    assert threaded_getter == getter
+    assert threaded_run == run
+
+
 def test_run_regression_experiment_invalid_build_settings():
     """Test run_regression_experiment method with invalid build settings."""
     with pytest.raises(ValueError, match="Both test_file and train_file"):

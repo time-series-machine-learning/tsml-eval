@@ -1,5 +1,39 @@
 """Tests for forecasting experiments."""
 
+import pytest
+
+from tsml_eval.experiments import (
+    forecasting_experiments,
+    threaded_forecasting_experiments,
+)
+from tsml_eval.testing.testing_utils import _TEST_DATA_PATH
+
+
+@pytest.mark.parametrize(
+    "module", [forecasting_experiments, threaded_forecasting_experiments]
+)
+def test_forecasting_experiment_overwrite(module, monkeypatch, tmp_path):
+    """Test the forecasting scripts only rerun present results with --overwrite."""
+    predictions = tmp_path / "DummyForecaster" / "Predictions" / "ShampooSales"
+    predictions.mkdir(parents=True)
+    (predictions / "testResample0.csv").touch()
+
+    calls = []
+    monkeypatch.setattr(module, "get_forecaster_by_name", lambda *a, **kw: None)
+    monkeypatch.setattr(
+        module,
+        "load_and_run_forecasting_experiment",
+        lambda *a, **kw: calls.append(kw),
+    )
+
+    args = [_TEST_DATA_PATH, str(tmp_path), "DummyForecaster", "ShampooSales", "0"]
+    module.run_experiment(args)
+    assert calls == []
+
+    module.run_experiment(args + ["-ow"])
+    assert len(calls) == 1
+
+
 # import os
 # import runpy
 #
