@@ -172,26 +172,28 @@ def get_clusterer_by_name(
         String indicating which clusterer to be returned.
     random_state : int, RandomState instance or None, default=None
         Random seed or RandomState object to be used in the clusterer if available.
-    n_jobs: int, default=1
+    n_jobs : int, default=1
         The number of jobs to run in parallel for both clusterer ``fit`` and
         ``predict`` if available. `-1` means using all processors.
-    fit_contract: int, default=0
-        The number of data points to use in the clusterer ``fit`` if available.
-    checkpoint: str, default=None
-        Checkpoint to save model
-    data_vars: list, default=None
+    fit_contract : int, default=0
+        Contract time in minutes for clusterer ``fit``. Not currently used by any
+        clusterer.
+    checkpoint : bool or None, default=None
+        Whether to save the clusterer to file periodically during ``fit``. Not
+        currently used by any clusterer.
+    data_vars : list or None, default=None
         List of arguments to load the dataset using
         `tsml_eval.utils.datasets.load_experiment_data`, used to find the ERP g
         parameter from the train data. An optional fifth item is True if the train
         and test data are combined.
-    row_normalise: bool, default=False
+    row_normalise : bool, default=False
         Whether to row normalise the data if it is loaded using data_vars.
     **kwargs
         Additional keyword arguments to be passed to the clusterer.
 
-    Return
-    ------
-    clusterer: A BaseClusterer.
+    Returns
+    -------
+    clusterer : BaseClusterer
         The clusterer matching the input clusterer name.
     """
     c = clusterer_name.lower()

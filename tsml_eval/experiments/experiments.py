@@ -1,6 +1,6 @@
 """Functions to perform machine learning/data mining experiments.
 
-Results are saved a standardised format used by tsml.
+Results are saved in a standardised format used by tsml.
 """
 
 __maintainer__ = ["TonyBagnall", "MatthewMiddlehurst"]

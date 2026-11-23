@@ -1,4 +1,4 @@
-"""Regression Experiments: code for experiments as an alternative to orchestration.
+"""Forecasting Experiments: code for experiments as an alternative to orchestration.
 
 This file is configured for runs of the main method with command line arguments, or for
 single debugging runs. Results are written in a standard tsml format.

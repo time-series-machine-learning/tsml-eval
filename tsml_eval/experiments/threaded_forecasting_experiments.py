@@ -1,4 +1,4 @@
-"""Regression Experiments: code for experiments as an alternative to orchestration.
+"""Forecasting Experiments: code for experiments as an alternative to orchestration.
 
 This file is configured for runs of the main method with command line arguments, or for
 single debugging runs. Results are written in a standard tsml format.
@@ -65,7 +65,6 @@ def run_experiment(args, overwrite=False):
     else:
         # These are example parameters, change as required for local runs
         # Do not include paths to your local directories here in PRs
-        # If threading is required, see the threaded version of this file
         data_path = _TEST_DATA_PATH
         results_path = _FORECASTER_RESULTS_PATH
         estimator_name = "DummyForecaster"
@@ -104,5 +103,5 @@ if __name__ == "__main__":
     """
     Example simple usage, with arguments input via script or hard coded for testing.
     """
-    print("Running forecasting_experiments.py main")
+    print("Running threaded_forecasting_experiments.py main")
     run_experiment(sys.argv[1:])

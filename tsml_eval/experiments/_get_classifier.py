@@ -154,20 +154,20 @@ def get_classifier_by_name(
         String indicating which classifier to be returned.
     random_state : int, RandomState instance or None, default=None
         Random seed or RandomState object to be used in the classifier if available.
-    n_jobs: int, default=1
+    n_jobs : int, default=1
         The number of jobs to run in parallel for both classifier ``fit`` and
         ``predict`` if available. `-1` means using all processors.
-    fit_contract: int, default=0
+    fit_contract : int, default=0
         Contract time in minutes for classifier ``fit`` if available.
-    checkpoint: str or None, default=None
-        Path to a checkpoint file to save the classifier if available. No checkpointing
-        if None.
+    checkpoint : bool or None, default=None
+        Whether to save the classifier to file periodically during ``fit``. Not
+        currently used by any classifier.
     **kwargs
         Additional keyword arguments to be passed to the classifier.
 
-    Return
-    ------
-    classifier : A BaseClassifier.
+    Returns
+    -------
+    classifier : BaseClassifier
         The classifier matching the input classifier name.
     """
     c = classifier_name.casefold()
