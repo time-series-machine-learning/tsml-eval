@@ -16,11 +16,13 @@ import numpy as np
 from sklearn.base import BaseEstimator
 from sklearn.utils import check_random_state
 
+from tsml_eval.utils.results_writing import _predictions_path
+
 
 def _results_present(path, estimator, dataset, resample_id=None, split="TEST"):
     """Check if results are present already."""
     resample_str = "Results" if resample_id is None else f"Resample{resample_id}"
-    path = f"{path}/{estimator}/Predictions/{dataset}/"
+    path = f"{_predictions_path(path, estimator, dataset)}/"
 
     if split == "BOTH":
         full_path = f"{path}test{resample_str}.csv"
@@ -55,25 +57,14 @@ def _check_existing_results(
 ):
     """Check if results are present already and if they should be overwritten."""
     if not overwrite:
-        resample_str = "Result" if resample_id is None else f"Resample{resample_id}"
+        resample_str = "Results" if resample_id is None else f"Resample{resample_id}"
+        path = _predictions_path(results_path, estimator_name, dataset)
 
-        if build_test_file:
-            full_path = (
-                f"{results_path}/{estimator_name}/Predictions/{dataset}/"
-                f"/test{resample_str}.csv"
-            )
+        if build_test_file and os.path.exists(f"{path}/test{resample_str}.csv"):
+            build_test_file = False
 
-            if os.path.exists(full_path):
-                build_test_file = False
-
-        if build_train_file:
-            full_path = (
-                f"{results_path}/{estimator_name}/Predictions/{dataset}/"
-                f"/train{resample_str}.csv"
-            )
-
-            if os.path.exists(full_path):
-                build_train_file = False
+        if build_train_file and os.path.exists(f"{path}/train{resample_str}.csv"):
+            build_train_file = False
 
     return build_test_file, build_train_file
 

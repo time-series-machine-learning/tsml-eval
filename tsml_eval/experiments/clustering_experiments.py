@@ -92,6 +92,7 @@ def run_experiment(args):
                         args.dataset_name,
                         args.resample_id,
                         args.predefined_resample,
+                        args.combine_test_train_split,
                     ],
                     row_normalise=args.row_normalise,
                     **args.kwargs,
@@ -147,7 +148,13 @@ def run_experiment(args):
             n_jobs=1,
             fit_contract=fit_contract,
             checkpoint=checkpoint,
-            data_vars=[data_path, dataset_name, resample_id, predefined_resample],
+            data_vars=[
+                data_path,
+                dataset_name,
+                resample_id,
+                predefined_resample,
+                combine_test_train_split,
+            ],
             row_normalise=row_normalise,
             **kwargs,
         )

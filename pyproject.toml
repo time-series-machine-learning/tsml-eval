@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tsml-eval"
-version = "0.6.0"
+version = "0.7.0"
 description = "A package for benchmarking time series machine learning tools."
 authors = [
     {name = "Matthew Middlehurst", email = "m.b.middlehurst@soton.ac.uk"},
@@ -40,7 +40,7 @@ classifiers = [
 ]
 requires-python = ">=3.12,<3.15"
 dependencies = [
-    "aeon>=1.0.0,<1.6.0",
+    "aeon>=1.0.0,<1.7.0",
     "scikit-learn>=1.4.0,<1.10.0",
     "matplotlib",
     "seaborn",
@@ -51,15 +51,18 @@ dependencies = [
 [project.optional-dependencies]
 all_extras = [
     "aeon[all_extras]",
+    "aeon-neuro>=0.1.0; python_version < '3.14'",
     "tsml[all_extras]",
     "xgboost",
 ]
 unstable_extras = [
     "aeon[unstable_extras]",
-    "tsml[unstable_extras]",
 ]
 deep_learning = [
     "aeon[dl]",
+]
+neuro = [
+    "aeon-neuro>=0.1.0; python_version < '3.14'",
 ]
 
 dev = [
@@ -99,19 +102,21 @@ repository = "https://github.com/time-series-machine-learning/tsml-eval/"
 file = "LICENSE"
 
 [tool.setuptools.packages.find]
-include = ["tsml_eval"]
+include = ["tsml_eval", "tsml_eval.*"]
+# _wip holds unreleased work-in-progress research code; keep it out of distributions
+exclude = ["tsml_eval._wip", "tsml_eval._wip.*"]
 
 [tool.check-manifest]
 ignore = [
     # Ignore virtual environments in local builds
     ".venv/**",
     "venv/**",
+    # Ignore the work-in-progress package, excluded from distributions
+    "tsml_eval/_wip",
+    "tsml_eval/_wip/**",
     # Ignore local files
     "local/**",
     "examples/generated_results/**",
-    # Ignore the publications symlinks and its contents
-    "tsml_eval/publications/2023",
-    "tsml_eval/publications/2023/**",
     # Ignore the docs symlinks and its contents
     "docs/examples",
     "docs/examples/**",
@@ -125,34 +130,28 @@ extend-exclude = [
 ]
 
 [tool.ruff.lint]
-select = ["D"]
+select = ["E", "F", "W", "B", "T20", "D"]
+ignore = ["E203", "E741", "B904", "B905", "B028"]
+
+[tool.ruff.lint.per-file-ignores]
+"*.ipynb" = ["T201", "E402"]
+"tsml_eval/experiments/classification_experiments.py" = ["E402", "T201"]
+"tsml_eval/experiments/threaded_classification_experiments.py" = ["T201"]
+"tsml_eval/experiments/regression_experiments.py" = ["E402", "T201"]
+"tsml_eval/experiments/threaded_regression_experiments.py" = ["T201"]
+"tsml_eval/experiments/clustering_experiments.py" = ["E402", "T201"]
+"tsml_eval/experiments/threaded_clustering_experiments.py" = ["T201"]
+"tsml_eval/experiments/forecasting_experiments.py" = ["E402", "T201"]
+"tsml_eval/experiments/threaded_forecasting_experiments.py" = ["T201"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
-
-[tool.flake8]
-exclude = [
-    "tsml_eval/_wip/*",
-]
-per-file-ignores = [
-    "tsml_eval/experiments/classification_experiments.py:E402,T201",
-    "tsml_eval/experiments/threaded_classification_experiments.py:T201",
-    "tsml_eval/experiments/regression_experiments.py:E402,T201",
-    "tsml_eval/experiments/threaded_regression_experiments.py:T201",
-    "tsml_eval/experiments/clustering_experiments.py:E402,T201",
-    "tsml_eval/experiments/threaded_clustering_experiments.py:T201",
-    "tsml_eval/experiments/forecasting_experiments.py:E402,T201",
-    "tsml_eval/experiments/threaded_forecasting_experiments.py:T201",
-    "tsml_eval/publications/*:E402,T201",
-]
 
 [tool.mypy]
 ignore_missing_imports = true
 follow_imports = "silent"
 exclude = [
     "_wip/",
-    # Ignore the publications symlinks and its contents
-    "tsml_eval/publications/2023",
 ]
 
 
@@ -160,7 +159,6 @@ exclude = [
 testpaths = "tsml_eval"
 addopts = '''
     --ignore tsml_eval/_wip
-    --ignore tsml_eval/publications/2023
     --doctest-modules
     --durations 20
     --timeout 600

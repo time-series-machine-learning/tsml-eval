@@ -26,6 +26,7 @@ updates:
     labels:
       - "maintenance"
       - "dependencies"
+      - "full pytest actions"
     groups:
       python-packages:
         patterns:

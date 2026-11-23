@@ -1,7 +1,5 @@
 recursive-include tsml_eval *.py
-recursive-include tsml_eval/_wip *.csv *.xlsx
 recursive-include tsml_eval/datasets *.ts *.csv *.txt
-recursive-include tsml_eval/publications *.csv *.txt *.md *.ipynb
 recursive-include tsml_eval/testing/_test_eval_files *.csv *.pdf *.pickle
 recursive-include tsml_eval/testing/_test_results_files *.csv
 include LICENSE
@@ -9,6 +7,8 @@ include MANIFEST.in
 include pyproject.toml
 include README.md
 
+recursive-exclude tsml_eval/_wip *
+recursive-exclude tsml_eval/publications *
 recursive-exclude .binder *
 recursive-exclude .github *
 recursive-exclude _tsml_research_resources *
@@ -21,4 +21,5 @@ exclude .gitattributes
 exclude .gitignore
 exclude .pre-commit-config.yaml
 exclude .readthedocs.yml
+exclude AGENTS.md
 exclude conftest.py

@@ -321,7 +321,7 @@ class FromFileHIVECOTE(BaseClassifier):
                     for v in range(len(test_index)):
                         dists[v] = np.add(
                             dists[v],
-                            [k for k in X_probas[test_index[v], n]]
+                            [*X_probas[test_index[v], n]]
                             * (np.ones(self.n_classes_) * weight_list[n]),
                         )
 

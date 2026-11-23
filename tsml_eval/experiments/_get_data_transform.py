@@ -164,9 +164,7 @@ def _set_unequal_transformer(t, random_state, n_jobs):
 
 def _set_unbalanced_transformer(t, random_state, n_jobs):
     if t == "smote":
-        from tsml_eval._wip.rt.transformations.collection.imbalance._smote import (
-            SMOTE,
-        )
+        from aeon.transformations.collection.imbalance import SMOTE
 
         return SMOTE(
             n_neighbors=5,
@@ -178,9 +176,7 @@ def _set_unbalanced_transformer(t, random_state, n_jobs):
         )
 
     elif t == "adasyn":
-        from tsml_eval._wip.rt.transformations.collection.imbalance._adasyn import (
-            ADASYN,
-        )
+        from aeon.transformations.collection.imbalance import ADASYN
 
         return ADASYN(
             n_neighbors=5,
@@ -204,16 +200,12 @@ def _set_unbalanced_transformer(t, random_state, n_jobs):
             distance_params=None,
         )
     elif t == "ohit":
-        from tsml_eval._wip.rt.transformations.collection.imbalance._ohit import (
-            OHIT,
-        )
+        from aeon.transformations.collection.imbalance import OHIT
 
         return OHIT(distance="euclidean", random_state=random_state)
 
     elif t == "esmote":
-        from tsml_eval._wip.rt.transformations.collection.imbalance._esmote import (
-            ESMOTE,
-        )
+        from aeon.transformations.collection.imbalance import ESMOTE
 
         return ESMOTE(
             n_neighbors=5,

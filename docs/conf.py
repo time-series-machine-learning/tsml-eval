@@ -106,7 +106,38 @@ copybutton_exclude = ".linenos, .gp, .go"
 remove_from_toctrees = ["auto_generated/*"]
 
 # sphinx-reredirects
-redirects = {"redirect": "index"}
+redirects = {
+    "publications/2023/rist_pipeline/rist_pipeline": (
+        "https://github.com/time-series-machine-learning/rist-pipeline-2023"
+    ),
+    "publications/y2023/rist_pipeline/rist_pipeline": (
+        "https://github.com/time-series-machine-learning/rist-pipeline-2023"
+    ),
+    "publications/2023/tser_archive_expansion/tser_archive_expansion": (
+        "https://github.com/time-series-machine-learning/tser-archive-expansion-2024"
+    ),
+    "publications/y2023/tser_archive_expansion/tser_archive_expansion": (
+        "https://github.com/time-series-machine-learning/tser-archive-expansion-2024"
+    ),
+    "publications/2023/tsc_bakeoff/tsc_bakeoff_2023": (
+        "https://github.com/time-series-machine-learning/tsc-bakeoff-2024"
+    ),
+    "publications/y2023/tsc_bakeoff/tsc_bakeoff_2023": (
+        "https://github.com/time-series-machine-learning/tsc-bakeoff-2024"
+    ),
+    "publications/2023/distance_based_clustering/distance_based_clustering": (
+        "https://github.com/time-series-machine-learning/elastic-distance-clustering-2023"
+    ),
+    "publications/y2023/distance_based_clustering/distance_based_clustering": (
+        "https://github.com/time-series-machine-learning/elastic-distance-clustering-2023"
+    ),
+    "publications/2023/distance_based_clustering/alignment_and_paths_figures": (
+        "https://github.com/time-series-machine-learning/elastic-distance-clustering-2023/blob/main/alignment_and_paths_figures.ipynb"
+    ),
+    "publications/y2023/distance_based_clustering/alignment_and_paths_figures": (
+        "https://github.com/time-series-machine-learning/elastic-distance-clustering-2023/blob/main/alignment_and_paths_figures.ipynb"
+    ),
+}
 
 # nbsphinx
 
@@ -232,3 +263,18 @@ html_theme_options = {
         },
     ],
 }
+
+
+def _orphan_publication_pages(app, doctree):
+    """Keep the publication pages out of the toctree check and the sidebar.
+
+    The pages are linked from publications.md rather than a toctree. Setting this
+    here keeps the files unchanged, as some sit at GitHub paths printed in papers.
+    """
+    if app.env.docname.startswith("publications/"):
+        app.env.metadata[app.env.docname]["orphan"] = True
+
+
+def setup(app):
+    """Connect the publication page handler after the metadata is collected."""
+    app.connect("doctree-read", _orphan_publication_pages, priority=900)
