@@ -26,6 +26,7 @@ from tsml_eval.experiments.tests import (
     _CLASSIFIER_RESULTS_PATH,
     _REGRESSOR_RESULTS_PATH,
 )
+from tsml_eval.utils.splitters import BufferedBlockedKFold, HVBlockCrossValidator
 from tsml_eval.utils.tests.test_results_writing import (
     _check_classification_file_format,
     _check_regression_file_format,
@@ -395,6 +396,57 @@ def test_cross_validation_groups_and_precomputed_splits(tmp_path, task):
 
     with pytest.warns(UserWarning, match="ignored by pre-computed splits"):
         get_folds(X, y, cv=folds, groups=groups)
+
+
+@pytest.mark.parametrize("task", ["classification", "regression"])
+@pytest.mark.parametrize(
+    "splitter",
+    [HVBlockCrossValidator(h=1, v=1), BufferedBlockedKFold(n_splits=3, gap=1)],
+)
+def test_cross_validation_sequence_splitters(tmp_path, task, splitter):
+    """Pass sequence IDs through groups to the dependent time series splitters."""
+    X = np.zeros((12, 1, 3))
+    y = np.tile([0, 1], 6) if task == "classification" else np.arange(12) / 10
+    groups = np.repeat(["s0", "s1"], 6)
+    get_folds = getattr(cv_module, f"{task}_cross_validation_folds")
+    run_cv = getattr(cv_module, f"{task}_cross_validation")
+    estimator = DummyClassifier() if task == "classification" else DummyRegressor()
+
+    folds = get_folds(X, y, cv=splitter, groups=groups)
+    expected = list(splitter.split(X, y, groups))
+    assert len(folds) == len(expected)
+    for (train, test), (expected_train, expected_test) in zip(folds, expected):
+        np.testing.assert_array_equal(train, expected_train)
+        np.testing.assert_array_equal(test, expected_test)
+    ungrouped = get_folds(X, y, cv=splitter)
+    assert any(
+        not np.array_equal(train, ungrouped_train)
+        for (train, _), (ungrouped_train, _) in zip(folds, ungrouped)
+    )
+
+    run_cv(
+        X,
+        y,
+        estimator,
+        str(tmp_path),
+        cv=splitter,
+        groups=groups,
+        fold_ids=[0, 1],
+        dataset_name="Sequences",
+        benchmark_time=False,
+    )
+    results_dir = tmp_path / type(estimator).__name__ / "Predictions" / "Sequences"
+    check_format = (
+        _check_classification_file_format
+        if task == "classification"
+        else _check_regression_file_format
+    )
+    for fold in [0, 1]:
+        check_format(
+            str(results_dir / f"testResample{fold}.csv"),
+            num_results_lines=len(folds[fold][1]),
+        )
+    assert not (results_dir / "testResample2.csv").exists()
 
 
 def test_cross_validation_precomputed_split_checks():

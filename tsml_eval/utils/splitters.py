@@ -1,4 +1,4 @@
-"""Cross-validation utilities for dependent time-series cases."""
+"""Cross-validation splitters for dependent time series cases."""
 
 __maintainer__ = ["MatthewMiddlehurst"]
 __all__ = [
@@ -12,130 +12,33 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import BaseCrossValidator
 from sklearn.utils import indexable
-from sklearn.utils.validation import _num_samples
 
 
-def _validate_non_negative_integer(value, name):
-    """Validate and return a non-negative integer parameter."""
-    if (
-        isinstance(value, (bool, np.bool_))
-        or not isinstance(value, Integral)
-        or value < 0
-    ):
-        raise ValueError(f"{name} must be a non-negative integer, but found {value!r}.")
+def _check_integer(value, name, min_value):
+    if not isinstance(value, Integral):
+        raise TypeError(f"{name} must be an integer, but found {value!r}.")
+    if value < min_value:
+        raise ValueError(f"{name} must be at least {min_value}, but found {value}.")
     return int(value)
 
 
-def _validate_n_splits(n_splits):
-    """Validate and return the number of folds."""
-    if (
-        isinstance(n_splits, (bool, np.bool_))
-        or not isinstance(n_splits, Integral)
-        or n_splits < 2
-    ):
-        raise ValueError(
-            "n_splits must be an integer greater than or equal to 2, "
-            f"but found {n_splits!r}."
-        )
-    return int(n_splits)
-
-
-def _get_sequence_indices(n_samples, groups):
-    """Return input-order indices for each independent sequence."""
+def _sequence_indices(n_cases, groups):
+    """Return the case indices of each independent sequence, in input order."""
     if groups is None:
-        return [np.arange(n_samples, dtype=int)]
+        return [np.arange(n_cases)]
 
-    if isinstance(groups, (list, tuple)):
-        if any(
-            isinstance(
-                item, (list, tuple, np.ndarray, pd.Series, pd.Index, pd.DataFrame)
-            )
-            for item in groups
-        ):
-            raise ValueError("groups must be one-dimensional.")
-        groups_array = np.empty(len(groups), dtype=object)
-        groups_array[:] = groups
-    else:
-        if np.ndim(groups) != 1:
-            raise ValueError("groups must be one-dimensional.")
-        groups_array = groups
-
-    if np.any(pd.isna(groups_array)):
+    # np.asarray would turn [0, "0", np.nan] into strings, merging 0 and "0" and
+    # hiding the missing value. A Series keeps the original objects.
+    codes, _ = pd.factorize(pd.Series(groups))
+    if np.any(codes < 0):
         raise ValueError("groups must not contain missing values.")
-
-    codes, _ = pd.factorize(groups_array, sort=False, use_na_sentinel=False)
     order = np.argsort(codes, kind="stable")
-    counts = np.bincount(codes)
-    return np.split(order, np.cumsum(counts[:-1]))
+    return np.split(order, np.cumsum(np.bincount(codes))[:-1])
 
 
-def _get_exclusion_bounds(test_start, test_stop, sequence_size, h):
-    """Return the test block and buffer bounds within a sequence."""
-    return max(0, test_start - h), min(sequence_size, test_stop + h)
-
-
-def _validate_test_size(sequence_indices, test_size):
-    """Validate that every sequence can contain a complete test block."""
-    min_sequence_size = min(len(indices) for indices in sequence_indices)
-    if min_sequence_size < test_size:
-        raise ValueError(
-            "Each sequence must contain at least 2 * v + 1 cases. "
-            f"Found a test block size of {test_size} and a smallest sequence "
-            f"size of {min_sequence_size}."
-        )
-
-
-def _validate_hv_inputs(X, y, groups, h, v):
-    """Validate hv-block inputs and return sample count and per-sequence indices."""
-    X, y, groups = indexable(X, y, groups)
-    n_samples = _num_samples(X)
-    if n_samples < 2:
-        raise ValueError(
-            "HVBlockCrossValidator requires at least 2 cases, "
-            f"but found {n_samples}."
-        )
-
-    sequence_indices = _get_sequence_indices(n_samples, groups)
-    test_size = 2 * v + 1
-    _validate_test_size(sequence_indices, test_size)
-
-    if len(sequence_indices) == 1 and n_samples <= 2 * h + test_size:
-        parameters = "h" if v == 0 else "h or v"
-        raise ValueError(
-            f"A split has no training cases. Reduce {parameters}, or provide "
-            "more cases or independent sequences."
-        )
-
-    return n_samples, sequence_indices
-
-
-def _yield_sliding_block_splits(n_samples, sequence_indices, h, v):
-    """Yield two-sided buffered splits for every valid sliding test block."""
-    test_size = 2 * v + 1
-    split_specs = []
-    for indices in sequence_indices:
-        for test_start in range(len(indices) - test_size + 1):
-            test_stop = test_start + test_size
-            excluded_start, excluded_stop = _get_exclusion_bounds(
-                test_start, test_stop, len(indices), h
-            )
-            split_specs.append(
-                (
-                    indices[test_start],
-                    indices,
-                    test_start,
-                    test_stop,
-                    excluded_start,
-                    excluded_stop,
-                )
-            )
-
-    split_specs.sort(key=lambda spec: spec[0])
-    for _, indices, test_start, test_stop, excluded_start, excluded_stop in split_specs:
-        train_mask = np.ones(n_samples, dtype=bool)
-        train_mask[indices[excluded_start:excluded_stop]] = False
-        train = np.flatnonzero(train_mask)
-        yield train, indices[test_start:test_stop].copy()
+def _exclusion_bounds(test_start, test_stop, sequence_size, buffer):
+    """Return the bounds of a test block and its buffer within a sequence."""
+    return max(0, test_start - buffer), min(sequence_size, test_stop + buffer)
 
 
 class HVBlockCrossValidator(BaseCrossValidator):
@@ -165,11 +68,24 @@ class HVBlockCrossValidator(BaseCrossValidator):
     ----------
     h : int, default=0
         Number of neighbouring cases to exclude from training on each side of the
-        test block.
+        test block. The default of 0 excludes none.
     v : int, default=0
         Number of cases on each side of the centre case that form the test block.
         The complete test block therefore contains ``2v + 1`` cases. ``v=0`` gives
         h-block cross-validation.
+
+    Notes
+    -----
+    Each fold tests only ``2v + 1`` neighbouring cases, so the error should be
+    pooled over all folds. Averaging a per-case loss over folds, such as squared
+    error or accuracy, gives the pooled value because every fold has the same size.
+    Metrics that need several cases or classes, such as R², AUROC or log loss, are
+    not defined for a single fold.
+
+    The cross-validation functions in ``tsml_eval.experiments`` write one results
+    file per fold, and tsml-eval's evaluation calculates every metric per file. For
+    classification, a fold whose test block holds one class makes that calculation
+    fail.
 
     References
     ----------
@@ -185,7 +101,7 @@ class HVBlockCrossValidator(BaseCrossValidator):
     Examples
     --------
     >>> import numpy as np
-    >>> from tsml_eval.utils.cross_validation import HVBlockCrossValidator
+    >>> from tsml_eval.utils.splitters import HVBlockCrossValidator
     >>> X = np.arange(8)
     >>> cv = HVBlockCrossValidator(h=1, v=1)
     >>> for train, test in cv.split(X):
@@ -202,8 +118,8 @@ class HVBlockCrossValidator(BaseCrossValidator):
     __metadata_request__split = {"groups": True}
 
     def __init__(self, h=0, v=0):
-        self.h = _validate_non_negative_integer(h, "h")
-        self.v = _validate_non_negative_integer(v, "v")
+        self.h = _check_integer(h, "h", 0)
+        self.v = _check_integer(v, "v", 0)
 
     def get_n_splits(self, X, y=None, groups=None):
         """Return the number of valid sliding test blocks.
@@ -223,8 +139,8 @@ class HVBlockCrossValidator(BaseCrossValidator):
         n_splits : int
             Total number of valid sliding test blocks.
         """
-        _, sequence_indices = _validate_hv_inputs(X, y, groups, h=self.h, v=self.v)
-        return sum(len(indices) - 2 * self.v for indices in sequence_indices)
+        sequences = self._sequences(X, y, groups)
+        return sum(len(indices) - 2 * self.v for indices in sequences)
 
     def split(self, X, y=None, groups=None):
         """Generate sliding hv-block train and test indices.
@@ -250,12 +166,47 @@ class HVBlockCrossValidator(BaseCrossValidator):
         test : np.ndarray
             Test block indices.
         """
-        n_samples, sequence_indices = _validate_hv_inputs(
-            X, y, groups, h=self.h, v=self.v
-        )
-        yield from _yield_sliding_block_splits(
-            n_samples, sequence_indices, h=self.h, v=self.v
-        )
+        sequences = self._sequences(X, y, groups)
+        n_cases = sum(len(indices) for indices in sequences)
+        test_size = 2 * self.v + 1
+
+        blocks = [
+            (indices, start)
+            for indices in sequences
+            for start in range(len(indices) - test_size + 1)
+        ]
+        # Yield folds in the input order of each test block's first case.
+        blocks.sort(key=lambda block: block[0][block[1]])
+
+        for indices, start in blocks:
+            stop = start + test_size
+            excluded_start, excluded_stop = _exclusion_bounds(
+                start, stop, len(indices), self.h
+            )
+            train = np.ones(n_cases, dtype=bool)
+            train[indices[excluded_start:excluded_stop]] = False
+            yield np.flatnonzero(train), indices[start:stop].copy()
+
+    def _sequences(self, X, y, groups):
+        X, y, groups = indexable(X, y, groups)
+        sequences = _sequence_indices(len(X), groups)
+
+        test_size = 2 * self.v + 1
+        smallest = min(len(indices) for indices in sequences)
+        if smallest < test_size:
+            raise ValueError(
+                "Each sequence must contain at least 2 * v + 1 cases. "
+                f"Found a test block size of {test_size} and a smallest sequence "
+                f"size of {smallest}."
+            )
+        # With several sequences, the other sequences are always available to train.
+        if len(sequences) == 1 and len(X) <= 2 * self.h + test_size:
+            parameters = "h" if self.v == 0 else "h or v"
+            raise ValueError(
+                f"A split has no training cases. Reduce {parameters}, or provide "
+                "more cases or independent sequences."
+            )
+        return sequences
 
 
 class BufferedBlockedKFold(BaseCrossValidator):
@@ -281,12 +232,12 @@ class BufferedBlockedKFold(BaseCrossValidator):
         least ``n_splits`` cases so that it contributes to every fold.
     gap : int, default=0
         Number of neighbouring cases to exclude from training on each side of every
-        test block.
+        test block. The default of 0 excludes none.
 
     Examples
     --------
     >>> import numpy as np
-    >>> from tsml_eval.utils.cross_validation import BufferedBlockedKFold
+    >>> from tsml_eval.utils.splitters import BufferedBlockedKFold
     >>> X = np.arange(10)
     >>> groups = np.repeat(["sequence_a", "sequence_b"], 5)
     >>> cv = BufferedBlockedKFold(n_splits=2, gap=1)
@@ -300,8 +251,8 @@ class BufferedBlockedKFold(BaseCrossValidator):
     __metadata_request__split = {"groups": True}
 
     def __init__(self, n_splits=5, gap=0):
-        self.n_splits = _validate_n_splits(n_splits)
-        self.gap = _validate_non_negative_integer(gap, "gap")
+        self.n_splits = _check_integer(n_splits, "n_splits", 2)
+        self.gap = _check_integer(gap, "gap", 0)
 
     def get_n_splits(self, X=None, y=None, groups=None):
         """Return the configured number of folds.
@@ -350,63 +301,36 @@ class BufferedBlockedKFold(BaseCrossValidator):
             Test case indices combined across sequences.
         """
         X, y, groups = indexable(X, y, groups)
-        n_samples = _num_samples(X)
-        if n_samples == 0:
-            raise ValueError("BufferedBlockedKFold requires at least one case.")
+        n_cases = len(X)
+        sequences = _sequence_indices(n_cases, groups)
 
-        sequence_indices = _get_sequence_indices(n_samples, groups)
-
-        min_sequence_size = min(len(indices) for indices in sequence_indices)
-        if min_sequence_size < self.n_splits:
+        smallest = min(len(indices) for indices in sequences)
+        if smallest < self.n_splits:
             raise ValueError(
                 "Each sequence must contain at least n_splits cases so that it "
                 "contributes to every test fold. "
                 f"Found n_splits={self.n_splits} and a smallest sequence size of "
-                f"{min_sequence_size}."
+                f"{smallest}."
             )
 
-        sequence_blocks = [
-            np.array_split(np.arange(len(indices), dtype=int), self.n_splits)
-            for indices in sequence_indices
+        blocks = [
+            np.array_split(np.arange(len(indices)), self.n_splits)
+            for indices in sequences
         ]
-
-        fold_specs = []
         for fold in range(self.n_splits):
-            excluded_cases = 0
-            sequence_specs = []
-            for indices, blocks in zip(sequence_indices, sequence_blocks):
-                block_positions = blocks[fold]
-                excluded_start, excluded_stop = _get_exclusion_bounds(
-                    block_positions[0],
-                    block_positions[-1] + 1,
-                    len(indices),
-                    self.gap,
+            train = np.ones(n_cases, dtype=bool)
+            test = []
+            for indices, sequence_blocks in zip(sequences, blocks):
+                positions = sequence_blocks[fold]
+                excluded_start, excluded_stop = _exclusion_bounds(
+                    positions[0], positions[-1] + 1, len(indices), self.gap
                 )
-                excluded_cases += excluded_stop - excluded_start
-                sequence_specs.append(
-                    (indices, block_positions, excluded_start, excluded_stop)
-                )
+                train[indices[excluded_start:excluded_stop]] = False
+                test.append(indices[positions])
 
-            if excluded_cases == n_samples:
+            if not train.any():
                 raise ValueError(
-                    f"Fold {fold} has no training cases. Reduce gap, increase "
-                    "n_splits, or provide more cases per sequence."
+                    f"Fold {fold} has no training cases. Reduce gap, or provide more "
+                    "cases per sequence."
                 )
-            fold_specs.append(sequence_specs)
-
-        for sequence_specs in fold_specs:
-            train_mask = np.ones(n_samples, dtype=bool)
-            test_parts = []
-
-            for (
-                indices,
-                block_positions,
-                excluded_start,
-                excluded_stop,
-            ) in sequence_specs:
-                test_parts.append(indices[block_positions])
-                train_mask[indices[excluded_start:excluded_stop]] = False
-
-            train = np.flatnonzero(train_mask)
-            test = np.sort(np.concatenate(test_parts))
-            yield train, test
+            yield np.flatnonzero(train), np.sort(np.concatenate(test))
