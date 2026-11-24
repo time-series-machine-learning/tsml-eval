@@ -3,6 +3,7 @@
 import os
 
 import numpy as np
+import pandas as pd
 import pytest
 from aeon.classification import DummyClassifier
 from aeon.regression import DummyRegressor
@@ -196,3 +197,36 @@ def test_train_estimate_does_not_refit_fit_is_empty_transforms(
     )
 
     assert _StatelessRecordingTransformer.calls == [20, 20]
+
+
+@pytest.mark.parametrize(
+    "run_experiment, estimator",
+    [
+        (run_classification_experiment, DummyClassifier()),
+        (run_regression_experiment, DummyRegressor()),
+    ],
+)
+def test_train_estimate_with_dataframe_input(run_experiment, estimator, tmp_path):
+    """Test a pandas collection is converted before the CV train estimate."""
+    X = pd.DataFrame(np.random.default_rng(0).normal(size=(20, 12)))
+    y = (
+        np.tile([0, 1], 10)
+        if run_experiment is run_classification_experiment
+        else (np.arange(20, dtype=float))
+    )
+
+    run_experiment(
+        X,
+        y,
+        X,
+        y,
+        estimator,
+        str(tmp_path),
+        build_test_file=False,
+        build_train_file=True,
+        benchmark_time=False,
+    )
+
+    assert os.path.exists(
+        tmp_path / type(estimator).__name__ / "Predictions" / "trainResults.csv"
+    )

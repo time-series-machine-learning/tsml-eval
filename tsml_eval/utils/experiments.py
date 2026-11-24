@@ -13,6 +13,8 @@ from collections.abc import Sequence
 
 import gpustat
 import numpy as np
+from aeon.utils.conversion import convert_collection
+from aeon.utils.validation.collection import is_equal_length
 from sklearn.base import BaseEstimator
 from sklearn.utils import check_random_state
 
@@ -44,6 +46,15 @@ def _results_present(path, estimator, dataset, resample_id=None, split="TEST"):
             return True
 
     return False
+
+
+def _convert_collection(X):
+    """Convert a collection to a numpy array or a list of numpy arrays."""
+    if isinstance(X, np.ndarray) or (
+        isinstance(X, list) and all(isinstance(x, np.ndarray) for x in X)
+    ):
+        return X
+    return convert_collection(X, "numpy3D" if is_equal_length(X) else "np-list")
 
 
 def _fit_is_empty(transforms):

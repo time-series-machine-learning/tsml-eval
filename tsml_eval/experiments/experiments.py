@@ -50,6 +50,7 @@ from tsml_eval.estimators.regression._sklearn import SklearnToAeonRegressor
 from tsml_eval.utils.datasets import load_experiment_data
 from tsml_eval.utils.experiments import (
     _check_existing_results,
+    _convert_collection,
     _fit_is_empty,
     _index_cases,
     estimator_attributes_to_file,
@@ -164,6 +165,9 @@ def run_classification_experiment(
 
     if classifier_name is None:
         classifier_name = type(classifier).__name__
+
+    X_train = _convert_collection(X_train)
+    X_test = _convert_collection(X_test)
 
     use_fit_predict = False
     # aeon classifier
@@ -565,6 +569,9 @@ def run_regression_experiment(
     if regressor_name is None:
         regressor_name = type(regressor).__name__
 
+    X_train = _convert_collection(X_train)
+    X_test = _convert_collection(X_test)
+
     use_fit_predict = False
     # aeon regressor
     if isinstance(regressor, BaseRegressor):
@@ -938,6 +945,10 @@ def run_clustering_experiment(
 
     if clusterer_name is None:
         clusterer_name = type(clusterer).__name__
+
+    X_train = _convert_collection(X_train)
+    if X_test is not None:
+        X_test = _convert_collection(X_test)
 
     can_predict = True
     # aeon clusterer
