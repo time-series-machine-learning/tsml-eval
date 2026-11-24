@@ -84,8 +84,12 @@ def rank_array(arr, higher_better=True):
     Returns
     -------
     ranks : numpy.ndarray
-        Array of ranks, same shape as `arr`.
+        Array of ranks, same shape as `arr`. If any value in `arr` is NaN, all ranks
+        are NaN.
     """
+    if np.isnan(arr).any():
+        return np.full(len(arr), np.nan)
+
     # argsort returns indices that would sort the array
     sorter = np.argsort(arr)
     ranks = np.zeros(len(arr), dtype=float)
