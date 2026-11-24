@@ -9,6 +9,7 @@ import pytest
 from tsml_eval.evaluation.multiple_estimator_evaluation import (
     evaluate_classifiers,
     evaluate_classifiers_by_problem,
+    evaluate_classifiers_from_file,
     evaluate_clusterers_by_problem,
     evaluate_forecasters_by_problem,
     evaluate_regressors_by_problem,
@@ -135,6 +136,59 @@ def test_evaluate_classifiers_by_problem_broken_results(
         assert "Chinatown" not in means
         assert "Trace" in means
         assert os.path.exists(eval_path + f"{eval_name}_summary.csv")
+
+
+@pytest.mark.parametrize("error_on_missing", [True, False])
+def test_evaluate_classifiers_from_file_broken_results(error_on_missing):
+    """Test results files which fail to load are skipped along with their names."""
+    paths = {
+        "TSF": _TEST_RESULTS_PATH + "/classification/",
+        "BrokenROCKET": _TEST_RESULTS_PATH + "/broken/",
+        "1NN-DTW": _TEST_RESULTS_PATH + "/classification/",
+    }
+    datasets = ["Chinatown", "Trace"]
+    save_path = _TEST_OUTPUT_PATH + "/eval/classification/"
+    eval_name = f"broken_from_file_{error_on_missing}"
+    eval_path = f"{save_path}{eval_name}/"
+    shutil.rmtree(eval_path, ignore_errors=True)
+
+    # the broken file is not last, so skipping it without its name would shift the
+    # names of every result after it
+    load_paths = [
+        f"{path}{classifier}/Predictions/{dataset}/testResample0.csv"
+        for classifier, path in paths.items()
+        for dataset in datasets
+    ]
+    names = [classifier for classifier in paths for _ in datasets]
+
+    kwargs = {
+        "load_paths": load_paths,
+        "save_path": save_path,
+        "error_on_missing": error_on_missing,
+        "continue_on_missing": True,
+        "eval_name": eval_name,
+        "estimator_names": names,
+    }
+
+    if error_on_missing:
+        with pytest.raises(
+            ValueError,
+            match="BrokenROCKET/Predictions/Chinatown/testResample0.csv could not be "
+            "loaded",
+        ):
+            evaluate_classifiers_from_file(**kwargs)
+        return
+
+    evaluate_classifiers_from_file(**kwargs)
+
+    means = _read_rows(eval_path + "Accuracy/accuracy_mean.csv")
+    assert means["Estimators:"] == ["1NN-DTW", "BrokenROCKET", "TSF"]
+    assert means["Chinatown"][1] == "nan"
+    for i, classifier in enumerate(means["Estimators:"]):
+        cr = ClassifierResults().load_from_file(
+            f"{paths[classifier]}{classifier}/Predictions/Trace/testResample0.csv"
+        )
+        assert float(means["Trace"][i]) == pytest.approx(cr.accuracy)
 
 
 def test_evaluate_clusterers_by_problem():

@@ -115,7 +115,8 @@ def evaluate_classifiers_from_file(
     save_path : str
         The path to save the evaluation results to.
     error_on_missing : bool, default=True
-        Whether to raise an error if results are missing.
+        Whether to raise an error if results are missing. Results files that fail
+        to load are treated as missing.
     continue_on_missing : bool, default=False
         Whether to continue the evaluation if results are missing.
         If False, removes datasets with missing results from the evaluation.
@@ -130,13 +131,17 @@ def evaluate_classifiers_from_file(
         the estimator_name attribute of each classifier result.
     """
     classifier_results = []
-    for load_path in load_paths:
+    # only keep names for results that load, so they stay aligned
+    names = None if estimator_names is None else []
+    for i, load_path in enumerate(load_paths):
         try:
             classifier_results.append(
                 ClassifierResults().load_from_file(
                     load_path, verify_values=verify_results
                 )
             )
+            if names is not None:
+                names.append(estimator_names[i])
         except FileNotFoundError:
             if error_on_missing:
                 raise FileNotFoundError(f"Results for {load_path} not found.")
@@ -153,7 +158,7 @@ def evaluate_classifiers_from_file(
         error_on_missing=error_on_missing,
         continue_on_missing=continue_on_missing,
         eval_name=eval_name,
-        estimator_names=estimator_names,
+        estimator_names=names,
     )
 
 
@@ -210,7 +215,8 @@ def evaluate_classifiers_by_problem(
     load_train_results : bool, default=False
         Whether to load train results as well as test results.
     error_on_missing : bool, default=True
-        Whether to raise an error if results are missing.
+        Whether to raise an error if results are missing. Results files that fail
+        to load are treated as missing.
     continue_on_missing : bool, default=False
         Whether to continue the evaluation if results are missing.
         If False, removes datasets with missing results from the evaluation.
@@ -401,7 +407,8 @@ def evaluate_clusterers_from_file(
     save_path : str
         The path to save the evaluation results to.
     error_on_missing : bool, default=True
-        Whether to raise an error if results are missing.
+        Whether to raise an error if results are missing. Results files that fail
+        to load are treated as missing.
     continue_on_missing : bool, default=False
         Whether to continue the evaluation if results are missing.
         If False, removes datasets with missing results from the evaluation.
@@ -416,13 +423,17 @@ def evaluate_clusterers_from_file(
         the estimator_name attribute of each clusterer result.
     """
     clusterer_results = []
-    for load_path in load_paths:
+    # only keep names for results that load, so they stay aligned
+    names = None if estimator_names is None else []
+    for i, load_path in enumerate(load_paths):
         try:
             clusterer_results.append(
                 ClustererResults().load_from_file(
                     load_path, verify_values=verify_results
                 )
             )
+            if names is not None:
+                names.append(estimator_names[i])
         except FileNotFoundError:
             if error_on_missing:
                 raise FileNotFoundError(f"Results for {load_path} not found.")
@@ -439,7 +450,7 @@ def evaluate_clusterers_from_file(
         error_on_missing=error_on_missing,
         continue_on_missing=continue_on_missing,
         eval_name=eval_name,
-        estimator_names=estimator_names,
+        estimator_names=names,
     )
 
 
@@ -496,7 +507,8 @@ def evaluate_clusterers_by_problem(
     load_test_results : bool, default=True
         Whether to load test results as well as train results.
     error_on_missing : bool, default=True
-        Whether to raise an error if results are missing.
+        Whether to raise an error if results are missing. Results files that fail
+        to load are treated as missing.
     continue_on_missing : bool, default=False
         Whether to continue the evaluation if results are missing.
         If False, removes datasets with missing results from the evaluation.
@@ -687,7 +699,8 @@ def evaluate_regressors_from_file(
     save_path : str
         The path to save the evaluation results to.
     error_on_missing : bool, default=True
-        Whether to raise an error if results are missing.
+        Whether to raise an error if results are missing. Results files that fail
+        to load are treated as missing.
     continue_on_missing : bool, default=False
         Whether to continue the evaluation if results are missing.
         If False, removes datasets with missing results from the evaluation.
@@ -702,13 +715,17 @@ def evaluate_regressors_from_file(
         the estimator_name attribute of each regressor result.
     """
     regressor_results = []
-    for load_path in load_paths:
+    # only keep names for results that load, so they stay aligned
+    names = None if estimator_names is None else []
+    for i, load_path in enumerate(load_paths):
         try:
             regressor_results.append(
                 RegressorResults().load_from_file(
                     load_path, verify_values=verify_results
                 )
             )
+            if names is not None:
+                names.append(estimator_names[i])
         except FileNotFoundError:
             if error_on_missing:
                 raise FileNotFoundError(f"Results for {load_path} not found.")
@@ -725,7 +742,7 @@ def evaluate_regressors_from_file(
         error_on_missing=error_on_missing,
         continue_on_missing=continue_on_missing,
         eval_name=eval_name,
-        estimator_names=estimator_names,
+        estimator_names=names,
     )
 
 
@@ -782,7 +799,8 @@ def evaluate_regressors_by_problem(
     load_train_results : bool, default=False
         Whether to load train results as well as test results.
     error_on_missing : bool, default=True
-        Whether to raise an error if results are missing.
+        Whether to raise an error if results are missing. Results files that fail
+        to load are treated as missing.
     continue_on_missing : bool, default=False
         Whether to continue the evaluation if results are missing.
         If False, removes datasets with missing results from the evaluation.
@@ -973,7 +991,8 @@ def evaluate_forecasters_from_file(
     save_path : str
         The path to save the evaluation results to.
     error_on_missing : bool, default=True
-        Whether to raise an error if results are missing.
+        Whether to raise an error if results are missing. Results files that fail
+        to load are treated as missing.
     continue_on_missing : bool, default=False
         Whether to continue the evaluation if results are missing.
         If False, removes datasets with missing results from the evaluation.
@@ -988,13 +1007,17 @@ def evaluate_forecasters_from_file(
         the estimator_name attribute of each forecaster result.
     """
     forecaster_results = []
-    for load_path in load_paths:
+    # only keep names for results that load, so they stay aligned
+    names = None if estimator_names is None else []
+    for i, load_path in enumerate(load_paths):
         try:
             forecaster_results.append(
                 ForecasterResults().load_from_file(
                     load_path, verify_values=verify_results
                 )
             )
+            if names is not None:
+                names.append(estimator_names[i])
         except FileNotFoundError:
             if error_on_missing:
                 raise FileNotFoundError(f"Results for {load_path} not found.")
@@ -1011,7 +1034,7 @@ def evaluate_forecasters_from_file(
         error_on_missing=error_on_missing,
         continue_on_missing=continue_on_missing,
         eval_name=eval_name,
-        estimator_names=estimator_names,
+        estimator_names=names,
     )
 
 
@@ -1065,7 +1088,8 @@ def evaluate_forecasters_by_problem(
         If int, evaluates resamples 0 to resamples-1.
         if None, treats resample as empty i.e. {split}Resample.csv.
     error_on_missing : bool, default=True
-        Whether to raise an error if results are missing.
+        Whether to raise an error if results are missing. Results files that fail
+        to load are treated as missing.
     continue_on_missing : bool, default=False
         Whether to continue the evaluation if results are missing.
         If False, removes datasets with missing results from the evaluation.
