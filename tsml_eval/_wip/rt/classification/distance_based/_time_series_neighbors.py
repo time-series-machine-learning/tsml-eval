@@ -291,11 +291,12 @@ class KNeighborsTimeSeriesClassifier(BaseClassifier):
 
         return neigh_ind
 
-    def _fit_setup(self, X, y):
-        # KNN can support if all labels are the same so always return False for single
-        # class problem so the fit will always run
-        X, y, _ = super()._fit_setup(X, y)
-        return X, y, False
+    def _check_y(self, y, n_cases, update_classes=True, allow_single_class=False):
+        # KNN can support if all labels are the same so always allow a single class
+        # so the fit will always run
+        return super()._check_y(
+            y, n_cases, update_classes=update_classes, allow_single_class=True
+        )
 
     @classmethod
     def _get_test_params(

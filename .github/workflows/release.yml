@@ -13,7 +13,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v7
+      - name: Setup Python 3.13
+        uses: actions/setup-python@v7
         with:
           python-version: "3.13"
 
@@ -28,7 +29,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v7
+      - name: Setup Python 3.13
+        uses: actions/setup-python@v7
         with:
           python-version: "3.13"
 
@@ -36,6 +38,18 @@ jobs:
         run: |
           python -m pip install build
           python -m build
+
+      - name: Check tag matches built version
+        if: github.ref_type == 'tag'
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          if ! ls dist/tsml_eval-"${RELEASE_TAG#v}"-*.whl > /dev/null 2>&1; then
+            echo "::error::Tag ${RELEASE_TAG} does not match the built distribution."
+            ls dist/
+            exit 1
+          fi
 
       - name: Store build files
         uses: actions/upload-artifact@v7
@@ -46,19 +60,20 @@ jobs:
 
   test-wheels:
     needs: build-project
-    name: Test wheels on ${{ matrix.os }} with ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
 
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-24.04, macos-14, windows-2022 ]
+        os: [ ubuntu-24.04, macOS-14, windows-2022 ]
         python-version: [ "3.12", "3.13", "3.14" ]
 
     steps:
-      - uses: actions/checkout@v7
+      - name: Checkout
+        uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v7
+      - name: Setup Python
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -71,30 +86,39 @@ jobs:
           name: dist
           path: dist
 
-      - if: matrix.os == 'windows-2022'
+      - if: runner.os == 'Windows'
         name: Windows wheel filename
         run: echo "WHEELNAME=$(ls ./dist/tsml_eval-*-none-any.whl)" >> $env:GITHUB_ENV
-      - if: matrix.os != 'windows-2022'
+      - if: runner.os != 'Windows'
         name: Unix wheel filename
         run: echo "WHEELNAME=$(ls ./dist/tsml_eval-*-none-any.whl)" >> $GITHUB_ENV
 
-      - if: matrix.os == 'windows-2022'
+      - if: runner.os == 'Windows'
         name: Windows install
         uses: nick-fields/retry@v4
         with:
           timeout_minutes: 30
           max_attempts: 3
-          command: python -m pip install "${env:WHEELNAME}[dev,all_extras]"
-      - if: matrix.os != 'windows-2022'
+          command: python -m pip install "${env:WHEELNAME}[all_extras,dev]"
+      - if: runner.os != 'Windows'
         name: Unix install
         uses: nick-fields/retry@v4
         with:
           timeout_minutes: 30
           max_attempts: 3
-          command: python -m pip install "${{ env.WHEELNAME }}[dev,all_extras]"
+          command: python -m pip install "${{ env.WHEELNAME }}[all_extras,dev]"
 
-      - name: Tests
-        run: python -m pytest -n logical
+      - name: Show dependencies
+        run: python -m pip list
+
+      # importlib import mode stops the root conftest.py adding the checkout to
+      # sys.path, which would make pytest import tsml_eval from source
+      - name: Test installed wheel
+        shell: bash
+        run: |
+          mkdir wheel-test && cd wheel-test
+          python -c "import tsml_eval; print(tsml_eval.__file__); assert 'site-packages' in tsml_eval.__file__, 'not the installed wheel'"
+          python -m pytest -c ../pyproject.toml --import-mode=importlib -n logical --pyargs tsml_eval
 
   upload-wheels:
     needs: test-wheels

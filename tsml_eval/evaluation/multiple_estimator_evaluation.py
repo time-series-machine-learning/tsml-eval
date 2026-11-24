@@ -1644,8 +1644,7 @@ def _summary_evaluation(stats, estimators, save_path, eval_name):
                 sorted_indices = list(range(len(estimators)))
             else:
                 sorted_indices = [
-                    i
-                    for i in sorted(
+                    *sorted(
                         range(len(avg_rank[i])),
                         key=lambda x: (
                             avg_rank[i][x],
@@ -1668,7 +1667,7 @@ def _summary_evaluation(stats, estimators, save_path, eval_name):
             )
 
     with open(f"{save_path}/{eval_name}_summary_table.csv", "w") as file:
-        file.write(f",{','.join([e for e in estimators])}\n")
+        file.write(f",{','.join([*estimators])}\n")
         for i, stat in enumerate(stats):
             file.write(
                 f"{stat[4]}{stat[2]}Mean,"

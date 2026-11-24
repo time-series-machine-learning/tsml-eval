@@ -12,9 +12,7 @@ if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
     MULTITHREADED=false
 fi
 
-excluded=(
-  "tsml_eval/publications/y2023/distance_based_clustering/package_distance_timing.ipynb"
-)
+excluded=()
 if [ "$1" = true ]; then
   excluded+=()
 fi

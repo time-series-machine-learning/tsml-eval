@@ -25,12 +25,23 @@ required, or install all of them using the `all_extras` extra dependency set:
 pip install tsml-eval[all_extras]
 ```
 
+To run EEG classifiers from `aeon-neuro` 0.1.0 or later, install the `neuro`
+extra with Python 3.12 or 3.13 (the Python versions supported by that release):
+
+```console
+pip install tsml-eval[neuro]
+```
+
 ```{note}
     If this results in a "no matches found" error, it may be due to how your shell
     handles special characters. Try surrounding the dependency portion with quotes i.e.
 
     pip install tsml-eval"[all_extras]"
 ```
+
+Use an aeon-neuro classifier by its class name, for example
+`get_classifier_by_name("EEGNetClassifier")`. Newly exported aeon-neuro
+classifiers can also be selected as `neuro:ClassName`.
 
 All extra dependency sets can be found in the [pyproject.toml](https://github.com/time-series-machine-learning/tsml-eval/blob/main/pyproject.toml)
 file `[project.optional-dependencies]` options.

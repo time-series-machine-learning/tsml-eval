@@ -22,6 +22,7 @@ from sklearn.kernel_ridge import KernelRidge
 from sklearn.utils import check_random_state
 
 from aeon.classification.base import BaseClassifier
+from aeon.utils.validation import check_n_jobs
 
 from tsml_eval._wip.unequal_length._pad import Padder
 from tsml_eval._wip.unequal_length._resize import Resizer
@@ -254,6 +255,7 @@ class TemporalDictionaryEnsemble(BaseClassifier):
         self.n_cases_ = len(X)
         self.n_channels_ = X[0].shape[0]
         self.max_n_timepoints_ = max([x.shape[1] for x in X])
+        self._n_jobs = check_n_jobs(self.n_jobs)
 
         self.estimators_ = []
         self.weights_ = []
@@ -795,6 +797,7 @@ class IndividualTDE(BaseClassifier):
         """
         self.n_cases_ = len(X)
         self.n_channels_ = X[0].shape[0]
+        self._n_jobs = check_n_jobs(self.n_jobs)
         self._class_vals = y
 
         if self.resize == True:

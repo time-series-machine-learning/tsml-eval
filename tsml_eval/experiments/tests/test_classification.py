@@ -146,6 +146,40 @@ def test_run_threaded_classification_experiment():
     os.remove(test_file)
 
 
+def test_threaded_classification_experiment_arguments(monkeypatch, tmp_path):
+    """Test the threaded script passes the same arguments as the unthreaded one."""
+    args = [
+        _TEST_DATA_PATH,
+        str(tmp_path),
+        "ROCKET",
+        "MinimalChinatown",
+        "0",
+        "-tr",
+        "-tto",
+        "--data_transform_name",
+        "Padder",
+    ]
+
+    calls = []
+    for module in (classification_experiments, threaded_classification_experiments):
+        monkeypatch.setattr(
+            module, "get_classifier_by_name", lambda *a, **kw: calls.append(kw)
+        )
+        monkeypatch.setattr(
+            module,
+            "load_and_run_classification_experiment",
+            lambda *a, **kw: calls.append(kw),
+        )
+        module.run_experiment(args)
+
+    # transforms are compared by their repr
+    getter, run, threaded_getter, threaded_run = (
+        {k: repr(v) for k, v in kw.items()} for kw in calls
+    )
+    assert threaded_getter == getter
+    assert threaded_run == run
+
+
 def test_run_classification_experiment_invalid_build_settings():
     """Test run_classification_experiment method with invalid build settings."""
     with pytest.raises(ValueError, match="Both test_file and train_file"):
@@ -213,6 +247,85 @@ def test_get_classifier_by_name_invalid():
     """Test get_classifier_by_name method with invalid estimator."""
     with pytest.raises(ValueError, match="UNKNOWN CLASSIFIER"):
         get_classifier_by_name("invalid")
+
+
+@pytest.mark.parametrize(
+    "name, expected",
+    [
+        ("EEGNet", "EEGNetClassifier"),
+        ("DeepConvNet", "DeepConvNetClassifier"),
+        ("RiemannianMDM", "RiemannianMDMClassifier"),
+        ("RiemannianKNN", "RiemannianKNNClassifier"),
+        ("CSP", "CSPClassifier"),
+    ],
+)
+def test_get_aeon_neuro_classifier(name, expected):
+    """Test native aeon-neuro classifiers are available by name and alias."""
+    pytest.importorskip("aeon_neuro")
+    for classifier_name in (name, expected, f"neuro:{expected}"):
+        try:
+            classifier = get_classifier_by_name(classifier_name)
+        except ModuleNotFoundError as exc:
+            pytest.skip(str(exc))
+        assert type(classifier).__name__ == expected
+
+
+@pytest.mark.parametrize(
+    "name, expected",
+    [
+        ("CSPRandomForest", "RandomForestClassifier"),
+        ("CSPRF", "RandomForestClassifier"),
+        ("CSPSVM", "SVC"),
+        ("CSPSVMClassifier", "SVC"),
+    ],
+)
+def test_get_aeon_neuro_csp_variants(name, expected):
+    """CSP variants use the requested sklearn classifier."""
+    pytest.importorskip("aeon_neuro")
+    classifier = get_classifier_by_name(name, random_state=42, n_jobs=2)
+    assert type(classifier).__name__ == "CSPClassifier"
+    assert type(classifier.classifier).__name__ == expected
+    assert classifier.random_state == 42
+    if expected == "RandomForestClassifier":
+        assert classifier.classifier.n_jobs == 2
+    else:
+        assert classifier.classifier.probability
+
+
+def test_get_aeon_neuro_classifier_invalid():
+    """Test that the prefixed lookup only accepts exported neuro classifiers."""
+    pytest.importorskip("aeon_neuro")
+    with pytest.raises(ValueError, match="UNKNOWN CLASSIFIER"):
+        get_classifier_by_name("neuro:InvalidClassifier")
+
+
+def test_get_future_aeon_neuro_classifier(monkeypatch):
+    """Test discovery of a newly exported classifier and shared parameters."""
+    classification = pytest.importorskip("aeon_neuro.classification")
+    from aeon.classification.base import BaseClassifier
+
+    class FutureClassifier(BaseClassifier):
+        __module__ = "aeon_neuro.classification.future"
+
+        def __init__(self, random_state=None, n_jobs=1):
+            self.random_state = random_state
+            self.n_jobs = n_jobs
+            super().__init__()
+
+        def _fit(self, X, y):
+            return self
+
+        def _predict(self, X):
+            return [0] * len(X)
+
+    monkeypatch.setattr(
+        classification, "FutureClassifier", FutureClassifier, raising=False
+    )
+    classifier = get_classifier_by_name(
+        "neuro:FutureClassifier", random_state=42, n_jobs=2
+    )
+    assert isinstance(classifier, FutureClassifier)
+    assert (classifier.random_state, classifier.n_jobs) == (42, 2)
 
 
 def test_aeon_classifiers_available():

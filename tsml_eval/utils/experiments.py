@@ -13,14 +13,18 @@ from collections.abc import Sequence
 
 import gpustat
 import numpy as np
+from aeon.utils.conversion import convert_collection, convert_series
+from aeon.utils.validation.collection import is_equal_length
 from sklearn.base import BaseEstimator
 from sklearn.utils import check_random_state
+
+from tsml_eval.utils.results_writing import _predictions_path
 
 
 def _results_present(path, estimator, dataset, resample_id=None, split="TEST"):
     """Check if results are present already."""
     resample_str = "Results" if resample_id is None else f"Resample{resample_id}"
-    path = f"{path}/{estimator}/Predictions/{dataset}/"
+    path = f"{_predictions_path(path, estimator, dataset)}/"
 
     if split == "BOTH":
         full_path = f"{path}test{resample_str}.csv"
@@ -44,6 +48,39 @@ def _results_present(path, estimator, dataset, resample_id=None, split="TEST"):
     return False
 
 
+def _convert_collection(X):
+    """Convert a collection to a numpy array or a list of numpy arrays."""
+    if isinstance(X, np.ndarray) or (
+        isinstance(X, list) and all(isinstance(x, np.ndarray) for x in X)
+    ):
+        return X
+    return convert_collection(X, "numpy3D" if is_equal_length(X) else "np-list")
+
+
+def _convert_series(y):
+    """Convert a series to a numpy array, with univariate series as 1D arrays."""
+    if isinstance(y, np.ndarray):
+        return y
+    y = convert_series(y, "np.ndarray")
+    return y.ravel() if y.ndim == 2 and 1 in y.shape else y
+
+
+def _fit_is_empty(transforms):
+    """Return True if every transform has the aeon fit_is_empty tag."""
+    return all(
+        hasattr(transform, "get_tag")
+        and transform.get_tag("fit_is_empty", False, False)
+        for transform in transforms
+    )
+
+
+def _index_cases(X, indices):
+    """Select cases from a numpy array or a list of numpy arrays."""
+    if isinstance(X, list):
+        return [X[i] for i in indices]
+    return X[indices]
+
+
 def _check_existing_results(
     results_path,
     estimator_name,
@@ -55,25 +92,14 @@ def _check_existing_results(
 ):
     """Check if results are present already and if they should be overwritten."""
     if not overwrite:
-        resample_str = "Result" if resample_id is None else f"Resample{resample_id}"
+        resample_str = "Results" if resample_id is None else f"Resample{resample_id}"
+        path = _predictions_path(results_path, estimator_name, dataset)
 
-        if build_test_file:
-            full_path = (
-                f"{results_path}/{estimator_name}/Predictions/{dataset}/"
-                f"/test{resample_str}.csv"
-            )
+        if build_test_file and os.path.exists(f"{path}/test{resample_str}.csv"):
+            build_test_file = False
 
-            if os.path.exists(full_path):
-                build_test_file = False
-
-        if build_train_file:
-            full_path = (
-                f"{results_path}/{estimator_name}/Predictions/{dataset}/"
-                f"/train{resample_str}.csv"
-            )
-
-            if os.path.exists(full_path):
-                build_train_file = False
+        if build_train_file and os.path.exists(f"{path}/train{resample_str}.csv"):
+            build_train_file = False
 
     return build_test_file, build_train_file
 

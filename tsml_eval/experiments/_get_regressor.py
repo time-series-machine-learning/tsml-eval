@@ -1,4 +1,4 @@
-"""Set regressor function."""
+"""Get regressor function."""
 
 __maintainer__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
@@ -110,20 +110,20 @@ def get_regressor_by_name(
         String indicating which regressor to be returned.
     random_state : int, RandomState instance or None, default=None
         Random seed or RandomState object to be used in the regressor if available.
-    n_jobs: int, default=1
+    n_jobs : int, default=1
         The number of jobs to run in parallel for both regressor ``fit`` and
         ``predict`` if available. `-1` means using all processors.
-    fit_contract: int, default=0
+    fit_contract : int, default=0
         Contract time in minutes for regressor ``fit`` if available.
-    checkpoint: str or None, default=None
-        Path to a checkpoint file to save the regressor if available. No checkpointing
-        if None.
+    checkpoint : bool or None, default=None
+        Whether to save the regressor to file periodically during ``fit``. Not
+        currently used by any regressor.
     **kwargs
         Additional keyword arguments to be passed to the regressor.
 
-    Return
-    ------
-    regressor: A BaseRegressor.
+    Returns
+    -------
+    regressor : BaseRegressor
         The regressor matching the input regressor name.
     """
     r = regressor_name.lower()
@@ -269,22 +269,30 @@ def _set_regressor_distance_based(
     if r == "1nn-ed":
         from aeon.regression.distance_based import KNeighborsTimeSeriesRegressor
 
-        return KNeighborsTimeSeriesRegressor(**kwargs)
+        return KNeighborsTimeSeriesRegressor(
+            distance="euclidean", n_jobs=n_jobs, **kwargs
+        )
     elif r == "5nn-ed":
         from aeon.regression.distance_based import KNeighborsTimeSeriesRegressor
 
-        return KNeighborsTimeSeriesRegressor(n_neighbors=5, **kwargs)
+        return KNeighborsTimeSeriesRegressor(
+            n_neighbors=5, distance="euclidean", n_jobs=n_jobs, **kwargs
+        )
     elif r == "kneighborstimeseriesregressor" or r == "1nn-dtw":
         from aeon.regression.distance_based import KNeighborsTimeSeriesRegressor
 
         return KNeighborsTimeSeriesRegressor(
-            distance="dtw", distance_params={"window": 0.1}, **kwargs
+            distance="dtw", distance_params={"window": 0.1}, n_jobs=n_jobs, **kwargs
         )
     elif r == "5nn-dtw":
         from aeon.regression.distance_based import KNeighborsTimeSeriesRegressor
 
         return KNeighborsTimeSeriesRegressor(
-            n_neighbors=5, distance="dtw", distance_params={"window": 0.1}, **kwargs
+            n_neighbors=5,
+            distance="dtw",
+            distance_params={"window": 0.1},
+            n_jobs=n_jobs,
+            **kwargs,
         )
     elif r == "1nn-msm":
         from aeon.regression.distance_based import KNeighborsTimeSeriesRegressor
@@ -293,6 +301,8 @@ def _set_regressor_distance_based(
             n_neighbors=1,
             distance="msm",
             distance_params={"window": None, "independent": True, "c": 1},
+            n_jobs=n_jobs,
+            **kwargs,
         )
     elif r == "5nn-msm":
         from aeon.regression.distance_based import KNeighborsTimeSeriesRegressor
@@ -301,6 +311,8 @@ def _set_regressor_distance_based(
             n_neighbors=5,
             distance="msm",
             distance_params={"window": None, "independent": True, "c": 1},
+            n_jobs=n_jobs,
+            **kwargs,
         )
 
 
@@ -397,6 +409,7 @@ def _set_regressor_interval_based(
         return TimeSeriesForestRegressor(
             random_state=random_state,
             n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
             **kwargs,
         )
     elif r == "tsf-i":
@@ -422,6 +435,7 @@ def _set_regressor_interval_based(
             n_estimators=500,
             random_state=random_state,
             n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
             **kwargs,
         )
     elif r == "rise-500":
@@ -433,6 +447,7 @@ def _set_regressor_interval_based(
             n_estimators=500,
             random_state=random_state,
             n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
             **kwargs,
         )
     elif r == "randomintervalspectralensembleregressor" or r == "rise":
@@ -443,6 +458,7 @@ def _set_regressor_interval_based(
         return RandomIntervalSpectralEnsembleRegressor(
             random_state=random_state,
             n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
             **kwargs,
         )
     elif r == "cif-500":
@@ -452,6 +468,7 @@ def _set_regressor_interval_based(
             n_estimators=500,
             random_state=random_state,
             n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
             **kwargs,
         )
     elif r == "canonicalintervalforestregressor" or r == "cif":
@@ -460,6 +477,7 @@ def _set_regressor_interval_based(
         return CanonicalIntervalForestRegressor(
             random_state=random_state,
             n_jobs=n_jobs,
+            time_limit_in_minutes=fit_contract,
             **kwargs,
         )
     elif r == "drcif" or r == "drcifregressor":

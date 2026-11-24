@@ -1,4 +1,4 @@
-"""get data transformer function."""
+"""Get data transformer function."""
 
 __maintainer__ = ["MatthewMiddlehurst"]
 
@@ -38,25 +38,26 @@ def get_data_transform_by_name(
     random_state=None,
     n_jobs=1,
 ):
-    """Return a transformers matching a given input name(s).
+    """Return the transformer(s) matching the given input name(s).
 
     Parameters
     ----------
-    transformer_names : str or list of str
+    transformer_names : str, list of str or None
         String or list of strings indicating the transformer(s) to be returned.
     row_normalise : bool, default=False
         Adds a Normalizer to the front of the transformer list.
     random_state : int, RandomState instance or None, default=None
-        Random seed or RandomState object to be used in the classifier if available.
-    n_jobs: int, default=1
-        The number of jobs to run in parallel for both classifier ``fit`` and
-        ``predict`` if available. `-1` means using all processors.
+        Random seed or RandomState object to be used in the transformers if
+        available.
+    n_jobs : int, default=1
+        The number of jobs to run in parallel for transformer ``fit`` and
+        ``transform`` if available. `-1` means using all processors.
 
-    Return
-    ------
-    transformers : A transformer or list of transformers.
+    Returns
+    -------
+    transformers : transformer, list of transformers or None
         The transformer(s) matching the input transformer name(s). Returns a list if
-        more than one transformer is requested.
+        more than one transformer is requested, and None if none are.
     """
     if transformer_names is None and not row_normalise:
         return None
@@ -164,9 +165,7 @@ def _set_unequal_transformer(t, random_state, n_jobs):
 
 def _set_unbalanced_transformer(t, random_state, n_jobs):
     if t == "smote":
-        from tsml_eval._wip.rt.transformations.collection.imbalance._smote import (
-            SMOTE,
-        )
+        from aeon.transformations.collection.imbalance import SMOTE
 
         return SMOTE(
             n_neighbors=5,
@@ -178,9 +177,7 @@ def _set_unbalanced_transformer(t, random_state, n_jobs):
         )
 
     elif t == "adasyn":
-        from tsml_eval._wip.rt.transformations.collection.imbalance._adasyn import (
-            ADASYN,
-        )
+        from aeon.transformations.collection.imbalance import ADASYN
 
         return ADASYN(
             n_neighbors=5,
@@ -204,16 +201,12 @@ def _set_unbalanced_transformer(t, random_state, n_jobs):
             distance_params=None,
         )
     elif t == "ohit":
-        from tsml_eval._wip.rt.transformations.collection.imbalance._ohit import (
-            OHIT,
-        )
+        from aeon.transformations.collection.imbalance import OHIT
 
         return OHIT(distance="euclidean", random_state=random_state)
 
     elif t == "esmote":
-        from tsml_eval._wip.rt.transformations.collection.imbalance._esmote import (
-            ESMOTE,
-        )
+        from aeon.transformations.collection.imbalance import ESMOTE
 
         return ESMOTE(
             n_neighbors=5,
