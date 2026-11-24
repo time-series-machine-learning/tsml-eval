@@ -102,14 +102,16 @@ class Rocket(BaseCollectionTransformer):
         """
         if isinstance(self.random_state, int):
             np.random.seed(self.random_state)
+            seed = self.random_state
         else:
             self._random_state = None
+            seed = -1
         n_channels = X[0].shape[0]
 
         # The only use of n_timepoints is to set the maximum dilation
         self.random_max_length_ = X[np.random.randint(len(X))].shape[1]
         self.kernels = _generate_kernels(
-            self.random_max_length_, self.n_kernels, n_channels,
+            self.random_max_length_, self.n_kernels, n_channels, seed
         )
         return self
 
@@ -141,7 +143,10 @@ class Rocket(BaseCollectionTransformer):
 
 
 @njit(fastmath=True, cache=True)
-def _generate_kernels(n_timepoints, n_kernels, n_channels):
+def _generate_kernels(n_timepoints, n_kernels, n_channels, seed):
+    # numba has its own random state, so it must be seeded inside the jitted function
+    if seed >= 0:
+        np.random.seed(seed)
     candidate_lengths = np.array((7, 9, 11), dtype=np.int32)
     lengths = np.random.choice(candidate_lengths, n_kernels).astype(np.int32)
 
