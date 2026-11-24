@@ -48,6 +48,20 @@ def _results_present(path, estimator, dataset, resample_id=None, split="TEST"):
     return False
 
 
+def _attributes_path(results_path, estimator_name, dataset_name, resample_id):
+    """Return the directory estimator attributes are written to for a resample.
+
+    Mirrors the results file layout, with ``Workspace`` in place of ``Predictions``
+    and a ``Resample{resample_id}`` (or ``Results`` if None) directory in place of
+    the results file.
+    """
+    path = f"{results_path}/{estimator_name}/Workspace"
+    if dataset_name is not None and dataset_name != "" and dataset_name != "N/A":
+        path = f"{path}/{dataset_name}"
+    resample_str = "Results" if resample_id is None else f"Resample{resample_id}"
+    return f"{path}/{resample_str}"
+
+
 def _convert_collection(X):
     """Convert a collection to a numpy array or a list of numpy arrays."""
     if isinstance(X, np.ndarray) or (

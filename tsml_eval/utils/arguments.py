@@ -96,7 +96,9 @@ def parse_args(args):
       -wa, --write_attributes
                             write the estimator attributes to file when running
                             experiments. Will recursively write the attributes of
-                            sub-estimators if present (default: False).
+                            sub-estimators if present. Files are written to
+                            'Workspace/{dataset_name}/Resample{resample_id}/' next
+                            to the 'Predictions' directory (default: False).
       -ams ATT_MAX_SHAPE, --att_max_shape ATT_MAX_SHAPE
                             the max estimator collections shape allowed when
                             writing attributes, at 0 no estimators in collections
@@ -263,8 +265,9 @@ def parse_args(args):
         "--write_attributes",
         action="store_true",
         help="write the estimator attributes to file when running experiments. Will "
-        "recursively write the attributes of sub-estimators if present "
-        "(default: %(default)s).",
+        "recursively write the attributes of sub-estimators if present. Files are "
+        "written to 'Workspace/{dataset_name}/Resample{resample_id}/' next to the "
+        "'Predictions' directory (default: %(default)s).",
     )
     parser.add_argument(
         "-ams",

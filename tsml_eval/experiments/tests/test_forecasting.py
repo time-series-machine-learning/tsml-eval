@@ -1,8 +1,10 @@
 """Tests for forecasting experiments."""
 
 import pytest
+from aeon.forecasting import NaiveForecaster
 
 from tsml_eval.experiments import (
+    experiments,
     forecasting_experiments,
     threaded_forecasting_experiments,
 )
@@ -32,6 +34,33 @@ def test_forecasting_experiment_overwrite(module, monkeypatch, tmp_path):
 
     module.run_experiment(args + ["-ow"])
     assert len(calls) == 1
+
+
+def test_forecasting_attributes_written_per_seed(monkeypatch, tmp_path):
+    """Test each random seed gets its own attribute directory."""
+    paths = []
+    monkeypatch.setattr(
+        experiments,
+        "run_forecasting_experiment",
+        lambda *a, **kw: paths.append(kw["attribute_file_path"]),
+    )
+
+    for random_seed in [0, 1, None]:
+        experiments.load_and_run_forecasting_experiment(
+            _TEST_DATA_PATH,
+            str(tmp_path),
+            "ShampooSales",
+            NaiveForecaster(),
+            random_seed=random_seed,
+            write_attributes=True,
+        )
+
+    workspace = f"{tmp_path}/NaiveForecaster/Workspace/ShampooSales"
+    assert paths == [
+        f"{workspace}/Resample0",
+        f"{workspace}/Resample1",
+        f"{workspace}/Results",
+    ]
 
 
 # import os

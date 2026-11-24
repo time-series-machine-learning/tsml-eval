@@ -166,7 +166,7 @@ def test_cross_validation_clones_and_indexes_list_data(
         str(tmp_path / "results"),
         cv=2,
         dataset_name="Unequal",
-        attribute_file_path=str(tmp_path / "attributes"),
+        write_attributes=True,
         benchmark_time=False,
         data_transforms=transform,
         random_seed=random_seed,
@@ -200,7 +200,16 @@ def test_cross_validation_clones_and_indexes_list_data(
             / f"testResample{fold}.csv"
         )
         check_format(str(test_file), num_results_lines=len(test))
-        assert (tmp_path / "attributes" / f"fold{fold}" / f"{name}.txt").exists()
+        attribute_file = (
+            tmp_path
+            / "results"
+            / name
+            / "Workspace"
+            / "Unequal"
+            / f"Resample{fold}"
+            / f"{name}.txt"
+        )
+        assert attribute_file.exists()
 
 
 @pytest.mark.parametrize("task", ["classification", "regression"])
