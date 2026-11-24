@@ -38,6 +38,7 @@ def test_forecasting_experiment_overwrite(module, monkeypatch, tmp_path):
 # import runpy
 #
 # import pytest
+# from aeon.forecasting import NaiveForecaster
 # from aeon.utils.discovery import all_estimators
 # from tsml.dummy import DummyClassifier
 #
@@ -49,6 +50,7 @@ def test_forecasting_experiment_overwrite(module, monkeypatch, tmp_path):
 #     set_forecaster,
 #     threaded_forecasting_experiments,
 # )
+# from tsml_eval.experiments.experiments import load_and_run_forecasting_experiment
 # from tsml_eval.experiments.tests import _FORECASTER_RESULTS_PATH
 # from tsml_eval.testing.testing_utils import (
 #     _TEST_DATA_PATH,
@@ -215,3 +217,23 @@ def test_forecasting_experiment_overwrite(module, monkeypatch, tmp_path):
 #             assert get_forecaster_by_name(e) is not None
 #         except ModuleNotFoundError:
 #             continue
+#
+#
+# def test_forecasting_attributes_written_per_seed(tmp_path):
+#     """Test each random seed writes its attributes to its own directory."""
+#     for random_seed in [0, 1, None]:
+#         load_and_run_forecasting_experiment(
+#             _TEST_DATA_PATH,
+#             str(tmp_path),
+#             "ShampooSales",
+#             NaiveForecaster(),
+#             random_seed=random_seed,
+#             write_attributes=True,
+#             benchmark_time=False,
+#         )
+#
+#     workspace = tmp_path / "NaiveForecaster" / "Workspace" / "ShampooSales"
+#     assert sorted(os.listdir(workspace)) == ["Resample0", "Resample1", "Results"]
+#     assert (workspace / "Resample0" / "NaiveForecaster.txt").exists()
+#     assert (workspace / "Resample1" / "NaiveForecaster.txt").exists()
+#     assert (workspace / "Results" / "NaiveForecaster.txt").exists()

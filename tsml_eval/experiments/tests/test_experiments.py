@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from aeon.classification import DummyClassifier
+from aeon.clustering import DummyClusterer
 from aeon.regression import DummyRegressor
 from aeon.testing.data_generation import make_example_3d_numpy
 from aeon.transformations.collection import BaseCollectionTransformer
@@ -13,6 +14,8 @@ from aeon.transformations.collection import BaseCollectionTransformer
 from tsml_eval.experiments import (
     classification_experiments,
     load_and_run_classification_experiment,
+    load_and_run_clustering_experiment,
+    load_and_run_regression_experiment,
     run_classification_experiment,
     run_regression_experiment,
 )
@@ -78,6 +81,34 @@ def test_experiments_predefined_resample_data_loading():
     _check_classification_file_format(test_file)
 
     os.remove(test_file)
+
+
+@pytest.mark.parametrize(
+    "load_and_run, estimator, dataset",
+    [
+        (load_and_run_classification_experiment, DummyClassifier(), "MinimalChinatown"),
+        (load_and_run_regression_experiment, DummyRegressor(), "MinimalGasPrices"),
+        (load_and_run_clustering_experiment, DummyClusterer(), "MinimalChinatown"),
+    ],
+)
+def test_attributes_written_per_resample(load_and_run, estimator, dataset, tmp_path):
+    """Test each resample writes its attributes to its own directory."""
+    for resample_id in [0, 1]:
+        load_and_run(
+            _TEST_DATA_PATH,
+            str(tmp_path),
+            dataset,
+            estimator,
+            resample_id=resample_id,
+            write_attributes=True,
+            benchmark_time=False,
+        )
+
+    name = type(estimator).__name__
+    workspace = tmp_path / name / "Workspace" / dataset
+    assert sorted(os.listdir(workspace)) == ["Resample0", "Resample1"]
+    assert (workspace / "Resample0" / f"{name}.txt").exists()
+    assert (workspace / "Resample1" / f"{name}.txt").exists()
 
 
 class _RecordingTransformer(BaseCollectionTransformer):

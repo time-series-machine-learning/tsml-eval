@@ -49,6 +49,7 @@ from tsml_eval.estimators.clustering._sklearn import SklearnToAeonClusterer
 from tsml_eval.estimators.regression._sklearn import SklearnToAeonRegressor
 from tsml_eval.utils.datasets import load_experiment_data
 from tsml_eval.utils.experiments import (
+    _attributes_path,
     _check_existing_results,
     _convert_collection,
     _convert_series,
@@ -412,8 +413,8 @@ def load_and_run_classification_experiment(
         up to 10 folds.
     write_attributes : bool, default=False
         Whether to write the fitted classifier's attributes to
-        ``<results_path>/<classifier_name>/Workspace/<dataset>/``. Attributes are only
-        written when the test file is built.
+        ``<results_path>/<classifier_name>/Workspace/<dataset>/Resample<resample_id>/``.
+        Attributes are only written when the test file is built.
     att_max_shape : int, default=0
         Maximum list shape when writing attributes, passed to
         ``estimator_attributes_to_file`` as ``max_list_shape``. At 0, estimators in
@@ -456,7 +457,9 @@ def load_and_run_classification_experiment(
         )
 
     if write_attributes:
-        attribute_file_path = f"{results_path}/{classifier_name}/Workspace/{dataset}/"
+        attribute_file_path = _attributes_path(
+            results_path, classifier_name, dataset, resample_id
+        )
     else:
         attribute_file_path = None
 
@@ -783,8 +786,8 @@ def load_and_run_regression_experiment(
         up to 10 folds.
     write_attributes : bool, default=False
         Whether to write the fitted regressor's attributes to
-        ``<results_path>/<regressor_name>/Workspace/<dataset>/``. Attributes are only
-        written when the test file is built.
+        ``<results_path>/<regressor_name>/Workspace/<dataset>/Resample<resample_id>/``.
+        Attributes are only written when the test file is built.
     att_max_shape : int, default=0
         Maximum list shape when writing attributes, passed to
         ``estimator_attributes_to_file`` as ``max_list_shape``. At 0, estimators in
@@ -827,7 +830,9 @@ def load_and_run_regression_experiment(
         )
 
     if write_attributes:
-        attribute_file_path = f"{results_path}/{regressor_name}/Workspace/{dataset}/"
+        attribute_file_path = _attributes_path(
+            results_path, regressor_name, dataset, resample_id
+        )
     else:
         attribute_file_path = None
 
@@ -1202,7 +1207,7 @@ def load_and_run_clustering_experiment(
         clusters to the loaded test data, so it must be able to predict unseen cases.
     write_attributes : bool, default=False
         Whether to write the fitted clusterer's attributes to
-        ``<results_path>/<clusterer_name>/Workspace/<dataset>/``.
+        ``<results_path>/<clusterer_name>/Workspace/<dataset>/Resample<resample_id>/``.
     att_max_shape : int, default=0
         Maximum list shape when writing attributes, passed to
         ``estimator_attributes_to_file`` as ``max_list_shape``. At 0, estimators in
@@ -1252,7 +1257,9 @@ def load_and_run_clustering_experiment(
         )
 
     if write_attributes:
-        attribute_file_path = f"{results_path}/{clusterer_name}/Workspace/{dataset}/"
+        attribute_file_path = _attributes_path(
+            results_path, clusterer_name, dataset, resample_id
+        )
     else:
         attribute_file_path = None
 
@@ -1438,10 +1445,12 @@ def load_and_run_forecasting_experiment(
         the forecaster.
     random_seed : int or None, default=None
         Indicates what random seed was used as a random_state for the forecaster. Only
-        used for the results file name.
+        used for the results file and attribute directory names.
     write_attributes : bool, default=False
         Whether to write the fitted forecaster's attributes to
-        ``<results_path>/<forecaster_name>/Workspace/<dataset>/``.
+        ``<results_path>/<forecaster_name>/Workspace/<dataset>/Resample<random_seed>/``,
+        or to a ``Results`` directory in place of ``Resample<random_seed>`` if
+        ``random_seed`` is None.
     att_max_shape : int, default=0
         Maximum list shape when writing attributes, passed to
         ``estimator_attributes_to_file`` as ``max_list_shape``. At 0, estimators in
@@ -1471,7 +1480,9 @@ def load_and_run_forecasting_experiment(
         return
 
     if write_attributes:
-        attribute_file_path = f"{results_path}/{forecaster_name}/Workspace/{dataset}/"
+        attribute_file_path = _attributes_path(
+            results_path, forecaster_name, dataset, random_seed
+        )
     else:
         attribute_file_path = None
 
