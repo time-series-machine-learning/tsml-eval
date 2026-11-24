@@ -13,7 +13,7 @@ from collections.abc import Sequence
 
 import gpustat
 import numpy as np
-from aeon.utils.conversion import convert_collection
+from aeon.utils.conversion import convert_collection, convert_series
 from aeon.utils.validation.collection import is_equal_length
 from sklearn.base import BaseEstimator
 from sklearn.utils import check_random_state
@@ -55,6 +55,14 @@ def _convert_collection(X):
     ):
         return X
     return convert_collection(X, "numpy3D" if is_equal_length(X) else "np-list")
+
+
+def _convert_series(y):
+    """Convert a series to a numpy array, with univariate series as 1D arrays."""
+    if isinstance(y, np.ndarray):
+        return y
+    y = convert_series(y, "np.ndarray")
+    return y.ravel() if y.ndim == 2 and 1 in y.shape else y
 
 
 def _fit_is_empty(transforms):

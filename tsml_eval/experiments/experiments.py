@@ -51,6 +51,7 @@ from tsml_eval.utils.datasets import load_experiment_data
 from tsml_eval.utils.experiments import (
     _check_existing_results,
     _convert_collection,
+    _convert_series,
     _fit_is_empty,
     _index_cases,
     estimator_attributes_to_file,
@@ -1340,6 +1341,9 @@ def run_forecasting_experiment(
 
     if forecaster_name is None:
         forecaster_name = type(forecaster).__name__
+
+    train = _convert_series(train)
+    test = _convert_series(test)
 
     benchmark = -1
     if benchmark_time:

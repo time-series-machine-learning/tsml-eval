@@ -3,6 +3,7 @@
 import os
 
 import numpy as np
+import pandas as pd
 import pytest
 from aeon.classification import DummyClassifier
 from aeon.classification.compose import ClassifierEnsemble
@@ -13,6 +14,7 @@ from tsml_eval.datasets._loaders import load_minimal_chinatown
 from tsml_eval.testing.testing_utils import _TEST_OUTPUT_PATH
 from tsml_eval.utils.experiments import (
     _check_existing_results,
+    _convert_series,
     _results_present,
     estimator_attributes_to_file,
     timing_benchmark,
@@ -127,3 +129,14 @@ def test_max_list_shape(max_list_shape):
     assert os.path.exists(test_dir + "ensemble__0_1/ensemble__0_1.txt") == (
         max_list_shape >= 2
     )
+
+
+def test_convert_series_to_1d_numpy():
+    """Test pandas series with a date index become 1D numpy arrays."""
+    values = np.arange(5, dtype=float)
+    index = pd.date_range("2020-01-01", periods=5, freq="D")
+
+    for series in (pd.Series(values, index=index), pd.DataFrame({"a": values}, index)):
+        converted = _convert_series(series)
+        assert isinstance(converted, np.ndarray)
+        assert np.array_equal(converted, values)
