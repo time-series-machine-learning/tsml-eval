@@ -113,7 +113,11 @@ def classification_cross_validation(
         overwritten.
     groups : array-like or None, default=None
         Group labels for the cases used while splitting the dataset into train and
-        test folds. Only used in conjunction with a ``cv`` splitter.
+        test folds. Only used in conjunction with a ``cv`` splitter. What the labels
+        mean depends on the splitter. ``GroupKFold`` never puts one group in both
+        the train and test set. ``HVBlockCrossValidator`` and
+        ``BufferedBlockedKFold`` from ``tsml_eval.utils.splitters`` treat each group
+        as an independent sequence, which can appear on both sides of a split.
     random_seed : int, list of int or None, default=None
         Use a different random seed than the fold id. An int is used for every fold,
         a list gives one seed per fold. If None, the fold id is used.
@@ -203,7 +207,11 @@ def classification_cross_validation_folds(X, y, cv=None, groups=None):
         index splits. If None, up to 10-fold stratified cross-validation will be used.
     groups : array-like or None, default=None
         Group labels for the cases used while splitting the dataset into train and
-        test folds. Only used in conjunction with a ``cv`` splitter.
+        test folds. Only used in conjunction with a ``cv`` splitter. What the labels
+        mean depends on the splitter. ``GroupKFold`` never puts one group in both
+        the train and test set. ``HVBlockCrossValidator`` and
+        ``BufferedBlockedKFold`` from ``tsml_eval.utils.splitters`` treat each group
+        as an independent sequence, which can appear on both sides of a split.
 
     Returns
     -------
@@ -296,7 +304,11 @@ def regression_cross_validation(
         overwritten.
     groups : array-like or None, default=None
         Group labels for the cases used while splitting the dataset into train and
-        test folds. Only used in conjunction with a ``cv`` splitter.
+        test folds. Only used in conjunction with a ``cv`` splitter. What the labels
+        mean depends on the splitter. ``GroupKFold`` never puts one group in both
+        the train and test set. ``HVBlockCrossValidator`` and
+        ``BufferedBlockedKFold`` from ``tsml_eval.utils.splitters`` treat each group
+        as an independent sequence, which can appear on both sides of a split.
     random_seed : int, list of int or None, default=None
         Use a different random seed than the fold id. An int is used for every fold,
         a list gives one seed per fold. If None, the fold id is used.
@@ -377,7 +389,11 @@ def regression_cross_validation_folds(X, y, cv=None, groups=None):
         index splits. If None, 10-fold shuffled cross-validation will be used.
     groups : array-like or None, default=None
         Group labels for the cases used while splitting the dataset into train and
-        test folds. Only used in conjunction with a ``cv`` splitter.
+        test folds. Only used in conjunction with a ``cv`` splitter. What the labels
+        mean depends on the splitter. ``GroupKFold`` never puts one group in both
+        the train and test set. ``HVBlockCrossValidator`` and
+        ``BufferedBlockedKFold`` from ``tsml_eval.utils.splitters`` treat each group
+        as an independent sequence, which can appear on both sides of a split.
 
     Returns
     -------

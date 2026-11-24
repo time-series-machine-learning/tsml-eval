@@ -76,6 +76,19 @@ Functions for running experiments.
 
 ## Utilities: [tsml_eval.utils](https://github.com/time-series-machine-learning/tsml-eval/tree/main/tsml_eval/utils)
 
+Cross-validation splitters for dependent time series cases, for use as the `cv`
+argument of the cross-validation functions.
+
+```{eval-rst}
+.. currentmodule:: tsml_eval
+.. autosummary::
+    :toctree: auto_generated/
+    :template: class.rst
+
+    utils.splitters.HVBlockCrossValidator
+    utils.splitters.BufferedBlockedKFold
+```
+
 Public utility functions used elsewhere in the package.
 
 ```{eval-rst}
