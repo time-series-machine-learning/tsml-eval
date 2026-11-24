@@ -12,8 +12,7 @@ import warnings
 from numbers import Integral
 
 import numpy as np
-from aeon.utils.conversion import convert_collection
-from aeon.utils.validation.collection import get_n_cases, get_type, is_equal_length
+from aeon.utils.validation.collection import get_n_cases
 from sklearn.base import clone
 from sklearn.model_selection import KFold, StratifiedKFold, check_cv
 
@@ -21,7 +20,11 @@ from tsml_eval.experiments.experiments import (
     run_classification_experiment,
     run_regression_experiment,
 )
-from tsml_eval.utils.experiments import _check_existing_results
+from tsml_eval.utils.experiments import (
+    _check_existing_results,
+    _convert_collection,
+    _index_cases,
+)
 
 
 def classification_cross_validation(
@@ -386,9 +389,7 @@ def regression_cross_validation_folds(X, y, cv=None, groups=None):
 
 
 def _convert_X_y(X, y):
-    if get_type(X) not in ("numpy3D", "numpy2D", "np-list"):
-        X = convert_collection(X, "numpy3D" if is_equal_length(X) else "np-list")
-    return X, np.asarray(y)
+    return _convert_collection(X), np.asarray(y)
 
 
 def _classification_folds(X, y, cv, groups):
@@ -471,12 +472,6 @@ def _fold_seeds(random_seed, n_folds):
             f"for {n_folds} folds."
         )
     return [int(seed) for seed in random_seed]
-
-
-def _index_cases(X, indices):
-    if isinstance(X, list):
-        return [X[i] for i in indices]
-    return X[indices]
 
 
 def _clone_with_seed(estimator, seed):
