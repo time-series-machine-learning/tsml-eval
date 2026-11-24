@@ -74,8 +74,8 @@ class ClassifierResults(EstimatorResults):
         Prediction times for each case.
     pred_descriptions : list of str or None, default=None
         Descriptions for each prediction.
-    labels : list or None, default=None
-        Ordered set of all encoded class labels seen during training. The order must
+    labels : array-like or None, default=None
+        Sorted set of all encoded class labels seen during training. The order must
         match the columns in ``probabilities``. When loading results, labels are only
         inferred if an encoder dictionary is present in the file description.
 
@@ -274,7 +274,6 @@ class ClassifierResults(EstimatorResults):
             If the function should overwrite the current values when they are not None.
         """
         self.infer_size(overwrite=overwrite)
-        present_labels = np.unique(self.class_labels)
 
         if self.accuracy is None or overwrite:
             self.accuracy = accuracy_score(self.class_labels, self.predictions)
@@ -294,7 +293,10 @@ class ClassifierResults(EstimatorResults):
                 labels=self.labels,
             )
         if self.auroc_score is None or overwrite:
-            if self.labels is not None and len(present_labels) < self.n_classes:
+            if (
+                self.labels is not None
+                and len(np.unique(self.class_labels)) < self.n_classes
+            ):
                 self.auroc_score = _calculate_missing_class_auroc_score(
                     self.class_labels,
                     self.probabilities,
@@ -362,16 +364,47 @@ class ClassifierResults(EstimatorResults):
 
 
 def _calculate_missing_class_auroc_score(class_labels, probabilities, labels):
-    """Calculate weighted one-vs-rest AUROC when test classes are missing."""
-    present_labels, counts = np.unique(class_labels, return_counts=True)
-    if len(present_labels) < 2:
-        return np.nan
+    """Calculate weighted one-vs-rest AUROC when test classes are missing.
 
+    Only classes present in ``class_labels`` are scored. Passing ``labels`` to
+    ``roc_auc_score`` would also score the absent classes, which have no positive
+    cases and are undefined.
+
+    Input validation matches ``roc_auc_score`` with ``labels``, except an error is
+    raised rather than returning NaN when fewer than two classes are present.
+    """
+    if not np.allclose(1, probabilities.sum(axis=1)):
+        raise ValueError(
+            "Target scores need to be probabilities for multiclass roc_auc, i.e. they "
+            "should sum up to 1.0 over classes"
+        )
+
+    labels = np.asarray(labels)
+    unique_labels = np.unique(labels)
+    if len(unique_labels) != len(labels):
+        raise ValueError("Parameter 'labels' must be unique")
+    if not np.array_equal(unique_labels, labels):
+        raise ValueError("Parameter 'labels' must be ordered")
+    if len(labels) != probabilities.shape[1]:
+        raise ValueError(
+            f"Number of given labels, {len(labels)}, not equal to the number of "
+            f"columns in 'y_score', {probabilities.shape[1]}"
+        )
+
+    present_labels, counts = np.unique(class_labels, return_counts=True)
+    if len(np.setdiff1d(present_labels, labels)):
+        raise ValueError("'y_true' contains labels not in parameter 'labels'")
+    if len(present_labels) < 2:
+        raise ValueError(
+            "AUROC is undefined when fewer than two classes are present in "
+            "class_labels."
+        )
+
+    label_indices = {label: i for i, label in enumerate(labels)}
     scores = []
     for label in present_labels:
-        probability_column = labels.index(label)
         scores.append(
-            roc_auc_score(class_labels == label, probabilities[:, probability_column])
+            roc_auc_score(class_labels == label, probabilities[:, label_indices[label]])
         )
     return np.average(scores, weights=counts)
 

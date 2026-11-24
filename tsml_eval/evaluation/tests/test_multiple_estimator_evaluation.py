@@ -1,12 +1,29 @@
 """Tests for the multiple estimator evaluation functionality."""
 
+import os
+import shutil
+
+import numpy as np
+import pytest
+
 from tsml_eval.evaluation.multiple_estimator_evaluation import (
+    evaluate_classifiers,
     evaluate_classifiers_by_problem,
     evaluate_clusterers_by_problem,
     evaluate_forecasters_by_problem,
     evaluate_regressors_by_problem,
 )
+from tsml_eval.evaluation.storage import ClassifierResults
 from tsml_eval.testing.testing_utils import _TEST_OUTPUT_PATH, _TEST_RESULTS_PATH
+
+
+def _read_rows(path):
+    with open(path) as f:
+        return {
+            line.split(",")[0]: line.strip().split(",")[1:]
+            for line in f
+            if line.strip()
+        }
 
 
 def test_evaluate_classifiers_by_problem():
@@ -23,6 +40,101 @@ def test_evaluate_classifiers_by_problem():
         resamples=resamples,
         eval_name="test0",
     )
+
+
+def test_evaluate_classifiers_nan_statistic():
+    """Test a NaN statistic does not silently alter the evaluation."""
+    classifiers = ["ROCKET", "TSF", "1NN-DTW"]
+    datasets = ["Chinatown", "ItalyPowerDemand", "Trace"]
+    save_path = _TEST_OUTPUT_PATH + "/eval/classification/"
+    eval_path = save_path + "nan_statistic/"
+    shutil.rmtree(eval_path, ignore_errors=True)
+
+    results = []
+    names = []
+    for classifier in classifiers:
+        for dataset in datasets:
+            cr = ClassifierResults().load_from_file(
+                f"{_TEST_RESULTS_PATH}/classification/{classifier}/Predictions/"
+                f"{dataset}/testResample0.csv"
+            )
+            if classifier == "TSF" and dataset == "Trace":
+                cr.auroc_score = np.nan
+            results.append(cr)
+            names.append(classifier)
+
+    with pytest.warns(UserWarning, match=r"test AUROC is NaN for datasets \['Trace'\]"):
+        evaluate_classifiers(
+            results, save_path, eval_name="nan_statistic", estimator_names=names
+        )
+
+    means = _read_rows(eval_path + "AUROC/auroc_mean.csv")
+    tsf = means["Estimators:"].index("TSF")
+    assert means["Trace"][tsf] == "nan"
+    assert means["Trace"].count("nan") == 1
+
+    ranks = _read_rows(eval_path + "AUROC/auroc_ranks.csv")
+    assert ranks["Trace"] == ["nan"] * 3
+    assert "nan" not in ranks["Chinatown"]
+
+    summary = _read_rows(eval_path + "nan_statistic_summary.csv")
+    assert summary["testAUROCMean"].count("nan") == 1
+    assert summary["testAUROCAvgRank"] == ["nan"] * 3
+    assert "nan" not in summary["testAccuracyAvgRank"]
+
+    assert not os.path.exists(eval_path + "AUROC/auroc_p_values.csv")
+    assert not os.path.exists(eval_path + "AUROC/figures/")
+    assert os.path.exists(eval_path + "Accuracy/accuracy_p_values.csv")
+    assert os.path.exists(eval_path + "Accuracy/figures/")
+
+
+@pytest.mark.parametrize(
+    "error_on_missing, continue_on_missing",
+    [(True, False), (False, False), (False, True)],
+)
+def test_evaluate_classifiers_by_problem_broken_results(
+    error_on_missing, continue_on_missing
+):
+    """Test results files which fail to load are treated as missing."""
+    datasets = ["Chinatown", "Trace"]
+    save_path = _TEST_OUTPUT_PATH + "/eval/classification/"
+    eval_name = f"broken_{error_on_missing}_{continue_on_missing}"
+    eval_path = f"{save_path}{eval_name}/"
+    shutil.rmtree(eval_path, ignore_errors=True)
+
+    kwargs = {
+        "load_path": [
+            _TEST_RESULTS_PATH + "/classification/",
+            _TEST_RESULTS_PATH + "/broken/",
+        ],
+        "classifier_names": [["ROCKET", "TSF"], ["BrokenROCKET"]],
+        "dataset_names": [datasets, datasets],
+        "save_path": save_path,
+        "error_on_missing": error_on_missing,
+        "continue_on_missing": continue_on_missing,
+        "eval_name": eval_name,
+    }
+
+    if error_on_missing:
+        with pytest.raises(
+            ValueError,
+            match="BrokenROCKET on Chinatown test resample 0 could not be loaded. "
+            "ValueError: AUROC is undefined when fewer than two classes",
+        ):
+            evaluate_classifiers_by_problem(**kwargs)
+        return
+
+    evaluate_classifiers_by_problem(**kwargs)
+
+    means = _read_rows(eval_path + "Accuracy/accuracy_mean.csv")
+    if continue_on_missing:
+        broken = means["Estimators:"].index("BrokenROCKET")
+        assert means["Chinatown"][broken] == "nan"
+        assert not os.path.exists(eval_path + f"{eval_name}_summary.csv")
+    else:
+        assert "Chinatown" not in means
+        assert "Trace" in means
+        assert os.path.exists(eval_path + f"{eval_name}_summary.csv")
 
 
 def test_evaluate_clusterers_by_problem():

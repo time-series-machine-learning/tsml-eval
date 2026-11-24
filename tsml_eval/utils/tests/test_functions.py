@@ -87,6 +87,14 @@ def test_rank_array():
     ).all()
 
 
+def test_rank_array_nan():
+    """Test array ranking function returns all NaN ranks when any value is NaN."""
+    arr = np.array([0.8, np.nan, 0.7])
+
+    assert np.isnan(rank_array(arr)).all()
+    assert np.isnan(rank_array(arr, higher_better=False)).all()
+
+
 def test_time_to_milliseconds_invalid_unit():
     """Test time_to_milliseconds function with invalid time unit."""
     with pytest.raises(ValueError, match="Unknown time unit"):

@@ -140,6 +140,12 @@ def evaluate_classifiers_from_file(
         except FileNotFoundError:
             if error_on_missing:
                 raise FileNotFoundError(f"Results for {load_path} not found.")
+        except (ValueError, AssertionError) as e:
+            if error_on_missing:
+                raise ValueError(
+                    f"Results for {load_path} could not be loaded. "
+                    f"{type(e).__name__}: {e}"
+                ) from e
 
     evaluate_classifiers(
         classifier_results,
@@ -291,6 +297,16 @@ def evaluate_classifiers_by_problem(
                                 raise FileNotFoundError(msg)
                             elif verbose:
                                 print(msg)  # noqa: T201
+                        except (ValueError, AssertionError) as e:
+                            msg = (
+                                f"Results for {classifier_eval_name} on {dataset_name} "
+                                f"{split} resample {resample} could not be loaded. "
+                                f"{type(e).__name__}: {e}"
+                            )
+                            if error_on_missing:
+                                raise ValueError(msg) from e
+                            elif verbose:
+                                print(msg)  # noqa: T201
 
             if not found_estimator:
                 print(f"Classifier {classifier_eval_name} not found.")  # noqa: T201
@@ -410,6 +426,12 @@ def evaluate_clusterers_from_file(
         except FileNotFoundError:
             if error_on_missing:
                 raise FileNotFoundError(f"Results for {load_path} not found.")
+        except (ValueError, AssertionError) as e:
+            if error_on_missing:
+                raise ValueError(
+                    f"Results for {load_path} could not be loaded. "
+                    f"{type(e).__name__}: {e}"
+                ) from e
 
     evaluate_clusterers(
         clusterer_results,
@@ -561,6 +583,16 @@ def evaluate_clusterers_by_problem(
                                 raise FileNotFoundError(msg)
                             elif verbose:
                                 print(msg)  # noqa: T201
+                        except (ValueError, AssertionError) as e:
+                            msg = (
+                                f"Results for {clusterer_eval_name} on {dataset_name} "
+                                f"{split} resample {resample} could not be loaded. "
+                                f"{type(e).__name__}: {e}"
+                            )
+                            if error_on_missing:
+                                raise ValueError(msg) from e
+                            elif verbose:
+                                print(msg)  # noqa: T201
 
             if not found_estimator:
                 print(f"Clusterer {clusterer_eval_name} not found.")  # noqa: T201
@@ -680,6 +712,12 @@ def evaluate_regressors_from_file(
         except FileNotFoundError:
             if error_on_missing:
                 raise FileNotFoundError(f"Results for {load_path} not found.")
+        except (ValueError, AssertionError) as e:
+            if error_on_missing:
+                raise ValueError(
+                    f"Results for {load_path} could not be loaded. "
+                    f"{type(e).__name__}: {e}"
+                ) from e
 
     evaluate_regressors(
         regressor_results,
@@ -831,6 +869,16 @@ def evaluate_regressors_by_problem(
                                 raise FileNotFoundError(msg)
                             elif verbose:
                                 print(msg)  # noqa: T201
+                        except (ValueError, AssertionError) as e:
+                            msg = (
+                                f"Results for {regressor_eval_name} on {dataset_name} "
+                                f"{split} resample {resample} could not be loaded. "
+                                f"{type(e).__name__}: {e}"
+                            )
+                            if error_on_missing:
+                                raise ValueError(msg) from e
+                            elif verbose:
+                                print(msg)  # noqa: T201
 
             if not found_estimator:
                 print(f"Regressor {regressor_eval_name} not found.")  # noqa: T201
@@ -950,6 +998,12 @@ def evaluate_forecasters_from_file(
         except FileNotFoundError:
             if error_on_missing:
                 raise FileNotFoundError(f"Results for {load_path} not found.")
+        except (ValueError, AssertionError) as e:
+            if error_on_missing:
+                raise ValueError(
+                    f"Results for {load_path} could not be loaded. "
+                    f"{type(e).__name__}: {e}"
+                ) from e
 
     evaluate_forecasters(
         forecaster_results,
@@ -1090,6 +1144,16 @@ def evaluate_forecasters_by_problem(
                         )
                         if error_on_missing:
                             raise FileNotFoundError(msg)
+                        elif verbose:
+                            print(msg)  # noqa: T201
+                    except (ValueError, AssertionError) as e:
+                        msg = (
+                            f"Results for {forecaster_eval_name} on {dataset_name} "
+                            f"resample {resample} could not be loaded. "
+                            f"{type(e).__name__}: {e}"
+                        )
+                        if error_on_missing:
+                            raise ValueError(msg) from e
                         elif verbose:
                             print(msg)  # noqa: T201
 
@@ -1336,6 +1400,7 @@ def _create_directory_for_statistic(
     os.makedirs(f"{save_path}/{statistic_name}/all_resamples/", exist_ok=True)
 
     average_stats = np.zeros((len(datasets), len(estimators)))
+    nan_datasets = set()
 
     for i, estimator_name in enumerate(estimators):
         est_stats = np.zeros((len(datasets), len(resamples)))
@@ -1355,6 +1420,9 @@ def _create_directory_for_statistic(
                             )
                         )
                     )
+
+                    if np.isnan(est_stats[n, j]):
+                        nan_datasets.add(dataset_name)
 
                     if est_stats[n, j] == -1:
                         warnings.warn(
@@ -1398,6 +1466,14 @@ def _create_directory_for_statistic(
                 f"{dataset_name},{','.join([str(n) for n in average_stats[i]])}\n"
             )
 
+    if nan_datasets:
+        warnings.warn(
+            f"{split} {statistic_name} is NaN for datasets {sorted(nan_datasets)}. "
+            f"Means and ranks using these results are NaN, and p-values and figures "
+            f"for {split} {statistic_name} are not produced.",
+            stacklevel=0,
+        )
+
     ranks = np.apply_along_axis(
         lambda x: rank_array(x, higher_better=higher_better), 1, average_stats
     )
@@ -1409,7 +1485,7 @@ def _create_directory_for_statistic(
         for i, dataset_name in enumerate(datasets):
             file.write(f"{dataset_name},{','.join([str(n) for n in ranks[i]])}\n")
 
-    if not has_missing:
+    if not has_missing and not nan_datasets:
         p_values = wilcoxon_test(
             average_stats, estimators, lower_better=not higher_better
         )
@@ -1563,16 +1639,20 @@ def _summary_evaluation(stats, estimators, save_path, eval_name):
 
     with open(f"{save_path}/{eval_name}_summary.csv", "w") as file:
         for i, stat in enumerate(stats):
-            sorted_indices = [
-                i
-                for i in sorted(
-                    range(len(avg_rank[i])),
-                    key=lambda x: (
-                        avg_rank[i][x],
-                        -avg_stat[i][x] if stat[3] else avg_stat[i][x],
-                    ),
-                )
-            ]
+            if np.isnan(avg_rank[i]).any():
+                # NaN ranks cannot be sorted, keep the estimator order
+                sorted_indices = list(range(len(estimators)))
+            else:
+                sorted_indices = [
+                    i
+                    for i in sorted(
+                        range(len(avg_rank[i])),
+                        key=lambda x: (
+                            avg_rank[i][x],
+                            -avg_stat[i][x] if stat[3] else avg_stat[i][x],
+                        ),
+                    )
+                ]
 
             file.write(
                 f"{stat[4]}{stat[2]},"
