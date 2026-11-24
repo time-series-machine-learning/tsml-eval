@@ -1,0 +1,35 @@
+# Cognitive shift/surrogate case study (24 Nov 2026), the other classifiers on Hali:
+# QUANT (interval, fixed positions: phase dependent), MRHydra (convolution with pooling)
+# and TS-LR (covariance; Surr keeps the covariance, SurrIndep destroys it). Same problems
+# as hali_cogshift_hc2.toml.
+#
+# Lives in ~/tsml-configs/cogshift on Hali (copied from the desktop), so no pull is needed.
+
+[experiment]
+name = "eeg-cogshift-other"
+cluster = "hali"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG-CogShift"
+datasets = "{home}/tsml-configs/cogshift/cogshift_datasets.txt"
+dataset_info = "{home}/tsml-configs/cogshift/cogshift_info.csv"
+results_dir = "{home}/Results/EEG-CogShift"
+resamples = 1
+smallest_datasets_first = true
+retry_timeouts = true
+max_attempts = 3
+
+[estimators]
+IntervalBased = ["QUANT"]
+ConvolutionBased = ["MRHydra"]
+FeatureBased = ["TSLR-NB"]
+
+[estimator_kwargs."TSLR-NB"]
+sfreq = "{dataset.sfreq}"
+
+[slurm]
+env_name = "tsml-eval"
+memory_gb = [16, 32, 64, 128, 256]
+max_active = 100

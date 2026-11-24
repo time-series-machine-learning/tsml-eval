@@ -1,0 +1,36 @@
+# Cognitive shift/surrogate case study (24 Nov 2026), HC2 components on Hali, with train
+# files so HC2 (without TDE) can be built from them as in the main results.
+#
+# Four event-locked Cognitive problems (SemanticTargets, StylisedFaceEmotion,
+# WordRelatedness, FaceStimuli), each as Crop50, Shift50S, Shift50L (middle half of the
+# epoch at a fixed, small random or large random offset) and Surr, SurrIndep
+# (phase-randomised with shared or independent phases); see build_cognitive_shifts.py.
+# DrCIF is the phase-dependent component, STC and Arsenal the phase-independent ones.
+#
+# Lives in ~/tsml-configs/cogshift on Hali (copied from the desktop), so no pull is needed.
+
+[experiment]
+name = "eeg-cogshift-hc2"
+cluster = "hali"
+resources = "cpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/Data/EEG-CogShift"
+datasets = "{home}/tsml-configs/cogshift/cogshift_datasets.txt"
+results_dir = "{home}/Results/EEG-CogShift"
+resamples = 1
+train_files = true
+smallest_datasets_first = true
+retry_timeouts = true
+max_attempts = 3
+
+[estimators]
+ConvolutionBased = ["Arsenal"]
+IntervalBased = ["DrCIF-500"]
+ShapeletBased = ["STC-aeon"]
+
+[slurm]
+env_name = "tsml-eval"
+memory_gb = [16, 32, 64, 128, 256]
+max_active = 100

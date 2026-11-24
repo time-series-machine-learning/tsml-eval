@@ -1,0 +1,23 @@
+# Cognitive shift/surrogate case study (24 Nov 2026): four event-locked Cognitive problems,
+# each as Crop50, Shift50S, Shift50L (middle half, fixed / small / large random offsets) and
+# Surr, SurrIndep (phase-randomised, shared / independent phases). build_cognitive_shifts.py
+SemanticTargets-Crop50
+SemanticTargets-Shift50S
+SemanticTargets-Shift50L
+SemanticTargets-Surr
+SemanticTargets-SurrIndep
+StylisedFaceEmotion-Crop50
+StylisedFaceEmotion-Shift50S
+StylisedFaceEmotion-Shift50L
+StylisedFaceEmotion-Surr
+StylisedFaceEmotion-SurrIndep
+WordRelatedness-Crop50
+WordRelatedness-Shift50S
+WordRelatedness-Shift50L
+WordRelatedness-Surr
+WordRelatedness-SurrIndep
+FaceStimuli-Crop50
+FaceStimuli-Shift50S
+FaceStimuli-Shift50L
+FaceStimuli-Surr
+FaceStimuli-SurrIndep
