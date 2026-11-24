@@ -1,0 +1,50 @@
+# Clinical window-length case study (24 Nov 2026), REVE-FT on the Iridis X h200s.
+# Same problems and protocol as iridisx_clinwin_eegnex.toml. Settings as the main REVE-FT
+# run (iridisx_eeg_reve_luna.toml), with a longer time limit for the 120 s and Full series.
+#
+# Lives in ~/tsml-configs/clinwin on Iridis (copied from the desktop), so no pull is needed.
+
+[experiment]
+name = "eeg-clinwin-reve-x"
+cluster = "iridisx"
+resources = "gpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval-gpu"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/DataClinWin"
+datasets = "{home}/tsml-configs/clinwin/clinwin_datasets.txt"
+dataset_info = "{home}/tsml-configs/clinwin/clinwin_info.csv"
+results_dir = "{home}/Results/EEG-ClinWin"
+resamples = 1
+smallest_datasets_first = true
+retry_timeouts = true
+max_attempts = 3
+
+[estimators]
+DeepLearning = ["REVE-FT"]
+
+[estimator_kwargs."REVE-FT"]
+sfreq = "{dataset.sfreq}"
+input_units = "{dataset.input_units}"
+train_groups = "{dataset.train_groups}"
+ch_names = "{dataset.ch_names_any_length}"
+weights_path = "/home/ajb2u23/hf_models/brain-bzh--reve-base/pytorch_model.bin"
+batch_size = 8
+device = "cuda"
+verbose = true
+positions_path = "/home/ajb2u23/hf_models/brain-bzh--reve-base/reve_positions.json"
+
+[slurm]
+env_name = "tsml-eval-torch"
+time_limit = "48:00:00"
+gpu_check = "torch"
+memory_gb = [64, 128]
+max_active = 4
+setup = [
+  'export PYTHONNOUSERSITE=1 HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1',
+  'export PYTHONPATH=/home/ajb2u23/Code/aeon-neuro-fm-20261118:$PYTHONPATH',
+  'cd /home/ajb2u23/Code/aeon-neuro-fm-20261118 && sha256sum --quiet -c SNAPSHOT.sha256',
+]
+
+[supervisor]
+interval_minutes = 5

@@ -1,0 +1,46 @@
+# Clinical window-length case study (24 Nov 2026): 10 segmented Clinical problems at 256 Hz,
+# windows of 4, 10, 30 and 120 s, and Full (one series per run, cut to the shortest run) where
+# runs are longer than 120 s. Built by build_clinical_windows.py into ~/DataClinWin.
+ZosterNeuralgiaSleep-256Hz-W4s
+ZosterNeuralgiaSleep-256Hz-W10s
+ZosterNeuralgiaSleep-256Hz-W30s
+ZosterNeuralgiaSleep-256Hz-W120s
+ParkinsonsRestUCSD-256Hz-W4s
+ParkinsonsRestUCSD-256Hz-W10s
+ParkinsonsRestUCSD-256Hz-W30s
+ParkinsonsRestUCSD-256Hz-W120s
+ParkinsonsRestUCSD-256Hz-Full
+LearningDifficulties-256Hz-W4s
+LearningDifficulties-256Hz-W10s
+LearningDifficulties-256Hz-W30s
+LearningDifficulties-256Hz-W120s
+AlcoholUseBandit-256Hz-W4s
+AlcoholUseBandit-256Hz-W10s
+AlcoholUseBandit-256Hz-W30s
+AlcoholUseBandit-256Hz-W120s
+FamilialAlzheimersRest-256Hz-W4s
+FamilialAlzheimersRest-256Hz-W10s
+FamilialAlzheimersRest-256Hz-W30s
+FamilialAlzheimersRest-256Hz-W120s
+SchizophreniaConflict-256Hz-W4s
+SchizophreniaConflict-256Hz-W10s
+SchizophreniaConflict-256Hz-W30s
+SchizophreniaConflict-256Hz-W120s
+ParkinsonsPedalling-256Hz-W4s
+ParkinsonsPedalling-256Hz-W10s
+ParkinsonsPedalling-256Hz-W30s
+ParkinsonsPedalling-256Hz-W120s
+ParkinsonsPedalling-256Hz-Full
+PsychosisRestCohort2-256Hz-W4s
+PsychosisRestCohort2-256Hz-W10s
+PsychosisRestCohort2-256Hz-W30s
+PsychosisRestCohort2-256Hz-W120s
+PsychosisRestCohort2-256Hz-Full
+MigraineRest-256Hz-W4s
+MigraineRest-256Hz-W10s
+MigraineRest-256Hz-W30s
+MigraineRest-256Hz-W120s
+ParkinsonsRestIowa-256Hz-W4s
+ParkinsonsRestIowa-256Hz-W10s
+ParkinsonsRestIowa-256Hz-W30s
+ParkinsonsRestIowa-256Hz-W120s

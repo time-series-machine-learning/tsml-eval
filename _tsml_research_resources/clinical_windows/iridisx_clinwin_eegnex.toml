@@ -1,0 +1,50 @@
+# Clinical window-length case study (24 Nov 2026), EEGNeX-NB on the Iridis X h200s.
+#
+# Ten segmented Clinical problems (continuous recordings that the conversion cut into 4 s
+# windows) rebuilt at 256 Hz with windows of 4, 10, 30 and 120 s, plus Full (one series per
+# run) for the three with runs over 120 s; see build_clinical_windows.py and
+# clinwin_datasets.txt. The 4 s variant at 256 Hz separates the effect of downsampling
+# from the main results (native rate, 4 s) and the effect of window length. Original
+# train/test split; score windows, and subjects by averaging window probabilities.
+#
+# batch_size 8 at every length: at 120 s there are only 30 to 110 training series, and the
+# default 64 with drop_last gives about one step per epoch (the within-subject MI problem).
+#
+# Lives in ~/tsml-configs/clinwin on Iridis (copied from the desktop), so no pull is needed:
+#   ~/.conda/envs/tsml-eval-gpu/bin/python ~/Code/tsml-eval-gpu/_tsml_research_resources/slurm/tsml_slurm.py \
+#       check ~/tsml-configs/clinwin/iridisx_clinwin_eegnex.toml
+
+[experiment]
+name = "eeg-clinwin-eegnex-x"
+cluster = "iridisx"
+resources = "gpu"
+task = "classification"
+repo_dir = "{home}/Code/tsml-eval-gpu"
+branch = "ajb/slurm-runner"
+data_dir = "{home}/DataClinWin"
+datasets = "{home}/tsml-configs/clinwin/clinwin_datasets.txt"
+dataset_info = "{home}/tsml-configs/clinwin/clinwin_info.csv"
+results_dir = "{home}/Results/EEG-ClinWin"
+resamples = 1
+smallest_datasets_first = true
+retry_timeouts = true
+max_attempts = 3
+
+[estimators]
+DeepLearning = ["EEGNeX-NB"]
+
+[estimator_kwargs."EEGNeX-NB"]
+sfreq = "{dataset.sfreq}"
+train_groups = "{dataset.train_groups}"
+batch_size = 8
+device = "cuda"
+
+[slurm]
+env_name = "tsml-eval-torch"
+time_limit = "24:00:00"
+max_active = 4
+gpu_check = "torch"
+memory_gb = [32, 64, 128]
+
+[supervisor]
+interval_minutes = 5
