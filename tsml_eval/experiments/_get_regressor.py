@@ -1,4 +1,4 @@
-"""Set regressor function."""
+"""Get regressor function."""
 
 __maintainer__ = ["TonyBagnall", "MatthewMiddlehurst"]
 
@@ -110,20 +110,20 @@ def get_regressor_by_name(
         String indicating which regressor to be returned.
     random_state : int, RandomState instance or None, default=None
         Random seed or RandomState object to be used in the regressor if available.
-    n_jobs: int, default=1
+    n_jobs : int, default=1
         The number of jobs to run in parallel for both regressor ``fit`` and
         ``predict`` if available. `-1` means using all processors.
-    fit_contract: int, default=0
+    fit_contract : int, default=0
         Contract time in minutes for regressor ``fit`` if available.
-    checkpoint: str or None, default=None
-        Path to a checkpoint file to save the regressor if available. No checkpointing
-        if None.
+    checkpoint : bool or None, default=None
+        Whether to save the regressor to file periodically during ``fit``. Not
+        currently used by any regressor.
     **kwargs
         Additional keyword arguments to be passed to the regressor.
 
-    Return
-    ------
-    regressor: A BaseRegressor.
+    Returns
+    -------
+    regressor : BaseRegressor
         The regressor matching the input regressor name.
     """
     r = regressor_name.lower()

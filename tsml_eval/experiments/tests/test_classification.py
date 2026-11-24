@@ -146,6 +146,40 @@ def test_run_threaded_classification_experiment():
     os.remove(test_file)
 
 
+def test_threaded_classification_experiment_arguments(monkeypatch, tmp_path):
+    """Test the threaded script passes the same arguments as the unthreaded one."""
+    args = [
+        _TEST_DATA_PATH,
+        str(tmp_path),
+        "ROCKET",
+        "MinimalChinatown",
+        "0",
+        "-tr",
+        "-tto",
+        "--data_transform_name",
+        "Padder",
+    ]
+
+    calls = []
+    for module in (classification_experiments, threaded_classification_experiments):
+        monkeypatch.setattr(
+            module, "get_classifier_by_name", lambda *a, **kw: calls.append(kw)
+        )
+        monkeypatch.setattr(
+            module,
+            "load_and_run_classification_experiment",
+            lambda *a, **kw: calls.append(kw),
+        )
+        module.run_experiment(args)
+
+    # transforms are compared by their repr
+    getter, run, threaded_getter, threaded_run = (
+        {k: repr(v) for k, v in kw.items()} for kw in calls
+    )
+    assert threaded_getter == getter
+    assert threaded_run == run
+
+
 def test_run_classification_experiment_invalid_build_settings():
     """Test run_classification_experiment method with invalid build settings."""
     with pytest.raises(ValueError, match="Both test_file and train_file"):

@@ -1,4 +1,4 @@
-"""Set forecaster function."""
+"""Get forecaster function."""
 
 __maintainer__ = ["MatthewMiddlehurst"]
 
@@ -36,25 +36,25 @@ def get_forecaster_by_name(forecaster_name, random_state=None, n_jobs=1, **kwarg
     settings. This set up is to help with batch jobs for multiple problems and to
     facilitate easy reproducibility for use with run_forecasting_experiment.
 
-    Generally, inputting a forecasters class name will return said forecaster with
+    Generally, inputting a forecaster class name will return said forecaster with
     default settings.
-
-    todo
 
     Parameters
     ----------
     forecaster_name : str
-        String indicating which classifier to be returned.
+        String indicating which forecaster to be returned.
     random_state : int, RandomState instance or None, default=None
-        Random seed or RandomState object to be used in the classifier if available.
-    n_jobs: int, default=1
-        The number of jobs to run in parallel for both classifier ``fit`` and
+        Random seed or RandomState object to be used in the forecaster if available.
+    n_jobs : int, default=1
+        The number of jobs to run in parallel for both forecaster ``fit`` and
         ``predict`` if available. `-1` means using all processors.
+    **kwargs
+        Additional keyword arguments to be passed to the forecaster.
 
-    Return
-    ------
-    forecaster : A BaseForecaster.
-        The forecaster matching the input classifier name.
+    Returns
+    -------
+    forecaster : BaseForecaster
+        The forecaster matching the input forecaster name.
     """
     f = forecaster_name.lower()
 
