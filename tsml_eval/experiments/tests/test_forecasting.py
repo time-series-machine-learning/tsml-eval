@@ -151,6 +151,91 @@ def test_run_threaded_forecasting_experiment():
     os.remove(test_file)
 
 
+def test_threaded_forecasting_experiment_arguments(monkeypatch, tmp_path):
+    """Test the threaded script passes the same arguments as the unthreaded one."""
+    args = [
+        _TEST_DATA_PATH,
+        str(tmp_path),
+        "NaiveForecaster",
+        "ShampooSales",
+        "0",
+        "-fs",
+        "direct",
+    ]
+
+    calls = []
+    for module in (forecasting_experiments, threaded_forecasting_experiments):
+        monkeypatch.setattr(
+            module, "get_forecaster_by_name", lambda *a, **kw: calls.append(kw)
+        )
+        monkeypatch.setattr(
+            module,
+            "load_and_run_forecasting_experiment",
+            lambda *a, **kw: calls.append(kw),
+        )
+        module.run_experiment(args)
+
+    getter, run, threaded_getter, threaded_run = calls
+    assert threaded_getter == getter
+    assert threaded_run == run
+
+
+@pytest.mark.parametrize(
+    "forecasting_strategy", ["iterative", "direct", "series_to_series"]
+)
+def test_run_forecasting_experiment_strategies(forecasting_strategy, tmp_path):
+    """Test forecasting experiments with each forecasting strategy."""
+    if forecasting_strategy == "series_to_series":
+        pytest.importorskip("tensorflow")
+        from aeon.forecasting.deep_learning import NBeatsForecaster
+
+        forecaster = NBeatsForecaster(
+            window=10, n_epochs=2, random_state=0, file_path=f"{tmp_path}/"
+        )
+    else:
+        forecaster = NaiveForecaster()
+
+    load_and_run_forecasting_experiment(
+        _TEST_DATA_PATH,
+        str(tmp_path),
+        "ShampooSales",
+        forecaster,
+        random_seed=0,
+        benchmark_time=False,
+        forecasting_strategy=forecasting_strategy,
+    )
+
+    test_file = (
+        f"{tmp_path}/{type(forecaster).__name__}/Predictions/ShampooSales/"
+        "testResample0.csv"
+    )
+    assert os.path.exists(test_file)
+    _check_forecasting_file_format(
+        test_file, num_results_lines=DATA_TEST_SIZES["ShampooSales"]
+    )
+
+
+def test_run_forecasting_experiment_invalid_forecasting_strategy():
+    """Test run_forecasting_experiment method with invalid forecasting strategies."""
+    with pytest.raises(ValueError, match="forecasting_strategy must be one of"):
+        run_forecasting_experiment(
+            [],
+            [],
+            NaiveForecaster(),
+            [],
+            forecasting_strategy="invalid",
+        )
+
+    with pytest.raises(ValueError, match="does not support the 'series_to_series'"):
+        run_forecasting_experiment(
+            [],
+            [],
+            NaiveForecaster(),
+            [],
+            forecasting_strategy="series_to_series",
+        )
+
+
 def test_run_forecasting_experiment_invalid_estimator():
     """Test run_forecasting_experiment method with invalid estimator."""
     with pytest.raises(TypeError, match="forecaster must be a"):
@@ -160,6 +245,12 @@ def test_run_forecasting_experiment_invalid_estimator():
             DummyClassifier(),
             [],
         )
+
+
+def _get_forecaster_by_name_with_window(forecaster_name):
+    if forecaster_name.lower() in ["tcnforecaster", "tcn", "tvpforecaster", "tvp"]:
+        return get_forecaster_by_name(forecaster_name, window=10)
+    return get_forecaster_by_name(forecaster_name)
 
 
 def test_get_forecaster_by_name():
@@ -177,7 +268,7 @@ def test_get_forecaster_by_name():
     all_forecaster_names = []
     for forecaster_name_list in forecaster_name_lists:
         _check_set_method(
-            get_forecaster_by_name,
+            _get_forecaster_by_name_with_window,
             forecaster_name_list,
             forecaster_list,
             forecaster_dict,
@@ -219,7 +310,7 @@ def test_aeon_forecasters_available():
             continue
 
         try:
-            assert get_forecaster_by_name(e) is not None
+            assert _get_forecaster_by_name_with_window(e) is not None
         except ModuleNotFoundError:
             continue
 
