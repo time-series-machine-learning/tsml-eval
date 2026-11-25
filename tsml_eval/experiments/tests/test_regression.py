@@ -228,7 +228,10 @@ def test_get_regressor_by_name():
         )
 
     _check_set_method_results(
-        regressor_dict, estimator_name="Regressors", method_name="get_regressor_by_name"
+        regressor_dict,
+        estimator_name="Regressors",
+        method_name="get_regressor_by_name",
+        exempt_names=["channelensembleregressor", "gridsearchcv"],
     )
 
 

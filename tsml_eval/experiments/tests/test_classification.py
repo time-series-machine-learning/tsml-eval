@@ -241,6 +241,7 @@ def test_get_classifier_by_name():
         classifier_dict,
         estimator_name="Classifiers",
         method_name="get_classifier_by_name",
+        exempt_names=["gridsearchcv"],
     )
 
 

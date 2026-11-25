@@ -108,19 +108,16 @@ def _check_set_method(
                     estimator_dict[e_name] = False
 
 
-EXEMPT_ESTIMATOR_NAMES = [
-    "channelensembleregressor",
-    "gridsearchcv",
-    "regressionforecaster",
-]
-
-
 def _check_set_method_results(
-    estimator_dict, estimator_name="Estimators", method_name="the method"
+    estimator_dict,
+    estimator_name="Estimators",
+    method_name="the method",
+    exempt_names=None,
 ):
-    for estimator in EXEMPT_ESTIMATOR_NAMES:
-        if estimator in estimator_dict:
-            estimator_dict.pop(estimator)
+    if exempt_names is not None:
+        for estimator in exempt_names:
+            if estimator in estimator_dict:
+                estimator_dict.pop(estimator)
 
     if not all(estimator_dict.values()):
         missing_keys = [key for key, value in estimator_dict.items() if not value]

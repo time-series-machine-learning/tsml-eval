@@ -282,6 +282,7 @@ def test_get_forecaster_by_name():
         forecaster_dict,
         estimator_name="Forecasters",
         method_name="get_forecaster_by_name",
+        exempt_names=["regressionforecaster"],
     )
 
 
