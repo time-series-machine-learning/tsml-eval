@@ -218,6 +218,7 @@ def test_get_classifier_by_name():
         _get_classifier.feature_based_classifiers,
         _get_classifier.hybrid_classifiers,
         _get_classifier.interval_based_classifiers,
+        _get_classifier.neuro_classifiers,
         _get_classifier.other_classifiers,
         _get_classifier.shapelet_based_classifiers,
         _get_classifier.vector_classifiers,

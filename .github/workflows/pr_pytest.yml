@@ -8,6 +8,7 @@ on:
     paths:
       - "tsml_eval/**"
       - ".github/workflows/**"
+      - ".github/actions/**"
       - "pyproject.toml"
 
 concurrency:

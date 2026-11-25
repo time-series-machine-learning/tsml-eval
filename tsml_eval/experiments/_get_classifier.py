@@ -201,7 +201,9 @@ def get_classifier_by_name(
             c, random_state, n_jobs, fit_contract, checkpoint, kwargs
         )
     elif str_in_nested_list(neuro_classifiers, c):
-        return _set_classifier_neuro(c, random_state, n_jobs, kwargs)
+        return _set_classifier_neuro(
+            c, random_state, n_jobs, fit_contract, checkpoint, kwargs
+        )
     elif str_in_nested_list(other_classifiers, c):
         return _set_classifier_other(
             c, random_state, n_jobs, fit_contract, checkpoint, kwargs
@@ -216,7 +218,12 @@ def get_classifier_by_name(
         )
     elif c.startswith("neuro:"):
         return _set_classifier_neuro_by_class_name(
-            c.removeprefix("neuro:"), random_state, n_jobs, kwargs
+            c.removeprefix("neuro:"),
+            random_state,
+            n_jobs,
+            fit_contract,
+            checkpoint,
+            kwargs,
         )
     else:
         raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
@@ -363,7 +370,7 @@ def _set_classifier_deep_learning(
         raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
 
 
-def _set_classifier_neuro(c, random_state, n_jobs, kwargs):
+def _set_classifier_neuro(c, random_state, n_jobs, fit_contract, checkpoint, kwargs):
     if c in ("eegnetclassifier", "eegnet"):
         from aeon_neuro.classification.deep_learning import EEGNetClassifier
 
@@ -412,7 +419,9 @@ def _set_classifier_neuro(c, random_state, n_jobs, kwargs):
         raise ValueError(f"UNKNOWN CLASSIFIER: {c} in get_classifier_by_name")
 
 
-def _set_classifier_neuro_by_class_name(c, random_state, n_jobs, kwargs):
+def _set_classifier_neuro_by_class_name(
+    c, random_state, n_jobs, fit_contract, checkpoint, kwargs
+):
     """Create an aeon-neuro classifier exported by its classification package."""
     from inspect import isclass, signature
 
