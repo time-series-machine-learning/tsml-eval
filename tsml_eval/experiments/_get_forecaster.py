@@ -76,7 +76,7 @@ def _set_forecaster_deep(f, random_state, n_jobs, kwargs):
     if f == "tcnforecaster" or f == "tcn":
         from aeon.forecasting.deep_learning import TCNForecaster
 
-        return TCNForecaster(window=10, random_state=random_state, **kwargs)
+        return TCNForecaster(random_state=random_state, **kwargs)
 
 
 def _set_forecaster_ml(f, random_state, n_jobs, kwargs):
@@ -122,7 +122,7 @@ def _set_forecaster_stats(f, random_state, n_jobs, kwargs):
     elif f == "tvpforecaster" or f == "tvp":
         from aeon.forecasting.stats import TVP
 
-        return TVP(window=10, **kwargs)
+        return TVP(**kwargs)
 
 
 def _set_forecaster_regression(f, random_state, n_jobs, kwargs):
