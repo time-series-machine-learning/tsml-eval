@@ -43,7 +43,8 @@ def _check_set_method(
             ), f"Estimator {estimator_alias} is duplicated"
             all_estimator_names.append(estimator_alias)
 
-            # all names should pass except for not installed soft dependencies
+            # all names should pass except for not installed soft dependencies and
+            # names backed by _wip, which is excluded from releases
             try:
                 out = set_method(estimator_alias)
             except ModuleNotFoundError as err:
@@ -53,6 +54,7 @@ def _check_set_method(
                     "python version",
                     "No module named 'xgboost'",
                     "No module named 'tsml'",
+                    "No module named 'tsml_eval._wip'",
                 ]
                 if any(s in str(err) for s in exempt_errors):
                     continue
