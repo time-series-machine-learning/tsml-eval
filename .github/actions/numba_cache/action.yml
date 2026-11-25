@@ -56,7 +56,7 @@ runs:
 
     # Restore cache if restore_cache is true
     - name: Restore cache
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v6
       if: ${{ inputs.restore_cache == 'true' }}
       with:
         path: ${{ github.workspace }}/.numba_cache
