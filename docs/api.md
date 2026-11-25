@@ -5,7 +5,7 @@ functions and classes.
 
 ## Estimators: [tsml_eval.estimators](https://github.com/time-series-machine-learning/tsml-eval/tree/main/tsml_eval/estimators)
 
-Wrappers and misc estimators for use with `tsml-eval`.
+Misc estimators for use with `tsml-eval`.
 
 ```{eval-rst}
 .. currentmodule:: tsml_eval
@@ -13,9 +13,6 @@ Wrappers and misc estimators for use with `tsml-eval`.
     :toctree: auto_generated/
     :template: class.rst
 
-    estimators.SklearnToTsmlClassifier
-    estimators.SklearnToTsmlClusterer
-    estimators.SklearnToTsmlRegressor
     estimators.classification.hybrid.FromFileHIVECOTE
     estimators.clustering.consensus.IterativeVotingClustering
     estimators.clustering.consensus.FromFileIterativeVotingClustering
@@ -69,6 +66,7 @@ Functions for running experiments.
     experiments.get_classifier_by_name
     experiments.get_clusterer_by_name
     experiments.get_regressor_by_name
+    experiments.get_data_transform_by_name
     experiments.run_timing_experiment
     experiments.classification_cross_validation
     experiments.classification_cross_validation_folds
@@ -77,6 +75,19 @@ Functions for running experiments.
 ```
 
 ## Utilities: [tsml_eval.utils](https://github.com/time-series-machine-learning/tsml-eval/tree/main/tsml_eval/utils)
+
+Cross-validation splitters for dependent time series cases, for use as the `cv`
+argument of the cross-validation functions.
+
+```{eval-rst}
+.. currentmodule:: tsml_eval
+.. autosummary::
+    :toctree: auto_generated/
+    :template: class.rst
+
+    utils.splitters.HVBlockCrossValidator
+    utils.splitters.BufferedBlockedKFold
+```
 
 Public utility functions used elsewhere in the package.
 

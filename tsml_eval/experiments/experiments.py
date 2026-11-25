@@ -1,6 +1,6 @@
 """Functions to perform machine learning/data mining experiments.
 
-Results are saved a standardised format used by tsml.
+Results are saved in a standardised format used by tsml.
 """
 
 __maintainer__ = ["TonyBagnall", "MatthewMiddlehurst"]
@@ -30,20 +30,31 @@ from aeon.regression.base import BaseRegressor
 from aeon.utils.validation._dependencies import _check_soft_dependencies
 from aeon.utils.validation.collection import get_n_cases
 from sklearn import preprocessing
-from sklearn.base import BaseEstimator, is_classifier, is_clusterer, is_regressor
+from sklearn.base import (
+    BaseEstimator,
+    clone,
+    is_classifier,
+    is_clusterer,
+    is_regressor,
+)
 from sklearn.metrics import (
     accuracy_score,
     mean_absolute_percentage_error,
     mean_squared_error,
 )
-from sklearn.model_selection import cross_val_predict
+from sklearn.model_selection import KFold, StratifiedKFold
 
 from tsml_eval.estimators.classification._sklearn import SklearnToAeonClassifier
 from tsml_eval.estimators.clustering._sklearn import SklearnToAeonClusterer
 from tsml_eval.estimators.regression._sklearn import SklearnToAeonRegressor
 from tsml_eval.utils.datasets import load_experiment_data
 from tsml_eval.utils.experiments import (
+    _attributes_path,
     _check_existing_results,
+    _convert_collection,
+    _convert_series,
+    _fit_is_empty,
+    _index_cases,
     estimator_attributes_to_file,
     timing_benchmark,
 )
@@ -119,6 +130,9 @@ def run_classification_experiment(
         If a list, the transformers are applied in order.
         If None, no transformation is applied.
         Calls fit_transform on the training data and transform on the test data.
+        A cross-validated train estimate refits clones of the transforms in each
+        fold, unless every transform has the aeon ``fit_is_empty`` tag and
+        ``transform_train_only`` is False.
     transform_train_only : bool, default=False
         If True, the data transforms are only applied to the training data.
     build_test_file : bool, default=True
@@ -154,6 +168,9 @@ def run_classification_experiment(
     if classifier_name is None:
         classifier_name = type(classifier).__name__
 
+    X_train = _convert_collection(X_train)
+    X_test = _convert_collection(X_test)
+
     use_fit_predict = False
     # aeon classifier
     if isinstance(classifier, BaseClassifier):
@@ -185,40 +202,26 @@ def run_classification_experiment(
     else:
         raise TypeError("classifier must be an aeon, tsml or sklearn classifier.")
 
-    n_cases_test = get_n_cases(X_test)
+    le = preprocessing.LabelEncoder()
+    y_train = le.fit_transform(y_train)
+    y_test = le.transform(y_test)
+    encoder_dict = {label: i for i, label in enumerate(le.classes_)}
+
+    # the CV train estimate refits transforms in each fold unless fit learns nothing
+    X_cv, y_cv, fold_transforms = X_train, y_train, []
     if data_transforms is not None:
         if not isinstance(data_transforms, list):
             data_transforms = [data_transforms]
 
-        for transform in data_transforms:
-            transform_results = transform.fit_transform(X_train, y_train)
-            if isinstance(transform_results, tuple) and len(transform_results) == 2:
-                # If the transformer returns a tuple of length 2, assume it is (X, y)
-                X_train, y_train = transform_results
-            else:
-                X_train = transform_results
+        X_train, y_train, X_test, y_test = _transform_data(
+            data_transforms, X_train, y_train, X_test, y_test, transform_train_only
+        )
 
-            if not transform_train_only:
-                transform_results = transform.transform(X_test, y_test)
-                if isinstance(transform_results, tuple) and len(transform_results) == 2:
-                    X_test, y_test = transform_results
-                else:
-                    X_test = transform_results
+        if transform_train_only or not _fit_is_empty(data_transforms):
+            fold_transforms = data_transforms
+        else:
+            X_cv, y_cv = X_train, y_train
 
-                # If we have edited the number of cases in test something has gone
-                # wrong i.e. we have applied SMOTE to the test set
-                new_n_cases_test = get_n_cases(X_test)
-                assert new_n_cases_test == n_cases_test, (
-                    f"Error: X_test sample size changed from {n_cases_test} to "
-                    f"{new_n_cases_test} after transformation "
-                    f"{transform.__class__.__name__}"
-                )
-
-    le = preprocessing.LabelEncoder()
-    y_train = le.fit_transform(y_train)
-    y_test = le.transform(y_test)
-
-    encoder_dict = {label: i for i, label in enumerate(le.classes_)}
     n_classes = len(np.unique(y_train))
 
     needs_fit = True
@@ -253,21 +256,33 @@ def run_classification_experiment(
                 fit_time = classifier.fit_time_millis_
             fit_and_train_time = int(round(time.time() * 1000)) - start
         else:
-            _, counts = np.unique(y_train, return_counts=True)
+            _, counts = np.unique(y_cv, return_counts=True)
             cv_size = min(cv_size, max(2, int(np.min(counts))))
 
-            train_probs = cross_val_predict(
-                classifier, X_train, y=y_train, cv=cv_size, method="predict_proba"
-            )
+            train_probs = np.zeros((len(y_cv), n_classes))
+            for train, val in StratifiedKFold(n_splits=cv_size).split(X_cv, y_cv):
+                X_fold, y_fold, X_val, _ = _transform_data(
+                    [clone(t) for t in fold_transforms],
+                    _index_cases(X_cv, train),
+                    y_cv[train],
+                    _index_cases(X_cv, val),
+                    y_cv[val],
+                    transform_train_only,
+                )
+                fold_classifier = clone(classifier).fit(X_fold, y_fold)
+                train_probs[np.ix_(val, fold_classifier.classes_)] = (
+                    fold_classifier.predict_proba(X_val)
+                )
             train_time = int(round(time.time() * 1000)) - start
 
-        train_preds = np.unique(y_train)[np.argmax(train_probs, axis=1)]
-        train_acc = accuracy_score(y_train, train_preds)
+        y_est = y_train if use_fit_predict else y_cv
+        train_preds = np.unique(y_est)[np.argmax(train_probs, axis=1)]
+        train_acc = accuracy_score(y_est, train_preds)
 
         write_classification_results(
             train_preds,
             train_probs,
-            y_train,
+            y_est,
             classifier_name,
             dataset_name,
             results_path,
@@ -398,8 +413,8 @@ def load_and_run_classification_experiment(
         up to 10 folds.
     write_attributes : bool, default=False
         Whether to write the fitted classifier's attributes to
-        ``<results_path>/<classifier_name>/Workspace/<dataset>/``. Attributes are only
-        written when the test file is built.
+        ``<results_path>/<classifier_name>/Workspace/<dataset>/Resample<resample_id>/``.
+        Attributes are only written when the test file is built.
     att_max_shape : int, default=0
         Maximum list shape when writing attributes, passed to
         ``estimator_attributes_to_file`` as ``max_list_shape``. At 0, estimators in
@@ -442,7 +457,9 @@ def load_and_run_classification_experiment(
         )
 
     if write_attributes:
-        attribute_file_path = f"{results_path}/{classifier_name}/Workspace/{dataset}/"
+        attribute_file_path = _attributes_path(
+            results_path, classifier_name, dataset, resample_id
+        )
     else:
         attribute_file_path = None
 
@@ -521,6 +538,8 @@ def run_regression_experiment(
         If a list, the transformers are applied in order.
         If None, no transformation is applied.
         Calls fit_transform on the training data and transform on the test data.
+        A cross-validated train estimate refits clones of the transforms in each
+        fold, unless every transform has the aeon ``fit_is_empty`` tag.
     build_test_file : bool, default=True
         Whether to generate test files or not.
     build_train_file : bool, default=False
@@ -554,6 +573,9 @@ def run_regression_experiment(
     if regressor_name is None:
         regressor_name = type(regressor).__name__
 
+    X_train = _convert_collection(X_train)
+    X_test = _convert_collection(X_test)
+
     use_fit_predict = False
     # aeon regressor
     if isinstance(regressor, BaseRegressor):
@@ -585,13 +607,20 @@ def run_regression_experiment(
     else:
         raise TypeError("regressor must be a tsml, aeon or sklearn regressor.")
 
+    # the CV train estimate refits transforms in each fold unless fit learns nothing
+    X_cv, y_cv, fold_transforms = X_train, y_train, []
     if data_transforms is not None:
         if not isinstance(data_transforms, list):
             data_transforms = [data_transforms]
 
-        for transform in data_transforms:
-            X_train = transform.fit_transform(X_train, y_train)
-            X_test = transform.transform(X_test, y_test)
+        X_train, y_train, X_test, y_test = _transform_data(
+            data_transforms, X_train, y_train, X_test, y_test, False
+        )
+
+        if not _fit_is_empty(data_transforms):
+            fold_transforms = data_transforms
+        else:
+            X_cv, y_cv = X_train, y_train
 
     needs_fit = True
     fit_time = -1
@@ -615,21 +644,32 @@ def run_regression_experiment(
     second = str(regressor.get_params()).replace("\n", " ").replace("\r", " ")
 
     if build_train_file:
-        cv_size = min(10, len(y_train))
+        cv_size = min(10, len(y_cv))
         start = int(round(time.time() * 1000))
         if use_fit_predict:
             train_preds = regressor.fit_predict(X_train, y_train)
             needs_fit = False
             fit_and_train_time = int(round(time.time() * 1000)) - start
         else:
-            train_preds = cross_val_predict(regressor, X_train, y=y_train, cv=cv_size)
+            train_preds = np.zeros(len(y_cv))
+            for train, val in KFold(n_splits=cv_size).split(X_cv):
+                X_fold, y_fold, X_val, _ = _transform_data(
+                    [clone(t) for t in fold_transforms],
+                    _index_cases(X_cv, train),
+                    y_cv[train],
+                    _index_cases(X_cv, val),
+                    y_cv[val],
+                    False,
+                )
+                train_preds[val] = clone(regressor).fit(X_fold, y_fold).predict(X_val)
             train_time = int(round(time.time() * 1000)) - start
 
-        train_mse = mean_squared_error(y_train, train_preds)
+        y_est = y_train if use_fit_predict else y_cv
+        train_mse = mean_squared_error(y_est, train_preds)
 
         write_regression_results(
             train_preds,
-            y_train,
+            y_est,
             regressor_name,
             dataset_name,
             results_path,
@@ -746,8 +786,8 @@ def load_and_run_regression_experiment(
         up to 10 folds.
     write_attributes : bool, default=False
         Whether to write the fitted regressor's attributes to
-        ``<results_path>/<regressor_name>/Workspace/<dataset>/``. Attributes are only
-        written when the test file is built.
+        ``<results_path>/<regressor_name>/Workspace/<dataset>/Resample<resample_id>/``.
+        Attributes are only written when the test file is built.
     att_max_shape : int, default=0
         Maximum list shape when writing attributes, passed to
         ``estimator_attributes_to_file`` as ``max_list_shape``. At 0, estimators in
@@ -790,7 +830,9 @@ def load_and_run_regression_experiment(
         )
 
     if write_attributes:
-        attribute_file_path = f"{results_path}/{regressor_name}/Workspace/{dataset}/"
+        attribute_file_path = _attributes_path(
+            results_path, regressor_name, dataset, resample_id
+        )
     else:
         attribute_file_path = None
 
@@ -909,6 +951,10 @@ def run_clustering_experiment(
 
     if clusterer_name is None:
         clusterer_name = type(clusterer).__name__
+
+    X_train = _convert_collection(X_train)
+    if X_test is not None:
+        X_test = _convert_collection(X_test)
 
     can_predict = True
     # aeon clusterer
@@ -1161,7 +1207,7 @@ def load_and_run_clustering_experiment(
         clusters to the loaded test data, so it must be able to predict unseen cases.
     write_attributes : bool, default=False
         Whether to write the fitted clusterer's attributes to
-        ``<results_path>/<clusterer_name>/Workspace/<dataset>/``.
+        ``<results_path>/<clusterer_name>/Workspace/<dataset>/Resample<resample_id>/``.
     att_max_shape : int, default=0
         Maximum list shape when writing attributes, passed to
         ``estimator_attributes_to_file`` as ``max_list_shape``. At 0, estimators in
@@ -1211,7 +1257,9 @@ def load_and_run_clustering_experiment(
         )
 
     if write_attributes:
-        attribute_file_path = f"{results_path}/{clusterer_name}/Workspace/{dataset}/"
+        attribute_file_path = _attributes_path(
+            results_path, clusterer_name, dataset, resample_id
+        )
     else:
         attribute_file_path = None
 
@@ -1300,6 +1348,9 @@ def run_forecasting_experiment(
 
     if forecaster_name is None:
         forecaster_name = type(forecaster).__name__
+
+    train = _convert_series(train)
+    test = _convert_series(test)
 
     benchmark = -1
     if benchmark_time:
@@ -1394,10 +1445,12 @@ def load_and_run_forecasting_experiment(
         the forecaster.
     random_seed : int or None, default=None
         Indicates what random seed was used as a random_state for the forecaster. Only
-        used for the results file name.
+        used for the results file and attribute directory names.
     write_attributes : bool, default=False
         Whether to write the fitted forecaster's attributes to
-        ``<results_path>/<forecaster_name>/Workspace/<dataset>/``.
+        ``<results_path>/<forecaster_name>/Workspace/<dataset>/Resample<random_seed>/``,
+        or to a ``Results`` directory in place of ``Resample<random_seed>`` if
+        ``random_seed`` is None.
     att_max_shape : int, default=0
         Maximum list shape when writing attributes, passed to
         ``estimator_attributes_to_file`` as ``max_list_shape``. At 0, estimators in
@@ -1427,7 +1480,9 @@ def load_and_run_forecasting_experiment(
         return
 
     if write_attributes:
-        attribute_file_path = f"{results_path}/{forecaster_name}/Workspace/{dataset}/"
+        attribute_file_path = _attributes_path(
+            results_path, forecaster_name, dataset, random_seed
+        )
     else:
         attribute_file_path = None
 
@@ -1452,3 +1507,33 @@ def load_and_run_forecasting_experiment(
         att_max_shape=att_max_shape,
         benchmark_time=benchmark_time,
     )
+
+
+def _transform_data(transforms, X_train, y_train, X_test, y_test, train_only):
+    """Fit transforms in order on the train data and apply them to the test data."""
+    n_cases_test = get_n_cases(X_test)
+    for transform in transforms:
+        transform_results = transform.fit_transform(X_train, y_train)
+        if isinstance(transform_results, tuple) and len(transform_results) == 2:
+            # If the transformer returns a tuple of length 2, assume it is (X, y)
+            X_train, y_train = transform_results
+        else:
+            X_train = transform_results
+
+        if not train_only:
+            transform_results = transform.transform(X_test, y_test)
+            if isinstance(transform_results, tuple) and len(transform_results) == 2:
+                X_test, y_test = transform_results
+            else:
+                X_test = transform_results
+
+            # If we have edited the number of cases in test something has gone
+            # wrong i.e. we have applied SMOTE to the test set
+            new_n_cases_test = get_n_cases(X_test)
+            assert new_n_cases_test == n_cases_test, (
+                f"Error: X_test sample size changed from {n_cases_test} to "
+                f"{new_n_cases_test} after transformation "
+                f"{transform.__class__.__name__}"
+            )
+
+    return X_train, y_train, X_test, y_test

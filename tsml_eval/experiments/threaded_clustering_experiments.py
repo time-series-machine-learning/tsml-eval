@@ -64,6 +64,7 @@ def run_experiment(args):
                         args.dataset_name,
                         args.resample_id,
                         args.predefined_resample,
+                        args.combine_test_train_split,
                     ],
                     row_normalise=args.row_normalise,
                     **args.kwargs,
@@ -87,6 +88,7 @@ def run_experiment(args):
                 benchmark_time=args.benchmark_time,
                 overwrite=args.overwrite,
                 predefined_resample=args.predefined_resample,
+                combine_train_test_split=args.combine_test_train_split,
             )
     # local run (no args)
     else:
@@ -109,6 +111,7 @@ def run_experiment(args):
         predefined_resample = False
         fit_contract = 0
         checkpoint = None
+        combine_test_train_split = True
         kwargs = {}
 
         clusterer = get_clusterer_by_name(
@@ -117,7 +120,13 @@ def run_experiment(args):
             n_jobs=n_jobs,
             fit_contract=fit_contract,
             checkpoint=checkpoint,
-            data_vars=[data_path, dataset_name, resample_id, predefined_resample],
+            data_vars=[
+                data_path,
+                dataset_name,
+                resample_id,
+                predefined_resample,
+                combine_test_train_split,
+            ],
             row_normalise=row_normalise,
             **kwargs,
         )
@@ -144,6 +153,7 @@ def run_experiment(args):
             benchmark_time=benchmark_time,
             overwrite=overwrite,
             predefined_resample=predefined_resample,
+            combine_train_test_split=combine_test_train_split,
         )
 
 

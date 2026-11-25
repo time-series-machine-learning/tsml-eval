@@ -1,5 +1,6 @@
 """Class for storing and loading results from a classification experiment."""
 
+import re
 import warnings
 
 import numpy as np
@@ -73,6 +74,13 @@ class ClassifierResults(EstimatorResults):
         Prediction times for each case.
     pred_descriptions : list of str or None, default=None
         Descriptions for each prediction.
+    labels : array-like or None, default=None
+        Sorted set of all encoded class labels seen during training. The order must
+        match the columns in ``probabilities``. When loading results, labels are only
+        inferred if an encoder dictionary is present in the file description.
+
+        Currently only used for compatibility in datasets where the train and test set
+        do not contain the same classes.
 
     Attributes
     ----------
@@ -127,6 +135,7 @@ class ClassifierResults(EstimatorResults):
         probabilities=None,
         pred_times=None,
         pred_descriptions=None,
+        labels=None,
     ):
         # Line 1
         self.classifier_name = classifier_name
@@ -143,6 +152,8 @@ class ClassifierResults(EstimatorResults):
         self.probabilities = probabilities
         self.pred_times = pred_times
         self.pred_descriptions = pred_descriptions
+
+        self.labels = labels
 
         self.n_cases = None
         self._minority_class = None
@@ -279,14 +290,29 @@ class ClassifierResults(EstimatorResults):
             self.log_loss = log_loss(
                 self.class_labels,
                 self.probabilities,
+                labels=self.labels,
             )
         if self.auroc_score is None or overwrite:
-            self.auroc_score = roc_auc_score(
-                self.class_labels,
-                self.probabilities[:, 1] if self.n_classes == 2 else self.probabilities,
-                average="weighted",
-                multi_class="ovr",
-            )
+            if (
+                self.labels is not None
+                and len(np.unique(self.class_labels)) < self.n_classes
+            ):
+                self.auroc_score = _calculate_missing_class_auroc_score(
+                    self.class_labels,
+                    self.probabilities,
+                    self.labels,
+                )
+            else:
+                self.auroc_score = roc_auc_score(
+                    self.class_labels,
+                    (
+                        self.probabilities[:, 1]
+                        if self.n_classes == 2
+                        else self.probabilities
+                    ),
+                    average="weighted",
+                    multi_class="ovr",
+                )
         if self.sensitivity is None or overwrite:
             self.sensitivity = recall_score(
                 self.class_labels,
@@ -337,6 +363,70 @@ class ClassifierResults(EstimatorResults):
             self._majority_class = unique[np.flatnonzero(counts == np.max(counts))[-1]]
 
 
+def _calculate_missing_class_auroc_score(class_labels, probabilities, labels):
+    """Calculate weighted one-vs-rest AUROC when test classes are missing.
+
+    Only classes present in ``class_labels`` are scored. Passing ``labels`` to
+    ``roc_auc_score`` would also score the absent classes, which have no positive
+    cases and are undefined.
+
+    Input validation matches ``roc_auc_score`` with ``labels``, except an error is
+    raised rather than returning NaN when fewer than two classes are present.
+    """
+    if not np.allclose(1, probabilities.sum(axis=1)):
+        raise ValueError(
+            "Target scores need to be probabilities for multiclass roc_auc, i.e. they "
+            "should sum up to 1.0 over classes"
+        )
+
+    labels = np.asarray(labels)
+    unique_labels = np.unique(labels)
+    if len(unique_labels) != len(labels):
+        raise ValueError("Parameter 'labels' must be unique")
+    if not np.array_equal(unique_labels, labels):
+        raise ValueError("Parameter 'labels' must be ordered")
+    if len(labels) != probabilities.shape[1]:
+        raise ValueError(
+            f"Number of given labels, {len(labels)}, not equal to the number of "
+            f"columns in 'y_score', {probabilities.shape[1]}"
+        )
+
+    present_labels, counts = np.unique(class_labels, return_counts=True)
+    if len(np.setdiff1d(present_labels, labels)):
+        raise ValueError("'y_true' contains labels not in parameter 'labels'")
+    if len(present_labels) < 2:
+        raise ValueError(
+            "AUROC is undefined when fewer than two classes are present in "
+            "class_labels."
+        )
+
+    label_indices = {label: i for i, label in enumerate(labels)}
+    scores = []
+    for label in present_labels:
+        scores.append(
+            roc_auc_score(class_labels == label, probabilities[:, label_indices[label]])
+        )
+    return np.average(scores, weights=counts)
+
+
+def _get_class_labels_from_description(description, n_classes):
+    """Get the ordered encoded training labels from a results description."""
+    encoder_match = re.search(
+        r"Encoder dictionary:\s*\{([^}]*)\}",
+        description,
+    )
+    if encoder_match is not None:
+        encoder_values = re.findall(
+            r":\s*(-?\d+)\s*(?=,|$)",
+            encoder_match.group(1),
+        )
+        labels = sorted({int(value) for value in encoder_values})
+        if len(labels) == n_classes:
+            return labels
+
+    return None
+
+
 def load_classifier_results(file_path, calculate_stats=True, verify_values=True):
     """
     Load and return classifier results from a specified file.
@@ -368,6 +458,8 @@ def load_classifier_results(file_path, calculate_stats=True, verify_values=True)
         acc = float(line3[0])
         n_classes = int(line3[5])
         n_cases = len(lines) - 3
+        description = ",".join(line1[5:]).strip()
+        labels = _get_class_labels_from_description(description, n_classes)
 
         line_size = len(lines[3].split(","))
 
@@ -415,7 +507,7 @@ def load_classifier_results(file_path, calculate_stats=True, verify_values=True)
         split=line1[2],
         resample_id=None if line1[3] == "None" else int(line1[3]),
         time_unit=line1[4].lower(),
-        description=",".join(line1[5:]).strip(),
+        description=description,
         parameter_info=lines[1].strip(),
         fit_time=float(line3[1]),
         predict_time=float(line3[2]),
@@ -430,6 +522,7 @@ def load_classifier_results(file_path, calculate_stats=True, verify_values=True)
         probabilities=probabilities,
         pred_times=pred_times,
         pred_descriptions=pred_descriptions,
+        labels=labels,
     )
 
     if calculate_stats:

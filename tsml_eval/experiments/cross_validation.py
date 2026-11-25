@@ -12,8 +12,7 @@ import warnings
 from numbers import Integral
 
 import numpy as np
-from aeon.utils.conversion import convert_collection
-from aeon.utils.validation.collection import get_n_cases, get_type, is_equal_length
+from aeon.utils.validation.collection import get_n_cases
 from sklearn.base import clone
 from sklearn.model_selection import KFold, StratifiedKFold, check_cv
 
@@ -21,7 +20,12 @@ from tsml_eval.experiments.experiments import (
     run_classification_experiment,
     run_regression_experiment,
 )
-from tsml_eval.utils.experiments import _check_existing_results
+from tsml_eval.utils.experiments import (
+    _attributes_path,
+    _check_existing_results,
+    _convert_collection,
+    _index_cases,
+)
 
 
 def classification_cross_validation(
@@ -36,7 +40,7 @@ def classification_cross_validation(
     build_test_file=True,
     build_train_file=False,
     ignore_custom_train_estimate=False,
-    attribute_file_path=None,
+    write_attributes=False,
     att_max_shape=0,
     benchmark_time=True,
     data_transforms=None,
@@ -85,11 +89,12 @@ def classification_cross_validation(
         classifier has the ``capability:train_estimate`` tag, each fold's train file
         uses its own estimate. Otherwise, a cross-validation on that fold's training
         data is used.
-    attribute_file_path : str or None, default=None
-        Directory to write the fitted classifier's attributes to using
-        ``estimator_attributes_to_file``. Each fold writes to a ``fold{i}``
-        subfolder, where ``i`` is the fold id. Attributes are only written when the
-        fold's test file is built. If None, no attributes are written.
+    write_attributes : bool, default=False
+        Whether to write each fold's fitted classifier attributes to
+        ``<results_path>/<classifier_name>/Workspace/<dataset_name>/Resample<fold>/``,
+        where ``fold`` is the fold id. As with the results files, the
+        ``<dataset_name>`` directory is left out if ``dataset_name`` is "N/A".
+        Attributes are only written when the fold's test file is built.
     att_max_shape : int, default=0
         Maximum list shape when writing attributes, passed to
         ``estimator_attributes_to_file`` as ``max_list_shape``. At 0, estimators in
@@ -110,7 +115,11 @@ def classification_cross_validation(
         overwritten.
     groups : array-like or None, default=None
         Group labels for the cases used while splitting the dataset into train and
-        test folds. Only used in conjunction with a ``cv`` splitter.
+        test folds. Only used in conjunction with a ``cv`` splitter. What the labels
+        mean depends on the splitter. ``GroupKFold`` never puts one group in both
+        the train and test set. ``HVBlockCrossValidator`` and
+        ``BufferedBlockedKFold`` from ``tsml_eval.utils.splitters`` treat each group
+        as an independent sequence, which can appear on both sides of a split.
     random_seed : int, list of int or None, default=None
         Use a different random seed than the fold id. An int is used for every fold,
         a list gives one seed per fold. If None, the fold id is used.
@@ -173,9 +182,9 @@ def classification_cross_validation(
             build_train_file=fold_build_train,
             ignore_custom_train_estimate=ignore_custom_train_estimate,
             attribute_file_path=(
-                None
-                if attribute_file_path is None
-                else f"{attribute_file_path}/fold{fold}/"
+                _attributes_path(results_path, classifier_name, dataset_name, fold)
+                if write_attributes
+                else None
             ),
             att_max_shape=att_max_shape,
             benchmark_time=benchmark_time,
@@ -200,7 +209,11 @@ def classification_cross_validation_folds(X, y, cv=None, groups=None):
         index splits. If None, up to 10-fold stratified cross-validation will be used.
     groups : array-like or None, default=None
         Group labels for the cases used while splitting the dataset into train and
-        test folds. Only used in conjunction with a ``cv`` splitter.
+        test folds. Only used in conjunction with a ``cv`` splitter. What the labels
+        mean depends on the splitter. ``GroupKFold`` never puts one group in both
+        the train and test set. ``HVBlockCrossValidator`` and
+        ``BufferedBlockedKFold`` from ``tsml_eval.utils.splitters`` treat each group
+        as an independent sequence, which can appear on both sides of a split.
 
     Returns
     -------
@@ -223,7 +236,7 @@ def regression_cross_validation(
     build_test_file=True,
     build_train_file=False,
     ignore_custom_train_estimate=False,
-    attribute_file_path=None,
+    write_attributes=False,
     att_max_shape=0,
     benchmark_time=True,
     data_transforms=None,
@@ -271,11 +284,12 @@ def regression_cross_validation(
         regressor has the ``capability:train_estimate`` tag, each fold's train file
         uses its own estimate. Otherwise, a cross-validation on that fold's training
         data is used.
-    attribute_file_path : str or None, default=None
-        Directory to write the fitted regressor's attributes to using
-        ``estimator_attributes_to_file``. Each fold writes to a ``fold{i}``
-        subfolder, where ``i`` is the fold id. Attributes are only written when the
-        fold's test file is built. If None, no attributes are written.
+    write_attributes : bool, default=False
+        Whether to write each fold's fitted regressor attributes to
+        ``<results_path>/<regressor_name>/Workspace/<dataset_name>/Resample<fold>/``,
+        where ``fold`` is the fold id. As with the results files, the
+        ``<dataset_name>`` directory is left out if ``dataset_name`` is "N/A".
+        Attributes are only written when the fold's test file is built.
     att_max_shape : int, default=0
         Maximum list shape when writing attributes, passed to
         ``estimator_attributes_to_file`` as ``max_list_shape``. At 0, estimators in
@@ -293,7 +307,11 @@ def regression_cross_validation(
         overwritten.
     groups : array-like or None, default=None
         Group labels for the cases used while splitting the dataset into train and
-        test folds. Only used in conjunction with a ``cv`` splitter.
+        test folds. Only used in conjunction with a ``cv`` splitter. What the labels
+        mean depends on the splitter. ``GroupKFold`` never puts one group in both
+        the train and test set. ``HVBlockCrossValidator`` and
+        ``BufferedBlockedKFold`` from ``tsml_eval.utils.splitters`` treat each group
+        as an independent sequence, which can appear on both sides of a split.
     random_seed : int, list of int or None, default=None
         Use a different random seed than the fold id. An int is used for every fold,
         a list gives one seed per fold. If None, the fold id is used.
@@ -347,9 +365,9 @@ def regression_cross_validation(
             build_train_file=fold_build_train,
             ignore_custom_train_estimate=ignore_custom_train_estimate,
             attribute_file_path=(
-                None
-                if attribute_file_path is None
-                else f"{attribute_file_path}/fold{fold}/"
+                _attributes_path(results_path, regressor_name, dataset_name, fold)
+                if write_attributes
+                else None
             ),
             att_max_shape=att_max_shape,
             benchmark_time=benchmark_time,
@@ -374,7 +392,11 @@ def regression_cross_validation_folds(X, y, cv=None, groups=None):
         index splits. If None, 10-fold shuffled cross-validation will be used.
     groups : array-like or None, default=None
         Group labels for the cases used while splitting the dataset into train and
-        test folds. Only used in conjunction with a ``cv`` splitter.
+        test folds. Only used in conjunction with a ``cv`` splitter. What the labels
+        mean depends on the splitter. ``GroupKFold`` never puts one group in both
+        the train and test set. ``HVBlockCrossValidator`` and
+        ``BufferedBlockedKFold`` from ``tsml_eval.utils.splitters`` treat each group
+        as an independent sequence, which can appear on both sides of a split.
 
     Returns
     -------
@@ -386,9 +408,7 @@ def regression_cross_validation_folds(X, y, cv=None, groups=None):
 
 
 def _convert_X_y(X, y):
-    if get_type(X) not in ("numpy3D", "numpy2D", "np-list"):
-        X = convert_collection(X, "numpy3D" if is_equal_length(X) else "np-list")
-    return X, np.asarray(y)
+    return _convert_collection(X), np.asarray(y)
 
 
 def _classification_folds(X, y, cv, groups):
@@ -471,12 +491,6 @@ def _fold_seeds(random_seed, n_folds):
             f"for {n_folds} folds."
         )
     return [int(seed) for seed in random_seed]
-
-
-def _index_cases(X, indices):
-    if isinstance(X, list):
-        return [X[i] for i in indices]
-    return X[indices]
 
 
 def _clone_with_seed(estimator, seed):
