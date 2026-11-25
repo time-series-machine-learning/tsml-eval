@@ -67,7 +67,7 @@ def run_experiment(args):
         # Do not include paths to your local directories here in PRs
         data_path = _TEST_DATA_PATH
         results_path = _FORECASTER_RESULTS_PATH
-        estimator_name = "DummyForecaster"
+        estimator_name = "NaiveForecaster"
         dataset_name = "ShampooSales"
         random_seed = 0
         n_jobs = 1

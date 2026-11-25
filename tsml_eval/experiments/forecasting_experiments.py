@@ -98,7 +98,7 @@ def run_experiment(args):
         # If threading is required, see the threaded version of this file
         data_path = _TEST_DATA_PATH
         results_path = _FORECASTER_RESULTS_PATH
-        estimator_name = "DummyForecaster"
+        estimator_name = "NaiveForecaster"
         dataset_name = "ShampooSales"
         random_seed = 0
         write_attributes = True
