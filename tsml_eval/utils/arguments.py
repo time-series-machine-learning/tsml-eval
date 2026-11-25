@@ -19,7 +19,8 @@ def parse_args(args):
     usage: tsml_eval [-h] [--version] [-ow] [-pr] [-rs RANDOM_SEED] [-nj N_JOBS]
                      [-tr] [-te] [-fc FIT_CONTRACT] [-ch]
                      [-dtn DATA_TRANSFORM_NAME] [-tto] [-rn] [-nc N_CLUSTERS]
-                     [-ctts] [-bt] [-wa] [-ams ATT_MAX_SHAPE] [-kw KEY VALUE TYPE]
+                     [-ctts] [-fs FORECASTING_STRATEGY] [-bt] [-wa]
+                     [-ams ATT_MAX_SHAPE] [-kw KEY VALUE TYPE]
                      data_path results_path estimator_name dataset_name
                      resample_id
 
@@ -90,6 +91,11 @@ def parse_args(args):
                             train and test sets are combined and used to fit the
                             estimator. Only available for clustering (default:
                             False).
+      -fs FORECASTING_STRATEGY, --forecasting_strategy FORECASTING_STRATEGY
+                            the strategy used to forecast the test series from the
+                            train series, one of {iterative, direct,
+                            series_to_series}. Only available for forecasting
+                            (default: iterative).
       -bt, --benchmark_time
                             run a benchmark function and save the time spent in
                             the results file (default: False).
@@ -252,6 +258,16 @@ def parse_args(args):
         help="whether to use a train/test split or not. If True, the train and test "
         "sets are combined and used to fit the estimator. Only available for "
         "clustering (default: %(default)s).",
+    )
+    parser.add_argument(
+        "-fs",
+        "--forecasting_strategy",
+        default="iterative",
+        choices=["iterative", "direct", "series_to_series"],
+        metavar="FORECASTING_STRATEGY",
+        help="the strategy used to forecast the test series from the train series, "
+        "one of {iterative, direct, series_to_series}. Only available for "
+        "forecasting (default: %(default)s).",
     )
     parser.add_argument(
         "-bt",

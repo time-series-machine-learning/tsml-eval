@@ -60,6 +60,7 @@ def run_experiment(args):
                 att_max_shape=args.att_max_shape,
                 benchmark_time=args.benchmark_time,
                 overwrite=args.overwrite,
+                forecasting_strategy=args.forecasting_strategy,
             )
     # local run (no args)
     else:
@@ -67,7 +68,7 @@ def run_experiment(args):
         # Do not include paths to your local directories here in PRs
         data_path = _TEST_DATA_PATH
         results_path = _FORECASTER_RESULTS_PATH
-        estimator_name = "DummyForecaster"
+        estimator_name = "NaiveForecaster"
         dataset_name = "ShampooSales"
         random_seed = 0
         n_jobs = 1
@@ -75,6 +76,7 @@ def run_experiment(args):
         att_max_shape = 0
         benchmark_time = True
         overwrite = False
+        forecasting_strategy = "iterative"
         kwargs = {}
 
         forecaster = get_forecaster_by_name(
@@ -96,6 +98,7 @@ def run_experiment(args):
             att_max_shape=att_max_shape,
             benchmark_time=benchmark_time,
             overwrite=overwrite,
+            forecasting_strategy=forecasting_strategy,
         )
 
 

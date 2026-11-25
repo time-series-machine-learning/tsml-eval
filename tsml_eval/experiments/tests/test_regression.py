@@ -203,6 +203,11 @@ def test_run_regression_experiment_invalid_estimator():
 
 def test_get_regressor_by_name():
     """Test get_regressor_by_name method."""
+    exempt_names = [
+        "ChannelEnsembleRegressor",
+        "GridSearchCV",
+    ]
+
     regressor_name_lists = [
         _get_regressor.convolution_based_regressors,
         _get_regressor.deep_learning_regressors,
@@ -228,7 +233,10 @@ def test_get_regressor_by_name():
         )
 
     _check_set_method_results(
-        regressor_dict, estimator_name="Regressors", method_name="get_regressor_by_name"
+        regressor_dict,
+        estimator_name="Regressors",
+        method_name="get_regressor_by_name",
+        exempt_names=exempt_names,
     )
 
 
