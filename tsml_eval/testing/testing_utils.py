@@ -54,6 +54,7 @@ def _check_set_method(
                     "python version",
                     "No module named 'xgboost'",
                     "No module named 'tsml'",
+                    "No module named 'aeon_neuro'",
                     "No module named 'tsml_eval._wip'",
                 ]
                 if any(s in str(err) for s in exempt_errors):
