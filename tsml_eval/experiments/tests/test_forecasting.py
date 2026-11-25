@@ -213,6 +213,9 @@ def test_run_forecasting_experiment_strategies(forecasting_strategy, tmp_path):
     _check_forecasting_file_format(
         test_file, num_results_lines=DATA_TEST_SIZES["ShampooSales"]
     )
+    with open(test_file) as f:
+        first_line = f.readline()
+    assert f"Forecasting strategy: {forecasting_strategy}." in first_line
 
 
 def test_run_forecasting_experiment_invalid_forecasting_strategy():
