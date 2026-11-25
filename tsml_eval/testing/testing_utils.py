@@ -116,8 +116,7 @@ def _check_set_method_results(
 ):
     if exempt_names is not None:
         for estimator in exempt_names:
-            if estimator in estimator_dict:
-                estimator_dict.pop(estimator)
+            estimator_dict.pop(estimator.lower(), None)
 
     if not all(estimator_dict.values()):
         missing_keys = [key for key, value in estimator_dict.items() if not value]

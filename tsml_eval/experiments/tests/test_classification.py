@@ -210,6 +210,10 @@ def test_run_classification_experiment_invalid_estimator():
 
 def test_get_classifier_by_name():
     """Test get_classifier_by_name method."""
+    exempt_names = [
+        "GridSearchCV",
+    ]
+
     classifier_name_lists = [
         _get_classifier.convolution_based_classifiers,
         _get_classifier.deep_learning_classifiers,
@@ -241,7 +245,7 @@ def test_get_classifier_by_name():
         classifier_dict,
         estimator_name="Classifiers",
         method_name="get_classifier_by_name",
-        exempt_names=["gridsearchcv"],
+        exempt_names=exempt_names,
     )
 
 

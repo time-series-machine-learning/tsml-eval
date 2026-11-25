@@ -258,6 +258,10 @@ def _get_forecaster_by_name_with_window(forecaster_name):
 
 def test_get_forecaster_by_name():
     """Test get_forecaster_by_name method."""
+    exempt_names = [
+        "RegressionForecaster",
+    ]
+
     forecaster_name_lists = [
         _get_forecaster.deep_forecasters,
         _get_forecaster.ml_forecasters,
@@ -282,7 +286,7 @@ def test_get_forecaster_by_name():
         forecaster_dict,
         estimator_name="Forecasters",
         method_name="get_forecaster_by_name",
-        exempt_names=["regressionforecaster"],
+        exempt_names=exempt_names,
     )
 
 
